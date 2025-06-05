@@ -3,12 +3,16 @@ import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { BookOpenIcon, MessageCircleIcon, StarIcon } from "lucide-react";
+import { BookOpenIcon, MessageCircleIcon, StarIcon, GraduationCapIcon } from "lucide-react";
 import LessonFeedbackForm from "@/components/LessonFeedbackForm";
+import TeacherLogin from "./TeacherLogin";
+import TeacherDashboard from "./TeacherDashboard";
 import { useToast } from "@/hooks/use-toast";
 
 const Index = () => {
   const [showFeedbackForm, setShowFeedbackForm] = useState(false);
+  const [showTeacherLogin, setShowTeacherLogin] = useState(false);
+  const [teacher, setTeacher] = useState<{ name: string; email: string } | null>(null);
   const [submittedFeedback, setSubmittedFeedback] = useState<any[]>([]);
   const { toast } = useToast();
 
@@ -21,6 +25,32 @@ const Index = () => {
     });
   };
 
+  const handleTeacherLogin = (teacherData: { name: string; email: string }) => {
+    setTeacher(teacherData);
+    setShowTeacherLogin(false);
+  };
+
+  const handleTeacherLogout = () => {
+    setTeacher(null);
+  };
+
+  // If teacher is logged in, show teacher dashboard
+  if (teacher) {
+    return (
+      <TeacherDashboard 
+        teacher={teacher} 
+        feedbackData={submittedFeedback} 
+        onLogout={handleTeacherLogout} 
+      />
+    );
+  }
+
+  // If showing teacher login
+  if (showTeacherLogin) {
+    return <TeacherLogin onLogin={handleTeacherLogin} />;
+  }
+
+  // If showing feedback form
   if (showFeedbackForm) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
@@ -37,14 +67,24 @@ const Index = () => {
       {/* Header */}
       <div className="bg-white/80 backdrop-blur-sm border-b border-blue-100 sticky top-0 z-10">
         <div className="container mx-auto px-4 py-6">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center">
-              <MessageCircleIcon className="w-6 h-6 text-white" />
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center">
+                <MessageCircleIcon className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">LessonLens</h1>
+                <p className="text-gray-600">Connect • Reflect • Improve</p>
+              </div>
             </div>
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">LessonLens</h1>
-              <p className="text-gray-600">Connect • Reflect • Improve</p>
-            </div>
+            <Button 
+              onClick={() => setShowTeacherLogin(true)}
+              variant="outline"
+              className="border-blue-200 text-blue-600 hover:bg-blue-50"
+            >
+              <GraduationCapIcon className="w-4 h-4 mr-2" />
+              Teacher Login
+            </Button>
           </div>
         </div>
       </div>
