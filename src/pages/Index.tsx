@@ -3,26 +3,55 @@ import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { BookOpenIcon, MessageCircleIcon, StarIcon, GraduationCapIcon } from "lucide-react";
+import { BookOpenIcon, MessageCircleIcon, StarIcon, GraduationCapIcon, UserIcon } from "lucide-react";
 import LessonFeedbackForm from "@/components/LessonFeedbackForm";
+import StudentLogin from "./StudentLogin";
 import TeacherLogin from "./TeacherLogin";
 import TeacherDashboard from "./TeacherDashboard";
 import { useToast } from "@/hooks/use-toast";
 
 const Index = () => {
   const [showFeedbackForm, setShowFeedbackForm] = useState(false);
+  const [showStudentLogin, setShowStudentLogin] = useState(false);
   const [showTeacherLogin, setShowTeacherLogin] = useState(false);
+  const [student, setStudent] = useState<{ name: string; email: string } | null>(null);
+  const [isAnonymousMode, setIsAnonymousMode] = useState(false);
   const [teacher, setTeacher] = useState<{ name: string; email: string } | null>(null);
   const [submittedFeedback, setSubmittedFeedback] = useState<any[]>([]);
   const { toast } = useToast();
 
   const handleFeedbackSubmit = (feedbackData: any) => {
-    setSubmittedFeedback(prev => [...prev, { ...feedbackData, id: Date.now(), date: new Date().toLocaleDateString() }]);
+    const submissionData = {
+      ...feedbackData,
+      id: Date.now(),
+      date: new Date().toLocaleDateString(),
+      studentName: isAnonymousMode ? "Anonymous" : student?.name || "Anonymous",
+      studentEmail: isAnonymousMode ? "anonymous" : student?.email || "anonymous",
+      isAnonymous: isAnonymousMode
+    };
+    
+    setSubmittedFeedback(prev => [...prev, submissionData]);
     setShowFeedbackForm(false);
     toast({
       title: "Feedback Submitted Successfully! 🎉",
-      description: "Your teacher will receive your feedback to help improve future lessons.",
+      description: isAnonymousMode 
+        ? "Your anonymous feedback has been sent to your teacher."
+        : "Your feedback has been sent to your teacher.",
     });
+  };
+
+  const handleStudentLogin = (studentData: { name: string; email: string }) => {
+    setStudent(studentData);
+    setIsAnonymousMode(false);
+    setShowStudentLogin(false);
+    setShowFeedbackForm(true);
+  };
+
+  const handleAnonymousContinue = () => {
+    setStudent(null);
+    setIsAnonymousMode(true);
+    setShowStudentLogin(false);
+    setShowFeedbackForm(true);
   };
 
   const handleTeacherLogin = (teacherData: { name: string; email: string }) => {
@@ -32,6 +61,10 @@ const Index = () => {
 
   const handleTeacherLogout = () => {
     setTeacher(null);
+  };
+
+  const handleStartFeedback = () => {
+    setShowStudentLogin(true);
   };
 
   // If teacher is logged in, show teacher dashboard
@@ -50,13 +83,29 @@ const Index = () => {
     return <TeacherLogin onLogin={handleTeacherLogin} />;
   }
 
+  // If showing student login
+  if (showStudentLogin) {
+    return (
+      <StudentLogin 
+        onLogin={handleStudentLogin}
+        onContinueAnonymous={handleAnonymousContinue}
+      />
+    );
+  }
+
   // If showing feedback form
   if (showFeedbackForm) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
         <LessonFeedbackForm 
           onSubmit={handleFeedbackSubmit}
-          onCancel={() => setShowFeedbackForm(false)}
+          onCancel={() => {
+            setShowFeedbackForm(false);
+            setStudent(null);
+            setIsAnonymousMode(false);
+          }}
+          studentInfo={isAnonymousMode ? null : student}
+          isAnonymous={isAnonymousMode}
         />
       </div>
     );
@@ -147,9 +196,9 @@ const Index = () => {
         </div>
 
         {/* CTA Section */}
-        <div className="text-center mb-12">
+        <div className="text-center mb-8">
           <Button 
-            onClick={() => setShowFeedbackForm(true)}
+            onClick={handleStartFeedback}
             size="lg"
             className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-8 py-4 text-lg font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
           >
@@ -158,10 +207,20 @@ const Index = () => {
           </Button>
         </div>
 
+        {/* Anonymous Option Notice */}
+        <div className="text-center mb-12">
+          <div className="inline-flex items-center gap-2 bg-orange-50 text-orange-700 px-4 py-2 rounded-lg border border-orange-200">
+            <UserIcon className="w-4 h-4" />
+            <span className="text-sm font-medium">
+              Don't worry - you can submit feedback anonymously if you prefer
+            </span>
+          </div>
+        </div>
+
         {/* Recent Feedback */}
         {submittedFeedback.length > 0 && (
           <div className="mt-16">
-            <h3 className="text-2xl font-bold text-gray-900 mb-6 text-center">Your Recent Feedback</h3>
+            <h3 className="text-2xl font-bold text-gray-900 mb-6 text-center">Recent Feedback</h3>
             <div className="grid gap-6 max-w-4xl mx-auto">
               {submittedFeedback.slice(-3).reverse().map((feedback) => (
                 <Card key={feedback.id} className="bg-white/70 backdrop-blur-sm border-gray-200">
@@ -169,11 +228,18 @@ const Index = () => {
                     <div className="flex justify-between items-start">
                       <div>
                         <CardTitle className="text-lg">{feedback.subject} - {feedback.lessonTopic}</CardTitle>
-                        <CardDescription>{feedback.date}</CardDescription>
+                        <CardDescription>{feedback.date} • {feedback.studentName}</CardDescription>
                       </div>
-                      <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-                        Submitted
-                      </Badge>
+                      <div className="flex gap-2">
+                        <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                          Submitted
+                        </Badge>
+                        {feedback.isAnonymous && (
+                          <Badge variant="outline" className="bg-orange-50 text-orange-700 border-orange-200">
+                            Anonymous
+                          </Badge>
+                        )}
+                      </div>
                     </div>
                   </CardHeader>
                   <CardContent>

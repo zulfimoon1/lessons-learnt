@@ -6,16 +6,19 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, Send } from "lucide-react";
+import { ArrowLeft, Send, UserIcon, ShieldIcon } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import StarRating from "@/components/StarRating";
 import EmotionalStateSelector from "@/components/EmotionalStateSelector";
 
 interface LessonFeedbackFormProps {
   onSubmit: (data: any) => void;
   onCancel: () => void;
+  studentInfo?: { name: string; email: string } | null;
+  isAnonymous?: boolean;
 }
 
-const LessonFeedbackForm = ({ onSubmit, onCancel }: LessonFeedbackFormProps) => {
+const LessonFeedbackForm = ({ onSubmit, onCancel, studentInfo, isAnonymous = false }: LessonFeedbackFormProps) => {
   const [formData, setFormData] = useState({
     subject: "",
     lessonTopic: "",
@@ -49,9 +52,27 @@ const LessonFeedbackForm = ({ onSubmit, onCancel }: LessonFeedbackFormProps) => 
           <ArrowLeft className="w-4 h-4 mr-2" />
           Back
         </Button>
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Share Your Learning Experience</h1>
-          <p className="text-gray-600">Help your teacher understand how to make lessons even better</p>
+        <div className="flex-1">
+          <div className="flex items-center gap-3 mb-2">
+            <h1 className="text-3xl font-bold text-gray-900">Share Your Learning Experience</h1>
+            {isAnonymous ? (
+              <Badge variant="outline" className="bg-orange-50 text-orange-700 border-orange-200">
+                <ShieldIcon className="w-3 h-3 mr-1" />
+                Anonymous Mode
+              </Badge>
+            ) : (
+              <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                <UserIcon className="w-3 h-3 mr-1" />
+                {studentInfo?.name}
+              </Badge>
+            )}
+          </div>
+          <p className="text-gray-600">
+            {isAnonymous 
+              ? "Your feedback is completely anonymous - your teacher won't know who submitted this."
+              : "Help your teacher understand how to make lessons even better"
+            }
+          </p>
         </div>
       </div>
 
@@ -208,7 +229,7 @@ const LessonFeedbackForm = ({ onSubmit, onCancel }: LessonFeedbackFormProps) => 
             className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-8 py-4 text-lg font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Send className="w-5 h-5 mr-2" />
-            Submit Feedback
+            {isAnonymous ? "Submit Anonymous Feedback" : "Submit Feedback"}
           </Button>
         </div>
       </form>
