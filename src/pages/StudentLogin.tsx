@@ -4,30 +4,41 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { BookOpenIcon, LogInIcon, UserIcon } from "lucide-react";
+import { BookOpenIcon, LogInIcon, UserIcon, School, GraduationCap } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface StudentLoginProps {
-  onLogin: (studentData: { name: string; email: string }) => void;
+  onLogin: (studentData: { name: string; email: string; school: string; grade: string }) => void;
   onContinueAnonymous: () => void;
 }
 
 const StudentLogin = ({ onLogin, onContinueAnonymous }: StudentLoginProps) => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [formData, setFormData] = useState({
+    fullName: "",
+    email: "",
+    school: "",
+    grade: "",
+    password: ""
+  });
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+
+  const handleInputChange = (field: string, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
     // Simple demo authentication - in real app, this would be proper auth
-    if (email.includes("@") && password.length > 0) {
+    if (formData.email.includes("@") && formData.password.length > 0 && formData.fullName && formData.school && formData.grade) {
       setTimeout(() => {
         onLogin({
-          name: email.split("@")[0].replace(".", " ").replace(/\b\w/g, l => l.toUpperCase()),
-          email: email
+          name: formData.fullName,
+          email: formData.email,
+          school: formData.school,
+          grade: formData.grade
         });
         toast({
           title: "Welcome! 📚",
@@ -37,8 +48,8 @@ const StudentLogin = ({ onLogin, onContinueAnonymous }: StudentLoginProps) => {
       }, 1000);
     } else {
       toast({
-        title: "Invalid credentials",
-        description: "Please enter a valid email and password.",
+        title: "Missing information",
+        description: "Please fill in all fields to continue.",
         variant: "destructive",
       });
       setIsLoading(false);
@@ -62,33 +73,80 @@ const StudentLogin = ({ onLogin, onContinueAnonymous }: StudentLoginProps) => {
           </div>
           <CardTitle className="text-2xl text-gray-900">Student Login</CardTitle>
           <CardDescription>
-            Login to give feedback or continue anonymously
+            Enter your details to give feedback or continue anonymously
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="fullName" className="flex items-center gap-2">
+                <UserIcon className="w-4 h-4" />
+                Full Name
+              </Label>
+              <Input
+                id="fullName"
+                type="text"
+                placeholder="Enter your full name"
+                value={formData.fullName}
+                onChange={(e) => handleInputChange("fullName", e.target.value)}
+                required
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="school" className="flex items-center gap-2">
+                <School className="w-4 h-4" />
+                School
+              </Label>
+              <Input
+                id="school"
+                type="text"
+                placeholder="Enter your school name"
+                value={formData.school}
+                onChange={(e) => handleInputChange("school", e.target.value)}
+                required
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="grade" className="flex items-center gap-2">
+                <GraduationCap className="w-4 h-4" />
+                Class/Grade
+              </Label>
+              <Input
+                id="grade"
+                type="text"
+                placeholder="e.g., Grade 5, Class 10A, Year 9"
+                value={formData.grade}
+                onChange={(e) => handleInputChange("grade", e.target.value)}
+                required
+              />
+            </div>
+
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <Input
                 id="email"
                 type="email"
                 placeholder="student@school.edu"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                value={formData.email}
+                onChange={(e) => handleInputChange("email", e.target.value)}
                 required
               />
             </div>
+
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
               <Input
                 id="password"
                 type="password"
                 placeholder="Enter your password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                value={formData.password}
+                onChange={(e) => handleInputChange("password", e.target.value)}
                 required
               />
             </div>
+
             <Button 
               type="submit" 
               className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
@@ -124,7 +182,7 @@ const StudentLogin = ({ onLogin, onContinueAnonymous }: StudentLoginProps) => {
           </Button>
 
           <div className="mt-4 text-center text-sm text-gray-600">
-            <p className="mb-2">Demo: Use any email and password to login</p>
+            <p className="mb-2">Demo: Fill in all fields to login</p>
             <p className="text-orange-600">
               Feel scared to share? Use anonymous mode for complete privacy.
             </p>
