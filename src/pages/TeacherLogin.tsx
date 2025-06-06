@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -11,9 +12,25 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { useNavigate } from "react-router-dom";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useEffect } from "react";
 
 const TeacherLogin = () => {
   const { t } = useLanguage();
+  const { teacher } = useAuth();
+  const navigate = useNavigate();
+
+  // Redirect if already logged in
+  useEffect(() => {
+    if (teacher) {
+      console.log('TeacherLogin: User already logged in, redirecting...');
+      if (teacher.role === "admin") {
+        navigate("/admin-dashboard");
+      } else {
+        navigate("/teacher-dashboard");
+      }
+    }
+  }, [teacher, navigate]);
+
   const [loginData, setLoginData] = useState({
     email: "",
     password: ""
@@ -31,7 +48,6 @@ const TeacherLogin = () => {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const { teacherLogin } = useAuth();
-  const navigate = useNavigate();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -67,15 +83,8 @@ const TeacherLogin = () => {
           description: `Successfully logged in as ${result.teacher.name}`,
         });
         
-        // Navigate based on role
+        // Navigation will be handled by useEffect when teacher state updates
         console.log('TeacherLogin: Teacher role is:', result.teacher.role);
-        if (result.teacher.role === "admin") {
-          console.log('TeacherLogin: Navigating to admin dashboard');
-          navigate("/admin-dashboard");
-        } else {
-          console.log('TeacherLogin: Navigating to teacher dashboard');
-          navigate("/teacher-dashboard");
-        }
       } else {
         console.error('TeacherLogin: No error but no teacher data returned');
         toast({
@@ -147,15 +156,8 @@ const TeacherLogin = () => {
           description: `Welcome to Lesson Lens, ${result.teacher.name}!`,
         });
         
-        // Navigate based on role
+        // Navigation will be handled by useEffect when teacher state updates
         console.log('TeacherLogin: New teacher role is:', result.teacher.role);
-        if (result.teacher.role === "admin") {
-          console.log('TeacherLogin: Navigating to admin dashboard');
-          navigate("/admin-dashboard");
-        } else {
-          console.log('TeacherLogin: Navigating to teacher dashboard');
-          navigate("/teacher-dashboard");
-        }
       } else {
         console.error('TeacherLogin: No error but no teacher data returned');
         toast({
