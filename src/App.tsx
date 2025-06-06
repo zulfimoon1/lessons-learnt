@@ -20,33 +20,37 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <PlatformAdminProvider>
-      <AuthProvider>
-        <LanguageProvider>
-          <TooltipProvider>
-            <BrowserRouter>
-              <Toaster />
-              <Routes>
-                <Route path="/" element={<Index />} />
-                <Route path="/student-login" element={<StudentLogin />} />
-                <Route path="/teacher-login" element={<TeacherLogin />} />
-                <Route path="/student-dashboard" element={<StudentDashboard />} />
-                <Route path="/teacher-dashboard" element={<TeacherDashboard />} />
-                <Route path="/admin-dashboard" element={<AdminDashboard />} />
-                <Route path="/platform-admin-login" element={<PlatformAdminLogin />} />
-                <Route path="/platform-admin-dashboard" element={<PlatformAdminDashboard />} />
-                <Route path="/pricing" element={<PricingPage />} />
-                <Route path="/accept-invitation" element={<AcceptInvitation />} />
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </BrowserRouter>
-          </TooltipProvider>
-        </LanguageProvider>
-      </AuthProvider>
-    </PlatformAdminProvider>
-  </QueryClientProvider>
-);
+const App = () => {
+  console.log('App: Rendering main App component');
+  
+  return (
+    <QueryClientProvider client={queryClient}>
+      <PlatformAdminProvider>
+        <AuthProvider>
+          <LanguageProvider>
+            <TooltipProvider>
+              <BrowserRouter>
+                <Toaster />
+                <Routes>
+                  <Route path="/" element={<Index />} />
+                  <Route path="/student-login" element={<StudentLogin />} />
+                  <Route path="/teacher-login" element={<TeacherLogin />} />
+                  <Route path="/student-dashboard" element={<StudentDashboard />} />
+                  <Route path="/teacher-dashboard" element={<TeacherDashboard />} />
+                  <Route path="/admin-dashboard" element={<AdminDashboard />} />
+                  <Route path="/platform-admin-login" element={<PlatformAdminLogin />} />
+                  <Route path="/platform-admin-dashboard" element={<PlatformAdminDashboard />} />
+                  <Route path="/pricing" element={<PricingPage />} />
+                  <Route path="/accept-invitation" element={<AcceptInvitation />} />
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </BrowserRouter>
+            </TooltipProvider>
+          </LanguageProvider>
+        </AuthProvider>
+      </PlatformAdminProvider>
+    </QueryClientProvider>
+  );
+};
 
 export default App;

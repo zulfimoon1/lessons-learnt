@@ -24,30 +24,27 @@ export const useAuthStorage = () => {
   useEffect(() => {
     console.log('useAuthStorage: Loading auth data from localStorage');
     
-    // Load from localStorage on mount
-    const savedTeacher = localStorage.getItem('teacher');
-    const savedStudent = localStorage.getItem('student');
-    
-    if (savedTeacher) {
-      try {
+    try {
+      // Load from localStorage on mount
+      const savedTeacher = localStorage.getItem('teacher');
+      const savedStudent = localStorage.getItem('student');
+      
+      if (savedTeacher) {
         const teacherData = JSON.parse(savedTeacher);
         console.log('useAuthStorage: Loaded teacher from storage:', teacherData);
         setTeacher(teacherData);
-      } catch (error) {
-        console.error('useAuthStorage: Error parsing saved teacher:', error);
-        localStorage.removeItem('teacher');
       }
-    }
-    
-    if (savedStudent) {
-      try {
+      
+      if (savedStudent) {
         const studentData = JSON.parse(savedStudent);
         console.log('useAuthStorage: Loaded student from storage:', studentData);
         setStudent(studentData);
-      } catch (error) {
-        console.error('useAuthStorage: Error parsing saved student:', error);
-        localStorage.removeItem('student');
       }
+    } catch (error) {
+      console.error('useAuthStorage: Error loading from storage:', error);
+      // Clear corrupted data
+      localStorage.removeItem('teacher');
+      localStorage.removeItem('student');
     }
     
     setIsLoading(false);
@@ -57,13 +54,17 @@ export const useAuthStorage = () => {
   const saveTeacher = (teacherData: Teacher) => {
     console.log('useAuthStorage: Saving teacher to storage:', teacherData);
     setTeacher(teacherData);
+    setStudent(null); // Clear student when teacher logs in
     localStorage.setItem('teacher', JSON.stringify(teacherData));
+    localStorage.removeItem('student');
   };
 
   const saveStudent = (studentData: Student) => {
     console.log('useAuthStorage: Saving student to storage:', studentData);
     setStudent(studentData);
+    setTeacher(null); // Clear teacher when student logs in
     localStorage.setItem('student', JSON.stringify(studentData));
+    localStorage.removeItem('teacher');
   };
 
   const clearAuth = () => {

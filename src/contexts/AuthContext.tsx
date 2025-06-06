@@ -101,6 +101,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     logout
   };
 
+  console.log('AuthContext: Providing context with values:', { 
+    hasTeacher: !!teacher, 
+    hasStudent: !!student, 
+    isLoading 
+  });
+
   return (
     <AuthContext.Provider value={value}>
       {children}
