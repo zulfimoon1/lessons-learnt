@@ -1,59 +1,108 @@
+
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { CalendarIcon, ClockIcon, LogOutIcon, BookOpenIcon, MessageSquareIcon, TrendingUpIcon } from "lucide-react";
-import { useAuth } from "@/contexts/AuthContext";
-import { useLanguage } from "@/contexts/LanguageContext";
+import { useAuthStorage } from "@/hooks/useAuthStorage";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { 
+  SchoolIcon, 
+  CalendarIcon, 
+  MessageSquareIcon, 
+  LogOutIcon,
+  BookOpenIcon,
+  HeartHandshakeIcon
+} from "lucide-react";
 import LessonFeedbackForm from "@/components/LessonFeedbackForm";
 import WeeklySummary from "@/components/WeeklySummary";
-import LanguageSwitcher from "@/components/LanguageSwitcher";
 import PsychologistInfo from "@/components/PsychologistInfo";
+import { useNavigate } from "react-router-dom";
 
 interface ClassSchedule {
   id: string;
   subject: string;
+  grade: string;
   lesson_topic: string;
   class_date: string;
   class_time: string;
   duration_minutes: number;
-  description?: string;
   teacher_id: string;
+  school: string;
+}
+
+interface SchoolPsychologist {
+  id: string;
+  name: string;
+  email: string;
+  phone?: string;
+  office_location?: string;
+  availability_hours?: string;
 }
 
 const StudentDashboard = () => {
-  const { student, logout } = useAuth();
-  const { t } = useLanguage();
-  const [schedules, setSchedules] = useState<ClassSchedule[]>([]);
-  const [selectedClass, setSelectedClass] = useState<ClassSchedule | null>(null);
-  const [showFeedbackForm, setShowFeedbackForm] = useState(false);
-  const [showWeeklySummary, setShowWeeklySummary] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+  const { student, clearAuth } = useAuthStorage();
   const { toast } = useToast();
+  const navigate = useNavigate();
+  const [upcomingClasses, setUpcomingClasses] = useState<ClassSchedule[]>([]);
+  const [psychologists, setPsychologists] = useState<SchoolPsychologist[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    if (student) {
-      fetchSchedules();
+    if (!student) {
+      navigate('/student-login');
+      return;
     }
-  }, [student]);
+    loadUpcomingClasses();
+    loadPsychologists();
+  }, [student, navigate]);
 
-  const fetchSchedules = async () => {
+  const loadUpcomingClasses = async () => {
+    if (!student?.school || !student?.grade) return;
+    
     try {
+      const today = new Date().toISOString().split('T')[0];
+      
       const { data, error } = await supabase
         .from('class_schedules')
         .select('*')
-        .eq('school', student?.school)
-        .eq('grade', student?.grade)
-        .order('class_date', { ascending: true });
+        .eq('school', student.school)
+        .eq('grade', student.grade)
+        .gte('class_date', today)
+        .order('class_date', { ascending: true })
+        .order('class_time', { ascending: true })
+        .limit(5);
 
       if (error) throw error;
-      setSchedules(data || []);
+      setUpcomingClasses(data || []);
     } catch (error) {
+      console.error('Error loading classes:', error);
       toast({
-        title: "Error loading schedules",
-        description: "Failed to load your class schedules",
+        title: "Error",
+        description: "Failed to load upcoming classes",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const loadPsychologists = async () => {
+    if (!student?.school) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('school_psychologists')
+        .select('*')
+        .eq('school', student.school)
+        .order('name', { ascending: true });
+
+      if (error) throw error;
+      setPsychologists(data || []);
+    } catch (error) {
+      console.error('Error loading psychologists:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load school psychologists",
         variant: "destructive",
       });
     } finally {
@@ -61,213 +110,159 @@ const StudentDashboard = () => {
     }
   };
 
-  const handleFeedbackSubmit = async (feedbackData: any) => {
-    try {
-      const submissionData = {
-        class_schedule_id: selectedClass?.id,
-        student_id: feedbackData.isAnonymous ? null : student?.id,
-        student_name: feedbackData.isAnonymous ? null : student?.full_name,
-        is_anonymous: feedbackData.isAnonymous || false,
-        understanding: feedbackData.understanding,
-        interest: feedbackData.interest,
-        educational_growth: feedbackData.educationalGrowth,
-        emotional_state: feedbackData.emotionalState,
-        what_went_well: feedbackData.whatWorkedWell,
-        suggestions: feedbackData.howToImprove,
-        additional_comments: feedbackData.additionalComments
-      };
-
-      const { error } = await supabase
-        .from('feedback')
-        .insert(submissionData);
-
-      if (error) throw error;
-
-      toast({
-        title: "Feedback submitted! 🎉",
-        description: feedbackData.isAnonymous 
-          ? "Your anonymous feedback has been sent to your teacher."
-          : "Your feedback has been sent to your teacher.",
-      });
-
-      setShowFeedbackForm(false);
-      setSelectedClass(null);
-    } catch (error) {
-      toast({
-        title: "Submission failed",
-        description: "Failed to submit feedback. Please try again.",
-        variant: "destructive",
-      });
-    }
+  const handleLogout = () => {
+    clearAuth();
+    navigate('/student-login');
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
-  };
-
-  const formatTime = (timeString: string) => {
-    return new Date(`2000-01-01T${timeString}`).toLocaleTimeString('en-US', {
-      hour: 'numeric',
-      minute: '2-digit',
-      hour12: true
-    });
-  };
-
-  if (showWeeklySummary) {
-    return <WeeklySummary onClose={() => setShowWeeklySummary(false)} />;
-  }
-
-  if (showFeedbackForm && selectedClass) {
+  if (isLoading) {
     return (
-      <LessonFeedbackForm
-        onSubmit={(data) => handleFeedbackSubmit({ ...data, isAnonymous: false })}
-        onCancel={() => {
-          setShowFeedbackForm(false);
-          setSelectedClass(null);
-        }}
-        studentInfo={{
-          name: student?.full_name || "",
-          email: `${student?.full_name}@${student?.school}` || ""
-        }}
-        isAnonymous={false}
-      />
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
+          <p>Loading dashboard...</p>
+        </div>
+      </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
-      {/* Header */}
-      <div className="bg-white/80 backdrop-blur-sm border-b border-blue-100">
-        <div className="container mx-auto px-4 py-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center">
-                <BookOpenIcon className="w-6 h-6 text-white" />
-              </div>
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">My Classes</h1>
-                <p className="text-gray-600">
-                  Welcome, {student?.full_name} - {student?.school}, {student?.grade}
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center gap-4">
-              <LanguageSwitcher />
-              <Button 
-                onClick={() => setShowWeeklySummary(true)}
-                variant="outline"
-                className="border-purple-200 text-purple-600 hover:bg-purple-50"
-              >
-                <TrendingUpIcon className="w-4 h-4 mr-2" />
-                Weekly Summary
-              </Button>
-              <Button 
-                onClick={logout}
-                variant="outline"
-                className="border-red-200 text-red-600 hover:bg-red-50"
-              >
-                <LogOutIcon className="w-4 h-4 mr-2" />
-                Logout
-              </Button>
-            </div>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+      <header className="bg-white/80 backdrop-blur-sm border-b border-blue-100 p-4">
+        <div className="max-w-7xl mx-auto flex justify-between items-center">
+          <div className="flex items-center gap-4">
+            <SchoolIcon className="w-8 h-8 text-purple-600" />
+            <h1 className="text-2xl font-bold text-gray-900">Student Dashboard</h1>
+          </div>
+          <div className="flex items-center gap-4">
+            <span className="text-sm text-gray-600">Welcome, {student?.full_name}</span>
+            <Button
+              onClick={handleLogout}
+              variant="outline"
+              className="flex items-center gap-2"
+            >
+              <LogOutIcon className="w-4 h-4" />
+              Logout
+            </Button>
           </div>
         </div>
-      </div>
+      </header>
 
-      <div className="container mx-auto px-4 py-8">
-        {isLoading ? (
-          <div className="text-center py-8">
-            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-            <p className="mt-2 text-gray-600">Loading...</p>
-          </div>
-        ) : (
-          <div className="space-y-6">
-            {/* Psychologist Information */}
-            {student && (
-              <PsychologistInfo school={student.school} />
-            )}
+      <main className="max-w-7xl mx-auto p-6 space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">School</CardTitle>
+              <SchoolIcon className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-lg font-semibold">{student?.school}</div>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Grade</CardTitle>
+              <BookOpenIcon className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-lg font-semibold">{student?.grade}</div>
+            </CardContent>
+          </Card>
 
-            {schedules.length === 0 ? (
-              <Card className="bg-white/70 backdrop-blur-sm border-gray-200">
-                <CardContent className="text-center py-12">
-                  <BookOpenIcon className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-xl font-semibold text-gray-700 mb-2">No classes scheduled</h3>
-                  <p className="text-gray-600">
-                    Your teacher hasn't scheduled any classes yet.
-                  </p>
-                </CardContent>
-              </Card>
-            ) : (
-              <div className="grid gap-6">
-                <h2 className="text-xl font-semibold text-gray-900">Upcoming Classes</h2>
-                
-                {schedules.map((schedule) => (
-                  <Card key={schedule.id} className="bg-white/70 backdrop-blur-sm border-gray-200 hover:shadow-lg transition-shadow">
-                    <CardHeader>
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <CardTitle className="text-lg text-gray-900">{schedule.subject}</CardTitle>
-                          <CardDescription className="text-base font-medium text-gray-700">
-                            {schedule.lesson_topic}
-                          </CardDescription>
-                        </div>
-                        <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
-                          {schedule.duration_minutes} min
-                        </Badge>
-                      </div>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      <div className="flex items-center gap-4 text-sm text-gray-600">
-                        <div className="flex items-center gap-2">
-                          <CalendarIcon className="w-4 h-4" />
-                          {formatDate(schedule.class_date)}
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <ClockIcon className="w-4 h-4" />
-                          {formatTime(schedule.class_time)}
-                        </div>
-                      </div>
-                      
-                      {schedule.description && (
-                        <p className="text-gray-600 text-sm">{schedule.description}</p>
-                      )}
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Upcoming Classes</CardTitle>
+              <CalendarIcon className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-lg font-semibold">{upcomingClasses.length}</div>
+            </CardContent>
+          </Card>
+        </div>
 
-                      <div className="flex gap-2 pt-4">
-                        <Button
-                          onClick={() => {
-                            setSelectedClass(schedule);
-                            setShowFeedbackForm(true);
-                          }}
-                          className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
-                        >
-                          <MessageSquareIcon className="w-4 h-4 mr-2" />
-                          Give Feedback
-                        </Button>
-                        
-                        <Button
-                          variant="outline"
-                          onClick={() => {
-                            setSelectedClass(schedule);
-                            setShowFeedbackForm(true);
-                          }}
-                          className="border-orange-200 text-orange-600 hover:bg-orange-50"
-                        >
-                          Give Anonymous Feedback
-                        </Button>
+        <Tabs defaultValue="feedback" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-4">
+            <TabsTrigger value="feedback">Lesson Feedback</TabsTrigger>
+            <TabsTrigger value="classes">Upcoming Classes</TabsTrigger>
+            <TabsTrigger value="weekly">Weekly Summary</TabsTrigger>
+            <TabsTrigger value="support">Mental Health Support</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="feedback" className="space-y-6">
+            <LessonFeedbackForm student={student} />
+          </TabsContent>
+
+          <TabsContent value="classes" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Upcoming Classes</CardTitle>
+                <CardDescription>
+                  Your scheduled classes for {student?.grade} at {student?.school}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {upcomingClasses.map((classItem) => (
+                    <div key={classItem.id} className="flex items-center justify-between p-4 border rounded-lg">
+                      <div>
+                        <h3 className="font-medium">{classItem.subject}</h3>
+                        <p className="text-sm text-gray-600">{classItem.lesson_topic}</p>
+                        <div className="flex gap-2 mt-2">
+                          <Badge variant="outline">{classItem.grade}</Badge>
+                          <Badge variant="outline">{classItem.duration_minutes} min</Badge>
+                        </div>
                       </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-      </div>
+                      <div className="text-right">
+                        <p className="font-medium">{new Date(classItem.class_date).toLocaleDateString()}</p>
+                        <p className="text-sm text-gray-600">{classItem.class_time}</p>
+                      </div>
+                    </div>
+                  ))}
+                  {upcomingClasses.length === 0 && (
+                    <p className="text-center text-gray-500 py-8">No upcoming classes scheduled</p>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="weekly" className="space-y-6">
+            <WeeklySummary student={student} />
+          </TabsContent>
+
+          <TabsContent value="support" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <HeartHandshakeIcon className="w-5 h-5" />
+                  Mental Health Support
+                </CardTitle>
+                <CardDescription>
+                  Access mental health resources and support at {student?.school}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {psychologists.length > 0 ? (
+                  <div className="space-y-4">
+                    {psychologists.map((psychologist) => (
+                      <PsychologistInfo key={psychologist.id} psychologist={psychologist} />
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8">
+                    <HeartHandshakeIcon className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+                    <p className="text-gray-500">No school psychologists are currently available.</p>
+                    <p className="text-sm text-gray-400 mt-2">
+                      If you need support, please contact your school administration.
+                    </p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+      </main>
     </div>
   );
 };

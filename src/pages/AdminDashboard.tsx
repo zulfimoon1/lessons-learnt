@@ -1,275 +1,118 @@
+
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { useAuth } from "@/contexts/AuthContext";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useAuthStorage } from "@/hooks/useAuthStorage";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { useLanguage } from "@/contexts/LanguageContext";
 import { 
   SchoolIcon, 
   UsersIcon, 
   MessageSquareIcon, 
-  BarChart3Icon, 
   LogOutIcon,
-  CreditCardIcon,
-  RefreshCwIcon,
-  MailIcon
+  CalendarIcon,
+  UserPlusIcon
 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
-import LanguageSwitcher from "@/components/LanguageSwitcher";
+import ClassScheduleForm from "@/components/ClassScheduleForm";
 import InviteTeacherForm from "@/components/InviteTeacherForm";
 import SchoolPsychologistForm from "@/components/SchoolPsychologistForm";
+import { useNavigate } from "react-router-dom";
 
 interface Teacher {
   id: string;
   name: string;
   email: string;
-  school: string;
   role: string;
   created_at: string;
-}
-
-interface FeedbackSummary {
-  teacher: string;
-  subject: string;
-  class_date: string;
-  total_responses: number;
-  avg_understanding: number;
-  avg_interest: number;
-  avg_growth: number;
 }
 
 interface Subscription {
   id: string;
   school_name: string;
   status: string;
+  plan_type: string;
   amount: number;
   current_period_end: string;
-  plan_type: string;
-  stripe_subscription_id: string;
-  stripe_customer_id: string;
-}
-
-interface Invitation {
-  id: string;
-  email: string;
-  school: string;
-  role: string;
-  status: string;
-  created_at: string;
-  expires_at: string;
-  accepted_at: string | null;
 }
 
 const AdminDashboard = () => {
-  const { teacher, logout } = useAuth();
+  const { teacher, clearAuth } = useAuthStorage();
   const { toast } = useToast();
-  const { t } = useLanguage();
   const navigate = useNavigate();
   const [teachers, setTeachers] = useState<Teacher[]>([]);
-  const [invitations, setInvitations] = useState<Invitation[]>([]);
-  const [feedbackSummary, setFeedbackSummary] = useState<FeedbackSummary[]>([]);
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [subscriptionError, setSubscriptionError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!teacher || teacher.role !== 'admin') {
-      console.log('Not an admin user, redirecting to teacher login');
       navigate('/teacher-login');
       return;
     }
-    loadDashboardData();
+    loadTeachers();
+    loadSubscription();
   }, [teacher, navigate]);
 
-  const loadDashboardData = async () => {
+  const loadTeachers = async () => {
+    if (!teacher?.school) return;
+    
     try {
-      console.log('=== ADMIN DASHBOARD LOADING ===');
-      console.log('Current admin teacher:', teacher);
-      console.log('Admin school:', teacher?.school);
-      
-      setSubscriptionError(null);
-      
-      // Load teachers from the same school
-      const { data: teachersData, error: teachersError } = await supabase
+      const { data, error } = await supabase
         .from('teachers')
         .select('*')
-        .eq('school', teacher?.school)
+        .eq('school', teacher.school)
         .order('created_at', { ascending: false });
 
-      if (teachersError) {
-        console.error('Teachers error:', teachersError);
-        throw teachersError;
-      }
-      
-      console.log('Teachers loaded:', teachersData?.length || 0);
-      setTeachers(teachersData || []);
-
-      // Load invitations for this school
-      const { data: invitationsData, error: invitationsError } = await supabase
-        .from('invitations')
-        .select('*')
-        .eq('school', teacher?.school)
-        .order('created_at', { ascending: false });
-
-      if (invitationsError) {
-        console.error('Invitations error:', invitationsError);
-      } else {
-        console.log('Invitations loaded:', invitationsData?.length || 0);
-        setInvitations(invitationsData || []);
-      }
-
-      // Load feedback summary for this school
-      const { data: feedbackData, error: feedbackError } = await supabase
-        .from('feedback_analytics')
-        .select('*')
-        .eq('school', teacher?.school)
-        .order('class_date', { ascending: false })
-        .limit(10);
-
-      if (feedbackError) {
-        console.error('Feedback error:', feedbackError);
-        throw feedbackError;
-      }
-      
-      const transformedFeedback: FeedbackSummary[] = (feedbackData || []).map(item => ({
-        teacher: item.lesson_topic || 'Unknown Teacher',
-        subject: item.subject,
-        class_date: item.class_date,
-        total_responses: item.total_responses,
-        avg_understanding: item.avg_understanding,
-        avg_interest: item.avg_interest,
-        avg_growth: item.avg_growth
-      }));
-      
-      console.log('Feedback loaded:', transformedFeedback.length);
-      setFeedbackSummary(transformedFeedback);
-
-      // Load subscription for this school
-      await loadSubscription();
-
-      console.log('=== ADMIN DASHBOARD COMPLETE ===');
-
+      if (error) throw error;
+      setTeachers(data || []);
     } catch (error) {
-      console.error('Error loading admin dashboard data:', error);
+      console.error('Error loading teachers:', error);
       toast({
-        title: "Error loading admin data",
-        description: `Failed to load admin dashboard: ${error.message}`,
+        title: "Error",
+        description: "Failed to load teachers",
         variant: "destructive",
       });
+    }
+  };
+
+  const loadSubscription = async () => {
+    if (!teacher?.school) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('subscriptions')
+        .select('*')
+        .eq('school_name', teacher.school)
+        .eq('status', 'active')
+        .single();
+
+      if (error && error.code !== 'PGRST116') {
+        console.error('Error loading subscription:', error);
+      } else {
+        setSubscription(data);
+      }
+    } catch (error) {
+      console.error('Error loading subscription:', error);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const loadSubscription = async () => {
-    try {
-      console.log('=== LOADING SUBSCRIPTION ===');
-      console.log('Looking for subscription for school:', teacher?.school);
-      
-      // Get all subscriptions to see what's available
-      const { data: allSubs, error: allSubsError } = await supabase
-        .from('subscriptions')
-        .select('*');
-
-      if (allSubsError) {
-        console.error('Error fetching all subscriptions:', allSubsError);
-        setSubscriptionError(`Error fetching subscriptions: ${allSubsError.message}`);
-        return;
-      }
-
-      console.log('All subscriptions in database:', allSubs);
-
-      if (!allSubs || allSubs.length === 0) {
-        console.log('No subscriptions found in database');
-        setSubscriptionError('No subscriptions found in the database');
-        setSubscription(null);
-        return;
-      }
-
-      // Try exact match first
-      let foundSub = allSubs.find(sub => sub.school_name === teacher?.school);
-      
-      if (!foundSub) {
-        // Try case-insensitive match
-        foundSub = allSubs.find(sub => 
-          sub.school_name?.toLowerCase() === teacher?.school?.toLowerCase()
-        );
-      }
-
-      if (!foundSub) {
-        // Try partial match
-        foundSub = allSubs.find(sub => 
-          sub.school_name?.includes(teacher?.school || '') || 
-          (teacher?.school || '').includes(sub.school_name || '')
-        );
-      }
-
-      if (foundSub) {
-        console.log('Found subscription:', foundSub);
-        setSubscription(foundSub);
-        setSubscriptionError(null);
-      } else {
-        console.log('No matching subscription found for school:', teacher?.school);
-        console.log('Available school names:', allSubs.map(s => s.school_name));
-        setSubscriptionError(`No subscription found for school "${teacher?.school}". Available schools: ${allSubs.map(s => s.school_name).join(', ')}`);
-        setSubscription(null);
-      }
-
-    } catch (error) {
-      console.error('Error loading subscription:', error);
-      setSubscriptionError(`Error loading subscription: ${error.message}`);
-      setSubscription(null);
-    }
+  const handleLogout = () => {
+    clearAuth();
+    navigate('/teacher-login');
   };
 
-  const handleManageSubscription = async () => {
-    try {
-      console.log('Opening customer portal...');
-      const { data, error } = await supabase.functions.invoke('customer-portal');
-      
-      if (error) {
-        console.error('Customer portal error:', error);
-        throw error;
-      }
-      
-      if (data?.url) {
-        console.log('Redirecting to portal:', data.url);
-        window.open(data.url, '_blank');
-      } else {
-        throw new Error('No portal URL returned');
-      }
-    } catch (error) {
-      console.error("Error opening customer portal:", error);
-      toast({
-        title: "Error",
-        description: `Failed to open subscription management: ${error.message}`,
-        variant: "destructive",
-      });
-    }
+  const handleSubscribe = () => {
+    navigate('/pricing');
   };
-
-  const refreshData = () => {
-    console.log('Refreshing admin dashboard data...');
-    setIsLoading(true);
-    loadDashboardData();
-  };
-
-  const handleInviteSent = () => {
-    // Refresh invitations data
-    loadDashboardData();
-  };
-
-  const totalFeedback = feedbackSummary.reduce((sum, item) => sum + item.total_responses, 0);
 
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
-          <p>Loading admin dashboard...</p>
+          <p>Loading dashboard...</p>
         </div>
       </div>
     );
@@ -280,20 +123,15 @@ const AdminDashboard = () => {
       <header className="bg-white/80 backdrop-blur-sm border-b border-blue-100 p-4">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
           <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2">
-              <SchoolIcon className="w-8 h-8 text-purple-600" />
-              <h1 className="text-2xl font-bold text-gray-900">{teacher?.school} - Admin Dashboard</h1>
-            </div>
-            <Button onClick={refreshData} variant="outline" size="sm" className="flex items-center gap-2">
-              <RefreshCwIcon className="w-4 h-4" />
-              Refresh
-            </Button>
+            <SchoolIcon className="w-8 h-8 text-purple-600" />
+            <h1 className="text-2xl font-bold text-gray-900">
+              {teacher?.school} - Admin Dashboard
+            </h1>
           </div>
           <div className="flex items-center gap-4">
-            <span className="text-sm text-gray-600">Admin: {teacher?.name}</span>
-            <LanguageSwitcher />
+            <span className="text-sm text-gray-600">Welcome, {teacher?.name}</span>
             <Button
-              onClick={logout}
+              onClick={handleLogout}
               variant="outline"
               className="flex items-center gap-2"
             >
@@ -305,267 +143,114 @@ const AdminDashboard = () => {
       </header>
 
       <main className="max-w-7xl mx-auto p-6 space-y-6">
-        {/* Subscription Status */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <CreditCardIcon className="w-5 h-5" />
-              School Subscription Status
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {subscription ? (
-              <div className="space-y-4">
-                <div className="flex justify-between items-center">
-                  <div>
-                    <Badge variant={subscription.status === 'active' ? 'default' : 'destructive'}>
-                      {subscription.status}
-                    </Badge>
-                    <p className="text-sm text-gray-600 mt-1">
-                      ${(subscription.amount / 100).toFixed(2)}/month ({subscription.plan_type})
-                    </p>
-                    <p className="text-xs text-gray-500">
-                      School: {subscription.school_name}
-                    </p>
-                    {subscription.current_period_end && (
-                      <p className="text-xs text-gray-500">
-                        Next billing: {new Date(subscription.current_period_end).toLocaleDateString()}
-                      </p>
-                    )}
-                  </div>
-                  <Button onClick={handleManageSubscription} variant="outline">
-                    Manage Subscription
-                  </Button>
-                </div>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                <div className="flex justify-between items-center">
-                  <div>
-                    <p className="text-gray-600">No subscription found for this school</p>
-                    <p className="text-xs text-gray-500">School: {teacher?.school}</p>
-                    {subscriptionError && (
-                      <p className="text-xs text-red-500 mt-1">{subscriptionError}</p>
-                    )}
-                  </div>
-                  <Button 
-                    onClick={() => navigate('/pricing')}
-                    className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
-                  >
-                    Subscribe Now
-                  </Button>
-                </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+        {!subscription && (
+          <Card className="border-yellow-200 bg-yellow-50">
+            <CardHeader>
+              <CardTitle className="text-yellow-800">Subscription Required</CardTitle>
+              <CardDescription className="text-yellow-700">
+                You need an active subscription to access all admin features and invite teachers.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button 
+                onClick={handleSubscribe}
+                className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
+              >
+                Subscribe Now
+              </Button>
+            </CardContent>
+          </Card>
+        )}
 
-        {/* Invite Teacher Section */}
-        <InviteTeacherForm 
-          school={teacher?.school || ''} 
-          subscriptionId={subscription?.id}
-          hasActiveSubscription={subscription?.status === 'active'}
-          onInviteSent={handleInviteSent}
-        />
-
-        {/* School Psychologist Management */}
-        <SchoolPsychologistForm school={teacher?.school || ''} />
-
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">School Teachers</CardTitle>
+              <CardTitle className="text-sm font-medium">Total Teachers</CardTitle>
               <UsersIcon className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{teachers.length}</div>
-              <p className="text-xs text-muted-foreground">
-                At {teacher?.school}
-              </p>
             </CardContent>
           </Card>
-
+          
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Pending Invitations</CardTitle>
-              <MailIcon className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium">Active Teachers</CardTitle>
+              <UsersIcon className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">
-                {invitations.filter(inv => inv.status === 'pending').length}
-              </div>
-              <p className="text-xs text-muted-foreground">
-                Awaiting response
-              </p>
+              <div className="text-2xl font-bold">{teachers.filter(t => t.role === 'teacher').length}</div>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Feedback</CardTitle>
+              <CardTitle className="text-sm font-medium">Subscription Status</CardTitle>
               <MessageSquareIcon className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{totalFeedback}</div>
-              <p className="text-xs text-muted-foreground">
-                From all teachers
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">School</CardTitle>
-              <SchoolIcon className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-lg font-bold">{teacher?.school}</div>
-              <p className="text-xs text-muted-foreground">
-                Admin access
-              </p>
+              <div className="text-2xl font-bold">
+                {subscription ? 'Active' : 'Inactive'}
+              </div>
             </CardContent>
           </Card>
         </div>
 
-        {/* Teachers and Invitations Tables */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Teachers Table */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <UsersIcon className="w-5 h-5" />
-                School Teachers
-              </CardTitle>
-              <CardDescription>Active teachers in your school</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {teachers.length > 0 ? (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Name</TableHead>
-                      <TableHead>Role</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {teachers.map((teacher) => (
-                      <TableRow key={teacher.id}>
-                        <TableCell>
-                          <div>
-                            <div className="font-medium">{teacher.name}</div>
-                            <div className="text-sm text-gray-500">{teacher.email}</div>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant={teacher.role === 'admin' ? 'default' : 'secondary'}>
-                            {teacher.role}
-                          </Badge>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              ) : (
-                <p className="text-center text-gray-500 py-8">No teachers found</p>
-              )}
-            </CardContent>
-          </Card>
+        <Tabs defaultValue="schedule" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-4">
+            <TabsTrigger value="schedule">Class Schedule</TabsTrigger>
+            <TabsTrigger value="teachers">Teachers</TabsTrigger>
+            <TabsTrigger value="psychologists">Psychologists</TabsTrigger>
+            <TabsTrigger value="invite">Invite Teacher</TabsTrigger>
+          </TabsList>
 
-          {/* Invitations Table */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <MailIcon className="w-5 h-5" />
-                Teacher Invitations
-              </CardTitle>
-              <CardDescription>Pending and accepted invitations</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {invitations.length > 0 ? (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Email</TableHead>
-                      <TableHead>Status</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {invitations.map((invitation) => (
-                      <TableRow key={invitation.id}>
-                        <TableCell>
-                          <div>
-                            <div className="font-medium">{invitation.email}</div>
-                            <div className="text-sm text-gray-500">
-                              {new Date(invitation.created_at).toLocaleDateString()}
-                            </div>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <Badge 
-                            variant={
-                              invitation.status === 'accepted' ? 'default' : 
-                              invitation.status === 'pending' ? 'secondary' : 
-                              'destructive'
-                            }
-                          >
-                            {invitation.status}
-                          </Badge>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              ) : (
-                <p className="text-center text-gray-500 py-8">No invitations sent yet</p>
-              )}
-            </CardContent>
-          </Card>
-        </div>
+          <TabsContent value="schedule" className="space-y-6">
+            <ClassScheduleForm teacher={teacher} />
+          </TabsContent>
 
-        {/* Feedback Summary */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <BarChart3Icon className="w-5 h-5" />
-              School Feedback Analytics
-            </CardTitle>
-            <CardDescription>Recent feedback from your school</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {feedbackSummary.length > 0 ? (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Teacher/Topic</TableHead>
-                    <TableHead>Subject</TableHead>
-                    <TableHead>Date</TableHead>
-                    <TableHead className="text-center">Avg Scores</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {feedbackSummary.map((item, index) => (
-                    <TableRow key={index}>
-                      <TableCell className="font-medium">{item.teacher}</TableCell>
-                      <TableCell>{item.subject}</TableCell>
-                      <TableCell>{new Date(item.class_date).toLocaleDateString()}</TableCell>
-                      <TableCell className="text-center">
-                        <div className="text-xs space-y-1">
-                          <div>Understanding: {item.avg_understanding?.toFixed(1) || 'N/A'}</div>
-                          <div>Interest: {item.avg_interest?.toFixed(1) || 'N/A'}</div>
-                          <div>Growth: {item.avg_growth?.toFixed(1) || 'N/A'}</div>
-                          <div className="text-gray-500">({item.total_responses} responses)</div>
-                        </div>
-                      </TableCell>
-                    </TableRow>
+          <TabsContent value="teachers" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Teacher Management</CardTitle>
+                <CardDescription>
+                  Manage teachers in your school
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {teachers.map((teacherItem) => (
+                    <div key={teacherItem.id} className="flex items-center justify-between p-4 border rounded-lg">
+                      <div>
+                        <h3 className="font-medium">{teacherItem.name}</h3>
+                        <p className="text-sm text-gray-600">{teacherItem.email}</p>
+                        <p className="text-xs text-gray-500 capitalize">{teacherItem.role}</p>
+                      </div>
+                      <div className="text-sm text-gray-500">
+                        Joined: {new Date(teacherItem.created_at).toLocaleDateString()}
+                      </div>
+                    </div>
                   ))}
-                </TableBody>
-              </Table>
-            ) : (
-              <p className="text-center text-gray-500 py-8">No feedback data available yet</p>
-            )}
-          </CardContent>
-        </Card>
+                  {teachers.length === 0 && (
+                    <p className="text-center text-gray-500 py-8">No teachers found</p>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="psychologists" className="space-y-6">
+            <SchoolPsychologistForm school={teacher?.school || ''} />
+          </TabsContent>
+
+          <TabsContent value="invite" className="space-y-6">
+            <InviteTeacherForm 
+              school={teacher?.school || ''}
+              subscriptionId={subscription?.id}
+              hasActiveSubscription={!!subscription}
+              onInviteSent={loadTeachers}
+            />
+          </TabsContent>
+        </Tabs>
       </main>
     </div>
   );
