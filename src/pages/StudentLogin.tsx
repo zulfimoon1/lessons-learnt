@@ -35,25 +35,40 @@ const StudentLogin = () => {
     e.preventDefault();
     setIsLoading(true);
 
-    const { error } = await studentLogin(
-      loginData.fullName,
-      loginData.school,
-      loginData.grade,
-      loginData.password
-    );
+    console.log('Starting student login process...');
 
-    if (error) {
+    try {
+      const { error } = await studentLogin(
+        loginData.fullName,
+        loginData.school,
+        loginData.grade,
+        loginData.password
+      );
+
+      console.log('Student login result:', { error });
+
+      if (error) {
+        console.error('Login failed:', error);
+        toast({
+          title: "Login failed",
+          description: error,
+          variant: "destructive",
+        });
+      } else {
+        console.log('Login successful, navigating to dashboard...');
+        toast({
+          title: "Welcome! 📚",
+          description: "You've successfully logged in.",
+        });
+        navigate("/student-dashboard");
+      }
+    } catch (err) {
+      console.error('Unexpected error during login:', err);
       toast({
         title: "Login failed",
-        description: error,
+        description: "An unexpected error occurred. Please try again.",
         variant: "destructive",
       });
-    } else {
-      toast({
-        title: "Welcome! 📚",
-        description: "You've successfully logged in.",
-      });
-      navigate("/student-dashboard");
     }
 
     setIsLoading(false);
@@ -73,25 +88,40 @@ const StudentLogin = () => {
       return;
     }
 
-    const { error } = await studentSignup(
-      signupData.fullName,
-      signupData.school,
-      signupData.grade,
-      signupData.password
-    );
+    console.log('Starting student signup process...');
 
-    if (error) {
+    try {
+      const { error } = await studentSignup(
+        signupData.fullName,
+        signupData.school,
+        signupData.grade,
+        signupData.password
+      );
+
+      console.log('Student signup result:', { error });
+
+      if (error) {
+        console.error('Signup failed:', error);
+        toast({
+          title: "Signup failed",
+          description: error,
+          variant: "destructive",
+        });
+      } else {
+        console.log('Signup successful, navigating to dashboard...');
+        toast({
+          title: "Account created! 🎉",
+          description: "Welcome to Lesson Lens!",
+        });
+        navigate("/student-dashboard");
+      }
+    } catch (err) {
+      console.error('Unexpected error during signup:', err);
       toast({
         title: "Signup failed",
-        description: error,
+        description: "An unexpected error occurred. Please try again.",
         variant: "destructive",
       });
-    } else {
-      toast({
-        title: "Account created! 🎉",
-        description: "Welcome to Lesson Lens!",
-      });
-      navigate("/student-dashboard");
     }
 
     setIsLoading(false);

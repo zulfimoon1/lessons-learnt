@@ -79,7 +79,9 @@ export const teacherLoginService = async (
 
 export const studentLoginService = async (fullName: string, school: string, grade: string, password: string) => {
   try {
-    const { data: students, error } = await supabase
+    console.log('Student login attempt:', { fullName, school, grade });
+    
+    const { data: student, error } = await supabase
       .from('students')
       .select('*')
       .eq('full_name', fullName)
@@ -87,29 +89,38 @@ export const studentLoginService = async (fullName: string, school: string, grad
       .eq('grade', grade)
       .single();
 
-    if (error || !students) {
+    console.log('Student query result:', { student, error });
+
+    if (error || !student) {
+      console.error('Student not found:', error);
       return { error: 'Student not found. Please check your details or sign up.' };
     }
 
-    if (students.password_hash !== password) {
+    if (student.password_hash !== password) {
+      console.error('Invalid password for student:', fullName);
       return { error: 'Invalid password' };
     }
 
     const studentData: Student = {
-      id: students.id,
-      full_name: students.full_name,
-      school: students.school,
-      grade: students.grade
+      id: student.id,
+      full_name: student.full_name,
+      school: student.school,
+      grade: student.grade,
+      email: student.email || undefined
     };
 
+    console.log('Student login successful:', studentData);
     return { student: studentData };
   } catch (error) {
+    console.error('Student login service error:', error);
     return { error: 'Login failed. Please try again.' };
   }
 };
 
 export const studentSignupService = async (fullName: string, school: string, grade: string, password: string) => {
   try {
+    console.log('Student signup attempt:', { fullName, school, grade });
+    
     const { data: newStudent, error } = await supabase
       .from('students')
       .insert({
@@ -121,7 +132,10 @@ export const studentSignupService = async (fullName: string, school: string, gra
       .select()
       .single();
 
+    console.log('Student signup result:', { newStudent, error });
+
     if (error) {
+      console.error('Student signup error:', error);
       if (error.code === '23505') {
         return { error: 'A student with this name already exists in this school and grade.' };
       }
@@ -132,11 +146,14 @@ export const studentSignupService = async (fullName: string, school: string, gra
       id: newStudent.id,
       full_name: newStudent.full_name,
       school: newStudent.school,
-      grade: newStudent.grade
+      grade: newStudent.grade,
+      email: newStudent.email || undefined
     };
 
+    console.log('Student signup successful:', studentData);
     return { student: studentData };
   } catch (error) {
+    console.error('Student signup service error:', error);
     return { error: 'Signup failed. Please try again.' };
   }
 };

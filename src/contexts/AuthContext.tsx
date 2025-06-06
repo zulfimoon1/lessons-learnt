@@ -24,30 +24,43 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     school?: string,
     role?: 'teacher' | 'admin'
   ) => {
+    console.log('AuthContext: Teacher login attempt');
     const result = await teacherLoginService(email, password, name, school, role);
+    console.log('AuthContext: Teacher login result:', result);
+    
     if (result.teacher) {
+      console.log('AuthContext: Saving teacher to storage');
       saveTeacher(result.teacher);
     }
     return result;
   };
 
   const studentLogin = async (fullName: string, school: string, grade: string, password: string) => {
+    console.log('AuthContext: Student login attempt');
     const result = await studentLoginService(fullName, school, grade, password);
+    console.log('AuthContext: Student login result:', result);
+    
     if (result.student) {
+      console.log('AuthContext: Saving student to storage');
       saveStudent(result.student);
     }
     return result;
   };
 
   const studentSignup = async (fullName: string, school: string, grade: string, password: string) => {
+    console.log('AuthContext: Student signup attempt');
     const result = await studentSignupService(fullName, school, grade, password);
+    console.log('AuthContext: Student signup result:', result);
+    
     if (result.student) {
+      console.log('AuthContext: Saving student to storage');
       saveStudent(result.student);
     }
     return result;
   };
 
   const logout = () => {
+    console.log('AuthContext: Logout called');
     clearAuth();
   };
 
