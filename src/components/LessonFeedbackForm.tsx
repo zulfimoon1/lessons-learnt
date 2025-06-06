@@ -10,15 +10,23 @@ import { ArrowLeft, Send, UserIcon, ShieldIcon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import StarRating from "@/components/StarRating";
 import EmotionalStateSelector from "@/components/EmotionalStateSelector";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
-interface LessonFeedbackFormProps {
-  onSubmit: (data: any) => void;
-  onCancel: () => void;
-  studentInfo?: { name: string; email: string } | null;
-  isAnonymous?: boolean;
+interface Student {
+  id: string;
+  full_name: string;
+  email: string;
+  school: string;
+  grade: string;
 }
 
-const LessonFeedbackForm = ({ onSubmit, onCancel, studentInfo, isAnonymous = false }: LessonFeedbackFormProps) => {
+interface LessonFeedbackFormProps {
+  student: Student;
+}
+
+const LessonFeedbackForm = ({ student }: LessonFeedbackFormProps) => {
+  const { toast } = useToast();
   const [formData, setFormData] = useState({
     subject: "",
     lessonTopic: "",
@@ -32,48 +40,72 @@ const LessonFeedbackForm = ({ onSubmit, onCancel, studentInfo, isAnonymous = fal
     additionalComments: ""
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit(formData);
+    
+    try {
+      const { error } = await supabase
+        .from('feedback')
+        .insert({
+          student_id: student.id,
+          student_name: student.full_name,
+          subject: formData.subject,
+          lesson_topic: formData.lessonTopic,
+          understanding_rating: formData.understanding,
+          interest_rating: formData.interest,
+          educational_growth_rating: formData.educationalGrowth,
+          emotional_state: formData.emotionalState,
+          what_went_well: formData.whatWorkedWell,
+          what_was_confusing: formData.whatWasConfusing,
+          suggestions: formData.howToImprove,
+          additional_comments: formData.additionalComments
+        });
+
+      if (error) throw error;
+
+      toast({
+        title: "Feedback submitted",
+        description: "Thank you for your feedback!",
+      });
+
+      // Reset form
+      setFormData({
+        subject: "",
+        lessonTopic: "",
+        understanding: 0,
+        interest: 0,
+        educationalGrowth: 0,
+        emotionalState: "",
+        whatWorkedWell: "",
+        whatWasConfusing: "",
+        howToImprove: "",
+        additionalComments: ""
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to submit feedback",
+        variant: "destructive",
+      });
+    }
   };
 
   const isFormValid = formData.subject && formData.lessonTopic && formData.understanding > 0;
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-4xl">
+    <div className="space-y-8">
       {/* Header */}
-      <div className="flex items-center gap-4 mb-8">
-        <Button 
-          variant="ghost" 
-          size="sm" 
-          onClick={onCancel}
-          className="text-gray-600 hover:text-gray-900"
-        >
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Back
-        </Button>
-        <div className="flex-1">
-          <div className="flex items-center gap-3 mb-2">
-            <h1 className="text-3xl font-bold text-gray-900">Share Your Learning Experience</h1>
-            {isAnonymous ? (
-              <Badge variant="outline" className="bg-orange-50 text-orange-700 border-orange-200">
-                <ShieldIcon className="w-3 h-3 mr-1" />
-                Anonymous Mode
-              </Badge>
-            ) : (
-              <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
-                <UserIcon className="w-3 h-3 mr-1" />
-                {studentInfo?.name}
-              </Badge>
-            )}
-          </div>
-          <p className="text-gray-600">
-            {isAnonymous 
-              ? "Your feedback is completely anonymous - your teacher won't know who submitted this."
-              : "Help your teacher understand how to make lessons even better"
-            }
-          </p>
+      <div className="text-center">
+        <div className="flex items-center gap-3 mb-2 justify-center">
+          <h2 className="text-2xl font-bold text-gray-900">Share Your Learning Experience</h2>
+          <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+            <UserIcon className="w-3 h-3 mr-1" />
+            {student?.full_name}
+          </Badge>
         </div>
+        <p className="text-gray-600">
+          Help your teacher understand how to make lessons even better
+        </p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-8">
@@ -229,7 +261,7 @@ const LessonFeedbackForm = ({ onSubmit, onCancel, studentInfo, isAnonymous = fal
             className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-8 py-4 text-lg font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Send className="w-5 h-5 mr-2" />
-            {isAnonymous ? "Submit Anonymous Feedback" : "Submit Feedback"}
+            Submit Feedback
           </Button>
         </div>
       </form>
