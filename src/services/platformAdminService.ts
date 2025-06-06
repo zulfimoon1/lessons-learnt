@@ -1,10 +1,15 @@
-
 import { supabase } from '@/integrations/supabase/client';
 
 export interface PlatformAdmin {
   id: string;
   name: string;
   email: string;
+}
+
+export interface StudentStatistics {
+  school: string;
+  total_students: number;
+  student_response_rate: number;
 }
 
 export const platformAdminLoginService = async (email: string, password: string) => {
@@ -76,5 +81,61 @@ export const createTestAdmin = async () => {
   } catch (error) {
     console.error('Error in createTestAdmin:', error);
     return { error: 'Failed to create test admin' };
+  }
+};
+
+// New function to get student statistics by school
+export const getStudentStatistics = async () => {
+  try {
+    // Get count of students per school
+    const { data: studentCountBySchool, error: studentError } = await supabase
+      .from('students')
+      .select('school, count')
+      .group('school');
+      
+    if (studentError) {
+      console.error('Error fetching student statistics:', studentError);
+      return { error: studentError.message };
+    }
+
+    // Get count of feedback responses per school
+    const { data: feedbackData, error: feedbackError } = await supabase
+      .from('feedback')
+      .select(`
+        class_schedule_id,
+        class_schedules!inner (
+          school
+        )
+      `);
+
+    if (feedbackError) {
+      console.error('Error fetching feedback data:', feedbackError);
+      return { error: feedbackError.message };
+    }
+
+    // Process the data to get response counts by school
+    const responseCounts: Record<string, number> = {};
+    feedbackData.forEach((feedback) => {
+      const school = (feedback.class_schedules as any).school;
+      responseCounts[school] = (responseCounts[school] || 0) + 1;
+    });
+
+    // Combine the data
+    const statistics: StudentStatistics[] = studentCountBySchool.map((item) => {
+      const totalStudents = Number(item.count);
+      const totalResponses = responseCounts[item.school] || 0;
+      const responseRate = totalStudents > 0 ? (totalResponses / totalStudents) * 100 : 0;
+      
+      return {
+        school: item.school,
+        total_students: totalStudents,
+        student_response_rate: parseFloat(responseRate.toFixed(1))
+      };
+    });
+
+    return { statistics };
+  } catch (error) {
+    console.error('Error in getStudentStatistics:', error);
+    return { error: 'Failed to fetch student statistics' };
   }
 };

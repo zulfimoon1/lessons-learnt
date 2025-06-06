@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -14,11 +15,14 @@ import {
   CreditCardIcon, 
   LogOutIcon,
   BarChart3Icon,
-  TrendingUpIcon
+  TrendingUpIcon,
+  UserIcon,
+  BookOpenIcon
 } from "lucide-react";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from "recharts";
 import MentalHealthAlerts from "@/components/MentalHealthAlerts";
+import { getStudentStatistics, StudentStatistics } from "@/services/platformAdminService";
 
 interface SchoolStats {
   school: string;
@@ -59,6 +63,7 @@ const PlatformAdminDashboard = () => {
   const [schoolStats, setSchoolStats] = useState<SchoolStats[]>([]);
   const [feedbackStats, setFeedbackStats] = useState<FeedbackStats[]>([]);
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
+  const [studentStats, setStudentStats] = useState<StudentStatistics[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -93,6 +98,19 @@ const PlatformAdminDashboard = () => {
       if (subscriptionError) throw subscriptionError;
       setSubscriptions(subscriptionData || []);
 
+      // Load student statistics
+      const { statistics, error: studentStatsError } = await getStudentStatistics();
+      
+      if (studentStatsError) {
+        toast({
+          title: "Error loading student data",
+          description: studentStatsError,
+          variant: "destructive",
+        });
+      } else {
+        setStudentStats(statistics || []);
+      }
+
     } catch (error) {
       toast({
         title: "Error loading data",
@@ -116,6 +134,23 @@ const PlatformAdminDashboard = () => {
     responses: stat.total_responses
   }));
 
+  const studentChartData = studentStats.map(stat => ({
+    name: stat.school,
+    students: stat.total_students,
+    responseRate: stat.student_response_rate
+  }));
+
+  const studentChartConfig = {
+    students: {
+      label: "Total Students",
+      color: "#0ea5e9",
+    },
+    responseRate: {
+      label: "Response Rate (%)",
+      color: "#10b981",
+    },
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -126,6 +161,12 @@ const PlatformAdminDashboard = () => {
       </div>
     );
   }
+
+  // Calculate totals for the summary cards
+  const totalStudents = studentStats.reduce((acc, curr) => acc + curr.total_students, 0);
+  const totalSchools = schoolStats.length;
+  const totalTeachers = schoolStats.reduce((acc, curr) => acc + curr.total_teachers, 0);
+  const totalResponses = feedbackStats.reduce((acc, curr) => acc + curr.total_responses, 0);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
@@ -153,14 +194,24 @@ const PlatformAdminDashboard = () => {
 
       <main className="max-w-7xl mx-auto p-6 space-y-6">
         {/* Overview Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Students</CardTitle>
+              <UserIcon className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{totalStudents}</div>
+            </CardContent>
+          </Card>
+          
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Total Schools</CardTitle>
               <SchoolIcon className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{schoolStats.length}</div>
+              <div className="text-2xl font-bold">{totalSchools}</div>
             </CardContent>
           </Card>
 
@@ -170,9 +221,7 @@ const PlatformAdminDashboard = () => {
               <UsersIcon className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">
-                {schoolStats.reduce((acc, curr) => acc + curr.total_teachers, 0)}
-              </div>
+              <div className="text-2xl font-bold">{totalTeachers}</div>
             </CardContent>
           </Card>
 
@@ -182,33 +231,79 @@ const PlatformAdminDashboard = () => {
               <MessageSquareIcon className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">
-                {feedbackStats.reduce((acc, curr) => acc + curr.total_responses, 0)}
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Active Subscriptions</CardTitle>
-              <CreditCardIcon className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {subscriptions.filter(s => s.status === 'active').length}
-              </div>
+              <div className="text-2xl font-bold">{totalResponses}</div>
             </CardContent>
           </Card>
         </div>
 
         {/* Tabs for different views */}
-        <Tabs defaultValue="mental-health" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="mental-health">Mental Health</TabsTrigger>
+        <Tabs defaultValue="students" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-5">
+            <TabsTrigger value="students">Students</TabsTrigger>
             <TabsTrigger value="analytics">Analytics</TabsTrigger>
             <TabsTrigger value="schools">Schools</TabsTrigger>
             <TabsTrigger value="payments">Payments</TabsTrigger>
+            <TabsTrigger value="mental-health">Mental Health</TabsTrigger>
           </TabsList>
+
+          <TabsContent value="students" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <UserIcon className="w-5 h-5" />
+                  Student Statistics by School
+                </CardTitle>
+                <CardDescription>Students enrolled and their response rates</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-8">
+                  <ChartContainer config={studentChartConfig} className="h-[400px]">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={studentChartData} barSize={40}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis 
+                          dataKey="name" 
+                          tick={{ fontSize: 11 }}
+                          angle={-45}
+                          textAnchor="end"
+                          height={100}
+                        />
+                        <YAxis yAxisId="left" orientation="left" stroke="#0ea5e9" />
+                        <YAxis yAxisId="right" orientation="right" stroke="#10b981" domain={[0, 100]} />
+                        <ChartTooltip content={<ChartTooltipContent />} />
+                        <Bar dataKey="students" fill="var(--color-students)" yAxisId="left" />
+                        <Bar dataKey="responseRate" fill="var(--color-responseRate)" yAxisId="right" />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </ChartContainer>
+                  
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>School</TableHead>
+                        <TableHead>Total Students</TableHead>
+                        <TableHead>Response Rate</TableHead>
+                        <TableHead>Teachers</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {studentStats.map((stat, index) => {
+                        const schoolTeacherCount = schoolStats.find(s => s.school === stat.school)?.total_teachers || 0;
+                        return (
+                          <TableRow key={index}>
+                            <TableCell className="font-medium">{stat.school}</TableCell>
+                            <TableCell>{stat.total_students}</TableCell>
+                            <TableCell>{stat.student_response_rate}%</TableCell>
+                            <TableCell>{schoolTeacherCount}</TableCell>
+                          </TableRow>
+                        );
+                      })}
+                    </TableBody>
+                  </Table>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
 
           <TabsContent value="mental-health" className="space-y-6">
             <MentalHealthAlerts />
