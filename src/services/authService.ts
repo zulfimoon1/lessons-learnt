@@ -119,26 +119,42 @@ export const studentSignupService = async (fullName: string, school: string, gra
 // Simple login service (just name and password)
 export const studentSimpleLoginService = async (fullName: string, password: string) => {
   try {
-    console.log('Student simple login attempt:', { fullName });
+    console.log('Student login attempt:', { fullName });
+    
+    // First, let's check if we have any students at all
+    const { data: allStudents, error: countError } = await supabase
+      .from('students')
+      .select('id, full_name')
+      .limit(5);
+    
+    console.log('Sample students in database:', allStudents);
     
     const { data: students, error } = await supabase
       .from('students')
       .select('*')
       .eq('full_name', fullName);
 
-    console.log('Student simple login query result:', { students, error });
+    console.log('Student login query result:', { students, error, searchName: fullName });
 
-    if (error || !students || students.length === 0) {
-      console.error('Student not found:', error);
-      return { error: 'Student not found. Please check your name or sign up.' };
+    if (error) {
+      console.error('Database error during student login:', error);
+      return { error: 'Login failed. Please try again.' };
+    }
+
+    if (!students || students.length === 0) {
+      console.error('Student not found:', fullName);
+      return { error: 'Student not found. Please check your name or sign up first.' };
     }
 
     // If multiple students with same name, we need more info
     if (students.length > 1) {
+      console.log('Multiple students found with name:', fullName, students);
       return { error: 'Multiple students found with this name. Please contact your teacher for help.' };
     }
 
     const student = students[0];
+    console.log('Found student:', student);
+    
     if (student.password_hash !== password) {
       console.error('Invalid password for student:', fullName);
       return { error: 'Invalid password' };
@@ -151,10 +167,10 @@ export const studentSimpleLoginService = async (fullName: string, password: stri
       grade: student.grade
     };
 
-    console.log('Student simple login successful:', studentData);
+    console.log('Student login successful:', studentData);
     return { student: studentData };
   } catch (error) {
-    console.error('Student simple login service error:', error);
+    console.error('Student login service error:', error);
     return { error: 'Login failed. Please try again.' };
   }
 };

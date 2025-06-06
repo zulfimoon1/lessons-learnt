@@ -33,11 +33,14 @@ const StudentLogin = () => {
     e.preventDefault();
     setIsLoading(true);
 
-    console.log('Starting student login process...');
+    console.log('Starting student login process with data:', { 
+      fullName: loginData.fullName, 
+      passwordLength: loginData.password.length 
+    });
 
     try {
       const { error } = await studentLogin(
-        loginData.fullName,
+        loginData.fullName.trim(),
         loginData.password
       );
 
@@ -88,9 +91,9 @@ const StudentLogin = () => {
 
     try {
       const { error } = await studentSignup(
-        signupData.fullName,
-        signupData.school,
-        signupData.grade,
+        signupData.fullName.trim(),
+        signupData.school.trim(),
+        signupData.grade.trim(),
         signupData.password
       );
 
@@ -152,7 +155,7 @@ const StudentLogin = () => {
                   <Input
                     id="loginFullName"
                     type="text"
-                    placeholder="Enter your full name"
+                    placeholder="Enter your full name exactly as registered"
                     value={loginData.fullName}
                     onChange={(e) => setLoginData(prev => ({ ...prev, fullName: e.target.value }))}
                     required
