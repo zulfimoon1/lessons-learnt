@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -21,6 +20,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import InviteTeacherForm from "@/components/InviteTeacherForm";
+import SchoolPsychologistForm from "@/components/SchoolPsychologistForm";
 
 interface Teacher {
   id: string;
@@ -282,7 +282,7 @@ const AdminDashboard = () => {
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
               <SchoolIcon className="w-8 h-8 text-purple-600" />
-              <h1 className="text-2xl font-bold text-gray-900">School Admin Dashboard</h1>
+              <h1 className="text-2xl font-bold text-gray-900">{teacher?.school} - Admin Dashboard</h1>
             </div>
             <Button onClick={refreshData} variant="outline" size="sm" className="flex items-center gap-2">
               <RefreshCwIcon className="w-4 h-4" />
@@ -364,8 +364,12 @@ const AdminDashboard = () => {
         <InviteTeacherForm 
           school={teacher?.school || ''} 
           subscriptionId={subscription?.id}
+          hasActiveSubscription={subscription?.status === 'active'}
           onInviteSent={handleInviteSent}
         />
+
+        {/* School Psychologist Management */}
+        <SchoolPsychologistForm school={teacher?.school || ''} />
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">

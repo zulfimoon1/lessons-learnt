@@ -6,21 +6,34 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { UserPlusIcon } from "lucide-react";
+import { UserPlusIcon, CreditCardIcon } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 interface InviteTeacherFormProps {
   school: string;
   subscriptionId?: string;
+  hasActiveSubscription: boolean;
   onInviteSent?: () => void;
 }
 
-const InviteTeacherForm = ({ school, subscriptionId, onInviteSent }: InviteTeacherFormProps) => {
+const InviteTeacherForm = ({ school, subscriptionId, hasActiveSubscription, onInviteSent }: InviteTeacherFormProps) => {
   const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!hasActiveSubscription) {
+      toast({
+        title: "Subscription Required",
+        description: "You need an active subscription to invite teachers.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (!email.trim()) {
       toast({
         title: "Error",
@@ -64,7 +77,6 @@ const InviteTeacherForm = ({ school, subscriptionId, onInviteSent }: InviteTeach
 
       if (emailError) {
         console.error('Error sending invitation email:', emailError);
-        // Don't throw here - invitation was created successfully
         toast({
           title: "Invitation Created",
           description: `Invitation created for ${email}, but email sending failed. Please share the invitation link manually.`,
@@ -91,6 +103,30 @@ const InviteTeacherForm = ({ school, subscriptionId, onInviteSent }: InviteTeach
       setIsLoading(false);
     }
   };
+
+  if (!hasActiveSubscription) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <CreditCardIcon className="w-5 h-5" />
+            Subscription Required
+          </CardTitle>
+          <CardDescription>
+            You need an active subscription to invite teachers to {school}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Button 
+            onClick={() => navigate('/pricing')}
+            className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
+          >
+            Subscribe Now to Invite Teachers
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card>
