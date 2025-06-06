@@ -91,18 +91,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     clearAuth();
   };
 
+  const contextValue: AuthContextType = {
+    teacher,
+    student,
+    isLoading,
+    teacherLogin,
+    studentLogin,
+    studentSignup,
+    logout
+  };
+
   return (
-    <AuthContext.Provider
-      value={{
-        teacher,
-        student,
-        isLoading,
-        teacherLogin,
-        studentLogin,
-        studentSignup,
-        logout
-      }}
-    >
+    <AuthContext.Provider value={contextValue}>
       {children}
     </AuthContext.Provider>
   );
