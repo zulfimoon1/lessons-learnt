@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { SchoolIcon, CheckCircleIcon, XCircleIcon } from "lucide-react";
+import { SchoolIcon, XCircleIcon, ArrowLeftIcon } from "lucide-react";
 import bcrypt from 'bcryptjs';
 
 const AcceptInvitation = () => {
@@ -20,7 +20,7 @@ const AcceptInvitation = () => {
   const [formData, setFormData] = useState({
     name: '',
     password: '',
-    confirmPassword: '',
+    confirmPassword: ''
   });
 
   const token = searchParams.get('token');
@@ -189,9 +189,20 @@ const AcceptInvitation = () => {
               This invitation link is invalid or has expired.
             </CardDescription>
           </CardHeader>
-          <CardContent>
-            <Button onClick={() => navigate('/teacher-login')} className="w-full">
+          <CardContent className="space-y-4">
+            <Button
+              onClick={() => navigate('/teacher-login')}
+              className="w-full"
+            >
               Go to Login
+            </Button>
+            <Button
+              onClick={() => navigate('/')}
+              variant="outline"
+              className="w-full flex items-center gap-2"
+            >
+              <ArrowLeftIcon className="w-4 h-4" />
+              Back to Home
             </Button>
           </CardContent>
         </Card>
@@ -202,64 +213,66 @@ const AcceptInvitation = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 py-12 px-4">
       <div className="max-w-md mx-auto">
+        <div className="mb-6">
+          <Button
+            onClick={() => navigate('/')}
+            variant="outline"
+            className="flex items-center gap-2"
+          >
+            <ArrowLeftIcon className="w-4 h-4" />
+            Back to Home
+          </Button>
+        </div>
+        
         <Card>
           <CardHeader className="text-center">
             <SchoolIcon className="w-16 h-16 text-purple-600 mx-auto mb-4" />
-            <CardTitle>Join {invitation.school}</CardTitle>
+            <CardTitle>Accept Teacher Invitation</CardTitle>
             <CardDescription>
-              You've been invited to join {invitation.school} as a teacher. 
-              Complete your registration below.
+              You've been invited to join <strong>{invitation.school}</strong> as a teacher.
+              Please create your account to get started.
             </CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="email">Email Address</Label>
                 <Input
                   id="email"
                   type="email"
                   value={invitation.email}
                   disabled
-                  className="bg-gray-100"
+                  className="bg-gray-50"
                 />
               </div>
               
               <div>
-                <Label htmlFor="school">School</Label>
-                <Input
-                  id="school"
-                  value={invitation.school}
-                  disabled
-                  className="bg-gray-100"
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="name">Full Name *</Label>
+                <Label htmlFor="name">Full Name</Label>
                 <Input
                   id="name"
+                  type="text"
                   value={formData.name}
                   onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
                   placeholder="Enter your full name"
                   required
                 />
               </div>
-
+              
               <div>
-                <Label htmlFor="password">Password *</Label>
+                <Label htmlFor="password">Password</Label>
                 <Input
                   id="password"
                   type="password"
                   value={formData.password}
                   onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
-                  placeholder="Choose a password (min 6 characters)"
+                  placeholder="Create a password (min 6 characters)"
                   required
                   minLength={6}
                 />
               </div>
-
+              
               <div>
-                <Label htmlFor="confirmPassword">Confirm Password *</Label>
+                <Label htmlFor="confirmPassword">Confirm Password</Label>
                 <Input
                   id="confirmPassword"
                   type="password"
@@ -269,24 +282,15 @@ const AcceptInvitation = () => {
                   required
                 />
               </div>
-
-              <Button type="submit" disabled={isAccepting} className="w-full">
-                {isAccepting ? 'Creating Account...' : 'Create Account'}
+              
+              <Button
+                type="submit"
+                disabled={isAccepting}
+                className="w-full"
+              >
+                {isAccepting ? 'Creating Account...' : 'Accept Invitation & Create Account'}
               </Button>
             </form>
-
-            <div className="mt-6 text-center">
-              <p className="text-sm text-gray-600">
-                Already have an account?{' '}
-                <Button
-                  variant="link"
-                  onClick={() => navigate('/teacher-login')}
-                  className="p-0 h-auto"
-                >
-                  Sign in here
-                </Button>
-              </p>
-            </div>
           </CardContent>
         </Card>
       </div>

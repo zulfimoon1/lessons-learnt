@@ -45,17 +45,25 @@ serve(async (req) => {
     }
     console.log("User authenticated:", userData.user.email);
 
-    // Get teacher info to identify school
+    // Get teacher info to identify school - if not found, this might be a new signup
     const { data: teacherData, error: teacherError } = await supabaseAdmin
       .from('teachers')
       .select('name, school, email')
       .eq('email', userData.user.email)
       .single();
 
+    let schoolName, customerName;
+    
     if (teacherError || !teacherData) {
-      throw new Error("Teacher not found");
+      console.log("Teacher not found in database, using user data");
+      // If teacher not found, use user email and create a default school name
+      schoolName = `School for ${userData.user.email}`;
+      customerName = userData.user.email.split('@')[0];
+    } else {
+      console.log("Teacher data:", teacherData);
+      schoolName = teacherData.school;
+      customerName = teacherData.name;
     }
-    console.log("Teacher data:", teacherData);
 
     const basePrice = 999; // $9.99 in cents
     const subtotal = teacherCount * basePrice;
@@ -78,9 +86,9 @@ serve(async (req) => {
       // Create new customer
       const customer = await stripe.customers.create({
         email: userData.user.email,
-        name: teacherData.name,
+        name: customerName,
         metadata: {
-          school: teacherData.school,
+          school: schoolName,
           teacherCount: teacherCount.toString()
         }
       });
@@ -95,7 +103,7 @@ serve(async (req) => {
           currency: "usd",
           product_data: {
             name: "LessonLens School Subscription",
-            description: `Monthly subscription for ${teacherCount} teacher${teacherCount > 1 ? 's' : ''} - ${teacherData.school}`,
+            description: `Monthly subscription for ${teacherCount} teacher${teacherCount > 1 ? 's' : ''} - ${schoolName}`,
           },
           unit_amount: finalAmount,
           recurring: {
@@ -117,9 +125,9 @@ serve(async (req) => {
         originalAmount: subtotal.toString(),
         discountCode: discountCode || '',
         discountPercent: discountPercent.toString(),
-        schoolName: teacherData.school,
+        schoolName: schoolName,
         adminEmail: userData.user.email,
-        adminName: teacherData.name
+        adminName: customerName
       },
     };
 
@@ -134,7 +142,7 @@ serve(async (req) => {
 
     // Store subscription intent in our database for tracking
     const subscriptionData = {
-      school_name: teacherData.school,
+      school_name: schoolName,
       stripe_customer_id: customerId,
       amount: finalAmount,
       plan_type: 'monthly',

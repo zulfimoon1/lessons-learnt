@@ -29,11 +29,12 @@ const PricingPage = () => {
   const discountAmount = subtotal * (discount / 100);
   const total = subtotal - discountAmount;
 
-  useEffect(() => {
-    if (!teacher || teacher.role !== 'admin') {
-      navigate('/teacher-login');
-    }
-  }, [teacher, navigate]);
+  // Remove the teacher role check - allow anyone to access pricing
+  // useEffect(() => {
+  //   if (!teacher || teacher.role !== 'admin') {
+  //     navigate('/teacher-login');
+  //   }
+  // }, [teacher, navigate]);
 
   const validateDiscountCode = async () => {
     if (!discountCode.trim()) {
@@ -102,27 +103,25 @@ const PricingPage = () => {
     }
   };
 
-  if (!teacher) {
-    return null;
-  }
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
       <header className="bg-white/80 backdrop-blur-sm border-b border-blue-100 p-4">
         <div className="max-w-4xl mx-auto flex justify-between items-center">
           <div className="flex items-center gap-4">
             <Button
-              onClick={() => navigate('/admin-dashboard')}
+              onClick={() => navigate(teacher ? '/admin-dashboard' : '/')}
               variant="outline"
               className="flex items-center gap-2"
             >
               <ArrowLeftIcon className="w-4 h-4" />
-              {t('pricing.backToDashboard')}
+              {teacher ? t('pricing.backToDashboard') : 'Back to Home'}
             </Button>
             <h1 className="text-2xl font-bold text-gray-900">{t('pricing.title')}</h1>
           </div>
           <div className="flex items-center gap-4">
-            <span className="text-sm text-gray-600">{t('pricing.welcome')}, {teacher?.name}</span>
+            {teacher && (
+              <span className="text-sm text-gray-600">{t('pricing.welcome')}, {teacher?.name}</span>
+            )}
             <LanguageSwitcher />
           </div>
         </div>
@@ -136,9 +135,11 @@ const PricingPage = () => {
           <p className="text-lg text-gray-600 mb-2">
             {t('pricing.subtitle')}
           </p>
-          <p className="text-sm text-gray-500">
-            {t('pricing.school')}: <Badge variant="outline" className="ml-1">{teacher.school}</Badge>
-          </p>
+          {teacher && (
+            <p className="text-sm text-gray-500">
+              {t('pricing.school')}: <Badge variant="outline" className="ml-1">{teacher.school}</Badge>
+            </p>
+          )}
         </div>
 
         <div className="grid md:grid-cols-2 gap-8">
