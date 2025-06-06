@@ -88,25 +88,23 @@ export const createTestAdmin = async () => {
 // Function to get student statistics by school
 export const getStudentStatistics = async () => {
   try {
-    // Get count of students per school
-    const { data: schoolData, error: schoolError } = await supabase
+    // Get all students first
+    const { data: allStudents, error: studentError } = await supabase
       .from('students')
-      .select('school')
-      .count()
-      .group('school');
+      .select('school');
       
-    if (schoolError) {
-      console.error('Error fetching student statistics:', schoolError);
-      return { error: schoolError.message };
+    if (studentError) {
+      console.error('Error fetching students:', studentError);
+      return { error: studentError.message };
     }
 
-    console.log('Student count data:', schoolData);
+    console.log('All students data:', allStudents);
     
-    // Transform the data to match our expected format
-    const studentCountBySchool = schoolData.map(item => ({
-      school: item.school,
-      count: parseInt(item.count)
-    }));
+    // Count students by school manually
+    const studentCounts: Record<string, number> = {};
+    allStudents?.forEach((student) => {
+      studentCounts[student.school] = (studentCounts[student.school] || 0) + 1;
+    });
 
     // Get count of feedback responses per school
     const { data: feedbackData, error: feedbackError } = await supabase
@@ -125,19 +123,18 @@ export const getStudentStatistics = async () => {
 
     // Process the data to get response counts by school
     const responseCounts: Record<string, number> = {};
-    feedbackData.forEach((feedback) => {
+    feedbackData?.forEach((feedback) => {
       const school = (feedback.class_schedules as any).school;
       responseCounts[school] = (responseCounts[school] || 0) + 1;
     });
 
     // Combine the data
-    const statistics: StudentStatistics[] = studentCountBySchool.map((item) => {
-      const totalStudents = item.count;
-      const totalResponses = responseCounts[item.school] || 0;
+    const statistics: StudentStatistics[] = Object.entries(studentCounts).map(([school, totalStudents]) => {
+      const totalResponses = responseCounts[school] || 0;
       const responseRate = totalStudents > 0 ? (totalResponses / totalStudents) * 100 : 0;
       
       return {
-        school: item.school,
+        school: school,
         total_students: totalStudents,
         student_response_rate: parseFloat(responseRate.toFixed(1))
       };
