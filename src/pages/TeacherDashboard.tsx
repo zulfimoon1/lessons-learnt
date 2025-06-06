@@ -13,7 +13,9 @@ import {
   UsersIcon,
   BookOpenIcon,
   CalendarPlusIcon,
-  PlusIcon
+  PlusIcon,
+  CreditCardIcon,
+  RefreshCwIcon
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -21,6 +23,7 @@ import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import ClassScheduleForm from "@/components/ClassScheduleForm";
+import { useNavigate } from "react-router-dom";
 
 interface ClassSchedule {
   id: string;
@@ -54,13 +57,27 @@ interface FeedbackData {
   } | null;
 }
 
+interface Subscription {
+  id: string;
+  school_name: string;
+  status: string;
+  amount: number;
+  current_period_end: string;
+  plan_type: string;
+  stripe_subscription_id: string;
+  stripe_customer_id: string;
+}
+
 const TeacherDashboard = () => {
   const { teacher, logout } = useAuth();
   const { t } = useLanguage();
+  const navigate = useNavigate();
   const [schedules, setSchedules] = useState<ClassSchedule[]>([]);
   const [feedbackData, setFeedbackData] = useState<FeedbackData[]>([]);
   const [selectedFeedback, setSelectedFeedback] = useState<FeedbackData | null>(null);
   const [showScheduleForm, setShowScheduleForm] = useState(false);
+  const [subscription, setSubscription] = useState<Subscription | null>(null);
+  const [subscriptionError, setSubscriptionError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
 
@@ -102,6 +119,10 @@ const TeacherDashboard = () => {
       // Filter out feedback items where class_schedules is null
       const validFeedback = (feedbackData || []).filter(feedback => feedback.class_schedules !== null);
       setFeedbackData(validFeedback);
+
+      // Load subscription for this school
+      await loadSubscription();
+
     } catch (error) {
       console.error('Error in fetchData:', error);
       toast({
@@ -112,6 +133,101 @@ const TeacherDashboard = () => {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const loadSubscription = async () => {
+    try {
+      console.log('=== LOADING SUBSCRIPTION ===');
+      console.log('Looking for subscription for school:', teacher?.school);
+      
+      setSubscriptionError(null);
+      
+      // Get all subscriptions to see what's available
+      const { data: allSubs, error: allSubsError } = await supabase
+        .from('subscriptions')
+        .select('*');
+
+      if (allSubsError) {
+        console.error('Error fetching all subscriptions:', allSubsError);
+        setSubscriptionError(`Error fetching subscriptions: ${allSubsError.message}`);
+        return;
+      }
+
+      console.log('All subscriptions in database:', allSubs);
+
+      if (!allSubs || allSubs.length === 0) {
+        console.log('No subscriptions found in database');
+        setSubscriptionError('No subscriptions found in the database');
+        setSubscription(null);
+        return;
+      }
+
+      // Try exact match first
+      let foundSub = allSubs.find(sub => sub.school_name === teacher?.school);
+      
+      if (!foundSub) {
+        // Try case-insensitive match
+        foundSub = allSubs.find(sub => 
+          sub.school_name?.toLowerCase() === teacher?.school?.toLowerCase()
+        );
+      }
+
+      if (!foundSub) {
+        // Try partial match
+        foundSub = allSubs.find(sub => 
+          sub.school_name?.includes(teacher?.school || '') || 
+          (teacher?.school || '').includes(sub.school_name || '')
+        );
+      }
+
+      if (foundSub) {
+        console.log('Found subscription:', foundSub);
+        setSubscription(foundSub);
+        setSubscriptionError(null);
+      } else {
+        console.log('No matching subscription found for school:', teacher?.school);
+        console.log('Available school names:', allSubs.map(s => s.school_name));
+        setSubscriptionError(`No subscription found for school "${teacher?.school}". Available schools: ${allSubs.map(s => s.school_name).join(', ')}`);
+        setSubscription(null);
+      }
+
+    } catch (error) {
+      console.error('Error loading subscription:', error);
+      setSubscriptionError(`Error loading subscription: ${error.message}`);
+      setSubscription(null);
+    }
+  };
+
+  const handleManageSubscription = async () => {
+    try {
+      console.log('Opening customer portal...');
+      const { data, error } = await supabase.functions.invoke('customer-portal');
+      
+      if (error) {
+        console.error('Customer portal error:', error);
+        throw error;
+      }
+      
+      if (data?.url) {
+        console.log('Redirecting to portal:', data.url);
+        window.open(data.url, '_blank');
+      } else {
+        throw new Error('No portal URL returned');
+      }
+    } catch (error) {
+      console.error("Error opening customer portal:", error);
+      toast({
+        title: "Error",
+        description: `Failed to open subscription management: ${error.message}`,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const refreshData = () => {
+    console.log('Refreshing teacher dashboard data...');
+    setIsLoading(true);
+    fetchData();
   };
 
   const createRecurringClasses = async (baseSchedule: any) => {
@@ -269,6 +385,10 @@ const TeacherDashboard = () => {
               </div>
             </div>
             <div className="flex gap-2 items-center">
+              <Button onClick={refreshData} variant="outline" size="sm" className="flex items-center gap-2">
+                <RefreshCwIcon className="w-4 h-4" />
+                Refresh
+              </Button>
               <LanguageSwitcher />
               <Button 
                 onClick={() => setShowScheduleForm(true)}
@@ -298,6 +418,85 @@ const TeacherDashboard = () => {
           </div>
         ) : (
           <>
+            {/* Subscription Status */}
+            <Card className="mb-8 bg-white/70 backdrop-blur-sm border-gray-200">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <CreditCardIcon className="w-5 h-5" />
+                  School Subscription Status
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {subscription ? (
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <Badge variant={subscription.status === 'active' ? 'default' : 'destructive'}>
+                          {subscription.status}
+                        </Badge>
+                        <p className="text-sm text-gray-600 mt-1">
+                          ${(subscription.amount / 100).toFixed(2)}/month ({subscription.plan_type})
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          School: {subscription.school_name}
+                        </p>
+                        {subscription.current_period_end && (
+                          <p className="text-xs text-gray-500">
+                            Next billing: {new Date(subscription.current_period_end).toLocaleDateString()}
+                          </p>
+                        )}
+                      </div>
+                      <Button onClick={handleManageSubscription} variant="outline">
+                        Manage Subscription
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <p className="text-gray-600">No subscription found for this school</p>
+                        <p className="text-xs text-gray-500">School: {teacher?.school}</p>
+                        {subscriptionError && (
+                          <p className="text-xs text-red-500 mt-1">{subscriptionError}</p>
+                        )}
+                      </div>
+                      <Button 
+                        onClick={() => navigate('/pricing')}
+                        className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
+                      >
+                        Subscribe Now
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Debug Information - Only show if there's an error or no subscription */}
+            {(!subscription || subscriptionError) && (
+              <Card className="mb-8 border-yellow-200 bg-yellow-50">
+                <CardHeader>
+                  <CardTitle className="text-sm text-yellow-800">Debug Information</CardTitle>
+                </CardHeader>
+                <CardContent className="text-xs space-y-2">
+                  <p><strong>Current School:</strong> {teacher?.school}</p>
+                  <p><strong>Subscription Found:</strong> {subscription ? 'Yes' : 'No'}</p>
+                  {subscriptionError && (
+                    <p><strong>Error:</strong> {subscriptionError}</p>
+                  )}
+                  <Button 
+                    onClick={loadSubscription} 
+                    size="sm" 
+                    variant="outline"
+                    className="mt-2"
+                  >
+                    Reload Subscription
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
+
             {/* Stats Grid */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
               <Card className="bg-white/70 backdrop-blur-sm border-blue-100">
