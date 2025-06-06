@@ -58,9 +58,11 @@ const Index = () => {
             </Link>
           </div>
           
-          <p className="text-lg text-muted-foreground mt-8 font-medium italic">
-            When students lead, teachers succeed
-          </p>
+          <div className="max-w-2xl mx-auto mt-12">
+            <p className="text-2xl text-foreground font-bold italic leading-relaxed">
+              {t('tagline.studentLead')}
+            </p>
+          </div>
         </div>
       </section>
 

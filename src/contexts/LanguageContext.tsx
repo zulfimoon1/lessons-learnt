@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
 interface LanguageContextProps {
@@ -194,6 +193,9 @@ const translations: Record<string, Record<string, string>> = {
     'common.back': 'Back',
     'common.next': 'Next',
     'common.previous': 'Previous',
+    
+    // Tagline
+    'tagline.studentLead': 'When students lead, teachers succeed',
   },
   lt: {
     // Navigation
@@ -379,6 +381,9 @@ const translations: Record<string, Record<string, string>> = {
     'common.back': 'Atgal',
     'common.next': 'Toliau',
     'common.previous': 'Ankstesnis',
+    
+    // Tagline
+    'tagline.studentLead': 'Kai mokiniai veda, mokytojai sėkmingai dirba',
   }
 };
 
