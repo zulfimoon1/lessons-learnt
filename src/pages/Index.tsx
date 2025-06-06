@@ -39,10 +39,10 @@ const Index = () => {
             <Link to="/student-login">
               <Button 
                 size="lg" 
-                className="w-full h-16 text-lg"
+                className="w-full min-h-16 py-4 px-6 text-lg flex items-center justify-center"
               >
-                <UsersIcon className="w-6 h-6 mr-2" />
-                {t('auth.studentLogin')}
+                <UsersIcon className="w-6 h-6 mr-2 flex-shrink-0" />
+                <span className="text-center leading-tight">{t('auth.studentLogin')}</span>
               </Button>
             </Link>
             
@@ -50,10 +50,10 @@ const Index = () => {
               <Button 
                 size="lg" 
                 variant="outline" 
-                className="w-full border-2 border-border hover:bg-accent h-16 text-lg"
+                className="w-full border-2 border-border hover:bg-accent min-h-16 py-4 px-6 text-lg flex items-center justify-center"
               >
-                <BookOpenIcon className="w-6 h-6 mr-2" />
-                {t('auth.teacherLogin')}
+                <BookOpenIcon className="w-6 h-6 mr-2 flex-shrink-0" />
+                <span className="text-center leading-tight">{t('auth.teacherLogin')}</span>
               </Button>
             </Link>
           </div>
