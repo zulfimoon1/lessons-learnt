@@ -26,7 +26,7 @@ const StudentLogin = () => {
 
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
-  const { studentSimpleLogin, studentSignup } = useAuth();
+  const { studentLogin, studentSignup } = useAuth();
   const navigate = useNavigate();
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -36,7 +36,7 @@ const StudentLogin = () => {
     console.log('Starting student login process...');
 
     try {
-      const { error } = await studentSimpleLogin(
+      const { error } = await studentLogin(
         loginData.fullName,
         loginData.password
       );
