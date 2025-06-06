@@ -6,7 +6,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/contexts/AuthContext";
-import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeftIcon, CheckIcon, UsersIcon, CreditCardIcon } from "lucide-react";
@@ -15,7 +14,6 @@ import LanguageSwitcher from "@/components/LanguageSwitcher";
 
 const PricingPage = () => {
   const { teacher } = useAuth();
-  const { t } = useLanguage();
   const { toast } = useToast();
   const navigate = useNavigate();
   const [teacherCount, setTeacherCount] = useState(1);
@@ -44,13 +42,13 @@ const PricingPage = () => {
     setIsValidatingDiscount(true);
     try {
       // Mock discount validation - in real app this would call your backend
-      const validCodes = {
+      const validCodes: Record<string, number> = {
         'EDUCATION10': 10,
         'NEWSCHOOL15': 15,
         'BULK20': 20
       };
       
-      const discountValue = validCodes[discountCode.toUpperCase() as keyof typeof validCodes];
+      const discountValue = validCodes[discountCode.toUpperCase()];
       if (discountValue) {
         setDiscount(discountValue);
         toast({

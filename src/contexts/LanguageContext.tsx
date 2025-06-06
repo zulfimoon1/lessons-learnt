@@ -1,220 +1,210 @@
-import React, { createContext, useContext, useState, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 
-interface LanguageContextType {
+interface LanguageContextProps {
   language: string;
+  setLanguage: (language: string) => void;
   t: (key: string) => string;
-  setLanguage: (lang: string) => void;
 }
 
-const LanguageContext = createContext<LanguageContextType>({
-  language: 'en',
-  t: (key: string) => key,
-  setLanguage: () => {}
-});
+const LanguageContext = createContext<LanguageContextProps | undefined>(undefined);
 
-export const useLanguage = () => useContext(LanguageContext);
-
-interface LanguageProviderProps {
-  children: React.ReactNode;
-}
-
-const translations = {
+const translations: Record<string, Record<string, string>> = {
   en: {
-    'app.title': 'Lesson Lens',
-    'app.subtitle': 'Empowering Education Through Feedback',
-    'navigation.studentLogin': 'Student Login',
-    'navigation.teacherLogin': 'Teacher Login',
-    'login.student.title': 'Student Login',
-    'login.student.subtitle': 'Enter your details to access the dashboard',
-    'login.student.fullName': 'Full Name',
-    'login.student.school': 'School',
-    'login.student.grade': 'Grade',
-    'login.student.password': 'Password',
-    'login.student.login': 'Login',
-    'login.student.signup': 'Signup',
-    'login.student.signingIn': 'Signing In...',
-    'login.student.signingUp': 'Signing Up...',
-    'login.teacher.title': 'Teacher Login',
-    'login.teacher.subtitle': 'Sign in to access your teacher dashboard',
-    'login.teacher.login': 'Login',
-    'login.teacher.signup': 'Signup',
-    'login.teacher.email': 'Email',
-    'login.teacher.password': 'Password',
-    'login.teacher.fullName': 'Full Name',
-    'login.teacher.school': 'School',
-    'login.teacher.confirmPassword': 'Confirm Password',
-    'login.teacher.createAccount': 'Create Account',
-    'login.teacher.loggingIn': 'Logging In...',
-    'login.teacher.creatingAccount': 'Creating Account...',
-    'login.teacher.role': 'Role',
-    'login.teacher.roleTeacher': 'Teacher',
-    'login.teacher.roleAdmin': 'School Admin',
-    'login.teacher.adminHint': 'School Admins can manage teachers and view all feedback',
+    // Navigation
+    'nav.home': 'Home',
+    'nav.about': 'About',
+    'nav.contact': 'Contact',
     
-    // Admin dashboard translations
-    'admin.title': 'School Admin Dashboard',
-    'admin.welcome': 'Welcome',
-    'admin.logout': 'Logout',
-    'admin.loading': 'Loading dashboard...',
-    'admin.stats.teachers': 'Total Teachers',
-    'admin.stats.feedback': 'Total Feedback',
-    'admin.subscription': 'Subscription',
-    'admin.subscribe': 'Subscribe Now',
-    'admin.teachers.title': 'Teachers at',
-    'admin.teachers.description': 'Manage teachers at your school',
-    'admin.teachers.empty': 'No teachers found',
-    'admin.feedback.title': 'Feedback Summary',
-    'admin.feedback.description': 'Overview of student feedback per teacher and class',
-    'admin.feedback.empty': 'No feedback data available yet',
-    'admin.feedback.teacher': 'Teacher',
-    'admin.feedback.subject': 'Subject',
-    'admin.feedback.date': 'Date',
-    'admin.feedback.scores': 'Scores',
-    'admin.feedback.understanding': 'Understanding',
-    'admin.feedback.interest': 'Interest',
-    'admin.feedback.growth': 'Growth',
-    'admin.feedback.count': '{count} responses',
-    'admin.error.title': 'Error loading data',
-    'admin.error.description': 'Failed to load dashboard data',
-    'admin.payment.error.title': 'Payment Error',
-    'admin.payment.error.description': 'Failed to create subscription. Please try again.',
+    // Authentication
+    'auth.login': 'Login',
+    'auth.logout': 'Logout',
+    'auth.studentLogin': 'Student Login',
+    'auth.teacherLogin': 'Teacher Login',
+    'auth.email': 'Email',
+    'auth.password': 'Password',
+    'auth.confirmPassword': 'Confirm Password',
+    'auth.name': 'Name',
+    'auth.school': 'School',
+    'auth.signUp': 'Sign Up',
+    'auth.alreadyHaveAccount': 'Already have an account?',
+    'auth.dontHaveAccount': "Don't have an account?",
+    'auth.forgotPassword': 'Forgot Password?',
+    
+    // Welcome messages
+    'welcome.title': 'Transform Your School with Real-Time Feedback',
+    'welcome.subtitle': 'Empower teachers with student insights and help administrators monitor school-wide performance',
+    
+    // Features
+    'features.studentFeedback.title': 'Student Feedback',
+    'features.studentFeedback.description': 'Students can easily provide feedback on their learning experience',
+    'features.teacherInsights.title': 'Teacher Insights',
+    'features.teacherInsights.description': 'Teachers get real-time insights to improve their teaching methods',
+    'features.dataAnalytics.title': 'Data Analytics',
+    'features.dataAnalytics.description': 'Comprehensive analytics to track student progress and well-being',
+    
+    // Dashboard
+    'dashboard.overview': 'Overview',
+    'dashboard.classes': 'Classes',
+    'dashboard.feedback': 'Feedback',
+    'dashboard.analytics': 'Analytics',
+    'dashboard.settings': 'Settings',
+    'dashboard.schoolOverview': 'School Overview',
+    'dashboard.teacherOverview': 'Teacher Overview',
+    'dashboard.totalTeachers': 'Total Teachers',
+    'dashboard.totalClasses': 'Total Classes',
+    'dashboard.avgSatisfaction': 'Avg Satisfaction',
+    'dashboard.feedbackReceived': 'Feedback Received',
+    'dashboard.recentFeedback': 'Recent Feedback',
+    'dashboard.subscribeNow': 'Subscribe Now',
+    'dashboard.manageSubscription': 'Manage Subscription',
+    
+    // Class management
+    'class.create': 'Create Class',
+    'class.edit': 'Edit Class',
+    'class.delete': 'Delete Class',
+    'class.name': 'Class Name',
+    'class.subject': 'Subject',
+    'class.schedule': 'Schedule',
+    'class.students': 'Students',
+    
+    // Feedback
+    'feedback.understanding': 'Understanding',
+    'feedback.interest': 'Interest',
+    'feedback.growth': 'Growth',
+    'feedback.submit': 'Submit Feedback',
+    'feedback.average': 'Average',
+    'feedback.excellent': 'Excellent',
+    'feedback.good': 'Good',
+    'feedback.fair': 'Fair',
+    'feedback.poor': 'Poor',
+    
+    // Common
+    'common.save': 'Save',
+    'common.cancel': 'Cancel',
+    'common.edit': 'Edit',
+    'common.delete': 'Delete',
+    'common.loading': 'Loading...',
+    'common.error': 'Error',
+    'common.success': 'Success',
+    'common.close': 'Close',
+    'common.back': 'Back',
+    'common.next': 'Next',
+    'common.previous': 'Previous',
   },
   es: {
-    'app.title': 'Lesson Lens',
-    'app.subtitle': 'Potenciando la Educación a Través de la Retroalimentación',
-    'navigation.studentLogin': 'Acceso Estudiantes',
-    'navigation.teacherLogin': 'Acceso Profesores',
-     'login.student.title': 'Acceso Estudiantes',
-    'login.student.subtitle': 'Introduce tus datos para acceder al panel',
-    'login.student.fullName': 'Nombre Completo',
-    'login.student.school': 'Escuela',
-    'login.student.grade': 'Grado',
-    'login.student.password': 'Contraseña',
-    'login.student.login': 'Acceder',
-    'login.student.signup': 'Registrarse',
-    'login.student.signingIn': 'Iniciando Sesión...',
-    'login.student.signingUp': 'Registrando...',
-    'login.teacher.title': 'Acceso de Profesor',
-    'login.teacher.subtitle': 'Inicia sesión para acceder a tu panel de profesor',
-    'login.teacher.login': 'Acceder',
-    'login.teacher.signup': 'Registrarse',
-    'login.teacher.email': 'Correo Electrónico',
-    'login.teacher.password': 'Contraseña',
-    'login.teacher.fullName': 'Nombre Completo',
-    'login.teacher.school': 'Escuela',
-    'login.teacher.confirmPassword': 'Confirmar Contraseña',
-    'login.teacher.createAccount': 'Crear Cuenta',
-    'login.teacher.loggingIn': 'Iniciando Sesión...',
-    'login.teacher.creatingAccount': 'Creando Cuenta...',
-    'login.teacher.role': 'Rol',
-    'login.teacher.roleTeacher': 'Profesor',
-    'login.teacher.roleAdmin': 'Administrador Escolar',
-    'login.teacher.adminHint': 'Los administradores escolares pueden gestionar profesores y ver todos los comentarios',
+    // Navigation
+    'nav.home': 'Inicio',
+    'nav.about': 'Acerca de',
+    'nav.contact': 'Contacto',
     
-    // Admin dashboard translations
-    'admin.title': 'Panel de Administración Escolar',
-    'admin.welcome': 'Bienvenido',
-    'admin.logout': 'Cerrar sesión',
-    'admin.loading': 'Cargando panel...',
-    'admin.stats.teachers': 'Total de Profesores',
-    'admin.stats.feedback': 'Total de Comentarios',
-    'admin.subscription': 'Suscripción',
-    'admin.subscribe': 'Suscribirse Ahora',
-    'admin.teachers.title': 'Profesores en',
-    'admin.teachers.description': 'Gestionar profesores en tu escuela',
-    'admin.teachers.empty': 'No se encontraron profesores',
-    'admin.feedback.title': 'Resumen de Comentarios',
-    'admin.feedback.description': 'Visión general de los comentarios de estudiantes por profesor y clase',
-    'admin.feedback.empty': 'Aún no hay datos de comentarios disponibles',
-    'admin.feedback.teacher': 'Profesor',
-    'admin.feedback.subject': 'Asignatura',
-    'admin.feedback.date': 'Fecha',
-    'admin.feedback.scores': 'Puntuaciones',
-    'admin.feedback.understanding': 'Comprensión',
-    'admin.feedback.interest': 'Interés',
-    'admin.feedback.growth': 'Crecimiento',
-    'admin.feedback.count': '{count} respuestas',
-    'admin.error.title': 'Error al cargar datos',
-    'admin.error.description': 'No se pudieron cargar los datos del panel',
-    'admin.payment.error.title': 'Error de Pago',
-    'admin.payment.error.description': 'No se pudo crear la suscripción. Por favor, inténtalo de nuevo.',
-  },
-  fr: {
-    'app.title': 'Lesson Lens',
-    'app.subtitle': 'Améliorer l\'éducation grâce au feedback',
-    'navigation.studentLogin': 'Connexion Étudiant',
-    'navigation.teacherLogin': 'Connexion Enseignant',
-    'login.student.title': 'Connexion Étudiant',
-    'login.student.subtitle': 'Entrez vos informations pour accéder au tableau de bord',
-    'login.student.fullName': 'Nom Complet',
-    'login.student.school': 'École',
-    'login.student.grade': 'Niveau',
-    'login.student.password': 'Mot de Passe',
-    'login.student.login': 'Se Connecter',
-    'login.student.signup': 'S\'inscrire',
-    'login.student.signingIn': 'Connexion...',
-    'login.student.signingUp': 'Inscription...',
-    'login.teacher.title': 'Connexion Enseignant',
-    'login.teacher.subtitle': 'Connectez-vous pour accéder à votre tableau de bord enseignant',
-    'login.teacher.login': 'Se Connecter',
-    'login.teacher.signup': 'S\'inscrire',
-    'login.teacher.email': 'Adresse Email',
-    'login.teacher.password': 'Mot de Passe',
-    'login.teacher.fullName': 'Nom Complet',
-    'login.teacher.school': 'École',
-    'login.teacher.confirmPassword': 'Confirmer le Mot de Passe',
-    'login.teacher.createAccount': 'Créer un Compte',
-    'login.teacher.loggingIn': 'Connexion...',
-    'login.teacher.creatingAccount': 'Création du Compte...',
-    'login.teacher.role': 'Rôle',
-    'login.teacher.roleTeacher': 'Enseignant',
-    'login.teacher.roleAdmin': 'Administrateur scolaire',
-    'login.teacher.adminHint': 'Les administrateurs scolaires peuvent gérer les enseignants et consulter tous les commentaires',
+    // Authentication
+    'auth.login': 'Iniciar Sesión',
+    'auth.logout': 'Cerrar Sesión',
+    'auth.studentLogin': 'Acceso Estudiantes',
+    'auth.teacherLogin': 'Acceso Profesores',
+    'auth.email': 'Correo Electrónico',
+    'auth.password': 'Contraseña',
+    'auth.confirmPassword': 'Confirmar Contraseña',
+    'auth.name': 'Nombre',
+    'auth.school': 'Escuela',
+    'auth.signUp': 'Registrarse',
+    'auth.alreadyHaveAccount': '¿Ya tienes una cuenta?',
+    'auth.dontHaveAccount': '¿No tienes una cuenta?',
+    'auth.forgotPassword': '¿Olvidaste tu contraseña?',
     
-    // Admin dashboard translations
-    'admin.title': 'Tableau de Bord d\'Administration Scolaire',
-    'admin.welcome': 'Bienvenue',
-    'admin.logout': 'Déconnexion',
-    'admin.loading': 'Chargement du tableau de bord...',
-    'admin.stats.teachers': 'Total des Enseignants',
-    'admin.stats.feedback': 'Total des Commentaires',
-    'admin.subscription': 'Abonnement',
-    'admin.subscribe': 'S\'abonner Maintenant',
-    'admin.teachers.title': 'Enseignants à',
-    'admin.teachers.description': 'Gérer les enseignants de votre école',
-    'admin.teachers.empty': 'Aucun enseignant trouvé',
-    'admin.feedback.title': 'Résumé des Commentaires',
-    'admin.feedback.description': 'Aperçu des commentaires des élèves par enseignant et par classe',
-    'admin.feedback.empty': 'Aucune donnée de commentaire disponible pour le moment',
-    'admin.feedback.teacher': 'Enseignant',
-    'admin.feedback.subject': 'Matière',
-    'admin.feedback.date': 'Date',
-    'admin.feedback.scores': 'Scores',
-    'admin.feedback.understanding': 'Compréhension',
-    'admin.feedback.interest': 'Intérêt',
-    'admin.feedback.growth': 'Progrès',
-    'admin.feedback.count': '{count} réponses',
-    'admin.error.title': 'Erreur de chargement des données',
-    'admin.error.description': 'Échec du chargement des données du tableau de bord',
-    'admin.payment.error.title': 'Erreur de Paiement',
-    'admin.payment.error.description': 'Échec de la création de l\'abonnement. Veuillez réessayer.',
+    // Welcome messages
+    'welcome.title': 'Transforma tu Escuela con Retroalimentación en Tiempo Real',
+    'welcome.subtitle': 'Empodera a los profesores con insights de estudiantes y ayuda a los administradores a monitorear el rendimiento escolar',
+    
+    // Features
+    'features.studentFeedback.title': 'Retroalimentación Estudiantil',
+    'features.studentFeedback.description': 'Los estudiantes pueden proporcionar fácilmente retroalimentación sobre su experiencia de aprendizaje',
+    'features.teacherInsights.title': 'Insights para Profesores',
+    'features.teacherInsights.description': 'Los profesores obtienen insights en tiempo real para mejorar sus métodos de enseñanza',
+    'features.dataAnalytics.title': 'Análisis de Datos',
+    'features.dataAnalytics.description': 'Análisis comprehensivo para rastrear el progreso y bienestar de los estudiantes',
+    
+    // Dashboard
+    'dashboard.overview': 'Resumen',
+    'dashboard.classes': 'Clases',
+    'dashboard.feedback': 'Retroalimentación',
+    'dashboard.analytics': 'Análisis',
+    'dashboard.settings': 'Configuración',
+    'dashboard.schoolOverview': 'Resumen de la Escuela',
+    'dashboard.teacherOverview': 'Resumen del Profesor',
+    'dashboard.totalTeachers': 'Total de Profesores',
+    'dashboard.totalClasses': 'Total de Clases',
+    'dashboard.avgSatisfaction': 'Satisfacción Promedio',
+    'dashboard.feedbackReceived': 'Retroalimentación Recibida',
+    'dashboard.recentFeedback': 'Retroalimentación Reciente',
+    'dashboard.subscribeNow': 'Suscribirse Ahora',
+    'dashboard.manageSubscription': 'Gestionar Suscripción',
+    
+    // Class management
+    'class.create': 'Crear Clase',
+    'class.edit': 'Editar Clase',
+    'class.delete': 'Eliminar Clase',
+    'class.name': 'Nombre de la Clase',
+    'class.subject': 'Materia',
+    'class.schedule': 'Horario',
+    'class.students': 'Estudiantes',
+    
+    // Feedback
+    'feedback.understanding': 'Comprensión',
+    'feedback.interest': 'Interés',
+    'feedback.growth': 'Crecimiento',
+    'feedback.submit': 'Enviar Retroalimentación',
+    'feedback.average': 'Promedio',
+    'feedback.excellent': 'Excelente',
+    'feedback.good': 'Bueno',
+    'feedback.fair': 'Regular',
+    'feedback.poor': 'Deficiente',
+    
+    // Common
+    'common.save': 'Guardar',
+    'common.cancel': 'Cancelar',
+    'common.edit': 'Editar',
+    'common.delete': 'Eliminar',
+    'common.loading': 'Cargando...',
+    'common.error': 'Error',
+    'common.success': 'Éxito',
+    'common.close': 'Cerrar',
+    'common.back': 'Atrás',
+    'common.next': 'Siguiente',
+    'common.previous': 'Anterior',
   }
 };
 
-export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) => {
-  const [language, setLanguage] = useState<string>(localStorage.getItem('language') || 'en');
+const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [language, setLanguage] = useState(localStorage.getItem('language') || 'en');
 
-  React.useEffect(() => {
+  useEffect(() => {
     localStorage.setItem('language', language);
   }, [language]);
 
-  const t = useCallback((key: string) => {
-    return translations[language as keyof typeof translations][key] || key;
-  }, [language]);
+  const t = (key: string): string => {
+    return translations[language][key] || key;
+  };
+
+  const value: LanguageContextProps = {
+    language,
+    setLanguage,
+    t,
+  };
 
   return (
-    <LanguageContext.Provider value={{ language, t, setLanguage }}>
+    <LanguageContext.Provider value={value}>
       {children}
     </LanguageContext.Provider>
   );
 };
+
+const useLanguage = () => {
+  const context = useContext(LanguageContext);
+  if (context === undefined) {
+    throw new Error('useLanguage must be used within a LanguageProvider');
+  }
+  return context;
+};
+
+export { LanguageProvider, useLanguage };

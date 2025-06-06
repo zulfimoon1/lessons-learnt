@@ -17,7 +17,7 @@ const Index = () => {
           <div className="flex justify-between items-center">
             <div className="flex items-center gap-2">
               <GraduationCapIcon className="w-8 h-8 text-blue-600" />
-              <h1 className="text-2xl font-bold text-gray-900">EduFeedback</h1>
+              <h1 className="text-2xl font-bold text-gray-900">LessonLens</h1>
             </div>
             <LanguageSwitcher />
           </div>
@@ -28,10 +28,10 @@ const Index = () => {
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 text-center">
         <div className="max-w-3xl mx-auto">
           <h2 className="text-5xl font-bold text-gray-900 mb-6">
-            {t('welcome.title')}
+            Transform Your School with Real-Time Feedback
           </h2>
           <p className="text-xl text-gray-600 mb-12">
-            {t('welcome.subtitle')}
+            Empower teachers with student insights and help administrators monitor school-wide performance
           </p>
           
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-md mx-auto">
@@ -41,7 +41,7 @@ const Index = () => {
                 className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 h-16 text-lg"
               >
                 <UsersIcon className="w-6 h-6 mr-2" />
-                {t('auth.studentLogin')}
+                Student Login
               </Button>
             </Link>
             
@@ -52,7 +52,7 @@ const Index = () => {
                 className="w-full border-2 border-indigo-200 hover:bg-indigo-50 h-16 text-lg"
               >
                 <BookOpenIcon className="w-6 h-6 mr-2" />
-                {t('auth.teacherLogin')}
+                Teacher Login
               </Button>
             </Link>
           </div>
@@ -67,9 +67,9 @@ const Index = () => {
               <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
                 <UsersIcon className="w-6 h-6 text-blue-600" />
               </div>
-              <CardTitle className="text-xl">{t('features.studentFeedback.title')}</CardTitle>
+              <CardTitle className="text-xl">Student Feedback</CardTitle>
               <CardDescription>
-                {t('features.studentFeedback.description')}
+                Students can easily provide feedback on their learning experience
               </CardDescription>
             </CardHeader>
           </Card>
@@ -79,9 +79,9 @@ const Index = () => {
               <div className="w-12 h-12 bg-indigo-100 rounded-lg flex items-center justify-center mb-4">
                 <BookOpenIcon className="w-6 h-6 text-indigo-600" />
               </div>
-              <CardTitle className="text-xl">{t('features.teacherInsights.title')}</CardTitle>
+              <CardTitle className="text-xl">Teacher Insights</CardTitle>
               <CardDescription>
-                {t('features.teacherInsights.description')}
+                Teachers get real-time insights to improve their teaching methods
               </CardDescription>
             </CardHeader>
           </Card>
@@ -91,9 +91,9 @@ const Index = () => {
               <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mb-4">
                 <TrendingUpIcon className="w-6 h-6 text-purple-600" />
               </div>
-              <CardTitle className="text-xl">{t('features.dataAnalytics.title')}</CardTitle>
+              <CardTitle className="text-xl">Data Analytics</CardTitle>
               <CardDescription>
-                {t('features.dataAnalytics.description')}
+                Comprehensive analytics to track student progress and well-being
               </CardDescription>
             </CardHeader>
           </Card>
