@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -111,25 +112,102 @@ const TeacherDashboard = () => {
     }
   };
 
+  const createRecurringClasses = async (baseSchedule: any) => {
+    const { 
+      is_recurring, 
+      recurrence_pattern, 
+      recurrence_end_date, 
+      number_of_occurrences,
+      ...classData 
+    } = baseSchedule;
+    
+    // If not recurring, just return the single class data
+    if (!is_recurring) {
+      return [classData];
+    }
+    
+    const classes = [];
+    const startDate = new Date(classData.class_date);
+    let endDate = recurrence_end_date ? new Date(recurrence_end_date) : null;
+    let occurrences = number_of_occurrences || 4;
+    
+    // Calculate days to add based on pattern
+    let daysToAdd = 7; // default weekly
+    switch (recurrence_pattern) {
+      case 'daily': 
+        daysToAdd = 1;
+        break;
+      case 'weekly': 
+        daysToAdd = 7;
+        break;
+      case 'bi-weekly': 
+        daysToAdd = 14;
+        break;
+      case 'monthly': 
+        daysToAdd = 30;
+        break;
+    }
+    
+    // Create the base class
+    classes.push({...classData});
+    
+    // Create recurring classes
+    let currentDate = new Date(startDate);
+    let count = 1;
+    
+    while (count < occurrences) {
+      // Add days based on pattern
+      currentDate = new Date(currentDate.getTime() + (daysToAdd * 24 * 60 * 60 * 1000));
+      
+      // Stop if we've reached the end date
+      if (endDate && currentDate > endDate) {
+        break;
+      }
+      
+      // Format date to YYYY-MM-DD
+      const formattedDate = currentDate.toISOString().split('T')[0];
+      
+      // Create a new class with the updated date
+      classes.push({
+        ...classData,
+        class_date: formattedDate
+      });
+      
+      count++;
+    }
+    
+    return classes;
+  };
+
   const handleScheduleSubmit = async (scheduleData: any) => {
     try {
+      const classesToCreate = await createRecurringClasses(scheduleData);
+      
+      // Insert all classes
       const { error } = await supabase
         .from('class_schedules')
-        .insert({
-          teacher_id: teacher?.id,
-          ...scheduleData
-        });
+        .insert(
+          classesToCreate.map(classData => ({
+            teacher_id: teacher?.id,
+            ...classData
+          }))
+        );
 
       if (error) throw error;
 
       toast({
-        title: "Class scheduled! 📅",
-        description: "Your class has been added to the schedule.",
+        title: classesToCreate.length > 1 ? 
+          `${classesToCreate.length} Classes Scheduled! 📅` : 
+          "Class Scheduled! 📅",
+        description: classesToCreate.length > 1 ? 
+          `Your recurring classes have been added to the schedule.` :
+          "Your class has been added to the schedule.",
       });
 
       setShowScheduleForm(false);
       fetchData(); // Refresh data
     } catch (error) {
+      console.error('Error scheduling classes:', error);
       toast({
         title: "Scheduling failed",
         description: "Failed to add class schedule. Please try again.",

@@ -6,7 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, Save, BookOpenIcon, CalendarIcon, ClockIcon } from "lucide-react";
+import { ArrowLeft, Save, BookOpenIcon, CalendarIcon, ClockIcon, RefreshCcwIcon } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
 
 interface ClassScheduleFormProps {
   onSubmit: (data: any) => void;
@@ -22,7 +23,11 @@ const ClassScheduleForm = ({ onSubmit, onCancel }: ClassScheduleFormProps) => {
     duration_minutes: 60,
     school: "",
     grade: "",
-    description: ""
+    description: "",
+    is_recurring: false,
+    recurrence_pattern: "weekly",
+    recurrence_end_date: "",
+    number_of_occurrences: 4
   });
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -32,6 +37,9 @@ const ClassScheduleForm = ({ onSubmit, onCancel }: ClassScheduleFormProps) => {
 
   const isFormValid = formData.subject && formData.lesson_topic && formData.class_date && 
                      formData.class_time && formData.school && formData.grade;
+
+  const isRecurrenceEndDateValid = !formData.is_recurring || 
+                                  (formData.recurrence_end_date && new Date(formData.recurrence_end_date) > new Date(formData.class_date));
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
@@ -183,16 +191,96 @@ const ClassScheduleForm = ({ onSubmit, onCancel }: ClassScheduleFormProps) => {
             </CardContent>
           </Card>
 
+          {/* Recurring Options */}
+          <Card className="bg-white/80 backdrop-blur-sm border-purple-100">
+            <CardHeader>
+              <CardTitle className="text-xl text-gray-900 flex items-center gap-2">
+                <RefreshCcwIcon className="w-5 h-5" />
+                Recurring Options
+              </CardTitle>
+              <CardDescription>Set this class to repeat on a schedule</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center space-x-2">
+                <Switch 
+                  id="is_recurring" 
+                  checked={formData.is_recurring}
+                  onCheckedChange={(checked) => setFormData(prev => ({ ...prev, is_recurring: checked }))} 
+                />
+                <Label htmlFor="is_recurring" className="font-medium">Make this class recurring</Label>
+              </div>
+
+              {formData.is_recurring && (
+                <div className="space-y-4 pt-2">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="recurrence_pattern" className="text-gray-700 font-medium">Repeats</Label>
+                      <Select 
+                        onValueChange={(value) => setFormData(prev => ({ ...prev, recurrence_pattern: value }))}
+                        defaultValue={formData.recurrence_pattern}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select pattern" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="daily">Daily</SelectItem>
+                          <SelectItem value="weekly">Weekly</SelectItem>
+                          <SelectItem value="bi-weekly">Every Two Weeks</SelectItem>
+                          <SelectItem value="monthly">Monthly</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label htmlFor="number_of_occurrences" className="text-gray-700 font-medium">Number of occurrences</Label>
+                      <Select 
+                        onValueChange={(value) => setFormData(prev => ({ ...prev, number_of_occurrences: parseInt(value) }))}
+                        defaultValue={formData.number_of_occurrences.toString()}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="4" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="2">2 Classes</SelectItem>
+                          <SelectItem value="4">4 Classes</SelectItem>
+                          <SelectItem value="8">8 Classes</SelectItem>
+                          <SelectItem value="12">12 Classes (Term/Semester)</SelectItem>
+                          <SelectItem value="36">36 Classes (Full Year)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="recurrence_end_date" className="text-gray-700 font-medium">End Date</Label>
+                    <Input
+                      id="recurrence_end_date"
+                      type="date"
+                      value={formData.recurrence_end_date}
+                      onChange={(e) => setFormData(prev => ({ ...prev, recurrence_end_date: e.target.value }))}
+                      className={`border-gray-200 ${!isRecurrenceEndDateValid && "border-red-500"}`}
+                    />
+                    {!isRecurrenceEndDateValid && (
+                      <p className="text-red-500 text-sm mt-1">End date must be after the start date</p>
+                    )}
+                    <p className="text-sm text-gray-500 mt-1">
+                      Optional: If not specified, classes will be created based on the number of occurrences
+                    </p>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
           {/* Submit Button */}
           <div className="flex justify-center pt-6">
             <Button 
               type="submit" 
-              disabled={!isFormValid}
+              disabled={!isFormValid || !isRecurrenceEndDateValid}
               size="lg"
               className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white px-8 py-4 text-lg font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Save className="w-5 h-5 mr-2" />
-              Schedule Class
+              {formData.is_recurring ? "Schedule Recurring Classes" : "Schedule Class"}
             </Button>
           </div>
         </form>
