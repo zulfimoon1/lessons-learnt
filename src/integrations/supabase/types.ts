@@ -173,6 +173,50 @@ export type Database = {
         }
         Relationships: []
       }
+      weekly_summaries: {
+        Row: {
+          academic_concerns: string | null
+          emotional_concerns: string | null
+          grade: string
+          id: string
+          school: string
+          student_id: string | null
+          student_name: string
+          submitted_at: string
+          week_start_date: string
+        }
+        Insert: {
+          academic_concerns?: string | null
+          emotional_concerns?: string | null
+          grade: string
+          id?: string
+          school: string
+          student_id?: string | null
+          student_name: string
+          submitted_at?: string
+          week_start_date: string
+        }
+        Update: {
+          academic_concerns?: string | null
+          emotional_concerns?: string | null
+          grade?: string
+          id?: string
+          school?: string
+          student_id?: string | null
+          student_name?: string
+          submitted_at?: string
+          week_start_date?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "weekly_summaries_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never

@@ -42,9 +42,9 @@ const WeeklySummary = ({ onClose }: WeeklySummaryProps) => {
         .from('weekly_summaries')
         .insert({
           student_id: student?.id,
-          student_name: student?.full_name,
-          school: student?.school,
-          grade: student?.grade,
+          student_name: student?.full_name || '',
+          school: student?.school || '',
+          grade: student?.grade || '',
           emotional_concerns: emotionalConcerns.trim() || null,
           academic_concerns: academicConcerns.trim() || null,
           week_start_date: getStartOfWeek(new Date())
