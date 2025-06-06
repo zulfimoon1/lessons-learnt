@@ -7,11 +7,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BookOpenIcon, LogInIcon, UserIcon, School, GraduationCap } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
-import { useAuthStorage } from "@/hooks/useAuthStorage";
 import { useNavigate } from "react-router-dom";
 
 const StudentLogin = () => {
-  const { student } = useAuthStorage();
+  const { student } = useAuth();
   const navigate = useNavigate();
 
   // Redirect if already logged in
