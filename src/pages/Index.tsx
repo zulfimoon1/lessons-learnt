@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { GraduationCapIcon, UsersIcon, BookOpenIcon, HeartIcon, BarChart3Icon, ShieldCheckIcon } from "lucide-react";
@@ -91,9 +92,9 @@ const Index = () => {
               <div className="w-12 h-12 bg-primary/20 rounded-lg flex items-center justify-center mb-4">
                 <HeartIcon className="w-6 h-6 text-primary" />
               </div>
-              <CardTitle className="text-xl">Mental Health</CardTitle>
+              <CardTitle className="text-xl">{t('features.mentalHealth.title')}</CardTitle>
               <CardDescription>
-                Early detection and support for student well-being and mental health concerns
+                {t('features.mentalHealth.description')}
               </CardDescription>
             </CardHeader>
           </Card>
@@ -105,44 +106,43 @@ const Index = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-4xl font-bold text-foreground mb-6">
-              Why Schools Choose Lessons Learnt
+              {t('platform.whySchools')}
             </h2>
             <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-              Our platform empowers schools with actionable insights to create better learning environments, 
-              support student well-being, and drive educational excellence through data-driven decisions.
+              {t('platform.whySchoolsSubtitle')}
             </p>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center mb-16">
             <div>
               <h3 className="text-3xl font-bold text-foreground mb-6">
-                Comprehensive Student Insights
+                {t('platform.studentInsights')}
               </h3>
               <div className="space-y-6">
                 <div className="flex items-start gap-4">
                   <BarChart3Icon className="w-6 h-6 text-primary mt-1" />
                   <div>
-                    <h4 className="font-semibold text-lg mb-2">Real-Time Analytics</h4>
+                    <h4 className="font-semibold text-lg mb-2">{t('platform.realTimeAnalytics')}</h4>
                     <p className="text-muted-foreground">
-                      Track student engagement, learning progress, and classroom dynamics with instant feedback collection and analysis.
+                      {t('platform.realTimeAnalyticsDesc')}
                     </p>
                   </div>
                 </div>
                 <div className="flex items-start gap-4">
                   <HeartIcon className="w-6 h-6 text-primary mt-1" />
                   <div>
-                    <h4 className="font-semibold text-lg mb-2">Mental Health Monitoring</h4>
+                    <h4 className="font-semibold text-lg mb-2">{t('platform.mentalHealthMonitoring')}</h4>
                     <p className="text-muted-foreground">
-                      Early detection of student well-being concerns through intelligent content analysis and immediate alerts to school counselors.
+                      {t('platform.mentalHealthMonitoringDesc')}
                     </p>
                   </div>
                 </div>
                 <div className="flex items-start gap-4">
                   <ShieldCheckIcon className="w-6 h-6 text-primary mt-1" />
                   <div>
-                    <h4 className="font-semibold text-lg mb-2">Privacy & Security</h4>
+                    <h4 className="font-semibold text-lg mb-2">{t('platform.privacySecurity')}</h4>
                     <p className="text-muted-foreground">
-                      Enterprise-grade security ensures student data protection while maintaining compliance with educational privacy standards.
+                      {t('platform.privacySecurityDesc')}
                     </p>
                   </div>
                 </div>
@@ -150,10 +150,10 @@ const Index = () => {
             </div>
             <div className="bg-gradient-to-br from-primary/10 to-primary/5 rounded-2xl p-8">
               <div className="text-center">
-                <div className="text-6xl font-bold text-primary mb-4">85%</div>
-                <p className="text-xl font-semibold mb-2">Improvement in Student Engagement</p>
+                <div className="text-6xl font-bold text-primary mb-4">{t('platform.improvementPercent')}</div>
+                <p className="text-xl font-semibold mb-2">{t('platform.improvementTitle')}</p>
                 <p className="text-muted-foreground">
-                  Schools using our platform report significant increases in student participation and learning outcomes.
+                  {t('platform.improvementDesc')}
                 </p>
               </div>
             </div>
@@ -161,10 +161,10 @@ const Index = () => {
 
           <div className="text-center">
             <h3 className="text-2xl font-bold text-foreground mb-4">
-              Ready to Transform Your School?
+              {t('platform.readyToTransform')}
             </h3>
             <p className="text-lg text-muted-foreground mb-8">
-              Join hundreds of schools already using Lessons Learnt to create better learning environments.
+              {t('platform.readyToTransformDesc')}
             </p>
             <CalendarBooking />
           </div>

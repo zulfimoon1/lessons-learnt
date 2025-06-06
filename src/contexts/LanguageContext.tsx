@@ -58,8 +58,26 @@ const translations: Record<string, Record<string, string>> = {
     'features.studentFeedback.description': 'Students can easily provide feedback on their learning experience',
     'features.teacherInsights.title': 'Teacher Insights',
     'features.teacherInsights.description': 'Teachers get real-time insights to improve their teaching methods',
+    'features.mentalHealth.title': 'Mental Health',
+    'features.mentalHealth.description': 'Early detection and support for student well-being and mental health concerns',
     'features.dataAnalytics.title': 'Data Analytics',
     'features.dataAnalytics.description': 'Comprehensive analytics to track student progress and well-being',
+    
+    // Platform overview
+    'platform.whySchools': 'Why Schools Choose Lessons Learnt',
+    'platform.whySchoolsSubtitle': 'Our platform empowers schools with actionable insights to create better learning environments, support student well-being, and drive educational excellence through data-driven decisions.',
+    'platform.studentInsights': 'Comprehensive Student Insights',
+    'platform.realTimeAnalytics': 'Real-Time Analytics',
+    'platform.realTimeAnalyticsDesc': 'Track student engagement, learning progress, and classroom dynamics with instant feedback collection and analysis.',
+    'platform.mentalHealthMonitoring': 'Mental Health Monitoring',
+    'platform.mentalHealthMonitoringDesc': 'Early detection of student well-being concerns through intelligent content analysis and immediate alerts to school counselors.',
+    'platform.privacySecurity': 'Privacy & Security',
+    'platform.privacySecurityDesc': 'Enterprise-grade security ensures student data protection while maintaining compliance with educational privacy standards.',
+    'platform.improvementPercent': '85%',
+    'platform.improvementTitle': 'Improvement in Student Engagement',
+    'platform.improvementDesc': 'Schools using our platform report significant increases in student participation and learning outcomes.',
+    'platform.readyToTransform': 'Ready to Transform Your School?',
+    'platform.readyToTransformDesc': 'Join hundreds of schools already using Lessons Learnt to create better learning environments.',
     
     // Dashboard
     'dashboard.overview': 'Overview',
@@ -225,8 +243,26 @@ const translations: Record<string, Record<string, string>> = {
     'features.studentFeedback.description': 'Mokiniai gali lengvai pateikti grįžtamąjį ryšį apie savo mokymosi patirtį',
     'features.teacherInsights.title': 'Mokytojų įžvalgos',
     'features.teacherInsights.description': 'Mokytojai gauna realaus laiko įžvalgas, kad pagerintų savo mokymo metodus',
+    'features.mentalHealth.title': 'Psichikos sveikata',
+    'features.mentalHealth.description': 'Ankstyvos mokinių gerovės ir psichikos sveikatos problemų aptikimas ir pagalba',
     'features.dataAnalytics.title': 'Duomenų analitika',
     'features.dataAnalytics.description': 'Išsami analitika mokinių pažangai ir gerovei sekti',
+    
+    // Platform overview
+    'platform.whySchools': 'Kodėl mokyklos renkasi Lessons Learnt',
+    'platform.whySchoolsSubtitle': 'Mūsų platforma įgalina mokyklas veiksmingomis įžvalgomis kurti geresnę mokymosi aplinką, palaikyti mokinių gerovę ir skatinti švietimo puikumą per duomenimis grįstus sprendimus.',
+    'platform.studentInsights': 'Išsamios mokinių įžvalgos',
+    'platform.realTimeAnalytics': 'Realaus laiko analitika',
+    'platform.realTimeAnalyticsDesc': 'Sekite mokinių įsitraukimą, mokymosi pažangą ir klasės dinamiką su momentaliu grįžtamojo ryšio rinkiniu ir analize.',
+    'platform.mentalHealthMonitoring': 'Psichikos sveikatos stebėjimas',
+    'platform.mentalHealthMonitoringDesc': 'Ankstyvos mokinių gerovės problemų aptikimas per protingą turinio analizę ir momentalius įspėjimus mokyklos konsultantams.',
+    'platform.privacySecurity': 'Privatumas ir saugumas',
+    'platform.privacySecurityDesc': 'Įmonių lygio saugumas užtikrina mokinių duomenų apsaugą ir atitikimą švietimo privatumo standartams.',
+    'platform.improvementPercent': '85%',
+    'platform.improvementTitle': 'Pagerėjimas mokinių įsitraukime',
+    'platform.improvementDesc': 'Mokyklos, naudojančios mūsų platformą, praneša apie žymų mokinių dalyvavimo ir mokymosi rezultatų padidėjimą.',
+    'platform.readyToTransform': 'Pasiruošę transformuoti savo mokyklą?',
+    'platform.readyToTransformDesc': 'Prisijunkite prie šimtų mokyklų, jau naudojančių Lessons Learnt geresnei mokymosi aplinkai kurti.',
     
     // Dashboard
     'dashboard.overview': 'Apžvalga',
