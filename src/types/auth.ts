@@ -18,7 +18,13 @@ export interface AuthContextType {
   teacher: Teacher | null;
   student: Student | null;
   isLoading: boolean;
-  teacherLogin: (email: string, password: string) => Promise<{ error?: string; teacher?: Teacher }>;
+  teacherLogin: (
+    email: string, 
+    password: string, 
+    name?: string, 
+    school?: string,
+    role?: 'teacher' | 'admin'
+  ) => Promise<{ error?: string; teacher?: Teacher }>;
   studentLogin: (fullName: string, school: string, grade: string, password: string) => Promise<{ error?: string; student?: Student }>;
   studentSignup: (fullName: string, school: string, grade: string, password: string) => Promise<{ error?: string; student?: Student }>;
   logout: () => void;

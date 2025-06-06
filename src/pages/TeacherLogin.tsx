@@ -5,12 +5,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { GraduationCapIcon, LogInIcon, School, UserIcon, Mail } from "lucide-react";
+import { GraduationCapIcon, LogInIcon, School, UserIcon, Mail, ShieldIcon } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { useNavigate } from "react-router-dom";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const TeacherLogin = () => {
   const { t } = useLanguage();
@@ -23,6 +24,7 @@ const TeacherLogin = () => {
     name: "",
     email: "",
     school: "",
+    role: "teacher" as "teacher" | "admin",
     password: "",
     confirmPassword: ""
   });
@@ -71,8 +73,9 @@ const TeacherLogin = () => {
     }
 
     // Use the same teacherLogin function - in the current implementation 
-    // it will create a new account if one doesn't exist
-    const { error } = await teacherLogin(signupData.email, signupData.password);
+    // it will create a new account if one doesn't exist, passing the role
+    const { error } = await teacherLogin(signupData.email, signupData.password, 
+      signupData.name, signupData.school, signupData.role);
 
     if (error) {
       toast({
@@ -85,7 +88,7 @@ const TeacherLogin = () => {
         title: "Account created! 🎉",
         description: "Welcome to Lesson Lens!",
       });
-      navigate("/teacher-dashboard");
+      navigate(signupData.role === "admin" ? "/admin-dashboard" : "/teacher-dashboard");
     }
 
     setIsLoading(false);
@@ -202,6 +205,32 @@ const TeacherLogin = () => {
                     onChange={(e) => setSignupData(prev => ({ ...prev, school: e.target.value }))}
                     required
                   />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="role" className="flex items-center gap-2">
+                    <ShieldIcon className="w-4 h-4" />
+                    {t('login.teacher.role') || "Role"}
+                  </Label>
+                  <Select 
+                    value={signupData.role} 
+                    onValueChange={(value: "teacher" | "admin") => 
+                      setSignupData(prev => ({ ...prev, role: value }))
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select role" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="teacher">{t('login.teacher.roleTeacher') || "Teacher"}</SelectItem>
+                      <SelectItem value="admin">{t('login.teacher.roleAdmin') || "School Admin"}</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  {signupData.role === "admin" && (
+                    <p className="text-xs text-gray-500 mt-1">
+                      {t('login.teacher.adminHint') || "School Admins can manage teachers and view all feedback"}
+                    </p>
+                  )}
                 </div>
 
                 <div className="space-y-2">

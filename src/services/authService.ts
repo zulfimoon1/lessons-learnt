@@ -1,7 +1,14 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { Teacher, Student } from '@/types/auth';
 
-export const teacherLoginService = async (email: string, password: string) => {
+export const teacherLoginService = async (
+  email: string, 
+  password: string,
+  name?: string,
+  school?: string,
+  role?: 'teacher' | 'admin'
+) => {
   try {
     // First check if a teacher with this email exists
     const { data: teachers, error: queryError } = await supabase
@@ -16,13 +23,19 @@ export const teacherLoginService = async (email: string, password: string) => {
 
     // If no teacher exists with this email, create one (auto-signup)
     if (!teachers || teachers.length === 0) {
+      // Ensure we have all required data for signup
+      if (!name || !school) {
+        return { error: 'Missing required fields for signup.' };
+      }
+
       const { data: newTeacher, error: createError } = await supabase
         .from('teachers')
         .insert({
           email: email,
           password_hash: password, // In production, this should be properly hashed
-          name: email.split('@')[0], // Default name from email
-          school: 'Default School'
+          name: name,
+          school: school,
+          role: role || 'teacher'
         })
         .select()
         .single();
@@ -36,7 +49,7 @@ export const teacherLoginService = async (email: string, password: string) => {
         id: newTeacher.id,
         name: newTeacher.name,
         email: newTeacher.email,
-        school: (newTeacher as any).school || 'Default School',
+        school: newTeacher.school,
         role: ((newTeacher as any).role as 'teacher' | 'admin') || 'teacher'
       };
 

@@ -1,207 +1,136 @@
-
-import React, { createContext, useContext, useState, ReactNode } from 'react';
-
-type Language = 'en' | 'lt';
+import React, { createContext, useContext, useState, useCallback } from 'react';
 
 interface LanguageContextType {
-  language: Language;
-  setLanguage: (lang: Language) => void;
+  language: string;
   t: (key: string) => string;
+  setLanguage: (lang: string) => void;
+}
+
+const LanguageContext = createContext<LanguageContextType>({
+  language: 'en',
+  t: (key: string) => key,
+  setLanguage: () => {}
+});
+
+export const useLanguage = () => useContext(LanguageContext);
+
+interface LanguageProviderProps {
+  children: React.ReactNode;
 }
 
 const translations = {
   en: {
-    'welcome.title': 'Transform Education with Real-Time Feedback',
-    'welcome.subtitle': 'Empower students to share their thoughts and help teachers create better learning experiences through meaningful feedback.',
-    'auth.studentLogin': 'Student Login',
-    'auth.teacherLogin': 'Teacher Login',
-    'features.studentFeedback.title': 'Student Feedback',
-    'features.studentFeedback.description': 'Students can easily share their thoughts about lessons, teaching methods, and classroom experience in real-time.',
-    'features.teacherInsights.title': 'Teacher Insights',
-    'features.teacherInsights.description': 'Teachers get valuable insights from student feedback to improve their teaching methods and create better learning environments.',
-    'features.dataAnalytics.title': 'Data Analytics',
-    'features.dataAnalytics.description': 'Comprehensive analytics and reporting tools help schools track progress and make data-driven decisions for educational improvement.',
-    
-    // Teacher Dashboard
-    'dashboard.teacher.title': 'Teacher Dashboard',
-    'dashboard.teacher.welcome': 'Welcome back',
-    'dashboard.teacher.addClass': 'Add Class',
-    'dashboard.teacher.logout': 'Logout',
-    'dashboard.teacher.loading': 'Loading dashboard...',
-    'dashboard.teacher.totalClasses': 'Total Classes',
-    'dashboard.teacher.totalFeedback': 'Total Feedback',
-    'dashboard.teacher.avgUnderstanding': 'Avg Understanding',
-    'dashboard.teacher.thisWeek': 'This Week',
-    'dashboard.teacher.schedule': 'Your Class Schedule',
-    'dashboard.teacher.scheduleDescription': 'Manage your upcoming classes and view student enrollment',
-    'dashboard.teacher.noClasses': 'No classes scheduled yet. Add your first class!',
-    'dashboard.teacher.studentFeedback': 'Student Feedback',
-    'dashboard.teacher.feedbackDescription': 'Review and analyze feedback from your students',
-    'dashboard.teacher.noFeedback': 'No feedback submissions yet. Students will see your scheduled classes and can submit feedback.',
-    'dashboard.teacher.detailedFeedback': 'Detailed Feedback',
-    'dashboard.teacher.understanding': 'Understanding',
-    'dashboard.teacher.interestLevel': 'Interest Level',
-    'dashboard.teacher.educationalGrowth': 'Educational Growth',
-    'dashboard.teacher.emotionalState': 'Emotional State',
-    'dashboard.teacher.whatWentWell': 'What Went Well',
-    'dashboard.teacher.suggestions': 'Suggestions for Improvement',
-    'dashboard.teacher.additionalComments': 'Additional Comments',
-    'dashboard.teacher.close': 'Close',
-    'dashboard.teacher.viewDetails': 'View Details',
-    'dashboard.teacher.anonymous': 'Anonymous',
-    
-    // Teacher Login
-    'login.teacher.title': 'Teacher Portal',
-    'login.teacher.subtitle': 'Login to your account or create a new one',
+    'app.title': 'Lesson Lens',
+    'app.subtitle': 'Empowering Education Through Feedback',
+    'navigation.studentLogin': 'Student Login',
+    'navigation.teacherLogin': 'Teacher Login',
+    'login.student.title': 'Student Login',
+    'login.student.subtitle': 'Enter your details to access the dashboard',
+    'login.student.fullName': 'Full Name',
+    'login.student.school': 'School',
+    'login.student.grade': 'Grade',
+    'login.student.password': 'Password',
+    'login.student.login': 'Login',
+    'login.student.signup': 'Signup',
+    'login.student.signingIn': 'Signing In...',
+    'login.student.signingUp': 'Signing Up...',
+    'login.teacher.title': 'Teacher Login',
+    'login.teacher.subtitle': 'Sign in to access your teacher dashboard',
     'login.teacher.login': 'Login',
-    'login.teacher.signup': 'Sign Up',
+    'login.teacher.signup': 'Signup',
     'login.teacher.email': 'Email',
     'login.teacher.password': 'Password',
     'login.teacher.fullName': 'Full Name',
     'login.teacher.school': 'School',
     'login.teacher.confirmPassword': 'Confirm Password',
     'login.teacher.createAccount': 'Create Account',
-    'login.teacher.loggingIn': 'Logging in...',
-    'login.teacher.creatingAccount': 'Creating account...',
-    
-    // Class Schedule Form
-    'schedule.title': 'Schedule New Class',
-    'schedule.subtitle': 'Add a new class to your schedule for students to review',
-    'schedule.backToDashboard': 'Back to Dashboard',
-    'schedule.classDetails': 'Class Details',
-    'schedule.classDetailsDescription': 'Basic information about your lesson',
-    'schedule.subject': 'Subject',
-    'schedule.selectSubject': 'Select subject',
-    'schedule.lessonTopic': 'Lesson Topic',
-    'schedule.description': 'Description (Optional)',
-    'schedule.scheduleDetails': 'Schedule Details',
-    'schedule.scheduleDetailsDescription': 'When and where the class will take place',
-    'schedule.date': 'Date',
-    'schedule.time': 'Time',
-    'schedule.duration': 'Duration (minutes)',
-    'schedule.school': 'School',
-    'schedule.classGrade': 'Class/Grade',
-    'schedule.recurringOptions': 'Recurring Options',
-    'schedule.recurringDescription': 'Set this class to repeat on a schedule',
-    'schedule.makeRecurring': 'Make this class recurring',
-    'schedule.repeats': 'Repeats',
-    'schedule.occurrences': 'Number of occurrences',
-    'schedule.endDate': 'End Date',
-    'schedule.scheduleClass': 'Schedule Class',
-    'schedule.scheduleRecurringClasses': 'Schedule Recurring Classes',
-    
-    // Common
-    'common.minutes': 'minutes',
-    'common.min': 'min',
-    'common.unknown': 'Unknown'
+    'login.teacher.loggingIn': 'Logging In...',
+    'login.teacher.creatingAccount': 'Creating Account...',
+    'login.teacher.role': 'Role',
+    'login.teacher.roleTeacher': 'Teacher',
+    'login.teacher.roleAdmin': 'School Admin',
+    'login.teacher.adminHint': 'School Admins can manage teachers and view all feedback',
   },
-  lt: {
-    'welcome.title': 'Keiskite švietimą su realaus laiko atsiliepimais',
-    'welcome.subtitle': 'Įgalinkite mokinius dalytis savo mintimis ir padėkite mokytojams kurti geresnes mokymosi patirtis per prasmingus atsiliepimus.',
-    'auth.studentLogin': 'Mokinio prisijungimas',
-    'auth.teacherLogin': 'Mokytojo prisijungimas',
-    'features.studentFeedback.title': 'Mokinių atsiliepimai',
-    'features.studentFeedback.description': 'Mokiniai gali lengvai dalytis savo mintimis apie pamokas, mokymo metodus ir klasės patirtį realiu laiku.',
-    'features.teacherInsights.title': 'Mokytojų įžvalgos',
-    'features.teacherInsights.description': 'Mokytojai gauna vertingas įžvalgas iš mokinių atsiliepimų, kad pagerintų savo mokymo metodus ir sukurtų geresnes mokymosi aplinkas.',
-    'features.dataAnalytics.title': 'Duomenų analitika',
-    'features.dataAnalytics.description': 'Išsamūs analitikos ir ataskaitų įrankiai padeda mokykloms sekti pažangą ir priimti duomenimis pagrįstus sprendimus švietimo gerinimui.',
-    
-    // Teacher Dashboard
-    'dashboard.teacher.title': 'Mokytojo valdymo skydas',
-    'dashboard.teacher.welcome': 'Sveiki sugrįžę',
-    'dashboard.teacher.addClass': 'Pridėti pamoką',
-    'dashboard.teacher.logout': 'Atsijungti',
-    'dashboard.teacher.loading': 'Kraunamas valdymo skydas...',
-    'dashboard.teacher.totalClasses': 'Viso pamokų',
-    'dashboard.teacher.totalFeedback': 'Viso atsiliepimų',
-    'dashboard.teacher.avgUnderstanding': 'Vid. supratimas',
-    'dashboard.teacher.thisWeek': 'Šią savaitę',
-    'dashboard.teacher.schedule': 'Jūsų pamokų tvarkaraštis',
-    'dashboard.teacher.scheduleDescription': 'Tvarkykite būsimas pamokas ir peržiūrėkite mokinių registraciją',
-    'dashboard.teacher.noClasses': 'Pamokų dar nesuplanuota. Pridėkite pirmą pamoką!',
-    'dashboard.teacher.studentFeedback': 'Mokinių atsiliepimai',
-    'dashboard.teacher.feedbackDescription': 'Peržiūrėkite ir analizuokite mokinių atsiliepimus',
-    'dashboard.teacher.noFeedback': 'Atsiliepimų dar nėra. Mokiniai matys jūsų suplanuotas pamokas ir galės pateikti atsiliepimus.',
-    'dashboard.teacher.detailedFeedback': 'Išsamus atsiliepimas',
-    'dashboard.teacher.understanding': 'Supratimas',
-    'dashboard.teacher.interestLevel': 'Susidomėjimo lygis',
-    'dashboard.teacher.educationalGrowth': 'Ugdymo augimas',
-    'dashboard.teacher.emotionalState': 'Emocinė būsena',
-    'dashboard.teacher.whatWentWell': 'Kas pavyko gerai',
-    'dashboard.teacher.suggestions': 'Pasiūlymai pagerinimui',
-    'dashboard.teacher.additionalComments': 'Papildomi komentarai',
-    'dashboard.teacher.close': 'Uždaryti',
-    'dashboard.teacher.viewDetails': 'Peržiūrėti detales',
-    'dashboard.teacher.anonymous': 'Anoniminis',
-    
-    // Teacher Login
-    'login.teacher.title': 'Mokytojo portalas',
-    'login.teacher.subtitle': 'Prisijunkite prie savo paskyros arba sukurkite naują',
-    'login.teacher.login': 'Prisijungti',
-    'login.teacher.signup': 'Registruotis',
-    'login.teacher.email': 'El. paštas',
-    'login.teacher.password': 'Slaptažodis',
-    'login.teacher.fullName': 'Pilnas vardas',
-    'login.teacher.school': 'Mokykla',
-    'login.teacher.confirmPassword': 'Patvirtinti slaptažodį',
-    'login.teacher.createAccount': 'Sukurti paskyrą',
-    'login.teacher.loggingIn': 'Prisijungiama...',
-    'login.teacher.creatingAccount': 'Kuriama paskyra...',
-    
-    // Class Schedule Form
-    'schedule.title': 'Suplanuoti naują pamoką',
-    'schedule.subtitle': 'Pridėkite naują pamoką į savo tvarkaraštį, kad mokiniai galėtų vertinti',
-    'schedule.backToDashboard': 'Grįžti į valdymo skydą',
-    'schedule.classDetails': 'Pamokos detalės',
-    'schedule.classDetailsDescription': 'Pagrindinė informacija apie jūsų pamoką',
-    'schedule.subject': 'Dalykas',
-    'schedule.selectSubject': 'Pasirinkite dalyką',
-    'schedule.lessonTopic': 'Pamokos tema',
-    'schedule.description': 'Aprašymas (neprivalomas)',
-    'schedule.scheduleDetails': 'Tvarkaraščio detalės',
-    'schedule.scheduleDetailsDescription': 'Kada ir kur vyks pamoka',
-    'schedule.date': 'Data',
-    'schedule.time': 'Laikas',
-    'schedule.duration': 'Trukmė (minutės)',
-    'schedule.school': 'Mokykla',
-    'schedule.classGrade': 'Klasė/Kursas',
-    'schedule.recurringOptions': 'Pasikartojimo parinktys',
-    'schedule.recurringDescription': 'Nustatykite, kad ši pamoka kartotųsi pagal tvarkaraštį',
-    'schedule.makeRecurring': 'Padaryti šią pamoką pasikartojančią',
-    'schedule.repeats': 'Kartojasi',
-    'schedule.occurrences': 'Pasikartojimų skaičius',
-    'schedule.endDate': 'Pabaigos data',
-    'schedule.scheduleClass': 'Suplanuoti pamoką',
-    'schedule.scheduleRecurringClasses': 'Suplanuoti pasikartojančias pamokas',
-    
-    // Common
-    'common.minutes': 'minutės',
-    'common.min': 'min',
-    'common.unknown': 'Nežinoma'
+  es: {
+    'app.title': 'Lesson Lens',
+    'app.subtitle': 'Potenciando la Educación a Través de la Retroalimentación',
+    'navigation.studentLogin': 'Acceso Estudiantes',
+    'navigation.teacherLogin': 'Acceso Profesores',
+     'login.student.title': 'Acceso Estudiantes',
+    'login.student.subtitle': 'Introduce tus datos para acceder al panel',
+    'login.student.fullName': 'Nombre Completo',
+    'login.student.school': 'Escuela',
+    'login.student.grade': 'Grado',
+    'login.student.password': 'Contraseña',
+    'login.student.login': 'Acceder',
+    'login.student.signup': 'Registrarse',
+    'login.student.signingIn': 'Iniciando Sesión...',
+    'login.student.signingUp': 'Registrando...',
+    'login.teacher.title': 'Acceso de Profesor',
+    'login.teacher.subtitle': 'Inicia sesión para acceder a tu panel de profesor',
+    'login.teacher.login': 'Acceder',
+    'login.teacher.signup': 'Registrarse',
+    'login.teacher.email': 'Correo Electrónico',
+    'login.teacher.password': 'Contraseña',
+    'login.teacher.fullName': 'Nombre Completo',
+    'login.teacher.school': 'Escuela',
+    'login.teacher.confirmPassword': 'Confirmar Contraseña',
+    'login.teacher.createAccount': 'Crear Cuenta',
+    'login.teacher.loggingIn': 'Iniciando Sesión...',
+    'login.teacher.creatingAccount': 'Creando Cuenta...',
+    'login.teacher.role': 'Rol',
+    'login.teacher.roleTeacher': 'Profesor',
+    'login.teacher.roleAdmin': 'Administrador Escolar',
+    'login.teacher.adminHint': 'Los administradores escolares pueden gestionar profesores y ver todos los comentarios',
+  },
+  fr: {
+    'app.title': 'Lesson Lens',
+    'app.subtitle': 'Améliorer l\'éducation grâce au feedback',
+    'navigation.studentLogin': 'Connexion Étudiant',
+    'navigation.teacherLogin': 'Connexion Enseignant',
+    'login.student.title': 'Connexion Étudiant',
+    'login.student.subtitle': 'Entrez vos informations pour accéder au tableau de bord',
+    'login.student.fullName': 'Nom Complet',
+    'login.student.school': 'École',
+    'login.student.grade': 'Niveau',
+    'login.student.password': 'Mot de Passe',
+    'login.student.login': 'Se Connecter',
+    'login.student.signup': 'S\'inscrire',
+    'login.student.signingIn': 'Connexion...',
+    'login.student.signingUp': 'Inscription...',
+    'login.teacher.title': 'Connexion Enseignant',
+    'login.teacher.subtitle': 'Connectez-vous pour accéder à votre tableau de bord enseignant',
+    'login.teacher.login': 'Se Connecter',
+    'login.teacher.signup': 'S\'inscrire',
+    'login.teacher.email': 'Adresse Email',
+    'login.teacher.password': 'Mot de Passe',
+    'login.teacher.fullName': 'Nom Complet',
+    'login.teacher.school': 'École',
+    'login.teacher.confirmPassword': 'Confirmer le Mot de Passe',
+    'login.teacher.createAccount': 'Créer un Compte',
+    'login.teacher.loggingIn': 'Connexion...',
+    'login.teacher.creatingAccount': 'Création du Compte...',
+    'login.teacher.role': 'Rôle',
+    'login.teacher.roleTeacher': 'Enseignant',
+    'login.teacher.roleAdmin': 'Administrateur scolaire',
+    'login.teacher.adminHint': 'Les administrateurs scolaires peuvent gérer les enseignants et consulter tous les commentaires',
   }
 };
 
-const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
+export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) => {
+  const [language, setLanguage] = useState<string>(localStorage.getItem('language') || 'en');
 
-export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [language, setLanguage] = useState<Language>('en');
+  React.useEffect(() => {
+    localStorage.setItem('language', language);
+  }, [language]);
 
-  const t = (key: string): string => {
-    return translations[language][key] || key;
-  };
+  const t = useCallback((key: string) => {
+    return translations[language as keyof typeof translations][key] || key;
+  }, [language]);
 
   return (
-    <LanguageContext.Provider value={{ language, setLanguage, t }}>
+    <LanguageContext.Provider value={{ language, t, setLanguage }}>
       {children}
     </LanguageContext.Provider>
   );
-};
-
-export const useLanguage = (): LanguageContextType => {
-  const context = useContext(LanguageContext);
-  if (!context) {
-    throw new Error('useLanguage must be used within a LanguageProvider');
-  }
-  return context;
 };

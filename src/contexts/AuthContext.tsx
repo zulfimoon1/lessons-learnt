@@ -17,8 +17,14 @@ export const useAuth = () => {
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { teacher, student, isLoading, saveTeacher, saveStudent, clearAuth } = useAuthStorage();
 
-  const teacherLogin = async (email: string, password: string) => {
-    const result = await teacherLoginService(email, password);
+  const teacherLogin = async (
+    email: string, 
+    password: string, 
+    name?: string, 
+    school?: string,
+    role?: 'teacher' | 'admin'
+  ) => {
+    const result = await teacherLoginService(email, password, name, school, role);
     if (result.teacher) {
       saveTeacher(result.teacher);
     }
