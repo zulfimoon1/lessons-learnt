@@ -7,12 +7,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { usePlatformAdmin } from "@/contexts/PlatformAdminContext";
-import { ShieldIcon } from "lucide-react";
+import { createTestAdmin } from "@/services/platformAdminService";
+import { ShieldIcon, UserPlusIcon } from "lucide-react";
 
 const PlatformAdminLogin = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isCreatingAdmin, setIsCreatingAdmin] = useState(false);
   const { login } = usePlatformAdmin();
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -22,6 +24,7 @@ const PlatformAdminLogin = () => {
     setIsLoading(true);
 
     try {
+      console.log('Submitting login form');
       const result = await login(email, password);
       
       if (result.error) {
@@ -38,6 +41,7 @@ const PlatformAdminLogin = () => {
         navigate("/platform-admin");
       }
     } catch (error) {
+      console.error('Login form error:', error);
       toast({
         title: "Login Failed",
         description: "An unexpected error occurred",
@@ -45,6 +49,37 @@ const PlatformAdminLogin = () => {
       });
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleCreateTestAdmin = async () => {
+    setIsCreatingAdmin(true);
+    
+    try {
+      const result = await createTestAdmin();
+      
+      if (result.error) {
+        toast({
+          title: "Error",
+          description: result.error,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Test Admin Created",
+          description: "Email: admin@test.com, Password: admin123",
+        });
+        setEmail("admin@test.com");
+        setPassword("admin123");
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to create test admin",
+        variant: "destructive",
+      });
+    } finally {
+      setIsCreatingAdmin(false);
     }
   };
 
@@ -60,7 +95,7 @@ const PlatformAdminLogin = () => {
             Sign in to access the platform management dashboard
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-4">
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
@@ -91,6 +126,21 @@ const PlatformAdminLogin = () => {
               {isLoading ? "Signing In..." : "Sign In"}
             </Button>
           </form>
+          
+          <div className="text-center">
+            <Button
+              variant="outline"
+              onClick={handleCreateTestAdmin}
+              disabled={isCreatingAdmin}
+              className="w-full"
+            >
+              <UserPlusIcon className="w-4 h-4 mr-2" />
+              {isCreatingAdmin ? "Creating..." : "Create Test Admin"}
+            </Button>
+            <p className="text-xs text-gray-500 mt-2">
+              This will create admin@test.com with password admin123
+            </p>
+          </div>
         </CardContent>
       </Card>
     </div>
