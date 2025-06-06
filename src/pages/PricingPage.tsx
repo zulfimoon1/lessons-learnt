@@ -11,11 +11,13 @@ import { useToast } from "@/hooks/use-toast";
 import { ArrowLeftIcon, CheckIcon, UsersIcon, CreditCardIcon } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const PricingPage = () => {
   const { teacher } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const [teacherCount, setTeacherCount] = useState(1);
   const [discountCode, setDiscountCode] = useState("");
   const [discount, setDiscount] = useState(0);
@@ -41,7 +43,6 @@ const PricingPage = () => {
 
     setIsValidatingDiscount(true);
     try {
-      // Mock discount validation - in real app this would call your backend
       const validCodes: Record<string, number> = {
         'EDUCATION10': 10,
         'NEWSCHOOL15': 15,
@@ -52,14 +53,14 @@ const PricingPage = () => {
       if (discountValue) {
         setDiscount(discountValue);
         toast({
-          title: "Discount Applied!",
-          description: `${discountValue}% discount has been applied to your order.`,
+          title: t('pricing.discountApplied'),
+          description: t('pricing.discountAppliedDesc').replace('{percent}', discountValue.toString()),
         });
       } else {
         setDiscount(0);
         toast({
-          title: "Invalid Discount Code",
-          description: "The discount code you entered is not valid.",
+          title: t('pricing.invalidDiscount'),
+          description: t('pricing.invalidDiscountDesc'),
           variant: "destructive",
         });
       }
@@ -86,13 +87,14 @@ const PricingPage = () => {
       if (error) throw error;
       
       if (data?.url) {
+        // Open Stripe checkout in a new tab
         window.open(data.url, '_blank');
       }
     } catch (error) {
       console.error("Error creating checkout:", error);
       toast({
-        title: "Payment Error",
-        description: "Failed to create subscription. Please try again.",
+        title: t('pricing.paymentError'),
+        description: t('pricing.paymentErrorDesc'),
         variant: "destructive",
       });
     } finally {
@@ -115,12 +117,12 @@ const PricingPage = () => {
               className="flex items-center gap-2"
             >
               <ArrowLeftIcon className="w-4 h-4" />
-              Back to Dashboard
+              {t('pricing.backToDashboard')}
             </Button>
-            <h1 className="text-2xl font-bold text-gray-900">Subscription Pricing</h1>
+            <h1 className="text-2xl font-bold text-gray-900">{t('pricing.title')}</h1>
           </div>
           <div className="flex items-center gap-4">
-            <span className="text-sm text-gray-600">Welcome, {teacher?.name}</span>
+            <span className="text-sm text-gray-600">{t('pricing.welcome')}, {teacher?.name}</span>
             <LanguageSwitcher />
           </div>
         </div>
@@ -129,13 +131,13 @@ const PricingPage = () => {
       <main className="max-w-4xl mx-auto p-6">
         <div className="text-center mb-8">
           <h2 className="text-3xl font-bold text-gray-900 mb-4">
-            Choose Your School Plan
+            {t('pricing.choosePlan')}
           </h2>
           <p className="text-lg text-gray-600 mb-2">
-            Simple, transparent pricing for your entire school
+            {t('pricing.subtitle')}
           </p>
           <p className="text-sm text-gray-500">
-            School: <Badge variant="outline" className="ml-1">{teacher.school}</Badge>
+            {t('pricing.school')}: <Badge variant="outline" className="ml-1">{teacher.school}</Badge>
           </p>
         </div>
 
@@ -145,16 +147,16 @@ const PricingPage = () => {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <UsersIcon className="w-5 h-5" />
-                Configure Your Plan
+                {t('pricing.configurePlan')}
               </CardTitle>
               <CardDescription>
-                Customize your subscription based on the number of teachers
+                {t('pricing.configureDesc')}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <div>
                 <Label htmlFor="teacherCount" className="text-base font-medium">
-                  Number of Teachers
+                  {t('pricing.numberOfTeachers')}
                 </Label>
                 <div className="mt-2">
                   <Input
@@ -168,18 +170,18 @@ const PricingPage = () => {
                   />
                 </div>
                 <p className="text-sm text-gray-500 mt-1">
-                  Each teacher can create unlimited classes and collect student feedback
+                  {t('pricing.teacherDesc')}
                 </p>
               </div>
 
               <div>
                 <Label htmlFor="discountCode" className="text-base font-medium">
-                  Discount Code (Optional)
+                  {t('pricing.discountCode')}
                 </Label>
                 <div className="mt-2 flex gap-2">
                   <Input
                     id="discountCode"
-                    placeholder="Enter discount code"
+                    placeholder={t('pricing.enterDiscount')}
                     value={discountCode}
                     onChange={(e) => setDiscountCode(e.target.value.toUpperCase())}
                     onBlur={validateDiscountCode}
@@ -189,39 +191,39 @@ const PricingPage = () => {
                     variant="outline"
                     disabled={isValidatingDiscount}
                   >
-                    {isValidatingDiscount ? "Validating..." : "Apply"}
+                    {isValidatingDiscount ? t('pricing.validating') : t('pricing.apply')}
                   </Button>
                 </div>
                 {discount > 0 && (
                   <div className="mt-2 flex items-center gap-2 text-green-600">
                     <CheckIcon className="w-4 h-4" />
-                    <span className="text-sm font-medium">{discount}% discount applied!</span>
+                    <span className="text-sm font-medium">{discount}% {t('pricing.discountAppliedShort')}</span>
                   </div>
                 )}
               </div>
 
               <div className="space-y-2 text-sm text-gray-600">
-                <p className="font-medium">What's included:</p>
+                <p className="font-medium">{t('pricing.whatsIncluded')}:</p>
                 <ul className="space-y-1">
                   <li className="flex items-center gap-2">
                     <CheckIcon className="w-4 h-4 text-green-600" />
-                    Unlimited class schedules
+                    {t('pricing.unlimitedClasses')}
                   </li>
                   <li className="flex items-center gap-2">
                     <CheckIcon className="w-4 h-4 text-green-600" />
-                    Student feedback collection
+                    {t('pricing.feedbackCollection')}
                   </li>
                   <li className="flex items-center gap-2">
                     <CheckIcon className="w-4 h-4 text-green-600" />
-                    Analytics and reporting
+                    {t('pricing.analytics')}
                   </li>
                   <li className="flex items-center gap-2">
                     <CheckIcon className="w-4 h-4 text-green-600" />
-                    Mental health monitoring
+                    {t('pricing.mentalHealth')}
                   </li>
                   <li className="flex items-center gap-2">
                     <CheckIcon className="w-4 h-4 text-green-600" />
-                    Multi-language support
+                    {t('pricing.multiLanguage')}
                   </li>
                 </ul>
               </div>
@@ -233,41 +235,40 @@ const PricingPage = () => {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <CreditCardIcon className="w-5 h-5" />
-                Order Summary
+                {t('pricing.orderSummary')}
               </CardTitle>
               <CardDescription>
-                Review your subscription details
+                {t('pricing.reviewDetails')}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <div className="flex justify-between">
-                  <span>Teachers ({teacherCount})</span>
-                  <span>${basePrice} each</span>
+                  <span>{t('pricing.teachers')} ({teacherCount})</span>
+                  <span>${basePrice} {t('pricing.each')}</span>
                 </div>
                 <div className="flex justify-between text-lg">
-                  <span>Subtotal</span>
+                  <span>{t('pricing.subtotal')}</span>
                   <span>${subtotal.toFixed(2)}</span>
                 </div>
                 
                 {discount > 0 && (
                   <div className="flex justify-between text-green-600">
-                    <span>Discount ({discount}%)</span>
+                    <span>{t('pricing.discount')} ({discount}%)</span>
                     <span>-${discountAmount.toFixed(2)}</span>
                   </div>
                 )}
                 
                 <hr className="my-2" />
                 <div className="flex justify-between text-xl font-bold">
-                  <span>Total (Monthly)</span>
+                  <span>{t('pricing.totalMonthly')}</span>
                   <span>${total.toFixed(2)}</span>
                 </div>
               </div>
 
               <div className="bg-blue-50 p-4 rounded-lg">
                 <p className="text-sm text-blue-800">
-                  <strong>Billing:</strong> You will be charged ${total.toFixed(2)} monthly. 
-                  You can cancel or modify your subscription at any time.
+                  <strong>{t('pricing.billing')}:</strong> {t('pricing.billingDesc').replace('{amount}', total.toFixed(2))}
                 </p>
               </div>
 
@@ -276,11 +277,11 @@ const PricingPage = () => {
                 disabled={isCreatingCheckout}
                 className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-lg py-6"
               >
-                {isCreatingCheckout ? "Processing..." : `Subscribe for $${total.toFixed(2)}/month`}
+                {isCreatingCheckout ? t('pricing.processing') : `${t('pricing.subscribeFor')} $${total.toFixed(2)}/month`}
               </Button>
 
               <p className="text-xs text-gray-500 text-center">
-                Secure payment powered by Stripe. Cancel anytime.
+                {t('pricing.securePayment')}
               </p>
             </CardContent>
           </Card>

@@ -1,44 +1,71 @@
+
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useAuth } from "@/contexts/AuthContext";
-import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { GraduationCapIcon, UsersIcon, MessageSquareIcon, CreditCardIcon, LogOutIcon } from "lucide-react";
-import LanguageSwitcher from "@/components/LanguageSwitcher";
-import { Teacher, TeacherFeedbackSummary } from "@/types/auth";
-import { useNavigate } from "react-router-dom";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { 
-  Table, 
-  TableBody, 
-  TableCaption, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
-} from "@/components/ui/table";
+  SchoolIcon, 
+  UsersIcon, 
+  MessageSquareIcon, 
+  BarChart3Icon, 
+  LogOutIcon,
+  CreditCardIcon
+} from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
+
+interface Teacher {
+  id: string;
+  name: string;
+  email: string;
+  school: string;
+  role: string;
+  created_at: string;
+}
+
+interface FeedbackSummary {
+  teacher: string;
+  subject: string;
+  class_date: string;
+  total_responses: number;
+  avg_understanding: number;
+  avg_interest: number;
+  avg_growth: number;
+}
+
+interface Subscription {
+  id: string;
+  school_name: string;
+  status: string;
+  amount: number;
+  current_period_end: string;
+}
 
 const AdminDashboard = () => {
   const { teacher, logout } = useAuth();
-  const { t } = useLanguage();
   const { toast } = useToast();
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const [teachers, setTeachers] = useState<Teacher[]>([]);
-  const [feedbackSummaries, setFeedbackSummaries] = useState<TeacherFeedbackSummary[]>([]);
+  const [feedbackSummary, setFeedbackSummary] = useState<FeedbackSummary[]>([]);
+  const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    if (teacher && teacher.role === 'admin') {
-      loadDashboardData();
+    if (!teacher || teacher.role !== 'admin') {
+      navigate('/teacher-login');
+      return;
     }
-  }, [teacher]);
+    loadDashboardData();
+  }, [teacher, navigate]);
 
   const loadDashboardData = async () => {
     try {
-      setIsLoading(true);
-      
       // Load teachers from the same school
       const { data: teachersData, error: teachersError } = await supabase
         .from('teachers')
@@ -46,81 +73,37 @@ const AdminDashboard = () => {
         .eq('school', teacher?.school);
 
       if (teachersError) throw teachersError;
-      
-      const teachersList: Teacher[] = (teachersData || []).map((t: any) => ({
-        id: t.id,
-        name: t.name,
-        email: t.email,
-        school: t.school || 'Default School',
-        role: (t.role as 'teacher' | 'admin') || 'teacher'
-      }));
-      
-      setTeachers(teachersList);
+      setTeachers(teachersData || []);
 
-      // Fetch feedback summaries grouped by teacher and class
-      const { data: summaryData, error: summaryError } = await supabase
-        .from('feedback')
-        .select(`
-          class_schedule_id,
-          understanding,
-          interest,
-          educational_growth,
-          class_schedules(
-            teacher_id,
-            subject,
-            class_date,
-            lesson_topic,
-            teachers(name)
-          )
-        `)
-        .eq('class_schedules.teachers.school', teacher?.school);
+      // Load feedback summary
+      const { data: feedbackData, error: feedbackError } = await supabase
+        .from('feedback_analytics')
+        .select('*')
+        .eq('school', teacher?.school)
+        .order('class_date', { ascending: false })
+        .limit(10);
 
-      if (summaryError) throw summaryError;
+      if (feedbackError) throw feedbackError;
+      setFeedbackSummary(feedbackData || []);
 
-      // Process and aggregate feedback data
-      const summaryMap = new Map<string, TeacherFeedbackSummary>();
-      
-      summaryData?.forEach((feedback: any) => {
-        if (!feedback.class_schedules) return;
-        
-        const classSchedule = feedback.class_schedules;
-        const key = `${classSchedule.teacher_id}-${classSchedule.subject}-${classSchedule.class_date}`;
-        
-        if (!summaryMap.has(key)) {
-          summaryMap.set(key, {
-            teacher_id: classSchedule.teacher_id,
-            teacher_name: classSchedule.teachers?.name || 'Unknown',
-            subject: classSchedule.subject,
-            class_date: classSchedule.class_date,
-            lesson_topic: classSchedule.lesson_topic || '',
-            avg_understanding: feedback.understanding,
-            avg_interest: feedback.interest,
-            avg_educational_growth: feedback.educational_growth,
-            total_feedback: 1
-          });
-        } else {
-          const existing = summaryMap.get(key)!;
-          existing.avg_understanding += feedback.understanding;
-          existing.avg_interest += feedback.interest;
-          existing.avg_educational_growth += feedback.educational_growth;
-          existing.total_feedback++;
-        }
-      });
+      // Load subscription info
+      const { data: subscriptionData, error: subscriptionError } = await supabase
+        .from('subscriptions')
+        .select('*')
+        .eq('school_name', teacher?.school)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
 
-      // Calculate averages
-      const summaries = Array.from(summaryMap.values()).map(summary => ({
-        ...summary,
-        avg_understanding: Math.round((summary.avg_understanding / summary.total_feedback) * 10) / 10,
-        avg_interest: Math.round((summary.avg_interest / summary.total_feedback) * 10) / 10,
-        avg_educational_growth: Math.round((summary.avg_educational_growth / summary.total_feedback) * 10) / 10
-      }));
+      if (!subscriptionError && subscriptionData) {
+        setSubscription(subscriptionData);
+      }
 
-      setFeedbackSummaries(summaries);
     } catch (error) {
-      console.error("Error loading dashboard data:", error);
+      console.error('Error loading dashboard data:', error);
       toast({
-        title: t('admin.error.title') || "Error loading data",
-        description: t('admin.error.description') || "Failed to load dashboard data",
+        title: t('admin.error.title'),
+        description: t('admin.error.description'),
         variant: "destructive",
       });
     } finally {
@@ -128,36 +111,50 @@ const AdminDashboard = () => {
     }
   };
 
-  const handleGoToPricing = () => {
-    navigate('/pricing');
+  const handleManageSubscription = async () => {
+    try {
+      const { data, error } = await supabase.functions.invoke('customer-portal');
+      
+      if (error) throw error;
+      
+      if (data?.url) {
+        window.open(data.url, '_blank');
+      }
+    } catch (error) {
+      console.error("Error opening customer portal:", error);
+      toast({
+        title: "Error",
+        description: "Failed to open subscription management. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
+
+  const totalFeedback = feedbackSummary.reduce((sum, item) => sum + item.total_responses, 0);
 
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
-          <p>{t('admin.loading') || "Loading dashboard..."}</p>
+          <p>{t('admin.loading')}</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
       <header className="bg-white/80 backdrop-blur-sm border-b border-blue-100 p-4">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
-              <GraduationCapIcon className="w-8 h-8 text-purple-600" />
-              <h1 className="text-2xl font-bold text-gray-900">{t('admin.title') || "Admin Dashboard"}</h1>
+              <SchoolIcon className="w-8 h-8 text-purple-600" />
+              <h1 className="text-2xl font-bold text-gray-900">{t('admin.title')}</h1>
             </div>
-            <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200">
-              {teacher?.school}
-            </Badge>
           </div>
           <div className="flex items-center gap-4">
-            <span className="text-sm text-gray-600">{t('admin.welcome') || "Welcome"}, {teacher?.name}</span>
+            <span className="text-sm text-gray-600">{t('admin.welcome')}, {teacher?.name}</span>
             <LanguageSwitcher />
             <Button
               onClick={logout}
@@ -165,17 +162,60 @@ const AdminDashboard = () => {
               className="flex items-center gap-2"
             >
               <LogOutIcon className="w-4 h-4" />
-              {t('admin.logout') || "Logout"}
+              {t('admin.logout')}
             </Button>
           </div>
         </div>
       </header>
 
       <main className="max-w-7xl mx-auto p-6 space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {/* Subscription Status */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <CreditCardIcon className="w-5 h-5" />
+              {t('admin.subscription')}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {subscription ? (
+              <div className="flex justify-between items-center">
+                <div>
+                  <Badge variant={subscription.status === 'active' ? 'default' : 'destructive'}>
+                    {subscription.status}
+                  </Badge>
+                  <p className="text-sm text-gray-600 mt-1">
+                    ${(subscription.amount / 100).toFixed(2)}/month
+                  </p>
+                  {subscription.current_period_end && (
+                    <p className="text-xs text-gray-500">
+                      Next billing: {new Date(subscription.current_period_end).toLocaleDateString()}
+                    </p>
+                  )}
+                </div>
+                <Button onClick={handleManageSubscription} variant="outline">
+                  {t('dashboard.manageSubscription')}
+                </Button>
+              </div>
+            ) : (
+              <div className="flex justify-between items-center">
+                <p className="text-gray-600">No active subscription</p>
+                <Button 
+                  onClick={() => navigate('/pricing')}
+                  className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
+                >
+                  {t('admin.subscribe')}
+                </Button>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{t('admin.stats.teachers') || "Total Teachers"}</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('admin.stats.teachers')}</CardTitle>
               <UsersIcon className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
@@ -185,113 +225,111 @@ const AdminDashboard = () => {
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{t('admin.stats.feedback') || "Total Feedback"}</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('admin.stats.feedback')}</CardTitle>
               <MessageSquareIcon className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">
-                {feedbackSummaries.reduce((acc, curr) => acc + curr.total_feedback, 0)}
-              </div>
+              <div className="text-2xl font-bold">{totalFeedback}</div>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{t('admin.subscription') || "Subscription"}</CardTitle>
-              <CreditCardIcon className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium">School</CardTitle>
+              <SchoolIcon className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <Button
-                onClick={handleGoToPricing}
-                className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
-              >
-                {t('admin.subscribe') || "Subscribe Now"}
-              </Button>
+              <div className="text-lg font-bold">{teacher?.school}</div>
             </CardContent>
           </Card>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>{t('admin.teachers.title') || "Teachers"} at {teacher?.school}</CardTitle>
-              <CardDescription>{t('admin.teachers.description') || "Manage teachers at your school"}</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {teachers.map((teacherItem) => (
-                  <div key={teacherItem.id} className="flex items-center justify-between p-3 border rounded-lg">
-                    <div>
-                      <p className="font-medium">{teacherItem.name}</p>
-                      <p className="text-sm text-gray-500">{teacherItem.email}</p>
-                    </div>
-                    <Badge variant={teacherItem.role === 'admin' ? 'default' : 'secondary'}>
-                      {teacherItem.role}
-                    </Badge>
-                  </div>
-                ))}
-                {teachers.length === 0 && (
-                  <p className="text-center text-gray-500 py-4">{t('admin.teachers.empty') || "No teachers found"}</p>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="lg:row-span-2">
-            <CardHeader>
-              <CardTitle>{t('admin.feedback.title') || "Feedback Summary"}</CardTitle>
-              <CardDescription>{t('admin.feedback.description') || "Overview of student feedback per teacher and class"}</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {feedbackSummaries.length > 0 ? (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>{t('admin.feedback.teacher') || "Teacher"}</TableHead>
-                      <TableHead>{t('admin.feedback.subject') || "Subject"}</TableHead>
-                      <TableHead>{t('admin.feedback.date') || "Date"}</TableHead>
-                      <TableHead className="text-right">{t('admin.feedback.scores') || "Scores"}</TableHead>
+        {/* Teachers Table */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <UsersIcon className="w-5 h-5" />
+              {t('admin.teachers.title')}
+            </CardTitle>
+            <CardDescription>{t('admin.teachers.description')}</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {teachers.length > 0 ? (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Name</TableHead>
+                    <TableHead>Email</TableHead>
+                    <TableHead>Role</TableHead>
+                    <TableHead>Joined</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {teachers.map((teacher) => (
+                    <TableRow key={teacher.id}>
+                      <TableCell className="font-medium">{teacher.name}</TableCell>
+                      <TableCell>{teacher.email}</TableCell>
+                      <TableCell>
+                        <Badge variant={teacher.role === 'admin' ? 'default' : 'secondary'}>
+                          {teacher.role}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        {new Date(teacher.created_at).toLocaleDateString()}
+                      </TableCell>
                     </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {feedbackSummaries.map((summary, index) => (
-                      <TableRow key={index}>
-                        <TableCell className="font-medium">{summary.teacher_name}</TableCell>
-                        <TableCell>
-                          <div>
-                            <div>{summary.subject}</div>
-                            <div className="text-xs text-gray-500">{summary.lesson_topic}</div>
-                          </div>
-                        </TableCell>
-                        <TableCell>{new Date(summary.class_date).toLocaleDateString()}</TableCell>
-                        <TableCell className="text-right">
-                          <div className="flex flex-col gap-1 items-end">
-                            <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
-                              {t('admin.feedback.understanding') || "Understanding"}: {summary.avg_understanding.toFixed(1)}
-                            </Badge>
-                            <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200">
-                              {t('admin.feedback.interest') || "Interest"}: {summary.avg_interest.toFixed(1)}
-                            </Badge>
-                            <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-                              {t('admin.feedback.growth') || "Growth"}: {summary.avg_educational_growth.toFixed(1)}
-                            </Badge>
-                            <span className="text-xs text-gray-500">
-                              {summary.total_feedback} {t('admin.feedback.responses') || "responses"}
-                            </span>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              ) : (
-                <div className="text-center py-10 text-gray-500">
-                  {t('admin.feedback.empty') || "No feedback data available yet"}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
+                  ))}
+                </TableBody>
+              </Table>
+            ) : (
+              <p className="text-center text-gray-500 py-8">{t('admin.teachers.empty')}</p>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Feedback Summary */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <BarChart3Icon className="w-5 h-5" />
+              {t('admin.feedback.title')}
+            </CardTitle>
+            <CardDescription>{t('admin.feedback.description')}</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {feedbackSummary.length > 0 ? (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>{t('admin.feedback.teacher')}</TableHead>
+                    <TableHead>{t('admin.feedback.subject')}</TableHead>
+                    <TableHead>{t('admin.feedback.date')}</TableHead>
+                    <TableHead className="text-center">{t('admin.feedback.scores')}</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {feedbackSummary.map((item, index) => (
+                    <TableRow key={index}>
+                      <TableCell className="font-medium">{item.teacher}</TableCell>
+                      <TableCell>{item.subject}</TableCell>
+                      <TableCell>{new Date(item.class_date).toLocaleDateString()}</TableCell>
+                      <TableCell className="text-center">
+                        <div className="text-xs space-y-1">
+                          <div>{t('admin.feedback.understanding')}: {item.avg_understanding?.toFixed(1) || 'N/A'}</div>
+                          <div>{t('admin.feedback.interest')}: {item.avg_interest?.toFixed(1) || 'N/A'}</div>
+                          <div>{t('admin.feedback.growth')}: {item.avg_growth?.toFixed(1) || 'N/A'}</div>
+                          <div className="text-gray-500">({item.total_responses} {t('admin.feedback.responses')})</div>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            ) : (
+              <p className="text-center text-gray-500 py-8">{t('admin.feedback.empty')}</p>
+            )}
+          </CardContent>
+        </Card>
       </main>
     </div>
   );
