@@ -22,8 +22,8 @@ export const teacherLoginService = async (email: string, password: string) => {
       id: teachers.id,
       name: teachers.name,
       email: teachers.email,
-      school: teachers.school,
-      role: teachers.role as 'teacher' | 'admin'
+      school: (teachers as any).school || 'Default School',
+      role: ((teachers as any).role as 'teacher' | 'admin') || 'teacher'
     };
 
     return { teacher: teacherData };

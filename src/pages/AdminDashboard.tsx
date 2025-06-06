@@ -44,12 +44,12 @@ const AdminDashboard = () => {
 
       if (teachersError) throw teachersError;
       
-      const teachersList: Teacher[] = (teachersData || []).map(t => ({
+      const teachersList: Teacher[] = (teachersData || []).map((t: any) => ({
         id: t.id,
         name: t.name,
         email: t.email,
-        school: t.school,
-        role: t.role as 'teacher' | 'admin'
+        school: t.school || 'Default School',
+        role: (t.role as 'teacher' | 'admin') || 'teacher'
       }));
       
       setTeachers(teachersList);
