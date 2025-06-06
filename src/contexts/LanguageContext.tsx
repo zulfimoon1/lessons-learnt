@@ -93,6 +93,15 @@ const translations: Record<string, Record<string, string>> = {
     'dashboard.recentFeedback': 'Recent Feedback',
     'dashboard.subscribeNow': 'Subscribe Now',
     'dashboard.manageSubscription': 'Manage Subscription',
+    'dashboard.title': 'Student Dashboard',
+    'dashboard.grade': 'Grade',
+    'dashboard.upcomingClasses': 'Upcoming Classes',
+    'dashboard.mentalHealthSupport': 'Mental Health Support',
+    'dashboard.weeklySummary': 'Weekly Summary',
+    'dashboard.scheduledClasses': 'Your scheduled classes',
+    'dashboard.noClasses': 'No upcoming classes scheduled',
+    'dashboard.noPsychologists': 'No school psychologists are currently available.',
+    'dashboard.contactAdmin': 'If you need support, please contact your school administration.',
     
     // Class management
     'class.create': 'Create Class',
@@ -102,6 +111,8 @@ const translations: Record<string, Record<string, string>> = {
     'class.subject': 'Subject',
     'class.schedule': 'Schedule',
     'class.students': 'Students',
+    'class.upcomingClasses': 'Upcoming Classes',
+    'class.duration': 'min',
     
     // Feedback
     'feedback.understanding': 'Understanding',
@@ -281,6 +292,15 @@ const translations: Record<string, Record<string, string>> = {
     'dashboard.recentFeedback': 'Naujausi atsiliepimai',
     'dashboard.subscribeNow': 'Prenumeruoti dabar',
     'dashboard.manageSubscription': 'Valdyti prenumeratą',
+    'dashboard.title': 'Mokinio skydelis',
+    'dashboard.grade': 'Klasė',
+    'dashboard.upcomingClasses': 'Artėjančios pamokos',
+    'dashboard.mentalHealthSupport': 'Psichikos sveikatos pagalba',
+    'dashboard.weeklySummary': 'Savaitės suvestinė',
+    'dashboard.scheduledClasses': 'Jūsų suplanuotos pamokos',
+    'dashboard.noClasses': 'Nėra suplanuotų artėjančių pamokų',
+    'dashboard.noPsychologists': 'Šiuo metu mokyklos psichologų nėra.',
+    'dashboard.contactAdmin': 'Jei reikia pagalbos, kreipkitės į mokyklos administraciją.',
     
     // Class management
     'class.create': 'Sukurti klasę',
@@ -290,6 +310,8 @@ const translations: Record<string, Record<string, string>> = {
     'class.subject': 'Dalykas',
     'class.schedule': 'Tvarkaraštis',
     'class.students': 'Mokiniai',
+    'class.upcomingClasses': 'Artėjančios pamokos',
+    'class.duration': 'min',
     
     // Feedback
     'feedback.understanding': 'Supratimas',

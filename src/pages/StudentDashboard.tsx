@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -134,7 +135,7 @@ const StudentDashboard = () => {
         <div className="max-w-7xl mx-auto flex justify-between items-center">
           <div className="flex items-center gap-4">
             <SchoolIcon className="w-8 h-8 text-primary" />
-            <h1 className="text-2xl font-bold text-foreground">Student Dashboard</h1>
+            <h1 className="text-2xl font-bold text-foreground">{t('dashboard.title')}</h1>
           </div>
           <div className="flex items-center gap-4">
             <LanguageSwitcher />
@@ -165,7 +166,7 @@ const StudentDashboard = () => {
           
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Grade</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('dashboard.grade')}</CardTitle>
               <BookOpenIcon className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
@@ -175,7 +176,7 @@ const StudentDashboard = () => {
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Upcoming Classes</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('dashboard.upcomingClasses')}</CardTitle>
               <CalendarIcon className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
@@ -187,9 +188,9 @@ const StudentDashboard = () => {
         <Tabs defaultValue="feedback" className="space-y-6">
           <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="feedback">{t('dashboard.feedback')}</TabsTrigger>
-            <TabsTrigger value="classes">Upcoming Classes</TabsTrigger>
-            <TabsTrigger value="weekly">Weekly Summary</TabsTrigger>
-            <TabsTrigger value="support">Mental Health Support</TabsTrigger>
+            <TabsTrigger value="classes">{t('class.upcomingClasses')}</TabsTrigger>
+            <TabsTrigger value="weekly">{t('dashboard.weeklySummary')}</TabsTrigger>
+            <TabsTrigger value="support">{t('dashboard.mentalHealthSupport')}</TabsTrigger>
           </TabsList>
 
           <TabsContent value="feedback" className="space-y-6">
@@ -199,9 +200,9 @@ const StudentDashboard = () => {
           <TabsContent value="classes" className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>Upcoming Classes</CardTitle>
+                <CardTitle>{t('class.upcomingClasses')}</CardTitle>
                 <CardDescription>
-                  Your scheduled classes for {student?.grade} at {student?.school}
+                  {t('dashboard.scheduledClasses')} {student?.grade} {t('auth.school').toLowerCase()} {student?.school}
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -213,7 +214,7 @@ const StudentDashboard = () => {
                         <p className="text-sm text-muted-foreground">{classItem.lesson_topic}</p>
                         <div className="flex gap-2 mt-2">
                           <Badge variant="outline">{classItem.grade}</Badge>
-                          <Badge variant="outline">{classItem.duration_minutes} min</Badge>
+                          <Badge variant="outline">{classItem.duration_minutes} {t('class.duration')}</Badge>
                         </div>
                       </div>
                       <div className="text-right">
@@ -223,7 +224,7 @@ const StudentDashboard = () => {
                     </div>
                   ))}
                   {upcomingClasses.length === 0 && (
-                    <p className="text-center text-muted-foreground py-8">No upcoming classes scheduled</p>
+                    <p className="text-center text-muted-foreground py-8">{t('dashboard.noClasses')}</p>
                   )}
                 </div>
               </CardContent>
@@ -239,7 +240,7 @@ const StudentDashboard = () => {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <HeartHandshakeIcon className="w-5 h-5" />
-                  Mental Health Support
+                  {t('dashboard.mentalHealthSupport')}
                 </CardTitle>
                 <CardDescription>
                   Access mental health resources and support at {student?.school}
@@ -255,9 +256,9 @@ const StudentDashboard = () => {
                 ) : (
                   <div className="text-center py-8">
                     <HeartHandshakeIcon className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                    <p className="text-muted-foreground">No school psychologists are currently available.</p>
+                    <p className="text-muted-foreground">{t('dashboard.noPsychologists')}</p>
                     <p className="text-sm text-muted-foreground mt-2">
-                      If you need support, please contact your school administration.
+                      {t('dashboard.contactAdmin')}
                     </p>
                   </div>
                 )}
