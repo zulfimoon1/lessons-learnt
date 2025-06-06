@@ -22,42 +22,52 @@ export const useAuthStorage = () => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    console.log('useAuthStorage: Loading auth data from localStorage');
+    
     // Load from localStorage on mount
     const savedTeacher = localStorage.getItem('teacher');
     const savedStudent = localStorage.getItem('student');
     
     if (savedTeacher) {
       try {
-        setTeacher(JSON.parse(savedTeacher));
+        const teacherData = JSON.parse(savedTeacher);
+        console.log('useAuthStorage: Loaded teacher from storage:', teacherData);
+        setTeacher(teacherData);
       } catch (error) {
-        console.error('Error parsing saved teacher:', error);
+        console.error('useAuthStorage: Error parsing saved teacher:', error);
         localStorage.removeItem('teacher');
       }
     }
     
     if (savedStudent) {
       try {
-        setStudent(JSON.parse(savedStudent));
+        const studentData = JSON.parse(savedStudent);
+        console.log('useAuthStorage: Loaded student from storage:', studentData);
+        setStudent(studentData);
       } catch (error) {
-        console.error('Error parsing saved student:', error);
+        console.error('useAuthStorage: Error parsing saved student:', error);
         localStorage.removeItem('student');
       }
     }
     
     setIsLoading(false);
+    console.log('useAuthStorage: Initialization complete');
   }, []);
 
   const saveTeacher = (teacherData: Teacher) => {
+    console.log('useAuthStorage: Saving teacher to storage:', teacherData);
     setTeacher(teacherData);
     localStorage.setItem('teacher', JSON.stringify(teacherData));
   };
 
   const saveStudent = (studentData: Student) => {
+    console.log('useAuthStorage: Saving student to storage:', studentData);
     setStudent(studentData);
     localStorage.setItem('student', JSON.stringify(studentData));
   };
 
   const clearAuth = () => {
+    console.log('useAuthStorage: Clearing auth data');
     setTeacher(null);
     setStudent(null);
     localStorage.removeItem('teacher');
