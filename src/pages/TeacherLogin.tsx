@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -38,27 +37,41 @@ const TeacherLogin = () => {
     e.preventDefault();
     setIsLoading(true);
 
-    console.log('TeacherLogin: Starting login process');
+    console.log('TeacherLogin: Starting login process with:', loginData.email);
 
     try {
-      const { error } = await teacherLogin(loginData.email, loginData.password);
+      const result = await teacherLogin(loginData.email, loginData.password);
+      console.log('TeacherLogin: Login result:', result);
 
-      console.log('TeacherLogin: Login result:', { error });
-
-      if (error) {
-        console.error('TeacherLogin: Login failed:', error);
+      if (result.error) {
+        console.error('TeacherLogin: Login failed:', result.error);
         toast({
           title: "Login failed",
-          description: error,
+          description: result.error,
           variant: "destructive",
         });
-      } else {
-        console.log('TeacherLogin: Login successful, navigating...');
+      } else if (result.teacher) {
+        console.log('TeacherLogin: Login successful, teacher:', result.teacher);
         toast({
           title: "Welcome back! 👨‍🏫",
           description: "You've successfully logged in to your teacher dashboard.",
         });
-        navigate("/teacher-dashboard");
+        
+        // Navigate based on role
+        if (result.teacher.role === "admin") {
+          console.log('TeacherLogin: Navigating to admin dashboard');
+          navigate("/admin-dashboard");
+        } else {
+          console.log('TeacherLogin: Navigating to teacher dashboard');
+          navigate("/teacher-dashboard");
+        }
+      } else {
+        console.error('TeacherLogin: No error but no teacher data returned');
+        toast({
+          title: "Login failed",
+          description: "Invalid response from server",
+          variant: "destructive",
+        });
       }
     } catch (err) {
       console.error('TeacherLogin: Unexpected error:', err);
@@ -90,27 +103,40 @@ const TeacherLogin = () => {
     console.log('TeacherLogin: Starting signup process');
 
     try {
-      // Use the same teacherLogin function - in the current implementation 
-      // it will create a new account if one doesn't exist, passing the role
-      const { error } = await teacherLogin(signupData.email, signupData.password, 
+      const result = await teacherLogin(signupData.email, signupData.password, 
         signupData.name, signupData.school, signupData.role);
 
-      console.log('TeacherLogin: Signup result:', { error });
+      console.log('TeacherLogin: Signup result:', result);
 
-      if (error) {
-        console.error('TeacherLogin: Signup failed:', error);
+      if (result.error) {
+        console.error('TeacherLogin: Signup failed:', result.error);
         toast({
           title: "Signup failed",
-          description: error,
+          description: result.error,
           variant: "destructive",
         });
-      } else {
-        console.log('TeacherLogin: Signup successful, navigating...');
+      } else if (result.teacher) {
+        console.log('TeacherLogin: Signup successful, teacher:', result.teacher);
         toast({
           title: "Account created! 🎉",
           description: "Welcome to Lesson Lens!",
         });
-        navigate(signupData.role === "admin" ? "/admin-dashboard" : "/teacher-dashboard");
+        
+        // Navigate based on role
+        if (result.teacher.role === "admin") {
+          console.log('TeacherLogin: Navigating to admin dashboard');
+          navigate("/admin-dashboard");
+        } else {
+          console.log('TeacherLogin: Navigating to teacher dashboard');
+          navigate("/teacher-dashboard");
+        }
+      } else {
+        console.error('TeacherLogin: No error but no teacher data returned');
+        toast({
+          title: "Signup failed",
+          description: "Invalid response from server",
+          variant: "destructive",
+        });
       }
     } catch (err) {
       console.error('TeacherLogin: Unexpected signup error:', err);

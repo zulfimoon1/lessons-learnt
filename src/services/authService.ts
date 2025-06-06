@@ -9,6 +9,8 @@ export const teacherLoginService = async (
   role?: 'teacher' | 'admin'
 ) => {
   try {
+    console.log('teacherLoginService: Starting with email:', email);
+    
     // First check if a teacher with this email exists
     const { data: teachers, error: queryError } = await supabase
       .from('teachers')
@@ -20,6 +22,8 @@ export const teacherLoginService = async (
       return { error: 'Login failed. Please try again.' };
     }
 
+    console.log('teacherLoginService: Teachers found:', teachers?.length || 0);
+
     // If no teacher exists with this email, create one (auto-signup)
     if (!teachers || teachers.length === 0) {
       // Ensure we have all required data for signup
@@ -27,6 +31,7 @@ export const teacherLoginService = async (
         return { error: 'Missing required fields for signup.' };
       }
 
+      console.log('teacherLoginService: Creating new teacher');
       const { data: newTeacher, error: createError } = await supabase
         .from('teachers')
         .insert({
@@ -52,12 +57,16 @@ export const teacherLoginService = async (
         role: ((newTeacher as any).role as 'teacher' | 'admin') || 'teacher'
       };
 
+      console.log('teacherLoginService: New teacher created:', teacherData);
       return { teacher: teacherData };
     }
 
     // Otherwise, check password and login
     const teacher = teachers[0];
+    console.log('teacherLoginService: Checking password for existing teacher');
+    
     if (teacher.password_hash !== password) {
+      console.log('teacherLoginService: Invalid password');
       return { error: 'Invalid email or password' };
     }
 
@@ -69,6 +78,7 @@ export const teacherLoginService = async (
       role: ((teacher as any).role as 'teacher' | 'admin') || 'teacher'
     };
 
+    console.log('teacherLoginService: Login successful:', teacherData);
     return { teacher: teacherData };
   } catch (error) {
     console.error('Teacher login service error:', error);
@@ -119,22 +129,14 @@ export const studentSignupService = async (fullName: string, school: string, gra
 // Simple login service (just name and password)
 export const studentSimpleLoginService = async (fullName: string, password: string) => {
   try {
-    console.log('Student login attempt:', { fullName });
-    
-    // First, let's check if we have any students at all
-    const { data: allStudents, error: countError } = await supabase
-      .from('students')
-      .select('id, full_name')
-      .limit(5);
-    
-    console.log('Sample students in database:', allStudents);
+    console.log('studentSimpleLoginService: Starting login for:', fullName);
     
     const { data: students, error } = await supabase
       .from('students')
       .select('*')
       .eq('full_name', fullName);
 
-    console.log('Student login query result:', { students, error, searchName: fullName });
+    console.log('studentSimpleLoginService: Query result:', { students: students?.length || 0, error });
 
     if (error) {
       console.error('Database error during student login:', error);
@@ -142,39 +144,21 @@ export const studentSimpleLoginService = async (fullName: string, password: stri
     }
 
     if (!students || students.length === 0) {
-      console.error('Student not found:', fullName);
+      console.log('studentSimpleLoginService: No student found with name:', fullName);
       return { error: 'Student not found. Please check your name or sign up first.' };
     }
 
-    // If multiple students with same name, try to find one with matching password
-    let matchingStudent = null;
+    console.log('studentSimpleLoginService: Found', students.length, 'student(s)');
+
+    // Find student with matching password
+    const matchingStudent = students.find(student => student.password_hash === password);
     
-    if (students.length > 1) {
-      console.log('Multiple students found with name:', fullName, students);
-      
-      // Try to find a student with matching password
-      const studentsWithMatchingPassword = students.filter(s => s.password_hash === password);
-      
-      if (studentsWithMatchingPassword.length === 1) {
-        matchingStudent = studentsWithMatchingPassword[0];
-        console.log('Found unique student with matching password:', matchingStudent);
-      } else if (studentsWithMatchingPassword.length === 0) {
-        console.error('No students found with matching password');
-        return { error: 'Invalid password' };
-      } else {
-        console.error('Multiple students found with same name and password');
-        return { error: 'Multiple accounts found with this name and password. Please contact your teacher for help.' };
-      }
-    } else {
-      matchingStudent = students[0];
+    if (!matchingStudent) {
+      console.log('studentSimpleLoginService: No student found with matching password');
+      return { error: 'Invalid password. Please check your password and try again.' };
     }
 
-    console.log('Found student:', matchingStudent);
-    
-    if (matchingStudent.password_hash !== password) {
-      console.error('Invalid password for student:', fullName);
-      return { error: 'Invalid password' };
-    }
+    console.log('studentSimpleLoginService: Login successful for student:', matchingStudent.id);
 
     const studentData: Student = {
       id: matchingStudent.id,
@@ -183,7 +167,6 @@ export const studentSimpleLoginService = async (fullName: string, password: stri
       grade: matchingStudent.grade
     };
 
-    console.log('Student login successful:', studentData);
     return { student: studentData };
   } catch (error) {
     console.error('Student login service error:', error);
