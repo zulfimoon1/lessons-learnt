@@ -1,33 +1,65 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { Teacher, Student } from '@/types/auth';
 
 export const teacherLoginService = async (email: string, password: string) => {
   try {
-    const { data: teachers, error } = await supabase
+    // First check if a teacher with this email exists
+    const { data: teachers, error: queryError } = await supabase
       .from('teachers')
       .select('*')
-      .eq('email', email)
-      .single();
+      .eq('email', email);
 
-    if (error || !teachers) {
-      return { error: 'Invalid email or password' };
+    if (queryError) {
+      console.error('Error querying teachers:', queryError);
+      return { error: 'Login failed. Please try again.' };
     }
 
-    if (teachers.password_hash !== password) {
+    // If no teacher exists with this email, create one (auto-signup)
+    if (!teachers || teachers.length === 0) {
+      const { data: newTeacher, error: createError } = await supabase
+        .from('teachers')
+        .insert({
+          email: email,
+          password_hash: password, // In production, this should be properly hashed
+          name: email.split('@')[0], // Default name from email
+          school: 'Default School'
+        })
+        .select()
+        .single();
+
+      if (createError) {
+        console.error('Error creating teacher:', createError);
+        return { error: 'Failed to create account. Please try again.' };
+      }
+
+      const teacherData: Teacher = {
+        id: newTeacher.id,
+        name: newTeacher.name,
+        email: newTeacher.email,
+        school: (newTeacher as any).school || 'Default School',
+        role: ((newTeacher as any).role as 'teacher' | 'admin') || 'teacher'
+      };
+
+      return { teacher: teacherData };
+    }
+
+    // Otherwise, check password and login
+    const teacher = teachers[0];
+    if (teacher.password_hash !== password) {
       return { error: 'Invalid email or password' };
     }
 
     const teacherData: Teacher = {
-      id: teachers.id,
-      name: teachers.name,
-      email: teachers.email,
-      school: (teachers as any).school || 'Default School',
-      role: ((teachers as any).role as 'teacher' | 'admin') || 'teacher'
+      id: teacher.id,
+      name: teacher.name,
+      email: teacher.email,
+      school: (teacher as any).school || 'Default School',
+      role: ((teacher as any).role as 'teacher' | 'admin') || 'teacher'
     };
 
     return { teacher: teacherData };
   } catch (error) {
+    console.error('Teacher login service error:', error);
     return { error: 'Login failed. Please try again.' };
   }
 };
