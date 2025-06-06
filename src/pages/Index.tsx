@@ -1,7 +1,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { GraduationCapIcon, UsersIcon, BookOpenIcon, TrendingUpIcon, BarChart3Icon, HeartIcon, ShieldCheckIcon } from "lucide-react";
+import { GraduationCapIcon, UsersIcon, BookOpenIcon, HeartIcon, BarChart3Icon, ShieldCheckIcon } from "lucide-react";
 import { Link } from "react-router-dom";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import CalendarBooking from "@/components/CalendarBooking";
@@ -90,11 +90,11 @@ const Index = () => {
           <Card className="bg-card/60 backdrop-blur-sm border-border">
             <CardHeader>
               <div className="w-12 h-12 bg-primary/20 rounded-lg flex items-center justify-center mb-4">
-                <TrendingUpIcon className="w-6 h-6 text-primary" />
+                <HeartIcon className="w-6 h-6 text-primary" />
               </div>
-              <CardTitle className="text-xl">{t('features.dataAnalytics.title')}</CardTitle>
+              <CardTitle className="text-xl">Mental Health</CardTitle>
               <CardDescription>
-                {t('features.dataAnalytics.description')}
+                Early detection and support for student well-being and mental health concerns
               </CardDescription>
             </CardHeader>
           </Card>
