@@ -12,6 +12,7 @@ import StarRating from "@/components/StarRating";
 import EmotionalStateSelector from "@/components/EmotionalStateSelector";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface Student {
   id: string;
@@ -26,6 +27,7 @@ interface LessonFeedbackFormProps {
 
 const LessonFeedbackForm = ({ student }: LessonFeedbackFormProps) => {
   const { toast } = useToast();
+  const { t } = useLanguage();
   const [formData, setFormData] = useState({
     subject: "",
     lessonTopic: "",
@@ -98,8 +100,8 @@ const LessonFeedbackForm = ({ student }: LessonFeedbackFormProps) => {
       if (error) throw error;
 
       toast({
-        title: "Feedback submitted",
-        description: "Thank you for your feedback!",
+        title: t('feedback.submitted'),
+        description: t('feedback.submittedDesc'),
       });
 
       // Reset form
@@ -117,8 +119,8 @@ const LessonFeedbackForm = ({ student }: LessonFeedbackFormProps) => {
       });
     } catch (error) {
       toast({
-        title: "Error",
-        description: "Failed to submit feedback",
+        title: t('feedback.submitError'),
+        description: t('feedback.submitErrorDesc'),
         variant: "destructive",
       });
     }
@@ -131,14 +133,14 @@ const LessonFeedbackForm = ({ student }: LessonFeedbackFormProps) => {
       {/* Header */}
       <div className="text-center">
         <div className="flex items-center gap-3 mb-2 justify-center">
-          <h2 className="text-2xl font-bold text-gray-900">Share Your Learning Experience</h2>
+          <h2 className="text-2xl font-bold text-gray-900">{t('feedback.title')}</h2>
           <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
             <UserIcon className="w-3 h-3 mr-1" />
             {student?.full_name}
           </Badge>
         </div>
         <p className="text-gray-600">
-          Help your teacher understand how to make lessons even better
+          {t('feedback.subtitle')}
         </p>
       </div>
 
@@ -146,34 +148,34 @@ const LessonFeedbackForm = ({ student }: LessonFeedbackFormProps) => {
         {/* Basic Information */}
         <Card className="bg-white/80 backdrop-blur-sm border-blue-100">
           <CardHeader>
-            <CardTitle className="text-xl text-gray-900">Lesson Details</CardTitle>
-            <CardDescription>Tell us about today's lesson</CardDescription>
+            <CardTitle className="text-xl text-gray-900">{t('feedback.lessonDetails')}</CardTitle>
+            <CardDescription>{t('feedback.lessonDetailsDesc')}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="subject" className="text-gray-700 font-medium">Subject</Label>
+                <Label htmlFor="subject" className="text-gray-700 font-medium">{t('class.subject')}</Label>
                 <Select onValueChange={(value) => setFormData(prev => ({ ...prev, subject: value }))}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select subject" />
+                    <SelectValue placeholder={t('subject.selectSubject')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="mathematics">Mathematics</SelectItem>
-                    <SelectItem value="science">Science</SelectItem>
-                    <SelectItem value="english">English</SelectItem>
-                    <SelectItem value="history">History</SelectItem>
-                    <SelectItem value="art">Art</SelectItem>
-                    <SelectItem value="music">Music</SelectItem>
-                    <SelectItem value="physical-education">Physical Education</SelectItem>
-                    <SelectItem value="other">Other</SelectItem>
+                    <SelectItem value="mathematics">{t('subject.mathematics')}</SelectItem>
+                    <SelectItem value="science">{t('subject.science')}</SelectItem>
+                    <SelectItem value="english">{t('subject.english')}</SelectItem>
+                    <SelectItem value="history">{t('subject.history')}</SelectItem>
+                    <SelectItem value="art">{t('subject.art')}</SelectItem>
+                    <SelectItem value="music">{t('subject.music')}</SelectItem>
+                    <SelectItem value="physical-education">{t('subject.physicalEducation')}</SelectItem>
+                    <SelectItem value="other">{t('subject.other')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div>
-                <Label htmlFor="lessonTopic" className="text-gray-700 font-medium">Lesson Topic</Label>
+                <Label htmlFor="lessonTopic" className="text-gray-700 font-medium">{t('feedback.lessonTopic')}</Label>
                 <Input
                   id="lessonTopic"
-                  placeholder="e.g., Fractions, Photosynthesis, Shakespeare"
+                  placeholder={t('feedback.lessonTopicPlaceholder')}
                   value={formData.lessonTopic}
                   onChange={(e) => setFormData(prev => ({ ...prev, lessonTopic: e.target.value }))}
                   className="border-gray-200"
@@ -186,34 +188,52 @@ const LessonFeedbackForm = ({ student }: LessonFeedbackFormProps) => {
         {/* Understanding and Engagement */}
         <Card className="bg-white/80 backdrop-blur-sm border-green-100">
           <CardHeader>
-            <CardTitle className="text-xl text-gray-900">Learning Assessment</CardTitle>
-            <CardDescription>Rate your learning experience</CardDescription>
+            <CardTitle className="text-xl text-gray-900">{t('feedback.learningAssessment')}</CardTitle>
+            <CardDescription>{t('feedback.learningAssessmentDesc')}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             <div>
-              <Label className="text-gray-700 font-medium">How well did you understand the lesson content?</Label>
+              <Label className="text-gray-700 font-medium">{t('feedback.understandingQuestion')}</Label>
               <StarRating
                 rating={formData.understanding}
                 onRatingChange={(rating) => setFormData(prev => ({ ...prev, understanding: rating }))}
-                labels={["Very Confused", "Confused", "Somewhat Clear", "Clear", "Very Clear"]}
+                labels={[
+                  t('rating.understanding.1'),
+                  t('rating.understanding.2'),
+                  t('rating.understanding.3'),
+                  t('rating.understanding.4'),
+                  t('rating.understanding.5')
+                ]}
               />
             </div>
 
             <div>
-              <Label className="text-gray-700 font-medium">How interesting was the lesson?</Label>
+              <Label className="text-gray-700 font-medium">{t('feedback.interestQuestion')}</Label>
               <StarRating
                 rating={formData.interest}
                 onRatingChange={(rating) => setFormData(prev => ({ ...prev, interest: rating }))}
-                labels={["Very Boring", "Boring", "Okay", "Interesting", "Very Interesting"]}
+                labels={[
+                  t('rating.interest.1'),
+                  t('rating.interest.2'),
+                  t('rating.interest.3'),
+                  t('rating.interest.4'),
+                  t('rating.interest.5')
+                ]}
               />
             </div>
 
             <div>
-              <Label className="text-gray-700 font-medium">How much do you feel you learned educationally?</Label>
+              <Label className="text-gray-700 font-medium">{t('feedback.educationalGrowthQuestion')}</Label>
               <StarRating
                 rating={formData.educationalGrowth}
                 onRatingChange={(rating) => setFormData(prev => ({ ...prev, educationalGrowth: rating }))}
-                labels={["Learned Nothing", "Learned Little", "Learned Some", "Learned Much", "Learned A Lot"]}
+                labels={[
+                  t('rating.growth.1'),
+                  t('rating.growth.2'),
+                  t('rating.growth.3'),
+                  t('rating.growth.4'),
+                  t('rating.growth.5')
+                ]}
               />
             </div>
           </CardContent>
@@ -222,8 +242,8 @@ const LessonFeedbackForm = ({ student }: LessonFeedbackFormProps) => {
         {/* Emotional State */}
         <Card className="bg-white/80 backdrop-blur-sm border-purple-100">
           <CardHeader>
-            <CardTitle className="text-xl text-gray-900">Emotional Wellbeing</CardTitle>
-            <CardDescription>How did you feel during the lesson?</CardDescription>
+            <CardTitle className="text-xl text-gray-900">{t('feedback.emotionalWellbeing')}</CardTitle>
+            <CardDescription>{t('feedback.emotionalWellbeingDesc')}</CardDescription>
           </CardHeader>
           <CardContent>
             <EmotionalStateSelector
@@ -236,15 +256,15 @@ const LessonFeedbackForm = ({ student }: LessonFeedbackFormProps) => {
         {/* Detailed Feedback */}
         <Card className="bg-white/80 backdrop-blur-sm border-indigo-100">
           <CardHeader>
-            <CardTitle className="text-xl text-gray-900">Detailed Feedback</CardTitle>
-            <CardDescription>Help your teacher understand what worked and what could be improved</CardDescription>
+            <CardTitle className="text-xl text-gray-900">{t('feedback.detailedFeedback')}</CardTitle>
+            <CardDescription>{t('feedback.detailedFeedbackDesc')}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <Label htmlFor="whatWorkedWell" className="text-gray-700 font-medium">What worked well in this lesson?</Label>
+              <Label htmlFor="whatWorkedWell" className="text-gray-700 font-medium">{t('feedback.whatWorkedWell')}</Label>
               <Textarea
                 id="whatWorkedWell"
-                placeholder="What did you enjoy? What helped you learn?"
+                placeholder={t('feedback.whatWorkedWellPlaceholder')}
                 value={formData.whatWorkedWell}
                 onChange={(e) => setFormData(prev => ({ ...prev, whatWorkedWell: e.target.value }))}
                 className="border-gray-200 min-h-[100px]"
@@ -252,10 +272,10 @@ const LessonFeedbackForm = ({ student }: LessonFeedbackFormProps) => {
             </div>
 
             <div>
-              <Label htmlFor="whatWasConfusing" className="text-gray-700 font-medium">What was confusing or difficult?</Label>
+              <Label htmlFor="whatWasConfusing" className="text-gray-700 font-medium">{t('feedback.whatWasConfusing')}</Label>
               <Textarea
                 id="whatWasConfusing"
-                placeholder="What parts were hard to understand?"
+                placeholder={t('feedback.whatWasConfusingPlaceholder')}
                 value={formData.whatWasConfusing}
                 onChange={(e) => setFormData(prev => ({ ...prev, whatWasConfusing: e.target.value }))}
                 className="border-gray-200 min-h-[100px]"
@@ -263,10 +283,10 @@ const LessonFeedbackForm = ({ student }: LessonFeedbackFormProps) => {
             </div>
 
             <div>
-              <Label htmlFor="howToImprove" className="text-gray-700 font-medium">How could the teacher make the lesson better?</Label>
+              <Label htmlFor="howToImprove" className="text-gray-700 font-medium">{t('feedback.howToImprove')}</Label>
               <Textarea
                 id="howToImprove"
-                placeholder="Your suggestions for improvement..."
+                placeholder={t('feedback.howToImprovePlaceholder')}
                 value={formData.howToImprove}
                 onChange={(e) => setFormData(prev => ({ ...prev, howToImprove: e.target.value }))}
                 className="border-gray-200 min-h-[100px]"
@@ -274,10 +294,10 @@ const LessonFeedbackForm = ({ student }: LessonFeedbackFormProps) => {
             </div>
 
             <div>
-              <Label htmlFor="additionalComments" className="text-gray-700 font-medium">Any other comments?</Label>
+              <Label htmlFor="additionalComments" className="text-gray-700 font-medium">{t('feedback.additionalComments')}</Label>
               <Textarea
                 id="additionalComments"
-                placeholder="Anything else you'd like to share..."
+                placeholder={t('feedback.additionalCommentsPlaceholder')}
                 value={formData.additionalComments}
                 onChange={(e) => setFormData(prev => ({ ...prev, additionalComments: e.target.value }))}
                 className="border-gray-200 min-h-[80px]"
@@ -295,7 +315,7 @@ const LessonFeedbackForm = ({ student }: LessonFeedbackFormProps) => {
             className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-8 py-4 text-lg font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Send className="w-5 h-5 mr-2" />
-            Submit Feedback
+            {t('feedback.submit')}
           </Button>
         </div>
       </form>
