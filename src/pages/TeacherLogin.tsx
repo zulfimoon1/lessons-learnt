@@ -38,20 +38,35 @@ const TeacherLogin = () => {
     e.preventDefault();
     setIsLoading(true);
 
-    const { error } = await teacherLogin(loginData.email, loginData.password);
+    console.log('TeacherLogin: Starting login process');
 
-    if (error) {
+    try {
+      const { error } = await teacherLogin(loginData.email, loginData.password);
+
+      console.log('TeacherLogin: Login result:', { error });
+
+      if (error) {
+        console.error('TeacherLogin: Login failed:', error);
+        toast({
+          title: "Login failed",
+          description: error,
+          variant: "destructive",
+        });
+      } else {
+        console.log('TeacherLogin: Login successful, navigating...');
+        toast({
+          title: "Welcome back! 👨‍🏫",
+          description: "You've successfully logged in to your teacher dashboard.",
+        });
+        navigate("/teacher-dashboard");
+      }
+    } catch (err) {
+      console.error('TeacherLogin: Unexpected error:', err);
       toast({
         title: "Login failed",
-        description: error,
+        description: "An unexpected error occurred. Please try again.",
         variant: "destructive",
       });
-    } else {
-      toast({
-        title: "Welcome back! 👨‍🏫",
-        description: "You've successfully logged in to your teacher dashboard.",
-      });
-      navigate("/teacher-dashboard");
     }
 
     setIsLoading(false);
@@ -72,23 +87,38 @@ const TeacherLogin = () => {
       return;
     }
 
-    // Use the same teacherLogin function - in the current implementation 
-    // it will create a new account if one doesn't exist, passing the role
-    const { error } = await teacherLogin(signupData.email, signupData.password, 
-      signupData.name, signupData.school, signupData.role);
+    console.log('TeacherLogin: Starting signup process');
 
-    if (error) {
+    try {
+      // Use the same teacherLogin function - in the current implementation 
+      // it will create a new account if one doesn't exist, passing the role
+      const { error } = await teacherLogin(signupData.email, signupData.password, 
+        signupData.name, signupData.school, signupData.role);
+
+      console.log('TeacherLogin: Signup result:', { error });
+
+      if (error) {
+        console.error('TeacherLogin: Signup failed:', error);
+        toast({
+          title: "Signup failed",
+          description: error,
+          variant: "destructive",
+        });
+      } else {
+        console.log('TeacherLogin: Signup successful, navigating...');
+        toast({
+          title: "Account created! 🎉",
+          description: "Welcome to Lesson Lens!",
+        });
+        navigate(signupData.role === "admin" ? "/admin-dashboard" : "/teacher-dashboard");
+      }
+    } catch (err) {
+      console.error('TeacherLogin: Unexpected signup error:', err);
       toast({
         title: "Signup failed",
-        description: error,
+        description: "An unexpected error occurred. Please try again.",
         variant: "destructive",
       });
-    } else {
-      toast({
-        title: "Account created! 🎉",
-        description: "Welcome to Lesson Lens!",
-      });
-      navigate(signupData.role === "admin" ? "/admin-dashboard" : "/teacher-dashboard");
     }
 
     setIsLoading(false);

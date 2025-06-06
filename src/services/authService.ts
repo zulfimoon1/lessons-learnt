@@ -146,25 +146,41 @@ export const studentSimpleLoginService = async (fullName: string, password: stri
       return { error: 'Student not found. Please check your name or sign up first.' };
     }
 
-    // If multiple students with same name, we need more info
+    // If multiple students with same name, try to find one with matching password
+    let matchingStudent = null;
+    
     if (students.length > 1) {
       console.log('Multiple students found with name:', fullName, students);
-      return { error: 'Multiple students found with this name. Please contact your teacher for help.' };
+      
+      // Try to find a student with matching password
+      const studentsWithMatchingPassword = students.filter(s => s.password_hash === password);
+      
+      if (studentsWithMatchingPassword.length === 1) {
+        matchingStudent = studentsWithMatchingPassword[0];
+        console.log('Found unique student with matching password:', matchingStudent);
+      } else if (studentsWithMatchingPassword.length === 0) {
+        console.error('No students found with matching password');
+        return { error: 'Invalid password' };
+      } else {
+        console.error('Multiple students found with same name and password');
+        return { error: 'Multiple accounts found with this name and password. Please contact your teacher for help.' };
+      }
+    } else {
+      matchingStudent = students[0];
     }
 
-    const student = students[0];
-    console.log('Found student:', student);
+    console.log('Found student:', matchingStudent);
     
-    if (student.password_hash !== password) {
+    if (matchingStudent.password_hash !== password) {
       console.error('Invalid password for student:', fullName);
       return { error: 'Invalid password' };
     }
 
     const studentData: Student = {
-      id: student.id,
-      full_name: student.full_name,
-      school: student.school,
-      grade: student.grade
+      id: matchingStudent.id,
+      full_name: matchingStudent.full_name,
+      school: matchingStudent.school,
+      grade: matchingStudent.grade
     };
 
     console.log('Student login successful:', studentData);
