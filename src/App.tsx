@@ -14,7 +14,6 @@ import AdminDashboard from "./pages/AdminDashboard";
 import PlatformAdminLogin from "./pages/PlatformAdminLogin";
 import PlatformAdminDashboard from "./pages/PlatformAdminDashboard";
 import NotFound from "./pages/NotFound";
-import { Toaster as Sonner } from "@/components/ui/sonner";
 
 const queryClient = new QueryClient();
 
@@ -134,7 +133,6 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <Toaster />
-      <Sonner />
       <LanguageProvider>
         <PlatformAdminProvider>
           <AuthProvider>

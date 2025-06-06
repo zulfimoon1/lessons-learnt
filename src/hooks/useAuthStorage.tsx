@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 
 interface Teacher {
   id: string;
-  full_name: string;
+  name: string;
   email: string;
   school: string;
   role: string;
