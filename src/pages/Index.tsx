@@ -1,9 +1,9 @@
-
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { GraduationCapIcon, UsersIcon, BookOpenIcon, TrendingUpIcon, BarChart3Icon, HeartIcon, ShieldCheckIcon } from "lucide-react";
 import { Link } from "react-router-dom";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
+import CalendarBooking from "@/components/CalendarBooking";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 const Index = () => {
@@ -166,9 +166,7 @@ const Index = () => {
             <p className="text-lg text-muted-foreground mb-8">
               Join hundreds of schools already using Lessons Learnt to create better learning environments.
             </p>
-            <Button size="lg" className="text-lg px-8 py-4">
-              Schedule a Demo
-            </Button>
+            <CalendarBooking />
           </div>
         </div>
       </section>
