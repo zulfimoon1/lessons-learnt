@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -10,6 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { GraduationCapIcon, UsersIcon, MessageSquareIcon, CreditCardIcon, LogOutIcon } from "lucide-react";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { Teacher, TeacherFeedbackSummary } from "@/types/auth";
+import { useNavigate } from "react-router-dom";
 import { 
   Table, 
   TableBody, 
@@ -24,6 +24,7 @@ const AdminDashboard = () => {
   const { teacher, logout } = useAuth();
   const { t } = useLanguage();
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [teachers, setTeachers] = useState<Teacher[]>([]);
   const [feedbackSummaries, setFeedbackSummaries] = useState<TeacherFeedbackSummary[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -127,22 +128,8 @@ const AdminDashboard = () => {
     }
   };
 
-  const handleCreateSubscription = async () => {
-    try {
-      const { data, error } = await supabase.functions.invoke('create-checkout');
-      
-      if (error) throw error;
-      
-      if (data?.url) {
-        window.open(data.url, '_blank');
-      }
-    } catch (error) {
-      toast({
-        title: t('admin.payment.error.title') || "Payment Error",
-        description: t('admin.payment.error.description') || "Failed to create subscription. Please try again.",
-        variant: "destructive",
-      });
-    }
+  const handleGoToPricing = () => {
+    navigate('/pricing');
   };
 
   if (isLoading) {
@@ -215,7 +202,7 @@ const AdminDashboard = () => {
             </CardHeader>
             <CardContent>
               <Button
-                onClick={handleCreateSubscription}
+                onClick={handleGoToPricing}
                 className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
               >
                 {t('admin.subscribe') || "Subscribe Now"}

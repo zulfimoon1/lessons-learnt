@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -11,6 +12,7 @@ import TeacherLogin from "./pages/TeacherLogin";
 import TeacherDashboard from "./pages/TeacherDashboard";
 import StudentDashboard from "./pages/StudentDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
+import PricingPage from "./pages/PricingPage";
 import PlatformAdminLogin from "./pages/PlatformAdminLogin";
 import PlatformAdminDashboard from "./pages/PlatformAdminDashboard";
 import NotFound from "./pages/NotFound";
@@ -113,6 +115,14 @@ const AppRoutes = () => {
         element={
           <ProtectedRoute requireAdmin>
             <AdminDashboard />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/pricing" 
+        element={
+          <ProtectedRoute requireAdmin>
+            <PricingPage />
           </ProtectedRoute>
         } 
       />
