@@ -9,14 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { GraduationCapIcon, UsersIcon, MessageSquareIcon, CreditCardIcon, LogOutIcon } from "lucide-react";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
-
-interface Teacher {
-  id: string;
-  name: string;
-  email: string;
-  school: string;
-  role: string;
-}
+import { Teacher } from "@/types/auth";
 
 interface FeedbackSummary {
   teacher_name: string;
@@ -50,7 +43,16 @@ const AdminDashboard = () => {
         .eq('school', teacher?.school);
 
       if (teachersError) throw teachersError;
-      setTeachers(teachersData || []);
+      
+      const teachersList: Teacher[] = (teachersData || []).map(t => ({
+        id: t.id,
+        name: t.name,
+        email: t.email,
+        school: t.school,
+        role: t.role as 'teacher' | 'admin'
+      }));
+      
+      setTeachers(teachersList);
 
       // This would need to be implemented with proper joins when feedback system is complete
       setFeedbackSummary([]);
