@@ -91,15 +91,17 @@ export const getStudentStatistics = async () => {
     // Get count of students per school
     const { data: schoolData, error: schoolError } = await supabase
       .from('students')
-      .select('school, count')
-      .select('school, count(*)', { count: 'exact' })
-      .groupBy('school');
+      .select('school')
+      .count()
+      .group('school');
       
     if (schoolError) {
       console.error('Error fetching student statistics:', schoolError);
       return { error: schoolError.message };
     }
 
+    console.log('Student count data:', schoolData);
+    
     // Transform the data to match our expected format
     const studentCountBySchool = schoolData.map(item => ({
       school: item.school,
