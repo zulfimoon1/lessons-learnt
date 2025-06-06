@@ -289,7 +289,7 @@ const AdminDashboard = () => {
                               {t('admin.feedback.growth') || "Growth"}: {summary.avg_educational_growth.toFixed(1)}
                             </Badge>
                             <span className="text-xs text-gray-500">
-                              {t('admin.feedback.count', { count: summary.total_feedback }) || `${summary.total_feedback} responses`}
+                              {summary.total_feedback} {t('admin.feedback.responses') || "responses"}
                             </span>
                           </div>
                         </TableCell>
