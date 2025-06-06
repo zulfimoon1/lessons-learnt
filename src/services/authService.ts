@@ -76,45 +76,6 @@ export const teacherLoginService = async (
   }
 };
 
-export const studentLoginService = async (fullName: string, school: string, grade: string, password: string) => {
-  try {
-    console.log('Student login attempt:', { fullName, school, grade });
-    
-    const { data: student, error } = await supabase
-      .from('students')
-      .select('*')
-      .eq('full_name', fullName)
-      .eq('school', school)
-      .eq('grade', grade)
-      .single();
-
-    console.log('Student query result:', { student, error });
-
-    if (error || !student) {
-      console.error('Student not found:', error);
-      return { error: 'Student not found. Please check your details or sign up.' };
-    }
-
-    if (student.password_hash !== password) {
-      console.error('Invalid password for student:', fullName);
-      return { error: 'Invalid password' };
-    }
-
-    const studentData: Student = {
-      id: student.id,
-      full_name: student.full_name,
-      school: student.school,
-      grade: student.grade
-    };
-
-    console.log('Student login successful:', studentData);
-    return { student: studentData };
-  } catch (error) {
-    console.error('Student login service error:', error);
-    return { error: 'Login failed. Please try again.' };
-  }
-};
-
 export const studentSignupService = async (fullName: string, school: string, grade: string, password: string) => {
   try {
     console.log('Student signup attempt:', { fullName, school, grade });
@@ -155,7 +116,7 @@ export const studentSignupService = async (fullName: string, school: string, gra
   }
 };
 
-// New service for simplified login (just name and password)
+// Simple login service (just name and password)
 export const studentSimpleLoginService = async (fullName: string, password: string) => {
   try {
     console.log('Student simple login attempt:', { fullName });
@@ -174,7 +135,7 @@ export const studentSimpleLoginService = async (fullName: string, password: stri
 
     // If multiple students with same name, we need more info
     if (students.length > 1) {
-      return { error: 'Multiple students found with this name. Please use the full login form with school and grade.' };
+      return { error: 'Multiple students found with this name. Please contact your teacher for help.' };
     }
 
     const student = students[0];
