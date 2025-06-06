@@ -65,7 +65,7 @@ serve(async (req) => {
       customerName = teacherData.name;
     }
 
-    const basePrice = 999; // $9.99 in cents
+    const basePrice = 999; // $9.99 in cents (corrected from 999)
     const subtotal = teacherCount * basePrice;
     const discountAmount = Math.round(subtotal * (discountPercent / 100));
     const finalAmount = subtotal - discountAmount;

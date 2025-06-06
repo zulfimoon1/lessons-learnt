@@ -86,10 +86,9 @@ const TeacherDashboard = () => {
       
       const { data, error } = await supabase.functions.invoke('create-checkout', {
         body: {
-          email: teacher.email,
-          school_name: teacher.school,
-          plan_type: 'monthly',
-          amount: 2999, // $29.99
+          teacherCount: 1,
+          discountCode: null,
+          discountPercent: 0
         }
       });
 
@@ -118,9 +117,9 @@ const TeacherDashboard = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
+      <div className="min-h-screen flex items-center justify-center bg-white">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto mb-4"></div>
           <p>Loading dashboard...</p>
         </div>
       </div>
@@ -128,20 +127,20 @@ const TeacherDashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="bg-card/80 backdrop-blur-sm border-b border-border p-4">
+    <div className="min-h-screen bg-white">
+      <header className="bg-white border-b border-green-200 p-4">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
           <div className="flex items-center gap-4">
-            <SchoolIcon className="w-8 h-8 text-primary" />
-            <h1 className="text-2xl font-bold text-foreground">Teacher Dashboard</h1>
+            <SchoolIcon className="w-8 h-8 text-green-600" />
+            <h1 className="text-2xl font-bold text-gray-900">Teacher Dashboard</h1>
           </div>
           <div className="flex items-center gap-4">
             <LanguageSwitcher />
-            <span className="text-sm text-muted-foreground">Welcome, {teacher?.name}</span>
+            <span className="text-sm text-gray-600">Welcome, {teacher?.name}</span>
             <Button
               onClick={handleLogout}
               variant="outline"
-              className="flex items-center gap-2"
+              className="flex items-center gap-2 border-green-200 text-green-700 hover:bg-green-50"
             >
               <LogOutIcon className="w-4 h-4" />
               Logout
@@ -166,9 +165,9 @@ const TeacherDashboard = () => {
               <Button 
                 onClick={handleCreateCheckout}
                 disabled={isCreatingCheckout}
-                className="bg-primary hover:bg-primary/90"
+                className="bg-green-600 hover:bg-green-700 text-white"
               >
-                {isCreatingCheckout ? 'Creating Session...' : 'Subscribe Now - $29.99/month'}
+                {isCreatingCheckout ? 'Creating Session...' : 'Subscribe Now - $9.99/month'}
               </Button>
             </CardContent>
           </Card>
@@ -186,17 +185,17 @@ const TeacherDashboard = () => {
         )}
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <Card>
+          <Card className="border-green-100">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">School</CardTitle>
-              <SchoolIcon className="h-4 w-4 text-muted-foreground" />
+              <SchoolIcon className="h-4 w-4 text-gray-500" />
             </CardHeader>
             <CardContent>
               <div className="text-lg font-semibold">{teacher?.school}</div>
             </CardContent>
           </Card>
           
-          <Card>
+          <Card className="border-green-100">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Role</CardTitle>
             </CardHeader>
@@ -205,10 +204,10 @@ const TeacherDashboard = () => {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="border-green-100">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Subscription</CardTitle>
-              <CreditCardIcon className="h-4 w-4 text-muted-foreground" />
+              <CreditCardIcon className="h-4 w-4 text-gray-500" />
             </CardHeader>
             <CardContent>
               <div className="text-lg font-semibold">
@@ -219,15 +218,15 @@ const TeacherDashboard = () => {
         </div>
 
         <Tabs defaultValue="schedule" className="space-y-6">
-          <TabsList>
-            <TabsTrigger value="schedule">Class Schedule</TabsTrigger>
+          <TabsList className="bg-green-50 border-green-200">
+            <TabsTrigger value="schedule" className="data-[state=active]:bg-green-600 data-[state=active]:text-white">Class Schedule</TabsTrigger>
           </TabsList>
 
           <TabsContent value="schedule" className="space-y-6">
             {subscription ? (
               <ClassScheduleForm teacher={teacher} />
             ) : (
-              <Card>
+              <Card className="border-green-100">
                 <CardHeader>
                   <CardTitle>Class Schedule</CardTitle>
                   <CardDescription>
@@ -235,11 +234,11 @@ const TeacherDashboard = () => {
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="text-center py-8">
-                  <p className="text-muted-foreground mb-4">Class scheduling is available with an active subscription</p>
+                  <p className="text-gray-600 mb-4">Class scheduling is available with an active subscription</p>
                   <Button 
                     onClick={handleCreateCheckout}
                     disabled={isCreatingCheckout}
-                    className="bg-primary hover:bg-primary/90"
+                    className="bg-green-600 hover:bg-green-700 text-white"
                   >
                     {isCreatingCheckout ? 'Creating Session...' : 'Subscribe to Continue'}
                   </Button>
