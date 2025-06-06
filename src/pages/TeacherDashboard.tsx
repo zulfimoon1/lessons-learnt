@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -157,7 +158,7 @@ const TeacherDashboard = () => {
                 {t('admin.subscription')}
               </CardTitle>
               <CardDescription className="text-yellow-700">
-                Subscribe to unlock all features and start creating class schedules for {teacher?.school}.
+                {t('teacher.subscriptionNeeded')} {teacher?.school}.
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -177,7 +178,10 @@ const TeacherDashboard = () => {
             <CardHeader>
               <CardTitle className="text-green-800">{t('admin.subscription')}</CardTitle>
               <CardDescription className="text-green-700">
-                Your {subscription.plan_type} plan is active until {new Date(subscription.current_period_end).toLocaleDateString()}
+                {t('teacher.activePlan', {
+                  planType: subscription.plan_type,
+                  date: new Date(subscription.current_period_end).toLocaleDateString()
+                })}
               </CardDescription>
             </CardHeader>
           </Card>
@@ -210,7 +214,7 @@ const TeacherDashboard = () => {
             </CardHeader>
             <CardContent>
               <div className="text-lg font-semibold">
-                {subscription ? 'Active' : 'Inactive'}
+                {subscription ? t('pricing.securePayment').split(' ')[0] : 'Inactive'}
               </div>
             </CardContent>
           </Card>
@@ -229,17 +233,17 @@ const TeacherDashboard = () => {
                 <CardHeader>
                   <CardTitle>{t('class.schedule')}</CardTitle>
                   <CardDescription>
-                    Subscribe to start creating and managing class schedules
+                    {t('teacher.classSchedulingAvailable')}
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="text-center py-8">
-                  <p className="text-gray-600 mb-4">Class scheduling is available with an active subscription</p>
+                  <p className="text-gray-600 mb-4">{t('teacher.classSchedulingAvailable')}</p>
                   <Button 
                     onClick={handleCreateCheckout}
                     disabled={isCreatingCheckout}
                     className="bg-green-600 hover:bg-green-700 text-white"
                   >
-                    {isCreatingCheckout ? t('pricing.processing') : 'Subscribe to Continue'}
+                    {isCreatingCheckout ? t('pricing.processing') : t('teacher.subscribeToContinue')}
                   </Button>
                 </CardContent>
               </Card>

@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
 interface LanguageContextProps {
@@ -126,6 +125,12 @@ const translations: Record<string, Record<string, string>> = {
     'dashboard.noClasses': 'No upcoming classes scheduled',
     'dashboard.noPsychologists': 'No school psychologists are currently available.',
     'dashboard.contactAdmin': 'If you need support, please contact your school administration.',
+    
+    // Teacher Dashboard specific
+    'teacher.subscriptionNeeded': 'Subscribe to unlock all features and start creating class schedules for',
+    'teacher.activePlan': 'Your {planType} plan is active until {date}',
+    'teacher.classSchedulingAvailable': 'Class scheduling is available with an active subscription',
+    'teacher.subscribeToContinue': 'Subscribe to Continue',
     
     // Class management
     'class.create': 'Create Class',
@@ -426,6 +431,12 @@ const translations: Record<string, Record<string, string>> = {
     'dashboard.noClasses': 'Nėra suplanuotų artėjančių pamokų',
     'dashboard.noPsychologists': 'Šiuo metu mokyklos psichologų nėra.',
     'dashboard.contactAdmin': 'Jei reikia pagalbos, kreipkitės į mokyklos administraciją.',
+    
+    // Teacher Dashboard specific
+    'teacher.subscriptionNeeded': 'Prenumeruokite, kad atrakintumėte visas funkcijas ir pradėtumėte kurti klasių tvarkaraščius',
+    'teacher.activePlan': 'Jūsų {planType} planas aktyvus iki {date}',
+    'teacher.classSchedulingAvailable': 'Klasių planavimas galimas su aktyvia prenumerata',
+    'teacher.subscribeToContinue': 'Prenumeruokite, kad tęstumėte',
     
     // Class management
     'class.create': 'Sukurti klasę',
