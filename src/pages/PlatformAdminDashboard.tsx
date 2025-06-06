@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -17,7 +16,8 @@ import {
   BarChart3Icon,
   TrendingUpIcon,
   UserIcon,
-  BookOpenIcon
+  BookOpenIcon,
+  RefreshCwIcon
 } from "lucide-react";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from "recharts";
@@ -55,6 +55,8 @@ interface Subscription {
   currency: string;
   current_period_end: string;
   created_at: string;
+  stripe_customer_id: string;
+  stripe_subscription_id: string;
 }
 
 const PlatformAdminDashboard = () => {
@@ -72,6 +74,8 @@ const PlatformAdminDashboard = () => {
 
   const loadDashboardData = async () => {
     try {
+      console.log('=== PLATFORM ADMIN DASHBOARD DEBUG START ===');
+      
       // Load school statistics
       const { data: schoolData, error: schoolError } = await supabase
         .from('school_statistics')
@@ -79,6 +83,7 @@ const PlatformAdminDashboard = () => {
 
       if (schoolError) throw schoolError;
       setSchoolStats(schoolData || []);
+      console.log('School stats loaded:', schoolData?.length);
 
       // Load feedback analytics
       const { data: feedbackData, error: feedbackError } = await supabase
@@ -88,20 +93,35 @@ const PlatformAdminDashboard = () => {
 
       if (feedbackError) throw feedbackError;
       setFeedbackStats(feedbackData || []);
+      console.log('Feedback stats loaded:', feedbackData?.length);
 
-      // Load subscriptions
+      // Load subscriptions with detailed logging
       const { data: subscriptionData, error: subscriptionError } = await supabase
         .from('subscriptions')
         .select('*')
         .order('created_at', { ascending: false });
 
-      if (subscriptionError) throw subscriptionError;
-      setSubscriptions(subscriptionData || []);
+      console.log('=== SUBSCRIPTIONS DEBUG ===');
+      console.log('Subscription query error:', subscriptionError);
+      console.log('Subscription data:', subscriptionData);
+      console.log('Number of subscriptions:', subscriptionData?.length || 0);
+
+      if (subscriptionError) {
+        console.error('Subscription error:', subscriptionError);
+        toast({
+          title: "Error loading subscriptions",
+          description: subscriptionError.message,
+          variant: "destructive",
+        });
+      } else {
+        setSubscriptions(subscriptionData || []);
+      }
 
       // Load student statistics
       const { statistics, error: studentStatsError } = await getStudentStatistics();
       
       if (studentStatsError) {
+        console.error('Student stats error:', studentStatsError);
         toast({
           title: "Error loading student data",
           description: studentStatsError,
@@ -109,9 +129,13 @@ const PlatformAdminDashboard = () => {
         });
       } else {
         setStudentStats(statistics || []);
+        console.log('Student stats loaded:', statistics?.length);
       }
 
+      console.log('=== PLATFORM ADMIN DASHBOARD DEBUG END ===');
+
     } catch (error) {
+      console.error('Dashboard load error:', error);
       toast({
         title: "Error loading data",
         description: "Failed to load dashboard data",
@@ -120,6 +144,12 @@ const PlatformAdminDashboard = () => {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const refreshData = () => {
+    console.log('Refreshing platform admin data...');
+    setIsLoading(true);
+    loadDashboardData();
   };
 
   const chartConfig = {
@@ -177,6 +207,10 @@ const PlatformAdminDashboard = () => {
               <SchoolIcon className="w-8 h-8 text-purple-600" />
               <h1 className="text-2xl font-bold text-gray-900">Platform Admin Dashboard</h1>
             </div>
+            <Button onClick={refreshData} variant="outline" size="sm" className="flex items-center gap-2">
+              <RefreshCwIcon className="w-4 h-4" />
+              Refresh
+            </Button>
           </div>
           <div className="flex items-center gap-4">
             <span className="text-sm text-gray-600">Welcome, {admin?.name}</span>
@@ -193,6 +227,32 @@ const PlatformAdminDashboard = () => {
       </header>
 
       <main className="max-w-7xl mx-auto p-6 space-y-6">
+        {/* Debug Information */}
+        <Card className="border-blue-200 bg-blue-50">
+          <CardHeader>
+            <CardTitle className="text-blue-800">System Information</CardTitle>
+          </CardHeader>
+          <CardContent className="text-sm text-blue-700">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div>
+                <p><strong>Schools:</strong> {totalSchools}</p>
+                <p><strong>Teachers:</strong> {totalTeachers}</p>
+              </div>
+              <div>
+                <p><strong>Students:</strong> {totalStudents}</p>
+                <p><strong>Responses:</strong> {totalResponses}</p>
+              </div>
+              <div>
+                <p><strong>Subscriptions:</strong> {subscriptions.length}</p>
+                <p><strong>Active:</strong> {subscriptions.filter(s => s.status === 'active').length}</p>
+              </div>
+              <div>
+                <p><strong>Revenue:</strong> ${(subscriptions.reduce((sum, s) => sum + (s.amount || 0), 0) / 100).toFixed(2)}/month</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Overview Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <Card>
@@ -237,14 +297,80 @@ const PlatformAdminDashboard = () => {
         </div>
 
         {/* Tabs for different views */}
-        <Tabs defaultValue="students" className="space-y-6">
+        <Tabs defaultValue="payments" className="space-y-6">
           <TabsList className="grid w-full grid-cols-5">
+            <TabsTrigger value="payments">Payments</TabsTrigger>
             <TabsTrigger value="students">Students</TabsTrigger>
             <TabsTrigger value="analytics">Analytics</TabsTrigger>
             <TabsTrigger value="schools">Schools</TabsTrigger>
-            <TabsTrigger value="payments">Payments</TabsTrigger>
             <TabsTrigger value="mental-health">Mental Health</TabsTrigger>
           </TabsList>
+
+          <TabsContent value="payments" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <TrendingUpIcon className="w-5 h-5" />
+                  Subscription Management
+                </CardTitle>
+                <CardDescription>Monitor and manage school subscriptions</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {subscriptions.length > 0 ? (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>School</TableHead>
+                        <TableHead>Plan</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Amount</TableHead>
+                        <TableHead>Period End</TableHead>
+                        <TableHead>Customer ID</TableHead>
+                        <TableHead>Created</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {subscriptions.map((subscription) => (
+                        <TableRow key={subscription.id}>
+                          <TableCell className="font-medium">{subscription.school_name}</TableCell>
+                          <TableCell>{subscription.plan_type}</TableCell>
+                          <TableCell>
+                            <Badge 
+                              variant={subscription.status === 'active' ? 'default' : 'destructive'}
+                            >
+                              {subscription.status}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            ${(subscription.amount / 100).toFixed(2)} {subscription.currency?.toUpperCase()}
+                          </TableCell>
+                          <TableCell>
+                            {subscription.current_period_end ? 
+                              new Date(subscription.current_period_end).toLocaleDateString() : 
+                              'N/A'
+                            }
+                          </TableCell>
+                          <TableCell className="text-xs font-mono">
+                            {subscription.stripe_customer_id || 'N/A'}
+                          </TableCell>
+                          <TableCell>
+                            {new Date(subscription.created_at).toLocaleDateString()}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                ) : (
+                  <div className="text-center py-8">
+                    <p className="text-gray-500">No subscriptions found in the database</p>
+                    <p className="text-xs text-gray-400 mt-2">
+                      This could mean subscriptions haven't been created yet or there's an issue with data storage
+                    </p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
 
           <TabsContent value="students" className="space-y-6">
             <Card>
@@ -399,59 +525,6 @@ const PlatformAdminDashboard = () => {
                         <TableCell>{school.total_grades}</TableCell>
                         <TableCell>{school.total_subjects}</TableCell>
                         <TableCell>{school.total_classes}</TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="payments" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <TrendingUpIcon className="w-5 h-5" />
-                  Subscription Management
-                </CardTitle>
-                <CardDescription>Monitor and manage school subscriptions</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>School</TableHead>
-                      <TableHead>Plan</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Amount</TableHead>
-                      <TableHead>Period End</TableHead>
-                      <TableHead>Created</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {subscriptions.map((subscription) => (
-                      <TableRow key={subscription.id}>
-                        <TableCell className="font-medium">{subscription.school_name}</TableCell>
-                        <TableCell>{subscription.plan_type}</TableCell>
-                        <TableCell>
-                          <Badge 
-                            variant={subscription.status === 'active' ? 'default' : 'destructive'}
-                          >
-                            {subscription.status}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          ${(subscription.amount / 100).toFixed(2)} {subscription.currency.toUpperCase()}
-                        </TableCell>
-                        <TableCell>
-                          {subscription.current_period_end ? 
-                            new Date(subscription.current_period_end).toLocaleDateString() : 
-                            'N/A'
-                          }
-                        </TableCell>
-                        <TableCell>
-                          {new Date(subscription.created_at).toLocaleDateString()}
-                        </TableCell>
                       </TableRow>
                     ))}
                   </TableBody>

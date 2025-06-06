@@ -57,6 +57,7 @@ const AdminDashboard = () => {
   const [feedbackSummary, setFeedbackSummary] = useState<FeedbackSummary[]>([]);
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [debugInfo, setDebugInfo] = useState<any>(null);
 
   useEffect(() => {
     if (!teacher || teacher.role !== 'admin') {
@@ -68,7 +69,9 @@ const AdminDashboard = () => {
 
   const loadDashboardData = async () => {
     try {
-      console.log('Loading dashboard data for school:', teacher?.school);
+      console.log('=== ADMIN DASHBOARD DEBUG START ===');
+      console.log('Current teacher:', teacher);
+      console.log('Teacher school:', teacher?.school);
       
       // Load teachers from the same school
       const { data: teachersData, error: teachersError } = await supabase
@@ -76,9 +79,12 @@ const AdminDashboard = () => {
         .select('*')
         .eq('school', teacher?.school);
 
-      if (teachersError) throw teachersError;
+      if (teachersError) {
+        console.error('Teachers error:', teachersError);
+        throw teachersError;
+      }
       setTeachers(teachersData || []);
-      console.log('Teachers loaded:', teachersData?.length);
+      console.log('Teachers loaded:', teachersData);
 
       // Load feedback summary
       const { data: feedbackData, error: feedbackError } = await supabase
@@ -88,7 +94,10 @@ const AdminDashboard = () => {
         .order('class_date', { ascending: false })
         .limit(10);
 
-      if (feedbackError) throw feedbackError;
+      if (feedbackError) {
+        console.error('Feedback error:', feedbackError);
+        throw feedbackError;
+      }
       
       const transformedFeedback: FeedbackSummary[] = (feedbackData || []).map(item => ({
         teacher: item.lesson_topic || 'Unknown Teacher',
@@ -101,50 +110,74 @@ const AdminDashboard = () => {
       }));
       
       setFeedbackSummary(transformedFeedback);
-      console.log('Feedback loaded:', transformedFeedback.length);
+      console.log('Feedback loaded:', transformedFeedback);
 
-      // Load subscription info - try multiple approaches
-      console.log('Looking for subscription for school:', teacher?.school);
-      
-      // First try exact match
-      let { data: subscriptionData, error: subscriptionError } = await supabase
+      // Debug: Load ALL subscriptions first
+      const { data: allSubscriptions, error: allSubError } = await supabase
         .from('subscriptions')
         .select('*')
-        .eq('school_name', teacher?.school)
-        .order('created_at', { ascending: false })
-        .limit(1);
+        .order('created_at', { ascending: false });
 
-      console.log('Exact match subscription query result:', subscriptionData, subscriptionError);
+      console.log('=== ALL SUBSCRIPTIONS DEBUG ===');
+      console.log('All subscriptions in database:', allSubscriptions);
+      console.log('Subscription query error:', allSubError);
 
-      // If no exact match, try case-insensitive search
-      if (!subscriptionData || subscriptionData.length === 0) {
-        const { data: allSubscriptions, error: allSubError } = await supabase
-          .from('subscriptions')
-          .select('*')
-          .order('created_at', { ascending: false });
-        
-        console.log('All subscriptions:', allSubscriptions);
-        
-        if (allSubscriptions && !allSubError) {
-          subscriptionData = allSubscriptions.filter(sub => 
+      // Try multiple approaches to find subscription
+      let foundSubscription = null;
+
+      if (allSubscriptions && allSubscriptions.length > 0) {
+        // Try exact match first
+        foundSubscription = allSubscriptions.find(sub => 
+          sub.school_name === teacher?.school
+        );
+        console.log('Exact match result:', foundSubscription);
+
+        // Try case-insensitive match
+        if (!foundSubscription) {
+          foundSubscription = allSubscriptions.find(sub => 
             sub.school_name?.toLowerCase() === teacher?.school?.toLowerCase()
           );
-          console.log('Case-insensitive match result:', subscriptionData);
+          console.log('Case-insensitive match result:', foundSubscription);
+        }
+
+        // Try partial match
+        if (!foundSubscription) {
+          foundSubscription = allSubscriptions.find(sub => 
+            sub.school_name?.includes(teacher?.school || '') || 
+            teacher?.school?.includes(sub.school_name || '')
+          );
+          console.log('Partial match result:', foundSubscription);
+        }
+
+        // For debugging, try to match by admin email (check if subscription was created by this admin)
+        if (!foundSubscription) {
+          foundSubscription = allSubscriptions.find(sub => 
+            sub.stripe_customer_id // Has a customer ID, might be ours
+          );
+          console.log('Any subscription with customer ID:', foundSubscription);
         }
       }
 
-      if (subscriptionData && subscriptionData.length > 0) {
-        setSubscription(subscriptionData[0]);
-        console.log('Subscription set:', subscriptionData[0]);
-      } else {
-        console.log('No subscription found for school:', teacher?.school);
-      }
+      setSubscription(foundSubscription);
+      
+      // Set debug info for display
+      setDebugInfo({
+        teacherSchool: teacher?.school,
+        teacherEmail: teacher?.email,
+        allSubscriptions: allSubscriptions || [],
+        foundSubscription: foundSubscription,
+        totalSubscriptions: allSubscriptions?.length || 0
+      });
+
+      console.log('=== FINAL SUBSCRIPTION RESULT ===');
+      console.log('Found subscription:', foundSubscription);
+      console.log('=== ADMIN DASHBOARD DEBUG END ===');
 
     } catch (error) {
       console.error('Error loading dashboard data:', error);
       toast({
-        title: t('admin.error.title'),
-        description: t('admin.error.description'),
+        title: "Error loading data",
+        description: `Failed to load dashboard data: ${error.message}`,
         variant: "destructive",
       });
     } finally {
@@ -154,21 +187,33 @@ const AdminDashboard = () => {
 
   const handleManageSubscription = async () => {
     try {
+      console.log('Opening customer portal...');
       const { data, error } = await supabase.functions.invoke('customer-portal');
       
-      if (error) throw error;
+      if (error) {
+        console.error('Customer portal error:', error);
+        throw error;
+      }
       
       if (data?.url) {
+        console.log('Redirecting to:', data.url);
         window.open(data.url, '_blank');
+      } else {
+        console.error('No URL returned from customer portal');
       }
     } catch (error) {
       console.error("Error opening customer portal:", error);
       toast({
         title: "Error",
-        description: "Failed to open subscription management. Please try again.",
+        description: `Failed to open subscription management: ${error.message}`,
         variant: "destructive",
       });
     }
+  };
+
+  const refreshSubscriptionData = () => {
+    console.log('Refreshing subscription data...');
+    loadDashboardData();
   };
 
   const totalFeedback = feedbackSummary.reduce((sum, item) => sum + item.total_responses, 0);
@@ -178,7 +223,7 @@ const AdminDashboard = () => {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
-          <p>{t('admin.loading')}</p>
+          <p>Loading dashboard...</p>
         </div>
       </div>
     );
@@ -191,11 +236,11 @@ const AdminDashboard = () => {
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
               <SchoolIcon className="w-8 h-8 text-purple-600" />
-              <h1 className="text-2xl font-bold text-gray-900">{t('admin.title')}</h1>
+              <h1 className="text-2xl font-bold text-gray-900">Admin Dashboard</h1>
             </div>
           </div>
           <div className="flex items-center gap-4">
-            <span className="text-sm text-gray-600">{t('admin.welcome')}, {teacher?.name}</span>
+            <span className="text-sm text-gray-600">Welcome, {teacher?.name}</span>
             <LanguageSwitcher />
             <Button
               onClick={logout}
@@ -203,19 +248,47 @@ const AdminDashboard = () => {
               className="flex items-center gap-2"
             >
               <LogOutIcon className="w-4 h-4" />
-              {t('admin.logout')}
+              Logout
             </Button>
           </div>
         </div>
       </header>
 
       <main className="max-w-7xl mx-auto p-6 space-y-6">
+        {/* Debug Information */}
+        {debugInfo && (
+          <Card className="border-orange-200 bg-orange-50">
+            <CardHeader>
+              <CardTitle className="text-orange-800">Debug Information</CardTitle>
+              <Button onClick={refreshSubscriptionData} variant="outline" size="sm">
+                Refresh Data
+              </Button>
+            </CardHeader>
+            <CardContent className="text-sm text-orange-700">
+              <div className="space-y-2">
+                <p><strong>Your School:</strong> {debugInfo.teacherSchool}</p>
+                <p><strong>Your Email:</strong> {debugInfo.teacherEmail}</p>
+                <p><strong>Total Subscriptions in DB:</strong> {debugInfo.totalSubscriptions}</p>
+                <p><strong>Found Subscription:</strong> {debugInfo.foundSubscription ? 'Yes' : 'No'}</p>
+                {debugInfo.allSubscriptions.length > 0 && (
+                  <details className="mt-2">
+                    <summary className="cursor-pointer">View All Subscriptions</summary>
+                    <pre className="mt-2 p-2 bg-white rounded text-xs overflow-auto">
+                      {JSON.stringify(debugInfo.allSubscriptions, null, 2)}
+                    </pre>
+                  </details>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Subscription Status */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <CreditCardIcon className="w-5 h-5" />
-              {t('admin.subscription')}
+              Subscription Status
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -240,7 +313,7 @@ const AdminDashboard = () => {
                   )}
                 </div>
                 <Button onClick={handleManageSubscription} variant="outline">
-                  {t('dashboard.manageSubscription')}
+                  Manage Subscription
                 </Button>
               </div>
             ) : (
@@ -248,12 +321,15 @@ const AdminDashboard = () => {
                 <div>
                   <p className="text-gray-600">No active subscription found</p>
                   <p className="text-xs text-gray-500">School: {teacher?.school}</p>
+                  <p className="text-xs text-gray-400">
+                    Total subscriptions in database: {debugInfo?.totalSubscriptions || 0}
+                  </p>
                 </div>
                 <Button 
                   onClick={() => navigate('/pricing')}
                   className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
                 >
-                  {t('admin.subscribe')}
+                  Subscribe Now
                 </Button>
               </div>
             )}
