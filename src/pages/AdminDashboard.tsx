@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -75,7 +74,7 @@ const AdminDashboard = () => {
       if (teachersError) throw teachersError;
       setTeachers(teachersData || []);
 
-      // Load feedback summary
+      // Load feedback summary - transform the data to match our interface
       const { data: feedbackData, error: feedbackError } = await supabase
         .from('feedback_analytics')
         .select('*')
@@ -84,7 +83,19 @@ const AdminDashboard = () => {
         .limit(10);
 
       if (feedbackError) throw feedbackError;
-      setFeedbackSummary(feedbackData || []);
+      
+      // Transform the data to match FeedbackSummary interface
+      const transformedFeedback: FeedbackSummary[] = (feedbackData || []).map(item => ({
+        teacher: item.lesson_topic || 'Unknown Teacher', // Using lesson_topic as teacher name fallback
+        subject: item.subject,
+        class_date: item.class_date,
+        total_responses: item.total_responses,
+        avg_understanding: item.avg_understanding,
+        avg_interest: item.avg_interest,
+        avg_growth: item.avg_growth
+      }));
+      
+      setFeedbackSummary(transformedFeedback);
 
       // Load subscription info
       const { data: subscriptionData, error: subscriptionError } = await supabase
