@@ -57,6 +57,10 @@ const Index = () => {
               </Button>
             </Link>
           </div>
+          
+          <p className="text-lg text-muted-foreground mt-8 font-medium italic">
+            When students lead, teachers succeed
+          </p>
         </div>
       </section>
 
