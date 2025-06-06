@@ -1,7 +1,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { GraduationCapIcon, UsersIcon, BookOpenIcon, TrendingUpIcon } from "lucide-react";
+import { GraduationCapIcon, UsersIcon, BookOpenIcon, TrendingUpIcon, BarChart3Icon, HeartIcon, ShieldCheckIcon } from "lucide-react";
 import { Link } from "react-router-dom";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -97,6 +97,79 @@ const Index = () => {
               </CardDescription>
             </CardHeader>
           </Card>
+        </div>
+      </section>
+
+      {/* Platform Overview Section */}
+      <section className="bg-muted/30 py-20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl font-bold text-foreground mb-6">
+              Why Schools Choose Lessons Learnt
+            </h2>
+            <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+              Our platform empowers schools with actionable insights to create better learning environments, 
+              support student well-being, and drive educational excellence through data-driven decisions.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center mb-16">
+            <div>
+              <h3 className="text-3xl font-bold text-foreground mb-6">
+                Comprehensive Student Insights
+              </h3>
+              <div className="space-y-6">
+                <div className="flex items-start gap-4">
+                  <BarChart3Icon className="w-6 h-6 text-primary mt-1" />
+                  <div>
+                    <h4 className="font-semibold text-lg mb-2">Real-Time Analytics</h4>
+                    <p className="text-muted-foreground">
+                      Track student engagement, learning progress, and classroom dynamics with instant feedback collection and analysis.
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-4">
+                  <HeartIcon className="w-6 h-6 text-primary mt-1" />
+                  <div>
+                    <h4 className="font-semibold text-lg mb-2">Mental Health Monitoring</h4>
+                    <p className="text-muted-foreground">
+                      Early detection of student well-being concerns through intelligent content analysis and immediate alerts to school counselors.
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-4">
+                  <ShieldCheckIcon className="w-6 h-6 text-primary mt-1" />
+                  <div>
+                    <h4 className="font-semibold text-lg mb-2">Privacy & Security</h4>
+                    <p className="text-muted-foreground">
+                      Enterprise-grade security ensures student data protection while maintaining compliance with educational privacy standards.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="bg-gradient-to-br from-primary/10 to-primary/5 rounded-2xl p-8">
+              <div className="text-center">
+                <div className="text-6xl font-bold text-primary mb-4">85%</div>
+                <p className="text-xl font-semibold mb-2">Improvement in Student Engagement</p>
+                <p className="text-muted-foreground">
+                  Schools using our platform report significant increases in student participation and learning outcomes.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="text-center">
+            <h3 className="text-2xl font-bold text-foreground mb-4">
+              Ready to Transform Your School?
+            </h3>
+            <p className="text-lg text-muted-foreground mb-8">
+              Join hundreds of schools already using Lessons Learnt to create better learning environments.
+            </p>
+            <Button size="lg" className="text-lg px-8 py-4">
+              Schedule a Demo
+            </Button>
+          </div>
         </div>
       </section>
     </div>
