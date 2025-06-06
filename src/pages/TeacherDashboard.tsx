@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -50,7 +49,7 @@ interface FeedbackData {
     subject: string;
     lesson_topic: string;
     class_date: string;
-  };
+  } | null;
 }
 
 const TeacherDashboard = () => {
@@ -96,8 +95,12 @@ const TeacherDashboard = () => {
         .order('submitted_at', { ascending: false });
 
       if (feedbackError) throw feedbackError;
-      setFeedbackData(feedbackData || []);
+      
+      // Filter out feedback items where class_schedules is null
+      const validFeedback = (feedbackData || []).filter(feedback => feedback.class_schedules !== null);
+      setFeedbackData(validFeedback);
     } catch (error) {
+      console.error('Error in fetchData:', error);
       toast({
         title: "Error loading data",
         description: "Failed to load dashboard data",
@@ -321,7 +324,7 @@ const TeacherDashboard = () => {
                         <TableRow key={feedback.id}>
                           <TableCell>{formatDate(feedback.submitted_at)}</TableCell>
                           <TableCell className="font-medium">
-                            {feedback.class_schedules.subject} - {feedback.class_schedules.lesson_topic}
+                            {feedback.class_schedules?.subject || 'Unknown'} - {feedback.class_schedules?.lesson_topic || 'Unknown'}
                           </TableCell>
                           <TableCell>
                             {feedback.is_anonymous ? (
@@ -372,7 +375,7 @@ const TeacherDashboard = () => {
                     <div>
                       <CardTitle>Detailed Feedback</CardTitle>
                       <CardDescription>
-                        {selectedFeedback.class_schedules.subject} - {selectedFeedback.class_schedules.lesson_topic} ({formatDate(selectedFeedback.submitted_at)})
+                        {selectedFeedback.class_schedules?.subject || 'Unknown'} - {selectedFeedback.class_schedules?.lesson_topic || 'Unknown'} ({formatDate(selectedFeedback.submitted_at)})
                       </CardDescription>
                     </div>
                     <Button 
