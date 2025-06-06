@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 
 export interface DiscountCode {
@@ -37,10 +38,13 @@ export interface UpdateDiscountCodeData {
 
 export const discountCodeService = {
   async getAllDiscountCodes() {
+    console.log('=== FETCHING DISCOUNT CODES ===');
     const { data, error } = await supabase
       .from('discount_codes')
       .select('*')
       .order('created_at', { ascending: false });
+
+    console.log('Discount codes query result:', { data, error });
 
     if (error) {
       console.error('Error fetching discount codes:', error);
@@ -51,14 +55,30 @@ export const discountCodeService = {
   },
 
   async createDiscountCode(codeData: CreateDiscountCodeData, createdBy: string) {
+    console.log('=== CREATING DISCOUNT CODE ===');
+    console.log('Code data:', codeData);
+    console.log('Created by:', createdBy);
+
+    const insertData = {
+      code: codeData.code,
+      discount_percent: codeData.discount_percent,
+      description: codeData.description || null,
+      max_uses: codeData.max_uses || null,
+      expires_at: codeData.expires_at || null,
+      is_active: codeData.is_active !== undefined ? codeData.is_active : true,
+      school_name: codeData.school_name || null,
+      created_by: createdBy,
+    };
+
+    console.log('Insert data:', insertData);
+
     const { data, error } = await supabase
       .from('discount_codes')
-      .insert({
-        ...codeData,
-        created_by: createdBy,
-      })
+      .insert(insertData)
       .select()
       .single();
+
+    console.log('Insert result:', { data, error });
 
     if (error) {
       console.error('Error creating discount code:', error);
@@ -69,15 +89,25 @@ export const discountCodeService = {
   },
 
   async updateDiscountCode(id: string, updates: UpdateDiscountCodeData) {
+    console.log('=== UPDATING DISCOUNT CODE ===');
+    console.log('ID:', id);
+    console.log('Updates:', updates);
+
+    const updateData = {
+      ...updates,
+      updated_at: new Date().toISOString(),
+    };
+
+    console.log('Update data:', updateData);
+
     const { data, error } = await supabase
       .from('discount_codes')
-      .update({
-        ...updates,
-        updated_at: new Date().toISOString(),
-      })
+      .update(updateData)
       .eq('id', id)
       .select()
       .single();
+
+    console.log('Update result:', { data, error });
 
     if (error) {
       console.error('Error updating discount code:', error);
@@ -88,10 +118,15 @@ export const discountCodeService = {
   },
 
   async deleteDiscountCode(id: string) {
+    console.log('=== DELETING DISCOUNT CODE ===');
+    console.log('ID:', id);
+
     const { error } = await supabase
       .from('discount_codes')
       .delete()
       .eq('id', id);
+
+    console.log('Delete result:', { error });
 
     if (error) {
       console.error('Error deleting discount code:', error);
@@ -100,12 +135,17 @@ export const discountCodeService = {
   },
 
   async validateDiscountCode(code: string) {
+    console.log('=== VALIDATING DISCOUNT CODE ===');
+    console.log('Code:', code);
+
     const { data, error } = await supabase
       .from('discount_codes')
       .select('*')
       .eq('code', code.toUpperCase())
       .eq('is_active', true)
       .single();
+
+    console.log('Validation result:', { data, error });
 
     if (error) {
       if (error.code === 'PGRST116') {
@@ -134,6 +174,9 @@ export const discountCodeService = {
   },
 
   async incrementCodeUsage(id: string) {
+    console.log('=== INCREMENTING CODE USAGE ===');
+    console.log('ID:', id);
+
     // First get the current usage count
     const { data: currentCode, error: fetchError } = await supabase
       .from('discount_codes')
@@ -145,6 +188,8 @@ export const discountCodeService = {
       console.error('Error fetching current usage:', fetchError);
       throw fetchError;
     }
+
+    console.log('Current usage:', currentCode.current_uses);
 
     // Then update with incremented value
     const { error } = await supabase
@@ -159,5 +204,7 @@ export const discountCodeService = {
       console.error('Error incrementing code usage:', error);
       throw error;
     }
+
+    console.log('Usage incremented successfully');
   }
 };

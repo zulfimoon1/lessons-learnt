@@ -71,6 +71,7 @@ export type Database = {
           id: string
           is_active: boolean | null
           max_uses: number | null
+          school_name: string | null
           updated_at: string | null
         }
         Insert: {
@@ -84,6 +85,7 @@ export type Database = {
           id?: string
           is_active?: boolean | null
           max_uses?: number | null
+          school_name?: string | null
           updated_at?: string | null
         }
         Update: {
@@ -97,6 +99,7 @@ export type Database = {
           id?: string
           is_active?: boolean | null
           max_uses?: number | null
+          school_name?: string | null
           updated_at?: string | null
         }
         Relationships: [

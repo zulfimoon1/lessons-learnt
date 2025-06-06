@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -31,6 +30,7 @@ const DiscountCodeManagement = () => {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editingCode, setEditingCode] = useState<DiscountCode | null>(null);
+  const [isCreating, setIsCreating] = useState(false);
   const [formData, setFormData] = useState({
     code: '',
     discount_percent: 10,
@@ -47,7 +47,9 @@ const DiscountCodeManagement = () => {
 
   const loadDiscountCodes = async () => {
     try {
+      console.log('Loading discount codes...');
       const codes = await discountCodeService.getAllDiscountCodes();
+      console.log('Loaded discount codes:', codes);
       setDiscountCodes(codes);
     } catch (error) {
       console.error('Error loading discount codes:', error);
@@ -74,10 +76,23 @@ const DiscountCodeManagement = () => {
   };
 
   const handleCreate = async () => {
-    if (!admin) return;
+    console.log('=== CREATE DISCOUNT CODE DEBUG ===');
+    console.log('Admin:', admin);
+    console.log('Form data:', formData);
+    
+    if (!admin) {
+      console.error('No admin found');
+      toast({
+        title: "Error",
+        description: "You must be logged in as an admin",
+        variant: "destructive",
+      });
+      return;
+    }
 
     // Validate required fields
     if (!formData.code.trim()) {
+      console.error('Code is required');
       toast({
         title: "Error",
         description: "Code is required",
@@ -87,6 +102,7 @@ const DiscountCodeManagement = () => {
     }
 
     if (!formData.school_name.trim()) {
+      console.error('School name is required');
       toast({
         title: "Error",
         description: "School name is required",
@@ -95,18 +111,24 @@ const DiscountCodeManagement = () => {
       return;
     }
 
+    setIsCreating(true);
+
     try {
       const createData: CreateDiscountCodeData = {
         code: formData.code.toUpperCase().trim(),
         discount_percent: formData.discount_percent,
-        description: formData.description || null,
-        max_uses: formData.max_uses ? parseInt(formData.max_uses) : null,
-        expires_at: formData.expires_at || null,
+        description: formData.description || undefined,
+        max_uses: formData.max_uses ? parseInt(formData.max_uses) : undefined,
+        expires_at: formData.expires_at || undefined,
         is_active: formData.is_active,
         school_name: formData.school_name.trim()
       };
 
-      await discountCodeService.createDiscountCode(createData, admin.id);
+      console.log('Creating discount code with data:', createData);
+      console.log('Created by admin ID:', admin.id);
+      
+      const result = await discountCodeService.createDiscountCode(createData, admin.id);
+      console.log('Discount code created successfully:', result);
       
       toast({
         title: "Success",
@@ -120,9 +142,11 @@ const DiscountCodeManagement = () => {
       console.error('Error creating discount code:', error);
       toast({
         title: "Error",
-        description: "Failed to create discount code",
+        description: error instanceof Error ? error.message : "Failed to create discount code",
         variant: "destructive",
       });
+    } finally {
+      setIsCreating(false);
     }
   };
 
@@ -166,9 +190,9 @@ const DiscountCodeManagement = () => {
       await discountCodeService.updateDiscountCode(editingCode.id, {
         code: formData.code.toUpperCase().trim(),
         discount_percent: formData.discount_percent,
-        description: formData.description || null,
-        max_uses: formData.max_uses ? parseInt(formData.max_uses) : null,
-        expires_at: formData.expires_at || null,
+        description: formData.description || undefined,
+        max_uses: formData.max_uses ? parseInt(formData.max_uses) : undefined,
+        expires_at: formData.expires_at || undefined,
         is_active: formData.is_active,
         school_name: formData.school_name.trim()
       });
@@ -283,7 +307,7 @@ const DiscountCodeManagement = () => {
                     min="1"
                     max="100"
                     value={formData.discount_percent}
-                    onChange={(e) => setFormData({...formData, discount_percent: parseInt(e.target.value)})}
+                    onChange={(e) => setFormData({...formData, discount_percent: parseInt(e.target.value) || 10})}
                   />
                 </div>
                 
@@ -330,10 +354,12 @@ const DiscountCodeManagement = () => {
               </div>
               
               <DialogFooter>
-                <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
+                <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)} disabled={isCreating}>
                   Cancel
                 </Button>
-                <Button onClick={handleCreate}>Create Code</Button>
+                <Button onClick={handleCreate} disabled={isCreating}>
+                  {isCreating ? 'Creating...' : 'Create Code'}
+                </Button>
               </DialogFooter>
             </DialogContent>
           </Dialog>
@@ -457,7 +483,7 @@ const DiscountCodeManagement = () => {
                 min="1"
                 max="100"
                 value={formData.discount_percent}
-                onChange={(e) => setFormData({...formData, discount_percent: parseInt(e.target.value)})}
+                onChange={(e) => setFormData({...formData, discount_percent: parseInt(e.target.value) || 10})}
               />
             </div>
             
