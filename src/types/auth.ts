@@ -29,3 +29,16 @@ export interface AuthContextType {
   studentSignup: (fullName: string, school: string, grade: string, password: string) => Promise<{ error?: string; student?: Student }>;
   logout: () => void;
 }
+
+// Add interface for feedback summary data
+export interface TeacherFeedbackSummary {
+  teacher_id: string;
+  teacher_name: string;
+  subject: string;
+  class_date: string;
+  avg_understanding: number;
+  avg_interest: number;
+  avg_educational_growth: number;
+  total_feedback: number;
+  lesson_topic: string;
+}
