@@ -2,7 +2,7 @@
 import React, { createContext, useContext } from 'react';
 import { AuthContextType } from '@/types/auth';
 import { useAuthStorage } from '@/hooks/useAuthStorage';
-import { teacherLoginService, studentLoginService, studentSignupService } from '@/services/authService';
+import { teacherLoginService, studentLoginService, studentSignupService, studentSimpleLoginService } from '@/services/authService';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -47,6 +47,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return result;
   };
 
+  const studentSimpleLogin = async (fullName: string, password: string) => {
+    console.log('AuthContext: Student simple login attempt');
+    const result = await studentSimpleLoginService(fullName, password);
+    console.log('AuthContext: Student simple login result:', result);
+    
+    if (result.student) {
+      console.log('AuthContext: Saving student to storage');
+      saveStudent(result.student);
+    }
+    return result;
+  };
+
   const studentSignup = async (fullName: string, school: string, grade: string, password: string) => {
     console.log('AuthContext: Student signup attempt');
     const result = await studentSignupService(fullName, school, grade, password);
@@ -72,6 +84,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         isLoading,
         teacherLogin,
         studentLogin,
+        studentSimpleLogin,
         studentSignup,
         logout
       }}

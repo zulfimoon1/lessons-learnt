@@ -27,6 +27,7 @@ export interface AuthContextType {
     role?: 'teacher' | 'admin'
   ) => Promise<{ error?: string; teacher?: Teacher }>;
   studentLogin: (fullName: string, school: string, grade: string, password: string) => Promise<{ error?: string; student?: Student }>;
+  studentSimpleLogin: (fullName: string, password: string) => Promise<{ error?: string; student?: Student }>;
   studentSignup: (fullName: string, school: string, grade: string, password: string) => Promise<{ error?: string; student?: Student }>;
   logout: () => void;
 }

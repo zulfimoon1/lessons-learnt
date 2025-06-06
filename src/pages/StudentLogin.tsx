@@ -11,6 +11,11 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 
 const StudentLogin = () => {
+  const [simpleLoginData, setSimpleLoginData] = useState({
+    fullName: "",
+    password: ""
+  });
+
   const [loginData, setLoginData] = useState({
     fullName: "",
     school: "",
@@ -28,14 +33,55 @@ const StudentLogin = () => {
 
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
-  const { studentLogin, studentSignup } = useAuth();
+  const { studentLogin, studentSimpleLogin, studentSignup } = useAuth();
   const navigate = useNavigate();
+
+  const handleSimpleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+
+    console.log('Starting student simple login process...');
+
+    try {
+      const { error } = await studentSimpleLogin(
+        simpleLoginData.fullName,
+        simpleLoginData.password
+      );
+
+      console.log('Student simple login result:', { error });
+
+      if (error) {
+        console.error('Simple login failed:', error);
+        toast({
+          title: "Login failed",
+          description: error,
+          variant: "destructive",
+        });
+      } else {
+        console.log('Simple login successful, navigating to dashboard...');
+        toast({
+          title: "Welcome back! 📚",
+          description: "You've successfully logged in.",
+        });
+        navigate("/student-dashboard");
+      }
+    } catch (err) {
+      console.error('Unexpected error during simple login:', err);
+      toast({
+        title: "Login failed",
+        description: "An unexpected error occurred. Please try again.",
+        variant: "destructive",
+      });
+    }
+
+    setIsLoading(false);
+  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
-    console.log('Starting student login process...');
+    console.log('Starting student full login process...');
 
     try {
       const { error } = await studentLogin(
@@ -45,17 +91,17 @@ const StudentLogin = () => {
         loginData.password
       );
 
-      console.log('Student login result:', { error });
+      console.log('Student full login result:', { error });
 
       if (error) {
-        console.error('Login failed:', error);
+        console.error('Full login failed:', error);
         toast({
           title: "Login failed",
           description: error,
           variant: "destructive",
         });
       } else {
-        console.log('Login successful, navigating to dashboard...');
+        console.log('Full login successful, navigating to dashboard...');
         toast({
           title: "Welcome! 📚",
           description: "You've successfully logged in.",
@@ -63,7 +109,7 @@ const StudentLogin = () => {
         navigate("/student-dashboard");
       }
     } catch (err) {
-      console.error('Unexpected error during login:', err);
+      console.error('Unexpected error during full login:', err);
       toast({
         title: "Login failed",
         description: "An unexpected error occurred. Please try again.",
@@ -140,13 +186,62 @@ const StudentLogin = () => {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Tabs defaultValue="login" className="space-y-4">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="login">Login</TabsTrigger>
+          <Tabs defaultValue="simple-login" className="space-y-4">
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="simple-login">Quick Login</TabsTrigger>
+              <TabsTrigger value="full-login">Full Login</TabsTrigger>
               <TabsTrigger value="signup">Sign Up</TabsTrigger>
             </TabsList>
 
-            <TabsContent value="login">
+            <TabsContent value="simple-login">
+              <form onSubmit={handleSimpleLogin} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="simpleFullName" className="flex items-center gap-2">
+                    <UserIcon className="w-4 h-4" />
+                    Full Name
+                  </Label>
+                  <Input
+                    id="simpleFullName"
+                    type="text"
+                    placeholder="Enter your full name"
+                    value={simpleLoginData.fullName}
+                    onChange={(e) => setSimpleLoginData(prev => ({ ...prev, fullName: e.target.value }))}
+                    required
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="simplePassword">Password</Label>
+                  <Input
+                    id="simplePassword"
+                    type="password"
+                    placeholder="Enter your password"
+                    value={simpleLoginData.password}
+                    onChange={(e) => setSimpleLoginData(prev => ({ ...prev, password: e.target.value }))}
+                    required
+                  />
+                </div>
+
+                <Button 
+                  type="submit" 
+                  className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
+                  disabled={isLoading}
+                >
+                  {isLoading ? "Logging in..." : (
+                    <>
+                      <LogInIcon className="w-4 h-4 mr-2" />
+                      Quick Login
+                    </>
+                  )}
+                </Button>
+
+                <p className="text-xs text-gray-500 text-center">
+                  If you have the same name as another student, use "Full Login" instead.
+                </p>
+              </form>
+            </TabsContent>
+
+            <TabsContent value="full-login">
               <form onSubmit={handleLogin} className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="loginFullName" className="flex items-center gap-2">

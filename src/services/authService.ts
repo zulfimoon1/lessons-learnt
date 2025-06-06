@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { Teacher, Student } from '@/types/auth';
 
@@ -105,8 +104,7 @@ export const studentLoginService = async (fullName: string, school: string, grad
       id: student.id,
       full_name: student.full_name,
       school: student.school,
-      grade: student.grade,
-      email: student.email || undefined
+      grade: student.grade
     };
 
     console.log('Student login successful:', studentData);
@@ -146,8 +144,7 @@ export const studentSignupService = async (fullName: string, school: string, gra
       id: newStudent.id,
       full_name: newStudent.full_name,
       school: newStudent.school,
-      grade: newStudent.grade,
-      email: newStudent.email || undefined
+      grade: newStudent.grade
     };
 
     console.log('Student signup successful:', studentData);
@@ -155,5 +152,48 @@ export const studentSignupService = async (fullName: string, school: string, gra
   } catch (error) {
     console.error('Student signup service error:', error);
     return { error: 'Signup failed. Please try again.' };
+  }
+};
+
+// New service for simplified login (just name and password)
+export const studentSimpleLoginService = async (fullName: string, password: string) => {
+  try {
+    console.log('Student simple login attempt:', { fullName });
+    
+    const { data: students, error } = await supabase
+      .from('students')
+      .select('*')
+      .eq('full_name', fullName);
+
+    console.log('Student simple login query result:', { students, error });
+
+    if (error || !students || students.length === 0) {
+      console.error('Student not found:', error);
+      return { error: 'Student not found. Please check your name or sign up.' };
+    }
+
+    // If multiple students with same name, we need more info
+    if (students.length > 1) {
+      return { error: 'Multiple students found with this name. Please use the full login form with school and grade.' };
+    }
+
+    const student = students[0];
+    if (student.password_hash !== password) {
+      console.error('Invalid password for student:', fullName);
+      return { error: 'Invalid password' };
+    }
+
+    const studentData: Student = {
+      id: student.id,
+      full_name: student.full_name,
+      school: student.school,
+      grade: student.grade
+    };
+
+    console.log('Student simple login successful:', studentData);
+    return { student: studentData };
+  } catch (error) {
+    console.error('Student simple login service error:', error);
+    return { error: 'Login failed. Please try again.' };
   }
 };
