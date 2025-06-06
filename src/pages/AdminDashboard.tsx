@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -18,6 +17,8 @@ import ClassScheduleForm from "@/components/ClassScheduleForm";
 import InviteTeacherForm from "@/components/InviteTeacherForm";
 import SchoolPsychologistForm from "@/components/SchoolPsychologistForm";
 import { useNavigate } from "react-router-dom";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface Teacher {
   id: string;
@@ -40,6 +41,7 @@ const AdminDashboard = () => {
   const { teacher, clearAuth } = useAuthStorage();
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const [teachers, setTeachers] = useState<Teacher[]>([]);
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -109,9 +111,9 @@ const AdminDashboard = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
           <p>Loading dashboard...</p>
         </div>
       </div>
@@ -119,17 +121,18 @@ const AdminDashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
-      <header className="bg-white/80 backdrop-blur-sm border-b border-blue-100 p-4">
+    <div className="min-h-screen bg-background">
+      <header className="bg-card/80 backdrop-blur-sm border-b border-border p-4">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
           <div className="flex items-center gap-4">
-            <SchoolIcon className="w-8 h-8 text-purple-600" />
-            <h1 className="text-2xl font-bold text-gray-900">
+            <SchoolIcon className="w-8 h-8 text-primary" />
+            <h1 className="text-2xl font-bold text-foreground">
               {teacher?.school} - Admin Dashboard
             </h1>
           </div>
           <div className="flex items-center gap-4">
-            <span className="text-sm text-gray-600">Welcome, {teacher?.name}</span>
+            <LanguageSwitcher />
+            <span className="text-sm text-muted-foreground">Welcome, {teacher?.name}</span>
             <Button
               onClick={handleLogout}
               variant="outline"
@@ -154,7 +157,7 @@ const AdminDashboard = () => {
             <CardContent>
               <Button 
                 onClick={handleSubscribe}
-                className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
+                className="bg-primary hover:bg-primary/90"
               >
                 Subscribe Now
               </Button>
@@ -222,16 +225,16 @@ const AdminDashboard = () => {
                     <div key={teacherItem.id} className="flex items-center justify-between p-4 border rounded-lg">
                       <div>
                         <h3 className="font-medium">{teacherItem.name}</h3>
-                        <p className="text-sm text-gray-600">{teacherItem.email}</p>
-                        <p className="text-xs text-gray-500 capitalize">{teacherItem.role}</p>
+                        <p className="text-sm text-muted-foreground">{teacherItem.email}</p>
+                        <p className="text-xs text-muted-foreground capitalize">{teacherItem.role}</p>
                       </div>
-                      <div className="text-sm text-gray-500">
+                      <div className="text-sm text-muted-foreground">
                         Joined: {new Date(teacherItem.created_at).toLocaleDateString()}
                       </div>
                     </div>
                   ))}
                   {teachers.length === 0 && (
-                    <p className="text-center text-gray-500 py-8">No teachers found</p>
+                    <p className="text-center text-muted-foreground py-8">No teachers found</p>
                   )}
                 </div>
               </CardContent>

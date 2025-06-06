@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -19,6 +18,8 @@ import LessonFeedbackForm from "@/components/LessonFeedbackForm";
 import WeeklySummary from "@/components/WeeklySummary";
 import PsychologistInfo from "@/components/PsychologistInfo";
 import { useNavigate } from "react-router-dom";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface ClassSchedule {
   id: string;
@@ -45,6 +46,7 @@ const StudentDashboard = () => {
   const { student, clearAuth } = useAuthStorage();
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const [upcomingClasses, setUpcomingClasses] = useState<ClassSchedule[]>([]);
   const [psychologists, setPsychologists] = useState<SchoolPsychologist[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -117,9 +119,9 @@ const StudentDashboard = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
           <p>Loading dashboard...</p>
         </div>
       </div>
@@ -127,15 +129,16 @@ const StudentDashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
-      <header className="bg-white/80 backdrop-blur-sm border-b border-blue-100 p-4">
+    <div className="min-h-screen bg-background">
+      <header className="bg-card/80 backdrop-blur-sm border-b border-border p-4">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
           <div className="flex items-center gap-4">
-            <SchoolIcon className="w-8 h-8 text-purple-600" />
-            <h1 className="text-2xl font-bold text-gray-900">Student Dashboard</h1>
+            <SchoolIcon className="w-8 h-8 text-primary" />
+            <h1 className="text-2xl font-bold text-foreground">Student Dashboard</h1>
           </div>
           <div className="flex items-center gap-4">
-            <span className="text-sm text-gray-600">Welcome, {student?.full_name}</span>
+            <LanguageSwitcher />
+            <span className="text-sm text-muted-foreground">Welcome, {student?.full_name}</span>
             <Button
               onClick={handleLogout}
               variant="outline"
@@ -207,7 +210,7 @@ const StudentDashboard = () => {
                     <div key={classItem.id} className="flex items-center justify-between p-4 border rounded-lg">
                       <div>
                         <h3 className="font-medium">{classItem.subject}</h3>
-                        <p className="text-sm text-gray-600">{classItem.lesson_topic}</p>
+                        <p className="text-sm text-muted-foreground">{classItem.lesson_topic}</p>
                         <div className="flex gap-2 mt-2">
                           <Badge variant="outline">{classItem.grade}</Badge>
                           <Badge variant="outline">{classItem.duration_minutes} min</Badge>
@@ -215,12 +218,12 @@ const StudentDashboard = () => {
                       </div>
                       <div className="text-right">
                         <p className="font-medium">{new Date(classItem.class_date).toLocaleDateString()}</p>
-                        <p className="text-sm text-gray-600">{classItem.class_time}</p>
+                        <p className="text-sm text-muted-foreground">{classItem.class_time}</p>
                       </div>
                     </div>
                   ))}
                   {upcomingClasses.length === 0 && (
-                    <p className="text-center text-gray-500 py-8">No upcoming classes scheduled</p>
+                    <p className="text-center text-muted-foreground py-8">No upcoming classes scheduled</p>
                   )}
                 </div>
               </CardContent>
@@ -251,9 +254,9 @@ const StudentDashboard = () => {
                   </div>
                 ) : (
                   <div className="text-center py-8">
-                    <HeartHandshakeIcon className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-                    <p className="text-gray-500">No school psychologists are currently available.</p>
-                    <p className="text-sm text-gray-400 mt-2">
+                    <HeartHandshakeIcon className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                    <p className="text-muted-foreground">No school psychologists are currently available.</p>
+                    <p className="text-sm text-muted-foreground mt-2">
                       If you need support, please contact your school administration.
                     </p>
                   </div>

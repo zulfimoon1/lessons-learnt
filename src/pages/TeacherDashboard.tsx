@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -12,6 +13,8 @@ import {
 } from "lucide-react";
 import ClassScheduleForm from "@/components/ClassScheduleForm";
 import { useNavigate } from "react-router-dom";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface Subscription {
   id: string;
@@ -26,6 +29,7 @@ const TeacherDashboard = () => {
   const { teacher, clearAuth } = useAuthStorage();
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isCreatingCheckout, setIsCreatingCheckout] = useState(false);
@@ -114,9 +118,9 @@ const TeacherDashboard = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
           <p>Loading dashboard...</p>
         </div>
       </div>
@@ -124,15 +128,16 @@ const TeacherDashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
-      <header className="bg-white/80 backdrop-blur-sm border-b border-blue-100 p-4">
+    <div className="min-h-screen bg-background">
+      <header className="bg-card/80 backdrop-blur-sm border-b border-border p-4">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
           <div className="flex items-center gap-4">
-            <SchoolIcon className="w-8 h-8 text-purple-600" />
-            <h1 className="text-2xl font-bold text-gray-900">Teacher Dashboard</h1>
+            <SchoolIcon className="w-8 h-8 text-primary" />
+            <h1 className="text-2xl font-bold text-foreground">Teacher Dashboard</h1>
           </div>
           <div className="flex items-center gap-4">
-            <span className="text-sm text-gray-600">Welcome, {teacher?.name}</span>
+            <LanguageSwitcher />
+            <span className="text-sm text-muted-foreground">Welcome, {teacher?.name}</span>
             <Button
               onClick={handleLogout}
               variant="outline"
@@ -161,7 +166,7 @@ const TeacherDashboard = () => {
               <Button 
                 onClick={handleCreateCheckout}
                 disabled={isCreatingCheckout}
-                className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
+                className="bg-primary hover:bg-primary/90"
               >
                 {isCreatingCheckout ? 'Creating Session...' : 'Subscribe Now - $29.99/month'}
               </Button>
@@ -230,11 +235,11 @@ const TeacherDashboard = () => {
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="text-center py-8">
-                  <p className="text-gray-500 mb-4">Class scheduling is available with an active subscription</p>
+                  <p className="text-muted-foreground mb-4">Class scheduling is available with an active subscription</p>
                   <Button 
                     onClick={handleCreateCheckout}
                     disabled={isCreatingCheckout}
-                    className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
+                    className="bg-primary hover:bg-primary/90"
                   >
                     {isCreatingCheckout ? 'Creating Session...' : 'Subscribe to Continue'}
                   </Button>

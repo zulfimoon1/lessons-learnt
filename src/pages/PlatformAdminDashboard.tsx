@@ -23,6 +23,8 @@ import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from "recharts";
 import MentalHealthAlerts from "@/components/MentalHealthAlerts";
 import { getStudentStatistics, StudentStatistics } from "@/services/platformAdminService";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface SchoolStats {
   school: string;
@@ -62,6 +64,7 @@ interface Subscription {
 const PlatformAdminDashboard = () => {
   const { admin, logout } = usePlatformAdmin();
   const { toast } = useToast();
+  const { t } = useLanguage();
   const [schoolStats, setSchoolStats] = useState<SchoolStats[]>([]);
   const [feedbackStats, setFeedbackStats] = useState<FeedbackStats[]>([]);
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
@@ -155,7 +158,7 @@ const PlatformAdminDashboard = () => {
   const chartConfig = {
     responses: {
       label: "Total Responses",
-      color: "#8b5cf6",
+      color: "#94c270",
     },
   };
 
@@ -173,19 +176,19 @@ const PlatformAdminDashboard = () => {
   const studentChartConfig = {
     students: {
       label: "Total Students",
-      color: "#0ea5e9",
+      color: "#94c270",
     },
     responseRate: {
       label: "Response Rate (%)",
-      color: "#10b981",
+      color: "#6b7280",
     },
   };
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
           <p>Loading dashboard...</p>
         </div>
       </div>
@@ -199,13 +202,13 @@ const PlatformAdminDashboard = () => {
   const totalResponses = feedbackStats.reduce((acc, curr) => acc + curr.total_responses, 0);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
-      <header className="bg-white/80 backdrop-blur-sm border-b border-blue-100 p-4">
+    <div className="min-h-screen bg-background">
+      <header className="bg-card/80 backdrop-blur-sm border-b border-border p-4">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
-              <SchoolIcon className="w-8 h-8 text-purple-600" />
-              <h1 className="text-2xl font-bold text-gray-900">Platform Admin Dashboard</h1>
+              <SchoolIcon className="w-8 h-8 text-primary" />
+              <h1 className="text-2xl font-bold text-foreground">Platform Admin Dashboard</h1>
             </div>
             <Button onClick={refreshData} variant="outline" size="sm" className="flex items-center gap-2">
               <RefreshCwIcon className="w-4 h-4" />
@@ -213,7 +216,8 @@ const PlatformAdminDashboard = () => {
             </Button>
           </div>
           <div className="flex items-center gap-4">
-            <span className="text-sm text-gray-600">Welcome, {admin?.name}</span>
+            <LanguageSwitcher />
+            <span className="text-sm text-muted-foreground">Welcome, {admin?.name}</span>
             <Button
               onClick={logout}
               variant="outline"
@@ -362,8 +366,8 @@ const PlatformAdminDashboard = () => {
                   </Table>
                 ) : (
                   <div className="text-center py-8">
-                    <p className="text-gray-500">No subscriptions found in the database</p>
-                    <p className="text-xs text-gray-400 mt-2">
+                    <p className="text-muted-foreground">No subscriptions found in the database</p>
+                    <p className="text-xs text-muted-foreground mt-2">
                       This could mean subscriptions haven't been created yet or there's an issue with data storage
                     </p>
                   </div>
@@ -394,8 +398,8 @@ const PlatformAdminDashboard = () => {
                           textAnchor="end"
                           height={100}
                         />
-                        <YAxis yAxisId="left" orientation="left" stroke="#0ea5e9" />
-                        <YAxis yAxisId="right" orientation="right" stroke="#10b981" domain={[0, 100]} />
+                        <YAxis yAxisId="left" orientation="left" stroke="#94c270" />
+                        <YAxis yAxisId="right" orientation="right" stroke="#6b7280" domain={[0, 100]} />
                         <ChartTooltip content={<ChartTooltipContent />} />
                         <Bar dataKey="students" fill="var(--color-students)" yAxisId="left" />
                         <Bar dataKey="responseRate" fill="var(--color-responseRate)" yAxisId="right" />
