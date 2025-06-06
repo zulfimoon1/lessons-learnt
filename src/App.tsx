@@ -22,12 +22,12 @@ const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <PlatformAdminProvider>
-      <AuthProvider>
-        <LanguageProvider>
-          <TooltipProvider>
-            <Toaster />
-            <BrowserRouter>
+    <BrowserRouter>
+      <PlatformAdminProvider>
+        <AuthProvider>
+          <LanguageProvider>
+            <TooltipProvider>
+              <Toaster />
               <Routes>
                 <Route path="/" element={<Index />} />
                 <Route path="/student-login" element={<StudentLogin />} />
@@ -41,11 +41,11 @@ const App = () => (
                 <Route path="/accept-invitation" element={<AcceptInvitation />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
-            </BrowserRouter>
-          </TooltipProvider>
-        </LanguageProvider>
-      </AuthProvider>
-    </PlatformAdminProvider>
+            </TooltipProvider>
+          </LanguageProvider>
+        </AuthProvider>
+      </PlatformAdminProvider>
+    </BrowserRouter>
   </QueryClientProvider>
 );
 
