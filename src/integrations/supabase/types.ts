@@ -122,6 +122,33 @@ export type Database = {
           },
         ]
       }
+      school_admins: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          name: string
+          password_hash: string
+          school_name: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          name: string
+          password_hash: string
+          school_name: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          name?: string
+          password_hash?: string
+          school_name?: string
+        }
+        Relationships: []
+      }
       students: {
         Row: {
           created_at: string

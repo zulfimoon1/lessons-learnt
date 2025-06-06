@@ -168,7 +168,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const schoolAdminLogin = async (email: string, password: string) => {
     try {
-      const { data: admins, error } = await supabase
+      // Use any type to bypass TypeScript errors since the table exists but types haven't been regenerated
+      const { data: admins, error } = await (supabase as any)
         .from('school_admins')
         .select('*')
         .eq('email', email)
@@ -199,7 +200,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const schoolAdminSignup = async (email: string, password: string, name: string, schoolName: string) => {
     try {
-      const { data: newAdmin, error } = await supabase
+      // Use any type to bypass TypeScript errors since the table exists but types haven't been regenerated
+      const { data: newAdmin, error } = await (supabase as any)
         .from('school_admins')
         .insert({
           email: email,
