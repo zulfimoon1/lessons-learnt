@@ -1,5 +1,4 @@
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,6 +10,17 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 
 const StudentLogin = () => {
+  const { student } = useAuth();
+  const navigate = useNavigate();
+
+  // Redirect if already logged in
+  useEffect(() => {
+    if (student) {
+      console.log('StudentLogin: Student already logged in, redirecting...');
+      navigate("/student-dashboard");
+    }
+  }, [student, navigate]);
+
   const [loginData, setLoginData] = useState({
     fullName: "",
     password: ""
@@ -27,7 +37,6 @@ const StudentLogin = () => {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const { studentLogin, studentSignup } = useAuth();
-  const navigate = useNavigate();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -54,12 +63,12 @@ const StudentLogin = () => {
           variant: "destructive",
         });
       } else if (result.student) {
-        console.log('Login successful, navigating to dashboard...');
+        console.log('Login successful, student data:', result.student);
         toast({
           title: "Welcome back! 📚",
           description: "You've successfully logged in.",
         });
-        navigate("/student-dashboard");
+        // Navigation will be handled by useEffect when student state updates
       } else {
         toast({
           title: "Login failed",
@@ -113,12 +122,12 @@ const StudentLogin = () => {
           variant: "destructive",
         });
       } else if (result.student) {
-        console.log('Signup successful, navigating to dashboard...');
+        console.log('Signup successful, student data:', result.student);
         toast({
           title: "Account created! 🎉",
           description: "Welcome to Lesson Lens!",
         });
-        navigate("/student-dashboard");
+        // Navigation will be handled by useEffect when student state updates
       } else {
         toast({
           title: "Signup failed",
