@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@14.21.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
@@ -31,6 +30,37 @@ serve(async (req) => {
     const body = await req.json();
     const { teacherCount = 1, discountCode = null, discountPercent = 0 } = body;
     console.log("Request body:", { teacherCount, discountCode, discountPercent });
+
+    // Validate discount code if provided
+    let validatedDiscountPercent = 0;
+    let discountCodeId = null;
+    
+    if (discountCode) {
+      const { data: discountData, error: discountError } = await supabaseAdmin
+        .from('discount_codes')
+        .select('*')
+        .eq('code', discountCode.toUpperCase())
+        .eq('is_active', true)
+        .single();
+
+      if (discountError || !discountData) {
+        throw new Error("Invalid discount code");
+      }
+
+      // Check if expired
+      if (discountData.expires_at && new Date(discountData.expires_at) < new Date()) {
+        throw new Error("Discount code has expired");
+      }
+
+      // Check if usage limit reached
+      if (discountData.max_uses && discountData.current_uses >= discountData.max_uses) {
+        throw new Error("Discount code usage limit reached");
+      }
+
+      validatedDiscountPercent = discountData.discount_percent;
+      discountCodeId = discountData.id;
+      console.log("Discount code validated:", { code: discountCode, percent: validatedDiscountPercent });
+    }
 
     // Get authenticated user
     const authHeader = req.headers.get("Authorization");
@@ -65,9 +95,9 @@ serve(async (req) => {
       customerName = teacherData.name;
     }
 
-    const basePrice = 999; // $9.99 in cents (corrected from 999)
+    const basePrice = 999; // $9.99 in cents
     const subtotal = teacherCount * basePrice;
-    const discountAmount = Math.round(subtotal * (discountPercent / 100));
+    const discountAmount = Math.round(subtotal * (validatedDiscountPercent / 100));
     const finalAmount = subtotal - discountAmount;
 
     console.log("Pricing:", { basePrice, subtotal, discountAmount, finalAmount });
@@ -124,21 +154,40 @@ serve(async (req) => {
         teacherCount: teacherCount.toString(),
         originalAmount: subtotal.toString(),
         discountCode: discountCode || '',
-        discountPercent: discountPercent.toString(),
+        discountPercent: validatedDiscountPercent.toString(),
         schoolName: schoolName,
         adminEmail: userData.user.email,
-        adminName: customerName
+        adminName: customerName,
+        discountCodeId: discountCodeId || ''
       },
     };
 
     // Add discount information to metadata if applicable
-    if (discountCode && discountPercent > 0) {
+    if (discountCode && validatedDiscountPercent > 0) {
       sessionData.metadata.discountApplied = 'true';
       sessionData.metadata.discountAmount = discountAmount.toString();
     }
 
     const session = await stripe.checkout.sessions.create(sessionData);
     console.log("Checkout session created:", session.id);
+
+    // Increment discount code usage if one was used
+    if (discountCodeId) {
+      const { error: incrementError } = await supabaseAdmin
+        .from('discount_codes')
+        .update({
+          current_uses: supabaseAdmin.sql`current_uses + 1`,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', discountCodeId);
+
+      if (incrementError) {
+        console.error("Error incrementing discount code usage:", incrementError);
+        // Don't fail the request, just log the error
+      } else {
+        console.log("Discount code usage incremented");
+      }
+    }
 
     // Store subscription intent in our database for tracking
     const subscriptionData = {

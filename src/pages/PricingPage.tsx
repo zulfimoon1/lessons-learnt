@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -12,6 +11,7 @@ import { ArrowLeftIcon, CheckIcon, UsersIcon, CreditCardIcon } from "lucide-reac
 import { useNavigate } from "react-router-dom";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { discountCodeService } from "@/services/discountCodeService";
 
 const PricingPage = () => {
   const { teacher } = useAuth();
@@ -21,6 +21,8 @@ const PricingPage = () => {
   const [teacherCount, setTeacherCount] = useState(1);
   const [discountCode, setDiscountCode] = useState("");
   const [discount, setDiscount] = useState(0);
+  const [discountError, setDiscountError] = useState("");
+  const [discountPercent, setDiscountPercent] = useState(0);
   const [isValidatingDiscount, setIsValidatingDiscount] = useState(false);
   const [isCreatingCheckout, setIsCreatingCheckout] = useState(false);
 
@@ -36,38 +38,35 @@ const PricingPage = () => {
   //   }
   // }, [teacher, navigate]);
 
-  const validateDiscountCode = async () => {
-    if (!discountCode.trim()) {
-      setDiscount(0);
+  const validateDiscountCode = async (code: string) => {
+    if (!code.trim()) {
+      setDiscountError("Please enter a discount code");
       return;
     }
 
     setIsValidatingDiscount(true);
+    setDiscountError("");
+
     try {
-      const validCodes: Record<string, number> = {
-        'EDUCATION10': 10,
-        'NEWSCHOOL15': 15,
-        'BULK20': 20
-      };
+      const result = await discountCodeService.validateDiscountCode(code.trim());
       
-      const discountValue = validCodes[discountCode.toUpperCase()];
-      if (discountValue) {
-        setDiscount(discountValue);
+      if (result.valid) {
+        setDiscountPercent(result.discountPercent);
+        setDiscountCode(code.trim().toUpperCase());
         toast({
-          title: t('pricing.discountApplied'),
-          description: t('pricing.discountAppliedDesc').replace('{percent}', discountValue.toString()),
+          title: "Success",
+          description: `${result.discountPercent}% discount applied!`,
         });
       } else {
-        setDiscount(0);
-        toast({
-          title: t('pricing.invalidDiscount'),
-          description: t('pricing.invalidDiscountDesc'),
-          variant: "destructive",
-        });
+        setDiscountError(result.error);
+        setDiscountPercent(0);
+        setDiscountCode("");
       }
     } catch (error) {
-      console.error("Error validating discount:", error);
-      setDiscount(0);
+      console.error('Error validating discount code:', error);
+      setDiscountError("Failed to validate discount code. Please try again.");
+      setDiscountPercent(0);
+      setDiscountCode("");
     } finally {
       setIsValidatingDiscount(false);
     }
@@ -185,10 +184,10 @@ const PricingPage = () => {
                     placeholder={t('pricing.enterDiscount')}
                     value={discountCode}
                     onChange={(e) => setDiscountCode(e.target.value.toUpperCase())}
-                    onBlur={validateDiscountCode}
+                    onBlur={() => validateDiscountCode(discountCode)}
                   />
                   <Button
-                    onClick={validateDiscountCode}
+                    onClick={() => validateDiscountCode(discountCode)}
                     variant="outline"
                     disabled={isValidatingDiscount}
                   >
