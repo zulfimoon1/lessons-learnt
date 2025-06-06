@@ -148,13 +148,13 @@ const StudentLogin = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center p-4">
-      <Card className="w-full max-w-md bg-white/80 backdrop-blur-sm border-blue-100">
+    <div className="min-h-screen bg-background flex items-center justify-center p-4">
+      <Card className="w-full max-w-md bg-card/80 backdrop-blur-sm border-border">
         <CardHeader className="text-center">
-          <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full mx-auto flex items-center justify-center mb-4">
-            <BookOpenIcon className="w-8 h-8 text-white" />
+          <div className="w-16 h-16 bg-primary rounded-full mx-auto flex items-center justify-center mb-4">
+            <BookOpenIcon className="w-8 h-8 text-primary-foreground" />
           </div>
-          <CardTitle className="text-2xl text-gray-900">Student Portal</CardTitle>
+          <CardTitle className="text-2xl text-foreground">Student Portal</CardTitle>
           <CardDescription>
             Login to your account or create a new one
           </CardDescription>
@@ -197,7 +197,7 @@ const StudentLogin = () => {
 
                 <Button 
                   type="submit" 
-                  className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
+                  className="w-full"
                   disabled={isLoading}
                 >
                   {isLoading ? "Logging in..." : (
@@ -283,7 +283,7 @@ const StudentLogin = () => {
 
                 <Button 
                   type="submit" 
-                  className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700"
+                  className="w-full"
                   disabled={isLoading}
                 >
                   {isLoading ? "Creating account..." : "Create Account"}
