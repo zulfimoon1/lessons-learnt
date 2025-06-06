@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 
 export interface PlatformAdmin {
@@ -84,19 +85,26 @@ export const createTestAdmin = async () => {
   }
 };
 
-// New function to get student statistics by school
+// Function to get student statistics by school
 export const getStudentStatistics = async () => {
   try {
     // Get count of students per school
-    const { data: studentCountBySchool, error: studentError } = await supabase
+    const { data: schoolData, error: schoolError } = await supabase
       .from('students')
       .select('school, count')
-      .group('school');
+      .select('school, count(*)', { count: 'exact' })
+      .groupBy('school');
       
-    if (studentError) {
-      console.error('Error fetching student statistics:', studentError);
-      return { error: studentError.message };
+    if (schoolError) {
+      console.error('Error fetching student statistics:', schoolError);
+      return { error: schoolError.message };
     }
+
+    // Transform the data to match our expected format
+    const studentCountBySchool = schoolData.map(item => ({
+      school: item.school,
+      count: parseInt(item.count)
+    }));
 
     // Get count of feedback responses per school
     const { data: feedbackData, error: feedbackError } = await supabase
@@ -122,7 +130,7 @@ export const getStudentStatistics = async () => {
 
     // Combine the data
     const statistics: StudentStatistics[] = studentCountBySchool.map((item) => {
-      const totalStudents = Number(item.count);
+      const totalStudents = item.count;
       const totalResponses = responseCounts[item.school] || 0;
       const responseRate = totalStudents > 0 ? (totalResponses / totalStudents) * 100 : 0;
       
