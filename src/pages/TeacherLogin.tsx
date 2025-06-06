@@ -6,42 +6,38 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { GraduationCapIcon, LogInIcon } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
 
-interface TeacherLoginProps {
-  onLogin: (teacherData: { name: string; email: string }) => void;
-}
-
-const TeacherLogin = ({ onLogin }: TeacherLoginProps) => {
+const TeacherLogin = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const { teacherLogin } = useAuth();
+  const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
-    // Simple demo authentication - in real app, this would be proper auth
-    if (email.includes("@") && password.length > 0) {
-      setTimeout(() => {
-        onLogin({
-          name: email.split("@")[0].replace(".", " ").replace(/\b\w/g, l => l.toUpperCase()),
-          email: email
-        });
-        toast({
-          title: "Welcome back! 👨‍🏫",
-          description: "You've successfully logged in to your teacher dashboard.",
-        });
-        setIsLoading(false);
-      }, 1000);
-    } else {
+    const { error } = await teacherLogin(email, password);
+
+    if (error) {
       toast({
-        title: "Invalid credentials",
-        description: "Please enter a valid email and password.",
+        title: "Login failed",
+        description: error,
         variant: "destructive",
       });
-      setIsLoading(false);
+    } else {
+      toast({
+        title: "Welcome back! 👨‍🏫",
+        description: "You've successfully logged in to your teacher dashboard.",
+      });
+      navigate("/teacher-dashboard");
     }
+
+    setIsLoading(false);
   };
 
   return (
@@ -53,7 +49,7 @@ const TeacherLogin = ({ onLogin }: TeacherLoginProps) => {
           </div>
           <CardTitle className="text-2xl text-gray-900">Teacher Login</CardTitle>
           <CardDescription>
-            Access your dashboard to review student feedback
+            Access your dashboard to manage classes and review student feedback
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -96,7 +92,7 @@ const TeacherLogin = ({ onLogin }: TeacherLoginProps) => {
             </Button>
           </form>
           <div className="mt-4 text-center text-sm text-gray-600">
-            Demo: Use any email and password to login
+            Demo: Use any email and password to login (will create account automatically)
           </div>
         </CardContent>
       </Card>

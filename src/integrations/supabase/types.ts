@@ -9,7 +9,170 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      class_schedules: {
+        Row: {
+          class_date: string
+          class_time: string
+          created_at: string
+          description: string | null
+          duration_minutes: number
+          grade: string
+          id: string
+          lesson_topic: string
+          school: string
+          subject: string
+          teacher_id: string
+        }
+        Insert: {
+          class_date: string
+          class_time: string
+          created_at?: string
+          description?: string | null
+          duration_minutes?: number
+          grade: string
+          id?: string
+          lesson_topic: string
+          school: string
+          subject: string
+          teacher_id: string
+        }
+        Update: {
+          class_date?: string
+          class_time?: string
+          created_at?: string
+          description?: string | null
+          duration_minutes?: number
+          grade?: string
+          id?: string
+          lesson_topic?: string
+          school?: string
+          subject?: string
+          teacher_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "class_schedules_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: false
+            referencedRelation: "teachers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      feedback: {
+        Row: {
+          additional_comments: string | null
+          class_schedule_id: string
+          educational_growth: number
+          emotional_state: string
+          id: string
+          interest: number
+          is_anonymous: boolean
+          student_id: string | null
+          student_name: string | null
+          submitted_at: string
+          suggestions: string | null
+          understanding: number
+          what_went_well: string | null
+        }
+        Insert: {
+          additional_comments?: string | null
+          class_schedule_id: string
+          educational_growth: number
+          emotional_state: string
+          id?: string
+          interest: number
+          is_anonymous?: boolean
+          student_id?: string | null
+          student_name?: string | null
+          submitted_at?: string
+          suggestions?: string | null
+          understanding: number
+          what_went_well?: string | null
+        }
+        Update: {
+          additional_comments?: string | null
+          class_schedule_id?: string
+          educational_growth?: number
+          emotional_state?: string
+          id?: string
+          interest?: number
+          is_anonymous?: boolean
+          student_id?: string | null
+          student_name?: string | null
+          submitted_at?: string
+          suggestions?: string | null
+          understanding?: number
+          what_went_well?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "feedback_class_schedule_id_fkey"
+            columns: ["class_schedule_id"]
+            isOneToOne: false
+            referencedRelation: "class_schedules"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "feedback_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      students: {
+        Row: {
+          created_at: string
+          full_name: string
+          grade: string
+          id: string
+          password_hash: string
+          school: string
+        }
+        Insert: {
+          created_at?: string
+          full_name: string
+          grade: string
+          id?: string
+          password_hash: string
+          school: string
+        }
+        Update: {
+          created_at?: string
+          full_name?: string
+          grade?: string
+          id?: string
+          password_hash?: string
+          school?: string
+        }
+        Relationships: []
+      }
+      teachers: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          name: string
+          password_hash: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          name: string
+          password_hash: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          name?: string
+          password_hash?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
