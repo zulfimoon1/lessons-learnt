@@ -70,8 +70,8 @@ const AdminDashboard = () => {
     } catch (error) {
       console.error('Error loading teachers:', error);
       toast({
-        title: "Error",
-        description: "Failed to load teachers",
+        title: t('admin.error.title'),
+        description: t('admin.error.description'),
         variant: "destructive",
       });
     }
@@ -114,7 +114,7 @@ const AdminDashboard = () => {
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p>Loading dashboard...</p>
+          <p>{t('admin.loading')}</p>
         </div>
       </div>
     );
@@ -127,19 +127,19 @@ const AdminDashboard = () => {
           <div className="flex items-center gap-4">
             <SchoolIcon className="w-8 h-8 text-primary" />
             <h1 className="text-2xl font-bold text-foreground">
-              {teacher?.school} - Admin Dashboard
+              {teacher?.school} - {t('admin.title')}
             </h1>
           </div>
           <div className="flex items-center gap-4">
             <LanguageSwitcher />
-            <span className="text-sm text-muted-foreground">Welcome, {teacher?.name}</span>
+            <span className="text-sm text-muted-foreground">{t('admin.welcome')}, {teacher?.name}</span>
             <Button
               onClick={handleLogout}
               variant="outline"
               className="flex items-center gap-2"
             >
               <LogOutIcon className="w-4 h-4" />
-              Logout
+              {t('admin.logout')}
             </Button>
           </div>
         </div>
@@ -149,7 +149,7 @@ const AdminDashboard = () => {
         {!subscription && (
           <Card className="border-yellow-200 bg-yellow-50">
             <CardHeader>
-              <CardTitle className="text-yellow-800">Subscription Required</CardTitle>
+              <CardTitle className="text-yellow-800">{t('admin.subscription')}</CardTitle>
               <CardDescription className="text-yellow-700">
                 You need an active subscription to access all admin features and invite teachers.
               </CardDescription>
@@ -159,7 +159,7 @@ const AdminDashboard = () => {
                 onClick={handleSubscribe}
                 className="bg-primary hover:bg-primary/90"
               >
-                Subscribe Now
+                {t('admin.subscribe')}
               </Button>
             </CardContent>
           </Card>
@@ -168,7 +168,7 @@ const AdminDashboard = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Teachers</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('admin.stats.teachers')}</CardTitle>
               <UsersIcon className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
@@ -188,7 +188,7 @@ const AdminDashboard = () => {
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Subscription Status</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('admin.subscription')}</CardTitle>
               <MessageSquareIcon className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
@@ -201,8 +201,8 @@ const AdminDashboard = () => {
 
         <Tabs defaultValue="schedule" className="space-y-6">
           <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="schedule">Class Schedule</TabsTrigger>
-            <TabsTrigger value="teachers">Teachers</TabsTrigger>
+            <TabsTrigger value="schedule">{t('class.schedule')}</TabsTrigger>
+            <TabsTrigger value="teachers">{t('admin.teachers.title')}</TabsTrigger>
             <TabsTrigger value="psychologists">Psychologists</TabsTrigger>
             <TabsTrigger value="invite">Invite Teacher</TabsTrigger>
           </TabsList>
@@ -214,9 +214,9 @@ const AdminDashboard = () => {
           <TabsContent value="teachers" className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>Teacher Management</CardTitle>
+                <CardTitle>{t('admin.teachers.title')}</CardTitle>
                 <CardDescription>
-                  Manage teachers in your school
+                  {t('admin.teachers.description')}
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -234,7 +234,7 @@ const AdminDashboard = () => {
                     </div>
                   ))}
                   {teachers.length === 0 && (
-                    <p className="text-center text-muted-foreground py-8">No teachers found</p>
+                    <p className="text-center text-muted-foreground py-8">{t('admin.teachers.empty')}</p>
                   )}
                 </div>
               </CardContent>

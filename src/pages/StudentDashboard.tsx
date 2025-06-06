@@ -81,7 +81,7 @@ const StudentDashboard = () => {
     } catch (error) {
       console.error('Error loading classes:', error);
       toast({
-        title: "Error",
+        title: t('common.error'),
         description: "Failed to load upcoming classes",
         variant: "destructive",
       });
@@ -103,7 +103,7 @@ const StudentDashboard = () => {
     } catch (error) {
       console.error('Error loading psychologists:', error);
       toast({
-        title: "Error",
+        title: t('common.error'),
         description: "Failed to load school psychologists",
         variant: "destructive",
       });
@@ -122,7 +122,7 @@ const StudentDashboard = () => {
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p>Loading dashboard...</p>
+          <p>{t('common.loading')}</p>
         </div>
       </div>
     );
@@ -138,14 +138,14 @@ const StudentDashboard = () => {
           </div>
           <div className="flex items-center gap-4">
             <LanguageSwitcher />
-            <span className="text-sm text-muted-foreground">Welcome, {student?.full_name}</span>
+            <span className="text-sm text-muted-foreground">{t('admin.welcome')}, {student?.full_name}</span>
             <Button
               onClick={handleLogout}
               variant="outline"
               className="flex items-center gap-2"
             >
               <LogOutIcon className="w-4 h-4" />
-              Logout
+              {t('auth.logout')}
             </Button>
           </div>
         </div>
@@ -155,7 +155,7 @@ const StudentDashboard = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">School</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('auth.school')}</CardTitle>
               <SchoolIcon className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
@@ -186,7 +186,7 @@ const StudentDashboard = () => {
 
         <Tabs defaultValue="feedback" className="space-y-6">
           <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="feedback">Lesson Feedback</TabsTrigger>
+            <TabsTrigger value="feedback">{t('dashboard.feedback')}</TabsTrigger>
             <TabsTrigger value="classes">Upcoming Classes</TabsTrigger>
             <TabsTrigger value="weekly">Weekly Summary</TabsTrigger>
             <TabsTrigger value="support">Mental Health Support</TabsTrigger>

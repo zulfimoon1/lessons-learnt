@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -73,7 +72,7 @@ const TeacherDashboard = () => {
   const handleCreateCheckout = async () => {
     if (!teacher?.email || !teacher?.school) {
       toast({
-        title: "Error",
+        title: t('common.error'),
         description: "Missing teacher information",
         variant: "destructive",
       });
@@ -106,7 +105,7 @@ const TeacherDashboard = () => {
     } catch (error) {
       console.error('Error creating checkout:', error);
       toast({
-        title: "Error",
+        title: t('common.error'),
         description: `Failed to create checkout session: ${error.message}`,
         variant: "destructive",
       });
@@ -120,7 +119,7 @@ const TeacherDashboard = () => {
       <div className="min-h-screen flex items-center justify-center bg-white">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto mb-4"></div>
-          <p>Loading dashboard...</p>
+          <p>{t('common.loading')}</p>
         </div>
       </div>
     );
@@ -132,18 +131,18 @@ const TeacherDashboard = () => {
         <div className="max-w-7xl mx-auto flex justify-between items-center">
           <div className="flex items-center gap-4">
             <SchoolIcon className="w-8 h-8 text-green-600" />
-            <h1 className="text-2xl font-bold text-gray-900">Teacher Dashboard</h1>
+            <h1 className="text-2xl font-bold text-gray-900">{t('dashboard.teacherOverview')}</h1>
           </div>
           <div className="flex items-center gap-4">
             <LanguageSwitcher />
-            <span className="text-sm text-gray-600">Welcome, {teacher?.name}</span>
+            <span className="text-sm text-gray-600">{t('admin.welcome')}, {teacher?.name}</span>
             <Button
               onClick={handleLogout}
               variant="outline"
               className="flex items-center gap-2 border-green-200 text-green-700 hover:bg-green-50"
             >
               <LogOutIcon className="w-4 h-4" />
-              Logout
+              {t('auth.logout')}
             </Button>
           </div>
         </div>
@@ -155,7 +154,7 @@ const TeacherDashboard = () => {
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-yellow-800">
                 <CreditCardIcon className="w-5 h-5" />
-                Subscription Required
+                {t('admin.subscription')}
               </CardTitle>
               <CardDescription className="text-yellow-700">
                 Subscribe to unlock all features and start creating class schedules for {teacher?.school}.
@@ -167,7 +166,7 @@ const TeacherDashboard = () => {
                 disabled={isCreatingCheckout}
                 className="bg-green-600 hover:bg-green-700 text-white"
               >
-                {isCreatingCheckout ? 'Creating Session...' : 'Subscribe Now - $9.99/month'}
+                {isCreatingCheckout ? t('pricing.processing') : t('dashboard.subscribeNow')}
               </Button>
             </CardContent>
           </Card>
@@ -176,7 +175,7 @@ const TeacherDashboard = () => {
         {subscription && (
           <Card className="border-green-200 bg-green-50">
             <CardHeader>
-              <CardTitle className="text-green-800">Active Subscription</CardTitle>
+              <CardTitle className="text-green-800">{t('admin.subscription')}</CardTitle>
               <CardDescription className="text-green-700">
                 Your {subscription.plan_type} plan is active until {new Date(subscription.current_period_end).toLocaleDateString()}
               </CardDescription>
@@ -187,7 +186,7 @@ const TeacherDashboard = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <Card className="border-green-100">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">School</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('auth.school')}</CardTitle>
               <SchoolIcon className="h-4 w-4 text-gray-500" />
             </CardHeader>
             <CardContent>
@@ -197,7 +196,7 @@ const TeacherDashboard = () => {
           
           <Card className="border-green-100">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Role</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('login.teacher.role')}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-lg font-semibold capitalize">{teacher?.role}</div>
@@ -206,7 +205,7 @@ const TeacherDashboard = () => {
 
           <Card className="border-green-100">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Subscription</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('admin.subscription')}</CardTitle>
               <CreditCardIcon className="h-4 w-4 text-gray-500" />
             </CardHeader>
             <CardContent>
@@ -219,7 +218,7 @@ const TeacherDashboard = () => {
 
         <Tabs defaultValue="schedule" className="space-y-6">
           <TabsList className="bg-green-50 border-green-200">
-            <TabsTrigger value="schedule" className="data-[state=active]:bg-green-600 data-[state=active]:text-white">Class Schedule</TabsTrigger>
+            <TabsTrigger value="schedule" className="data-[state=active]:bg-green-600 data-[state=active]:text-white">{t('class.schedule')}</TabsTrigger>
           </TabsList>
 
           <TabsContent value="schedule" className="space-y-6">
@@ -228,7 +227,7 @@ const TeacherDashboard = () => {
             ) : (
               <Card className="border-green-100">
                 <CardHeader>
-                  <CardTitle>Class Schedule</CardTitle>
+                  <CardTitle>{t('class.schedule')}</CardTitle>
                   <CardDescription>
                     Subscribe to start creating and managing class schedules
                   </CardDescription>
@@ -240,7 +239,7 @@ const TeacherDashboard = () => {
                     disabled={isCreatingCheckout}
                     className="bg-green-600 hover:bg-green-700 text-white"
                   >
-                    {isCreatingCheckout ? 'Creating Session...' : 'Subscribe to Continue'}
+                    {isCreatingCheckout ? t('pricing.processing') : 'Subscribe to Continue'}
                   </Button>
                 </CardContent>
               </Card>
