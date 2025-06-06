@@ -15,10 +15,12 @@ import {
   BarChart3Icon, 
   LogOutIcon,
   CreditCardIcon,
-  RefreshCwIcon
+  RefreshCwIcon,
+  MailIcon
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
+import InviteTeacherForm from "@/components/InviteTeacherForm";
 
 interface Teacher {
   id: string;
@@ -50,12 +52,24 @@ interface Subscription {
   stripe_customer_id: string;
 }
 
+interface Invitation {
+  id: string;
+  email: string;
+  school: string;
+  role: string;
+  status: string;
+  created_at: string;
+  expires_at: string;
+  accepted_at: string | null;
+}
+
 const AdminDashboard = () => {
   const { teacher, logout } = useAuth();
   const { toast } = useToast();
   const { t } = useLanguage();
   const navigate = useNavigate();
   const [teachers, setTeachers] = useState<Teacher[]>([]);
+  const [invitations, setInvitations] = useState<Invitation[]>([]);
   const [feedbackSummary, setFeedbackSummary] = useState<FeedbackSummary[]>([]);
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -92,6 +106,20 @@ const AdminDashboard = () => {
       
       console.log('Teachers loaded:', teachersData?.length || 0);
       setTeachers(teachersData || []);
+
+      // Load invitations for this school
+      const { data: invitationsData, error: invitationsError } = await supabase
+        .from('invitations')
+        .select('*')
+        .eq('school', teacher?.school)
+        .order('created_at', { ascending: false });
+
+      if (invitationsError) {
+        console.error('Invitations error:', invitationsError);
+      } else {
+        console.log('Invitations loaded:', invitationsData?.length || 0);
+        setInvitations(invitationsData || []);
+      }
 
       // Load feedback summary for this school
       const { data: feedbackData, error: feedbackError } = await supabase
@@ -229,6 +257,11 @@ const AdminDashboard = () => {
     loadDashboardData();
   };
 
+  const handleInviteSent = () => {
+    // Refresh invitations data
+    loadDashboardData();
+  };
+
   const totalFeedback = feedbackSummary.reduce((sum, item) => sum + item.total_responses, 0);
 
   if (isLoading) {
@@ -327,32 +360,15 @@ const AdminDashboard = () => {
           </CardContent>
         </Card>
 
-        {/* Debug Information - Only show if there's an error or no subscription */}
-        {(!subscription || subscriptionError) && (
-          <Card className="border-yellow-200 bg-yellow-50">
-            <CardHeader>
-              <CardTitle className="text-sm text-yellow-800">Debug Information</CardTitle>
-            </CardHeader>
-            <CardContent className="text-xs space-y-2">
-              <p><strong>Current School:</strong> {teacher?.school}</p>
-              <p><strong>Subscription Found:</strong> {subscription ? 'Yes' : 'No'}</p>
-              {subscriptionError && (
-                <p><strong>Error:</strong> {subscriptionError}</p>
-              )}
-              <Button 
-                onClick={loadSubscription} 
-                size="sm" 
-                variant="outline"
-                className="mt-2"
-              >
-                Reload Subscription
-              </Button>
-            </CardContent>
-          </Card>
-        )}
+        {/* Invite Teacher Section */}
+        <InviteTeacherForm 
+          school={teacher?.school || ''} 
+          subscriptionId={subscription?.id}
+          onInviteSent={handleInviteSent}
+        />
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">School Teachers</CardTitle>
@@ -362,6 +378,21 @@ const AdminDashboard = () => {
               <div className="text-2xl font-bold">{teachers.length}</div>
               <p className="text-xs text-muted-foreground">
                 At {teacher?.school}
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Pending Invitations</CardTitle>
+              <MailIcon className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                {invitations.filter(inv => inv.status === 'pending').length}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Awaiting response
               </p>
             </CardContent>
           </Card>
@@ -393,48 +424,100 @@ const AdminDashboard = () => {
           </Card>
         </div>
 
-        {/* Teachers Table */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <UsersIcon className="w-5 h-5" />
-              School Teachers Management
-            </CardTitle>
-            <CardDescription>Manage teachers in your school</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {teachers.length > 0 ? (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Email</TableHead>
-                    <TableHead>Role</TableHead>
-                    <TableHead>Joined</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {teachers.map((teacher) => (
-                    <TableRow key={teacher.id}>
-                      <TableCell className="font-medium">{teacher.name}</TableCell>
-                      <TableCell>{teacher.email}</TableCell>
-                      <TableCell>
-                        <Badge variant={teacher.role === 'admin' ? 'default' : 'secondary'}>
-                          {teacher.role}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        {new Date(teacher.created_at).toLocaleDateString()}
-                      </TableCell>
+        {/* Teachers and Invitations Tables */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Teachers Table */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <UsersIcon className="w-5 h-5" />
+                School Teachers
+              </CardTitle>
+              <CardDescription>Active teachers in your school</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {teachers.length > 0 ? (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Name</TableHead>
+                      <TableHead>Role</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            ) : (
-              <p className="text-center text-gray-500 py-8">No teachers found in your school</p>
-            )}
-          </CardContent>
-        </Card>
+                  </TableHeader>
+                  <TableBody>
+                    {teachers.map((teacher) => (
+                      <TableRow key={teacher.id}>
+                        <TableCell>
+                          <div>
+                            <div className="font-medium">{teacher.name}</div>
+                            <div className="text-sm text-gray-500">{teacher.email}</div>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant={teacher.role === 'admin' ? 'default' : 'secondary'}>
+                            {teacher.role}
+                          </Badge>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              ) : (
+                <p className="text-center text-gray-500 py-8">No teachers found</p>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Invitations Table */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <MailIcon className="w-5 h-5" />
+                Teacher Invitations
+              </CardTitle>
+              <CardDescription>Pending and accepted invitations</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {invitations.length > 0 ? (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Email</TableHead>
+                      <TableHead>Status</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {invitations.map((invitation) => (
+                      <TableRow key={invitation.id}>
+                        <TableCell>
+                          <div>
+                            <div className="font-medium">{invitation.email}</div>
+                            <div className="text-sm text-gray-500">
+                              {new Date(invitation.created_at).toLocaleDateString()}
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Badge 
+                            variant={
+                              invitation.status === 'accepted' ? 'default' : 
+                              invitation.status === 'pending' ? 'secondary' : 
+                              'destructive'
+                            }
+                          >
+                            {invitation.status}
+                          </Badge>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              ) : (
+                <p className="text-center text-gray-500 py-8">No invitations sent yet</p>
+              )}
+            </CardContent>
+          </Card>
+        </div>
 
         {/* Feedback Summary */}
         <Card>
