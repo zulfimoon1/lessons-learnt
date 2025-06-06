@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -178,10 +177,7 @@ const TeacherDashboard = () => {
             <CardHeader>
               <CardTitle className="text-green-800">{t('admin.subscription')}</CardTitle>
               <CardDescription className="text-green-700">
-                {t('teacher.activePlan', {
-                  planType: subscription.plan_type,
-                  date: new Date(subscription.current_period_end).toLocaleDateString()
-                })}
+                {`${t('login.teacher.role')} ${subscription.plan_type} ${t('admin.subscription')} ${new Date(subscription.current_period_end).toLocaleDateString()}`}
               </CardDescription>
             </CardHeader>
           </Card>
