@@ -14,6 +14,8 @@ serve(async (req) => {
   }
 
   try {
+    console.log("=== CREATE CHECKOUT STARTED ===");
+    
     const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
       apiVersion: "2023-10-16",
     });
@@ -28,6 +30,7 @@ serve(async (req) => {
     // Parse request body for pricing details
     const body = await req.json();
     const { teacherCount = 1, discountCode = null, discountPercent = 0 } = body;
+    console.log("Request body:", { teacherCount, discountCode, discountPercent });
 
     // Get authenticated user
     const authHeader = req.headers.get("Authorization");
@@ -40,6 +43,7 @@ serve(async (req) => {
     if (userError || !userData.user) {
       throw new Error("User not authenticated");
     }
+    console.log("User authenticated:", userData.user.email);
 
     // Get teacher info to identify school
     const { data: teacherData, error: teacherError } = await supabaseAdmin
@@ -51,11 +55,14 @@ serve(async (req) => {
     if (teacherError || !teacherData) {
       throw new Error("Teacher not found");
     }
+    console.log("Teacher data:", teacherData);
 
     const basePrice = 999; // $9.99 in cents
     const subtotal = teacherCount * basePrice;
     const discountAmount = Math.round(subtotal * (discountPercent / 100));
     const finalAmount = subtotal - discountAmount;
+
+    console.log("Pricing:", { basePrice, subtotal, discountAmount, finalAmount });
 
     // Check if customer exists
     const customers = await stripe.customers.list({
@@ -66,6 +73,7 @@ serve(async (req) => {
     let customerId;
     if (customers.data.length > 0) {
       customerId = customers.data[0].id;
+      console.log("Existing customer found:", customerId);
     } else {
       // Create new customer
       const customer = await stripe.customers.create({
@@ -77,6 +85,7 @@ serve(async (req) => {
         }
       });
       customerId = customer.id;
+      console.log("New customer created:", customerId);
     }
 
     // Create line items
@@ -121,24 +130,33 @@ serve(async (req) => {
     }
 
     const session = await stripe.checkout.sessions.create(sessionData);
+    console.log("Checkout session created:", session.id);
 
     // Store subscription intent in our database for tracking
+    const subscriptionData = {
+      school_name: teacherData.school,
+      stripe_customer_id: customerId,
+      amount: finalAmount,
+      plan_type: 'monthly',
+      status: 'pending',
+      current_period_start: new Date().toISOString(),
+      current_period_end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days from now
+    };
+
+    console.log("Inserting subscription data:", subscriptionData);
+
     const { error: insertError } = await supabaseAdmin
       .from('subscriptions')
-      .insert({
-        school_name: teacherData.school,
-        stripe_customer_id: customerId,
-        amount: finalAmount,
-        plan_type: 'monthly',
-        status: 'pending',
-        current_period_start: new Date().toISOString(),
-        current_period_end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days from now
-      });
+      .insert(subscriptionData);
 
     if (insertError) {
       console.error("Error storing subscription:", insertError);
       // Don't fail the request, just log the error
+    } else {
+      console.log("Subscription data stored successfully");
     }
+
+    console.log("=== CREATE CHECKOUT COMPLETED ===");
 
     return new Response(JSON.stringify({ url: session.url }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },

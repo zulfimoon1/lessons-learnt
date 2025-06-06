@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -43,6 +44,8 @@ interface Subscription {
   status: string;
   amount: number;
   current_period_end: string;
+  plan_type: string;
+  stripe_subscription_id: string;
 }
 
 const AdminDashboard = () => {
@@ -65,6 +68,8 @@ const AdminDashboard = () => {
 
   const loadDashboardData = async () => {
     try {
+      console.log('Loading dashboard data for school:', teacher?.school);
+      
       // Load teachers from the same school
       const { data: teachersData, error: teachersError } = await supabase
         .from('teachers')
@@ -73,8 +78,9 @@ const AdminDashboard = () => {
 
       if (teachersError) throw teachersError;
       setTeachers(teachersData || []);
+      console.log('Teachers loaded:', teachersData?.length);
 
-      // Load feedback summary - transform the data to match our interface
+      // Load feedback summary
       const { data: feedbackData, error: feedbackError } = await supabase
         .from('feedback_analytics')
         .select('*')
@@ -84,9 +90,8 @@ const AdminDashboard = () => {
 
       if (feedbackError) throw feedbackError;
       
-      // Transform the data to match FeedbackSummary interface
       const transformedFeedback: FeedbackSummary[] = (feedbackData || []).map(item => ({
-        teacher: item.lesson_topic || 'Unknown Teacher', // Using lesson_topic as teacher name fallback
+        teacher: item.lesson_topic || 'Unknown Teacher',
         subject: item.subject,
         class_date: item.class_date,
         total_responses: item.total_responses,
@@ -96,18 +101,43 @@ const AdminDashboard = () => {
       }));
       
       setFeedbackSummary(transformedFeedback);
+      console.log('Feedback loaded:', transformedFeedback.length);
 
-      // Load subscription info
-      const { data: subscriptionData, error: subscriptionError } = await supabase
+      // Load subscription info - try multiple approaches
+      console.log('Looking for subscription for school:', teacher?.school);
+      
+      // First try exact match
+      let { data: subscriptionData, error: subscriptionError } = await supabase
         .from('subscriptions')
         .select('*')
         .eq('school_name', teacher?.school)
         .order('created_at', { ascending: false })
-        .limit(1)
-        .single();
+        .limit(1);
 
-      if (!subscriptionError && subscriptionData) {
-        setSubscription(subscriptionData);
+      console.log('Exact match subscription query result:', subscriptionData, subscriptionError);
+
+      // If no exact match, try case-insensitive search
+      if (!subscriptionData || subscriptionData.length === 0) {
+        const { data: allSubscriptions, error: allSubError } = await supabase
+          .from('subscriptions')
+          .select('*')
+          .order('created_at', { ascending: false });
+        
+        console.log('All subscriptions:', allSubscriptions);
+        
+        if (allSubscriptions && !allSubError) {
+          subscriptionData = allSubscriptions.filter(sub => 
+            sub.school_name?.toLowerCase() === teacher?.school?.toLowerCase()
+          );
+          console.log('Case-insensitive match result:', subscriptionData);
+        }
+      }
+
+      if (subscriptionData && subscriptionData.length > 0) {
+        setSubscription(subscriptionData[0]);
+        console.log('Subscription set:', subscriptionData[0]);
+      } else {
+        console.log('No subscription found for school:', teacher?.school);
       }
 
     } catch (error) {
@@ -196,11 +226,16 @@ const AdminDashboard = () => {
                     {subscription.status}
                   </Badge>
                   <p className="text-sm text-gray-600 mt-1">
-                    ${(subscription.amount / 100).toFixed(2)}/month
+                    ${(subscription.amount / 100).toFixed(2)}/month ({subscription.plan_type})
                   </p>
                   {subscription.current_period_end && (
                     <p className="text-xs text-gray-500">
                       Next billing: {new Date(subscription.current_period_end).toLocaleDateString()}
+                    </p>
+                  )}
+                  {subscription.stripe_subscription_id && (
+                    <p className="text-xs text-gray-400">
+                      ID: {subscription.stripe_subscription_id}
                     </p>
                   )}
                 </div>
@@ -210,7 +245,10 @@ const AdminDashboard = () => {
               </div>
             ) : (
               <div className="flex justify-between items-center">
-                <p className="text-gray-600">No active subscription</p>
+                <div>
+                  <p className="text-gray-600">No active subscription found</p>
+                  <p className="text-xs text-gray-500">School: {teacher?.school}</p>
+                </div>
                 <Button 
                   onClick={() => navigate('/pricing')}
                   className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
