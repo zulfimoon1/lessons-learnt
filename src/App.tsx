@@ -11,16 +11,24 @@ import StudentLogin from "./pages/StudentLogin";
 import TeacherLogin from "./pages/TeacherLogin";
 import TeacherDashboard from "./pages/TeacherDashboard";
 import StudentDashboard from "./pages/StudentDashboard";
+import AdminDashboard from "./pages/AdminDashboard";
+import SchoolAdminLogin from "./components/SchoolAdminLogin";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
-const ProtectedRoute: React.FC<{ children: React.ReactNode; requireTeacher?: boolean; requireStudent?: boolean }> = ({ 
+const ProtectedRoute: React.FC<{ 
+  children: React.ReactNode; 
+  requireTeacher?: boolean; 
+  requireStudent?: boolean;
+  requireAdmin?: boolean;
+}> = ({ 
   children, 
   requireTeacher = false, 
-  requireStudent = false 
+  requireStudent = false,
+  requireAdmin = false
 }) => {
-  const { teacher, student, isLoading } = useAuth();
+  const { teacher, student, schoolAdmin, isLoading } = useAuth();
 
   if (isLoading) {
     return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
@@ -34,11 +42,15 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode; requireTeacher?: boo
     return <Navigate to="/student-login" replace />;
   }
 
+  if (requireAdmin && !schoolAdmin) {
+    return <Navigate to="/admin-login" replace />;
+  }
+
   return <>{children}</>;
 };
 
 const AppRoutes = () => {
-  const { teacher, student } = useAuth();
+  const { teacher, student, schoolAdmin } = useAuth();
 
   return (
     <Routes>
@@ -56,6 +68,12 @@ const AppRoutes = () => {
         } 
       />
       <Route 
+        path="/admin-login" 
+        element={
+          schoolAdmin ? <Navigate to="/admin-dashboard" replace /> : <SchoolAdminLogin />
+        } 
+      />
+      <Route 
         path="/teacher-dashboard" 
         element={
           <ProtectedRoute requireTeacher>
@@ -68,6 +86,14 @@ const AppRoutes = () => {
         element={
           <ProtectedRoute requireStudent>
             <StudentDashboard />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/admin-dashboard" 
+        element={
+          <ProtectedRoute requireAdmin>
+            <AdminDashboard />
           </ProtectedRoute>
         } 
       />

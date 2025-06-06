@@ -15,13 +15,23 @@ interface Student {
   grade: string;
 }
 
+interface SchoolAdmin {
+  id: string;
+  name: string;
+  email: string;
+  school_name: string;
+}
+
 interface AuthContextType {
   teacher: Teacher | null;
   student: Student | null;
+  schoolAdmin: SchoolAdmin | null;
   isLoading: boolean;
   teacherLogin: (email: string, password: string) => Promise<{ error?: string; teacher?: Teacher }>;
   studentLogin: (fullName: string, school: string, grade: string, password: string) => Promise<{ error?: string; student?: Student }>;
   studentSignup: (fullName: string, school: string, grade: string, password: string) => Promise<{ error?: string; student?: Student }>;
+  schoolAdminLogin: (email: string, password: string) => Promise<{ error?: string; schoolAdmin?: SchoolAdmin }>;
+  schoolAdminSignup: (email: string, password: string, name: string, schoolName: string) => Promise<{ error?: string; schoolAdmin?: SchoolAdmin }>;
   logout: () => void;
 }
 
@@ -38,17 +48,21 @@ export const useAuth = () => {
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [teacher, setTeacher] = useState<Teacher | null>(null);
   const [student, setStudent] = useState<Student | null>(null);
+  const [schoolAdmin, setSchoolAdmin] = useState<SchoolAdmin | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     // Check for existing session on mount
     const teacherData = localStorage.getItem('teacher');
     const studentData = localStorage.getItem('student');
+    const schoolAdminData = localStorage.getItem('schoolAdmin');
     
     if (teacherData) {
       setTeacher(JSON.parse(teacherData));
     } else if (studentData) {
       setStudent(JSON.parse(studentData));
+    } else if (schoolAdminData) {
+      setSchoolAdmin(JSON.parse(schoolAdminData));
     }
     
     setIsLoading(false);
@@ -56,8 +70,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const teacherLogin = async (email: string, password: string) => {
     try {
-      // For demo purposes, we'll use a simple password check
-      // In production, you'd want proper password hashing
       const { data: teachers, error } = await supabase
         .from('teachers')
         .select('*')
@@ -68,7 +80,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return { error: 'Invalid email or password' };
       }
 
-      // Simple password check (in production, use proper hashing)
       if (teachers.password_hash !== password) {
         return { error: 'Invalid email or password' };
       }
@@ -101,7 +112,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return { error: 'Student not found. Please check your details or sign up.' };
       }
 
-      // Simple password check (in production, use proper hashing)
       if (students.password_hash !== password) {
         return { error: 'Invalid password' };
       }
@@ -129,13 +139,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           full_name: fullName,
           school: school,
           grade: grade,
-          password_hash: password // In production, hash this properly
+          password_hash: password
         })
         .select()
         .single();
 
       if (error) {
-        if (error.code === '23505') { // Unique constraint violation
+        if (error.code === '23505') {
           return { error: 'A student with this name already exists in this school and grade.' };
         }
         return { error: 'Signup failed. Please try again.' };
@@ -156,11 +166,79 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const schoolAdminLogin = async (email: string, password: string) => {
+    try {
+      const { data: admins, error } = await supabase
+        .from('school_admins')
+        .select('*')
+        .eq('email', email)
+        .single();
+
+      if (error || !admins) {
+        return { error: 'Invalid email or password' };
+      }
+
+      if (admins.password_hash !== password) {
+        return { error: 'Invalid email or password' };
+      }
+
+      const adminData = {
+        id: admins.id,
+        name: admins.name,
+        email: admins.email,
+        school_name: admins.school_name
+      };
+
+      setSchoolAdmin(adminData);
+      localStorage.setItem('schoolAdmin', JSON.stringify(adminData));
+      return { schoolAdmin: adminData };
+    } catch (error) {
+      return { error: 'Login failed. Please try again.' };
+    }
+  };
+
+  const schoolAdminSignup = async (email: string, password: string, name: string, schoolName: string) => {
+    try {
+      const { data: newAdmin, error } = await supabase
+        .from('school_admins')
+        .insert({
+          email: email,
+          password_hash: password,
+          name: name,
+          school_name: schoolName
+        })
+        .select()
+        .single();
+
+      if (error) {
+        if (error.code === '23505') {
+          return { error: 'An admin with this email already exists.' };
+        }
+        return { error: 'Signup failed. Please try again.' };
+      }
+
+      const adminData = {
+        id: newAdmin.id,
+        name: newAdmin.name,
+        email: newAdmin.email,
+        school_name: newAdmin.school_name
+      };
+
+      setSchoolAdmin(adminData);
+      localStorage.setItem('schoolAdmin', JSON.stringify(adminData));
+      return { schoolAdmin: adminData };
+    } catch (error) {
+      return { error: 'Signup failed. Please try again.' };
+    }
+  };
+
   const logout = () => {
     setTeacher(null);
     setStudent(null);
+    setSchoolAdmin(null);
     localStorage.removeItem('teacher');
     localStorage.removeItem('student');
+    localStorage.removeItem('schoolAdmin');
   };
 
   return (
@@ -168,10 +246,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       value={{
         teacher,
         student,
+        schoolAdmin,
         isLoading,
         teacherLogin,
         studentLogin,
         studentSignup,
+        schoolAdminLogin,
+        schoolAdminSignup,
         logout
       }}
     >
