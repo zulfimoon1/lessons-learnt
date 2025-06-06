@@ -23,7 +23,7 @@ import {
 } from "lucide-react";
 
 const DiscountCodeManagement = () => {
-  const { admin } = usePlatformAdmin();
+  const { admin, isLoading: adminLoading } = usePlatformAdmin();
   const { toast } = useToast();
   const [discountCodes, setDiscountCodes] = useState<DiscountCode[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -41,9 +41,19 @@ const DiscountCodeManagement = () => {
     school_name: ''
   });
 
+  // Debug the admin state
   useEffect(() => {
-    loadDiscountCodes();
-  }, []);
+    console.log('=== DISCOUNT CODE MANAGEMENT DEBUG ===');
+    console.log('Admin loading:', adminLoading);
+    console.log('Admin data:', admin);
+    console.log('Admin ID:', admin?.id);
+  }, [admin, adminLoading]);
+
+  useEffect(() => {
+    if (!adminLoading) {
+      loadDiscountCodes();
+    }
+  }, [adminLoading]);
 
   const loadDiscountCodes = async () => {
     try {
@@ -76,15 +86,37 @@ const DiscountCodeManagement = () => {
   };
 
   const handleCreate = async () => {
-    console.log('=== CREATE DISCOUNT CODE DEBUG ===');
-    console.log('Admin:', admin);
+    console.log('=== CREATE DISCOUNT CODE DETAILED DEBUG ===');
+    console.log('Admin loading state:', adminLoading);
+    console.log('Admin object:', admin);
+    console.log('Admin ID:', admin?.id);
     console.log('Form data:', formData);
     
-    if (!admin) {
-      console.error('No admin found');
+    if (adminLoading) {
+      console.error('Admin is still loading');
       toast({
         title: "Error",
-        description: "You must be logged in as an admin",
+        description: "Please wait for authentication to load",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!admin) {
+      console.error('No admin found in context');
+      toast({
+        title: "Error",
+        description: "You must be logged in as an admin. Please refresh the page and try again.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!admin.id) {
+      console.error('Admin object exists but has no ID:', admin);
+      toast({
+        title: "Error",
+        description: "Admin ID is missing. Please log out and log in again.",
         variant: "destructive",
       });
       return;
@@ -106,6 +138,17 @@ const DiscountCodeManagement = () => {
       toast({
         title: "Error",
         description: "School name is required",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validate discount percentage
+    if (isNaN(formData.discount_percent) || formData.discount_percent < 1 || formData.discount_percent > 100) {
+      console.error('Invalid discount percentage:', formData.discount_percent);
+      toast({
+        title: "Error",
+        description: "Discount percentage must be between 1 and 100",
         variant: "destructive",
       });
       return;
@@ -243,11 +286,22 @@ const DiscountCodeManagement = () => {
     return new Date(dateString).toLocaleDateString();
   };
 
-  if (isLoading) {
+  if (adminLoading || isLoading) {
     return (
       <div className="flex items-center justify-center p-8">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
       </div>
+    );
+  }
+
+  if (!admin) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Authentication Required</CardTitle>
+          <CardDescription>You must be logged in as a platform admin to manage discount codes.</CardDescription>
+        </CardHeader>
+      </Card>
     );
   }
 

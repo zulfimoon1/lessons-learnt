@@ -24,26 +24,43 @@ export const PlatformAdminProvider: React.FC<{ children: React.ReactNode }> = ({
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    console.log('PlatformAdminProvider: Checking for stored admin data');
     const adminData = localStorage.getItem('platformAdmin');
     if (adminData) {
-      setAdmin(JSON.parse(adminData));
+      try {
+        const parsedAdmin = JSON.parse(adminData);
+        console.log('PlatformAdminProvider: Found stored admin:', parsedAdmin);
+        setAdmin(parsedAdmin);
+      } catch (error) {
+        console.error('PlatformAdminProvider: Error parsing stored admin data:', error);
+        localStorage.removeItem('platformAdmin');
+      }
+    } else {
+      console.log('PlatformAdminProvider: No stored admin data found');
     }
     setIsLoading(false);
   }, []);
 
   const login = async (email: string, password: string) => {
+    console.log('PlatformAdminProvider: Login attempt for:', email);
     const result = await platformAdminLoginService(email, password);
     if (result.admin) {
+      console.log('PlatformAdminProvider: Login successful, setting admin:', result.admin);
       setAdmin(result.admin);
       localStorage.setItem('platformAdmin', JSON.stringify(result.admin));
+    } else {
+      console.log('PlatformAdminProvider: Login failed:', result.error);
     }
     return result;
   };
 
   const logout = () => {
+    console.log('PlatformAdminProvider: Logging out');
     setAdmin(null);
     localStorage.removeItem('platformAdmin');
   };
+
+  console.log('PlatformAdminProvider: Current state - admin:', admin, 'isLoading:', isLoading);
 
   return (
     <PlatformAdminContext.Provider value={{ admin, isLoading, login, logout }}>
