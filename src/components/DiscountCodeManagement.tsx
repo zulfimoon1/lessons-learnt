@@ -19,7 +19,8 @@ import {
   TagIcon,
   CalendarIcon,
   UsersIcon,
-  PercentIcon
+  PercentIcon,
+  SchoolIcon
 } from "lucide-react";
 
 const DiscountCodeManagement = () => {
@@ -36,7 +37,8 @@ const DiscountCodeManagement = () => {
     description: '',
     max_uses: '',
     expires_at: '',
-    is_active: true
+    is_active: true,
+    school_name: ''
   });
 
   useEffect(() => {
@@ -66,21 +68,42 @@ const DiscountCodeManagement = () => {
       description: '',
       max_uses: '',
       expires_at: '',
-      is_active: true
+      is_active: true,
+      school_name: ''
     });
   };
 
   const handleCreate = async () => {
     if (!admin) return;
 
+    // Validate required fields
+    if (!formData.code.trim()) {
+      toast({
+        title: "Error",
+        description: "Code is required",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!formData.school_name.trim()) {
+      toast({
+        title: "Error",
+        description: "School name is required",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       const createData: CreateDiscountCodeData = {
-        code: formData.code.toUpperCase(),
+        code: formData.code.toUpperCase().trim(),
         discount_percent: formData.discount_percent,
         description: formData.description || null,
         max_uses: formData.max_uses ? parseInt(formData.max_uses) : null,
         expires_at: formData.expires_at || null,
-        is_active: formData.is_active
+        is_active: formData.is_active,
+        school_name: formData.school_name.trim()
       };
 
       await discountCodeService.createDiscountCode(createData, admin.id);
@@ -111,7 +134,8 @@ const DiscountCodeManagement = () => {
       description: code.description || '',
       max_uses: code.max_uses?.toString() || '',
       expires_at: code.expires_at ? new Date(code.expires_at).toISOString().slice(0, 16) : '',
-      is_active: code.is_active
+      is_active: code.is_active,
+      school_name: code.school_name || ''
     });
     setIsEditDialogOpen(true);
   };
@@ -119,14 +143,34 @@ const DiscountCodeManagement = () => {
   const handleUpdate = async () => {
     if (!editingCode) return;
 
+    // Validate required fields
+    if (!formData.code.trim()) {
+      toast({
+        title: "Error",
+        description: "Code is required",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!formData.school_name.trim()) {
+      toast({
+        title: "Error",
+        description: "School name is required",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       await discountCodeService.updateDiscountCode(editingCode.id, {
-        code: formData.code.toUpperCase(),
+        code: formData.code.toUpperCase().trim(),
         discount_percent: formData.discount_percent,
         description: formData.description || null,
         max_uses: formData.max_uses ? parseInt(formData.max_uses) : null,
         expires_at: formData.expires_at || null,
-        is_active: formData.is_active
+        is_active: formData.is_active,
+        school_name: formData.school_name.trim()
       });
 
       toast({
@@ -209,13 +253,25 @@ const DiscountCodeManagement = () => {
               
               <div className="space-y-4">
                 <div>
-                  <Label htmlFor="code">Code</Label>
+                  <Label htmlFor="code">Code *</Label>
                   <Input
                     id="code"
                     value={formData.code}
                     onChange={(e) => setFormData({...formData, code: e.target.value})}
                     placeholder="EDUCATION10"
                     className="uppercase"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="school_name">School Name *</Label>
+                  <Input
+                    id="school_name"
+                    value={formData.school_name}
+                    onChange={(e) => setFormData({...formData, school_name: e.target.value})}
+                    placeholder="Enter school name"
+                    required
                   />
                 </div>
                 
@@ -289,6 +345,7 @@ const DiscountCodeManagement = () => {
           <TableHeader>
             <TableRow>
               <TableHead>Code</TableHead>
+              <TableHead>School</TableHead>
               <TableHead>Discount</TableHead>
               <TableHead>Description</TableHead>
               <TableHead>Usage</TableHead>
@@ -301,6 +358,12 @@ const DiscountCodeManagement = () => {
             {discountCodes.map((code) => (
               <TableRow key={code.id}>
                 <TableCell className="font-mono font-medium">{code.code}</TableCell>
+                <TableCell>
+                  <div className="flex items-center gap-1">
+                    <SchoolIcon className="w-3 h-3" />
+                    {code.school_name || '-'}
+                  </div>
+                </TableCell>
                 <TableCell>
                   <div className="flex items-center gap-1">
                     <PercentIcon className="w-3 h-3" />
@@ -365,12 +428,24 @@ const DiscountCodeManagement = () => {
           
           <div className="space-y-4">
             <div>
-              <Label htmlFor="edit-code">Code</Label>
+              <Label htmlFor="edit-code">Code *</Label>
               <Input
                 id="edit-code"
                 value={formData.code}
                 onChange={(e) => setFormData({...formData, code: e.target.value})}
                 className="uppercase"
+                required
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="edit-school_name">School Name *</Label>
+              <Input
+                id="edit-school_name"
+                value={formData.school_name}
+                onChange={(e) => setFormData({...formData, school_name: e.target.value})}
+                placeholder="Enter school name"
+                required
               />
             </div>
             

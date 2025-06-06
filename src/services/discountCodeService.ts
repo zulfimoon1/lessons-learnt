@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 
 export interface DiscountCode {
@@ -13,6 +12,7 @@ export interface DiscountCode {
   created_by: string | null;
   created_at: string;
   updated_at: string;
+  school_name: string | null;
 }
 
 export interface CreateDiscountCodeData {
@@ -22,6 +22,7 @@ export interface CreateDiscountCodeData {
   max_uses?: number;
   expires_at?: string;
   is_active?: boolean;
+  school_name?: string;
 }
 
 export interface UpdateDiscountCodeData {
@@ -31,6 +32,7 @@ export interface UpdateDiscountCodeData {
   max_uses?: number;
   expires_at?: string;
   is_active?: boolean;
+  school_name?: string;
 }
 
 export const discountCodeService = {
