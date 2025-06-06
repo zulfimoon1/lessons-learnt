@@ -6,7 +6,7 @@ interface Teacher {
   name: string;
   email: string;
   school: string;
-  role: string;
+  role: 'teacher' | 'admin';
 }
 
 interface Student {
