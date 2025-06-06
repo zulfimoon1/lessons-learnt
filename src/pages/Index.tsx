@@ -5,20 +5,18 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { BookOpenIcon, MessageCircleIcon, StarIcon, GraduationCapIcon, UserIcon } from "lucide-react";
 import LessonFeedbackForm from "@/components/LessonFeedbackForm";
-import StudentLogin from "./StudentLogin";
-import TeacherLogin from "./TeacherLogin";
-import TeacherDashboard from "./TeacherDashboard";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 const Index = () => {
   const [showFeedbackForm, setShowFeedbackForm] = useState(false);
-  const [showStudentLogin, setShowStudentLogin] = useState(false);
-  const [showTeacherLogin, setShowTeacherLogin] = useState(false);
   const [student, setStudent] = useState<{ name: string; email: string } | null>(null);
   const [isAnonymousMode, setIsAnonymousMode] = useState(false);
-  const [teacher, setTeacher] = useState<{ name: string; email: string } | null>(null);
   const [submittedFeedback, setSubmittedFeedback] = useState<any[]>([]);
   const { toast } = useToast();
+  const { teacher, student: loggedInStudent } = useAuth();
+  const navigate = useNavigate();
 
   const handleFeedbackSubmit = (feedbackData: any) => {
     const submissionData = {
@@ -40,57 +38,37 @@ const Index = () => {
     });
   };
 
-  const handleStudentLogin = (studentData: { name: string; email: string }) => {
-    setStudent(studentData);
-    setIsAnonymousMode(false);
-    setShowStudentLogin(false);
-    setShowFeedbackForm(true);
+  const handleStartFeedback = () => {
+    if (loggedInStudent) {
+      // User is logged in as student, go directly to feedback
+      setStudent({ 
+        name: loggedInStudent.full_name, 
+        email: `${loggedInStudent.full_name}@${loggedInStudent.school}` 
+      });
+      setIsAnonymousMode(false);
+      setShowFeedbackForm(true);
+    } else {
+      // Redirect to student login
+      navigate("/student-login");
+    }
   };
 
   const handleAnonymousContinue = () => {
     setStudent(null);
     setIsAnonymousMode(true);
-    setShowStudentLogin(false);
     setShowFeedbackForm(true);
   };
 
-  const handleTeacherLogin = (teacherData: { name: string; email: string }) => {
-    setTeacher(teacherData);
-    setShowTeacherLogin(false);
-  };
-
-  const handleTeacherLogout = () => {
-    setTeacher(null);
-  };
-
-  const handleStartFeedback = () => {
-    setShowStudentLogin(true);
-  };
-
-  // If teacher is logged in, show teacher dashboard
+  // If teacher is logged in, redirect to teacher dashboard
   if (teacher) {
-    return (
-      <TeacherDashboard 
-        teacher={teacher} 
-        feedbackData={submittedFeedback} 
-        onLogout={handleTeacherLogout} 
-      />
-    );
+    navigate("/teacher-dashboard");
+    return null;
   }
 
-  // If showing teacher login
-  if (showTeacherLogin) {
-    return <TeacherLogin onLogin={handleTeacherLogin} />;
-  }
-
-  // If showing student login
-  if (showStudentLogin) {
-    return (
-      <StudentLogin 
-        onLogin={handleStudentLogin}
-        onContinueAnonymous={handleAnonymousContinue}
-      />
-    );
+  // If student is logged in, redirect to student dashboard
+  if (loggedInStudent) {
+    navigate("/student-dashboard");
+    return null;
   }
 
   // If showing feedback form
@@ -127,7 +105,7 @@ const Index = () => {
               </div>
             </div>
             <Button 
-              onClick={() => setShowTeacherLogin(true)}
+              onClick={() => navigate("/teacher-login")}
               variant="outline"
               className="border-blue-200 text-blue-600 hover:bg-blue-50"
             >
@@ -214,6 +192,16 @@ const Index = () => {
             <span className="text-sm font-medium">
               Don't worry - you can submit feedback anonymously if you prefer
             </span>
+          </div>
+          <div className="mt-4">
+            <Button 
+              onClick={handleAnonymousContinue}
+              variant="outline"
+              size="sm"
+              className="text-orange-600 border-orange-200 hover:bg-orange-50"
+            >
+              Continue Anonymously
+            </Button>
           </div>
         </div>
 
