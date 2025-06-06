@@ -17,6 +17,8 @@ import {
   PlusIcon
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import ClassScheduleForm from "@/components/ClassScheduleForm";
@@ -55,6 +57,7 @@ interface FeedbackData {
 
 const TeacherDashboard = () => {
   const { teacher, logout } = useAuth();
+  const { t } = useLanguage();
   const [schedules, setSchedules] = useState<ClassSchedule[]>([]);
   const [feedbackData, setFeedbackData] = useState<FeedbackData[]>([]);
   const [selectedFeedback, setSelectedFeedback] = useState<FeedbackData | null>(null);
@@ -262,17 +265,18 @@ const TeacherDashboard = () => {
                 <GraduationCapIcon className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">Teacher Dashboard</h1>
-                <p className="text-gray-600">Welcome back, {teacher?.name}</p>
+                <h1 className="text-2xl font-bold text-gray-900">{t('dashboard.teacher.title')}</h1>
+                <p className="text-gray-600">{t('dashboard.teacher.welcome')}, {teacher?.name}</p>
               </div>
             </div>
-            <div className="flex gap-2">
+            <div className="flex gap-2 items-center">
+              <LanguageSwitcher />
               <Button 
                 onClick={() => setShowScheduleForm(true)}
                 className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700"
               >
                 <PlusIcon className="w-4 h-4 mr-2" />
-                Add Class
+                {t('dashboard.teacher.addClass')}
               </Button>
               <Button 
                 onClick={logout}
@@ -280,7 +284,7 @@ const TeacherDashboard = () => {
                 className="border-red-200 text-red-600 hover:bg-red-50"
               >
                 <LogOutIcon className="w-4 h-4 mr-2" />
-                Logout
+                {t('dashboard.teacher.logout')}
               </Button>
             </div>
           </div>
@@ -291,7 +295,7 @@ const TeacherDashboard = () => {
         {isLoading ? (
           <div className="text-center py-8">
             <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-            <p className="mt-2 text-gray-600">Loading dashboard...</p>
+            <p className="mt-2 text-gray-600">{t('dashboard.teacher.loading')}</p>
           </div>
         ) : (
           <>
@@ -299,7 +303,7 @@ const TeacherDashboard = () => {
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
               <Card className="bg-white/70 backdrop-blur-sm border-blue-100">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Total Classes</CardTitle>
+                  <CardTitle className="text-sm font-medium">{t('dashboard.teacher.totalClasses')}</CardTitle>
                   <CalendarPlusIcon className="h-4 w-4 text-blue-600" />
                 </CardHeader>
                 <CardContent>
@@ -309,7 +313,7 @@ const TeacherDashboard = () => {
 
               <Card className="bg-white/70 backdrop-blur-sm border-green-100">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Total Feedback</CardTitle>
+                  <CardTitle className="text-sm font-medium">{t('dashboard.teacher.totalFeedback')}</CardTitle>
                   <MessageCircleIcon className="h-4 w-4 text-green-600" />
                 </CardHeader>
                 <CardContent>
@@ -319,7 +323,7 @@ const TeacherDashboard = () => {
 
               <Card className="bg-white/70 backdrop-blur-sm border-purple-100">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Avg Understanding</CardTitle>
+                  <CardTitle className="text-sm font-medium">{t('dashboard.teacher.avgUnderstanding')}</CardTitle>
                   <BookOpenIcon className="h-4 w-4 text-purple-600" />
                 </CardHeader>
                 <CardContent>
@@ -329,7 +333,7 @@ const TeacherDashboard = () => {
 
               <Card className="bg-white/70 backdrop-blur-sm border-orange-100">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">This Week</CardTitle>
+                  <CardTitle className="text-sm font-medium">{t('dashboard.teacher.thisWeek')}</CardTitle>
                   <BellIcon className="h-4 w-4 text-orange-600" />
                 </CardHeader>
                 <CardContent>
@@ -341,16 +345,16 @@ const TeacherDashboard = () => {
             {/* Class Schedules */}
             <Card className="bg-white/70 backdrop-blur-sm border-gray-200 mb-8">
               <CardHeader>
-                <CardTitle>Your Class Schedule</CardTitle>
+                <CardTitle>{t('dashboard.teacher.schedule')}</CardTitle>
                 <CardDescription>
-                  Manage your upcoming classes and view student enrollment
+                  {t('dashboard.teacher.scheduleDescription')}
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 {schedules.length === 0 ? (
                   <div className="text-center py-8 text-gray-500">
                     <CalendarPlusIcon className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                    <p>No classes scheduled yet. Add your first class!</p>
+                    <p>{t('dashboard.teacher.noClasses')}</p>
                   </div>
                 ) : (
                   <div className="space-y-4">
@@ -362,7 +366,7 @@ const TeacherDashboard = () => {
                             {formatDate(schedule.class_date)} • {schedule.class_time} • {schedule.school}, {schedule.grade}
                           </p>
                         </div>
-                        <Badge variant="outline">{schedule.duration_minutes} min</Badge>
+                        <Badge variant="outline">{schedule.duration_minutes} {t('common.min')}</Badge>
                       </div>
                     ))}
                   </div>
@@ -373,27 +377,27 @@ const TeacherDashboard = () => {
             {/* Feedback Table */}
             <Card className="bg-white/70 backdrop-blur-sm border-gray-200">
               <CardHeader>
-                <CardTitle>Student Feedback</CardTitle>
+                <CardTitle>{t('dashboard.teacher.studentFeedback')}</CardTitle>
                 <CardDescription>
-                  Review and analyze feedback from your students
+                  {t('dashboard.teacher.feedbackDescription')}
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 {feedbackData.length === 0 ? (
                   <div className="text-center py-8 text-gray-500">
                     <MessageCircleIcon className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                    <p>No feedback submissions yet. Students will see your scheduled classes and can submit feedback.</p>
+                    <p>{t('dashboard.teacher.noFeedback')}</p>
                   </div>
                 ) : (
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>Date</TableHead>
+                        <TableHead>{t('schedule.date')}</TableHead>
                         <TableHead>Class</TableHead>
                         <TableHead>Student</TableHead>
-                        <TableHead>Understanding</TableHead>
+                        <TableHead>{t('dashboard.teacher.understanding')}</TableHead>
                         <TableHead>Interest</TableHead>
-                        <TableHead>Emotional State</TableHead>
+                        <TableHead>{t('dashboard.teacher.emotionalState')}</TableHead>
                         <TableHead>Actions</TableHead>
                       </TableRow>
                     </TableHeader>
@@ -402,15 +406,15 @@ const TeacherDashboard = () => {
                         <TableRow key={feedback.id}>
                           <TableCell>{formatDate(feedback.submitted_at)}</TableCell>
                           <TableCell className="font-medium">
-                            {feedback.class_schedules?.subject || 'Unknown'} - {feedback.class_schedules?.lesson_topic || 'Unknown'}
+                            {feedback.class_schedules?.subject || t('common.unknown')} - {feedback.class_schedules?.lesson_topic || t('common.unknown')}
                           </TableCell>
                           <TableCell>
                             {feedback.is_anonymous ? (
                               <Badge variant="outline" className="bg-orange-50 text-orange-700">
-                                Anonymous
+                                {t('dashboard.teacher.anonymous')}
                               </Badge>
                             ) : (
-                              feedback.student_name || "Unknown"
+                              feedback.student_name || t('common.unknown')
                             )}
                           </TableCell>
                           <TableCell>
@@ -434,7 +438,7 @@ const TeacherDashboard = () => {
                               variant="outline"
                               onClick={() => setSelectedFeedback(feedback)}
                             >
-                              View Details
+                              {t('dashboard.teacher.viewDetails')}
                             </Button>
                           </TableCell>
                         </TableRow>
@@ -451,9 +455,9 @@ const TeacherDashboard = () => {
                 <CardHeader>
                   <div className="flex justify-between items-start">
                     <div>
-                      <CardTitle>Detailed Feedback</CardTitle>
+                      <CardTitle>{t('dashboard.teacher.detailedFeedback')}</CardTitle>
                       <CardDescription>
-                        {selectedFeedback.class_schedules?.subject || 'Unknown'} - {selectedFeedback.class_schedules?.lesson_topic || 'Unknown'} ({formatDate(selectedFeedback.submitted_at)})
+                        {selectedFeedback.class_schedules?.subject || t('common.unknown')} - {selectedFeedback.class_schedules?.lesson_topic || t('common.unknown')} ({formatDate(selectedFeedback.submitted_at)})
                       </CardDescription>
                     </div>
                     <Button 
@@ -461,14 +465,14 @@ const TeacherDashboard = () => {
                       variant="outline"
                       onClick={() => setSelectedFeedback(null)}
                     >
-                      Close
+                      {t('dashboard.teacher.close')}
                     </Button>
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
-                      <h4 className="font-medium text-gray-700 mb-2">Understanding</h4>
+                      <h4 className="font-medium text-gray-700 mb-2">{t('dashboard.teacher.understanding')}</h4>
                       <div className="flex">
                         {renderStars(selectedFeedback.understanding)}
                         <span className="ml-2 text-sm text-gray-600">
@@ -477,7 +481,7 @@ const TeacherDashboard = () => {
                       </div>
                     </div>
                     <div>
-                      <h4 className="font-medium text-gray-700 mb-2">Interest Level</h4>
+                      <h4 className="font-medium text-gray-700 mb-2">{t('dashboard.teacher.interestLevel')}</h4>
                       <div className="flex">
                         {renderStars(selectedFeedback.interest)}
                         <span className="ml-2 text-sm text-gray-600">
@@ -486,7 +490,7 @@ const TeacherDashboard = () => {
                       </div>
                     </div>
                     <div>
-                      <h4 className="font-medium text-gray-700 mb-2">Educational Growth</h4>
+                      <h4 className="font-medium text-gray-700 mb-2">{t('dashboard.teacher.educationalGrowth')}</h4>
                       <div className="flex">
                         {renderStars(selectedFeedback.educational_growth)}
                         <span className="ml-2 text-sm text-gray-600">
@@ -497,7 +501,7 @@ const TeacherDashboard = () => {
                   </div>
                   
                   <div>
-                    <h4 className="font-medium text-gray-700 mb-2">Emotional State</h4>
+                    <h4 className="font-medium text-gray-700 mb-2">{t('dashboard.teacher.emotionalState')}</h4>
                     <Badge variant="outline" className="capitalize">
                       {selectedFeedback.emotional_state}
                     </Badge>
@@ -505,7 +509,7 @@ const TeacherDashboard = () => {
 
                   {selectedFeedback.what_went_well && (
                     <div>
-                      <h4 className="font-medium text-gray-700 mb-2">What Went Well</h4>
+                      <h4 className="font-medium text-gray-700 mb-2">{t('dashboard.teacher.whatWentWell')}</h4>
                       <p className="text-gray-600 bg-gray-50 p-3 rounded-lg border">
                         {selectedFeedback.what_went_well}
                       </p>
@@ -514,7 +518,7 @@ const TeacherDashboard = () => {
 
                   {selectedFeedback.suggestions && (
                     <div>
-                      <h4 className="font-medium text-gray-700 mb-2">Suggestions for Improvement</h4>
+                      <h4 className="font-medium text-gray-700 mb-2">{t('dashboard.teacher.suggestions')}</h4>
                       <p className="text-gray-600 bg-gray-50 p-3 rounded-lg border">
                         {selectedFeedback.suggestions}
                       </p>
@@ -523,7 +527,7 @@ const TeacherDashboard = () => {
 
                   {selectedFeedback.additional_comments && (
                     <div>
-                      <h4 className="font-medium text-gray-700 mb-2">Additional Comments</h4>
+                      <h4 className="font-medium text-gray-700 mb-2">{t('dashboard.teacher.additionalComments')}</h4>
                       <p className="text-gray-600 bg-gray-50 p-3 rounded-lg border">
                         {selectedFeedback.additional_comments}
                       </p>

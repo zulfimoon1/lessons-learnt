@@ -8,9 +8,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { GraduationCapIcon, LogInIcon, School, UserIcon, Mail } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { useNavigate } from "react-router-dom";
 
 const TeacherLogin = () => {
+  const { t } = useLanguage();
   const [loginData, setLoginData] = useState({
     email: "",
     password: ""
@@ -90,21 +93,24 @@ const TeacherLogin = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center p-4">
+      <div className="absolute top-4 right-4">
+        <LanguageSwitcher />
+      </div>
       <Card className="w-full max-w-md bg-white/80 backdrop-blur-sm border-blue-100">
         <CardHeader className="text-center">
           <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full mx-auto flex items-center justify-center mb-4">
             <GraduationCapIcon className="w-8 h-8 text-white" />
           </div>
-          <CardTitle className="text-2xl text-gray-900">Teacher Portal</CardTitle>
+          <CardTitle className="text-2xl text-gray-900">{t('login.teacher.title')}</CardTitle>
           <CardDescription>
-            Login to your account or create a new one
+            {t('login.teacher.subtitle')}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="login" className="space-y-4">
             <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="login">Login</TabsTrigger>
-              <TabsTrigger value="signup">Sign Up</TabsTrigger>
+              <TabsTrigger value="login">{t('login.teacher.login')}</TabsTrigger>
+              <TabsTrigger value="signup">{t('login.teacher.signup')}</TabsTrigger>
             </TabsList>
 
             <TabsContent value="login">
@@ -112,7 +118,7 @@ const TeacherLogin = () => {
                 <div className="space-y-2">
                   <Label htmlFor="loginEmail" className="flex items-center gap-2">
                     <Mail className="w-4 h-4" />
-                    Email
+                    {t('login.teacher.email')}
                   </Label>
                   <Input
                     id="loginEmail"
@@ -125,7 +131,7 @@ const TeacherLogin = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="loginPassword">Password</Label>
+                  <Label htmlFor="loginPassword">{t('login.teacher.password')}</Label>
                   <Input
                     id="loginPassword"
                     type="password"
@@ -141,10 +147,10 @@ const TeacherLogin = () => {
                   className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
                   disabled={isLoading}
                 >
-                  {isLoading ? "Logging in..." : (
+                  {isLoading ? t('login.teacher.loggingIn') : (
                     <>
                       <LogInIcon className="w-4 h-4 mr-2" />
-                      Login
+                      {t('login.teacher.login')}
                     </>
                   )}
                 </Button>
@@ -156,7 +162,7 @@ const TeacherLogin = () => {
                 <div className="space-y-2">
                   <Label htmlFor="signupName" className="flex items-center gap-2">
                     <UserIcon className="w-4 h-4" />
-                    Full Name
+                    {t('login.teacher.fullName')}
                   </Label>
                   <Input
                     id="signupName"
@@ -171,7 +177,7 @@ const TeacherLogin = () => {
                 <div className="space-y-2">
                   <Label htmlFor="signupEmail" className="flex items-center gap-2">
                     <Mail className="w-4 h-4" />
-                    Email
+                    {t('login.teacher.email')}
                   </Label>
                   <Input
                     id="signupEmail"
@@ -186,7 +192,7 @@ const TeacherLogin = () => {
                 <div className="space-y-2">
                   <Label htmlFor="signupSchool" className="flex items-center gap-2">
                     <School className="w-4 h-4" />
-                    School
+                    {t('login.teacher.school')}
                   </Label>
                   <Input
                     id="signupSchool"
@@ -199,7 +205,7 @@ const TeacherLogin = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="signupPassword">Password</Label>
+                  <Label htmlFor="signupPassword">{t('login.teacher.password')}</Label>
                   <Input
                     id="signupPassword"
                     type="password"
@@ -211,7 +217,7 @@ const TeacherLogin = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="confirmPassword">Confirm Password</Label>
+                  <Label htmlFor="confirmPassword">{t('login.teacher.confirmPassword')}</Label>
                   <Input
                     id="confirmPassword"
                     type="password"
@@ -227,7 +233,7 @@ const TeacherLogin = () => {
                   className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700"
                   disabled={isLoading}
                 >
-                  {isLoading ? "Creating account..." : "Create Account"}
+                  {isLoading ? t('login.teacher.creatingAccount') : t('login.teacher.createAccount')}
                 </Button>
               </form>
             </TabsContent>
