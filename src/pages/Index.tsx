@@ -5,8 +5,10 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { BookOpenIcon, MessageCircleIcon, StarIcon, GraduationCapIcon, UserIcon } from "lucide-react";
 import LessonFeedbackForm from "@/components/LessonFeedbackForm";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { useNavigate } from "react-router-dom";
 
 const Index = () => {
@@ -16,6 +18,7 @@ const Index = () => {
   const [submittedFeedback, setSubmittedFeedback] = useState<any[]>([]);
   const { toast } = useToast();
   const { teacher, student: loggedInStudent } = useAuth();
+  const { t } = useLanguage();
   const navigate = useNavigate();
 
   const handleFeedbackSubmit = (feedbackData: any) => {
@@ -40,7 +43,6 @@ const Index = () => {
 
   const handleStartFeedback = () => {
     if (loggedInStudent) {
-      // User is logged in as student, go directly to feedback
       setStudent({ 
         name: loggedInStudent.full_name, 
         email: `${loggedInStudent.full_name}@${loggedInStudent.school}` 
@@ -48,7 +50,6 @@ const Index = () => {
       setIsAnonymousMode(false);
       setShowFeedbackForm(true);
     } else {
-      // Redirect to student login
       navigate("/student-login");
     }
   };
@@ -59,19 +60,16 @@ const Index = () => {
     setShowFeedbackForm(true);
   };
 
-  // If teacher is logged in, redirect to teacher dashboard
   if (teacher) {
     navigate("/teacher-dashboard");
     return null;
   }
 
-  // If student is logged in, redirect to student dashboard
   if (loggedInStudent) {
     navigate("/student-dashboard");
     return null;
   }
 
-  // If showing feedback form
   if (showFeedbackForm) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
@@ -100,18 +98,31 @@ const Index = () => {
                 <MessageCircleIcon className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">LessonLens</h1>
-                <p className="text-gray-600">Connect • Reflect • Improve</p>
+                <h1 className="text-2xl font-bold text-gray-900">{t('app.title')}</h1>
+                <p className="text-gray-600">{t('app.subtitle')}</p>
               </div>
             </div>
-            <Button 
-              onClick={() => navigate("/teacher-login")}
-              variant="outline"
-              className="border-blue-200 text-blue-600 hover:bg-blue-50"
-            >
-              <GraduationCapIcon className="w-4 h-4 mr-2" />
-              Teacher Login
-            </Button>
+            <div className="flex items-center gap-4">
+              <LanguageSwitcher />
+              <div className="flex gap-2">
+                <Button 
+                  onClick={() => navigate("/student-login")}
+                  variant="outline"
+                  className="border-green-200 text-green-600 hover:bg-green-50"
+                >
+                  <UserIcon className="w-4 h-4 mr-2" />
+                  {t('student.login')}
+                </Button>
+                <Button 
+                  onClick={() => navigate("/teacher-login")}
+                  variant="outline"
+                  className="border-blue-200 text-blue-600 hover:bg-blue-50"
+                >
+                  <GraduationCapIcon className="w-4 h-4 mr-2" />
+                  {t('teacher.login')}
+                </Button>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -120,11 +131,10 @@ const Index = () => {
         {/* Welcome Section */}
         <div className="text-center mb-12">
           <h2 className="text-4xl font-bold text-gray-900 mb-4">
-            Help Your Teachers Help You Learn Better
+            {t('home.welcome')}
           </h2>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
-            Share your learning experience, emotions, and suggestions to create better lessons for everyone.
-            Your voice matters in shaping your education journey.
+            {t('home.description')}
           </p>
         </div>
 
@@ -135,11 +145,11 @@ const Index = () => {
               <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full mx-auto flex items-center justify-center mb-4">
                 <BookOpenIcon className="w-8 h-8 text-white" />
               </div>
-              <CardTitle className="text-xl text-gray-900">Lesson Understanding</CardTitle>
+              <CardTitle className="text-xl text-gray-900">{t('feature.understanding.title')}</CardTitle>
             </CardHeader>
             <CardContent>
               <CardDescription className="text-center text-gray-600 leading-relaxed">
-                Rate how well you understood the lesson content and identify areas that need more explanation.
+                {t('feature.understanding.description')}
               </CardDescription>
             </CardContent>
           </Card>
@@ -149,11 +159,11 @@ const Index = () => {
               <div className="w-16 h-16 bg-gradient-to-br from-green-500 to-green-600 rounded-full mx-auto flex items-center justify-center mb-4">
                 <StarIcon className="w-8 h-8 text-white" />
               </div>
-              <CardTitle className="text-xl text-gray-900">Engagement Level</CardTitle>
+              <CardTitle className="text-xl text-gray-900">{t('feature.engagement.title')}</CardTitle>
             </CardHeader>
             <CardContent>
               <CardDescription className="text-center text-gray-600 leading-relaxed">
-                Share how interesting and engaging the lesson was, and what kept you motivated to learn.
+                {t('feature.engagement.description')}
               </CardDescription>
             </CardContent>
           </Card>
@@ -163,11 +173,11 @@ const Index = () => {
               <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-purple-600 rounded-full mx-auto flex items-center justify-center mb-4">
                 <MessageCircleIcon className="w-8 h-8 text-white" />
               </div>
-              <CardTitle className="text-xl text-gray-900">Emotional Wellbeing</CardTitle>
+              <CardTitle className="text-xl text-gray-900">{t('feature.emotional.title')}</CardTitle>
             </CardHeader>
             <CardContent>
               <CardDescription className="text-center text-gray-600 leading-relaxed">
-                Express how you felt during the lesson and any emotional aspects of your learning experience.
+                {t('feature.emotional.description')}
               </CardDescription>
             </CardContent>
           </Card>
@@ -181,7 +191,7 @@ const Index = () => {
             className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-8 py-4 text-lg font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
           >
             <MessageCircleIcon className="w-5 h-5 mr-2" />
-            Give Lesson Feedback
+            {t('home.giveFeedback')}
           </Button>
         </div>
 
@@ -190,7 +200,7 @@ const Index = () => {
           <div className="inline-flex items-center gap-2 bg-orange-50 text-orange-700 px-4 py-2 rounded-lg border border-orange-200">
             <UserIcon className="w-4 h-4" />
             <span className="text-sm font-medium">
-              Don't worry - you can submit feedback anonymously if you prefer
+              {t('home.anonymousNotice')}
             </span>
           </div>
           <div className="mt-4">
@@ -200,7 +210,7 @@ const Index = () => {
               size="sm"
               className="text-orange-600 border-orange-200 hover:bg-orange-50"
             >
-              Continue Anonymously
+              {t('home.continueAnonymously')}
             </Button>
           </div>
         </div>

@@ -3,11 +3,14 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { CalendarIcon, ClockIcon, LogOutIcon, BookOpenIcon, MessageSquareIcon } from "lucide-react";
+import { CalendarIcon, ClockIcon, LogOutIcon, BookOpenIcon, MessageSquareIcon, TrendingUpIcon } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import LessonFeedbackForm from "@/components/LessonFeedbackForm";
+import WeeklySummary from "@/components/WeeklySummary";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
 
 interface ClassSchedule {
   id: string;
@@ -22,9 +25,11 @@ interface ClassSchedule {
 
 const StudentDashboard = () => {
   const { student, logout } = useAuth();
+  const { t } = useLanguage();
   const [schedules, setSchedules] = useState<ClassSchedule[]>([]);
   const [selectedClass, setSelectedClass] = useState<ClassSchedule | null>(null);
   const [showFeedbackForm, setShowFeedbackForm] = useState(false);
+  const [showWeeklySummary, setShowWeeklySummary] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
 
@@ -61,7 +66,7 @@ const StudentDashboard = () => {
       const submissionData = {
         class_schedule_id: selectedClass?.id,
         student_id: feedbackData.isAnonymous ? null : student?.id,
-        student_name: feedbackData.isAnonymous ? student?.full_name : null,
+        student_name: feedbackData.isAnonymous ? null : student?.full_name,
         is_anonymous: feedbackData.isAnonymous || false,
         understanding: feedbackData.understanding,
         interest: feedbackData.interest,
@@ -113,6 +118,10 @@ const StudentDashboard = () => {
     });
   };
 
+  if (showWeeklySummary) {
+    return <WeeklySummary onClose={() => setShowWeeklySummary(false)} />;
+  }
+
   if (showFeedbackForm && selectedClass) {
     return (
       <LessonFeedbackForm
@@ -121,7 +130,10 @@ const StudentDashboard = () => {
           setShowFeedbackForm(false);
           setSelectedClass(null);
         }}
-        studentInfo={student}
+        studentInfo={{
+          name: student?.full_name || "",
+          email: `${student?.full_name}@${student?.school}` || ""
+        }}
         isAnonymous={false}
       />
     );
@@ -138,20 +150,31 @@ const StudentDashboard = () => {
                 <BookOpenIcon className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">My Classes</h1>
+                <h1 className="text-2xl font-bold text-gray-900">{t('dashboard.myClasses')}</h1>
                 <p className="text-gray-600">
-                  Welcome back, {student?.full_name} - {student?.school}, {student?.grade}
+                  {t('dashboard.welcome')}, {student?.full_name} - {student?.school}, {student?.grade}
                 </p>
               </div>
             </div>
-            <Button 
-              onClick={logout}
-              variant="outline"
-              className="border-red-200 text-red-600 hover:bg-red-50"
-            >
-              <LogOutIcon className="w-4 h-4 mr-2" />
-              Logout
-            </Button>
+            <div className="flex items-center gap-4">
+              <LanguageSwitcher />
+              <Button 
+                onClick={() => setShowWeeklySummary(true)}
+                variant="outline"
+                className="border-purple-200 text-purple-600 hover:bg-purple-50"
+              >
+                <TrendingUpIcon className="w-4 h-4 mr-2" />
+                {t('weekly.title')}
+              </Button>
+              <Button 
+                onClick={logout}
+                variant="outline"
+                className="border-red-200 text-red-600 hover:bg-red-50"
+              >
+                <LogOutIcon className="w-4 h-4 mr-2" />
+                {t('dashboard.logout')}
+              </Button>
+            </div>
           </div>
         </div>
       </div>
@@ -160,21 +183,21 @@ const StudentDashboard = () => {
         {isLoading ? (
           <div className="text-center py-8">
             <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-            <p className="mt-2 text-gray-600">Loading your class schedule...</p>
+            <p className="mt-2 text-gray-600">{t('loading')}</p>
           </div>
         ) : schedules.length === 0 ? (
           <Card className="bg-white/70 backdrop-blur-sm border-gray-200">
             <CardContent className="text-center py-12">
               <BookOpenIcon className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-xl font-semibold text-gray-700 mb-2">No Classes Scheduled</h3>
+              <h3 className="text-xl font-semibold text-gray-700 mb-2">{t('dashboard.noClasses')}</h3>
               <p className="text-gray-600">
-                Your teacher hasn't uploaded any class schedules yet. Check back later!
+                {t('dashboard.noClassesDescription')}
               </p>
             </CardContent>
           </Card>
         ) : (
           <div className="grid gap-6">
-            <h2 className="text-xl font-semibold text-gray-900">Upcoming Classes</h2>
+            <h2 className="text-xl font-semibold text-gray-900">{t('dashboard.upcomingClasses')}</h2>
             
             {schedules.map((schedule) => (
               <Card key={schedule.id} className="bg-white/70 backdrop-blur-sm border-gray-200 hover:shadow-lg transition-shadow">
@@ -216,7 +239,7 @@ const StudentDashboard = () => {
                       className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
                     >
                       <MessageSquareIcon className="w-4 h-4 mr-2" />
-                      Give Feedback
+                      {t('dashboard.giveFeedback')}
                     </Button>
                     
                     <Button
@@ -227,7 +250,7 @@ const StudentDashboard = () => {
                       }}
                       className="border-orange-200 text-orange-600 hover:bg-orange-50"
                     >
-                      Give Anonymous Feedback
+                      {t('dashboard.giveAnonymousFeedback')}
                     </Button>
                   </div>
                 </CardContent>
