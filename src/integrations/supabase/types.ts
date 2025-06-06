@@ -122,6 +122,65 @@ export type Database = {
           },
         ]
       }
+      mental_health_alerts: {
+        Row: {
+          alert_type: string
+          content: string
+          created_at: string
+          grade: string
+          id: string
+          is_reviewed: boolean
+          reviewed_at: string | null
+          reviewed_by: string | null
+          school: string
+          severity_level: number
+          source_id: string
+          source_table: string
+          student_id: string | null
+          student_name: string
+        }
+        Insert: {
+          alert_type?: string
+          content: string
+          created_at?: string
+          grade: string
+          id?: string
+          is_reviewed?: boolean
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          school: string
+          severity_level?: number
+          source_id: string
+          source_table: string
+          student_id?: string | null
+          student_name: string
+        }
+        Update: {
+          alert_type?: string
+          content?: string
+          created_at?: string
+          grade?: string
+          id?: string
+          is_reviewed?: boolean
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          school?: string
+          severity_level?: number
+          source_id?: string
+          source_table?: string
+          student_id?: string | null
+          student_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mental_health_alerts_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       platform_admins: {
         Row: {
           created_at: string
@@ -143,6 +202,42 @@ export type Database = {
           id?: string
           name?: string
           password_hash?: string
+        }
+        Relationships: []
+      }
+      school_psychologists: {
+        Row: {
+          availability_hours: string | null
+          created_at: string
+          email: string
+          id: string
+          name: string
+          office_location: string | null
+          phone: string | null
+          school: string
+          updated_at: string
+        }
+        Insert: {
+          availability_hours?: string | null
+          created_at?: string
+          email: string
+          id?: string
+          name: string
+          office_location?: string | null
+          phone?: string | null
+          school: string
+          updated_at?: string
+        }
+        Update: {
+          availability_hours?: string | null
+          created_at?: string
+          email?: string
+          id?: string
+          name?: string
+          office_location?: string | null
+          phone?: string | null
+          school?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -322,7 +417,10 @@ export type Database = {
       }
     }
     Functions: {
-      [_ in never]: never
+      detect_self_harm_language: {
+        Args: { text_content: string }
+        Returns: number
+      }
     }
     Enums: {
       [_ in never]: never
