@@ -59,7 +59,6 @@ const AdminDashboard = () => {
   const [feedbackSummary, setFeedbackSummary] = useState<FeedbackSummary[]>([]);
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [debugInfo, setDebugInfo] = useState<any>(null);
 
   useEffect(() => {
     if (!teacher || teacher.role !== 'admin') {
@@ -117,56 +116,36 @@ const AdminDashboard = () => {
       console.log('Feedback loaded:', transformedFeedback.length);
       setFeedbackSummary(transformedFeedback);
 
-      // Load ALL subscriptions for debugging
-      const { data: allSubscriptions, error: allSubError } = await supabase
+      // Load subscription for this school with multiple strategies
+      console.log('=== LOADING SUBSCRIPTION ===');
+      
+      // Strategy 1: Exact school name match
+      let { data: subData, error: subError } = await supabase
         .from('subscriptions')
         .select('*')
-        .order('created_at', { ascending: false });
+        .eq('school_name', teacher?.school)
+        .single();
 
-      console.log('=== SUBSCRIPTION DEBUG ===');
-      console.log('All subscriptions query error:', allSubError);
-      console.log('All subscriptions found:', allSubscriptions?.length || 0);
-      console.log('Full subscription data:', allSubscriptions);
+      if (subError && subError.code !== 'PGRST116') {
+        console.error('Subscription query error:', subError);
+      }
 
-      // Try to find subscription for this school
-      let foundSubscription = null;
-      if (allSubscriptions && allSubscriptions.length > 0) {
-        // Try exact match
-        foundSubscription = allSubscriptions.find(sub => 
-          sub.school_name === teacher?.school
-        );
-        console.log('Exact match for school "' + teacher?.school + '":', foundSubscription);
+      if (!subData) {
+        // Strategy 2: Case-insensitive match
+        const { data: allSubs, error: allSubsError } = await supabase
+          .from('subscriptions')
+          .select('*');
 
-        // Try case-insensitive match
-        if (!foundSubscription) {
-          foundSubscription = allSubscriptions.find(sub => 
+        if (!allSubsError && allSubs) {
+          subData = allSubs.find(sub => 
             sub.school_name?.toLowerCase() === teacher?.school?.toLowerCase()
-          );
-          console.log('Case-insensitive match:', foundSubscription);
-        }
-
-        // For debugging - just take the first one if nothing matches
-        if (!foundSubscription && allSubscriptions.length > 0) {
-          console.log('No match found, using first subscription for debugging');
-          foundSubscription = allSubscriptions[0];
+          ) || null;
         }
       }
 
-      setSubscription(foundSubscription);
-      
-      // Set debug info
-      setDebugInfo({
-        adminSchool: teacher?.school,
-        adminEmail: teacher?.email,
-        adminRole: teacher?.role,
-        totalSubscriptions: allSubscriptions?.length || 0,
-        allSubscriptions: allSubscriptions || [],
-        foundSubscription: foundSubscription,
-        teachersCount: teachersData?.length || 0,
-        feedbackCount: transformedFeedback.length
-      });
+      console.log('Found subscription:', subData);
+      setSubscription(subData);
 
-      console.log('Final subscription result:', foundSubscription);
       console.log('=== ADMIN DASHBOARD COMPLETE ===');
 
     } catch (error) {
@@ -256,38 +235,6 @@ const AdminDashboard = () => {
       </header>
 
       <main className="max-w-7xl mx-auto p-6 space-y-6">
-        {/* Debug Information */}
-        {debugInfo && (
-          <Card className="border-orange-200 bg-orange-50">
-            <CardHeader>
-              <CardTitle className="text-orange-800">Admin Debug Information</CardTitle>
-            </CardHeader>
-            <CardContent className="text-sm text-orange-700">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <p><strong>School:</strong> {debugInfo.adminSchool}</p>
-                  <p><strong>Email:</strong> {debugInfo.adminEmail}</p>
-                  <p><strong>Role:</strong> {debugInfo.adminRole}</p>
-                </div>
-                <div>
-                  <p><strong>Teachers Found:</strong> {debugInfo.teachersCount}</p>
-                  <p><strong>Feedback Records:</strong> {debugInfo.feedbackCount}</p>
-                  <p><strong>Total Subscriptions:</strong> {debugInfo.totalSubscriptions}</p>
-                  <p><strong>Found Subscription:</strong> {debugInfo.foundSubscription ? 'Yes' : 'No'}</p>
-                </div>
-              </div>
-              {debugInfo.allSubscriptions.length > 0 && (
-                <details className="mt-4">
-                  <summary className="cursor-pointer font-medium">View All Subscriptions Data</summary>
-                  <pre className="mt-2 p-2 bg-white rounded text-xs overflow-auto max-h-40">
-                    {JSON.stringify(debugInfo.allSubscriptions, null, 2)}
-                  </pre>
-                </details>
-              )}
-            </CardContent>
-          </Card>
-        )}
-
         {/* Subscription Status */}
         <Card>
           <CardHeader>

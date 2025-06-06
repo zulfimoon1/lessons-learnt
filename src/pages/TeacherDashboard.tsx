@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -265,8 +264,8 @@ const TeacherDashboard = () => {
                 <GraduationCapIcon className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">{t('dashboard.teacher.title')}</h1>
-                <p className="text-gray-600">{t('dashboard.teacher.welcome')}, {teacher?.name}</p>
+                <h1 className="text-2xl font-bold text-gray-900">Teacher Dashboard</h1>
+                <p className="text-gray-600">Welcome, {teacher?.name}</p>
               </div>
             </div>
             <div className="flex gap-2 items-center">
@@ -276,7 +275,7 @@ const TeacherDashboard = () => {
                 className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700"
               >
                 <PlusIcon className="w-4 h-4 mr-2" />
-                {t('dashboard.teacher.addClass')}
+                Add Class
               </Button>
               <Button 
                 onClick={logout}
@@ -284,7 +283,7 @@ const TeacherDashboard = () => {
                 className="border-red-200 text-red-600 hover:bg-red-50"
               >
                 <LogOutIcon className="w-4 h-4 mr-2" />
-                {t('dashboard.teacher.logout')}
+                Logout
               </Button>
             </div>
           </div>
@@ -295,7 +294,7 @@ const TeacherDashboard = () => {
         {isLoading ? (
           <div className="text-center py-8">
             <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-            <p className="mt-2 text-gray-600">{t('dashboard.teacher.loading')}</p>
+            <p className="mt-2 text-gray-600">Loading...</p>
           </div>
         ) : (
           <>
@@ -303,7 +302,7 @@ const TeacherDashboard = () => {
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
               <Card className="bg-white/70 backdrop-blur-sm border-blue-100">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">{t('dashboard.teacher.totalClasses')}</CardTitle>
+                  <CardTitle className="text-sm font-medium">Total Classes</CardTitle>
                   <CalendarPlusIcon className="h-4 w-4 text-blue-600" />
                 </CardHeader>
                 <CardContent>
@@ -313,7 +312,7 @@ const TeacherDashboard = () => {
 
               <Card className="bg-white/70 backdrop-blur-sm border-green-100">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">{t('dashboard.teacher.totalFeedback')}</CardTitle>
+                  <CardTitle className="text-sm font-medium">Total Feedback</CardTitle>
                   <MessageCircleIcon className="h-4 w-4 text-green-600" />
                 </CardHeader>
                 <CardContent>
@@ -323,7 +322,7 @@ const TeacherDashboard = () => {
 
               <Card className="bg-white/70 backdrop-blur-sm border-purple-100">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">{t('dashboard.teacher.avgUnderstanding')}</CardTitle>
+                  <CardTitle className="text-sm font-medium">Avg Understanding</CardTitle>
                   <BookOpenIcon className="h-4 w-4 text-purple-600" />
                 </CardHeader>
                 <CardContent>
@@ -333,7 +332,7 @@ const TeacherDashboard = () => {
 
               <Card className="bg-white/70 backdrop-blur-sm border-orange-100">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">{t('dashboard.teacher.thisWeek')}</CardTitle>
+                  <CardTitle className="text-sm font-medium">This Week</CardTitle>
                   <BellIcon className="h-4 w-4 text-orange-600" />
                 </CardHeader>
                 <CardContent>
