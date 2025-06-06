@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { GraduationCapIcon, UsersIcon, BookOpenIcon, HeartIcon, BarChart3Icon, ShieldCheckIcon } from "lucide-react";
@@ -39,10 +38,10 @@ const Index = () => {
             <Link to="/student-login">
               <Button 
                 size="lg" 
-                className="w-full min-h-16 py-4 px-6 text-lg flex items-center justify-center"
+                className="w-full min-h-16 py-3 px-4 text-base flex items-center justify-center"
               >
-                <UsersIcon className="w-6 h-6 mr-2 flex-shrink-0" />
-                <span className="text-center leading-tight">{t('auth.studentLogin')}</span>
+                <UsersIcon className="w-5 h-5 mr-2 flex-shrink-0" />
+                <span className="text-center leading-tight whitespace-normal">{t('auth.studentLogin')}</span>
               </Button>
             </Link>
             
@@ -50,10 +49,10 @@ const Index = () => {
               <Button 
                 size="lg" 
                 variant="outline" 
-                className="w-full border-2 border-border hover:bg-accent min-h-16 py-4 px-6 text-lg flex items-center justify-center"
+                className="w-full border-2 border-border hover:bg-accent min-h-16 py-3 px-4 text-base flex items-center justify-center"
               >
-                <BookOpenIcon className="w-6 h-6 mr-2 flex-shrink-0" />
-                <span className="text-center leading-tight">{t('auth.teacherLogin')}</span>
+                <BookOpenIcon className="w-5 h-5 mr-2 flex-shrink-0" />
+                <span className="text-center leading-tight whitespace-normal">{t('auth.teacherLogin')}</span>
               </Button>
             </Link>
           </div>
