@@ -132,10 +132,23 @@ export const discountCodeService = {
   },
 
   async incrementCodeUsage(id: string) {
+    // First get the current usage count
+    const { data: currentCode, error: fetchError } = await supabase
+      .from('discount_codes')
+      .select('current_uses')
+      .eq('id', id)
+      .single();
+
+    if (fetchError) {
+      console.error('Error fetching current usage:', fetchError);
+      throw fetchError;
+    }
+
+    // Then update with incremented value
     const { error } = await supabase
       .from('discount_codes')
       .update({
-        current_uses: supabase.sql`current_uses + 1`,
+        current_uses: (currentCode.current_uses || 0) + 1,
         updated_at: new Date().toISOString(),
       })
       .eq('id', id);
