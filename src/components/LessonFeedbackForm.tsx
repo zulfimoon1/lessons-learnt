@@ -16,7 +16,6 @@ import { useToast } from "@/hooks/use-toast";
 interface Student {
   id: string;
   full_name: string;
-  email: string;
   school: string;
   grade: string;
 }
@@ -44,19 +43,54 @@ const LessonFeedbackForm = ({ student }: LessonFeedbackFormProps) => {
     e.preventDefault();
     
     try {
+      // First, find or create a class schedule entry for this subject/lesson
+      const { data: existingSchedule, error: scheduleError } = await supabase
+        .from('class_schedules')
+        .select('id')
+        .eq('subject', formData.subject)
+        .eq('lesson_topic', formData.lessonTopic)
+        .eq('school', student.school)
+        .eq('grade', student.grade)
+        .limit(1);
+
+      if (scheduleError) throw scheduleError;
+
+      let classScheduleId;
+      
+      if (existingSchedule && existingSchedule.length > 0) {
+        classScheduleId = existingSchedule[0].id;
+      } else {
+        // Create a new class schedule entry
+        const { data: newSchedule, error: createError } = await supabase
+          .from('class_schedules')
+          .insert({
+            subject: formData.subject,
+            lesson_topic: formData.lessonTopic,
+            school: student.school,
+            grade: student.grade,
+            class_date: new Date().toISOString().split('T')[0],
+            class_time: '09:00:00',
+            teacher_id: '00000000-0000-0000-0000-000000000000' // placeholder
+          })
+          .select('id')
+          .single();
+
+        if (createError) throw createError;
+        classScheduleId = newSchedule.id;
+      }
+
+      // Now insert the feedback
       const { error } = await supabase
         .from('feedback')
         .insert({
           student_id: student.id,
           student_name: student.full_name,
-          subject: formData.subject,
-          lesson_topic: formData.lessonTopic,
-          understanding_rating: formData.understanding,
-          interest_rating: formData.interest,
-          educational_growth_rating: formData.educationalGrowth,
+          class_schedule_id: classScheduleId,
+          understanding: formData.understanding,
+          interest: formData.interest,
+          educational_growth: formData.educationalGrowth,
           emotional_state: formData.emotionalState,
           what_went_well: formData.whatWorkedWell,
-          what_was_confusing: formData.whatWasConfusing,
           suggestions: formData.howToImprove,
           additional_comments: formData.additionalComments
         });

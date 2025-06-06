@@ -12,6 +12,7 @@ export interface Student {
   full_name: string;
   school: string;
   grade: string;
+  email?: string; // Make email optional since it's not always available
 }
 
 export interface AuthContextType {
