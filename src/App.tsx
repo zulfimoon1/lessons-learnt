@@ -6,12 +6,15 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { LanguageProvider } from "./contexts/LanguageContext";
+import { PlatformAdminProvider, usePlatformAdmin } from "./contexts/PlatformAdminContext";
 import Index from "./pages/Index";
 import StudentLogin from "./pages/StudentLogin";
 import TeacherLogin from "./pages/TeacherLogin";
 import TeacherDashboard from "./pages/TeacherDashboard";
 import StudentDashboard from "./pages/StudentDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
+import PlatformAdminLogin from "./pages/PlatformAdminLogin";
+import PlatformAdminDashboard from "./pages/PlatformAdminDashboard";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -48,8 +51,23 @@ const ProtectedRoute: React.FC<{
   return <>{children}</>;
 };
 
+const PlatformAdminProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { admin, isLoading } = usePlatformAdmin();
+
+  if (isLoading) {
+    return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
+  }
+
+  if (!admin) {
+    return <Navigate to="/platform-admin-login" replace />;
+  }
+
+  return <>{children}</>;
+};
+
 const AppRoutes = () => {
   const { teacher, student } = useAuth();
+  const { admin } = usePlatformAdmin();
 
   return (
     <Routes>
@@ -68,6 +86,12 @@ const AppRoutes = () => {
               <Navigate to="/admin-dashboard" replace /> : 
               <Navigate to="/teacher-dashboard" replace />
           ) : <TeacherLogin />
+        } 
+      />
+      <Route 
+        path="/platform-admin-login" 
+        element={
+          admin ? <Navigate to="/platform-admin" replace /> : <PlatformAdminLogin />
         } 
       />
       <Route 
@@ -94,6 +118,14 @@ const AppRoutes = () => {
           </ProtectedRoute>
         } 
       />
+      <Route 
+        path="/platform-admin" 
+        element={
+          <PlatformAdminProtectedRoute>
+            <PlatformAdminDashboard />
+          </PlatformAdminProtectedRoute>
+        } 
+      />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );
@@ -105,11 +137,13 @@ const App = () => (
       <Toaster />
       <Sonner />
       <LanguageProvider>
-        <AuthProvider>
-          <BrowserRouter>
-            <AppRoutes />
-          </BrowserRouter>
-        </AuthProvider>
+        <PlatformAdminProvider>
+          <AuthProvider>
+            <BrowserRouter>
+              <AppRoutes />
+            </BrowserRouter>
+          </AuthProvider>
+        </PlatformAdminProvider>
       </LanguageProvider>
     </TooltipProvider>
   </QueryClientProvider>

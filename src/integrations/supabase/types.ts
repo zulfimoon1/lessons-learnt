@@ -122,6 +122,30 @@ export type Database = {
           },
         ]
       }
+      platform_admins: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          name: string
+          password_hash: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          name: string
+          password_hash: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          name?: string
+          password_hash?: string
+        }
+        Relationships: []
+      }
       students: {
         Row: {
           created_at: string
@@ -146,6 +170,51 @@ export type Database = {
           id?: string
           password_hash?: string
           school?: string
+        }
+        Relationships: []
+      }
+      subscriptions: {
+        Row: {
+          amount: number
+          created_at: string
+          currency: string
+          current_period_end: string | null
+          current_period_start: string | null
+          id: string
+          plan_type: string
+          school_name: string
+          status: string
+          stripe_customer_id: string | null
+          stripe_subscription_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          currency?: string
+          current_period_end?: string | null
+          current_period_start?: string | null
+          id?: string
+          plan_type?: string
+          school_name: string
+          status?: string
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          currency?: string
+          current_period_end?: string | null
+          current_period_start?: string | null
+          id?: string
+          plan_type?: string
+          school_name?: string
+          status?: string
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          updated_at?: string
         }
         Relationships: []
       }
@@ -225,7 +294,32 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      feedback_analytics: {
+        Row: {
+          anonymous_responses: number | null
+          avg_growth: number | null
+          avg_interest: number | null
+          avg_understanding: number | null
+          class_date: string | null
+          grade: string | null
+          lesson_topic: string | null
+          named_responses: number | null
+          school: string | null
+          subject: string | null
+          total_responses: number | null
+        }
+        Relationships: []
+      }
+      school_statistics: {
+        Row: {
+          school: string | null
+          total_classes: number | null
+          total_grades: number | null
+          total_subjects: number | null
+          total_teachers: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       [_ in never]: never
