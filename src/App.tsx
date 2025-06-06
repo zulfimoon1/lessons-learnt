@@ -12,7 +12,6 @@ import TeacherLogin from "./pages/TeacherLogin";
 import TeacherDashboard from "./pages/TeacherDashboard";
 import StudentDashboard from "./pages/StudentDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
-import SchoolAdminLogin from "./components/SchoolAdminLogin";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -28,7 +27,7 @@ const ProtectedRoute: React.FC<{
   requireStudent = false,
   requireAdmin = false
 }) => {
-  const { teacher, student, schoolAdmin, isLoading } = useAuth();
+  const { teacher, student, isLoading } = useAuth();
 
   if (isLoading) {
     return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
@@ -42,15 +41,15 @@ const ProtectedRoute: React.FC<{
     return <Navigate to="/student-login" replace />;
   }
 
-  if (requireAdmin && !schoolAdmin) {
-    return <Navigate to="/admin-login" replace />;
+  if (requireAdmin && (!teacher || teacher.role !== 'admin')) {
+    return <Navigate to="/teacher-login" replace />;
   }
 
   return <>{children}</>;
 };
 
 const AppRoutes = () => {
-  const { teacher, student, schoolAdmin } = useAuth();
+  const { teacher, student } = useAuth();
 
   return (
     <Routes>
@@ -64,13 +63,11 @@ const AppRoutes = () => {
       <Route 
         path="/teacher-login" 
         element={
-          teacher ? <Navigate to="/teacher-dashboard" replace /> : <TeacherLogin />
-        } 
-      />
-      <Route 
-        path="/admin-login" 
-        element={
-          schoolAdmin ? <Navigate to="/admin-dashboard" replace /> : <SchoolAdminLogin />
+          teacher ? (
+            teacher.role === 'admin' ? 
+              <Navigate to="/admin-dashboard" replace /> : 
+              <Navigate to="/teacher-dashboard" replace />
+          ) : <TeacherLogin />
         } 
       />
       <Route 

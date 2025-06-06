@@ -14,6 +14,8 @@ interface Teacher {
   id: string;
   name: string;
   email: string;
+  school: string;
+  role: string;
 }
 
 interface FeedbackSummary {
@@ -26,7 +28,7 @@ interface FeedbackSummary {
 }
 
 const AdminDashboard = () => {
-  const { schoolAdmin, logout } = useAuth();
+  const { teacher, logout } = useAuth();
   const { t } = useLanguage();
   const { toast } = useToast();
   const [teachers, setTeachers] = useState<Teacher[]>([]);
@@ -34,17 +36,18 @@ const AdminDashboard = () => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    if (schoolAdmin) {
+    if (teacher && teacher.role === 'admin') {
       loadDashboardData();
     }
-  }, [schoolAdmin]);
+  }, [teacher]);
 
   const loadDashboardData = async () => {
     try {
-      // Load teachers from the school
+      // Load teachers from the same school
       const { data: teachersData, error: teachersError } = await supabase
         .from('teachers')
-        .select('*');
+        .select('*')
+        .eq('school', teacher?.school);
 
       if (teachersError) throw teachersError;
       setTeachers(teachersData || []);
@@ -101,10 +104,11 @@ const AdminDashboard = () => {
               <h1 className="text-2xl font-bold text-gray-900">Admin Dashboard</h1>
             </div>
             <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200">
-              {schoolAdmin?.school_name}
+              {teacher?.school}
             </Badge>
           </div>
           <div className="flex items-center gap-4">
+            <span className="text-sm text-gray-600">Welcome, {teacher?.name}</span>
             <LanguageSwitcher />
             <Button
               onClick={logout}
@@ -161,17 +165,20 @@ const AdminDashboard = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <Card>
             <CardHeader>
-              <CardTitle>Teachers</CardTitle>
+              <CardTitle>Teachers at {teacher?.school}</CardTitle>
               <CardDescription>Manage teachers at your school</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {teachers.map((teacher) => (
-                  <div key={teacher.id} className="flex items-center justify-between p-3 border rounded-lg">
+                {teachers.map((teacherItem) => (
+                  <div key={teacherItem.id} className="flex items-center justify-between p-3 border rounded-lg">
                     <div>
-                      <p className="font-medium">{teacher.name}</p>
-                      <p className="text-sm text-gray-500">{teacher.email}</p>
+                      <p className="font-medium">{teacherItem.name}</p>
+                      <p className="text-sm text-gray-500">{teacherItem.email}</p>
                     </div>
+                    <Badge variant={teacherItem.role === 'admin' ? 'default' : 'secondary'}>
+                      {teacherItem.role}
+                    </Badge>
                   </div>
                 ))}
                 {teachers.length === 0 && (
