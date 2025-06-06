@@ -39,27 +39,33 @@ const StudentLogin = () => {
     });
 
     try {
-      const { error } = await studentLogin(
+      const result = await studentLogin(
         loginData.fullName.trim(),
         loginData.password
       );
 
-      console.log('Student login result:', { error });
+      console.log('Student login result:', result);
 
-      if (error) {
-        console.error('Login failed:', error);
+      if (result.error) {
+        console.error('Login failed:', result.error);
         toast({
           title: "Login failed",
-          description: error,
+          description: result.error,
           variant: "destructive",
         });
-      } else {
+      } else if (result.student) {
         console.log('Login successful, navigating to dashboard...');
         toast({
           title: "Welcome back! 📚",
           description: "You've successfully logged in.",
         });
         navigate("/student-dashboard");
+      } else {
+        toast({
+          title: "Login failed",
+          description: "Invalid response from server. Please try again.",
+          variant: "destructive",
+        });
       }
     } catch (err) {
       console.error('Unexpected error during login:', err);
@@ -90,29 +96,35 @@ const StudentLogin = () => {
     console.log('Starting student signup process...');
 
     try {
-      const { error } = await studentSignup(
+      const result = await studentSignup(
         signupData.fullName.trim(),
         signupData.school.trim(),
         signupData.grade.trim(),
         signupData.password
       );
 
-      console.log('Student signup result:', { error });
+      console.log('Student signup result:', result);
 
-      if (error) {
-        console.error('Signup failed:', error);
+      if (result.error) {
+        console.error('Signup failed:', result.error);
         toast({
           title: "Signup failed",
-          description: error,
+          description: result.error,
           variant: "destructive",
         });
-      } else {
+      } else if (result.student) {
         console.log('Signup successful, navigating to dashboard...');
         toast({
           title: "Account created! 🎉",
           description: "Welcome to Lesson Lens!",
         });
         navigate("/student-dashboard");
+      } else {
+        toast({
+          title: "Signup failed",
+          description: "Invalid response from server. Please try again.",
+          variant: "destructive",
+        });
       }
     } catch (err) {
       console.error('Unexpected error during signup:', err);

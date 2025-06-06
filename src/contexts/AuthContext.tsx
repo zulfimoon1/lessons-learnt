@@ -34,9 +34,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         console.log('AuthContext: Saving teacher to storage:', result.teacher);
         saveTeacher(result.teacher);
         console.log('AuthContext: Teacher saved successfully');
+        return { teacher: result.teacher };
       }
       
-      return result;
+      return { error: result.error || 'Login failed' };
     } catch (error) {
       console.error('AuthContext: Teacher login error:', error);
       return { error: 'An unexpected error occurred during login' };
@@ -54,9 +55,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         console.log('AuthContext: Saving student to storage:', result.student);
         saveStudent(result.student);
         console.log('AuthContext: Student saved successfully');
+        return { student: result.student };
       }
       
-      return result;
+      return { error: result.error || 'Login failed' };
     } catch (error) {
       console.error('AuthContext: Student login error:', error);
       return { error: 'An unexpected error occurred during login' };
@@ -74,9 +76,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         console.log('AuthContext: Saving student to storage after signup:', result.student);
         saveStudent(result.student);
         console.log('AuthContext: Student saved after signup successfully');
+        return { student: result.student };
       }
       
-      return result;
+      return { error: result.error || 'Signup failed' };
     } catch (error) {
       console.error('AuthContext: Student signup error:', error);
       return { error: 'An unexpected error occurred during signup' };

@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { Teacher, Student } from '@/types/auth';
 
@@ -130,33 +131,39 @@ export const studentSimpleLoginService = async (fullName: string, password: stri
   try {
     console.log('studentSimpleLoginService: Starting login for:', fullName);
     
+    // First, find all students with the matching name
     const { data: students, error } = await supabase
       .from('students')
       .select('*')
-      .eq('full_name', fullName)
-      .eq('password_hash', password); // Filter by both name AND password
+      .eq('full_name', fullName);
 
     if (error) {
       console.error('studentSimpleLoginService: Database error:', error);
       return { error: 'Database error occurred. Please try again.' };
     }
 
-    console.log('studentSimpleLoginService: Students found with matching name and password:', students?.length || 0);
+    console.log('studentSimpleLoginService: Students found with matching name:', students?.length || 0);
 
     if (!students || students.length === 0) {
-      console.log('studentSimpleLoginService: No student found with matching credentials');
-      return { error: 'Invalid name or password. Please check your credentials.' };
+      console.log('studentSimpleLoginService: No student found with matching name');
+      return { error: 'Student not found. Please check your name or sign up first.' };
     }
 
-    // If we get here, we found exactly the student(s) with matching name AND password
-    const student = students[0]; // Take the first match
-    console.log('studentSimpleLoginService: Login successful for student:', student.id);
+    // Now check password for each student until we find a match
+    const matchingStudent = students.find(student => student.password_hash === password);
+    
+    if (!matchingStudent) {
+      console.log('studentSimpleLoginService: Password does not match for any student with this name');
+      return { error: 'Invalid password. Please check your credentials.' };
+    }
+
+    console.log('studentSimpleLoginService: Login successful for student:', matchingStudent.id);
 
     const studentData: Student = {
-      id: student.id,
-      full_name: student.full_name,
-      school: student.school,
-      grade: student.grade
+      id: matchingStudent.id,
+      full_name: matchingStudent.full_name,
+      school: matchingStudent.school,
+      grade: matchingStudent.grade
     };
 
     return { student: studentData };
