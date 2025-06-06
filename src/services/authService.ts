@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { Teacher, Student } from '@/types/auth';
 
@@ -10,12 +11,15 @@ export const teacherLoginService = async (
 ) => {
   try {
     console.log('teacherLoginService: Starting login for email:', email);
+    console.log('teacherLoginService: Password provided:', password ? 'YES' : 'NO');
     
     // First check if a teacher with this email exists
     const { data: teachers, error: queryError } = await supabase
       .from('teachers')
       .select('*')
       .eq('email', email);
+
+    console.log('teacherLoginService: Database query result:', { teachers, queryError });
 
     if (queryError) {
       console.error('teacherLoginService: Database query error:', queryError);
@@ -30,9 +34,11 @@ export const teacherLoginService = async (
       
       // Ensure we have all required data for signup
       if (!name || !school) {
-        console.log('teacherLoginService: Missing required signup data');
+        console.log('teacherLoginService: Missing required signup data, name:', name, 'school:', school);
         return { error: 'Missing required fields for signup. Please provide name and school.' };
       }
+
+      console.log('teacherLoginService: Creating new teacher with data:', { email, name, school, role: role || 'teacher' });
 
       const { data: newTeacher, error: createError } = await supabase
         .from('teachers')
@@ -45,6 +51,8 @@ export const teacherLoginService = async (
         })
         .select()
         .single();
+
+      console.log('teacherLoginService: Teacher creation result:', { newTeacher, createError });
 
       if (createError) {
         console.error('teacherLoginService: Error creating teacher:', createError);
@@ -65,10 +73,16 @@ export const teacherLoginService = async (
 
     // Otherwise, check password and login
     const teacher = teachers[0];
-    console.log('teacherLoginService: Checking password for existing teacher');
+    console.log('teacherLoginService: Found existing teacher:', { 
+      id: teacher.id, 
+      email: teacher.email, 
+      name: teacher.name,
+      storedPasswordHash: teacher.password_hash ? 'EXISTS' : 'MISSING'
+    });
+    console.log('teacherLoginService: Comparing passwords - provided:', password, 'stored:', teacher.password_hash);
     
     if (teacher.password_hash !== password) {
-      console.log('teacherLoginService: Password mismatch');
+      console.log('teacherLoginService: Password mismatch - login failed');
       return { error: 'Invalid email or password' };
     }
 
@@ -103,6 +117,8 @@ export const studentSignupService = async (fullName: string, school: string, gra
       .select()
       .single();
 
+    console.log('studentSignupService: Database result:', { newStudent, error });
+
     if (error) {
       console.error('studentSignupService: Database error:', error);
       if (error.code === '23505') {
@@ -129,6 +145,7 @@ export const studentSignupService = async (fullName: string, school: string, gra
 export const studentSimpleLoginService = async (fullName: string, password: string) => {
   try {
     console.log('studentSimpleLoginService: Starting login for:', fullName);
+    console.log('studentSimpleLoginService: Password provided:', password ? 'YES' : 'NO');
     
     // Find student with matching name and password
     const { data: students, error } = await supabase
@@ -136,6 +153,8 @@ export const studentSimpleLoginService = async (fullName: string, password: stri
       .select('*')
       .eq('full_name', fullName)
       .eq('password_hash', password);
+
+    console.log('studentSimpleLoginService: Database result:', { students, error });
 
     if (error) {
       console.error('studentSimpleLoginService: Database error:', error);
@@ -150,7 +169,12 @@ export const studentSimpleLoginService = async (fullName: string, password: stri
     }
 
     const student = students[0];
-    console.log('studentSimpleLoginService: Login successful for student:', student.id);
+    console.log('studentSimpleLoginService: Login successful for student:', {
+      id: student.id,
+      name: student.full_name,
+      school: student.school,
+      grade: student.grade
+    });
 
     const studentData: Student = {
       id: student.id,
