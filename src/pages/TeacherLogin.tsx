@@ -35,29 +35,40 @@ const TeacherLogin = () => {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
+    
+    if (!loginData.email || !loginData.password) {
+      toast({
+        title: "Missing information",
+        description: "Please enter both email and password",
+        variant: "destructive",
+      });
+      return;
+    }
 
-    console.log('TeacherLogin: Starting login process with:', loginData.email);
+    setIsLoading(true);
+    console.log('TeacherLogin: Starting login process with email:', loginData.email);
 
     try {
       const result = await teacherLogin(loginData.email, loginData.password);
-      console.log('TeacherLogin: Login result:', result);
+      console.log('TeacherLogin: Login result received:', result);
 
       if (result.error) {
-        console.error('TeacherLogin: Login failed:', result.error);
+        console.error('TeacherLogin: Login failed with error:', result.error);
         toast({
           title: "Login failed",
           description: result.error,
           variant: "destructive",
         });
       } else if (result.teacher) {
-        console.log('TeacherLogin: Login successful, teacher:', result.teacher);
+        console.log('TeacherLogin: Login successful, teacher data:', result.teacher);
+        
         toast({
           title: "Welcome back! 👨‍🏫",
-          description: "You've successfully logged in to your teacher dashboard.",
+          description: `Successfully logged in as ${result.teacher.name}`,
         });
         
         // Navigate based on role
+        console.log('TeacherLogin: Teacher role is:', result.teacher.role);
         if (result.teacher.role === "admin") {
           console.log('TeacherLogin: Navigating to admin dashboard');
           navigate("/admin-dashboard");
@@ -69,25 +80,33 @@ const TeacherLogin = () => {
         console.error('TeacherLogin: No error but no teacher data returned');
         toast({
           title: "Login failed",
-          description: "Invalid response from server",
+          description: "Invalid response from server. Please try again.",
           variant: "destructive",
         });
       }
     } catch (err) {
-      console.error('TeacherLogin: Unexpected error:', err);
+      console.error('TeacherLogin: Unexpected error during login:', err);
       toast({
         title: "Login failed",
         description: "An unexpected error occurred. Please try again.",
         variant: "destructive",
       });
+    } finally {
+      setIsLoading(false);
     }
-
-    setIsLoading(false);
   };
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
+    
+    if (!signupData.name || !signupData.email || !signupData.school || !signupData.password || !signupData.confirmPassword) {
+      toast({
+        title: "Missing information",
+        description: "Please fill in all required fields",
+        variant: "destructive",
+      });
+      return;
+    }
 
     // Validate passwords match
     if (signupData.password !== signupData.confirmPassword) {
@@ -96,33 +115,40 @@ const TeacherLogin = () => {
         description: "Passwords do not match",
         variant: "destructive",
       });
-      setIsLoading(false);
       return;
     }
 
-    console.log('TeacherLogin: Starting signup process');
+    setIsLoading(true);
+    console.log('TeacherLogin: Starting signup process for:', signupData.email);
 
     try {
-      const result = await teacherLogin(signupData.email, signupData.password, 
-        signupData.name, signupData.school, signupData.role);
+      const result = await teacherLogin(
+        signupData.email, 
+        signupData.password, 
+        signupData.name, 
+        signupData.school, 
+        signupData.role
+      );
 
-      console.log('TeacherLogin: Signup result:', result);
+      console.log('TeacherLogin: Signup result received:', result);
 
       if (result.error) {
-        console.error('TeacherLogin: Signup failed:', result.error);
+        console.error('TeacherLogin: Signup failed with error:', result.error);
         toast({
           title: "Signup failed",
           description: result.error,
           variant: "destructive",
         });
       } else if (result.teacher) {
-        console.log('TeacherLogin: Signup successful, teacher:', result.teacher);
+        console.log('TeacherLogin: Signup successful, teacher data:', result.teacher);
+        
         toast({
           title: "Account created! 🎉",
-          description: "Welcome to Lesson Lens!",
+          description: `Welcome to Lesson Lens, ${result.teacher.name}!`,
         });
         
         // Navigate based on role
+        console.log('TeacherLogin: New teacher role is:', result.teacher.role);
         if (result.teacher.role === "admin") {
           console.log('TeacherLogin: Navigating to admin dashboard');
           navigate("/admin-dashboard");
@@ -134,20 +160,20 @@ const TeacherLogin = () => {
         console.error('TeacherLogin: No error but no teacher data returned');
         toast({
           title: "Signup failed",
-          description: "Invalid response from server",
+          description: "Invalid response from server. Please try again.",
           variant: "destructive",
         });
       }
     } catch (err) {
-      console.error('TeacherLogin: Unexpected signup error:', err);
+      console.error('TeacherLogin: Unexpected error during signup:', err);
       toast({
         title: "Signup failed",
         description: "An unexpected error occurred. Please try again.",
         variant: "destructive",
       });
+    } finally {
+      setIsLoading(false);
     }
-
-    setIsLoading(false);
   };
 
   return (

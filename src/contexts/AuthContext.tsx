@@ -24,39 +24,63 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     school?: string,
     role?: 'teacher' | 'admin'
   ) => {
-    console.log('AuthContext: Teacher login attempt');
-    const result = await teacherLoginService(email, password, name, school, role);
-    console.log('AuthContext: Teacher login result:', result);
+    console.log('AuthContext: Teacher login attempt for:', email);
     
-    if (result.teacher) {
-      console.log('AuthContext: Saving teacher to storage');
-      saveTeacher(result.teacher);
+    try {
+      const result = await teacherLoginService(email, password, name, school, role);
+      console.log('AuthContext: Teacher login service result:', result);
+      
+      if (result.teacher) {
+        console.log('AuthContext: Saving teacher to storage:', result.teacher);
+        saveTeacher(result.teacher);
+        console.log('AuthContext: Teacher saved successfully');
+      }
+      
+      return result;
+    } catch (error) {
+      console.error('AuthContext: Teacher login error:', error);
+      return { error: 'An unexpected error occurred during login' };
     }
-    return result;
   };
 
   const studentLogin = async (fullName: string, password: string) => {
-    console.log('AuthContext: Student login attempt');
-    const result = await studentSimpleLoginService(fullName, password);
-    console.log('AuthContext: Student login result:', result);
+    console.log('AuthContext: Student login attempt for:', fullName);
     
-    if (result.student) {
-      console.log('AuthContext: Saving student to storage');
-      saveStudent(result.student);
+    try {
+      const result = await studentSimpleLoginService(fullName, password);
+      console.log('AuthContext: Student login service result:', result);
+      
+      if (result.student) {
+        console.log('AuthContext: Saving student to storage:', result.student);
+        saveStudent(result.student);
+        console.log('AuthContext: Student saved successfully');
+      }
+      
+      return result;
+    } catch (error) {
+      console.error('AuthContext: Student login error:', error);
+      return { error: 'An unexpected error occurred during login' };
     }
-    return result;
   };
 
   const studentSignup = async (fullName: string, school: string, grade: string, password: string) => {
-    console.log('AuthContext: Student signup attempt');
-    const result = await studentSignupService(fullName, school, grade, password);
-    console.log('AuthContext: Student signup result:', result);
+    console.log('AuthContext: Student signup attempt for:', fullName);
     
-    if (result.student) {
-      console.log('AuthContext: Saving student to storage');
-      saveStudent(result.student);
+    try {
+      const result = await studentSignupService(fullName, school, grade, password);
+      console.log('AuthContext: Student signup service result:', result);
+      
+      if (result.student) {
+        console.log('AuthContext: Saving student to storage after signup:', result.student);
+        saveStudent(result.student);
+        console.log('AuthContext: Student saved after signup successfully');
+      }
+      
+      return result;
+    } catch (error) {
+      console.error('AuthContext: Student signup error:', error);
+      return { error: 'An unexpected error occurred during signup' };
     }
-    return result;
   };
 
   const logout = () => {
