@@ -58,7 +58,7 @@ const Index = () => {
             </Link>
           </div>
           
-          <div className="max-w-2xl mx-auto mt-12">
+          <div className="max-w-2xl mx-auto mt-6">
             <p className="text-2xl text-foreground font-bold italic leading-relaxed">
               {t('tagline.studentLead')}
             </p>
