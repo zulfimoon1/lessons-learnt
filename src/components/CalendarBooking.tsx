@@ -1,5 +1,6 @@
 
 import React, { useState } from 'react';
+import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -7,11 +8,15 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { CalendarIcon, ClockIcon } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { cn } from "@/lib/utils";
 
 const CalendarBooking = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const [selectedDate, setSelectedDate] = useState<Date>();
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -34,6 +39,15 @@ const CalendarBooking = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
+    if (!selectedDate) {
+      toast({
+        title: "Date Required",
+        description: "Please select a date for your demo.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     // Create calendar event data
     const eventData = {
       title: `Demo Call with ${formData.name} - ${formData.school}`,
@@ -42,9 +56,20 @@ const CalendarBooking = () => {
       attendee: formData.email
     };
 
-    // Generate calendar URLs
-    const startDate = new Date();
-    startDate.setDate(startDate.getDate() + 1); // Tomorrow
+    // Parse the selected time slot to create proper start and end times
+    const [startTime] = formData.timeSlot.split(' - ');
+    const [time, period] = startTime.split(' ');
+    const [hours, minutes] = time.split(':').map(Number);
+    
+    // Convert to 24-hour format
+    let hour24 = hours;
+    if (period === 'PM' && hours !== 12) hour24 += 12;
+    if (period === 'AM' && hours === 12) hour24 = 0;
+
+    // Create start and end dates
+    const startDate = new Date(selectedDate);
+    startDate.setHours(hour24, minutes, 0, 0);
+    
     const endDate = new Date(startDate);
     endDate.setMinutes(endDate.getMinutes() + 30);
 
@@ -73,6 +98,7 @@ const CalendarBooking = () => {
     }
 
     setIsOpen(false);
+    setSelectedDate(undefined);
     setFormData({
       name: '',
       email: '',
@@ -146,6 +172,34 @@ const CalendarBooking = () => {
           </div>
 
           <div className="space-y-2">
+            <Label>Preferred Date *</Label>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  className={cn(
+                    "w-full justify-start text-left font-normal",
+                    !selectedDate && "text-muted-foreground"
+                  )}
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {selectedDate ? format(selectedDate, "PPP") : <span>Pick a date</span>}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={selectedDate}
+                  onSelect={setSelectedDate}
+                  disabled={(date) => date < new Date()}
+                  initialFocus
+                  className={cn("p-3 pointer-events-auto")}
+                />
+              </PopoverContent>
+            </Popover>
+          </div>
+
+          <div className="space-y-2">
             <Label htmlFor="timeSlot">Preferred Time Slot *</Label>
             <Select value={formData.timeSlot} onValueChange={(value) => setFormData({...formData, timeSlot: value})}>
               <SelectTrigger>
@@ -175,7 +229,11 @@ const CalendarBooking = () => {
             />
           </div>
 
-          <Button type="submit" className="w-full" disabled={!formData.name || !formData.email || !formData.school || !formData.timeSlot}>
+          <Button 
+            type="submit" 
+            className="w-full" 
+            disabled={!formData.name || !formData.email || !formData.school || !formData.timeSlot || !selectedDate}
+          >
             Schedule Demo
           </Button>
         </form>
