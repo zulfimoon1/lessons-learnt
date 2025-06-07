@@ -201,16 +201,16 @@ const TeacherLogin = () => {
           <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full mx-auto flex items-center justify-center mb-4">
             <GraduationCapIcon className="w-8 h-8 text-white" />
           </div>
-          <CardTitle className="text-2xl text-gray-900">{t('login.teacher.title') || "Teacher Portal"}</CardTitle>
+          <CardTitle className="text-2xl text-gray-900">Teacher Portal</CardTitle>
           <CardDescription>
-            {t('login.teacher.subtitle') || "Access your teaching dashboard"}
+            Access your teaching dashboard
           </CardDescription>
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="login" className="space-y-4">
             <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="login">{t('login.teacher.login') || "Login"}</TabsTrigger>
-              <TabsTrigger value="signup">{t('login.teacher.signup') || "Sign Up"}</TabsTrigger>
+              <TabsTrigger value="login">Login</TabsTrigger>
+              <TabsTrigger value="signup">Sign Up</TabsTrigger>
             </TabsList>
 
             <TabsContent value="login">
@@ -218,7 +218,7 @@ const TeacherLogin = () => {
                 <div className="space-y-2">
                   <Label htmlFor="loginEmail" className="flex items-center gap-2">
                     <Mail className="w-4 h-4" />
-                    {t('login.teacher.email') || "Email"}
+                    Email
                   </Label>
                   <Input
                     id="loginEmail"
@@ -231,7 +231,7 @@ const TeacherLogin = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="loginPassword">{t('login.teacher.password') || "Password"}</Label>
+                  <Label htmlFor="loginPassword">Password</Label>
                   <Input
                     id="loginPassword"
                     type="password"
@@ -247,10 +247,10 @@ const TeacherLogin = () => {
                   className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
                   disabled={isLoading}
                 >
-                  {isLoading ? (t('login.teacher.loggingIn') || "Logging in...") : (
+                  {isLoading ? "Logging in..." : (
                     <>
                       <LogInIcon className="w-4 h-4 mr-2" />
-                      {t('login.teacher.login') || "Login"}
+                      Login
                     </>
                   )}
                 </Button>
@@ -262,7 +262,7 @@ const TeacherLogin = () => {
                 <div className="space-y-2">
                   <Label htmlFor="signupName" className="flex items-center gap-2">
                     <UserIcon className="w-4 h-4" />
-                    {t('login.teacher.fullName') || "Full Name"}
+                    Full Name
                   </Label>
                   <Input
                     id="signupName"
@@ -277,7 +277,7 @@ const TeacherLogin = () => {
                 <div className="space-y-2">
                   <Label htmlFor="signupEmail" className="flex items-center gap-2">
                     <Mail className="w-4 h-4" />
-                    {t('login.teacher.email') || "Email"}
+                    Email
                   </Label>
                   <Input
                     id="signupEmail"
@@ -292,7 +292,7 @@ const TeacherLogin = () => {
                 <div className="space-y-2">
                   <Label htmlFor="signupSchool" className="flex items-center gap-2">
                     <School className="w-4 h-4" />
-                    {t('login.teacher.school') || "School"}
+                    School
                   </Label>
                   <Input
                     id="signupSchool"
@@ -307,7 +307,7 @@ const TeacherLogin = () => {
                 <div className="space-y-2">
                   <Label htmlFor="role" className="flex items-center gap-2">
                     <ShieldIcon className="w-4 h-4" />
-                    {t('login.teacher.role') || "Role"}
+                    Role
                   </Label>
                   <Select 
                     value={signupData.role} 
@@ -319,19 +319,19 @@ const TeacherLogin = () => {
                       <SelectValue placeholder="Select role" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="teacher">{t('login.teacher.roleTeacher') || "Teacher"}</SelectItem>
-                      <SelectItem value="admin">{t('login.teacher.roleAdmin') || "School Admin"}</SelectItem>
+                      <SelectItem value="teacher">Teacher</SelectItem>
+                      <SelectItem value="admin">School Admin</SelectItem>
                     </SelectContent>
                   </Select>
                   {signupData.role === "admin" && (
                     <p className="text-xs text-gray-500 mt-1">
-                      {t('login.teacher.adminHint') || "School Admins can manage teachers and view all feedback"}
+                      School Admins can manage teachers and view all feedback
                     </p>
                   )}
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="signupPassword">{t('login.teacher.password') || "Password"}</Label>
+                  <Label htmlFor="signupPassword">Password</Label>
                   <Input
                     id="signupPassword"
                     type="password"
@@ -343,7 +343,7 @@ const TeacherLogin = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="confirmPassword">{t('login.teacher.confirmPassword') || "Confirm Password"}</Label>
+                  <Label htmlFor="confirmPassword">Confirm Password</Label>
                   <Input
                     id="confirmPassword"
                     type="password"
@@ -359,7 +359,7 @@ const TeacherLogin = () => {
                   className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700"
                   disabled={isLoading}
                 >
-                  {isLoading ? (t('login.teacher.creatingAccount') || "Creating account...") : (t('login.teacher.createAccount') || "Create Account")}
+                  {isLoading ? "Creating account..." : "Create Account"}
                 </Button>
               </form>
             </TabsContent>

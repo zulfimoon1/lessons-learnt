@@ -31,7 +31,7 @@ const SupportTab = ({ psychologists, student }: SupportTabProps) => {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <HeartHandshakeIcon className="w-5 h-5" />
-          {t('dashboard.mentalHealthSupport')}
+          Mental Health Support
         </CardTitle>
         <CardDescription>
           Access mental health resources and support at {student?.school}
@@ -52,9 +52,9 @@ const SupportTab = ({ psychologists, student }: SupportTabProps) => {
         ) : (
           <div className="text-center py-8">
             <HeartHandshakeIcon className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-            <p className="text-muted-foreground">{t('dashboard.noPsychologists')}</p>
+            <p className="text-muted-foreground">No psychologists found for your school</p>
             <p className="text-sm text-muted-foreground mt-2">
-              {t('dashboard.contactAdmin')}
+              Contact your school administrator for mental health resources
             </p>
             <div className="mt-4">
               <LiveChatWidget />

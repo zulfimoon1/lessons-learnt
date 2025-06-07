@@ -17,18 +17,18 @@ const DashboardHeader = ({ studentName, onLogout }: DashboardHeaderProps) => {
       <div className="max-w-7xl mx-auto flex justify-between items-center">
         <div className="flex items-center gap-4">
           <SchoolIcon className="w-8 h-8 text-primary" />
-          <h1 className="text-2xl font-bold text-foreground">{t('dashboard.title')}</h1>
+          <h1 className="text-2xl font-bold text-foreground">Student Dashboard</h1>
         </div>
         <div className="flex items-center gap-4">
           <LanguageSwitcher />
-          <span className="text-sm text-muted-foreground">{t('admin.welcome')}, {studentName}</span>
+          <span className="text-sm text-muted-foreground">Welcome, {studentName}</span>
           <Button
             onClick={onLogout}
             variant="outline"
             className="flex items-center gap-2"
           >
             <LogOutIcon className="w-4 h-4" />
-            {t('auth.logout')}
+            Logout
           </Button>
         </div>
       </div>

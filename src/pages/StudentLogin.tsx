@@ -179,16 +179,16 @@ const StudentLogin = () => {
           <div className="w-16 h-16 bg-primary rounded-full mx-auto flex items-center justify-center mb-4">
             <BookOpenIcon className="w-8 h-8 text-primary-foreground" />
           </div>
-          <CardTitle className="text-2xl text-foreground">{t('student.portal') || "Student Portal"}</CardTitle>
+          <CardTitle className="text-2xl text-foreground">Student Portal</CardTitle>
           <CardDescription>
-            {t('student.loginDescription') || "Access your learning dashboard"}
+            Access your learning dashboard
           </CardDescription>
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="login" className="space-y-4">
             <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="login">{t('auth.login') || "Login"}</TabsTrigger>
-              <TabsTrigger value="signup">{t('auth.signUp') || "Sign Up"}</TabsTrigger>
+              <TabsTrigger value="login">Login</TabsTrigger>
+              <TabsTrigger value="signup">Sign Up</TabsTrigger>
             </TabsList>
 
             <TabsContent value="login">
@@ -196,12 +196,12 @@ const StudentLogin = () => {
                 <div className="space-y-2">
                   <Label htmlFor="loginFullName" className="flex items-center gap-2">
                     <UserIcon className="w-4 h-4" />
-                    {t('student.fullName') || "Full Name"}
+                    Full Name
                   </Label>
                   <Input
                     id="loginFullName"
                     type="text"
-                    placeholder={t('student.fullNamePlaceholder') || "Enter your full name"}
+                    placeholder="Enter your full name"
                     value={loginData.fullName}
                     onChange={(e) => setLoginData(prev => ({ ...prev, fullName: e.target.value }))}
                     required
@@ -209,7 +209,7 @@ const StudentLogin = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="loginPassword">{t('auth.password') || "Password"}</Label>
+                  <Label htmlFor="loginPassword">Password</Label>
                   <Input
                     id="loginPassword"
                     type="password"
@@ -225,10 +225,10 @@ const StudentLogin = () => {
                   className="w-full"
                   disabled={isLoading}
                 >
-                  {isLoading ? (t('student.loggingIn') || "Logging in...") : (
+                  {isLoading ? "Logging in..." : (
                     <>
                       <LogInIcon className="w-4 h-4 mr-2" />
-                      {t('auth.login') || "Login"}
+                      Login
                     </>
                   )}
                 </Button>
@@ -240,12 +240,12 @@ const StudentLogin = () => {
                 <div className="space-y-2">
                   <Label htmlFor="signupFullName" className="flex items-center gap-2">
                     <UserIcon className="w-4 h-4" />
-                    {t('student.fullName') || "Full Name"}
+                    Full Name
                   </Label>
                   <Input
                     id="signupFullName"
                     type="text"
-                    placeholder={t('student.fullNameSignupPlaceholder') || "Enter your full name"}
+                    placeholder="Enter your full name"
                     value={signupData.fullName}
                     onChange={(e) => setSignupData(prev => ({ ...prev, fullName: e.target.value }))}
                     required
@@ -255,12 +255,12 @@ const StudentLogin = () => {
                 <div className="space-y-2">
                   <Label htmlFor="signupSchool" className="flex items-center gap-2">
                     <School className="w-4 h-4" />
-                    {t('auth.school') || "School"}
+                    School
                   </Label>
                   <Input
                     id="signupSchool"
                     type="text"
-                    placeholder={t('student.schoolPlaceholder') || "Enter your school name"}
+                    placeholder="Enter your school name"
                     value={signupData.school}
                     onChange={(e) => setSignupData(prev => ({ ...prev, school: e.target.value }))}
                     required
@@ -270,12 +270,12 @@ const StudentLogin = () => {
                 <div className="space-y-2">
                   <Label htmlFor="signupGrade" className="flex items-center gap-2">
                     <GraduationCap className="w-4 h-4" />
-                    {t('student.classGrade') || "Class/Grade"}
+                    Class/Grade
                   </Label>
                   <Input
                     id="signupGrade"
                     type="text"
-                    placeholder={t('student.gradePlaceholder') || "e.g., Grade 5, Year 7"}
+                    placeholder="e.g., Grade 5, Year 7"
                     value={signupData.grade}
                     onChange={(e) => setSignupData(prev => ({ ...prev, grade: e.target.value }))}
                     required
@@ -283,11 +283,11 @@ const StudentLogin = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="signupPassword">{t('auth.password') || "Password"}</Label>
+                  <Label htmlFor="signupPassword">Password</Label>
                   <Input
                     id="signupPassword"
                     type="password"
-                    placeholder={t('student.createPassword') || "Create a password"}
+                    placeholder="Create a password"
                     value={signupData.password}
                     onChange={(e) => setSignupData(prev => ({ ...prev, password: e.target.value }))}
                     required
@@ -295,11 +295,11 @@ const StudentLogin = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="confirmPassword">{t('auth.confirmPassword') || "Confirm Password"}</Label>
+                  <Label htmlFor="confirmPassword">Confirm Password</Label>
                   <Input
                     id="confirmPassword"
                     type="password"
-                    placeholder={t('student.confirmPasswordPlaceholder') || "Confirm your password"}
+                    placeholder="Confirm your password"
                     value={signupData.confirmPassword}
                     onChange={(e) => setSignupData(prev => ({ ...prev, confirmPassword: e.target.value }))}
                     required
@@ -311,7 +311,7 @@ const StudentLogin = () => {
                   className="w-full"
                   disabled={isLoading}
                 >
-                  {isLoading ? (t('student.creatingAccount') || "Creating account...") : (t('student.createAccount') || "Create Account")}
+                  {isLoading ? "Creating account..." : "Create Account"}
                 </Button>
               </form>
             </TabsContent>
