@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { EyeOffIcon } from "lucide-react";
 import StarRating from "./StarRating";
 import EmotionalStateSelector from "./EmotionalStateSelector";
+import DataProtectionBanner from "./DataProtectionBanner";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 interface FeedbackData {
@@ -24,10 +25,11 @@ interface FeedbackData {
 }
 
 interface LessonFeedbackFormProps {
-  classScheduleId: string;
+  classScheduleId?: string;
+  student?: any;
 }
 
-const LessonFeedbackForm: React.FC<LessonFeedbackFormProps> = ({ classScheduleId }) => {
+const LessonFeedbackForm: React.FC<LessonFeedbackFormProps> = ({ classScheduleId, student }) => {
   const [feedbackData, setFeedbackData] = useState<FeedbackData>({
     understanding: 0,
     interest: 0,
@@ -114,99 +116,102 @@ const LessonFeedbackForm: React.FC<LessonFeedbackFormProps> = ({ classScheduleId
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>{t('feedback.title')}</CardTitle>
-        <CardDescription>{t('feedback.description')}</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <Label htmlFor="understanding">{t('feedback.understanding')}</Label>
-            <StarRating
-              value={feedbackData.understanding}
-              onClick={(value) => handleStarClick('understanding', value)}
-            />
-          </div>
-          
-          <div>
-            <Label htmlFor="interest">{t('feedback.interest')}</Label>
-            <StarRating
-              value={feedbackData.interest}
-              onClick={(value) => handleStarClick('interest', value)}
-            />
-          </div>
-          
-          <div>
-            <Label htmlFor="educationalGrowth">{t('feedback.growth')}</Label>
-            <StarRating
-              value={feedbackData.educationalGrowth}
-              onClick={(value) => handleStarClick('educationalGrowth', value)}
-            />
-          </div>
+    <div className="space-y-6">
+      <DataProtectionBanner />
+      <Card>
+        <CardHeader>
+          <CardTitle>{t('feedback.title')}</CardTitle>
+          <CardDescription>{t('feedback.description')}</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <Label htmlFor="understanding">{t('feedback.understanding')}</Label>
+              <StarRating
+                rating={feedbackData.understanding}
+                onRatingChange={(value) => handleStarClick('understanding', value)}
+              />
+            </div>
+            
+            <div>
+              <Label htmlFor="interest">{t('feedback.interest')}</Label>
+              <StarRating
+                rating={feedbackData.interest}
+                onRatingChange={(value) => handleStarClick('interest', value)}
+              />
+            </div>
+            
+            <div>
+              <Label htmlFor="educationalGrowth">{t('feedback.growth')}</Label>
+              <StarRating
+                rating={feedbackData.educationalGrowth}
+                onRatingChange={(value) => handleStarClick('educationalGrowth', value)}
+              />
+            </div>
 
-          <div>
-            <Label htmlFor="emotionalState">{t('feedback.emotionalState')}</Label>
-            <EmotionalStateSelector
-              onStateChange={handleEmotionalStateChange}
-              selectedState={feedbackData.emotionalState}
-            />
-          </div>
+            <div>
+              <Label htmlFor="emotionalState">{t('feedback.emotionalState')}</Label>
+              <EmotionalStateSelector
+                onStateChange={handleEmotionalStateChange}
+                selectedState={feedbackData.emotionalState}
+              />
+            </div>
 
-          <div>
-            <Label htmlFor="whatWentWell">{t('feedback.whatWentWell')}</Label>
-            <Textarea
-              id="whatWentWell"
-              name="whatWentWell"
-              value={feedbackData.whatWentWell}
-              onChange={handleInputChange}
-              placeholder={t('feedback.whatWentWellPlaceholder')}
-              rows={3}
-            />
-          </div>
+            <div>
+              <Label htmlFor="whatWentWell">{t('feedback.whatWentWell')}</Label>
+              <Textarea
+                id="whatWentWell"
+                name="whatWentWell"
+                value={feedbackData.whatWentWell}
+                onChange={handleInputChange}
+                placeholder={t('feedback.whatWentWellPlaceholder')}
+                rows={3}
+              />
+            </div>
 
-          <div>
-            <Label htmlFor="suggestions">{t('feedback.suggestions')}</Label>
-            <Textarea
-              id="suggestions"
-              name="suggestions"
-              value={feedbackData.suggestions}
-              onChange={handleInputChange}
-              placeholder={t('feedback.suggestionsPlaceholder')}
-              rows={3}
-            />
-          </div>
+            <div>
+              <Label htmlFor="suggestions">{t('feedback.suggestions')}</Label>
+              <Textarea
+                id="suggestions"
+                name="suggestions"
+                value={feedbackData.suggestions}
+                onChange={handleInputChange}
+                placeholder={t('feedback.suggestionsPlaceholder')}
+                rows={3}
+              />
+            </div>
 
-          <div>
-            <Label htmlFor="additionalComments">{t('feedback.additionalComments')}</Label>
-            <Textarea
-              id="additionalComments"
-              name="additionalComments"
-              value={feedbackData.additionalComments}
-              onChange={handleInputChange}
-              placeholder={t('feedback.additionalCommentsPlaceholder')}
-              rows={3}
-            />
-          </div>
+            <div>
+              <Label htmlFor="additionalComments">{t('feedback.additionalComments')}</Label>
+              <Textarea
+                id="additionalComments"
+                name="additionalComments"
+                value={feedbackData.additionalComments}
+                onChange={handleInputChange}
+                placeholder={t('feedback.additionalCommentsPlaceholder')}
+                rows={3}
+              />
+            </div>
 
-          <div className="flex items-center space-x-2">
-            <Checkbox
-              id="isAnonymous"
-              checked={feedbackData.isAnonymous}
-              onCheckedChange={(checked) => setFeedbackData(prev => ({ ...prev, isAnonymous: Boolean(checked) }))}
-            />
-            <Label htmlFor="isAnonymous" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed flex items-center gap-1">
-              {t('feedback.anonymous')}
-              <EyeOffIcon className="w-4 h-4 text-gray-500" />
-            </Label>
-          </div>
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="isAnonymous"
+                checked={feedbackData.isAnonymous}
+                onCheckedChange={(checked) => setFeedbackData(prev => ({ ...prev, isAnonymous: Boolean(checked) }))}
+              />
+              <Label htmlFor="isAnonymous" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed flex items-center gap-1">
+                {t('feedback.anonymous')}
+                <EyeOffIcon className="w-4 h-4 text-gray-500" />
+              </Label>
+            </div>
 
-          <Button disabled={isSubmitting} className="bg-green-600 hover:bg-green-700">
-            {isSubmitting ? t('common.submitting') : t('feedback.submit')}
-          </Button>
-        </form>
-      </CardContent>
-    </Card>
+            <Button disabled={isSubmitting} className="bg-green-600 hover:bg-green-700">
+              {isSubmitting ? t('common.submitting') : t('feedback.submit')}
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
+    </div>
   );
 };
 

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -194,7 +193,7 @@ const StudentDashboard = () => {
           </TabsList>
 
           <TabsContent value="feedback" className="space-y-6">
-            <LessonFeedbackForm student={student} />
+            <LessonFeedbackForm />
           </TabsContent>
 
           <TabsContent value="classes" className="space-y-6">
