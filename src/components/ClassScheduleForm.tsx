@@ -43,23 +43,91 @@ const ClassScheduleForm = ({ teacher }: ClassScheduleFormProps) => {
     number_of_occurrences: 4
   });
 
+  const generateRecurringDates = (startDate: string, pattern: string, endDate: string, occurrences: number) => {
+    const dates = [];
+    const start = new Date(startDate);
+    let current = new Date(start);
+    
+    for (let i = 0; i < occurrences; i++) {
+      if (endDate && current > new Date(endDate)) break;
+      
+      dates.push(new Date(current));
+      
+      // Add interval based on pattern
+      switch (pattern) {
+        case "weekly":
+          current.setDate(current.getDate() + 7);
+          break;
+        case "biweekly":
+          current.setDate(current.getDate() + 14);
+          break;
+        case "monthly":
+          current.setMonth(current.getMonth() + 1);
+          break;
+      }
+    }
+    
+    return dates;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     try {
-      const { error } = await supabase
-        .from('class_schedules')
-        .insert({
-          ...formData,
+      if (formData.is_recurring) {
+        // Generate recurring schedule entries
+        const dates = generateRecurringDates(
+          formData.class_date,
+          formData.recurrence_pattern,
+          formData.recurrence_end_date,
+          formData.number_of_occurrences
+        );
+        
+        const schedules = dates.map(date => ({
+          subject: formData.subject,
+          lesson_topic: formData.lesson_topic,
+          class_date: date.toISOString().split('T')[0],
+          class_time: formData.class_time,
+          duration_minutes: formData.duration_minutes,
+          school: formData.school,
+          grade: formData.grade,
+          description: formData.description,
           teacher_id: teacher.id
+        }));
+
+        const { error } = await supabase
+          .from('class_schedules')
+          .insert(schedules);
+
+        if (error) throw error;
+
+        toast({
+          title: "Success",
+          description: `${schedules.length} recurring classes scheduled successfully`,
         });
+      } else {
+        // Single schedule entry
+        const { error } = await supabase
+          .from('class_schedules')
+          .insert({
+            subject: formData.subject,
+            lesson_topic: formData.lesson_topic,
+            class_date: formData.class_date,
+            class_time: formData.class_time,
+            duration_minutes: formData.duration_minutes,
+            school: formData.school,
+            grade: formData.grade,
+            description: formData.description,
+            teacher_id: teacher.id
+          });
 
-      if (error) throw error;
+        if (error) throw error;
 
-      toast({
-        title: "Success",
-        description: "Class scheduled successfully",
-      });
+        toast({
+          title: "Success",
+          description: "Class scheduled successfully",
+        });
+      }
 
       // Reset form
       setFormData({
@@ -223,6 +291,86 @@ const ClassScheduleForm = ({ teacher }: ClassScheduleFormProps) => {
           </CardContent>
         </Card>
 
+        {/* Recurring Options */}
+        <Card className="bg-white/80 backdrop-blur-sm border-purple-100">
+          <CardHeader>
+            <CardTitle className="text-xl text-gray-900 flex items-center gap-2">
+              <RefreshCcwIcon className="w-5 h-5" />
+              Recurring Schedule
+            </CardTitle>
+            <CardDescription>Set up recurring classes for regular lessons</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center space-x-2">
+              <Switch
+                id="is_recurring"
+                checked={formData.is_recurring}
+                onCheckedChange={(checked) => setFormData(prev => ({ ...prev, is_recurring: checked }))}
+              />
+              <Label htmlFor="is_recurring" className="text-gray-700 font-medium">
+                Make this a recurring class
+              </Label>
+            </div>
+
+            {formData.is_recurring && (
+              <div className="space-y-4 pt-4 border-t border-gray-200">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <Label htmlFor="recurrence_pattern" className="text-gray-700 font-medium">Repeat Pattern</Label>
+                    <Select 
+                      value={formData.recurrence_pattern} 
+                      onValueChange={(value) => setFormData(prev => ({ ...prev, recurrence_pattern: value }))}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="weekly">Weekly</SelectItem>
+                        <SelectItem value="biweekly">Bi-weekly</SelectItem>
+                        <SelectItem value="monthly">Monthly</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label htmlFor="number_of_occurrences" className="text-gray-700 font-medium">Number of Classes</Label>
+                    <Input
+                      id="number_of_occurrences"
+                      type="number"
+                      min="1"
+                      max="52"
+                      value={formData.number_of_occurrences}
+                      onChange={(e) => setFormData(prev => ({ ...prev, number_of_occurrences: parseInt(e.target.value) || 1 }))}
+                      className="border-gray-200"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="recurrence_end_date" className="text-gray-700 font-medium">End Date (optional)</Label>
+                    <Input
+                      id="recurrence_end_date"
+                      type="date"
+                      value={formData.recurrence_end_date}
+                      onChange={(e) => setFormData(prev => ({ ...prev, recurrence_end_date: e.target.value }))}
+                      className="border-gray-200"
+                    />
+                  </div>
+                </div>
+                
+                {!isRecurrenceEndDateValid && (
+                  <p className="text-sm text-red-600">End date must be after the start date</p>
+                )}
+
+                <div className="bg-purple-50 p-3 rounded-lg">
+                  <p className="text-sm text-purple-700">
+                    <strong>Preview:</strong> This will create {formData.number_of_occurrences} classes, 
+                    starting {formData.class_date && new Date(formData.class_date).toLocaleDateString()}, 
+                    repeating {formData.recurrence_pattern}.
+                  </p>
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
         {/* Submit Button */}
         <div className="flex justify-center pt-6">
           <Button 
@@ -232,7 +380,7 @@ const ClassScheduleForm = ({ teacher }: ClassScheduleFormProps) => {
             className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white px-8 py-4 text-lg font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Save className="w-5 h-5 mr-2" />
-            Schedule Class
+            {formData.is_recurring ? `Schedule ${formData.number_of_occurrences} Classes` : 'Schedule Class'}
           </Button>
         </div>
       </form>
