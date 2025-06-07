@@ -2,8 +2,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { HeartIcon, PhoneIcon, MapPinIcon, ClockIcon, UserIcon, MessageCircleIcon } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { HeartIcon, PhoneIcon, MapPinIcon, ClockIcon, UserIcon } from "lucide-react";
 
 interface SchoolPsychologist {
   id: string;
@@ -19,20 +18,6 @@ interface PsychologistInfoProps {
 }
 
 const PsychologistInfo = ({ psychologist }: PsychologistInfoProps) => {
-  const { toast } = useToast();
-
-  const handleAskTheDoctor = () => {
-    // This would integrate with your live chat system
-    // For now, we'll show a toast indicating the feature is being activated
-    toast({
-      title: "Connecting to Live Chat",
-      description: `Starting live chat session with ${psychologist.name}`,
-    });
-    
-    // TODO: Integrate with actual live chat service
-    console.log('Initiating live chat with psychologist:', psychologist.name);
-  };
-
   return (
     <div className="border border-purple-100 rounded-lg p-4 bg-purple-50/50">
       <div className="flex items-start justify-between mb-3">
@@ -47,14 +32,6 @@ const PsychologistInfo = ({ psychologist }: PsychologistInfoProps) => {
             </Badge>
           </div>
         </div>
-        <Button
-          onClick={handleAskTheDoctor}
-          className="bg-purple-600 hover:bg-purple-700 text-white"
-          size="sm"
-        >
-          <MessageCircleIcon className="w-4 h-4 mr-2" />
-          Ask the Doctor
-        </Button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">

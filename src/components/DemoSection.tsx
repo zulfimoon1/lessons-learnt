@@ -15,14 +15,8 @@ import {
   MessageCircleIcon,
   BarChart3Icon
 } from "lucide-react";
-import { 
-  Carousel, 
-  CarouselContent, 
-  CarouselItem, 
-  CarouselNext, 
-  CarouselPrevious 
-} from "@/components/ui/carousel";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useToast } from "@/hooks/use-toast";
 
 interface DemoFeature {
   id: string;
@@ -36,11 +30,12 @@ interface DemoFeature {
 
 const DemoSection = () => {
   const { t } = useLanguage();
+  const { toast } = useToast();
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [currentFeature, setCurrentFeature] = useState(0);
   const [progress, setProgress] = useState(0);
-  const audioRef = useRef<HTMLAudioElement>(null);
+  const [currentAudio, setCurrentAudio] = useState<HTMLAudioElement | null>(null);
   const intervalRef = useRef<NodeJS.Timeout>();
 
   const demoFeatures: DemoFeature[] = [
@@ -91,7 +86,39 @@ const DemoSection = () => {
     }
   ];
 
-  // Simulate video playback with automatic progression
+  // Text-to-speech functionality
+  const playVoiceover = (text: string) => {
+    if (!('speechSynthesis' in window)) {
+      toast({
+        title: "Text-to-Speech Not Supported",
+        description: "Your browser doesn't support text-to-speech functionality",
+        variant: "destructive"
+      });
+      return null;
+    }
+
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.rate = 0.9;
+    utterance.pitch = 1.1;
+    utterance.volume = isMuted ? 0 : 1;
+    
+    // Try to use a female voice
+    const voices = speechSynthesis.getVoices();
+    const femaleVoice = voices.find(voice => 
+      voice.name.toLowerCase().includes('female') || 
+      voice.name.toLowerCase().includes('woman') ||
+      voice.name.toLowerCase().includes('zira') ||
+      voice.name.toLowerCase().includes('susan')
+    ) || voices.find(voice => voice.gender === 'female');
+    
+    if (femaleVoice) {
+      utterance.voice = femaleVoice;
+    }
+
+    return utterance;
+  };
+
+  // Video/audio simulation with automatic progression
   useEffect(() => {
     if (isPlaying) {
       intervalRef.current = setInterval(() => {
@@ -118,17 +145,65 @@ const DemoSection = () => {
   }, [isPlaying, demoFeatures.length]);
 
   const handlePlayPause = () => {
-    setIsPlaying(!isPlaying);
-    
-    // Simulate voiceover (in a real implementation, this would be actual audio)
-    if (!isPlaying) {
-      console.log(`Playing voiceover: ${demoFeatures[currentFeature].voiceoverText}`);
+    if (isPlaying) {
+      // Pause
+      setIsPlaying(false);
+      if (currentAudio) {
+        speechSynthesis.cancel();
+        setCurrentAudio(null);
+      }
+    } else {
+      // Play
+      setIsPlaying(true);
+      const utterance = playVoiceover(demoFeatures[currentFeature].voiceoverText);
+      if (utterance) {
+        utterance.onend = () => {
+          setCurrentAudio(null);
+        };
+        speechSynthesis.speak(utterance);
+        setCurrentAudio(utterance as any);
+      }
     }
   };
 
   const handleFeatureSelect = (index: number) => {
+    // Stop current audio
+    if (currentAudio) {
+      speechSynthesis.cancel();
+      setCurrentAudio(null);
+    }
+    
     setCurrentFeature(index);
     setProgress(0);
+    
+    // If playing, start new voiceover
+    if (isPlaying) {
+      const utterance = playVoiceover(demoFeatures[index].voiceoverText);
+      if (utterance) {
+        utterance.onend = () => {
+          setCurrentAudio(null);
+        };
+        speechSynthesis.speak(utterance);
+        setCurrentAudio(utterance as any);
+      }
+    }
+  };
+
+  const handleMuteToggle = () => {
+    setIsMuted(!isMuted);
+    if (currentAudio) {
+      speechSynthesis.cancel();
+      setCurrentAudio(null);
+      if (isPlaying) {
+        // Restart with new volume setting
+        const utterance = playVoiceover(demoFeatures[currentFeature].voiceoverText);
+        if (utterance) {
+          utterance.volume = !isMuted ? 0 : 1;
+          speechSynthesis.speak(utterance);
+          setCurrentAudio(utterance as any);
+        }
+      }
+    }
   };
 
   const getUserTypeColor = (userType: string) => {
@@ -159,11 +234,11 @@ const DemoSection = () => {
           <div className="order-2 lg:order-1">
             <Card className="overflow-hidden border-2 border-primary/20">
               <CardContent className="p-0">
-                {/* Simulated Video Player */}
+                {/* Video Player */}
                 <div className="relative bg-gradient-to-br from-gray-900 to-gray-800 aspect-video">
                   <div className="absolute inset-0 flex items-center justify-center">
                     <div className="text-center text-white">
-                      <currentDemo.icon className="w-16 h-16 mx-auto mb-4 text-primary" />
+                      <currentDemo.icon className="w-16 h-16 mx-auto mb-4 text-primary animate-pulse" />
                       <h3 className="text-2xl font-bold mb-2">{currentDemo.title}</h3>
                       <p className="text-gray-300 mb-4">{currentDemo.videoDescription}</p>
                       <Badge className={getUserTypeColor(currentDemo.userType)}>
@@ -172,7 +247,7 @@ const DemoSection = () => {
                     </div>
                   </div>
                   
-                  {/* Progress Bar */}
+                  {/* Progress Bar and Controls */}
                   <div className="absolute bottom-0 left-0 right-0 bg-black/50 p-4">
                     <div className="flex items-center gap-4">
                       <Button
@@ -194,7 +269,7 @@ const DemoSection = () => {
                       <Button
                         size="sm"
                         variant="secondary"
-                        onClick={() => setIsMuted(!isMuted)}
+                        onClick={handleMuteToggle}
                         className="flex-shrink-0"
                       >
                         {isMuted ? <VolumeIcon className="w-4 h-4" /> : <Volume2Icon className="w-4 h-4" />}

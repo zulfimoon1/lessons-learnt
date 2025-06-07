@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -11,13 +12,12 @@ import {
   CalendarIcon, 
   LogOutIcon,
   BookOpenIcon,
-  HeartHandshakeIcon,
-  MessageCircleIcon
+  HeartHandshakeIcon
 } from "lucide-react";
 import LessonFeedbackForm from "@/components/LessonFeedbackForm";
 import WeeklySummary from "@/components/WeeklySummary";
 import PsychologistInfo from "@/components/PsychologistInfo";
-import AnonymousMessageForm from "@/components/AnonymousMessageForm";
+import LiveChatWidget from "@/components/LiveChatWidget";
 import { useNavigate } from "react-router-dom";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -120,16 +120,6 @@ const StudentDashboard = () => {
   const handleLogout = () => {
     clearAuth();
     navigate('/student-login');
-  };
-
-  const handleAskTheDoctor = () => {
-    toast({
-      title: "Live Chat Available",
-      description: "Connect with a mental health professional instantly",
-    });
-    
-    // TODO: Integrate with actual live chat service
-    console.log('Initiating live chat session');
   };
 
   if (isLoading) {
@@ -265,13 +255,7 @@ const StudentDashboard = () => {
                 {psychologists.length > 0 ? (
                   <div className="space-y-6">
                     <div className="flex justify-end">
-                      <Button
-                        onClick={handleAskTheDoctor}
-                        className="bg-purple-600 hover:bg-purple-700 text-white"
-                      >
-                        <MessageCircleIcon className="w-4 h-4 mr-2" />
-                        Ask the Doctor - Live Chat
-                      </Button>
+                      <LiveChatWidget />
                     </div>
                     <div className="space-y-4">
                       {psychologists.map((psychologist) => (
@@ -287,13 +271,7 @@ const StudentDashboard = () => {
                       {t('dashboard.contactAdmin')}
                     </p>
                     <div className="mt-4">
-                      <Button
-                        onClick={handleAskTheDoctor}
-                        className="bg-purple-600 hover:bg-purple-700 text-white"
-                      >
-                        <MessageCircleIcon className="w-4 h-4 mr-2" />
-                        Ask the Doctor - Live Chat
-                      </Button>
+                      <LiveChatWidget />
                     </div>
                   </div>
                 )}
