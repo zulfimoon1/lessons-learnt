@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { Teacher, Student } from '@/types/auth';
 
@@ -11,7 +10,6 @@ export const teacherLoginService = async (
 ) => {
   try {
     console.log('teacherLoginService: Starting login for email:', email);
-    console.log('teacherLoginService: Password provided:', password ? 'YES' : 'NO');
     
     // First check if a teacher with this email exists
     const { data: teachers, error: queryError } = await supabase

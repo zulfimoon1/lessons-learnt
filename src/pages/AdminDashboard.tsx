@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -9,9 +10,7 @@ import {
   SchoolIcon, 
   UsersIcon, 
   MessageSquareIcon, 
-  LogOutIcon,
-  CalendarIcon,
-  UserPlusIcon
+  LogOutIcon
 } from "lucide-react";
 import ClassScheduleForm from "@/components/ClassScheduleForm";
 import InviteTeacherForm from "@/components/InviteTeacherForm";
@@ -19,6 +18,8 @@ import SchoolPsychologistForm from "@/components/SchoolPsychologistForm";
 import { useNavigate } from "react-router-dom";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { useLanguage } from "@/contexts/LanguageContext";
+import ComplianceFooter from "@/components/ComplianceFooter";
+import CookieConsent from "@/components/CookieConsent";
 
 interface Teacher {
   id: string;
@@ -51,9 +52,13 @@ const AdminDashboard = () => {
       navigate('/teacher-login');
       return;
     }
-    loadTeachers();
-    loadSubscription();
+    loadData();
   }, [teacher, navigate]);
+
+  const loadData = async () => {
+    await Promise.all([loadTeachers(), loadSubscription()]);
+    setIsLoading(false);
+  };
 
   const loadTeachers = async () => {
     if (!teacher?.school) return;
@@ -95,8 +100,6 @@ const AdminDashboard = () => {
       }
     } catch (error) {
       console.error('Error loading subscription:', error);
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -122,6 +125,7 @@ const AdminDashboard = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <CookieConsent />
       <header className="bg-card/80 backdrop-blur-sm border-b border-border p-4">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
           <div className="flex items-center gap-4">
@@ -255,6 +259,7 @@ const AdminDashboard = () => {
           </TabsContent>
         </Tabs>
       </main>
+      <ComplianceFooter />
     </div>
   );
 };

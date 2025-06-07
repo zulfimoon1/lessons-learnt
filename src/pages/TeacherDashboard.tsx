@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -16,6 +17,8 @@ import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { useLanguage } from "@/contexts/LanguageContext";
 import BulkScheduleUpload from "@/components/BulkScheduleUpload";
 import MentalHealthArticles from "@/components/MentalHealthArticles";
+import ComplianceFooter from "@/components/ComplianceFooter";
+import CookieConsent from "@/components/CookieConsent";
 
 interface Subscription {
   id: string;
@@ -34,7 +37,6 @@ const TeacherDashboard = () => {
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isCreatingCheckout, setIsCreatingCheckout] = useState(false);
-  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   useEffect(() => {
     if (!teacher) {
@@ -118,7 +120,11 @@ const TeacherDashboard = () => {
   };
 
   const handleScheduleUploadComplete = () => {
-    setRefreshTrigger(prev => prev + 1);
+    // Removed unnecessary refresh trigger - components handle their own state
+    toast({
+      title: t('common.success'),
+      description: t('upload.uploadComplete'),
+    });
   };
 
   if (isLoading) {
@@ -134,6 +140,7 @@ const TeacherDashboard = () => {
 
   return (
     <div className="min-h-screen bg-white">
+      <CookieConsent />
       <header className="bg-white border-b border-green-200 p-4">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
           <div className="flex items-center gap-4">
@@ -234,7 +241,7 @@ const TeacherDashboard = () => {
 
           <TabsContent value="schedule" className="space-y-6">
             {subscription ? (
-              <ClassScheduleForm teacher={teacher} key={refreshTrigger} />
+              <ClassScheduleForm teacher={teacher} />
             ) : (
               <Card className="border-green-100">
                 <CardHeader>
@@ -313,6 +320,7 @@ const TeacherDashboard = () => {
           )}
         </Tabs>
       </main>
+      <ComplianceFooter />
     </div>
   );
 };

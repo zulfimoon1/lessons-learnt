@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -9,7 +10,6 @@ import { useToast } from "@/hooks/use-toast";
 import { 
   SchoolIcon, 
   CalendarIcon, 
-  MessageSquareIcon, 
   LogOutIcon,
   BookOpenIcon,
   HeartHandshakeIcon
@@ -20,6 +20,8 @@ import PsychologistInfo from "@/components/PsychologistInfo";
 import { useNavigate } from "react-router-dom";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { useLanguage } from "@/contexts/LanguageContext";
+import ComplianceFooter from "@/components/ComplianceFooter";
+import CookieConsent from "@/components/CookieConsent";
 
 interface ClassSchedule {
   id: string;
@@ -56,9 +58,13 @@ const StudentDashboard = () => {
       navigate('/student-login');
       return;
     }
-    loadUpcomingClasses();
-    loadPsychologists();
+    loadData();
   }, [student, navigate]);
+
+  const loadData = async () => {
+    await Promise.all([loadUpcomingClasses(), loadPsychologists()]);
+    setIsLoading(false);
+  };
 
   const loadUpcomingClasses = async () => {
     if (!student?.school || !student?.grade) return;
@@ -107,8 +113,6 @@ const StudentDashboard = () => {
         description: "Failed to load school psychologists",
         variant: "destructive",
       });
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -130,6 +134,7 @@ const StudentDashboard = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <CookieConsent />
       <header className="bg-card/80 backdrop-blur-sm border-b border-border p-4">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
           <div className="flex items-center gap-4">
@@ -266,6 +271,7 @@ const StudentDashboard = () => {
           </TabsContent>
         </Tabs>
       </main>
+      <ComplianceFooter />
     </div>
   );
 };

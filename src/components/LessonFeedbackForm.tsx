@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -102,7 +102,7 @@ const LessonFeedbackForm: React.FC<LessonFeedbackFormProps> = ({ classScheduleId
     }
   };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFeedbackData(prev => ({ ...prev, [name]: value }));
   };
@@ -126,7 +126,7 @@ const LessonFeedbackForm: React.FC<LessonFeedbackFormProps> = ({ classScheduleId
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <Label htmlFor="understanding">{t('feedback.understanding')}</Label>
+              <Label>{t('feedback.understanding')}</Label>
               <StarRating
                 rating={feedbackData.understanding}
                 onRatingChange={(value) => handleStarClick('understanding', value)}
@@ -134,7 +134,7 @@ const LessonFeedbackForm: React.FC<LessonFeedbackFormProps> = ({ classScheduleId
             </div>
             
             <div>
-              <Label htmlFor="interest">{t('feedback.interest')}</Label>
+              <Label>{t('feedback.interest')}</Label>
               <StarRating
                 rating={feedbackData.interest}
                 onRatingChange={(value) => handleStarClick('interest', value)}
@@ -142,7 +142,7 @@ const LessonFeedbackForm: React.FC<LessonFeedbackFormProps> = ({ classScheduleId
             </div>
             
             <div>
-              <Label htmlFor="educationalGrowth">{t('feedback.growth')}</Label>
+              <Label>{t('feedback.growth')}</Label>
               <StarRating
                 rating={feedbackData.educationalGrowth}
                 onRatingChange={(value) => handleStarClick('educationalGrowth', value)}
@@ -150,7 +150,7 @@ const LessonFeedbackForm: React.FC<LessonFeedbackFormProps> = ({ classScheduleId
             </div>
 
             <div>
-              <Label htmlFor="emotionalState">{t('feedback.emotionalState')}</Label>
+              <Label>{t('feedback.emotionalState')}</Label>
               <EmotionalStateSelector
                 onStateChange={handleEmotionalStateChange}
                 selectedState={feedbackData.emotionalState}
