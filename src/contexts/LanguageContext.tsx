@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
 type Language = 'en' | 'lt';
@@ -183,6 +182,7 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       value = value?.[k];
     }
     
+    console.log(`Translation for "${key}":`, value || 'NOT FOUND');
     return value || key;
   };
 
@@ -203,7 +203,8 @@ export const useLanguage = (): LanguageContextType => {
       language: 'en' as Language,
       setLanguage: () => {},
       t: (key: string) => {
-        // Fallback translation function
+        console.log(`Fallback translation for "${key}"`);
+        // ... keep existing code (fallback translations object)
         const fallbackTranslations: Record<string, string> = {
           'welcome.title': 'Transform Education with Student-Led Feedback',
           'welcome.subtitle': 'Empowering schools with real-time insights from students to create better learning environments and support mental health.',
