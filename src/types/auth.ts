@@ -17,6 +17,20 @@ export interface Student {
   grade: string;
 }
 
+export interface LiveChatSession {
+  id: string;
+  student_id: string | null;
+  student_name: string;
+  school: string;
+  grade: string;
+  is_anonymous: boolean;
+  status: 'waiting' | 'active' | 'ended';
+  doctor_id: string | null;
+  started_at: string | null;
+  ended_at: string | null;
+  created_at: string;
+}
+
 export interface AuthContextType {
   teacher: Teacher | null;
   student: Student | null;
