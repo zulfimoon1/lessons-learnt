@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -18,11 +19,27 @@ const TeacherLogin = () => {
   const { toast } = useToast();
   
   // Safe auth hook usage with error boundary
-  const auth = useAuth();
+  let auth;
+  try {
+    auth = useAuth();
+    console.log('TeacherLogin: Auth context loaded successfully');
+  } catch (error) {
+    console.error('TeacherLogin: Auth context error:', error);
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-red-600 mb-4">Authentication Error</h1>
+          <p className="text-gray-600">Unable to access authentication. Please refresh the page.</p>
+        </div>
+      </div>
+    );
+  }
+
   const { teacher, teacherLogin, isLoading: authLoading } = auth;
 
   // Redirect if already logged in
   useEffect(() => {
+    console.log('TeacherLogin: Checking auth state - teacher:', teacher, 'authLoading:', authLoading);
     if (teacher && !authLoading) {
       console.log('TeacherLogin: User already logged in, redirecting...');
       if (teacher.role === "admin") {
@@ -51,6 +68,7 @@ const TeacherLogin = () => {
 
   // Don't render if still loading auth state
   if (authLoading) {
+    console.log('TeacherLogin: Auth still loading...');
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center">
         <div className="text-center">
@@ -63,8 +81,10 @@ const TeacherLogin = () => {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log('TeacherLogin: Login attempt started for:', loginData.email);
     
     if (!loginData.email.trim() || !loginData.password) {
+      console.log('TeacherLogin: Missing login data');
       toast({
         title: "Missing information",
         description: "Please enter both email and password",
@@ -119,8 +139,10 @@ const TeacherLogin = () => {
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log('TeacherLogin: Signup attempt started for:', signupData.email);
     
     if (!signupData.name.trim() || !signupData.email.trim() || !signupData.school.trim() || !signupData.password || !signupData.confirmPassword) {
+      console.log('TeacherLogin: Missing signup data');
       toast({
         title: "Missing information",
         description: "Please fill in all required fields",
@@ -131,6 +153,7 @@ const TeacherLogin = () => {
 
     // Validate passwords match
     if (signupData.password !== signupData.confirmPassword) {
+      console.log('TeacherLogin: Password mismatch');
       toast({
         title: "Password mismatch",
         description: "Passwords do not match",
@@ -189,6 +212,8 @@ const TeacherLogin = () => {
       setIsLoading(false);
     }
   };
+
+  console.log('TeacherLogin: Rendering login page');
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center p-4">

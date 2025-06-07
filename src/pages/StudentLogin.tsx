@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -20,6 +21,7 @@ const StudentLogin = () => {
   let auth;
   try {
     auth = useAuth();
+    console.log('StudentLogin: Auth context loaded successfully');
   } catch (error) {
     console.error('StudentLogin: Auth context error:', error);
     return (
@@ -36,6 +38,7 @@ const StudentLogin = () => {
 
   // Redirect if already logged in
   useEffect(() => {
+    console.log('StudentLogin: Checking auth state - student:', student, 'authLoading:', authLoading);
     if (student && !authLoading) {
       console.log('StudentLogin: Student already logged in, redirecting...');
       navigate("/student-dashboard");
@@ -59,6 +62,7 @@ const StudentLogin = () => {
 
   // Don't render if still loading auth state
   if (authLoading) {
+    console.log('StudentLogin: Auth still loading...');
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
@@ -71,8 +75,10 @@ const StudentLogin = () => {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log('StudentLogin: Login attempt started for:', loginData.fullName);
     
     if (!loginData.fullName.trim() || !loginData.password) {
+      console.log('StudentLogin: Missing login data');
       toast({
         title: "Missing information",
         description: "Please enter both your full name and password",
@@ -82,6 +88,7 @@ const StudentLogin = () => {
     }
 
     setIsLoading(true);
+    console.log('StudentLogin: Calling studentLogin service...');
 
     try {
       const result = await studentLogin(
@@ -89,16 +96,28 @@ const StudentLogin = () => {
         loginData.password
       );
 
+      console.log('StudentLogin: Login result received:', result);
+
       if (result.error) {
+        console.error('StudentLogin: Login failed with error:', result.error);
         toast({
           title: t('student.loginFailed') || "Login failed",
           description: result.error,
           variant: "destructive",
         });
       } else if (result.student) {
+        console.log('StudentLogin: Login successful for student:', result.student);
         toast({
           title: t('student.welcomeBack') || "Welcome back!",
           description: t('student.loginSuccess') || "Login successful",
+        });
+        // Navigation should be handled by useEffect when student state updates
+      } else {
+        console.error('StudentLogin: No error but no student data returned');
+        toast({
+          title: t('student.loginFailed') || "Login failed",
+          description: "Invalid response from server. Please try again.",
+          variant: "destructive",
         });
       }
     } catch (err) {
@@ -115,8 +134,10 @@ const StudentLogin = () => {
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log('StudentLogin: Signup attempt started for:', signupData.fullName);
     
     if (!signupData.fullName.trim() || !signupData.school.trim() || !signupData.grade.trim() || !signupData.password || !signupData.confirmPassword) {
+      console.log('StudentLogin: Missing signup data');
       toast({
         title: "Missing information",
         description: "Please fill in all required fields",
@@ -126,6 +147,7 @@ const StudentLogin = () => {
     }
 
     if (signupData.password !== signupData.confirmPassword) {
+      console.log('StudentLogin: Password mismatch');
       toast({
         title: t('student.passwordMismatch') || "Password mismatch",
         description: t('student.passwordsDoNotMatch') || "Passwords do not match",
@@ -135,6 +157,7 @@ const StudentLogin = () => {
     }
 
     setIsLoading(true);
+    console.log('StudentLogin: Calling studentSignup service...');
 
     try {
       const result = await studentSignup(
@@ -144,16 +167,28 @@ const StudentLogin = () => {
         signupData.password
       );
 
+      console.log('StudentLogin: Signup result received:', result);
+
       if (result.error) {
+        console.error('StudentLogin: Signup failed with error:', result.error);
         toast({
           title: t('student.signupFailed') || "Signup failed",
           description: result.error,
           variant: "destructive",
         });
       } else if (result.student) {
+        console.log('StudentLogin: Signup successful for student:', result.student);
         toast({
           title: t('student.accountCreated') || "Account created!",
           description: t('student.welcomeToApp') || "Welcome to Lesson Lens!",
+        });
+        // Navigation should be handled by useEffect when student state updates
+      } else {
+        console.error('StudentLogin: No error but no student data returned');
+        toast({
+          title: t('student.signupFailed') || "Signup failed",
+          description: "Invalid response from server. Please try again.",
+          variant: "destructive",
         });
       }
     } catch (err) {
@@ -167,6 +202,8 @@ const StudentLogin = () => {
       setIsLoading(false);
     }
   };
+
+  console.log('StudentLogin: Rendering login page');
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
