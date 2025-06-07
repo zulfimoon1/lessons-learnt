@@ -43,7 +43,7 @@ const TeacherLogin = () => {
     name: "",
     email: "",
     school: "",
-    role: "teacher" as "teacher" | "admin",
+    role: "teacher" as "teacher" | "admin" | "doctor",
     password: "",
     confirmPassword: ""
   });
@@ -311,7 +311,7 @@ const TeacherLogin = () => {
                   </Label>
                   <Select 
                     value={signupData.role} 
-                    onValueChange={(value: "teacher" | "admin") => 
+                    onValueChange={(value: "teacher" | "admin" | "doctor") => 
                       setSignupData(prev => ({ ...prev, role: value }))
                     }
                   >
@@ -321,11 +321,17 @@ const TeacherLogin = () => {
                     <SelectContent>
                       <SelectItem value="teacher">{t('login.teacher.roleTeacher') || "Teacher"}</SelectItem>
                       <SelectItem value="admin">{t('login.teacher.roleAdmin') || "School Admin"}</SelectItem>
+                      <SelectItem value="doctor">Mental Health Professional</SelectItem>
                     </SelectContent>
                   </Select>
                   {signupData.role === "admin" && (
                     <p className="text-xs text-gray-500 mt-1">
                       {t('login.teacher.adminHint') || "School Admins can manage teachers and view all feedback"}
+                    </p>
+                  )}
+                  {signupData.role === "doctor" && (
+                    <p className="text-xs text-gray-500 mt-1">
+                      Mental Health Professionals can access live chat sessions and student wellness reports
                     </p>
                   )}
                 </div>
