@@ -1,15 +1,10 @@
-
 import { useState, useRef, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { 
-  PlayIcon, 
-  PauseIcon,
   UsersIcon,
   BookOpenIcon,
   HeartIcon,
-  GraduationCapIcon,
   MessageCircleIcon,
   BarChart3Icon,
   StarIcon,
@@ -29,9 +24,7 @@ interface DemoFeature {
 
 const DemoSection = () => {
   const { t } = useLanguage();
-  const [isPlaying, setIsPlaying] = useState(true); // Auto-play enabled
   const [currentFeature, setCurrentFeature] = useState(0);
-  const [progress, setProgress] = useState(0);
   const intervalRef = useRef<NodeJS.Timeout>();
 
   // Student Feedback Mockup
@@ -212,37 +205,19 @@ const DemoSection = () => {
 
   // Auto-play with automatic progression
   useEffect(() => {
-    if (isPlaying) {
-      intervalRef.current = setInterval(() => {
-        setProgress((prev) => {
-          if (prev >= 100) {
-            // Move to next feature
-            setCurrentFeature((current) => (current + 1) % demoFeatures.length);
-            return 0;
-          }
-          return prev + 2; // Adjust speed as needed
-        });
-      }, 100);
-    } else {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-      }
-    }
+    intervalRef.current = setInterval(() => {
+      setCurrentFeature((current) => (current + 1) % demoFeatures.length);
+    }, 5000); // Change feature every 5 seconds
 
     return () => {
       if (intervalRef.current) {
         clearInterval(intervalRef.current);
       }
     };
-  }, [isPlaying, demoFeatures.length]);
-
-  const handlePlayPause = () => {
-    setIsPlaying(!isPlaying);
-  };
+  }, [demoFeatures.length]);
 
   const handleFeatureSelect = (index: number) => {
     setCurrentFeature(index);
-    setProgress(0);
   };
 
   const getUserTypeColor = (userType: string) => {
@@ -281,27 +256,6 @@ const DemoSection = () => {
                     <Badge className={getUserTypeColor(currentDemo.userType)}>
                       {currentDemo.userType.charAt(0).toUpperCase() + currentDemo.userType.slice(1)} View
                     </Badge>
-                  </div>
-                  
-                  {/* Progress Bar and Controls */}
-                  <div className="absolute bottom-0 left-0 right-0 bg-black/50 p-4">
-                    <div className="flex items-center gap-4">
-                      <Button
-                        size="sm"
-                        variant="secondary"
-                        onClick={handlePlayPause}
-                        className="flex-shrink-0"
-                      >
-                        {isPlaying ? <PauseIcon className="w-4 h-4" /> : <PlayIcon className="w-4 h-4" />}
-                      </Button>
-                      
-                      <div className="flex-1 bg-gray-600 rounded-full h-2">
-                        <div 
-                          className="bg-primary h-2 rounded-full transition-all duration-100"
-                          style={{ width: `${progress}%` }}
-                        />
-                      </div>
-                    </div>
                   </div>
                 </div>
               </CardContent>
