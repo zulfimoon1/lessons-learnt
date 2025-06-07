@@ -1,3 +1,4 @@
+
 import { useState, useRef, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -12,7 +13,10 @@ import {
   HeartIcon,
   GraduationCapIcon,
   MessageCircleIcon,
-  BarChart3Icon
+  BarChart3Icon,
+  StarIcon,
+  CalendarIcon,
+  ClockIcon
 } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useToast } from "@/hooks/use-toast";
@@ -25,6 +29,7 @@ interface DemoFeature {
   icon: any;
   videoDescription: string;
   voiceoverText: string;
+  mockupComponent: React.ReactNode;
 }
 
 const DemoSection = () => {
@@ -37,6 +42,139 @@ const DemoSection = () => {
   const [currentAudio, setCurrentAudio] = useState<HTMLAudioElement | null>(null);
   const intervalRef = useRef<NodeJS.Timeout>();
 
+  // Student Feedback Mockup
+  const StudentFeedbackMockup = () => (
+    <div className="bg-white p-6 rounded-lg shadow-sm">
+      <h3 className="text-lg font-semibold mb-4 text-gray-800">Lesson Feedback</h3>
+      <div className="space-y-4">
+        <div>
+          <label className="text-sm font-medium text-gray-700">Understanding Level</label>
+          <div className="flex gap-1 mt-1">
+            {[1,2,3,4,5].map(star => (
+              <StarIcon key={star} className="w-5 h-5 fill-yellow-400 text-yellow-400" />
+            ))}
+          </div>
+        </div>
+        <div>
+          <label className="text-sm font-medium text-gray-700">How are you feeling?</label>
+          <div className="flex gap-2 mt-2">
+            <div className="bg-green-100 px-3 py-1 rounded-full text-sm">😊 Happy</div>
+            <div className="bg-gray-100 px-3 py-1 rounded-full text-sm">😐 Neutral</div>
+          </div>
+        </div>
+        <textarea className="w-full p-3 border rounded-md text-sm" placeholder="What went well in today's lesson?" rows={3}></textarea>
+        <button className="bg-green-600 text-white px-4 py-2 rounded-md text-sm">Submit Feedback</button>
+      </div>
+    </div>
+  );
+
+  // Teacher Dashboard Mockup
+  const TeacherDashboardMockup = () => (
+    <div className="bg-white p-6 rounded-lg shadow-sm">
+      <h3 className="text-lg font-semibold mb-4 text-gray-800">Teacher Analytics</h3>
+      <div className="grid grid-cols-2 gap-4 mb-4">
+        <div className="bg-blue-50 p-3 rounded-lg">
+          <div className="text-2xl font-bold text-blue-600">87%</div>
+          <div className="text-sm text-blue-800">Avg Understanding</div>
+        </div>
+        <div className="bg-green-50 p-3 rounded-lg">
+          <div className="text-2xl font-bold text-green-600">23</div>
+          <div className="text-sm text-green-800">Active Students</div>
+        </div>
+      </div>
+      <div className="space-y-2">
+        <div className="flex justify-between items-center p-2 bg-gray-50 rounded">
+          <span className="text-sm">Math Class - Period 3</span>
+          <span className="text-xs text-gray-500">4.2★</span>
+        </div>
+        <div className="flex justify-between items-center p-2 bg-gray-50 rounded">
+          <span className="text-sm">Science Lab - Period 5</span>
+          <span className="text-xs text-gray-500">4.7★</span>
+        </div>
+      </div>
+    </div>
+  );
+
+  // Mental Health Support Mockup
+  const MentalHealthMockup = () => (
+    <div className="bg-white p-6 rounded-lg shadow-sm">
+      <h3 className="text-lg font-semibold mb-4 text-gray-800">Mental Health Support</h3>
+      <div className="space-y-4">
+        <div className="bg-purple-50 p-4 rounded-lg border-l-4 border-purple-500">
+          <div className="flex items-center gap-2 mb-2">
+            <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+            <span className="text-sm font-medium">Dr. Sarah - Online</span>
+          </div>
+          <p className="text-sm text-purple-700">Available for live chat support</p>
+        </div>
+        <div className="space-y-2">
+          <button className="w-full bg-purple-600 text-white p-3 rounded-md text-sm">Start Live Chat</button>
+          <button className="w-full border border-purple-600 text-purple-600 p-3 rounded-md text-sm">Book Appointment</button>
+        </div>
+        <div className="bg-gray-50 p-3 rounded-lg">
+          <p className="text-xs text-gray-600">24/7 crisis support available</p>
+        </div>
+      </div>
+    </div>
+  );
+
+  // Class Management Mockup
+  const ClassManagementMockup = () => (
+    <div className="bg-white p-6 rounded-lg shadow-sm">
+      <h3 className="text-lg font-semibold mb-4 text-gray-800">Class Schedule</h3>
+      <div className="space-y-3">
+        <div className="flex items-center gap-3 p-3 bg-blue-50 rounded-lg border-l-4 border-blue-500">
+          <ClockIcon className="w-5 h-5 text-blue-600" />
+          <div>
+            <div className="font-medium text-sm">Mathematics</div>
+            <div className="text-xs text-gray-600">9:00 AM - 10:30 AM</div>
+          </div>
+        </div>
+        <div className="flex items-center gap-3 p-3 bg-green-50 rounded-lg border-l-4 border-green-500">
+          <ClockIcon className="w-5 h-5 text-green-600" />
+          <div>
+            <div className="font-medium text-sm">Science Lab</div>
+            <div className="text-xs text-gray-600">11:00 AM - 12:30 PM</div>
+          </div>
+        </div>
+        <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+          <CalendarIcon className="w-5 h-5 text-gray-400" />
+          <div>
+            <div className="font-medium text-sm text-gray-500">Free Period</div>
+            <div className="text-xs text-gray-400">1:00 PM - 2:00 PM</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  // Live Chat Mockup
+  const LiveChatMockup = () => (
+    <div className="bg-white p-6 rounded-lg shadow-sm">
+      <h3 className="text-lg font-semibold mb-4 text-gray-800">Live Chat with Dr. Sarah</h3>
+      <div className="bg-gray-50 rounded-lg p-4 h-40 mb-4 overflow-y-auto">
+        <div className="space-y-3">
+          <div className="bg-purple-100 p-2 rounded-lg max-w-xs">
+            <p className="text-sm">Hello! How can I help you today?</p>
+            <span className="text-xs text-gray-500">Dr. Sarah</span>
+          </div>
+          <div className="bg-blue-100 p-2 rounded-lg max-w-xs ml-auto">
+            <p className="text-sm">I'm feeling overwhelmed with my studies...</p>
+            <span className="text-xs text-gray-500">You</span>
+          </div>
+          <div className="bg-purple-100 p-2 rounded-lg max-w-xs">
+            <p className="text-sm">I understand. Let's talk about some strategies that might help...</p>
+            <span className="text-xs text-gray-500">Dr. Sarah</span>
+          </div>
+        </div>
+      </div>
+      <div className="flex gap-2">
+        <input className="flex-1 p-2 border rounded-md text-sm" placeholder="Type your message..." />
+        <button className="bg-purple-600 text-white px-4 py-2 rounded-md text-sm">Send</button>
+      </div>
+    </div>
+  );
+
   const demoFeatures: DemoFeature[] = [
     {
       id: "student-feedback",
@@ -45,7 +183,8 @@ const DemoSection = () => {
       userType: "student",
       icon: UsersIcon,
       videoDescription: "Student dashboard showing feedback forms and emotional state tracking",
-      voiceoverText: "Welcome to our comprehensive student feedback system. Students can easily share their thoughts about lessons and track their emotional well-being in a safe, supportive environment."
+      voiceoverText: "Welcome to our comprehensive student feedback system. Students can easily share their thoughts about lessons and track their emotional well-being in a safe, supportive environment.",
+      mockupComponent: <StudentFeedbackMockup />
     },
     {
       id: "teacher-insights",
@@ -54,7 +193,8 @@ const DemoSection = () => {
       userType: "teacher",
       icon: BarChart3Icon,
       videoDescription: "Teacher dashboard with analytics, class schedules, and student insights",
-      voiceoverText: "Our teacher dashboard provides powerful analytics and insights, helping educators understand student progress and adapt their teaching methods for maximum effectiveness."
+      voiceoverText: "Our teacher dashboard provides powerful analytics and insights, helping educators understand student progress and adapt their teaching methods for maximum effectiveness.",
+      mockupComponent: <TeacherDashboardMockup />
     },
     {
       id: "mental-health-support",
@@ -63,7 +203,8 @@ const DemoSection = () => {
       userType: "psychologist",
       icon: HeartIcon,
       videoDescription: "Mental health support interface with live chat and resource access",
-      voiceoverText: "Mental health support is seamlessly integrated into our platform, connecting students with qualified professionals through our 'Ask the Doctor' live chat feature."
+      voiceoverText: "Mental health support is seamlessly integrated into our platform, connecting students with qualified professionals through our Ask the Doctor live chat feature.",
+      mockupComponent: <MentalHealthMockup />
     },
     {
       id: "class-management",
@@ -72,7 +213,8 @@ const DemoSection = () => {
       userType: "teacher",
       icon: BookOpenIcon,
       videoDescription: "Class scheduling interface and calendar management",
-      voiceoverText: "Efficient class management tools help teachers organize schedules, track attendance, and manage lesson plans all in one integrated platform."
+      voiceoverText: "Efficient class management tools help teachers organize schedules, track attendance, and manage lesson plans all in one integrated platform.",
+      mockupComponent: <ClassManagementMockup />
     },
     {
       id: "live-chat",
@@ -81,11 +223,12 @@ const DemoSection = () => {
       userType: "student",
       icon: MessageCircleIcon,
       videoDescription: "Live chat interface connecting students with mental health professionals",
-      voiceoverText: "Students have instant access to mental health support through our live chat system, ensuring help is always available when needed."
+      voiceoverText: "Students have instant access to mental health support through our live chat system, ensuring help is always available when needed.",
+      mockupComponent: <LiveChatMockup />
     }
   ];
 
-  // Text-to-speech functionality
+  // Text-to-speech functionality with improved female voice selection
   const playVoiceover = (text: string) => {
     if (!('speechSynthesis' in window)) {
       toast({
@@ -97,21 +240,36 @@ const DemoSection = () => {
     }
 
     const utterance = new SpeechSynthesisUtterance(text);
-    utterance.rate = 0.9;
-    utterance.pitch = 1.1;
-    utterance.volume = isMuted ? 0 : 1;
+    utterance.rate = 0.8;
+    utterance.pitch = 1.2;
+    utterance.volume = isMuted ? 0 : 0.9; // Increased volume
     
-    // Try to use a female voice
+    // Enhanced female voice selection
     const voices = speechSynthesis.getVoices();
     const femaleVoice = voices.find(voice => 
       voice.name.toLowerCase().includes('female') || 
       voice.name.toLowerCase().includes('woman') ||
       voice.name.toLowerCase().includes('zira') ||
-      voice.name.toLowerCase().includes('susan')
-    );
+      voice.name.toLowerCase().includes('susan') ||
+      voice.name.toLowerCase().includes('samantha') ||
+      voice.name.toLowerCase().includes('karen') ||
+      voice.name.toLowerCase().includes('moira') ||
+      voice.name.toLowerCase().includes('tessa') ||
+      voice.name.toLowerCase().includes('fiona') ||
+      voice.name.toLowerCase().includes('microsoft zira') ||
+      voice.name.toLowerCase().includes('google uk english female')
+    ) || voices.find(voice => voice.lang.includes('en') && voice.name.includes('f'));
     
     if (femaleVoice) {
       utterance.voice = femaleVoice;
+      console.log('Using female voice:', femaleVoice.name);
+    } else {
+      // Fallback: try to find any English voice that might be female
+      const englishVoices = voices.filter(voice => voice.lang.startsWith('en'));
+      if (englishVoices.length > 0) {
+        utterance.voice = englishVoices[0];
+        console.log('Using fallback voice:', englishVoices[0].name);
+      }
     }
 
     return utterance;
@@ -127,7 +285,7 @@ const DemoSection = () => {
             setCurrentFeature((current) => (current + 1) % demoFeatures.length);
             return 0;
           }
-          return prev + 2; // Progress 2% every 100ms (5 seconds per feature)
+          return prev + 1.5; // Slower progression for longer viewing
         });
       }, 100);
     } else {
@@ -197,7 +355,7 @@ const DemoSection = () => {
         // Restart with new volume setting
         const utterance = playVoiceover(demoFeatures[currentFeature].voiceoverText);
         if (utterance) {
-          utterance.volume = !isMuted ? 0 : 1;
+          utterance.volume = !isMuted ? 0 : 0.9;
           speechSynthesis.speak(utterance);
           setCurrentAudio(utterance as any);
         }
@@ -230,17 +388,17 @@ const DemoSection = () => {
           <div className="order-2 lg:order-1">
             <Card className="overflow-hidden border-2 border-primary/20">
               <CardContent className="p-0">
-                {/* Video Player */}
-                <div className="relative bg-gradient-to-br from-gray-900 to-gray-800 aspect-video">
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="text-center text-white">
-                      <currentDemo.icon className="w-16 h-16 mx-auto mb-4 text-primary animate-pulse" />
-                      <h3 className="text-2xl font-bold mb-2">{currentDemo.title}</h3>
-                      <p className="text-gray-300 mb-4">{currentDemo.videoDescription}</p>
-                      <Badge className={getUserTypeColor(currentDemo.userType)}>
-                        {currentDemo.userType.charAt(0).toUpperCase() + currentDemo.userType.slice(1)} View
-                      </Badge>
-                    </div>
+                {/* Live Mockup Display */}
+                <div className="relative bg-gradient-to-br from-gray-50 to-gray-100 aspect-video p-6 flex items-center justify-center">
+                  <div className="w-full max-w-md">
+                    {currentDemo.mockupComponent}
+                  </div>
+                  
+                  {/* Feature Badge */}
+                  <div className="absolute top-4 right-4">
+                    <Badge className={getUserTypeColor(currentDemo.userType)}>
+                      {currentDemo.userType.charAt(0).toUpperCase() + currentDemo.userType.slice(1)} View
+                    </Badge>
                   </div>
                   
                   {/* Progress Bar and Controls */}
