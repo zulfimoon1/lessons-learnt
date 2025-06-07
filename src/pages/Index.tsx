@@ -67,7 +67,7 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Demo Section */}
+      {/* Demo Section - Moved up right after hero */}
       <DemoSection />
 
       {/* Features Section */}

@@ -1,4 +1,3 @@
-
 import { useState, useRef, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -109,7 +108,7 @@ const DemoSection = () => {
       voice.name.toLowerCase().includes('woman') ||
       voice.name.toLowerCase().includes('zira') ||
       voice.name.toLowerCase().includes('susan')
-    ) || voices.find(voice => voice.gender === 'female');
+    );
     
     if (femaleVoice) {
       utterance.voice = femaleVoice;
@@ -218,12 +217,9 @@ const DemoSection = () => {
   const currentDemo = demoFeatures[currentFeature];
 
   return (
-    <section className="bg-gradient-to-br from-primary/5 via-background to-secondary/5 py-20">
+    <section className="bg-gradient-to-br from-primary/5 via-background to-secondary/5 py-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-16">
-          <h2 className="text-4xl font-bold text-foreground mb-6">
-            Platform Demo
-          </h2>
+        <div className="text-center mb-12">
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
             Experience our comprehensive education platform through this interactive demonstration showcasing features for students, teachers, and mental health professionals.
           </p>
