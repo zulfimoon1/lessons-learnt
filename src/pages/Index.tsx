@@ -28,13 +28,13 @@ const Index = () => {
                 href="/student-login"
                 className="inline-flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-white bg-primary hover:bg-primary/90 transition-colors duration-200"
               >
-                {t('welcome.studentLogin')}
+                {t('auth.studentLogin')}
               </a>
               <a
                 href="/teacher-login"
                 className="inline-flex items-center justify-center px-8 py-3 border border-primary text-base font-medium rounded-md text-primary bg-background hover:bg-accent transition-colors duration-200"
               >
-                {t('welcome.teacherLogin')}
+                {t('auth.teacherLogin')}
               </a>
             </div>
           </div>
