@@ -1,5 +1,5 @@
 
-import React, { createContext, useContext } from 'react';
+import React, { createContext, useContext, useCallback } from 'react';
 import { AuthContextType } from '@/types/auth';
 import { useAuthStorage } from '@/hooks/useAuthStorage';
 import { teacherLoginService, studentSimpleLoginService, studentSignupService } from '@/services/authService';
@@ -17,13 +17,7 @@ export const useAuth = () => {
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { teacher, student, isLoading, saveTeacher, saveStudent, clearAuth } = useAuthStorage();
 
-  console.log('AuthContext: Rendering with state:', { 
-    hasTeacher: !!teacher, 
-    hasStudent: !!student, 
-    isLoading 
-  });
-
-  const teacherLogin = async (
+  const teacherLogin = useCallback(async (
     email: string, 
     password: string, 
     name?: string, 
@@ -46,9 +40,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.error('AuthContext: Teacher login error:', error);
       return { error: 'An unexpected error occurred during login' };
     }
-  };
+  }, [saveTeacher]);
 
-  const studentLogin = async (fullName: string, password: string) => {
+  const studentLogin = useCallback(async (fullName: string, password: string) => {
     console.log('AuthContext: Student login attempt for:', fullName);
     
     try {
@@ -65,9 +59,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.error('AuthContext: Student login error:', error);
       return { error: 'An unexpected error occurred during login' };
     }
-  };
+  }, [saveStudent]);
 
-  const studentSignup = async (fullName: string, school: string, grade: string, password: string) => {
+  const studentSignup = useCallback(async (fullName: string, school: string, grade: string, password: string) => {
     console.log('AuthContext: Student signup attempt for:', fullName);
     
     try {
@@ -84,12 +78,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.error('AuthContext: Student signup error:', error);
       return { error: 'An unexpected error occurred during signup' };
     }
-  };
+  }, [saveStudent]);
 
-  const logout = () => {
+  const logout = useCallback(() => {
     console.log('AuthContext: Logout called');
     clearAuth();
-  };
+  }, [clearAuth]);
 
   const value: AuthContextType = {
     teacher,

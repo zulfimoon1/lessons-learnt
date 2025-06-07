@@ -17,8 +17,22 @@ const StudentLogin = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   
-  // Safe auth hook usage
-  const auth = useAuth();
+  // Safe auth hook usage with error boundary
+  let auth;
+  try {
+    auth = useAuth();
+  } catch (error) {
+    console.error('StudentLogin: Auth context error:', error);
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-red-600 mb-4">Authentication Error</h1>
+          <p className="text-muted-foreground">Unable to access authentication. Please refresh the page.</p>
+        </div>
+      </div>
+    );
+  }
+
   const { student, studentLogin, studentSignup, isLoading: authLoading } = auth;
 
   // Redirect if already logged in
@@ -70,38 +84,22 @@ const StudentLogin = () => {
 
     setIsLoading(true);
 
-    console.log('StudentLogin: Starting login process with data:', { 
-      fullName: loginData.fullName, 
-      passwordLength: loginData.password.length 
-    });
-
     try {
       const result = await studentLogin(
         loginData.fullName.trim(),
         loginData.password
       );
 
-      console.log('StudentLogin: Login result:', result);
-
       if (result.error) {
-        console.error('StudentLogin: Login failed:', result.error);
         toast({
           title: t('student.loginFailed') || "Login failed",
           description: result.error,
           variant: "destructive",
         });
       } else if (result.student) {
-        console.log('StudentLogin: Login successful, student data:', result.student);
         toast({
           title: t('student.welcomeBack') || "Welcome back!",
           description: t('student.loginSuccess') || "Login successful",
-        });
-        // Navigation will be handled by useEffect when student state updates
-      } else {
-        toast({
-          title: t('student.loginFailed') || "Login failed",
-          description: "Invalid response from server. Please try again.",
-          variant: "destructive",
         });
       }
     } catch (err) {
@@ -139,8 +137,6 @@ const StudentLogin = () => {
 
     setIsLoading(true);
 
-    console.log('StudentLogin: Starting signup process...');
-
     try {
       const result = await studentSignup(
         signupData.fullName.trim(),
@@ -149,27 +145,16 @@ const StudentLogin = () => {
         signupData.password
       );
 
-      console.log('StudentLogin: Signup result:', result);
-
       if (result.error) {
-        console.error('StudentLogin: Signup failed:', result.error);
         toast({
           title: t('student.signupFailed') || "Signup failed",
           description: result.error,
           variant: "destructive",
         });
       } else if (result.student) {
-        console.log('StudentLogin: Signup successful, student data:', result.student);
         toast({
           title: t('student.accountCreated') || "Account created!",
           description: t('student.welcomeToApp') || "Welcome to Lesson Lens!",
-        });
-        // Navigation will be handled by useEffect when student state updates
-      } else {
-        toast({
-          title: t('student.signupFailed') || "Signup failed",
-          description: "Invalid response from server. Please try again.",
-          variant: "destructive",
         });
       }
     } catch (err) {
