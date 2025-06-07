@@ -1,14 +1,19 @@
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useToast } from "@/hooks/use-toast";
 
 export const useVoiceover = () => {
   const { toast } = useToast();
   const [currentUtterance, setCurrentUtterance] = useState<SpeechSynthesisUtterance | null>(null);
+  const [isMuted, setIsMuted] = useState(false);
 
   const playVoiceover = (text: string) => {
     if (!('speechSynthesis' in window)) {
-      console.warn('Text-to-Speech not supported in this browser');
+      toast({
+        title: "Text-to-Speech Not Supported",
+        description: "Your browser doesn't support text-to-speech functionality",
+        variant: "destructive"
+      });
       return null;
     }
 
@@ -16,83 +21,84 @@ export const useVoiceover = () => {
     speechSynthesis.cancel();
 
     const utterance = new SpeechSynthesisUtterance(text);
-    utterance.rate = 0.9;
-    utterance.pitch = 1.0;
-    utterance.volume = 1.0;
+    utterance.rate = 0.85;
+    utterance.pitch = 1.1;
+    utterance.volume = isMuted ? 0 : 1.0;
 
-    // Set voice with better selection logic
+    // Wait for voices to be loaded
     const setVoice = () => {
       const voices = speechSynthesis.getVoices();
-      console.log('Available voices:', voices.length);
+      console.log('Available voices:', voices.map(v => `${v.name} (${v.lang})`));
       
-      if (voices.length === 0) {
-        console.warn('No voices available');
-        return;
-      }
-
-      // Try to find a female voice, fallback to any English voice, then any voice
+      // Enhanced female voice selection with multiple fallbacks
       const femaleVoice = voices.find(voice => {
         const name = voice.name.toLowerCase();
         const lang = voice.lang.toLowerCase();
-        return lang.startsWith('en') && (
+        return (
+          // Prioritize high-quality female voices
+          name.includes('samantha') ||
+          name.includes('karen') ||
+          name.includes('susan') ||
+          name.includes('sarah') ||
+          name.includes('emma') ||
           name.includes('female') ||
           name.includes('woman') ||
           name.includes('zira') ||
           name.includes('hazel') ||
-          name.includes('samantha') ||
-          name.includes('karen') ||
-          name.includes('susan') ||
-          name.includes('sarah')
+          name.includes('moira') ||
+          name.includes('tessa') ||
+          name.includes('fiona') ||
+          name.includes('kate') ||
+          name.includes('victoria') ||
+          // Google voices
+          (name.includes('google') && name.includes('female')) ||
+          (name.includes('google') && lang.includes('en') && name.includes('2')) ||
+          // Microsoft voices
+          name.includes('microsoft zira') ||
+          // Natural-sounding voices that are typically female
+          (lang.includes('en') && (
+            name.includes('natural') ||
+            name.includes('neural')
+          ))
         );
       });
 
-      const englishVoice = voices.find(voice => voice.lang.toLowerCase().startsWith('en'));
-      const selectedVoice = femaleVoice || englishVoice || voices[0];
-
-      if (selectedVoice) {
-        utterance.voice = selectedVoice;
-        console.log('Using voice:', selectedVoice.name, 'Language:', selectedVoice.lang);
+      if (femaleVoice) {
+        utterance.voice = femaleVoice;
+        console.log('Using female voice:', femaleVoice.name, 'Language:', femaleVoice.lang);
+      } else {
+        // Fallback to any English voice
+        const englishVoice = voices.find(voice => voice.lang.startsWith('en'));
+        if (englishVoice) {
+          utterance.voice = englishVoice;
+          console.log('Using fallback English voice:', englishVoice.name);
+        }
       }
     };
 
-    // Set voice when available
+    // Set voice immediately if available, otherwise wait for voices to load
     if (speechSynthesis.getVoices().length > 0) {
       setVoice();
     } else {
-      speechSynthesis.onvoiceschanged = () => {
-        setVoice();
-        speechSynthesis.onvoiceschanged = null; // Remove listener after first call
-      };
+      speechSynthesis.onvoiceschanged = setVoice;
     }
-
-    // Add error handling
-    utterance.onerror = (event) => {
-      console.error('Speech synthesis error:', event);
-    };
-
-    utterance.onstart = () => {
-      console.log('Speech started');
-    };
-
-    utterance.onend = () => {
-      console.log('Speech ended');
-      setCurrentUtterance(null);
-    };
 
     return utterance;
   };
 
   const stopVoiceover = () => {
-    if (speechSynthesis.speaking) {
+    if (currentUtterance) {
       speechSynthesis.cancel();
+      setCurrentUtterance(null);
     }
-    setCurrentUtterance(null);
   };
 
   return {
     playVoiceover,
     stopVoiceover,
     currentUtterance,
-    setCurrentUtterance
+    setCurrentUtterance,
+    isMuted,
+    setIsMuted
   };
 };
