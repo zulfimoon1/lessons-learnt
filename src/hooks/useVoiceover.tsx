@@ -7,8 +7,11 @@ export const useVoiceover = () => {
   const [currentUtterance, setCurrentUtterance] = useState<SpeechSynthesisUtterance | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isReady, setIsReady] = useState(false);
+  const [hasUserInteracted, setHasUserInteracted] = useState(false);
 
   const playVoiceover = (text: string, autoplay: boolean = false) => {
+    console.log('playVoiceover called with text:', text.substring(0, 50) + '...', 'autoplay:', autoplay);
+    
     if (!('speechSynthesis' in window)) {
       console.warn('Text-to-Speech not supported in this browser');
       toast({
@@ -91,19 +94,26 @@ export const useVoiceover = () => {
       setCurrentUtterance(null);
       toast({
         title: "Audio error",
-        description: "There was an error playing the audio",
+        description: `Speech error: ${event.error}. Try clicking the play button to start audio.`,
         variant: "destructive"
       });
     };
 
     setCurrentUtterance(utterance);
+    setIsReady(true);
 
     // Only autoplay if explicitly requested and user has interacted
-    if (autoplay) {
+    if (autoplay && hasUserInteracted) {
       try {
+        console.log('Attempting to speak automatically');
         speechSynthesis.speak(utterance);
       } catch (error) {
         console.error('Error speaking:', error);
+        toast({
+          title: "Audio error",
+          description: "Click the play button to hear the voiceover",
+          variant: "default"
+        });
       }
     }
 
@@ -111,16 +121,29 @@ export const useVoiceover = () => {
   };
 
   const startPlayback = () => {
+    console.log('startPlayback called, currentUtterance:', !!currentUtterance, 'isPlaying:', isPlaying);
+    
+    if (!hasUserInteracted) {
+      setHasUserInteracted(true);
+    }
+
     if (currentUtterance && !isPlaying) {
       try {
+        console.log('Starting speech playback');
         speechSynthesis.speak(currentUtterance);
       } catch (error) {
         console.error('Error starting playback:', error);
+        toast({
+          title: "Audio error",
+          description: "Unable to play audio. Please try again.",
+          variant: "destructive"
+        });
       }
     }
   };
 
   const stopVoiceover = () => {
+    console.log('stopVoiceover called');
     if (speechSynthesis.speaking) {
       speechSynthesis.cancel();
     }
@@ -135,6 +158,7 @@ export const useVoiceover = () => {
     currentUtterance,
     setCurrentUtterance,
     isPlaying,
-    isReady
+    isReady,
+    hasUserInteracted
   };
 };

@@ -48,7 +48,8 @@ const DemoSection = () => {
     currentUtterance, 
     setCurrentUtterance,
     isPlaying,
-    isReady
+    isReady,
+    hasUserInteracted
   } = useVoiceover();
   const intervalRef = useRef<NodeJS.Timeout>();
 
@@ -132,10 +133,19 @@ const DemoSection = () => {
   };
 
   const handlePlayPause = () => {
+    console.log('Play/Pause clicked', { isPlaying, currentUtterance: !!currentUtterance });
+    
     if (isPlaying) {
       stopVoiceover();
     } else if (currentUtterance) {
       startPlayback();
+    } else {
+      // Recreate voiceover if it doesn't exist
+      const voiceoverText = t(demoFeatures[currentFeature].voiceoverKey);
+      const utterance = playVoiceover(voiceoverText, false);
+      if (utterance) {
+        setTimeout(() => startPlayback(), 100); // Small delay to ensure utterance is ready
+      }
     }
   };
 
@@ -196,13 +206,17 @@ const DemoSection = () => {
                     </Badge>
                   </div>
 
-                  {/* Play Button */}
+                  {/* Enhanced Play Button */}
                   <div className="absolute bottom-4 left-4">
                     <Button
                       onClick={handlePlayPause}
                       size="sm"
-                      className="bg-primary/90 hover:bg-primary"
-                      disabled={!currentUtterance}
+                      className={`${
+                        isPlaying 
+                          ? 'bg-red-600 hover:bg-red-700' 
+                          : 'bg-primary/90 hover:bg-primary'
+                      }`}
+                      disabled={!currentUtterance && !isReady}
                     >
                       {isPlaying ? (
                         <PauseIcon className="w-4 h-4" />
@@ -211,11 +225,18 @@ const DemoSection = () => {
                       )}
                     </Button>
                   </div>
+
+                  {/* Audio Status Indicator */}
+                  {!hasUserInteracted && (
+                    <div className="absolute bottom-4 right-4 bg-yellow-100 border border-yellow-300 rounded-lg px-3 py-1">
+                      <span className="text-xs text-yellow-800">Click play for audio</span>
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
 
-            {/* Voiceover Transcript */}
+            {/* Enhanced Voiceover Transcript */}
             <Card className="mt-4 border border-purple-200 bg-purple-50/50">
               <CardContent className="p-4">
                 <div className="flex items-center gap-2 mb-2">
@@ -238,6 +259,11 @@ const DemoSection = () => {
                 <p className="text-sm text-purple-600 italic">
                   "{t(currentDemo.voiceoverKey)}"
                 </p>
+                {!hasUserInteracted && (
+                  <p className="text-xs text-purple-500 mt-2">
+                    🔊 Audio requires user interaction. Click the play button to enable sound.
+                  </p>
+                )}
               </CardContent>
             </Card>
           </div>
