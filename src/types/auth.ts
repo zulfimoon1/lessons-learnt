@@ -15,7 +15,6 @@ export interface Student {
   full_name: string;
   school: string;
   grade: string;
-  email?: string; // Make email optional since it's not always available
 }
 
 export interface AuthContextType {
@@ -28,36 +27,8 @@ export interface AuthContextType {
     name?: string, 
     school?: string,
     role?: 'teacher' | 'admin' | 'doctor'
-  ) => Promise<{ error?: string; teacher?: Teacher }>;
-  studentLogin: (fullName: string, password: string) => Promise<{ error?: string; student?: Student }>;
-  studentSignup: (fullName: string, school: string, grade: string, password: string) => Promise<{ error?: string; student?: Student }>;
+  ) => Promise<{ teacher?: Teacher; error?: string }>;
+  studentLogin: (fullName: string, password: string) => Promise<{ student?: Student; error?: string }>;
+  studentSignup: (fullName: string, school: string, grade: string, password: string) => Promise<{ student?: Student; error?: string }>;
   logout: () => void;
-}
-
-// Add interface for feedback summary data
-export interface TeacherFeedbackSummary {
-  teacher_id: string;
-  teacher_name: string;
-  subject: string;
-  class_date: string;
-  avg_understanding: number;
-  avg_interest: number;
-  avg_educational_growth: number;
-  total_feedback: number;
-  lesson_topic: string;
-}
-
-// Add interface for live chat session
-export interface LiveChatSession {
-  id: string;
-  student_id?: string;
-  student_name?: string;
-  school: string;
-  grade?: string;
-  is_anonymous: boolean;
-  status: 'waiting' | 'active' | 'ended';
-  doctor_id?: string;
-  started_at: string;
-  ended_at?: string;
-  created_at: string;
 }

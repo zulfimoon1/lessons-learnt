@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -73,6 +74,16 @@ const PricingPage = () => {
   };
 
   const handleCreateSubscription = async () => {
+    if (!teacher?.email || !teacher?.school) {
+      toast({
+        title: t('pricing.paymentError'),
+        description: "Please log in to continue with subscription",
+        variant: "destructive",
+      });
+      navigate('/teacher-login');
+      return;
+    }
+
     try {
       setIsCreatingCheckout(true);
       
@@ -80,7 +91,10 @@ const PricingPage = () => {
         body: {
           teacherCount,
           discountCode: discountCode.trim() || null,
-          discountPercent: discount
+          discountPercent: discount,
+          teacherEmail: teacher.email,
+          teacherName: teacher.name,
+          schoolName: teacher.school
         }
       });
       
@@ -274,11 +288,17 @@ const PricingPage = () => {
 
               <Button
                 onClick={handleCreateSubscription}
-                disabled={isCreatingCheckout}
+                disabled={isCreatingCheckout || !teacher}
                 className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-lg py-6"
               >
                 {isCreatingCheckout ? t('pricing.processing') : `${t('pricing.subscribeFor')} $${total.toFixed(2)}/month`}
               </Button>
+
+              {!teacher && (
+                <p className="text-xs text-gray-500 text-center">
+                  Please log in to continue with subscription
+                </p>
+              )}
 
               <p className="text-xs text-gray-500 text-center">
                 {t('pricing.securePayment')}

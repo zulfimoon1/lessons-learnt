@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -91,7 +92,10 @@ const TeacherDashboard = () => {
         body: {
           teacherCount: 1,
           discountCode: null,
-          discountPercent: 0
+          discountPercent: 0,
+          teacherEmail: teacher.email,
+          teacherName: teacher.name,
+          schoolName: teacher.school
         }
       });
 

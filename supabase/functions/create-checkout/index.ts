@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@14.21.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
@@ -28,8 +29,13 @@ serve(async (req) => {
 
     // Parse request body for pricing details
     const body = await req.json();
-    const { teacherCount = 1, discountCode = null, discountPercent = 0 } = body;
-    console.log("Request body:", { teacherCount, discountCode, discountPercent });
+    const { teacherCount = 1, discountCode = null, discountPercent = 0, teacherEmail, teacherName, schoolName } = body;
+    console.log("Request body:", { teacherCount, discountCode, discountPercent, teacherEmail, schoolName });
+
+    // Validate required fields
+    if (!teacherEmail || !schoolName) {
+      throw new Error("Teacher email and school name are required");
+    }
 
     // Validate discount code if provided
     let validatedDiscountPercent = 0;
@@ -62,38 +68,7 @@ serve(async (req) => {
       console.log("Discount code validated:", { code: discountCode, percent: validatedDiscountPercent });
     }
 
-    // Get authenticated user
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader) {
-      throw new Error("No authorization header");
-    }
-
-    const token = authHeader.replace("Bearer ", "");
-    const { data: userData, error: userError } = await supabaseAdmin.auth.getUser(token);
-    if (userError || !userData.user) {
-      throw new Error("User not authenticated");
-    }
-    console.log("User authenticated:", userData.user.email);
-
-    // Get teacher info to identify school - if not found, this might be a new signup
-    const { data: teacherData, error: teacherError } = await supabaseAdmin
-      .from('teachers')
-      .select('name, school, email')
-      .eq('email', userData.user.email)
-      .single();
-
-    let schoolName, customerName;
-    
-    if (teacherError || !teacherData) {
-      console.log("Teacher not found in database, using user data");
-      // If teacher not found, use user email and create a default school name
-      schoolName = `School for ${userData.user.email}`;
-      customerName = userData.user.email.split('@')[0];
-    } else {
-      console.log("Teacher data:", teacherData);
-      schoolName = teacherData.school;
-      customerName = teacherData.name;
-    }
+    console.log("Teacher authenticated:", teacherEmail);
 
     const basePrice = 999; // $9.99 in cents
     const subtotal = teacherCount * basePrice;
@@ -104,7 +79,7 @@ serve(async (req) => {
 
     // Check if customer exists
     const customers = await stripe.customers.list({
-      email: userData.user.email,
+      email: teacherEmail,
       limit: 1
     });
 
@@ -115,8 +90,8 @@ serve(async (req) => {
     } else {
       // Create new customer
       const customer = await stripe.customers.create({
-        email: userData.user.email,
-        name: customerName,
+        email: teacherEmail,
+        name: teacherName || teacherEmail.split('@')[0],
         metadata: {
           school: schoolName,
           teacherCount: teacherCount.toString()
@@ -148,7 +123,7 @@ serve(async (req) => {
       customer: customerId,
       line_items: lineItems,
       mode: "subscription",
-      success_url: `${req.headers.get("origin")}/admin-dashboard?success=true`,
+      success_url: `${req.headers.get("origin")}/teacher-dashboard?success=true`,
       cancel_url: `${req.headers.get("origin")}/pricing?canceled=true`,
       metadata: {
         teacherCount: teacherCount.toString(),
@@ -156,8 +131,8 @@ serve(async (req) => {
         discountCode: discountCode || '',
         discountPercent: validatedDiscountPercent.toString(),
         schoolName: schoolName,
-        adminEmail: userData.user.email,
-        adminName: customerName,
+        adminEmail: teacherEmail,
+        adminName: teacherName || teacherEmail.split('@')[0],
         discountCodeId: discountCodeId || ''
       },
     };
