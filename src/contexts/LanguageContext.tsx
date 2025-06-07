@@ -180,6 +180,16 @@ const translations = {
     'feedback.good': 'Good',
     'feedback.fair': 'Fair',
     'feedback.poor': 'Poor',
+    'feedback.anonymous': 'Submit anonymously',
+    'feedback.whatWentWell': 'What went well',
+    'feedback.whatWentWellPlaceholder': 'What did you enjoy? What helped you learn?',
+    'feedback.suggestions': 'Suggestions for improvement',
+    'feedback.suggestionsPlaceholder': 'Your suggestions for improvement...',
+    'feedback.emotionalState': 'How are you feeling?',
+    'feedback.growth': 'Educational Growth',
+    'feedback.submitSuccess': 'Thank you for your feedback!',
+    'feedback.submitFailed': 'Failed to submit feedback. Please try again.',
+    'feedback.unexpectedError': 'An unexpected error occurred. Please try again.',
 
     // Rating Labels
     'rating.understanding.1': 'Very Confused',
@@ -215,6 +225,7 @@ const translations = {
     'weekly.submittedDesc': 'Your weekly summary helps us understand how to better support you.',
     'weekly.submitFailed': 'Submission failed',
     'weekly.submitFailedDesc': 'Failed to submit weekly summary. Please try again.',
+    'weekly.submitAnonymously': 'Submit anonymously',
 
     // Subject options
     'subject.mathematics': 'Mathematics',
@@ -311,6 +322,7 @@ const translations = {
     'common.back': 'Back',
     'common.next': 'Next',
     'common.previous': 'Previous',
+    'common.submitting': 'Submitting...',
     
     // Tagline
     'tagline.studentLead': 'When students lead, teachers succeed',
@@ -381,9 +393,28 @@ const translations = {
     'performance.allTeachers': 'All teachers across schools',
     'performance.teachersFromSchool': 'Teachers from {school}',
     'performance.teacher': 'Teacher',
-    
-    // Weekly Summary updates
-    'weekly.submitAnonymously': 'Submit anonymously',
+
+    // Compliance and Privacy
+    'compliance.gdpr.title': 'GDPR Compliance',
+    'compliance.gdpr.description': 'We are committed to protecting your personal data in accordance with GDPR regulations.',
+    'compliance.hipaa.title': 'HIPAA Compliance',
+    'compliance.hipaa.description': 'Student health information is protected under HIPAA standards.',
+    'compliance.soc2.title': 'SOC 2 Compliance',
+    'compliance.soc2.description': 'Our systems meet SOC 2 Type II security standards.',
+    'compliance.dataProcessing': 'Data Processing Agreement',
+    'compliance.privacyPolicy': 'Privacy Policy',
+    'compliance.cookiePolicy': 'Cookie Policy',
+    'compliance.dataRetention': 'Data Retention Policy',
+    'compliance.consentManagement': 'Consent Management',
+    'compliance.rightToDelete': 'Right to Delete Data',
+    'compliance.dataPortability': 'Data Portability',
+    'compliance.breachNotification': 'Data Breach Notification',
+    'compliance.dpo': 'Data Protection Officer',
+    'compliance.auditLog': 'Audit Log',
+    'compliance.encryption': 'End-to-End Encryption',
+    'compliance.accessControl': 'Role-Based Access Control',
+    'compliance.dataMinimization': 'Data Minimization',
+    'compliance.consentWithdrawal': 'Withdraw Consent',
   },
   lt: {
     // Navigation
@@ -556,6 +587,16 @@ const translations = {
     'feedback.good': 'Gerai',
     'feedback.fair': 'Vidutiniškai',
     'feedback.poor': 'Blogai',
+    'feedback.anonymous': 'Pateikti anonimnai',
+    'feedback.whatWentWell': 'Kas pavyko gerai',
+    'feedback.whatWentWellPlaceholder': 'Kas jums patiko? Kas padėjo mokytis?',
+    'feedback.suggestions': 'Pasiūlymai gerinimui',
+    'feedback.suggestionsPlaceholder': 'Jūsų pasiūlymai gerinimui...',
+    'feedback.emotionalState': 'Kaip jūs jaučiatės?',
+    'feedback.growth': 'Mokymosi pažanga',
+    'feedback.submitSuccess': 'Ačiū už jūsų grįžtamąjį ryšį!',
+    'feedback.submitFailed': 'Nepavyko pateikti grįžtamojo ryšio. Bandykite dar kartą.',
+    'feedback.unexpectedError': 'Įvyko netikėta klaida. Bandykite dar kartą.',
 
     // Rating Labels
     'rating.understanding.1': 'Visiškai neaišku',
@@ -591,6 +632,7 @@ const translations = {
     'weekly.submittedDesc': 'Jūsų savaitės suvestinė padeda mums suprasti, kaip geriau jus palaikyti.',
     'weekly.submitFailed': 'Pateikimas nepavyko',
     'weekly.submitFailedDesc': 'Nepavyko pateikti savaitės suvestinės. Bandykite dar kartą.',
+    'weekly.submitAnonymously': 'Pateikti anonimnai',
 
     // Subject options
     'subject.mathematics': 'Matematika',
@@ -687,6 +729,7 @@ const translations = {
     'common.back': 'Atgal',
     'common.next': 'Toliau',
     'common.previous': 'Ankstesnis',
+    'common.submitting': 'Pateikiama...',
     
     // Tagline
     'tagline.studentLead': 'Kai mokiniai veda, mokytojai sėkmingai dirba',
@@ -737,30 +780,48 @@ const translations = {
     'articles.fillRequired': 'Prašome užpildyti visus privalomust laukus',
     'articles.noArticles': 'Dar nėra psichikos sveikatos straipsnių',
     'articles.getStarted': 'Spustelėkite "Pridėti naują straipsnį", kad sukurtumėte pirmą psichikos sveikatos išteklių',
-    'articles.mentalHealth': 'Psichikos sveikatos straipsniai',
     'articles.subscriptionRequired': 'Reikalingas aktyvus prenumeratos planas psichikos sveikatos straipsnių tvarkymui',
     
     // Performance translations
-    'performance.filters': 'Performance Analysis',
-    'performance.filtersDesc': 'Analyze and compare school and teacher performance metrics',
-    'performance.school': 'School',
-    'performance.allSchools': 'All Schools',
-    'performance.sortBy': 'Sort By',
-    'performance.overallScore': 'Overall Score',
-    'performance.totalResponses': 'Total Responses',
-    'performance.minResponses': 'Minimum Responses',
-    'performance.topSchools': 'Top Performing Schools',
-    'performance.schoolPerformance': 'Based on student feedback scores',
-    'performance.score': 'Score',
-    'performance.responses': 'Responses',
-    'performance.rating': 'Rating',
-    'performance.topTeachers': 'Top Performing Teachers',
-    'performance.allTeachers': 'All teachers across schools',
-    'performance.teachersFromSchool': 'Teachers from {school}',
-    'performance.teacher': 'Teacher',
-    
-    // Weekly Summary updates
-    'weekly.submitAnonymously': 'Submit anonymously',
+    'performance.filters': 'Veiklos analizė',
+    'performance.filtersDesc': 'Analizuokite ir lyginkite mokyklų ir mokytojų veiklos rodiklius',
+    'performance.school': 'Mokykla',
+    'performance.allSchools': 'Visos mokyklos',
+    'performance.sortBy': 'Rūšiuoti pagal',
+    'performance.overallScore': 'Bendras balas',
+    'performance.totalResponses': 'Iš viso atsakymų',
+    'performance.minResponses': 'Mažiausiai atsakymų',
+    'performance.topSchools': 'Geriausiai veikiančios mokyklos',
+    'performance.schoolPerformance': 'Pagal mokinių grįžtamojo ryšio balus',
+    'performance.score': 'Balas',
+    'performance.responses': 'Atsakymai',
+    'performance.rating': 'Įvertinimas',
+    'performance.topTeachers': 'Geriausiai veikiantys mokytojai',
+    'performance.allTeachers': 'Visi mokytojai iš visų mokyklų',
+    'performance.teachersFromSchool': 'Mokytojai iš {school}',
+    'performance.teacher': 'Mokytojas',
+
+    // Compliance and Privacy - Lithuanian
+    'compliance.gdpr.title': 'GDPR atitiktis',
+    'compliance.gdpr.description': 'Esame įsipareigoję apsaugoti jūsų asmens duomenis pagal GDPR reglamentus.',
+    'compliance.hipaa.title': 'HIPAA atitiktis',
+    'compliance.hipaa.description': 'Mokinių sveikatos informacija apsaugota HIPAA standartais.',
+    'compliance.soc2.title': 'SOC 2 atitiktis',
+    'compliance.soc2.description': 'Mūsų sistemos atitinka SOC 2 Type II saugumo standartus.',
+    'compliance.dataProcessing': 'Duomenų apdorojimo sutartis',
+    'compliance.privacyPolicy': 'Privatumo politika',
+    'compliance.cookiePolicy': 'Slapukų politika',
+    'compliance.dataRetention': 'Duomenų saugojimo politika',
+    'compliance.consentManagement': 'Sutikimų valdymas',
+    'compliance.rightToDelete': 'Teisė ištrinti duomenis',
+    'compliance.dataPortability': 'Duomenų perkeliamumas',
+    'compliance.breachNotification': 'Duomenų pažeidimo pranešimas',
+    'compliance.dpo': 'Duomenų apsaugos pareigūnas',
+    'compliance.auditLog': 'Audito žurnalas',
+    'compliance.encryption': 'Ištisinis šifravimas',
+    'compliance.accessControl': 'Vaidmenimis grįsta prieigos kontrolė',
+    'compliance.dataMinimization': 'Duomenų minimizavimas',
+    'compliance.consentWithdrawal': 'Atšaukti sutikimą',
   }
 };
 

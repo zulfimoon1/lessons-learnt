@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -6,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { HeartIcon, EyeOffIcon } from "lucide-react";
+import { EyeOffIcon } from "lucide-react";
 import StarRating from "./StarRating";
 import EmotionalStateSelector from "./EmotionalStateSelector";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -112,10 +113,6 @@ const LessonFeedbackForm: React.FC<LessonFeedbackFormProps> = ({ classScheduleId
     setFeedbackData(prev => ({ ...prev, emotionalState: state }));
   };
 
-  const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFeedbackData(prev => ({ ...prev, isAnonymous: e.target.checked }));
-  };
-
   return (
     <Card>
       <CardHeader>
@@ -127,27 +124,24 @@ const LessonFeedbackForm: React.FC<LessonFeedbackFormProps> = ({ classScheduleId
           <div>
             <Label htmlFor="understanding">{t('feedback.understanding')}</Label>
             <StarRating
-              name="understanding"
               value={feedbackData.understanding}
-              onClick={handleStarClick}
+              onClick={(value) => handleStarClick('understanding', value)}
             />
           </div>
           
           <div>
             <Label htmlFor="interest">{t('feedback.interest')}</Label>
             <StarRating
-              name="interest"
               value={feedbackData.interest}
-              onClick={handleStarClick}
+              onClick={(value) => handleStarClick('interest', value)}
             />
           </div>
           
           <div>
             <Label htmlFor="educationalGrowth">{t('feedback.growth')}</Label>
             <StarRating
-              name="educationalGrowth"
               value={feedbackData.educationalGrowth}
-              onClick={handleStarClick}
+              onClick={(value) => handleStarClick('educationalGrowth', value)}
             />
           </div>
 
@@ -199,7 +193,7 @@ const LessonFeedbackForm: React.FC<LessonFeedbackFormProps> = ({ classScheduleId
             <Checkbox
               id="isAnonymous"
               checked={feedbackData.isAnonymous}
-              onCheckedChange={(checked) => setFeedbackData(prev => ({ ...prev, isAnonymous: checked || false }))}
+              onCheckedChange={(checked) => setFeedbackData(prev => ({ ...prev, isAnonymous: Boolean(checked) }))}
             />
             <Label htmlFor="isAnonymous" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed flex items-center gap-1">
               {t('feedback.anonymous')}
