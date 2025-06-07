@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 
 type Language = 'en' | 'lt';
 
@@ -7,8 +7,6 @@ interface LanguageContextType {
   setLanguage: (lang: Language) => void;
   t: (key: string, params?: Record<string, string>) => string;
 }
-
-const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
 const translations = {
   en: {
@@ -726,31 +724,69 @@ const translations = {
     'articles.content': 'Turinys',
     'articles.contentPlaceholder': 'Rašykite straipsnio turinį čia...',
     'articles.create': 'Sukurti straipsnį',
-    'articles.fillRequired': 'Prašome užpildyti visus privalomiuslaukus',
-    'articles.updated': 'Straipsnis atnaujintas',
-    'articles.updatedSuccess': 'Straipsnis sėkmingai atnaujintas',
     'articles.created': 'Straipsnis sukurtas',
-    'articles.createdSuccess': 'Straipsnis sėkmingai sukurtas',
-    'articles.saveFailed': 'Nepavyko išsaugoti straipsnio',
-    'articles.confirmDelete': 'Ar tikrai norite ištrinti šį straipsnį?',
+    'articles.createdSuccess': 'Psichikos sveikatos straipsnis sėkmingai sukurtas',
+    'articles.updated': 'Straipsnis atnaujintas',
+    'articles.updatedSuccess': 'Psichikos sveikatos straipsnis sėkmingai atnaujintas',
     'articles.deleted': 'Straipsnis ištrintas',
-    'articles.deletedSuccess': 'Straipsnis sėkmingai ištrintas',
-    'articles.deleteFailed': 'Nepavyko ištrinti straipsnio',
-    'articles.loadFailed': 'Nepavyko įkelti straipsnių',
-    'articles.noArticles': 'Straipsnių nerasta',
-    'articles.getStarted': 'Spustelėkite "Pridėti naują straipsnį" norėdami pradėti'
+    'articles.deletedSuccess': 'Psichikos sveikatos straipsnis sėkmingai ištrintas',
+    'articles.confirmDelete': 'Ar tikrai norite ištrinti šį straipsnį?',
+    'articles.loadFailed': 'Nepavyko įkelti psichikos sveikatos straipsnių',
+    'articles.saveFailed': 'Nepavyko išsaugoti psichikos sveikatos straipsnio',
+    'articles.deleteFailed': 'Nepavyko ištrinti psichikos sveikatos straipsnio',
+    'articles.fillRequired': 'Prašome užpildyti visus privalomust laukus',
+    'articles.noArticles': 'Dar nėra psichikos sveikatos straipsnių',
+    'articles.getStarted': 'Spustelėkite "Pridėti naują straipsnį", kad sukurtumėte pirmą psichikos sveikatos išteklių',
+    'articles.mentalHealth': 'Psichikos sveikatos straipsniai',
+    'articles.subscriptionRequired': 'Reikalingas aktyvus prenumeratos planas psichikos sveikatos straipsnių tvarkymui',
+    
+    // Performance translations
+    'performance.filters': 'Performance Analysis',
+    'performance.filtersDesc': 'Analyze and compare school and teacher performance metrics',
+    'performance.school': 'School',
+    'performance.allSchools': 'All Schools',
+    'performance.sortBy': 'Sort By',
+    'performance.overallScore': 'Overall Score',
+    'performance.totalResponses': 'Total Responses',
+    'performance.minResponses': 'Minimum Responses',
+    'performance.topSchools': 'Top Performing Schools',
+    'performance.schoolPerformance': 'Based on student feedback scores',
+    'performance.score': 'Score',
+    'performance.responses': 'Responses',
+    'performance.rating': 'Rating',
+    'performance.topTeachers': 'Top Performing Teachers',
+    'performance.allTeachers': 'All teachers across schools',
+    'performance.teachersFromSchool': 'Teachers from {school}',
+    'performance.teacher': 'Teacher',
+    
+    // Weekly Summary updates
+    'weekly.submitAnonymously': 'Submit anonymously',
   }
 };
 
-const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
+
+export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [language, setLanguage] = useState<Language>('en');
 
+  useEffect(() => {
+    const savedLanguage = localStorage.getItem('language') as Language;
+    if (savedLanguage && (savedLanguage === 'en' || savedLanguage === 'lt')) {
+      setLanguage(savedLanguage);
+    }
+  }, []);
+
+  const changeLanguage = (lang: Language) => {
+    setLanguage(lang);
+    localStorage.setItem('language', lang);
+  };
+
   const t = (key: string, params?: Record<string, string>): string => {
-    let translation = translations[language][key as keyof typeof translations[typeof language]] || key;
+    let translation = translations[language][key] || key;
     
     if (params) {
-      Object.entries(params).forEach(([paramKey, paramValue]) => {
-        translation = translation.replace(`{${paramKey}}`, paramValue);
+      Object.entries(params).forEach(([param, value]) => {
+        translation = translation.replace(`{${param}}`, value);
       });
     }
     
@@ -758,18 +794,16 @@ const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ children })
   };
 
   return (
-    <LanguageContext.Provider value={{ language, setLanguage, t }}>
+    <LanguageContext.Provider value={{ language, setLanguage: changeLanguage, t }}>
       {children}
     </LanguageContext.Provider>
   );
 };
 
-const useLanguage = () => {
+export const useLanguage = () => {
   const context = useContext(LanguageContext);
   if (context === undefined) {
     throw new Error('useLanguage must be used within a LanguageProvider');
   }
   return context;
 };
-
-export { LanguageProvider, useLanguage };
