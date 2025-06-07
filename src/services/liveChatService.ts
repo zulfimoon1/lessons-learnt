@@ -31,7 +31,23 @@ export const createChatSession = async (
     }
 
     console.log('Chat session created successfully:', session);
-    return { session };
+    
+    // Transform the database response to match our interface
+    const chatSession: LiveChatSession = {
+      id: session.id,
+      student_id: session.student_id,
+      student_name: session.student_name,
+      school: session.school,
+      grade: session.grade,
+      is_anonymous: session.is_anonymous,
+      status: session.status as 'waiting' | 'active' | 'ended',
+      doctor_id: session.doctor_id,
+      started_at: session.started_at,
+      ended_at: session.ended_at,
+      created_at: session.created_at
+    };
+    
+    return { session: chatSession };
   } catch (error) {
     console.error('Unexpected error creating chat session:', error);
     return { error: 'An unexpected error occurred. Please try again.' };

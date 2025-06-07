@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -289,14 +290,6 @@ const StudentDashboard = () => {
           </TabsContent>
         </Tabs>
       </main>
-      <div className="fixed bottom-4 right-4 z-50">
-        <LiveChatWidget
-          studentId={student?.id}
-          studentName={student?.full_name || "Student"}
-          school={student?.school || ""}
-          grade={student?.grade || ""}
-        />
-      </div>
       <ComplianceFooter />
     </div>
   );
