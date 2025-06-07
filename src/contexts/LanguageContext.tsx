@@ -76,7 +76,38 @@ const translations: Record<Language, Translations> = {
     'compliance.dataProcessing': 'Data Processing',
     'compliance.dataRetention': 'Data Retention',
     'compliance.rightToDelete': 'Right to Delete',
-    'compliance.termsOfService': 'Terms of Service'
+    'compliance.termsOfService': 'Terms of Service',
+    'dashboard.teacherOverview': 'Teacher Dashboard',
+    'dashboard.subscribeNow': 'Subscribe Now',
+    'admin.welcome': 'Welcome',
+    'auth.logout': 'Logout',
+    'admin.subscription': 'Subscription',
+    'teacher.subscriptionNeeded': 'A subscription is required for',
+    'pricing.processing': 'Processing...',
+    'login.teacher.role': 'Teacher',
+    'auth.school': 'School',
+    'pricing.securePayment': 'Active Plan',
+    'class.schedule': 'Class Schedule',
+    'upload.bulkUpload': 'Bulk Upload',
+    'articles.mentalHealth': 'Mental Health Articles',
+    'teacher.classSchedulingAvailable': 'Class scheduling is available with an active subscription.',
+    'teacher.subscribeToContinue': 'Subscribe to Continue',
+    'upload.subscriptionRequired': 'Subscription required for bulk upload.',
+    'articles.subscriptionRequired': 'Subscription required for mental health articles.',
+    'common.loading': 'Loading...',
+    'common.success': 'Success',
+    'common.error': 'Error',
+    'upload.uploadComplete': 'Upload completed successfully',
+    'admin.title': 'Admin Dashboard',
+    'admin.logout': 'Logout',
+    'admin.subscribe': 'Subscribe Now',
+    'admin.stats.teachers': 'Total Teachers',
+    'admin.teachers.title': 'School Teachers',
+    'admin.teachers.description': 'Manage your school teachers and their roles.',
+    'admin.teachers.empty': 'No teachers found.',
+    'admin.loading': 'Loading...',
+    'admin.error.title': 'Error',
+    'admin.error.description': 'Failed to load data. Please try again.'
   },
   lt: {
     'welcome.title': 'Transformuokite švietimą su mokinių vedamu grįžtuoju ryšiu',
@@ -147,7 +178,38 @@ const translations: Record<Language, Translations> = {
     'compliance.dataProcessing': 'Duomenų apdorojimas',
     'compliance.dataRetention': 'Duomenų saugojimas',
     'compliance.rightToDelete': 'Teisė ištrinti',
-    'compliance.termsOfService': 'Paslaugų teikimo sąlygos'
+    'compliance.termsOfService': 'Paslaugų teikimo sąlygos',
+    'dashboard.teacherOverview': 'Mokytojo skydelis',
+    'dashboard.subscribeNow': 'Prenumeruoti dabar',
+    'admin.welcome': 'Sveiki',
+    'auth.logout': 'Atsijungti',
+    'admin.subscription': 'Prenumerata',
+    'teacher.subscriptionNeeded': 'Prenumerata reikalinga',
+    'pricing.processing': 'Apdorojama...',
+    'login.teacher.role': 'Mokytojas',
+    'auth.school': 'Mokykla',
+    'pricing.securePayment': 'Aktyvus planas',
+    'class.schedule': 'Klasės tvarkaraštis',
+    'upload.bulkUpload': 'Masinis įkėlimas',
+    'articles.mentalHealth': 'Psichikos sveikatos straipsniai',
+    'teacher.classSchedulingAvailable': 'Klasės tvarkaraščio sudarymas prieinamas su aktyviu prenumeratos.',
+    'teacher.subscribeToContinue': 'Prenumeruoti, kad tęsti',
+    'upload.subscriptionRequired': 'Prenumerata reikalinga masiniui įkėlimui.',
+    'articles.subscriptionRequired': 'Prenumerata reikalinga psichikos sveikatos straipsniams.',
+    'common.loading': 'Kraunama...',
+    'common.success': 'Sėkmingai',
+    'common.error': 'Klaida',
+    'upload.uploadComplete': 'Įkėlimas sėkmingai baigtas',
+    'admin.title': 'Administratoriaus skydelis',
+    'admin.logout': 'Atsijungti',
+    'admin.subscribe': 'Prenumeruoti dabar',
+    'admin.stats.teachers': 'Viso mokytojų',
+    'admin.teachers.title': 'Mokyklos mokytojai',
+    'admin.teachers.description': 'Valdykite savo mokyklos mokytojus ir jų vaidmenis.',
+    'admin.teachers.empty': 'Mokytojų nerasta.',
+    'admin.loading': 'Kraunama...',
+    'admin.error.title': 'Klaida',
+    'admin.error.description': 'Nepavyko įkelti duomenų. Bandykite dar kartą.'
   }
 };
 
@@ -182,7 +244,6 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       value = value?.[k];
     }
     
-    console.log(`Translation for "${key}":`, value || 'NOT FOUND');
     return value || key;
   };
 
@@ -203,8 +264,6 @@ export const useLanguage = (): LanguageContextType => {
       language: 'en' as Language,
       setLanguage: () => {},
       t: (key: string) => {
-        console.log(`Fallback translation for "${key}"`);
-        // ... keep existing code (fallback translations object)
         const fallbackTranslations: Record<string, string> = {
           'welcome.title': 'Transform Education with Student-Led Feedback',
           'welcome.subtitle': 'Empowering schools with real-time insights from students to create better learning environments and support mental health.',
@@ -230,7 +289,38 @@ export const useLanguage = (): LanguageContextType => {
           'demo.classManagement.voiceover': 'See how teachers can efficiently manage their classes and track student progress in real-time.',
           'demo.liveChat.title': 'Live Communication',
           'demo.liveChat.description': 'Real-time communication between students, teachers, and support staff.',
-          'demo.liveChat.voiceover': 'Experience real-time communication between students and teachers for immediate support and guidance.'
+          'demo.liveChat.voiceover': 'Experience real-time communication between students and teachers for immediate support and guidance.',
+          'dashboard.teacherOverview': 'Teacher Dashboard',
+          'dashboard.subscribeNow': 'Subscribe Now',
+          'admin.welcome': 'Welcome',
+          'auth.logout': 'Logout',
+          'admin.subscription': 'Subscription',
+          'teacher.subscriptionNeeded': 'A subscription is required for',
+          'pricing.processing': 'Processing...',
+          'login.teacher.role': 'Teacher',
+          'auth.school': 'School',
+          'pricing.securePayment': 'Active Plan',
+          'class.schedule': 'Class Schedule',
+          'upload.bulkUpload': 'Bulk Upload',
+          'articles.mentalHealth': 'Mental Health Articles',
+          'teacher.classSchedulingAvailable': 'Class scheduling is available with an active subscription.',
+          'teacher.subscribeToContinue': 'Subscribe to Continue',
+          'upload.subscriptionRequired': 'Subscription required for bulk upload.',
+          'articles.subscriptionRequired': 'Subscription required for mental health articles.',
+          'common.loading': 'Loading...',
+          'common.success': 'Success',
+          'common.error': 'Error',
+          'upload.uploadComplete': 'Upload completed successfully',
+          'admin.title': 'Admin Dashboard',
+          'admin.logout': 'Logout',
+          'admin.subscribe': 'Subscribe Now',
+          'admin.stats.teachers': 'Total Teachers',
+          'admin.teachers.title': 'School Teachers',
+          'admin.teachers.description': 'Manage your school teachers and their roles.',
+          'admin.teachers.empty': 'No teachers found.',
+          'admin.loading': 'Loading...',
+          'admin.error.title': 'Error',
+          'admin.error.description': 'Failed to load data. Please try again.'
         };
         
         return fallbackTranslations[key] || key;

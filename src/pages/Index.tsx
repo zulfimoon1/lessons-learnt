@@ -6,11 +6,7 @@ import CookieConsent from "@/components/CookieConsent";
 import DataProtectionBanner from "@/components/DataProtectionBanner";
 
 const Index = () => {
-  const { t, language } = useLanguage();
-
-  console.log('Index page rendering, current language:', language);
-  console.log('Title translation:', t('welcome.title'));
-  console.log('Subtitle translation:', t('welcome.subtitle'));
+  const { t } = useLanguage();
 
   return (
     <div className="min-h-screen bg-background">
