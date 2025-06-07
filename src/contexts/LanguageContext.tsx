@@ -415,6 +415,42 @@ const translations = {
     'compliance.accessControl': 'Role-Based Access Control',
     'compliance.dataMinimization': 'Data Minimization',
     'compliance.consentWithdrawal': 'Withdraw Consent',
+
+    // Demo Section
+    'demo.subtitle': 'Experience our comprehensive education platform through this interactive demonstration showcasing features for students, teachers, and mental health professionals.',
+    'demo.compliance.gdpr': 'GDPR Compliant',
+    'demo.compliance.soc2': 'SOC 2 Certified',
+    'demo.compliance.hipaa': 'HIPAA Compliant',
+    'demo.compliance.description': 'Robust, secure platform with enterprise-grade compliance',
+    'demo.liveVoiceover': 'Live Voiceover',
+    'demo.exploreFeatures': 'Explore Platform Features',
+    'demo.userType.student': 'Student View',
+    'demo.userType.teacher': 'Teacher View',
+    'demo.userType.psychologist': 'Psychologist View',
+    'demo.stats.coreFeatures': 'Core Features',
+    'demo.stats.userTypes': 'User Types',
+    'demo.stats.mentalHealthSupport': 'Mental Health Support',
+    
+    // Demo Features
+    'demo.studentFeedback.title': 'Student Feedback System',
+    'demo.studentFeedback.description': 'Students provide real-time feedback on lessons and emotional state',
+    'demo.studentFeedback.voiceover': 'Welcome to our comprehensive student feedback system. Students can easily share their thoughts about lessons and track their emotional well-being in a safe, supportive environment. All feedback is completely anonymous and helps teachers improve their teaching methods.',
+    
+    'demo.teacherInsights.title': 'Teacher Analytics Dashboard',
+    'demo.teacherInsights.description': 'Teachers access detailed insights and performance analytics',
+    'demo.teacherInsights.voiceover': 'Our teacher dashboard provides powerful analytics and insights, helping educators understand student progress and adapt their teaching methods for maximum effectiveness. Real-time data helps identify students who may need additional support.',
+    
+    'demo.mentalHealth.title': 'Anonymous Mental Health Support',
+    'demo.mentalHealth.description': 'Integrated mental health resources with complete anonymity and GDPR compliance',
+    'demo.mentalHealth.voiceover': 'Mental health support is seamlessly integrated into our platform with complete anonymity protection. Our GDPR, SOC 2, and HIPAA compliant system connects students with qualified professionals through secure, anonymous live chat features.',
+    
+    'demo.classManagement.title': 'Class Schedule Management',
+    'demo.classManagement.description': 'Comprehensive class scheduling and management tools',
+    'demo.classManagement.voiceover': 'Efficient class management tools help teachers organize schedules, track attendance, and manage lesson plans all in one integrated platform. Students can easily view their daily schedules and upcoming assignments.',
+    
+    'demo.liveChat.title': 'Anonymous Live Mental Health Chat',
+    'demo.liveChat.description': 'Instant anonymous access to mental health professionals',
+    'demo.liveChat.voiceover': 'Students have instant access to mental health support through our completely anonymous live chat system. Our robust, compliant platform ensures help is always available when needed while protecting student privacy.',
   },
   lt: {
     // Navigation
@@ -822,6 +858,42 @@ const translations = {
     'compliance.accessControl': 'Vaidmenimis grįsta prieigos kontrolė',
     'compliance.dataMinimization': 'Duomenų minimizavimas',
     'compliance.consentWithdrawal': 'Atšaukti sutikimą',
+
+    // Demo Section
+    'demo.subtitle': 'Išbandykite mūsų išsamią švietimo platformą per šią interaktyvią demonstraciją, pristatančią funkcijas mokiniams, mokytojams ir psichikos sveikatos specialistams.',
+    'demo.compliance.gdpr': 'GDPR atitiktis',
+    'demo.compliance.soc2': 'SOC 2 sertifikatas',
+    'demo.compliance.hipaa': 'HIPAA atitiktis',
+    'demo.compliance.description': 'Patikima, saugi platforma su įmonių lygio atitiktimi',
+    'demo.liveVoiceover': 'Gyvasis komentaras',
+    'demo.exploreFeatures': 'Tyrinėkite platformos funkcijas',
+    'demo.userType.student': 'Mokinio vaizdas',
+    'demo.userType.teacher': 'Mokytojo vaizdas',
+    'demo.userType.psychologist': 'Psichologo vaizdas',
+    'demo.stats.coreFeatures': 'Pagrindinės funkcijos',
+    'demo.stats.userTypes': 'Vartotojų tipai',
+    'demo.stats.mentalHealthSupport': 'Psichikos sveikatos pagalba',
+    
+    // Demo Features
+    'demo.studentFeedback.title': 'Mokinių grįžtamojo ryšio sistema',
+    'demo.studentFeedback.description': 'Mokiniai teikia realaus laiko grįžtamąjį ryšį apie pamokas ir emocinę būseną',
+    'demo.studentFeedback.voiceover': 'Sveiki atvykę į mūsų išsamią mokinių grįžtamojo ryšio sistemą. Mokiniai gali lengvai pasidalinti mintimis apie pamokas ir sekti savo emocinę gerovę saugioje, palaikančioje aplinkoje. Visas grįžtamasis ryšys yra visiškai anoniminis ir padeda mokytojams tobulinti mokymo metodus.',
+    
+    'demo.teacherInsights.title': 'Mokytojų analitikos skydelis',
+    'demo.teacherInsights.description': 'Mokytojai gauna išsamias įžvalgas ir veiklos analitikos duomenis',
+    'demo.teacherInsights.voiceover': 'Mūsų mokytojų skydelis suteikia galingą analitiką ir įžvalgas, padedančias pedagogams suprasti mokinių pažangą ir pritaikyti mokymo metodus maksimaliam efektyvumui. Realaus laiko duomenys padeda identifikuoti mokinius, kuriems gali reikėti papildomos pagalbos.',
+    
+    'demo.mentalHealth.title': 'Anoniminis psichikos sveikatos palaikymas',
+    'demo.mentalHealth.description': 'Integruoti psichikos sveikatos ištekliai su visiška anonimiškumo ir GDPR atitiktimi',
+    'demo.mentalHealth.voiceover': 'Psichikos sveikatos pagalba sklandžiai integruota į mūsų platformą su visiška anonimiškumo apsauga. Mūsų GDPR, SOC 2 ir HIPAA atitinkanti sistema sujungia mokinius su kvalifikuotais specialistais per saugias, anonimines gyvojo pokalbio funkcijas.',
+    
+    'demo.classManagement.title': 'Klasių tvarkaraščių valdymas',
+    'demo.classManagement.description': 'Išsamūs klasių planavimo ir valdymo įrankiai',
+    'demo.classManagement.voiceover': 'Efektyvūs klasių valdymo įrankiai padeda mokytojams organizuoti tvarkaraščius, sekti lankymąsi ir valdyti pamokų planus vienoje integruotoje platformoje. Mokiniai gali lengvai peržiūrėti savo dienos tvarkaraščius ir artėjančius užduotis.',
+    
+    'demo.liveChat.title': 'Anoniminis gyvasis psichikos sveikatos pokalbis',
+    'demo.liveChat.description': 'Momentinė anoniminė prieiga prie psichikos sveikatos specialistų',
+    'demo.liveChat.voiceover': 'Mokiniai turi momentinę prieigą prie psichikos sveikatos pagalbos per mūsų visiškai anoniminę gyvojo pokalbio sistemą. Mūsų patikima, atitinkanti platforma užtikrina, kad pagalba visada būtų prieinama, kai reikia, kartu apsaugant mokinių privatumą.',
   }
 };
 

@@ -27,12 +27,11 @@ import LiveChatMockup from "@/components/demo/LiveChatMockup";
 
 interface DemoFeature {
   id: string;
-  title: string;
-  description: string;
+  titleKey: string;
+  descriptionKey: string;
   userType: "student" | "teacher" | "psychologist";
   icon: any;
-  videoDescription: string;
-  voiceoverText: string;
+  voiceoverKey: string;
   mockupComponent: React.ReactNode;
 }
 
@@ -45,52 +44,47 @@ const DemoSection = () => {
   const demoFeatures: DemoFeature[] = [
     {
       id: "student-feedback",
-      title: "Student Feedback System",
-      description: "Students provide real-time feedback on lessons and emotional state",
+      titleKey: "demo.studentFeedback.title",
+      descriptionKey: "demo.studentFeedback.description",
       userType: "student",
       icon: UsersIcon,
-      videoDescription: "Student dashboard showing feedback forms and emotional state tracking",
-      voiceoverText: "Welcome to our comprehensive student feedback system. Students can easily share their thoughts about lessons and track their emotional well-being in a safe, supportive environment. All feedback is completely anonymous and helps teachers improve their teaching methods.",
+      voiceoverKey: "demo.studentFeedback.voiceover",
       mockupComponent: <StudentFeedbackMockup />
     },
     {
       id: "teacher-insights",
-      title: "Teacher Analytics Dashboard",
-      description: "Teachers access detailed insights and performance analytics",
+      titleKey: "demo.teacherInsights.title",
+      descriptionKey: "demo.teacherInsights.description",
       userType: "teacher",
       icon: BarChart3Icon,
-      videoDescription: "Teacher dashboard with analytics, class schedules, and student insights",
-      voiceoverText: "Our teacher dashboard provides powerful analytics and insights, helping educators understand student progress and adapt their teaching methods for maximum effectiveness. Real-time data helps identify students who may need additional support.",
+      voiceoverKey: "demo.teacherInsights.voiceover",
       mockupComponent: <TeacherDashboardMockup />
     },
     {
       id: "mental-health-support",
-      title: "Anonymous Mental Health Support",
-      description: "Integrated mental health resources with complete anonymity and GDPR compliance",
+      titleKey: "demo.mentalHealth.title",
+      descriptionKey: "demo.mentalHealth.description",
       userType: "psychologist",
       icon: HeartIcon,
-      videoDescription: "Mental health support interface with anonymous chat and compliance features",
-      voiceoverText: "Mental health support is seamlessly integrated into our platform with complete anonymity protection. Our GDPR, SOC 2, and HIPAA compliant system connects students with qualified professionals through secure, anonymous live chat features.",
+      voiceoverKey: "demo.mentalHealth.voiceover",
       mockupComponent: <MentalHealthMockup />
     },
     {
       id: "class-management",
-      title: "Class Schedule Management",
-      description: "Comprehensive class scheduling and management tools",
+      titleKey: "demo.classManagement.title",
+      descriptionKey: "demo.classManagement.description",
       userType: "teacher",
       icon: BookOpenIcon,
-      videoDescription: "Class scheduling interface and calendar management",
-      voiceoverText: "Efficient class management tools help teachers organize schedules, track attendance, and manage lesson plans all in one integrated platform. Students can easily view their daily schedules and upcoming assignments.",
+      voiceoverKey: "demo.classManagement.voiceover",
       mockupComponent: <ClassManagementMockup />
     },
     {
       id: "live-chat",
-      title: "Anonymous Live Mental Health Chat",
-      description: "Instant anonymous access to mental health professionals",
+      titleKey: "demo.liveChat.title",
+      descriptionKey: "demo.liveChat.description",
       userType: "student",
       icon: MessageCircleIcon,
-      videoDescription: "Anonymous live chat interface connecting students with mental health professionals",
-      voiceoverText: "Students have instant access to mental health support through our completely anonymous live chat system. Our robust, compliant platform ensures help is always available when needed while protecting student privacy.",
+      voiceoverKey: "demo.liveChat.voiceover",
       mockupComponent: <LiveChatMockup />
     }
   ];
@@ -110,7 +104,8 @@ const DemoSection = () => {
 
   // Auto-play voiceover when feature changes
   useEffect(() => {
-    const utterance = playVoiceover(demoFeatures[currentFeature].voiceoverText);
+    const voiceoverText = t(demoFeatures[currentFeature].voiceoverKey);
+    const utterance = playVoiceover(voiceoverText);
     if (utterance) {
       utterance.onend = () => {
         setCurrentUtterance(null);
@@ -125,7 +120,7 @@ const DemoSection = () => {
     return () => {
       stopVoiceover();
     };
-  }, [currentFeature]);
+  }, [currentFeature, t]);
 
   const handleFeatureSelect = (index: number) => {
     // Stop current audio
@@ -134,7 +129,8 @@ const DemoSection = () => {
     setCurrentFeature(index);
     
     // Start new voiceover
-    const utterance = playVoiceover(demoFeatures[index].voiceoverText);
+    const voiceoverText = t(demoFeatures[index].voiceoverKey);
+    const utterance = playVoiceover(voiceoverText);
     if (utterance) {
       utterance.onend = () => {
         setCurrentUtterance(null);
@@ -160,26 +156,26 @@ const DemoSection = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-12">
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-            Experience our comprehensive education platform through this interactive demonstration showcasing features for students, teachers, and mental health professionals.
+            {t('demo.subtitle')}
           </p>
           
           {/* Compliance Banner */}
           <div className="flex justify-center gap-3 mt-6">
             <Badge className="bg-blue-50 text-blue-700 border border-blue-200">
               <ShieldIcon className="w-3 h-3 mr-1" />
-              GDPR Compliant
+              {t('demo.compliance.gdpr')}
             </Badge>
             <Badge className="bg-green-50 text-green-700 border border-green-200">
               <LockIcon className="w-3 h-3 mr-1" />
-              SOC 2 Certified
+              {t('demo.compliance.soc2')}
             </Badge>
             <Badge className="bg-purple-50 text-purple-700 border border-purple-200">
               <FileCheckIcon className="w-3 h-3 mr-1" />
-              HIPAA Compliant
+              {t('demo.compliance.hipaa')}
             </Badge>
           </div>
           <p className="text-sm text-muted-foreground mt-2">
-            Robust, secure platform with enterprise-grade compliance
+            {t('demo.compliance.description')}
           </p>
         </div>
 
@@ -197,7 +193,7 @@ const DemoSection = () => {
                   {/* Feature Badge */}
                   <div className="absolute top-4 right-4">
                     <Badge className={getUserTypeColor(currentDemo.userType)}>
-                      {currentDemo.userType.charAt(0).toUpperCase() + currentDemo.userType.slice(1)} View
+                      {t(`demo.userType.${currentDemo.userType}`)}
                     </Badge>
                   </div>
                 </div>
@@ -209,10 +205,10 @@ const DemoSection = () => {
               <CardContent className="p-4">
                 <div className="flex items-center gap-2 mb-2">
                   <div className="w-2 h-2 bg-purple-600 rounded-full animate-pulse"></div>
-                  <span className="text-sm font-medium text-purple-700">Live Voiceover</span>
+                  <span className="text-sm font-medium text-purple-700">{t('demo.liveVoiceover')}</span>
                 </div>
                 <p className="text-sm text-purple-600 italic">
-                  "{currentDemo.voiceoverText}"
+                  "{t(currentDemo.voiceoverKey)}"
                 </p>
               </CardContent>
             </Card>
@@ -222,7 +218,7 @@ const DemoSection = () => {
           <div className="order-1 lg:order-2">
             <div className="space-y-4">
               <h3 className="text-2xl font-bold text-foreground mb-6">
-                Explore Platform Features
+                {t('demo.exploreFeatures')}
               </h3>
               
               <div className="space-y-3">
@@ -244,11 +240,11 @@ const DemoSection = () => {
                           <feature.icon className="w-5 h-5" />
                         </div>
                         <div className="flex-1">
-                          <h4 className="font-semibold text-foreground">{feature.title}</h4>
-                          <p className="text-sm text-muted-foreground">{feature.description}</p>
+                          <h4 className="font-semibold text-foreground">{t(feature.titleKey)}</h4>
+                          <p className="text-sm text-muted-foreground">{t(feature.descriptionKey)}</p>
                         </div>
                         <Badge className={getUserTypeColor(feature.userType)}>
-                          {feature.userType}
+                          {t(`demo.userType.${feature.userType}`)}
                         </Badge>
                       </div>
                     </CardContent>
@@ -264,15 +260,15 @@ const DemoSection = () => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div className="text-center">
               <div className="text-3xl font-bold text-primary mb-2">5+</div>
-              <p className="text-muted-foreground">Core Features</p>
+              <p className="text-muted-foreground">{t('demo.stats.coreFeatures')}</p>
             </div>
             <div className="text-center">
               <div className="text-3xl font-bold text-primary mb-2">3</div>
-              <p className="text-muted-foreground">User Types</p>
+              <p className="text-muted-foreground">{t('demo.stats.userTypes')}</p>
             </div>
             <div className="text-center">
               <div className="text-3xl font-bold text-primary mb-2">24/7</div>
-              <p className="text-muted-foreground">Mental Health Support</p>
+              <p className="text-muted-foreground">{t('demo.stats.mentalHealthSupport')}</p>
             </div>
           </div>
         </div>
