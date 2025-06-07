@@ -5,6 +5,7 @@ import { GraduationCapIcon, UsersIcon, BookOpenIcon, HeartIcon, BarChart3Icon, S
 import { Link } from "react-router-dom";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import CalendarBooking from "@/components/CalendarBooking";
+import DemoSection from "@/components/DemoSection";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 const Index = () => {
@@ -65,6 +66,9 @@ const Index = () => {
           </div>
         </div>
       </section>
+
+      {/* Demo Section */}
+      <DemoSection />
 
       {/* Features Section */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
