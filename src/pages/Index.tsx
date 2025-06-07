@@ -23,6 +23,9 @@ const Index = () => {
             <p className="text-xl text-muted-foreground mb-8 max-w-3xl mx-auto">
               {t('welcome.subtitle')}
             </p>
+            <p className="text-lg text-primary font-medium mb-8">
+              {t('tagline.studentLead')}
+            </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
               <a
                 href="/student-login"
