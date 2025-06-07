@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -80,15 +79,18 @@ const PlatformAdminDashboard = () => {
 
   const loadDashboardData = async () => {
     try {
-      console.log('Loading platform admin dashboard data');
+      console.log('=== PLATFORM ADMIN DASHBOARD DEBUG START ===');
       
+      // Load school statistics
       const { data: schoolData, error: schoolError } = await supabase
         .from('school_statistics')
         .select('*');
 
       if (schoolError) throw schoolError;
       setSchoolStats(schoolData || []);
+      console.log('School stats loaded:', schoolData?.length);
 
+      // Load feedback analytics
       const { data: feedbackData, error: feedbackError } = await supabase
         .from('feedback_analytics')
         .select('*')
@@ -96,11 +98,18 @@ const PlatformAdminDashboard = () => {
 
       if (feedbackError) throw feedbackError;
       setFeedbackStats(feedbackData || []);
+      console.log('Feedback stats loaded:', feedbackData?.length);
 
+      // Load subscriptions with detailed logging
       const { data: subscriptionData, error: subscriptionError } = await supabase
         .from('subscriptions')
         .select('*')
         .order('created_at', { ascending: false });
+
+      console.log('=== SUBSCRIPTIONS DEBUG ===');
+      console.log('Subscription query error:', subscriptionError);
+      console.log('Subscription data:', subscriptionData);
+      console.log('Number of subscriptions:', subscriptionData?.length || 0);
 
       if (subscriptionError) {
         console.error('Subscription error:', subscriptionError);
@@ -113,6 +122,7 @@ const PlatformAdminDashboard = () => {
         setSubscriptions(subscriptionData || []);
       }
 
+      // Load student statistics
       const { statistics, error: studentStatsError } = await getStudentStatistics();
       
       if (studentStatsError) {
@@ -124,7 +134,10 @@ const PlatformAdminDashboard = () => {
         });
       } else {
         setStudentStats(statistics || []);
+        console.log('Student stats loaded:', statistics?.length);
       }
+
+      console.log('=== PLATFORM ADMIN DASHBOARD DEBUG END ===');
 
     } catch (error) {
       console.error('Dashboard load error:', error);
@@ -139,7 +152,7 @@ const PlatformAdminDashboard = () => {
   };
 
   const refreshData = () => {
-    console.log('Refreshing platform admin data');
+    console.log('Refreshing platform admin data...');
     setIsLoading(true);
     loadDashboardData();
   };
@@ -184,6 +197,7 @@ const PlatformAdminDashboard = () => {
     );
   }
 
+  // Calculate totals for the summary cards
   const totalStudents = studentStats.reduce((acc, curr) => acc + curr.total_students, 0);
   const totalSchools = schoolStats.length;
   const totalTeachers = schoolStats.reduce((acc, curr) => acc + curr.total_teachers, 0);
@@ -219,6 +233,7 @@ const PlatformAdminDashboard = () => {
       </header>
 
       <main className="max-w-7xl mx-auto p-6 space-y-6">
+        {/* Debug Information */}
         <Card className="border-blue-200 bg-blue-50">
           <CardHeader>
             <CardTitle className="text-blue-800">System Information</CardTitle>
@@ -244,6 +259,7 @@ const PlatformAdminDashboard = () => {
           </CardContent>
         </Card>
 
+        {/* Overview Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -286,6 +302,7 @@ const PlatformAdminDashboard = () => {
           </Card>
         </div>
 
+        {/* Tabs for different views */}
         <Tabs defaultValue="payments" className="space-y-6">
           <TabsList className="grid w-full grid-cols-7">
             <TabsTrigger value="payments">Payments</TabsTrigger>

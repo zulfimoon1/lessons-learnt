@@ -19,27 +19,11 @@ const TeacherLogin = () => {
   const { toast } = useToast();
   
   // Safe auth hook usage with error boundary
-  let auth;
-  try {
-    auth = useAuth();
-    console.log('TeacherLogin: Auth context loaded successfully');
-  } catch (error) {
-    console.error('TeacherLogin: Auth context error:', error);
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-red-600 mb-4">Authentication Error</h1>
-          <p className="text-gray-600">Unable to access authentication. Please refresh the page.</p>
-        </div>
-      </div>
-    );
-  }
-
+  const auth = useAuth();
   const { teacher, teacherLogin, isLoading: authLoading } = auth;
 
   // Redirect if already logged in
   useEffect(() => {
-    console.log('TeacherLogin: Checking auth state - teacher:', teacher, 'authLoading:', authLoading);
     if (teacher && !authLoading) {
       console.log('TeacherLogin: User already logged in, redirecting...');
       if (teacher.role === "admin") {
@@ -68,7 +52,6 @@ const TeacherLogin = () => {
 
   // Don't render if still loading auth state
   if (authLoading) {
-    console.log('TeacherLogin: Auth still loading...');
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center">
         <div className="text-center">
@@ -81,10 +64,8 @@ const TeacherLogin = () => {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('TeacherLogin: Login attempt started for:', loginData.email);
     
     if (!loginData.email.trim() || !loginData.password) {
-      console.log('TeacherLogin: Missing login data');
       toast({
         title: "Missing information",
         description: "Please enter both email and password",
@@ -139,10 +120,8 @@ const TeacherLogin = () => {
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('TeacherLogin: Signup attempt started for:', signupData.email);
     
     if (!signupData.name.trim() || !signupData.email.trim() || !signupData.school.trim() || !signupData.password || !signupData.confirmPassword) {
-      console.log('TeacherLogin: Missing signup data');
       toast({
         title: "Missing information",
         description: "Please fill in all required fields",
@@ -153,7 +132,6 @@ const TeacherLogin = () => {
 
     // Validate passwords match
     if (signupData.password !== signupData.confirmPassword) {
-      console.log('TeacherLogin: Password mismatch');
       toast({
         title: "Password mismatch",
         description: "Passwords do not match",
@@ -213,8 +191,6 @@ const TeacherLogin = () => {
     }
   };
 
-  console.log('TeacherLogin: Rendering login page');
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center p-4">
       <div className="absolute top-4 right-4">
@@ -225,16 +201,16 @@ const TeacherLogin = () => {
           <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full mx-auto flex items-center justify-center mb-4">
             <GraduationCapIcon className="w-8 h-8 text-white" />
           </div>
-          <CardTitle className="text-2xl text-gray-900">Teacher Portal</CardTitle>
+          <CardTitle className="text-2xl text-gray-900">{t('login.teacher.title') || "Teacher Portal"}</CardTitle>
           <CardDescription>
-            Access your teaching dashboard
+            {t('login.teacher.subtitle') || "Access your teaching dashboard"}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="login" className="space-y-4">
             <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="login">Login</TabsTrigger>
-              <TabsTrigger value="signup">Sign Up</TabsTrigger>
+              <TabsTrigger value="login">{t('login.teacher.login') || "Login"}</TabsTrigger>
+              <TabsTrigger value="signup">{t('login.teacher.signup') || "Sign Up"}</TabsTrigger>
             </TabsList>
 
             <TabsContent value="login">
@@ -242,7 +218,7 @@ const TeacherLogin = () => {
                 <div className="space-y-2">
                   <Label htmlFor="loginEmail" className="flex items-center gap-2">
                     <Mail className="w-4 h-4" />
-                    Email
+                    {t('login.teacher.email') || "Email"}
                   </Label>
                   <Input
                     id="loginEmail"
@@ -255,7 +231,7 @@ const TeacherLogin = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="loginPassword">Password</Label>
+                  <Label htmlFor="loginPassword">{t('login.teacher.password') || "Password"}</Label>
                   <Input
                     id="loginPassword"
                     type="password"
@@ -271,10 +247,10 @@ const TeacherLogin = () => {
                   className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
                   disabled={isLoading}
                 >
-                  {isLoading ? "Logging in..." : (
+                  {isLoading ? (t('login.teacher.loggingIn') || "Logging in...") : (
                     <>
                       <LogInIcon className="w-4 h-4 mr-2" />
-                      Login
+                      {t('login.teacher.login') || "Login"}
                     </>
                   )}
                 </Button>
@@ -286,7 +262,7 @@ const TeacherLogin = () => {
                 <div className="space-y-2">
                   <Label htmlFor="signupName" className="flex items-center gap-2">
                     <UserIcon className="w-4 h-4" />
-                    Full Name
+                    {t('login.teacher.fullName') || "Full Name"}
                   </Label>
                   <Input
                     id="signupName"
@@ -301,7 +277,7 @@ const TeacherLogin = () => {
                 <div className="space-y-2">
                   <Label htmlFor="signupEmail" className="flex items-center gap-2">
                     <Mail className="w-4 h-4" />
-                    Email
+                    {t('login.teacher.email') || "Email"}
                   </Label>
                   <Input
                     id="signupEmail"
@@ -316,7 +292,7 @@ const TeacherLogin = () => {
                 <div className="space-y-2">
                   <Label htmlFor="signupSchool" className="flex items-center gap-2">
                     <School className="w-4 h-4" />
-                    School
+                    {t('login.teacher.school') || "School"}
                   </Label>
                   <Input
                     id="signupSchool"
@@ -331,7 +307,7 @@ const TeacherLogin = () => {
                 <div className="space-y-2">
                   <Label htmlFor="role" className="flex items-center gap-2">
                     <ShieldIcon className="w-4 h-4" />
-                    Role
+                    {t('login.teacher.role') || "Role"}
                   </Label>
                   <Select 
                     value={signupData.role} 
@@ -343,19 +319,19 @@ const TeacherLogin = () => {
                       <SelectValue placeholder="Select role" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="teacher">Teacher</SelectItem>
-                      <SelectItem value="admin">School Admin</SelectItem>
+                      <SelectItem value="teacher">{t('login.teacher.roleTeacher') || "Teacher"}</SelectItem>
+                      <SelectItem value="admin">{t('login.teacher.roleAdmin') || "School Admin"}</SelectItem>
                     </SelectContent>
                   </Select>
                   {signupData.role === "admin" && (
                     <p className="text-xs text-gray-500 mt-1">
-                      School Admins can manage teachers and view all feedback
+                      {t('login.teacher.adminHint') || "School Admins can manage teachers and view all feedback"}
                     </p>
                   )}
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="signupPassword">Password</Label>
+                  <Label htmlFor="signupPassword">{t('login.teacher.password') || "Password"}</Label>
                   <Input
                     id="signupPassword"
                     type="password"
@@ -367,7 +343,7 @@ const TeacherLogin = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="confirmPassword">Confirm Password</Label>
+                  <Label htmlFor="confirmPassword">{t('login.teacher.confirmPassword') || "Confirm Password"}</Label>
                   <Input
                     id="confirmPassword"
                     type="password"
@@ -383,7 +359,7 @@ const TeacherLogin = () => {
                   className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700"
                   disabled={isLoading}
                 >
-                  {isLoading ? "Creating account..." : "Create Account"}
+                  {isLoading ? (t('login.teacher.creatingAccount') || "Creating account...") : (t('login.teacher.createAccount') || "Create Account")}
                 </Button>
               </form>
             </TabsContent>

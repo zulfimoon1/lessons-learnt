@@ -21,7 +21,6 @@ const StudentLogin = () => {
   let auth;
   try {
     auth = useAuth();
-    console.log('StudentLogin: Auth context loaded successfully');
   } catch (error) {
     console.error('StudentLogin: Auth context error:', error);
     return (
@@ -38,7 +37,6 @@ const StudentLogin = () => {
 
   // Redirect if already logged in
   useEffect(() => {
-    console.log('StudentLogin: Checking auth state - student:', student, 'authLoading:', authLoading);
     if (student && !authLoading) {
       console.log('StudentLogin: Student already logged in, redirecting...');
       navigate("/student-dashboard");
@@ -62,7 +60,6 @@ const StudentLogin = () => {
 
   // Don't render if still loading auth state
   if (authLoading) {
-    console.log('StudentLogin: Auth still loading...');
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
@@ -75,10 +72,8 @@ const StudentLogin = () => {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('StudentLogin: Login attempt started for:', loginData.fullName);
     
     if (!loginData.fullName.trim() || !loginData.password) {
-      console.log('StudentLogin: Missing login data');
       toast({
         title: "Missing information",
         description: "Please enter both your full name and password",
@@ -88,7 +83,6 @@ const StudentLogin = () => {
     }
 
     setIsLoading(true);
-    console.log('StudentLogin: Calling studentLogin service...');
 
     try {
       const result = await studentLogin(
@@ -96,34 +90,22 @@ const StudentLogin = () => {
         loginData.password
       );
 
-      console.log('StudentLogin: Login result received:', result);
-
       if (result.error) {
-        console.error('StudentLogin: Login failed with error:', result.error);
         toast({
-          title: "Login failed",
+          title: t('student.loginFailed') || "Login failed",
           description: result.error,
           variant: "destructive",
         });
       } else if (result.student) {
-        console.log('StudentLogin: Login successful for student:', result.student);
         toast({
-          title: "Welcome back!",
-          description: "Login successful",
-        });
-        // Navigation should be handled by useEffect when student state updates
-      } else {
-        console.error('StudentLogin: No error but no student data returned');
-        toast({
-          title: "Login failed",
-          description: "Invalid response from server. Please try again.",
-          variant: "destructive",
+          title: t('student.welcomeBack') || "Welcome back!",
+          description: t('student.loginSuccess') || "Login successful",
         });
       }
     } catch (err) {
       console.error('StudentLogin: Unexpected error during login:', err);
       toast({
-        title: "Login failed",
+        title: t('student.loginFailed') || "Login failed",
         description: "An unexpected error occurred. Please try again.",
         variant: "destructive",
       });
@@ -134,10 +116,8 @@ const StudentLogin = () => {
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('StudentLogin: Signup attempt started for:', signupData.fullName);
     
     if (!signupData.fullName.trim() || !signupData.school.trim() || !signupData.grade.trim() || !signupData.password || !signupData.confirmPassword) {
-      console.log('StudentLogin: Missing signup data');
       toast({
         title: "Missing information",
         description: "Please fill in all required fields",
@@ -147,17 +127,15 @@ const StudentLogin = () => {
     }
 
     if (signupData.password !== signupData.confirmPassword) {
-      console.log('StudentLogin: Password mismatch');
       toast({
-        title: "Password mismatch",
-        description: "Passwords do not match",
+        title: t('student.passwordMismatch') || "Password mismatch",
+        description: t('student.passwordsDoNotMatch') || "Passwords do not match",
         variant: "destructive",
       });
       return;
     }
 
     setIsLoading(true);
-    console.log('StudentLogin: Calling studentSignup service...');
 
     try {
       const result = await studentSignup(
@@ -167,34 +145,22 @@ const StudentLogin = () => {
         signupData.password
       );
 
-      console.log('StudentLogin: Signup result received:', result);
-
       if (result.error) {
-        console.error('StudentLogin: Signup failed with error:', result.error);
         toast({
-          title: "Signup failed",
+          title: t('student.signupFailed') || "Signup failed",
           description: result.error,
           variant: "destructive",
         });
       } else if (result.student) {
-        console.log('StudentLogin: Signup successful for student:', result.student);
         toast({
-          title: "Account created!",
-          description: "Welcome to Lesson Lens!",
-        });
-        // Navigation should be handled by useEffect when student state updates
-      } else {
-        console.error('StudentLogin: No error but no student data returned');
-        toast({
-          title: "Signup failed",
-          description: "Invalid response from server. Please try again.",
-          variant: "destructive",
+          title: t('student.accountCreated') || "Account created!",
+          description: t('student.welcomeToApp') || "Welcome to Lesson Lens!",
         });
       }
     } catch (err) {
       console.error('StudentLogin: Unexpected error during signup:', err);
       toast({
-        title: "Signup failed",
+        title: t('student.signupFailed') || "Signup failed",
         description: "An unexpected error occurred. Please try again.",
         variant: "destructive",
       });
@@ -202,8 +168,6 @@ const StudentLogin = () => {
       setIsLoading(false);
     }
   };
-
-  console.log('StudentLogin: Rendering login page');
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
@@ -215,16 +179,16 @@ const StudentLogin = () => {
           <div className="w-16 h-16 bg-primary rounded-full mx-auto flex items-center justify-center mb-4">
             <BookOpenIcon className="w-8 h-8 text-primary-foreground" />
           </div>
-          <CardTitle className="text-2xl text-foreground">Student Portal</CardTitle>
+          <CardTitle className="text-2xl text-foreground">{t('student.portal') || "Student Portal"}</CardTitle>
           <CardDescription>
-            Access your learning dashboard
+            {t('student.loginDescription') || "Access your learning dashboard"}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="login" className="space-y-4">
             <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="login">Login</TabsTrigger>
-              <TabsTrigger value="signup">Sign Up</TabsTrigger>
+              <TabsTrigger value="login">{t('auth.login') || "Login"}</TabsTrigger>
+              <TabsTrigger value="signup">{t('auth.signUp') || "Sign Up"}</TabsTrigger>
             </TabsList>
 
             <TabsContent value="login">
@@ -232,12 +196,12 @@ const StudentLogin = () => {
                 <div className="space-y-2">
                   <Label htmlFor="loginFullName" className="flex items-center gap-2">
                     <UserIcon className="w-4 h-4" />
-                    Full Name
+                    {t('student.fullName') || "Full Name"}
                   </Label>
                   <Input
                     id="loginFullName"
                     type="text"
-                    placeholder="Enter your full name"
+                    placeholder={t('student.fullNamePlaceholder') || "Enter your full name"}
                     value={loginData.fullName}
                     onChange={(e) => setLoginData(prev => ({ ...prev, fullName: e.target.value }))}
                     required
@@ -245,7 +209,7 @@ const StudentLogin = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="loginPassword">Password</Label>
+                  <Label htmlFor="loginPassword">{t('auth.password') || "Password"}</Label>
                   <Input
                     id="loginPassword"
                     type="password"
@@ -261,10 +225,10 @@ const StudentLogin = () => {
                   className="w-full"
                   disabled={isLoading}
                 >
-                  {isLoading ? "Logging in..." : (
+                  {isLoading ? (t('student.loggingIn') || "Logging in...") : (
                     <>
                       <LogInIcon className="w-4 h-4 mr-2" />
-                      Login
+                      {t('auth.login') || "Login"}
                     </>
                   )}
                 </Button>
@@ -276,12 +240,12 @@ const StudentLogin = () => {
                 <div className="space-y-2">
                   <Label htmlFor="signupFullName" className="flex items-center gap-2">
                     <UserIcon className="w-4 h-4" />
-                    Full Name
+                    {t('student.fullName') || "Full Name"}
                   </Label>
                   <Input
                     id="signupFullName"
                     type="text"
-                    placeholder="Enter your full name"
+                    placeholder={t('student.fullNameSignupPlaceholder') || "Enter your full name"}
                     value={signupData.fullName}
                     onChange={(e) => setSignupData(prev => ({ ...prev, fullName: e.target.value }))}
                     required
@@ -291,12 +255,12 @@ const StudentLogin = () => {
                 <div className="space-y-2">
                   <Label htmlFor="signupSchool" className="flex items-center gap-2">
                     <School className="w-4 h-4" />
-                    School
+                    {t('auth.school') || "School"}
                   </Label>
                   <Input
                     id="signupSchool"
                     type="text"
-                    placeholder="Enter your school name"
+                    placeholder={t('student.schoolPlaceholder') || "Enter your school name"}
                     value={signupData.school}
                     onChange={(e) => setSignupData(prev => ({ ...prev, school: e.target.value }))}
                     required
@@ -306,12 +270,12 @@ const StudentLogin = () => {
                 <div className="space-y-2">
                   <Label htmlFor="signupGrade" className="flex items-center gap-2">
                     <GraduationCap className="w-4 h-4" />
-                    Class/Grade
+                    {t('student.classGrade') || "Class/Grade"}
                   </Label>
                   <Input
                     id="signupGrade"
                     type="text"
-                    placeholder="e.g., Grade 5, Year 7"
+                    placeholder={t('student.gradePlaceholder') || "e.g., Grade 5, Year 7"}
                     value={signupData.grade}
                     onChange={(e) => setSignupData(prev => ({ ...prev, grade: e.target.value }))}
                     required
@@ -319,11 +283,11 @@ const StudentLogin = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="signupPassword">Password</Label>
+                  <Label htmlFor="signupPassword">{t('auth.password') || "Password"}</Label>
                   <Input
                     id="signupPassword"
                     type="password"
-                    placeholder="Create a password"
+                    placeholder={t('student.createPassword') || "Create a password"}
                     value={signupData.password}
                     onChange={(e) => setSignupData(prev => ({ ...prev, password: e.target.value }))}
                     required
@@ -331,11 +295,11 @@ const StudentLogin = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="confirmPassword">Confirm Password</Label>
+                  <Label htmlFor="confirmPassword">{t('auth.confirmPassword') || "Confirm Password"}</Label>
                   <Input
                     id="confirmPassword"
                     type="password"
-                    placeholder="Confirm your password"
+                    placeholder={t('student.confirmPasswordPlaceholder') || "Confirm your password"}
                     value={signupData.confirmPassword}
                     onChange={(e) => setSignupData(prev => ({ ...prev, confirmPassword: e.target.value }))}
                     required
@@ -347,7 +311,7 @@ const StudentLogin = () => {
                   className="w-full"
                   disabled={isLoading}
                 >
-                  {isLoading ? "Creating account..." : "Create Account"}
+                  {isLoading ? (t('student.creatingAccount') || "Creating account...") : (t('student.createAccount') || "Create Account")}
                 </Button>
               </form>
             </TabsContent>

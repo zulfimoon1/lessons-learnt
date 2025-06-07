@@ -120,6 +120,7 @@ const TeacherDashboard = () => {
   };
 
   const handleScheduleUploadComplete = () => {
+    // Removed unnecessary refresh trigger - components handle their own state
     toast({
       title: t('common.success'),
       description: t('upload.uploadComplete'),
@@ -170,7 +171,7 @@ const TeacherDashboard = () => {
                 {t('admin.subscription')}
               </CardTitle>
               <CardDescription className="text-yellow-700">
-                You need an active subscription for {teacher?.school}.
+                {t('teacher.subscriptionNeeded')} {teacher?.school}.
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -190,7 +191,7 @@ const TeacherDashboard = () => {
             <CardHeader>
               <CardTitle className="text-green-800">{t('admin.subscription')}</CardTitle>
               <CardDescription className="text-green-700">
-                Your {subscription.plan_type} subscription expires on {new Date(subscription.current_period_end).toLocaleDateString()}
+                {`${t('login.teacher.role')} ${subscription.plan_type} ${t('admin.subscription')} ${new Date(subscription.current_period_end).toLocaleDateString()}`}
               </CardDescription>
             </CardHeader>
           </Card>
@@ -223,7 +224,7 @@ const TeacherDashboard = () => {
             </CardHeader>
             <CardContent>
               <div className="text-lg font-semibold">
-                {subscription ? 'Active' : 'Inactive'}
+                {subscription ? t('pricing.securePayment').split(' ')[0] : 'Inactive'}
               </div>
             </CardContent>
           </Card>
@@ -246,17 +247,17 @@ const TeacherDashboard = () => {
                 <CardHeader>
                   <CardTitle>{t('class.schedule')}</CardTitle>
                   <CardDescription>
-                    Class scheduling is available with an active subscription
+                    {t('teacher.classSchedulingAvailable')}
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="text-center py-8">
-                  <p className="text-gray-600 mb-4">Subscribe to access class scheduling features</p>
+                  <p className="text-gray-600 mb-4">{t('teacher.classSchedulingAvailable')}</p>
                   <Button 
                     onClick={handleCreateCheckout}
                     disabled={isCreatingCheckout}
                     className="bg-green-600 hover:bg-green-700 text-white"
                   >
-                    {isCreatingCheckout ? t('pricing.processing') : 'Subscribe to Continue'}
+                    {isCreatingCheckout ? t('pricing.processing') : t('teacher.subscribeToContinue')}
                   </Button>
                 </CardContent>
               </Card>
@@ -274,17 +275,17 @@ const TeacherDashboard = () => {
                 <CardHeader>
                   <CardTitle>{t('upload.bulkUpload')}</CardTitle>
                   <CardDescription>
-                    Bulk upload requires an active subscription
+                    {t('upload.subscriptionRequired')}
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="text-center py-8">
-                  <p className="text-gray-600 mb-4">Subscribe to access bulk upload features</p>
+                  <p className="text-gray-600 mb-4">{t('upload.subscriptionRequired')}</p>
                   <Button 
                     onClick={handleCreateCheckout}
                     disabled={isCreatingCheckout}
                     className="bg-green-600 hover:bg-green-700 text-white"
                   >
-                    {isCreatingCheckout ? t('pricing.processing') : 'Subscribe to Continue'}
+                    {isCreatingCheckout ? t('pricing.processing') : t('teacher.subscribeToContinue')}
                   </Button>
                 </CardContent>
               </Card>
@@ -300,17 +301,17 @@ const TeacherDashboard = () => {
                   <CardHeader>
                     <CardTitle>{t('articles.mentalHealth')}</CardTitle>
                     <CardDescription>
-                      Mental health articles require an active subscription
+                      {t('articles.subscriptionRequired')}
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="text-center py-8">
-                    <p className="text-gray-600 mb-4">Subscribe to access mental health article management</p>
+                    <p className="text-gray-600 mb-4">{t('articles.subscriptionRequired')}</p>
                     <Button 
                       onClick={handleCreateCheckout}
                       disabled={isCreatingCheckout}
                       className="bg-green-600 hover:bg-green-700 text-white"
                     >
-                      {isCreatingCheckout ? t('pricing.processing') : 'Subscribe to Continue'}
+                      {isCreatingCheckout ? t('pricing.processing') : t('teacher.subscribeToContinue')}
                     </Button>
                   </CardContent>
                 </Card>
