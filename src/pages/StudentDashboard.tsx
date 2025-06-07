@@ -89,7 +89,7 @@ const StudentDashboard = () => {
       console.error('Error loading classes:', error);
       toast({
         title: t('common.error'),
-        description: "Failed to load upcoming classes",
+        description: t('student.failedToLoadClasses'),
         variant: "destructive",
       });
     }
@@ -111,7 +111,7 @@ const StudentDashboard = () => {
       console.error('Error loading psychologists:', error);
       toast({
         title: t('common.error'),
-        description: "Failed to load school psychologists",
+        description: t('student.failedToLoadPsychologists'),
         variant: "destructive",
       });
     }
@@ -248,7 +248,7 @@ const StudentDashboard = () => {
                   {t('dashboard.mentalHealthSupport')}
                 </CardTitle>
                 <CardDescription>
-                  Access mental health resources and support at {student?.school}
+                  {t('student.accessMentalHealthResources', { school: student?.school })}
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -257,7 +257,7 @@ const StudentDashboard = () => {
                     <div className="flex justify-end">
                       <LiveChatWidget
                         studentId={student?.id}
-                        studentName={student?.full_name || "Student"}
+                        studentName={student?.full_name || t('student.defaultName')}
                         school={student?.school || ""}
                         grade={student?.grade || ""}
                       />
@@ -278,7 +278,7 @@ const StudentDashboard = () => {
                     <div className="mt-4">
                       <LiveChatWidget
                         studentId={student?.id}
-                        studentName={student?.full_name || "Student"}
+                        studentName={student?.full_name || t('student.defaultName')}
                         school={student?.school || ""}
                         grade={student?.grade || ""}
                       />

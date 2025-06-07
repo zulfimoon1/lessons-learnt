@@ -52,6 +52,10 @@ const translations = {
     'student.loginSuccess': "You've successfully logged in.",
     'student.accountCreated': 'Account created! 🎉',
     'student.welcomeToApp': 'Welcome to Lesson Lens!',
+    'student.failedToLoadClasses': 'Failed to load upcoming classes',
+    'student.failedToLoadPsychologists': 'Failed to load school psychologists',
+    'student.accessMentalHealthResources': 'Access mental health resources and support at {school}',
+    'student.defaultName': 'Student',
 
     // Teacher Login Page
     'login.teacher.title': 'Teacher & Admin Portal',
@@ -109,6 +113,7 @@ const translations = {
     'dashboard.settings': 'Settings',
     'dashboard.schoolOverview': 'School Overview',
     'dashboard.teacherOverview': 'Teacher Overview',
+    'dashboard.doctorOverview': 'Mental Health Professional Overview',
     'dashboard.totalTeachers': 'Total Teachers',
     'dashboard.totalClasses': 'Total Classes',
     'dashboard.avgSatisfaction': 'Avg Satisfaction',
@@ -131,6 +136,19 @@ const translations = {
     'teacher.activePlan': 'Your {planType} plan is active until {date}',
     'teacher.classSchedulingAvailable': 'Class scheduling is available with an active subscription',
     'teacher.subscribeToContinue': 'Subscribe to Continue',
+    'teacher.subscriptionDescription': 'Upload your class schedules for free. Unlock the full paid features of lessons learnt including student feedback, questions and concerns.',
+    'teacher.missingInfo': 'Missing teacher information',
+    'teacher.checkoutFailed': 'Failed to create checkout session',
+    'teacher.mentalHealthProfessional': 'Mental Health Professional',
+    'teacher.availability': 'Availability',
+    'teacher.available': 'Available',
+    'teacher.busy': 'Busy',
+    'teacher.active': 'Active',
+    'teacher.inactive': 'Inactive',
+    'teacher.liveChatSessions': 'Live Chat Sessions',
+    'teacher.manageChatSessions': 'Manage your active chat sessions with students',
+    'teacher.noActiveSessions': 'No active chat sessions at the moment.',
+    'teacher.studentsCanConnect': 'Students can connect with you through the live chat feature.',
     
     // Class management
     'class.create': 'Create Class',
@@ -343,6 +361,7 @@ const translations = {
     'upload.schedulesUploaded': '{count} schedules uploaded successfully',
     'upload.failed': 'Upload failed. Please check your file and try again.',
     'upload.subscriptionRequired': 'An active subscription is required for bulk uploads',
+    'upload.uploadComplete': 'Upload completed successfully',
 
     // Articles translations
     'articles.title': 'Mental Health Articles',
@@ -513,6 +532,10 @@ const translations = {
     'student.loginSuccess': 'Sėkmingai prisijungėte.',
     'student.accountCreated': 'Paskyra sukurta! 🎉',
     'student.welcomeToApp': 'Sveiki atvykę į Lesson Lens!',
+    'student.failedToLoadClasses': 'Nepavyko įkelti artėjančių pamokų',
+    'student.failedToLoadPsychologists': 'Nepavyko įkelti mokyklos psichologų',
+    'student.accessMentalHealthResources': 'Prieiga prie psichikos sveikatos išteklių ir pagalbos {school} mokykloje',
+    'student.defaultName': 'Mokinys',
 
     // Teacher Login Page
     'login.teacher.title': 'Mokytojų ir administratorių portalas',
@@ -570,6 +593,7 @@ const translations = {
     'dashboard.settings': 'Nustatymai',
     'dashboard.schoolOverview': 'Mokyklos apžvalga',
     'dashboard.teacherOverview': 'Mokytojo apžvalga',
+    'dashboard.doctorOverview': 'Psichikos sveikatos specialisto apžvalga',
     'dashboard.totalTeachers': 'Iš viso mokytojų',
     'dashboard.totalClasses': 'Iš viso klasių',
     'dashboard.avgSatisfaction': 'Vid. pasitenkinimas',
@@ -592,6 +616,19 @@ const translations = {
     'teacher.activePlan': 'Jūsų {planType} planas aktyvus iki {date}',
     'teacher.classSchedulingAvailable': 'Klasių planavimas galimas su aktyvia prenumerata',
     'teacher.subscribeToContinue': 'Prenumeruokite, kad tęstumėte',
+    'teacher.subscriptionDescription': 'Įkelkite klasių tvarkaraščius nemokamai. Atrakinkite visas mokamas "Lessons Learnt" funkcijas, įskaitant mokinių grįžtamąjį ryšį, klausimus ir rūpesčius.',
+    'teacher.missingInfo': 'Trūksta mokytojo informacijos',
+    'teacher.checkoutFailed': 'Nepavyko sukurti mokėjimo sesijos',
+    'teacher.mentalHealthProfessional': 'Psichikos sveikatos specialistas',
+    'teacher.availability': 'Prieinamumas',
+    'teacher.available': 'Prieinamas',
+    'teacher.busy': 'Užimtas',
+    'teacher.active': 'Aktyvus',
+    'teacher.inactive': 'Neaktyvus',
+    'teacher.liveChatSessions': 'Tiesioginio pokalbio sesijos',
+    'teacher.manageChatSessions': 'Valdykite aktyvias pokalbių sesijas su mokiniais',
+    'teacher.noActiveSessions': 'Šiuo metu nėra aktyvių pokalbių sesijų.',
+    'teacher.studentsCanConnect': 'Mokiniai gali prisijungti prie jūsų per tiesioginio pokalbio funkciją.',
     
     // Class management
     'class.create': 'Sukurti klasę',
@@ -804,6 +841,7 @@ const translations = {
     'upload.failed': 'Įkėlimas nepavyko. Bandykite dar kartą.',
     'upload.processing': 'Apdorojamas įkėlimas...',
     'upload.subscriptionRequired': 'Aktyvios prenumeratos reikia masiniams įkėlimams',
+    'upload.uploadComplete': 'Įkėlimas sėkmingai baigtas',
 
     // Articles translations
     'articles.title': 'Psichikos sveikatos straipsniai',

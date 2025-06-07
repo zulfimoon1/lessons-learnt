@@ -78,7 +78,7 @@ const TeacherDashboard = () => {
     if (!teacher?.email || !teacher?.school) {
       toast({
         title: t('common.error'),
-        description: "Missing teacher information",
+        description: t('teacher.missingInfo'),
         variant: "destructive",
       });
       return;
@@ -114,7 +114,7 @@ const TeacherDashboard = () => {
       console.error('Error creating checkout:', error);
       toast({
         title: t('common.error'),
-        description: `Failed to create checkout session: ${error.message}`,
+        description: `${t('teacher.checkoutFailed')}: ${error.message}`,
         variant: "destructive",
       });
     } finally {
@@ -176,7 +176,7 @@ const TeacherDashboard = () => {
                 {t('admin.subscription')}
               </CardTitle>
               <CardDescription className="text-yellow-700">
-                Upload your class schedules for free. Unlock the full paid features of lessons learnt including student feedback, questions and concerns.
+                {t('teacher.subscriptionDescription')}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -196,7 +196,10 @@ const TeacherDashboard = () => {
             <CardHeader>
               <CardTitle className="text-green-800">{t('admin.subscription')}</CardTitle>
               <CardDescription className="text-green-700">
-                {`${t('login.teacher.role')} ${subscription.plan_type} ${t('admin.subscription')} ${new Date(subscription.current_period_end).toLocaleDateString()}`}
+                {t('teacher.activePlan', { 
+                  planType: subscription.plan_type, 
+                  date: new Date(subscription.current_period_end).toLocaleDateString() 
+                })}
               </CardDescription>
             </CardHeader>
           </Card>
@@ -219,7 +222,7 @@ const TeacherDashboard = () => {
             </CardHeader>
             <CardContent>
               <div className="text-lg font-semibold capitalize">
-                {teacher?.role === 'doctor' ? 'Mental Health Professional' : teacher?.role}
+                {teacher?.role === 'doctor' ? t('teacher.mentalHealthProfessional') : teacher?.role}
               </div>
               {teacher?.role === 'doctor' && teacher?.specialization && (
                 <div className="text-sm text-gray-600 mt-1">{teacher.specialization}</div>
@@ -230,15 +233,15 @@ const TeacherDashboard = () => {
           <Card className="border-green-100">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">
-                {teacher?.role === 'doctor' ? 'Availability' : t('admin.subscription')}
+                {teacher?.role === 'doctor' ? t('teacher.availability') : t('admin.subscription')}
               </CardTitle>
               <CreditCardIcon className="h-4 w-4 text-gray-500" />
             </CardHeader>
             <CardContent>
               <div className="text-lg font-semibold">
                 {teacher?.role === 'doctor' 
-                  ? (teacher?.is_available ? 'Available' : 'Busy')
-                  : (subscription ? t('pricing.securePayment').split(' ')[0] : 'Inactive')
+                  ? (teacher?.is_available ? t('teacher.available') : t('teacher.busy'))
+                  : (subscription ? t('teacher.active') : t('teacher.inactive'))
                 }
               </div>
             </CardContent>
@@ -249,7 +252,7 @@ const TeacherDashboard = () => {
           <TabsList className="bg-green-50 border-green-200">
             {teacher?.role === 'doctor' ? (
               <>
-                <TabsTrigger value="chat-sessions" className="data-[state=active]:bg-green-600 data-[state=active]:text-white">Live Chat Sessions</TabsTrigger>
+                <TabsTrigger value="chat-sessions" className="data-[state=active]:bg-green-600 data-[state=active]:text-white">{t('teacher.liveChatSessions')}</TabsTrigger>
                 <TabsTrigger value="articles" className="data-[state=active]:bg-green-600 data-[state=active]:text-white">{t('articles.mentalHealth')}</TabsTrigger>
               </>
             ) : (
@@ -268,14 +271,14 @@ const TeacherDashboard = () => {
               <TabsContent value="chat-sessions" className="space-y-6">
                 <Card className="border-green-100">
                   <CardHeader>
-                    <CardTitle>Live Chat Sessions</CardTitle>
+                    <CardTitle>{t('teacher.liveChatSessions')}</CardTitle>
                     <CardDescription>
-                      Manage your active chat sessions with students
+                      {t('teacher.manageChatSessions')}
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="text-center py-8">
-                    <p className="text-gray-600 mb-4">No active chat sessions at the moment.</p>
-                    <p className="text-sm text-gray-500">Students can connect with you through the live chat feature.</p>
+                    <p className="text-gray-600 mb-4">{t('teacher.noActiveSessions')}</p>
+                    <p className="text-sm text-gray-500">{t('teacher.studentsCanConnect')}</p>
                   </CardContent>
                 </Card>
               </TabsContent>
