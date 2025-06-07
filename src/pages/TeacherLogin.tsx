@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,16 +12,19 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { useNavigate } from "react-router-dom";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useEffect } from "react";
 
 const TeacherLogin = () => {
   const { t } = useLanguage();
-  const { teacher } = useAuth();
   const navigate = useNavigate();
+  const { toast } = useToast();
+  
+  // Safe auth hook usage with error boundary
+  const auth = useAuth();
+  const { teacher, teacherLogin, isLoading: authLoading } = auth;
 
   // Redirect if already logged in
   useEffect(() => {
-    if (teacher) {
+    if (teacher && !authLoading) {
       console.log('TeacherLogin: User already logged in, redirecting...');
       if (teacher.role === "admin") {
         navigate("/admin-dashboard");
@@ -29,7 +32,7 @@ const TeacherLogin = () => {
         navigate("/teacher-dashboard");
       }
     }
-  }, [teacher, navigate]);
+  }, [teacher, navigate, authLoading]);
 
   const [loginData, setLoginData] = useState({
     email: "",
@@ -46,8 +49,18 @@ const TeacherLogin = () => {
   });
 
   const [isLoading, setIsLoading] = useState(false);
-  const { toast } = useToast();
-  const { teacherLogin } = useAuth();
+
+  // Don't render if still loading auth state
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-2 text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();

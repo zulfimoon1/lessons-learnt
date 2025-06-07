@@ -17,6 +17,12 @@ export const useAuth = () => {
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { teacher, student, isLoading, saveTeacher, saveStudent, clearAuth } = useAuthStorage();
 
+  console.log('AuthContext: Rendering AuthProvider with state:', { 
+    hasTeacher: !!teacher, 
+    hasStudent: !!student, 
+    isLoading 
+  });
+
   const teacherLogin = async (
     email: string, 
     password: string, 
@@ -100,12 +106,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     studentSignup,
     logout
   };
-
-  console.log('AuthContext: Providing context with values:', { 
-    hasTeacher: !!teacher, 
-    hasStudent: !!student, 
-    isLoading 
-  });
 
   return (
     <AuthContext.Provider value={value}>
