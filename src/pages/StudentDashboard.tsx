@@ -207,7 +207,7 @@ const StudentDashboard = () => {
               <CardHeader>
                 <CardTitle>{t('class.upcomingClasses')}</CardTitle>
                 <CardDescription>
-                  {t('dashboard.scheduledClasses')} {student?.grade} {t('auth.school').toLowerCase()} {student?.school}
+                  Your scheduled classes for {student?.grade} at {student?.school}
                 </CardDescription>
               </CardHeader>
               <CardContent>
