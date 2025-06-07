@@ -55,25 +55,6 @@ const translations = {
       readyToTransform: "Ready to Transform Your School?",
       readyToTransformDesc: "Schedule a demo to learn how Lessons Learnt can revolutionize your educational environment."
     },
-    compliance: {
-      privacyPolicy: "Privacy Policy",
-      cookiePolicy: "Cookie Policy",
-      dataProcessing: "Data Processing Agreement",
-      dataRetention: "Data Retention Policy",
-      rightToDelete: "Right to be Forgotten",
-      gdpr: {
-        title: "GDPR Compliance",
-        description: "Full compliance with European General Data Protection Regulation including data subject rights, consent management, and breach notification."
-      },
-      soc2: {
-        title: "SOC 2 Type II",
-        description: "Independently audited security controls covering security, availability, processing integrity, confidentiality, and privacy."
-      },
-      hipaa: {
-        title: "HIPAA Compliance",
-        description: "Healthcare-grade security for student mental health data with proper safeguards, access controls, and audit trails."
-      }
-    },
     demo: {
       subtitle: "Explore our platform's key features with interactive demos tailored for students, teachers, and psychologists.",
       exploreFeatures: "Explore Key Features",
@@ -222,25 +203,6 @@ const translations = {
       improvementDesc: "Mokyklos, naudojančios Pamokos Išmoktos, pastebėjo 30% mokinių rezultatų ir įsitraukimo pagerėjimą.",
       readyToTransform: "Pasirengę pakeisti savo mokyklą?",
       readyToTransformDesc: "Suplanuokite demonstraciją, kad sužinotumėte, kaip Pamokos Išmoktos gali iš esmės pakeisti jūsų ugdymo aplinką."
-    },
-    compliance: {
-      privacyPolicy: "Privatumo politika",
-      cookiePolicy: "Slapukų politika",
-      dataProcessing: "Duomenų apdorojimo sutartis",
-      dataRetention: "Duomenų saugojimo politika",
-      rightToDelete: "Teisė būti pamirštam",
-      gdpr: {
-        title: "GDPR atitiktis",
-        description: "Visiškas atitikimas Europos bendrajam duomenų apsaugos reglamentui, įskaitant duomenų subjektų teises, sutikimo valdymą ir pažeidimų pranešimą."
-      },
-      soc2: {
-        title: "SOC 2 Type II",
-        description: "Nepriklausomai audituoti saugumo kontrolės mechanizmai, apimantys saugumą, prieinamumą, apdorojimo integralumą, konfidencialumą ir privatumą."
-      },
-      hipaa: {
-        title: "HIPAA atitiktis",
-        description: "Sveikatos priežiūros lygio saugumas mokinių psichikos sveikatos duomenims su tinkamomis apsaugos priemonėmis, prieigos kontrole ir audito pėdsakais."
-      }
     },
     demo: {
       subtitle: "Naršykite pagrindines mūsų platformos funkcijas naudodami interaktyvias demonstracijas, pritaikytas studentams, mokytojams ir psichologams.",
