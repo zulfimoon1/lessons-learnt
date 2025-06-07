@@ -6,7 +6,10 @@ interface Teacher {
   name: string;
   email: string;
   school: string;
-  role: 'teacher' | 'admin';
+  role: 'teacher' | 'admin' | 'doctor';
+  specialization?: string;
+  license_number?: string;
+  is_available?: boolean;
 }
 
 interface Student {
