@@ -1,22 +1,30 @@
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useToast } from "@/hooks/use-toast";
 
 export const useVoiceover = () => {
   const { toast } = useToast();
   const [currentUtterance, setCurrentUtterance] = useState<SpeechSynthesisUtterance | null>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [isReady, setIsReady] = useState(false);
 
-  const playVoiceover = (text: string) => {
+  const playVoiceover = (text: string, autoplay: boolean = false) => {
     if (!('speechSynthesis' in window)) {
       console.warn('Text-to-Speech not supported in this browser');
+      toast({
+        title: "Audio not supported",
+        description: "Your browser doesn't support text-to-speech",
+        variant: "destructive"
+      });
       return null;
     }
 
     // Cancel any existing speech
     speechSynthesis.cancel();
+    setIsPlaying(false);
 
     const utterance = new SpeechSynthesisUtterance(text);
-    utterance.rate = 0.9;
+    utterance.rate = 0.8;
     utterance.pitch = 1.0;
     utterance.volume = 1.0;
 
@@ -61,38 +69,72 @@ export const useVoiceover = () => {
     } else {
       speechSynthesis.onvoiceschanged = () => {
         setVoice();
-        speechSynthesis.onvoiceschanged = null; // Remove listener after first call
+        speechSynthesis.onvoiceschanged = null;
       };
     }
 
-    // Add error handling
-    utterance.onerror = (event) => {
-      console.error('Speech synthesis error:', event);
-    };
-
     utterance.onstart = () => {
       console.log('Speech started');
+      setIsPlaying(true);
+      setIsReady(true);
     };
 
     utterance.onend = () => {
       console.log('Speech ended');
+      setIsPlaying(false);
       setCurrentUtterance(null);
     };
 
+    utterance.onerror = (event) => {
+      console.error('Speech synthesis error:', event);
+      setIsPlaying(false);
+      setCurrentUtterance(null);
+      toast({
+        title: "Audio error",
+        description: "There was an error playing the audio",
+        variant: "destructive"
+      });
+    };
+
+    setCurrentUtterance(utterance);
+
+    // Only autoplay if explicitly requested and user has interacted
+    if (autoplay) {
+      try {
+        speechSynthesis.speak(utterance);
+      } catch (error) {
+        console.error('Error speaking:', error);
+      }
+    }
+
     return utterance;
+  };
+
+  const startPlayback = () => {
+    if (currentUtterance && !isPlaying) {
+      try {
+        speechSynthesis.speak(currentUtterance);
+      } catch (error) {
+        console.error('Error starting playback:', error);
+      }
+    }
   };
 
   const stopVoiceover = () => {
     if (speechSynthesis.speaking) {
       speechSynthesis.cancel();
     }
+    setIsPlaying(false);
     setCurrentUtterance(null);
   };
 
   return {
     playVoiceover,
+    startPlayback,
     stopVoiceover,
     currentUtterance,
-    setCurrentUtterance
+    setCurrentUtterance,
+    isPlaying,
+    isReady
   };
 };

@@ -1,7 +1,7 @@
-
 import { useState, useRef, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { 
   UsersIcon,
   BookOpenIcon,
@@ -13,7 +13,10 @@ import {
   ClockIcon,
   ShieldIcon,
   LockIcon,
-  FileCheckIcon
+  FileCheckIcon,
+  PlayIcon,
+  PauseIcon,
+  VolumeXIcon
 } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useVoiceover } from "@/hooks/useVoiceover";
@@ -38,7 +41,15 @@ interface DemoFeature {
 const DemoSection = () => {
   const { t } = useLanguage();
   const [currentFeature, setCurrentFeature] = useState(0);
-  const { playVoiceover, stopVoiceover, currentUtterance, setCurrentUtterance } = useVoiceover();
+  const { 
+    playVoiceover, 
+    startPlayback, 
+    stopVoiceover, 
+    currentUtterance, 
+    setCurrentUtterance,
+    isPlaying,
+    isReady
+  } = useVoiceover();
   const intervalRef = useRef<NodeJS.Timeout>();
 
   const demoFeatures: DemoFeature[] = [
@@ -93,7 +104,7 @@ const DemoSection = () => {
   useEffect(() => {
     intervalRef.current = setInterval(() => {
       setCurrentFeature((current) => (current + 1) % demoFeatures.length);
-    }, 8000); // Change every 8 seconds
+    }, 12000); // Increased to 12 seconds to allow time for audio
 
     return () => {
       if (intervalRef.current) {
@@ -102,24 +113,11 @@ const DemoSection = () => {
     };
   }, [demoFeatures.length]);
 
-  // Auto-play voiceover when feature changes
+  // Prepare voiceover when feature changes (but don't autoplay)
   useEffect(() => {
+    stopVoiceover();
     const voiceoverText = t(demoFeatures[currentFeature].voiceoverKey);
-    const utterance = playVoiceover(voiceoverText);
-    if (utterance) {
-      utterance.onend = () => {
-        setCurrentUtterance(null);
-      };
-      utterance.onerror = (event) => {
-        console.error('Speech synthesis error:', event);
-      };
-      speechSynthesis.speak(utterance);
-      setCurrentUtterance(utterance);
-    }
-
-    return () => {
-      stopVoiceover();
-    };
+    playVoiceover(voiceoverText, false); // Don't autoplay
   }, [currentFeature, t]);
 
   const handleFeatureSelect = (index: number) => {
@@ -128,15 +126,16 @@ const DemoSection = () => {
     
     setCurrentFeature(index);
     
-    // Start new voiceover
+    // Prepare new voiceover (but don't autoplay)
     const voiceoverText = t(demoFeatures[index].voiceoverKey);
-    const utterance = playVoiceover(voiceoverText);
-    if (utterance) {
-      utterance.onend = () => {
-        setCurrentUtterance(null);
-      };
-      speechSynthesis.speak(utterance);
-      setCurrentUtterance(utterance);
+    playVoiceover(voiceoverText, false);
+  };
+
+  const handlePlayPause = () => {
+    if (isPlaying) {
+      stopVoiceover();
+    } else if (currentUtterance) {
+      startPlayback();
     }
   };
 
@@ -196,6 +195,22 @@ const DemoSection = () => {
                       {t(`demo.userType.${currentDemo.userType}`)}
                     </Badge>
                   </div>
+
+                  {/* Play Button */}
+                  <div className="absolute bottom-4 left-4">
+                    <Button
+                      onClick={handlePlayPause}
+                      size="sm"
+                      className="bg-primary/90 hover:bg-primary"
+                      disabled={!currentUtterance}
+                    >
+                      {isPlaying ? (
+                        <PauseIcon className="w-4 h-4" />
+                      ) : (
+                        <PlayIcon className="w-4 h-4" />
+                      )}
+                    </Button>
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -204,8 +219,21 @@ const DemoSection = () => {
             <Card className="mt-4 border border-purple-200 bg-purple-50/50">
               <CardContent className="p-4">
                 <div className="flex items-center gap-2 mb-2">
-                  <div className="w-2 h-2 bg-purple-600 rounded-full animate-pulse"></div>
-                  <span className="text-sm font-medium text-purple-700">{t('demo.liveVoiceover')}</span>
+                  <div className={`w-2 h-2 rounded-full ${isPlaying ? 'bg-purple-600 animate-pulse' : 'bg-gray-400'}`}></div>
+                  <span className="text-sm font-medium text-purple-700">
+                    {isPlaying ? t('demo.liveVoiceover') : 'Click play to hear voiceover'}
+                  </span>
+                  {currentUtterance && !isPlaying && (
+                    <Button
+                      onClick={handlePlayPause}
+                      size="sm"
+                      variant="ghost"
+                      className="h-6 px-2 text-xs"
+                    >
+                      <PlayIcon className="w-3 h-3 mr-1" />
+                      Play
+                    </Button>
+                  )}
                 </div>
                 <p className="text-sm text-purple-600 italic">
                   "{t(currentDemo.voiceoverKey)}"
