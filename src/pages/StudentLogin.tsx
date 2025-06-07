@@ -101,21 +101,21 @@ const StudentLogin = () => {
       if (result.error) {
         console.error('StudentLogin: Login failed with error:', result.error);
         toast({
-          title: t('student.loginFailed') || "Login failed",
+          title: "Login failed",
           description: result.error,
           variant: "destructive",
         });
       } else if (result.student) {
         console.log('StudentLogin: Login successful for student:', result.student);
         toast({
-          title: t('student.welcomeBack') || "Welcome back!",
-          description: t('student.loginSuccess') || "Login successful",
+          title: "Welcome back!",
+          description: "Login successful",
         });
         // Navigation should be handled by useEffect when student state updates
       } else {
         console.error('StudentLogin: No error but no student data returned');
         toast({
-          title: t('student.loginFailed') || "Login failed",
+          title: "Login failed",
           description: "Invalid response from server. Please try again.",
           variant: "destructive",
         });
@@ -123,7 +123,7 @@ const StudentLogin = () => {
     } catch (err) {
       console.error('StudentLogin: Unexpected error during login:', err);
       toast({
-        title: t('student.loginFailed') || "Login failed",
+        title: "Login failed",
         description: "An unexpected error occurred. Please try again.",
         variant: "destructive",
       });
@@ -149,8 +149,8 @@ const StudentLogin = () => {
     if (signupData.password !== signupData.confirmPassword) {
       console.log('StudentLogin: Password mismatch');
       toast({
-        title: t('student.passwordMismatch') || "Password mismatch",
-        description: t('student.passwordsDoNotMatch') || "Passwords do not match",
+        title: "Password mismatch",
+        description: "Passwords do not match",
         variant: "destructive",
       });
       return;
@@ -172,21 +172,21 @@ const StudentLogin = () => {
       if (result.error) {
         console.error('StudentLogin: Signup failed with error:', result.error);
         toast({
-          title: t('student.signupFailed') || "Signup failed",
+          title: "Signup failed",
           description: result.error,
           variant: "destructive",
         });
       } else if (result.student) {
         console.log('StudentLogin: Signup successful for student:', result.student);
         toast({
-          title: t('student.accountCreated') || "Account created!",
-          description: t('student.welcomeToApp') || "Welcome to Lesson Lens!",
+          title: "Account created!",
+          description: "Welcome to Lesson Lens!",
         });
         // Navigation should be handled by useEffect when student state updates
       } else {
         console.error('StudentLogin: No error but no student data returned');
         toast({
-          title: t('student.signupFailed') || "Signup failed",
+          title: "Signup failed",
           description: "Invalid response from server. Please try again.",
           variant: "destructive",
         });
@@ -194,7 +194,7 @@ const StudentLogin = () => {
     } catch (err) {
       console.error('StudentLogin: Unexpected error during signup:', err);
       toast({
-        title: t('student.signupFailed') || "Signup failed",
+        title: "Signup failed",
         description: "An unexpected error occurred. Please try again.",
         variant: "destructive",
       });

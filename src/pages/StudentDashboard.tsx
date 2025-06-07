@@ -46,7 +46,9 @@ const StudentDashboard = () => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    console.log('StudentDashboard: useEffect triggered, student:', student);
     if (!student) {
+      console.log('StudentDashboard: No student found, redirecting to login');
       navigate('/student-login');
       return;
     }
@@ -54,12 +56,21 @@ const StudentDashboard = () => {
   }, [student, navigate]);
 
   const loadData = async () => {
-    await Promise.all([loadUpcomingClasses(), loadPsychologists()]);
-    setIsLoading(false);
+    console.log('StudentDashboard: Loading data for student:', student);
+    try {
+      await Promise.all([loadUpcomingClasses(), loadPsychologists()]);
+    } catch (error) {
+      console.error('StudentDashboard: Error loading data:', error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const loadUpcomingClasses = async () => {
-    if (!student?.school || !student?.grade) return;
+    if (!student?.school || !student?.grade) {
+      console.log('StudentDashboard: Missing school or grade data');
+      return;
+    }
     
     try {
       const today = new Date().toISOString().split('T')[0];
@@ -76,10 +87,11 @@ const StudentDashboard = () => {
 
       if (error) throw error;
       setUpcomingClasses(data || []);
+      console.log('StudentDashboard: Loaded upcoming classes:', data?.length || 0);
     } catch (error) {
       console.error('Error loading classes:', error);
       toast({
-        title: t('common.error'),
+        title: "Error",
         description: "Failed to load upcoming classes",
         variant: "destructive",
       });
@@ -87,7 +99,10 @@ const StudentDashboard = () => {
   };
 
   const loadPsychologists = async () => {
-    if (!student?.school) return;
+    if (!student?.school) {
+      console.log('StudentDashboard: Missing school data for psychologists');
+      return;
+    }
     
     try {
       const { data, error } = await supabase
@@ -98,10 +113,11 @@ const StudentDashboard = () => {
 
       if (error) throw error;
       setPsychologists(data || []);
+      console.log('StudentDashboard: Loaded psychologists:', data?.length || 0);
     } catch (error) {
       console.error('Error loading psychologists:', error);
       toast({
-        title: t('common.error'),
+        title: "Error",
         description: "Failed to load school psychologists",
         variant: "destructive",
       });
@@ -109,6 +125,7 @@ const StudentDashboard = () => {
   };
 
   const handleLogout = () => {
+    console.log('StudentDashboard: Logout initiated');
     clearAuth();
     navigate('/student-login');
   };
@@ -118,7 +135,24 @@ const StudentDashboard = () => {
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p>{t('common.loading')}</p>
+          <p>Loading dashboard...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!student) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold mb-4">Access Denied</h1>
+          <p className="text-muted-foreground mb-4">You need to be logged in to access this page.</p>
+          <button 
+            onClick={() => navigate('/student-login')}
+            className="px-4 py-2 bg-primary text-primary-foreground rounded hover:bg-primary/90"
+          >
+            Go to Login
+          </button>
         </div>
       </div>
     );
@@ -141,10 +175,10 @@ const StudentDashboard = () => {
 
         <Tabs defaultValue="feedback" className="space-y-6">
           <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="feedback">{t('dashboard.feedback')}</TabsTrigger>
-            <TabsTrigger value="classes">{t('class.upcomingClasses')}</TabsTrigger>
-            <TabsTrigger value="weekly">{t('dashboard.weeklySummary')}</TabsTrigger>
-            <TabsTrigger value="support">{t('dashboard.mentalHealthSupport')}</TabsTrigger>
+            <TabsTrigger value="feedback">Feedback</TabsTrigger>
+            <TabsTrigger value="classes">Upcoming Classes</TabsTrigger>
+            <TabsTrigger value="weekly">Weekly Summary</TabsTrigger>
+            <TabsTrigger value="support">Mental Health Support</TabsTrigger>
           </TabsList>
 
           <TabsContent value="feedback" className="space-y-6">
