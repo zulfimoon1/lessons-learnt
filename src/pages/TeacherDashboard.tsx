@@ -176,7 +176,7 @@ const TeacherDashboard = () => {
                 {t('admin.subscription')}
               </CardTitle>
               <CardDescription className="text-yellow-700">
-                {t('teacher.scheduleUploadFree')} {t('teacher.feedbackFeaturesPaywalled')}
+                Upload your class schedules for free. Unlock the full paid features of lessons learnt including student feedback, questions and concerns.
               </CardDescription>
             </CardHeader>
             <CardContent>
