@@ -1,4 +1,3 @@
-
 import { useState, useRef, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -16,7 +15,11 @@ import {
   BarChart3Icon,
   StarIcon,
   CalendarIcon,
-  ClockIcon
+  ClockIcon,
+  ShieldIcon,
+  LockIcon,
+  FileCheckIcon,
+  EyeOffIcon
 } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useToast } from "@/hooks/use-toast";
@@ -39,80 +42,147 @@ const DemoSection = () => {
   const [isMuted, setIsMuted] = useState(false);
   const [currentFeature, setCurrentFeature] = useState(0);
   const [progress, setProgress] = useState(0);
-  const [currentAudio, setCurrentAudio] = useState<HTMLAudioElement | null>(null);
+  const [currentUtterance, setCurrentUtterance] = useState<SpeechSynthesisUtterance | null>(null);
   const intervalRef = useRef<NodeJS.Timeout>();
 
   // Student Feedback Mockup
   const StudentFeedbackMockup = () => (
-    <div className="bg-white p-6 rounded-lg shadow-sm">
-      <h3 className="text-lg font-semibold mb-4 text-gray-800">Lesson Feedback</h3>
+    <div className="bg-white p-6 rounded-lg shadow-sm border">
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-lg font-semibold text-gray-800">Today's Lesson Feedback</h3>
+        <Badge className="bg-blue-100 text-blue-700">Mathematics - Grade 8</Badge>
+      </div>
       <div className="space-y-4">
-        <div>
-          <label className="text-sm font-medium text-gray-700">Understanding Level</label>
-          <div className="flex gap-1 mt-1">
+        <div className="bg-blue-50 p-4 rounded-lg">
+          <label className="text-sm font-medium text-blue-900 mb-2 block">How well did you understand today's lesson?</label>
+          <div className="flex gap-1">
             {[1,2,3,4,5].map(star => (
-              <StarIcon key={star} className="w-5 h-5 fill-yellow-400 text-yellow-400" />
+              <StarIcon key={star} className="w-6 h-6 fill-yellow-400 text-yellow-400 cursor-pointer" />
             ))}
           </div>
         </div>
-        <div>
-          <label className="text-sm font-medium text-gray-700">How are you feeling?</label>
-          <div className="flex gap-2 mt-2">
-            <div className="bg-green-100 px-3 py-1 rounded-full text-sm">😊 Happy</div>
-            <div className="bg-gray-100 px-3 py-1 rounded-full text-sm">😐 Neutral</div>
+        <div className="bg-green-50 p-4 rounded-lg">
+          <label className="text-sm font-medium text-green-900 mb-2 block">How are you feeling emotionally?</label>
+          <div className="flex gap-2 flex-wrap">
+            <div className="bg-green-200 px-3 py-2 rounded-full text-sm border-2 border-green-400">😊 Happy</div>
+            <div className="bg-gray-100 px-3 py-2 rounded-full text-sm cursor-pointer hover:bg-gray-200">😐 Neutral</div>
+            <div className="bg-gray-100 px-3 py-2 rounded-full text-sm cursor-pointer hover:bg-gray-200">😔 Overwhelmed</div>
           </div>
         </div>
-        <textarea className="w-full p-3 border rounded-md text-sm" placeholder="What went well in today's lesson?" rows={3}></textarea>
-        <button className="bg-green-600 text-white px-4 py-2 rounded-md text-sm">Submit Feedback</button>
+        <div>
+          <label className="text-sm font-medium text-gray-700 mb-2 block">What went well in today's lesson?</label>
+          <textarea 
+            className="w-full p-3 border border-gray-300 rounded-md text-sm resize-none" 
+            placeholder="The algebra examples were really clear and helped me understand..."
+            rows={3}
+            value="The algebra examples were really clear and helped me understand the concepts better."
+          ></textarea>
+        </div>
+        <button className="w-full bg-green-600 text-white px-4 py-3 rounded-md text-sm font-medium hover:bg-green-700 transition-colors">
+          Submit Anonymous Feedback
+        </button>
       </div>
     </div>
   );
 
   // Teacher Dashboard Mockup
   const TeacherDashboardMockup = () => (
-    <div className="bg-white p-6 rounded-lg shadow-sm">
-      <h3 className="text-lg font-semibold mb-4 text-gray-800">Teacher Analytics</h3>
-      <div className="grid grid-cols-2 gap-4 mb-4">
-        <div className="bg-blue-50 p-3 rounded-lg">
-          <div className="text-2xl font-bold text-blue-600">87%</div>
-          <div className="text-sm text-blue-800">Avg Understanding</div>
+    <div className="bg-white p-6 rounded-lg shadow-sm border">
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-lg font-semibold text-gray-800">Class Performance Analytics</h3>
+        <Badge className="bg-green-100 text-green-700">Live Data</Badge>
+      </div>
+      <div className="grid grid-cols-2 gap-4 mb-6">
+        <div className="bg-gradient-to-r from-blue-50 to-blue-100 p-4 rounded-lg border-l-4 border-blue-500">
+          <div className="text-3xl font-bold text-blue-600">87%</div>
+          <div className="text-sm text-blue-800">Average Understanding</div>
+          <div className="text-xs text-blue-600 mt-1">↑ 5% from last week</div>
         </div>
-        <div className="bg-green-50 p-3 rounded-lg">
-          <div className="text-2xl font-bold text-green-600">23</div>
+        <div className="bg-gradient-to-r from-green-50 to-green-100 p-4 rounded-lg border-l-4 border-green-500">
+          <div className="text-3xl font-bold text-green-600">23</div>
           <div className="text-sm text-green-800">Active Students</div>
+          <div className="text-xs text-green-600 mt-1">100% attendance today</div>
         </div>
       </div>
-      <div className="space-y-2">
-        <div className="flex justify-between items-center p-2 bg-gray-50 rounded">
-          <span className="text-sm">Math Class - Period 3</span>
-          <span className="text-xs text-gray-500">4.2★</span>
+      <div className="space-y-3">
+        <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg border">
+          <div>
+            <span className="text-sm font-medium">Math Class - Period 3</span>
+            <div className="text-xs text-gray-500">Algebra & Functions</div>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-green-600">92% understood</span>
+            <span className="text-xs text-gray-500">4.2★</span>
+          </div>
         </div>
-        <div className="flex justify-between items-center p-2 bg-gray-50 rounded">
-          <span className="text-sm">Science Lab - Period 5</span>
-          <span className="text-xs text-gray-500">4.7★</span>
+        <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg border">
+          <div>
+            <span className="text-sm font-medium">Science Lab - Period 5</span>
+            <div className="text-xs text-gray-500">Chemical Reactions</div>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-green-600">89% understood</span>
+            <span className="text-xs text-gray-500">4.7★</span>
+          </div>
         </div>
       </div>
     </div>
   );
 
-  // Mental Health Support Mockup
+  // Mental Health Support Mockup - Enhanced with anonymity and compliance
   const MentalHealthMockup = () => (
-    <div className="bg-white p-6 rounded-lg shadow-sm">
-      <h3 className="text-lg font-semibold mb-4 text-gray-800">Mental Health Support</h3>
+    <div className="bg-white p-6 rounded-lg shadow-sm border">
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-lg font-semibold text-gray-800">Anonymous Mental Health Support</h3>
+        <div className="flex items-center gap-1">
+          <EyeOffIcon className="w-4 h-4 text-purple-600" />
+          <Badge className="bg-purple-100 text-purple-700">100% Anonymous</Badge>
+        </div>
+      </div>
+      
+      {/* Compliance Badges */}
+      <div className="flex gap-2 mb-4">
+        <Badge className="bg-blue-50 text-blue-700 border border-blue-200">
+          <ShieldIcon className="w-3 h-3 mr-1" />
+          GDPR Compliant
+        </Badge>
+        <Badge className="bg-green-50 text-green-700 border border-green-200">
+          <LockIcon className="w-3 h-3 mr-1" />
+          SOC 2 Certified
+        </Badge>
+        <Badge className="bg-purple-50 text-purple-700 border border-purple-200">
+          <FileCheckIcon className="w-3 h-3 mr-1" />
+          HIPAA Compliant
+        </Badge>
+      </div>
+
       <div className="space-y-4">
         <div className="bg-purple-50 p-4 rounded-lg border-l-4 border-purple-500">
           <div className="flex items-center gap-2 mb-2">
-            <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-            <span className="text-sm font-medium">Dr. Sarah - Online</span>
+            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+            <span className="text-sm font-medium">Dr. Sarah - Online Now</span>
+            <Badge className="bg-white text-purple-700 text-xs">Licensed Therapist</Badge>
           </div>
-          <p className="text-sm text-purple-700">Available for live chat support</p>
+          <p className="text-sm text-purple-700">Available for anonymous live chat support</p>
+          <p className="text-xs text-purple-600 mt-1">🔒 Your identity remains completely private</p>
         </div>
+        
         <div className="space-y-2">
-          <button className="w-full bg-purple-600 text-white p-3 rounded-md text-sm">Start Live Chat</button>
-          <button className="w-full border border-purple-600 text-purple-600 p-3 rounded-md text-sm">Book Appointment</button>
+          <button className="w-full bg-purple-600 text-white p-3 rounded-md text-sm font-medium hover:bg-purple-700 transition-colors flex items-center justify-center gap-2">
+            <MessageCircleIcon className="w-4 h-4" />
+            Start Anonymous Chat
+          </button>
+          <button className="w-full border border-purple-600 text-purple-600 p-3 rounded-md text-sm font-medium hover:bg-purple-50 transition-colors">
+            Schedule Private Appointment
+          </button>
         </div>
-        <div className="bg-gray-50 p-3 rounded-lg">
-          <p className="text-xs text-gray-600">24/7 crisis support available</p>
+        
+        <div className="bg-gray-50 p-3 rounded-lg border">
+          <div className="flex items-center gap-2 mb-1">
+            <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+            <p className="text-xs font-medium text-gray-700">24/7 Crisis Support Available</p>
+          </div>
+          <p className="text-xs text-gray-600">Emergency support with certified professionals</p>
         </div>
       </div>
     </div>
@@ -120,27 +190,37 @@ const DemoSection = () => {
 
   // Class Management Mockup
   const ClassManagementMockup = () => (
-    <div className="bg-white p-6 rounded-lg shadow-sm">
-      <h3 className="text-lg font-semibold mb-4 text-gray-800">Class Schedule</h3>
+    <div className="bg-white p-6 rounded-lg shadow-sm border">
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-lg font-semibold text-gray-800">Today's Schedule</h3>
+        <Badge className="bg-blue-100 text-blue-700">Grade 8A</Badge>
+      </div>
       <div className="space-y-3">
-        <div className="flex items-center gap-3 p-3 bg-blue-50 rounded-lg border-l-4 border-blue-500">
-          <ClockIcon className="w-5 h-5 text-blue-600" />
-          <div>
+        <div className="flex items-center gap-3 p-4 bg-blue-50 rounded-lg border-l-4 border-blue-500">
+          <ClockIcon className="w-6 h-6 text-blue-600" />
+          <div className="flex-1">
             <div className="font-medium text-sm">Mathematics</div>
-            <div className="text-xs text-gray-600">9:00 AM - 10:30 AM</div>
+            <div className="text-xs text-gray-600">Algebra & Linear Equations</div>
+            <div className="text-xs text-blue-600 font-medium">9:00 AM - 10:30 AM</div>
           </div>
+          <Badge className="bg-blue-100 text-blue-700">Current</Badge>
         </div>
-        <div className="flex items-center gap-3 p-3 bg-green-50 rounded-lg border-l-4 border-green-500">
-          <ClockIcon className="w-5 h-5 text-green-600" />
-          <div>
+        
+        <div className="flex items-center gap-3 p-4 bg-green-50 rounded-lg border-l-4 border-green-500">
+          <ClockIcon className="w-6 h-6 text-green-600" />
+          <div className="flex-1">
             <div className="font-medium text-sm">Science Lab</div>
-            <div className="text-xs text-gray-600">11:00 AM - 12:30 PM</div>
+            <div className="text-xs text-gray-600">Chemical Reactions & Experiments</div>
+            <div className="text-xs text-green-600 font-medium">11:00 AM - 12:30 PM</div>
           </div>
+          <Badge className="bg-green-100 text-green-700">Next</Badge>
         </div>
-        <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-          <CalendarIcon className="w-5 h-5 text-gray-400" />
-          <div>
-            <div className="font-medium text-sm text-gray-500">Free Period</div>
+        
+        <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-lg border-l-4 border-gray-300">
+          <CalendarIcon className="w-6 h-6 text-gray-400" />
+          <div className="flex-1">
+            <div className="font-medium text-sm text-gray-500">Lunch Break</div>
+            <div className="text-xs text-gray-400">Free time for students</div>
             <div className="text-xs text-gray-400">1:00 PM - 2:00 PM</div>
           </div>
         </div>
@@ -148,29 +228,53 @@ const DemoSection = () => {
     </div>
   );
 
-  // Live Chat Mockup
+  // Live Chat Mockup - Enhanced with anonymity features
   const LiveChatMockup = () => (
-    <div className="bg-white p-6 rounded-lg shadow-sm">
-      <h3 className="text-lg font-semibold mb-4 text-gray-800">Live Chat with Dr. Sarah</h3>
-      <div className="bg-gray-50 rounded-lg p-4 h-40 mb-4 overflow-y-auto">
+    <div className="bg-white p-6 rounded-lg shadow-sm border">
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-lg font-semibold text-gray-800">Anonymous Live Chat</h3>
+        <div className="flex items-center gap-2">
+          <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+          <span className="text-xs text-green-600 font-medium">Secure Connection</span>
+        </div>
+      </div>
+      
+      <div className="bg-gray-50 rounded-lg p-4 h-48 mb-4 overflow-y-auto border">
         <div className="space-y-3">
-          <div className="bg-purple-100 p-2 rounded-lg max-w-xs">
-            <p className="text-sm">Hello! How can I help you today?</p>
-            <span className="text-xs text-gray-500">Dr. Sarah</span>
+          <div className="bg-purple-100 p-3 rounded-lg max-w-xs border">
+            <p className="text-sm">Hello! I'm Dr. Sarah. This is a completely anonymous and secure space. How can I help you today?</p>
+            <div className="flex items-center gap-1 mt-1">
+              <LockIcon className="w-3 h-3 text-purple-600" />
+              <span className="text-xs text-purple-600">Licensed Therapist</span>
+            </div>
           </div>
-          <div className="bg-blue-100 p-2 rounded-lg max-w-xs ml-auto">
-            <p className="text-sm">I'm feeling overwhelmed with my studies...</p>
-            <span className="text-xs text-gray-500">You</span>
+          
+          <div className="bg-blue-100 p-3 rounded-lg max-w-xs ml-auto border">
+            <p className="text-sm">I'm feeling overwhelmed with my studies and social pressure...</p>
+            <span className="text-xs text-blue-600">Anonymous Student</span>
           </div>
-          <div className="bg-purple-100 p-2 rounded-lg max-w-xs">
-            <p className="text-sm">I understand. Let's talk about some strategies that might help...</p>
-            <span className="text-xs text-gray-500">Dr. Sarah</span>
+          
+          <div className="bg-purple-100 p-3 rounded-lg max-w-xs border">
+            <p className="text-sm">I understand completely. Those feelings are very common. Let's explore some coping strategies together...</p>
+            <span className="text-xs text-purple-600">Dr. Sarah</span>
           </div>
         </div>
       </div>
+      
       <div className="flex gap-2">
-        <input className="flex-1 p-2 border rounded-md text-sm" placeholder="Type your message..." />
-        <button className="bg-purple-600 text-white px-4 py-2 rounded-md text-sm">Send</button>
+        <input 
+          className="flex-1 p-3 border border-gray-300 rounded-md text-sm" 
+          placeholder="Type your message... (completely anonymous)"
+          value=""
+        />
+        <button className="bg-purple-600 text-white px-4 py-3 rounded-md text-sm font-medium hover:bg-purple-700 transition-colors">
+          Send
+        </button>
+      </div>
+      
+      <div className="flex items-center gap-1 mt-2">
+        <EyeOffIcon className="w-3 h-3 text-gray-500" />
+        <span className="text-xs text-gray-500">Your identity is completely protected and anonymous</span>
       </div>
     </div>
   );
@@ -183,7 +287,7 @@ const DemoSection = () => {
       userType: "student",
       icon: UsersIcon,
       videoDescription: "Student dashboard showing feedback forms and emotional state tracking",
-      voiceoverText: "Welcome to our comprehensive student feedback system. Students can easily share their thoughts about lessons and track their emotional well-being in a safe, supportive environment.",
+      voiceoverText: "Welcome to our comprehensive student feedback system. Students can easily share their thoughts about lessons and track their emotional well-being in a safe, supportive environment. All feedback is completely anonymous and helps teachers improve their teaching methods.",
       mockupComponent: <StudentFeedbackMockup />
     },
     {
@@ -193,17 +297,17 @@ const DemoSection = () => {
       userType: "teacher",
       icon: BarChart3Icon,
       videoDescription: "Teacher dashboard with analytics, class schedules, and student insights",
-      voiceoverText: "Our teacher dashboard provides powerful analytics and insights, helping educators understand student progress and adapt their teaching methods for maximum effectiveness.",
+      voiceoverText: "Our teacher dashboard provides powerful analytics and insights, helping educators understand student progress and adapt their teaching methods for maximum effectiveness. Real-time data helps identify students who may need additional support.",
       mockupComponent: <TeacherDashboardMockup />
     },
     {
       id: "mental-health-support",
-      title: "Mental Health Support",
-      description: "Integrated mental health resources and professional support",
+      title: "Anonymous Mental Health Support",
+      description: "Integrated mental health resources with complete anonymity and GDPR compliance",
       userType: "psychologist",
       icon: HeartIcon,
-      videoDescription: "Mental health support interface with live chat and resource access",
-      voiceoverText: "Mental health support is seamlessly integrated into our platform, connecting students with qualified professionals through our Ask the Doctor live chat feature.",
+      videoDescription: "Mental health support interface with anonymous chat and compliance features",
+      voiceoverText: "Mental health support is seamlessly integrated into our platform with complete anonymity protection. Our GDPR, SOC 2, and HIPAA compliant system connects students with qualified professionals through secure, anonymous live chat features.",
       mockupComponent: <MentalHealthMockup />
     },
     {
@@ -213,22 +317,22 @@ const DemoSection = () => {
       userType: "teacher",
       icon: BookOpenIcon,
       videoDescription: "Class scheduling interface and calendar management",
-      voiceoverText: "Efficient class management tools help teachers organize schedules, track attendance, and manage lesson plans all in one integrated platform.",
+      voiceoverText: "Efficient class management tools help teachers organize schedules, track attendance, and manage lesson plans all in one integrated platform. Students can easily view their daily schedules and upcoming assignments.",
       mockupComponent: <ClassManagementMockup />
     },
     {
       id: "live-chat",
-      title: "Live Mental Health Chat",
-      description: "Instant access to mental health professionals",
+      title: "Anonymous Live Mental Health Chat",
+      description: "Instant anonymous access to mental health professionals",
       userType: "student",
       icon: MessageCircleIcon,
-      videoDescription: "Live chat interface connecting students with mental health professionals",
-      voiceoverText: "Students have instant access to mental health support through our live chat system, ensuring help is always available when needed.",
+      videoDescription: "Anonymous live chat interface connecting students with mental health professionals",
+      voiceoverText: "Students have instant access to mental health support through our completely anonymous live chat system. Our robust, compliant platform ensures help is always available when needed while protecting student privacy.",
       mockupComponent: <LiveChatMockup />
     }
   ];
 
-  // Text-to-speech functionality with improved female voice selection
+  // Enhanced text-to-speech functionality with better female voice selection and higher volume
   const playVoiceover = (text: string) => {
     if (!('speechSynthesis' in window)) {
       toast({
@@ -239,37 +343,70 @@ const DemoSection = () => {
       return null;
     }
 
+    // Cancel any existing speech
+    speechSynthesis.cancel();
+
     const utterance = new SpeechSynthesisUtterance(text);
-    utterance.rate = 0.8;
-    utterance.pitch = 1.2;
-    utterance.volume = isMuted ? 0 : 0.9; // Increased volume
-    
-    // Enhanced female voice selection
-    const voices = speechSynthesis.getVoices();
-    const femaleVoice = voices.find(voice => 
-      voice.name.toLowerCase().includes('female') || 
-      voice.name.toLowerCase().includes('woman') ||
-      voice.name.toLowerCase().includes('zira') ||
-      voice.name.toLowerCase().includes('susan') ||
-      voice.name.toLowerCase().includes('samantha') ||
-      voice.name.toLowerCase().includes('karen') ||
-      voice.name.toLowerCase().includes('moira') ||
-      voice.name.toLowerCase().includes('tessa') ||
-      voice.name.toLowerCase().includes('fiona') ||
-      voice.name.toLowerCase().includes('microsoft zira') ||
-      voice.name.toLowerCase().includes('google uk english female')
-    ) || voices.find(voice => voice.lang.includes('en') && voice.name.includes('f'));
-    
-    if (femaleVoice) {
-      utterance.voice = femaleVoice;
-      console.log('Using female voice:', femaleVoice.name);
-    } else {
-      // Fallback: try to find any English voice that might be female
-      const englishVoices = voices.filter(voice => voice.lang.startsWith('en'));
-      if (englishVoices.length > 0) {
-        utterance.voice = englishVoices[0];
-        console.log('Using fallback voice:', englishVoices[0].name);
+    utterance.rate = 0.85;
+    utterance.pitch = 1.1;
+    utterance.volume = isMuted ? 0 : 1.0; // Maximum volume
+
+    // Wait for voices to be loaded
+    const setVoice = () => {
+      const voices = speechSynthesis.getVoices();
+      console.log('Available voices:', voices.map(v => `${v.name} (${v.lang}) - ${v.gender || 'unknown gender'}`));
+      
+      // Enhanced female voice selection with multiple fallbacks
+      const femaleVoice = voices.find(voice => {
+        const name = voice.name.toLowerCase();
+        const lang = voice.lang.toLowerCase();
+        return (
+          // Prioritize high-quality female voices
+          name.includes('samantha') ||
+          name.includes('karen') ||
+          name.includes('susan') ||
+          name.includes('sarah') ||
+          name.includes('emma') ||
+          name.includes('female') ||
+          name.includes('woman') ||
+          name.includes('zira') ||
+          name.includes('hazel') ||
+          name.includes('moira') ||
+          name.includes('tessa') ||
+          name.includes('fiona') ||
+          name.includes('kate') ||
+          name.includes('victoria') ||
+          // Google voices
+          (name.includes('google') && name.includes('female')) ||
+          (name.includes('google') && lang.includes('en') && name.includes('2')) ||
+          // Microsoft voices
+          name.includes('microsoft zira') ||
+          // Natural-sounding voices that are typically female
+          (lang.includes('en') && (
+            name.includes('natural') ||
+            name.includes('neural')
+          ))
+        );
+      });
+
+      if (femaleVoice) {
+        utterance.voice = femaleVoice;
+        console.log('Using female voice:', femaleVoice.name, 'Language:', femaleVoice.lang);
+      } else {
+        // Fallback to any English voice
+        const englishVoice = voices.find(voice => voice.lang.startsWith('en'));
+        if (englishVoice) {
+          utterance.voice = englishVoice;
+          console.log('Using fallback English voice:', englishVoice.name);
+        }
       }
+    };
+
+    // Set voice immediately if available, otherwise wait for voices to load
+    if (speechSynthesis.getVoices().length > 0) {
+      setVoice();
+    } else {
+      speechSynthesis.onvoiceschanged = setVoice;
     }
 
     return utterance;
@@ -305,9 +442,9 @@ const DemoSection = () => {
     if (isPlaying) {
       // Pause
       setIsPlaying(false);
-      if (currentAudio) {
+      if (currentUtterance) {
         speechSynthesis.cancel();
-        setCurrentAudio(null);
+        setCurrentUtterance(null);
       }
     } else {
       // Play
@@ -315,19 +452,27 @@ const DemoSection = () => {
       const utterance = playVoiceover(demoFeatures[currentFeature].voiceoverText);
       if (utterance) {
         utterance.onend = () => {
-          setCurrentAudio(null);
+          setCurrentUtterance(null);
+        };
+        utterance.onerror = (event) => {
+          console.error('Speech synthesis error:', event);
+          toast({
+            title: "Audio Error",
+            description: "There was an issue playing the audio. Please try again.",
+            variant: "destructive"
+          });
         };
         speechSynthesis.speak(utterance);
-        setCurrentAudio(utterance as any);
+        setCurrentUtterance(utterance);
       }
     }
   };
 
   const handleFeatureSelect = (index: number) => {
     // Stop current audio
-    if (currentAudio) {
+    if (currentUtterance) {
       speechSynthesis.cancel();
-      setCurrentAudio(null);
+      setCurrentUtterance(null);
     }
     
     setCurrentFeature(index);
@@ -338,27 +483,29 @@ const DemoSection = () => {
       const utterance = playVoiceover(demoFeatures[index].voiceoverText);
       if (utterance) {
         utterance.onend = () => {
-          setCurrentAudio(null);
+          setCurrentUtterance(null);
         };
         speechSynthesis.speak(utterance);
-        setCurrentAudio(utterance as any);
+        setCurrentUtterance(utterance);
       }
     }
   };
 
   const handleMuteToggle = () => {
     setIsMuted(!isMuted);
-    if (currentAudio) {
+    if (currentUtterance) {
       speechSynthesis.cancel();
-      setCurrentAudio(null);
+      setCurrentUtterance(null);
       if (isPlaying) {
         // Restart with new volume setting
-        const utterance = playVoiceover(demoFeatures[currentFeature].voiceoverText);
-        if (utterance) {
-          utterance.volume = !isMuted ? 0 : 0.9;
-          speechSynthesis.speak(utterance);
-          setCurrentAudio(utterance as any);
-        }
+        setTimeout(() => {
+          const utterance = playVoiceover(demoFeatures[currentFeature].voiceoverText);
+          if (utterance) {
+            utterance.volume = !isMuted ? 0 : 1.0;
+            speechSynthesis.speak(utterance);
+            setCurrentUtterance(utterance);
+          }
+        }, 100);
       }
     }
   };
@@ -380,6 +527,25 @@ const DemoSection = () => {
         <div className="text-center mb-12">
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
             Experience our comprehensive education platform through this interactive demonstration showcasing features for students, teachers, and mental health professionals.
+          </p>
+          
+          {/* Compliance Banner */}
+          <div className="flex justify-center gap-3 mt-6">
+            <Badge className="bg-blue-50 text-blue-700 border border-blue-200">
+              <ShieldIcon className="w-3 h-3 mr-1" />
+              GDPR Compliant
+            </Badge>
+            <Badge className="bg-green-50 text-green-700 border border-green-200">
+              <LockIcon className="w-3 h-3 mr-1" />
+              SOC 2 Certified
+            </Badge>
+            <Badge className="bg-purple-50 text-purple-700 border border-purple-200">
+              <FileCheckIcon className="w-3 h-3 mr-1" />
+              HIPAA Compliant
+            </Badge>
+          </div>
+          <p className="text-sm text-muted-foreground mt-2">
+            Robust, secure platform with enterprise-grade compliance
           </p>
         </div>
 
