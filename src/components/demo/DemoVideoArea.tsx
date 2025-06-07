@@ -3,7 +3,7 @@ import React from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { PlayIcon, PauseIcon, VolumeXIcon } from "lucide-react";
+import { PlayIcon, PauseIcon } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 interface DemoFeature {
@@ -44,11 +44,6 @@ const DemoVideoArea: React.FC<DemoVideoAreaProps> = ({
     }
   };
 
-  const handlePlayClick = () => {
-    console.log('Play button clicked:', { isPlaying, hasUserInteracted, isReady });
-    onPlayPause();
-  };
-
   return (
     <>
       <Card className="overflow-hidden border-2 border-primary/20">
@@ -64,15 +59,16 @@ const DemoVideoArea: React.FC<DemoVideoAreaProps> = ({
               </Badge>
             </div>
 
-            <div className="absolute bottom-4 left-4 flex items-center gap-2">
+            <div className="absolute bottom-4 left-4">
               <Button
-                onClick={handlePlayClick}
+                onClick={onPlayPause}
                 size="sm"
                 className={`${
                   isPlaying 
                     ? 'bg-red-600 hover:bg-red-700' 
                     : 'bg-primary/90 hover:bg-primary'
                 }`}
+                disabled={!currentUtterance && !isReady}
               >
                 {isPlaying ? (
                   <PauseIcon className="w-4 h-4" />
@@ -80,13 +76,13 @@ const DemoVideoArea: React.FC<DemoVideoAreaProps> = ({
                   <PlayIcon className="w-4 h-4" />
                 )}
               </Button>
-              
-              {!hasUserInteracted && (
-                <div className="bg-yellow-100 border border-yellow-300 rounded-lg px-2 py-1">
-                  <VolumeXIcon className="w-3 h-3 text-yellow-700" />
-                </div>
-              )}
             </div>
+
+            {!hasUserInteracted && (
+              <div className="absolute bottom-4 right-4 bg-yellow-100 border border-yellow-300 rounded-lg px-3 py-1">
+                <span className="text-xs text-yellow-800">Click play for audio</span>
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>
@@ -96,17 +92,17 @@ const DemoVideoArea: React.FC<DemoVideoAreaProps> = ({
           <div className="flex items-center gap-2 mb-2">
             <div className={`w-2 h-2 rounded-full ${isPlaying ? 'bg-purple-600 animate-pulse' : 'bg-gray-400'}`}></div>
             <span className="text-sm font-medium text-purple-700">
-              {isPlaying ? t('demo.liveVoiceover') : 'Audio narration available'}
+              {isPlaying ? t('demo.liveVoiceover') : 'Click play to hear voiceover'}
             </span>
-            {!isPlaying && (
+            {currentUtterance && !isPlaying && (
               <Button
-                onClick={handlePlayClick}
+                onClick={onPlayPause}
                 size="sm"
                 variant="ghost"
                 className="h-6 px-2 text-xs"
               >
                 <PlayIcon className="w-3 h-3 mr-1" />
-                Play Audio
+                Play
               </Button>
             )}
           </div>
@@ -114,12 +110,9 @@ const DemoVideoArea: React.FC<DemoVideoAreaProps> = ({
             "{t(currentDemo.voiceoverKey)}"
           </p>
           {!hasUserInteracted && (
-            <div className="flex items-center gap-2 mt-2 p-2 bg-amber-50 border border-amber-200 rounded">
-              <VolumeXIcon className="w-4 h-4 text-amber-600" />
-              <p className="text-xs text-amber-700">
-                Click the play button to enable audio. Your browser may require user interaction for sound.
-              </p>
-            </div>
+            <p className="text-xs text-purple-500 mt-2">
+              🔊 Audio requires user interaction. Click the play button to enable sound.
+            </p>
           )}
         </CardContent>
       </Card>

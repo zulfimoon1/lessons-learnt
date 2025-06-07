@@ -112,41 +112,28 @@ const DemoSection = () => {
   useEffect(() => {
     stopVoiceover();
     const voiceoverText = t(demoFeatures[currentFeature].voiceoverKey);
-    if (voiceoverText && voiceoverText !== demoFeatures[currentFeature].voiceoverKey) {
-      playVoiceover(voiceoverText, false);
-    }
-  }, [currentFeature, t, stopVoiceover, playVoiceover, demoFeatures]);
+    playVoiceover(voiceoverText, false);
+  }, [currentFeature, t]);
 
   const handleFeatureSelect = (index: number) => {
     stopVoiceover();
     setCurrentFeature(index);
     const voiceoverText = t(demoFeatures[index].voiceoverKey);
-    if (voiceoverText && voiceoverText !== demoFeatures[index].voiceoverKey) {
-      playVoiceover(voiceoverText, false);
-    }
+    playVoiceover(voiceoverText, false);
   };
 
   const handlePlayPause = () => {
-    console.log('DemoSection - Play/Pause clicked:', { 
-      isPlaying, 
-      currentUtterance: !!currentUtterance,
-      hasUserInteracted,
-      isReady 
-    });
+    console.log('Play/Pause clicked', { isPlaying, currentUtterance: !!currentUtterance });
     
     if (isPlaying) {
       stopVoiceover();
+    } else if (currentUtterance) {
+      startPlayback();
     } else {
       const voiceoverText = t(demoFeatures[currentFeature].voiceoverKey);
-      if (currentUtterance) {
-        startPlayback();
-      } else if (voiceoverText && voiceoverText !== demoFeatures[currentFeature].voiceoverKey) {
-        const utterance = playVoiceover(voiceoverText, true);
-        if (utterance) {
-          console.log('Created new utterance, starting playback');
-        }
-      } else {
-        console.log('No valid voiceover text found');
+      const utterance = playVoiceover(voiceoverText, false);
+      if (utterance) {
+        setTimeout(() => startPlayback(), 100);
       }
     }
   };
