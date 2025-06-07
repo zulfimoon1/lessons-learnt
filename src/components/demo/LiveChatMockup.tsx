@@ -1,55 +1,62 @@
 
 import { Badge } from "@/components/ui/badge";
-import { EyeOffIcon, LockIcon } from "lucide-react";
+import { MessageCircleIcon, SendIcon } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
 
-const LiveChatMockup = () => (
-  <div className="bg-white p-6 rounded-lg shadow-sm border">
-    <div className="flex items-center justify-between mb-4">
-      <h3 className="text-lg font-semibold text-gray-800">Anonymous Live Chat</h3>
-      <div className="flex items-center gap-2">
-        <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-        <span className="text-xs text-green-600 font-medium">Secure Connection</span>
+const LiveChatMockup = () => {
+  const { t } = useLanguage();
+  
+  return (
+    <div className="bg-white p-6 rounded-lg shadow-sm border">
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-lg font-semibold text-gray-800">{t('demo.mockups.liveChat.title')}</h3>
+        <Badge className="bg-green-100 text-green-700">{t('demo.mockups.liveChat.online')}</Badge>
       </div>
-    </div>
-    
-    <div className="bg-gray-50 rounded-lg p-4 h-48 mb-4 overflow-y-auto border">
-      <div className="space-y-3">
-        <div className="bg-purple-100 p-3 rounded-lg max-w-xs border">
-          <p className="text-sm">Hello! I'm Dr. Sarah. This is a completely anonymous and secure space. How can I help you today?</p>
-          <div className="flex items-center gap-1 mt-1">
-            <LockIcon className="w-3 h-3 text-purple-600" />
-            <span className="text-xs text-purple-600">Licensed Therapist</span>
+      
+      <div className="space-y-3 mb-4">
+        <div className="flex gap-3">
+          <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-xs font-medium">
+            T
+          </div>
+          <div className="flex-1 bg-blue-50 p-3 rounded-lg">
+            <p className="text-sm text-blue-800">{t('demo.mockups.liveChat.teacherMessage')}</p>
+            <span className="text-xs text-blue-600">2 min</span>
           </div>
         </div>
         
-        <div className="bg-blue-100 p-3 rounded-lg max-w-xs ml-auto border">
-          <p className="text-sm">I'm feeling overwhelmed with my studies and social pressure...</p>
-          <span className="text-xs text-blue-600">Anonymous Student</span>
+        <div className="flex gap-3 justify-end">
+          <div className="flex-1 bg-gray-100 p-3 rounded-lg max-w-xs ml-8">
+            <p className="text-sm text-gray-800">{t('demo.mockups.liveChat.studentMessage')}</p>
+            <span className="text-xs text-gray-600">1 min</span>
+          </div>
+          <div className="w-8 h-8 bg-gray-400 rounded-full flex items-center justify-center text-white text-xs font-medium">
+            S
+          </div>
         </div>
         
-        <div className="bg-purple-100 p-3 rounded-lg max-w-xs border">
-          <p className="text-sm">I understand completely. Those feelings are very common. Let's explore some coping strategies together...</p>
-          <span className="text-xs text-purple-600">Dr. Sarah</span>
+        <div className="flex gap-3">
+          <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-xs font-medium">
+            T
+          </div>
+          <div className="flex-1 bg-blue-50 p-3 rounded-lg">
+            <p className="text-sm text-blue-800">{t('demo.mockups.liveChat.teacherReply')}</p>
+            <span className="text-xs text-blue-600">{t('demo.mockups.liveChat.now')}</span>
+          </div>
         </div>
       </div>
+      
+      <div className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg border">
+        <MessageCircleIcon className="w-4 h-4 text-gray-400" />
+        <input 
+          type="text" 
+          placeholder={t('demo.mockups.liveChat.placeholder')}
+          className="flex-1 bg-transparent text-sm border-none outline-none"
+          disabled
+        />
+        <SendIcon className="w-4 h-4 text-blue-500" />
+      </div>
     </div>
-    
-    <div className="flex gap-2">
-      <input 
-        className="flex-1 p-3 border border-gray-300 rounded-md text-sm" 
-        placeholder="Type your message... (completely anonymous)"
-        readOnly
-      />
-      <button className="bg-purple-600 text-white px-4 py-3 rounded-md text-sm font-medium hover:bg-purple-700 transition-colors">
-        Send
-      </button>
-    </div>
-    
-    <div className="flex items-center gap-1 mt-2">
-      <EyeOffIcon className="w-3 h-3 text-gray-500" />
-      <span className="text-xs text-gray-500">Your identity is completely protected and anonymous</span>
-    </div>
-  </div>
-);
+  );
+};
 
 export default LiveChatMockup;
