@@ -383,7 +383,7 @@ const translations = {
     'performance.allTeachers': 'All teachers across schools',
     'performance.teachersFromSchool': 'Teachers from {school}',
     'performance.teacher': 'Teacher',
-
+    
     // Weekly Summary updates
     'weekly.submitAnonymously': 'Submit anonymously',
   },
