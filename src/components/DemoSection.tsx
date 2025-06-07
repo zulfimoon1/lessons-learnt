@@ -1,3 +1,4 @@
+
 import { useState, useRef, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -83,21 +84,25 @@ const DemoSection = () => {
   // Mental Health Support Mockup
   const MentalHealthMockup = () => (
     <div className="bg-white p-6 rounded-lg shadow-sm">
-      <h3 className="text-lg font-semibold mb-4 text-gray-800">Mental Health Support</h3>
+      <h3 className="text-lg font-semibold mb-4 text-gray-800">Anonymous Mental Health Support</h3>
       <div className="space-y-4">
         <div className="bg-purple-50 p-4 rounded-lg border-l-4 border-purple-500">
           <div className="flex items-center gap-2 mb-2">
             <div className="w-2 h-2 bg-green-500 rounded-full"></div>
             <span className="text-sm font-medium">Dr. Sarah - Online</span>
           </div>
-          <p className="text-sm text-purple-700">Available for live chat support</p>
+          <p className="text-sm text-purple-700">Available for anonymous chat support</p>
+        </div>
+        <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
+          <p className="text-sm text-blue-800 font-medium">🔒 Your identity is completely protected</p>
+          <p className="text-xs text-blue-600 mt-1">All conversations are confidential and anonymous</p>
         </div>
         <div className="space-y-2">
-          <button className="w-full bg-purple-600 text-white p-3 rounded-md text-sm">Start Live Chat</button>
-          <button className="w-full border border-purple-600 text-purple-600 p-3 rounded-md text-sm">Book Appointment</button>
+          <button className="w-full bg-purple-600 text-white p-3 rounded-md text-sm">Start Anonymous Chat</button>
+          <button className="w-full border border-purple-600 text-purple-600 p-3 rounded-md text-sm">Book Anonymous Appointment</button>
         </div>
         <div className="bg-gray-50 p-3 rounded-lg">
-          <p className="text-xs text-gray-600">24/7 crisis support available</p>
+          <p className="text-xs text-gray-600">24/7 anonymous crisis support available</p>
         </div>
       </div>
     </div>
@@ -136,25 +141,29 @@ const DemoSection = () => {
   // Live Chat Mockup
   const LiveChatMockup = () => (
     <div className="bg-white p-6 rounded-lg shadow-sm">
-      <h3 className="text-lg font-semibold mb-4 text-gray-800">Live Chat with Dr. Sarah</h3>
+      <h3 className="text-lg font-semibold mb-4 text-gray-800">Anonymous Live Chat with Dr. Sarah</h3>
+      <div className="bg-blue-50 p-3 rounded-lg border border-blue-200 mb-4">
+        <p className="text-sm text-blue-800 font-medium">🔒 Anonymous & Confidential</p>
+        <p className="text-xs text-blue-600">Your identity is completely protected</p>
+      </div>
       <div className="bg-gray-50 rounded-lg p-4 h-40 mb-4 overflow-y-auto">
         <div className="space-y-3">
           <div className="bg-purple-100 p-2 rounded-lg max-w-xs">
-            <p className="text-sm">Hello! How can I help you today?</p>
+            <p className="text-sm">Hello! This is a safe, anonymous space. How can I help you today?</p>
             <span className="text-xs text-gray-500">Dr. Sarah</span>
           </div>
           <div className="bg-blue-100 p-2 rounded-lg max-w-xs ml-auto">
             <p className="text-sm">I'm feeling overwhelmed with my studies...</p>
-            <span className="text-xs text-gray-500">Anonymous</span>
+            <span className="text-xs text-gray-500">Anonymous Student</span>
           </div>
           <div className="bg-purple-100 p-2 rounded-lg max-w-xs">
-            <p className="text-sm">I understand. Let's talk about some strategies that might help...</p>
+            <p className="text-sm">I understand. Your feelings are valid. Let's talk about some strategies that might help...</p>
             <span className="text-xs text-gray-500">Dr. Sarah</span>
           </div>
         </div>
       </div>
       <div className="flex gap-2">
-        <input className="flex-1 p-2 border rounded-md text-sm" placeholder="Type your message..." />
+        <input className="flex-1 p-2 border rounded-md text-sm" placeholder="Type your anonymous message..." />
         <button className="bg-purple-600 text-white px-4 py-2 rounded-md text-sm">Send</button>
       </div>
     </div>
@@ -179,8 +188,8 @@ const DemoSection = () => {
     },
     {
       id: "mental-health-support",
-      title: "Mental Health Support",
-      description: "Integrated mental health resources and professional support",
+      title: "Anonymous Mental Health Support",
+      description: "Anonymous mental health resources and professional support",
       userType: "psychologist",
       icon: HeartIcon,
       mockupComponent: <MentalHealthMockup />
@@ -195,8 +204,8 @@ const DemoSection = () => {
     },
     {
       id: "live-chat",
-      title: "Live Mental Health Chat",
-      description: "Instant access to mental health professionals",
+      title: "Anonymous Live Mental Health Chat",
+      description: "Anonymous instant access to mental health professionals",
       userType: "student",
       icon: MessageCircleIcon,
       mockupComponent: <LiveChatMockup />
@@ -316,7 +325,7 @@ const DemoSection = () => {
             </div>
             <div className="text-center">
               <div className="text-3xl font-bold text-primary mb-2">24/7</div>
-              <p className="text-muted-foreground">Mental Health Support</p>
+              <p className="text-muted-foreground">Anonymous Mental Health Support</p>
             </div>
           </div>
         </div>
