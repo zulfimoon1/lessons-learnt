@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -145,7 +144,9 @@ const TeacherDashboard = () => {
         <div className="max-w-7xl mx-auto flex justify-between items-center">
           <div className="flex items-center gap-4">
             <SchoolIcon className="w-8 h-8 text-green-600" />
-            <h1 className="text-2xl font-bold text-gray-900">{t('dashboard.teacherOverview')}</h1>
+            <h1 className="text-2xl font-bold text-gray-900">
+              {teacher?.role === 'doctor' ? t('dashboard.doctorOverview') : t('dashboard.teacherOverview')}
+            </h1>
           </div>
           <div className="flex items-center gap-4">
             <LanguageSwitcher />
@@ -213,110 +214,175 @@ const TeacherDashboard = () => {
               <CardTitle className="text-sm font-medium">{t('login.teacher.role')}</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-lg font-semibold capitalize">{teacher?.role}</div>
+              <div className="text-lg font-semibold capitalize">
+                {teacher?.role === 'doctor' ? 'Mental Health Professional' : teacher?.role}
+              </div>
+              {teacher?.role === 'doctor' && teacher?.specialization && (
+                <div className="text-sm text-gray-600 mt-1">{teacher.specialization}</div>
+              )}
             </CardContent>
           </Card>
 
           <Card className="border-green-100">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{t('admin.subscription')}</CardTitle>
+              <CardTitle className="text-sm font-medium">
+                {teacher?.role === 'doctor' ? 'Availability' : t('admin.subscription')}
+              </CardTitle>
               <CreditCardIcon className="h-4 w-4 text-gray-500" />
             </CardHeader>
             <CardContent>
               <div className="text-lg font-semibold">
-                {subscription ? t('pricing.securePayment').split(' ')[0] : 'Inactive'}
+                {teacher?.role === 'doctor' 
+                  ? (teacher?.is_available ? 'Available' : 'Busy')
+                  : (subscription ? t('pricing.securePayment').split(' ')[0] : 'Inactive')
+                }
               </div>
             </CardContent>
           </Card>
         </div>
 
-        <Tabs defaultValue="schedule" className="space-y-6">
+        <Tabs defaultValue={teacher?.role === 'doctor' ? 'chat-sessions' : 'schedule'} className="space-y-6">
           <TabsList className="bg-green-50 border-green-200">
-            <TabsTrigger value="schedule" className="data-[state=active]:bg-green-600 data-[state=active]:text-white">{t('class.schedule')}</TabsTrigger>
-            <TabsTrigger value="bulk-upload" className="data-[state=active]:bg-green-600 data-[state=active]:text-white">{t('upload.bulkUpload')}</TabsTrigger>
-            {teacher?.role === 'admin' && (
-              <TabsTrigger value="articles" className="data-[state=active]:bg-green-600 data-[state=active]:text-white">{t('articles.mentalHealth')}</TabsTrigger>
+            {teacher?.role === 'doctor' ? (
+              <>
+                <TabsTrigger value="chat-sessions" className="data-[state=active]:bg-green-600 data-[state=active]:text-white">Live Chat Sessions</TabsTrigger>
+                <TabsTrigger value="articles" className="data-[state=active]:bg-green-600 data-[state=active]:text-white">{t('articles.mentalHealth')}</TabsTrigger>
+              </>
+            ) : (
+              <>
+                <TabsTrigger value="schedule" className="data-[state=active]:bg-green-600 data-[state=active]:text-white">{t('class.schedule')}</TabsTrigger>
+                <TabsTrigger value="bulk-upload" className="data-[state=active]:bg-green-600 data-[state=active]:text-white">{t('upload.bulkUpload')}</TabsTrigger>
+                {teacher?.role === 'admin' && (
+                  <TabsTrigger value="articles" className="data-[state=active]:bg-green-600 data-[state=active]:text-white">{t('articles.mentalHealth')}</TabsTrigger>
+                )}
+              </>
             )}
           </TabsList>
 
-          <TabsContent value="schedule" className="space-y-6">
-            {subscription ? (
-              <ClassScheduleForm teacher={teacher} />
-            ) : (
-              <Card className="border-green-100">
-                <CardHeader>
-                  <CardTitle>{t('class.schedule')}</CardTitle>
-                  <CardDescription>
-                    {t('teacher.classSchedulingAvailable')}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="text-center py-8">
-                  <p className="text-gray-600 mb-4">{t('teacher.classSchedulingAvailable')}</p>
-                  <Button 
-                    onClick={handleCreateCheckout}
-                    disabled={isCreatingCheckout}
-                    className="bg-green-600 hover:bg-green-700 text-white"
-                  >
-                    {isCreatingCheckout ? t('pricing.processing') : t('teacher.subscribeToContinue')}
-                  </Button>
-                </CardContent>
-              </Card>
-            )}
-          </TabsContent>
-
-          <TabsContent value="bulk-upload" className="space-y-6">
-            {subscription ? (
-              <BulkScheduleUpload 
-                teacher={teacher} 
-                onUploadComplete={handleScheduleUploadComplete}
-              />
-            ) : (
-              <Card className="border-green-100">
-                <CardHeader>
-                  <CardTitle>{t('upload.bulkUpload')}</CardTitle>
-                  <CardDescription>
-                    {t('upload.subscriptionRequired')}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="text-center py-8">
-                  <p className="text-gray-600 mb-4">{t('upload.subscriptionRequired')}</p>
-                  <Button 
-                    onClick={handleCreateCheckout}
-                    disabled={isCreatingCheckout}
-                    className="bg-green-600 hover:bg-green-700 text-white"
-                  >
-                    {isCreatingCheckout ? t('pricing.processing') : t('teacher.subscribeToContinue')}
-                  </Button>
-                </CardContent>
-              </Card>
-            )}
-          </TabsContent>
-
-          {teacher?.role === 'admin' && (
-            <TabsContent value="articles" className="space-y-6">
-              {subscription ? (
-                <MentalHealthArticles teacher={teacher} />
-              ) : (
+          {teacher?.role === 'doctor' ? (
+            <>
+              <TabsContent value="chat-sessions" className="space-y-6">
                 <Card className="border-green-100">
                   <CardHeader>
-                    <CardTitle>{t('articles.mentalHealth')}</CardTitle>
+                    <CardTitle>Live Chat Sessions</CardTitle>
                     <CardDescription>
-                      {t('articles.subscriptionRequired')}
+                      Manage your active chat sessions with students
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="text-center py-8">
-                    <p className="text-gray-600 mb-4">{t('articles.subscriptionRequired')}</p>
-                    <Button 
-                      onClick={handleCreateCheckout}
-                      disabled={isCreatingCheckout}
-                      className="bg-green-600 hover:bg-green-700 text-white"
-                    >
-                      {isCreatingCheckout ? t('pricing.processing') : t('teacher.subscribeToContinue')}
-                    </Button>
+                    <p className="text-gray-600 mb-4">No active chat sessions at the moment.</p>
+                    <p className="text-sm text-gray-500">Students can connect with you through the live chat feature.</p>
                   </CardContent>
                 </Card>
+              </TabsContent>
+              
+              <TabsContent value="articles" className="space-y-6">
+                {subscription ? (
+                  <MentalHealthArticles teacher={teacher} />
+                ) : (
+                  <Card className="border-green-100">
+                    <CardHeader>
+                      <CardTitle>{t('articles.mentalHealth')}</CardTitle>
+                      <CardDescription>
+                        {t('articles.subscriptionRequired')}
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="text-center py-8">
+                      <p className="text-gray-600 mb-4">{t('articles.subscriptionRequired')}</p>
+                      <Button 
+                        onClick={handleCreateCheckout}
+                        disabled={isCreatingCheckout}
+                        className="bg-green-600 hover:bg-green-700 text-white"
+                      >
+                        {isCreatingCheckout ? t('pricing.processing') : t('teacher.subscribeToContinue')}
+                      </Button>
+                    </CardContent>
+                  </Card>
+                )}
+              </TabsContent>
+            </>
+          ) : (
+            <>
+              <TabsContent value="schedule" className="space-y-6">
+                {subscription ? (
+                  <ClassScheduleForm teacher={teacher} />
+                ) : (
+                  <Card className="border-green-100">
+                    <CardHeader>
+                      <CardTitle>{t('class.schedule')}</CardTitle>
+                      <CardDescription>
+                        {t('teacher.classSchedulingAvailable')}
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="text-center py-8">
+                      <p className="text-gray-600 mb-4">{t('teacher.classSchedulingAvailable')}</p>
+                      <Button 
+                        onClick={handleCreateCheckout}
+                        disabled={isCreatingCheckout}
+                        className="bg-green-600 hover:bg-green-700 text-white"
+                      >
+                        {isCreatingCheckout ? t('pricing.processing') : t('teacher.subscribeToContinue')}
+                      </Button>
+                    </CardContent>
+                  </Card>
+                )}
+              </TabsContent>
+
+              <TabsContent value="bulk-upload" className="space-y-6">
+                {subscription ? (
+                  <BulkScheduleUpload 
+                    teacher={teacher} 
+                    onUploadComplete={handleScheduleUploadComplete}
+                  />
+                ) : (
+                  <Card className="border-green-100">
+                    <CardHeader>
+                      <CardTitle>{t('upload.bulkUpload')}</CardTitle>
+                      <CardDescription>
+                        {t('upload.subscriptionRequired')}
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="text-center py-8">
+                      <p className="text-gray-600 mb-4">{t('upload.subscriptionRequired')}</p>
+                      <Button 
+                        onClick={handleCreateCheckout}
+                        disabled={isCreatingCheckout}
+                        className="bg-green-600 hover:bg-green-700 text-white"
+                      >
+                        {isCreatingCheckout ? t('pricing.processing') : t('teacher.subscribeToContinue')}
+                      </Button>
+                    </CardContent>
+                  </Card>
+                )}
+              </TabsContent>
+
+              {teacher?.role === 'admin' && (
+                <TabsContent value="articles" className="space-y-6">
+                  {subscription ? (
+                    <MentalHealthArticles teacher={teacher} />
+                  ) : (
+                    <Card className="border-green-100">
+                      <CardHeader>
+                        <CardTitle>{t('articles.mentalHealth')}</CardTitle>
+                        <CardDescription>
+                          {t('articles.subscriptionRequired')}
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent className="text-center py-8">
+                        <p className="text-gray-600 mb-4">{t('articles.subscriptionRequired')}</p>
+                        <Button 
+                          onClick={handleCreateCheckout}
+                          disabled={isCreatingCheckout}
+                          className="bg-green-600 hover:bg-green-700 text-white"
+                        >
+                          {isCreatingCheckout ? t('pricing.processing') : t('teacher.subscribeToContinue')}
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  )}
+                </TabsContent>
               )}
-            </TabsContent>
+            </>
           )}
         </Tabs>
       </main>

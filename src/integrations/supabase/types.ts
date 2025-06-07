@@ -225,6 +225,63 @@ export type Database = {
           },
         ]
       }
+      live_chat_sessions: {
+        Row: {
+          created_at: string | null
+          doctor_id: string | null
+          ended_at: string | null
+          grade: string | null
+          id: string
+          is_anonymous: boolean | null
+          school: string
+          started_at: string | null
+          status: string | null
+          student_id: string | null
+          student_name: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          doctor_id?: string | null
+          ended_at?: string | null
+          grade?: string | null
+          id?: string
+          is_anonymous?: boolean | null
+          school: string
+          started_at?: string | null
+          status?: string | null
+          student_id?: string | null
+          student_name?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          doctor_id?: string | null
+          ended_at?: string | null
+          grade?: string | null
+          id?: string
+          is_anonymous?: boolean | null
+          school?: string
+          started_at?: string | null
+          status?: string | null
+          student_id?: string | null
+          student_name?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "live_chat_sessions_doctor_id_fkey"
+            columns: ["doctor_id"]
+            isOneToOne: false
+            referencedRelation: "teachers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "live_chat_sessions_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       mental_health_alerts: {
         Row: {
           alert_type: string
@@ -454,28 +511,37 @@ export type Database = {
           created_at: string
           email: string
           id: string
+          is_available: boolean | null
+          license_number: string | null
           name: string
           password_hash: string
-          role: string | null
+          role: Database["public"]["Enums"]["app_role"] | null
           school: string
+          specialization: string | null
         }
         Insert: {
           created_at?: string
           email: string
           id?: string
+          is_available?: boolean | null
+          license_number?: string | null
           name: string
           password_hash: string
-          role?: string | null
+          role?: Database["public"]["Enums"]["app_role"] | null
           school: string
+          specialization?: string | null
         }
         Update: {
           created_at?: string
           email?: string
           id?: string
+          is_available?: boolean | null
+          license_number?: string | null
           name?: string
           password_hash?: string
-          role?: string | null
+          role?: Database["public"]["Enums"]["app_role"] | null
           school?: string
+          specialization?: string | null
         }
         Relationships: []
       }
@@ -559,7 +625,7 @@ export type Database = {
       }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "teacher" | "admin" | "doctor"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -674,6 +740,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["teacher", "admin", "doctor"],
+    },
   },
 } as const

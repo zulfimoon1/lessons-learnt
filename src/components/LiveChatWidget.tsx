@@ -7,32 +7,68 @@ import { useToast } from "@/hooks/use-toast";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { createChatSession, endChatSession } from "@/services/liveChatService";
+import { LiveChatSession } from "@/types/auth";
 
 interface LiveChatWidgetProps {
+  studentId?: string;
+  studentName: string;
+  school: string;
+  grade: string;
   onClose?: () => void;
 }
 
-const LiveChatWidget = ({ onClose }: LiveChatWidgetProps) => {
+const LiveChatWidget = ({ studentId, studentName, school, grade, onClose }: LiveChatWidgetProps) => {
   const { toast } = useToast();
   const [isOpen, setIsOpen] = useState(false);
   const [message, setMessage] = useState("");
   const [isConnecting, setIsConnecting] = useState(false);
   const [isAnonymous, setIsAnonymous] = useState(true);
   const [chatStarted, setChatStarted] = useState(false);
+  const [currentSession, setCurrentSession] = useState<LiveChatSession | null>(null);
 
-  const handleOpenChat = () => {
+  const handleOpenChat = async () => {
     setIsConnecting(true);
     
-    // Simulate connection process
-    setTimeout(() => {
+    try {
+      console.log('Starting chat session for:', { studentId, studentName, school, grade, isAnonymous });
+      
+      const { error, session } = await createChatSession(
+        isAnonymous ? null : studentId || null,
+        isAnonymous ? 'Anonymous Student' : studentName,
+        school,
+        grade,
+        isAnonymous
+      );
+
+      if (error) {
+        toast({
+          title: "Connection Failed",
+          description: error,
+          variant: "destructive",
+        });
+        setIsConnecting(false);
+        return;
+      }
+
+      setCurrentSession(session || null);
       setIsConnecting(false);
       setIsOpen(true);
       setChatStarted(true);
+      
       toast({
         title: "Connected to Live Chat",
         description: `A mental health professional will be with you shortly${isAnonymous ? ' (Anonymous mode)' : ''}`,
       });
-    }, 2000);
+    } catch (error) {
+      console.error('Error starting chat:', error);
+      toast({
+        title: "Connection Failed",
+        description: "Failed to start chat session. Please try again.",
+        variant: "destructive",
+      });
+      setIsConnecting(false);
+    }
   };
 
   const handleSendMessage = () => {
@@ -54,9 +90,14 @@ const LiveChatWidget = ({ onClose }: LiveChatWidgetProps) => {
     }, 1000);
   };
 
-  const handleClose = () => {
+  const handleClose = async () => {
+    if (currentSession) {
+      await endChatSession(currentSession.id);
+    }
+    
     setIsOpen(false);
     setChatStarted(false);
+    setCurrentSession(null);
     if (onClose) onClose();
   };
 

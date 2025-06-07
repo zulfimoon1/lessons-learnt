@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { Teacher, Student } from '@/types/auth';
 
@@ -7,7 +6,7 @@ export const teacherLoginService = async (
   password: string,
   name?: string,
   school?: string,
-  role?: 'teacher' | 'admin'
+  role?: 'teacher' | 'admin' | 'doctor'
 ) => {
   try {
     console.log('teacherLoginService: Starting login for email:', email);
@@ -75,7 +74,10 @@ export const teacherLoginService = async (
         name: newTeacher.name,
         email: newTeacher.email,
         school: newTeacher.school,
-        role: newTeacher.role as 'teacher' | 'admin'
+        role: newTeacher.role as 'teacher' | 'admin' | 'doctor',
+        specialization: newTeacher.specialization,
+        license_number: newTeacher.license_number,
+        is_available: newTeacher.is_available
       };
 
       console.log('teacherLoginService: New teacher created successfully:', teacherData);
@@ -96,7 +98,10 @@ export const teacherLoginService = async (
       name: teacher.name,
       email: teacher.email,
       school: teacher.school,
-      role: teacher.role as 'teacher' | 'admin'
+      role: teacher.role as 'teacher' | 'admin' | 'doctor',
+      specialization: teacher.specialization,
+      license_number: teacher.license_number,
+      is_available: teacher.is_available
     };
 
     console.log('teacherLoginService: Login successful for teacher:', teacherData);

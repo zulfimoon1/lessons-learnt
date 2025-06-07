@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -134,7 +133,7 @@ const StudentDashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-white">
       <CookieConsent />
       <header className="bg-card/80 backdrop-blur-sm border-b border-border p-4">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
@@ -255,7 +254,12 @@ const StudentDashboard = () => {
                 {psychologists.length > 0 ? (
                   <div className="space-y-6">
                     <div className="flex justify-end">
-                      <LiveChatWidget />
+                      <LiveChatWidget
+                        studentId={student?.id}
+                        studentName={student?.full_name || "Student"}
+                        school={student?.school || ""}
+                        grade={student?.grade || ""}
+                      />
                     </div>
                     <div className="space-y-4">
                       {psychologists.map((psychologist) => (
@@ -271,7 +275,12 @@ const StudentDashboard = () => {
                       {t('dashboard.contactAdmin')}
                     </p>
                     <div className="mt-4">
-                      <LiveChatWidget />
+                      <LiveChatWidget
+                        studentId={student?.id}
+                        studentName={student?.full_name || "Student"}
+                        school={student?.school || ""}
+                        grade={student?.grade || ""}
+                      />
                     </div>
                   </div>
                 )}
@@ -280,6 +289,14 @@ const StudentDashboard = () => {
           </TabsContent>
         </Tabs>
       </main>
+      <div className="fixed bottom-4 right-4 z-50">
+        <LiveChatWidget
+          studentId={student?.id}
+          studentName={student?.full_name || "Student"}
+          school={student?.school || ""}
+          grade={student?.grade || ""}
+        />
+      </div>
       <ComplianceFooter />
     </div>
   );

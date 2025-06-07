@@ -4,7 +4,10 @@ export interface Teacher {
   name: string;
   email: string;
   school: string;
-  role: 'teacher' | 'admin';
+  role: 'teacher' | 'admin' | 'doctor';
+  specialization?: string;
+  license_number?: string;
+  is_available?: boolean;
 }
 
 export interface Student {
@@ -24,7 +27,7 @@ export interface AuthContextType {
     password: string, 
     name?: string, 
     school?: string,
-    role?: 'teacher' | 'admin'
+    role?: 'teacher' | 'admin' | 'doctor'
   ) => Promise<{ error?: string; teacher?: Teacher }>;
   studentLogin: (fullName: string, password: string) => Promise<{ error?: string; student?: Student }>;
   studentSignup: (fullName: string, school: string, grade: string, password: string) => Promise<{ error?: string; student?: Student }>;
@@ -42,4 +45,19 @@ export interface TeacherFeedbackSummary {
   avg_educational_growth: number;
   total_feedback: number;
   lesson_topic: string;
+}
+
+// Add interface for live chat session
+export interface LiveChatSession {
+  id: string;
+  student_id?: string;
+  student_name?: string;
+  school: string;
+  grade?: string;
+  is_anonymous: boolean;
+  status: 'waiting' | 'active' | 'ended';
+  doctor_id?: string;
+  started_at: string;
+  ended_at?: string;
+  created_at: string;
 }
