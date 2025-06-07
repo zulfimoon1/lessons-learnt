@@ -5,9 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { 
   PlayIcon, 
-  PauseIcon, 
-  VolumeIcon, 
-  Volume2Icon,
+  PauseIcon,
   UsersIcon,
   BookOpenIcon,
   HeartIcon,
@@ -19,7 +17,6 @@ import {
   ClockIcon
 } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { useToast } from "@/hooks/use-toast";
 
 interface DemoFeature {
   id: string;
@@ -27,19 +24,14 @@ interface DemoFeature {
   description: string;
   userType: "student" | "teacher" | "psychologist";
   icon: any;
-  videoDescription: string;
-  voiceoverText: string;
   mockupComponent: React.ReactNode;
 }
 
 const DemoSection = () => {
   const { t } = useLanguage();
-  const { toast } = useToast();
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [isMuted, setIsMuted] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(true); // Auto-play enabled
   const [currentFeature, setCurrentFeature] = useState(0);
   const [progress, setProgress] = useState(0);
-  const [currentAudio, setCurrentAudio] = useState<HTMLAudioElement | null>(null);
   const intervalRef = useRef<NodeJS.Timeout>();
 
   // Student Feedback Mockup
@@ -160,7 +152,7 @@ const DemoSection = () => {
           </div>
           <div className="bg-blue-100 p-2 rounded-lg max-w-xs ml-auto">
             <p className="text-sm">I'm feeling overwhelmed with my studies...</p>
-            <span className="text-xs text-gray-500">You</span>
+            <span className="text-xs text-gray-500">Anonymous</span>
           </div>
           <div className="bg-purple-100 p-2 rounded-lg max-w-xs">
             <p className="text-sm">I understand. Let's talk about some strategies that might help...</p>
@@ -182,8 +174,6 @@ const DemoSection = () => {
       description: "Students provide real-time feedback on lessons and emotional state",
       userType: "student",
       icon: UsersIcon,
-      videoDescription: "Student dashboard showing feedback forms and emotional state tracking",
-      voiceoverText: "Welcome to our comprehensive student feedback system. Students can easily share their thoughts about lessons and track their emotional well-being in a safe, supportive environment.",
       mockupComponent: <StudentFeedbackMockup />
     },
     {
@@ -192,8 +182,6 @@ const DemoSection = () => {
       description: "Teachers access detailed insights and performance analytics",
       userType: "teacher",
       icon: BarChart3Icon,
-      videoDescription: "Teacher dashboard with analytics, class schedules, and student insights",
-      voiceoverText: "Our teacher dashboard provides powerful analytics and insights, helping educators understand student progress and adapt their teaching methods for maximum effectiveness.",
       mockupComponent: <TeacherDashboardMockup />
     },
     {
@@ -202,8 +190,6 @@ const DemoSection = () => {
       description: "Integrated mental health resources and professional support",
       userType: "psychologist",
       icon: HeartIcon,
-      videoDescription: "Mental health support interface with live chat and resource access",
-      voiceoverText: "Mental health support is seamlessly integrated into our platform, connecting students with qualified professionals through our Ask the Doctor live chat feature.",
       mockupComponent: <MentalHealthMockup />
     },
     {
@@ -212,8 +198,6 @@ const DemoSection = () => {
       description: "Comprehensive class scheduling and management tools",
       userType: "teacher",
       icon: BookOpenIcon,
-      videoDescription: "Class scheduling interface and calendar management",
-      voiceoverText: "Efficient class management tools help teachers organize schedules, track attendance, and manage lesson plans all in one integrated platform.",
       mockupComponent: <ClassManagementMockup />
     },
     {
@@ -222,60 +206,11 @@ const DemoSection = () => {
       description: "Instant access to mental health professionals",
       userType: "student",
       icon: MessageCircleIcon,
-      videoDescription: "Live chat interface connecting students with mental health professionals",
-      voiceoverText: "Students have instant access to mental health support through our live chat system, ensuring help is always available when needed.",
       mockupComponent: <LiveChatMockup />
     }
   ];
 
-  // Text-to-speech functionality with improved female voice selection
-  const playVoiceover = (text: string) => {
-    if (!('speechSynthesis' in window)) {
-      toast({
-        title: "Text-to-Speech Not Supported",
-        description: "Your browser doesn't support text-to-speech functionality",
-        variant: "destructive"
-      });
-      return null;
-    }
-
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.rate = 0.8;
-    utterance.pitch = 1.2;
-    utterance.volume = isMuted ? 0 : 0.9; // Increased volume
-    
-    // Enhanced female voice selection
-    const voices = speechSynthesis.getVoices();
-    const femaleVoice = voices.find(voice => 
-      voice.name.toLowerCase().includes('female') || 
-      voice.name.toLowerCase().includes('woman') ||
-      voice.name.toLowerCase().includes('zira') ||
-      voice.name.toLowerCase().includes('susan') ||
-      voice.name.toLowerCase().includes('samantha') ||
-      voice.name.toLowerCase().includes('karen') ||
-      voice.name.toLowerCase().includes('moira') ||
-      voice.name.toLowerCase().includes('tessa') ||
-      voice.name.toLowerCase().includes('fiona') ||
-      voice.name.toLowerCase().includes('microsoft zira') ||
-      voice.name.toLowerCase().includes('google uk english female')
-    ) || voices.find(voice => voice.lang.includes('en') && voice.name.includes('f'));
-    
-    if (femaleVoice) {
-      utterance.voice = femaleVoice;
-      console.log('Using female voice:', femaleVoice.name);
-    } else {
-      // Fallback: try to find any English voice that might be female
-      const englishVoices = voices.filter(voice => voice.lang.startsWith('en'));
-      if (englishVoices.length > 0) {
-        utterance.voice = englishVoices[0];
-        console.log('Using fallback voice:', englishVoices[0].name);
-      }
-    }
-
-    return utterance;
-  };
-
-  // Video/audio simulation with automatic progression
+  // Auto-play with automatic progression
   useEffect(() => {
     if (isPlaying) {
       intervalRef.current = setInterval(() => {
@@ -285,7 +220,7 @@ const DemoSection = () => {
             setCurrentFeature((current) => (current + 1) % demoFeatures.length);
             return 0;
           }
-          return prev + 1.5; // Slower progression for longer viewing
+          return prev + 2; // Adjust speed as needed
         });
       }, 100);
     } else {
@@ -302,65 +237,12 @@ const DemoSection = () => {
   }, [isPlaying, demoFeatures.length]);
 
   const handlePlayPause = () => {
-    if (isPlaying) {
-      // Pause
-      setIsPlaying(false);
-      if (currentAudio) {
-        speechSynthesis.cancel();
-        setCurrentAudio(null);
-      }
-    } else {
-      // Play
-      setIsPlaying(true);
-      const utterance = playVoiceover(demoFeatures[currentFeature].voiceoverText);
-      if (utterance) {
-        utterance.onend = () => {
-          setCurrentAudio(null);
-        };
-        speechSynthesis.speak(utterance);
-        setCurrentAudio(utterance as any);
-      }
-    }
+    setIsPlaying(!isPlaying);
   };
 
   const handleFeatureSelect = (index: number) => {
-    // Stop current audio
-    if (currentAudio) {
-      speechSynthesis.cancel();
-      setCurrentAudio(null);
-    }
-    
     setCurrentFeature(index);
     setProgress(0);
-    
-    // If playing, start new voiceover
-    if (isPlaying) {
-      const utterance = playVoiceover(demoFeatures[index].voiceoverText);
-      if (utterance) {
-        utterance.onend = () => {
-          setCurrentAudio(null);
-        };
-        speechSynthesis.speak(utterance);
-        setCurrentAudio(utterance as any);
-      }
-    }
-  };
-
-  const handleMuteToggle = () => {
-    setIsMuted(!isMuted);
-    if (currentAudio) {
-      speechSynthesis.cancel();
-      setCurrentAudio(null);
-      if (isPlaying) {
-        // Restart with new volume setting
-        const utterance = playVoiceover(demoFeatures[currentFeature].voiceoverText);
-        if (utterance) {
-          utterance.volume = !isMuted ? 0 : 0.9;
-          speechSynthesis.speak(utterance);
-          setCurrentAudio(utterance as any);
-        }
-      }
-    }
   };
 
   const getUserTypeColor = (userType: string) => {
@@ -419,31 +301,9 @@ const DemoSection = () => {
                           style={{ width: `${progress}%` }}
                         />
                       </div>
-                      
-                      <Button
-                        size="sm"
-                        variant="secondary"
-                        onClick={handleMuteToggle}
-                        className="flex-shrink-0"
-                      >
-                        {isMuted ? <VolumeIcon className="w-4 h-4" /> : <Volume2Icon className="w-4 h-4" />}
-                      </Button>
                     </div>
                   </div>
                 </div>
-              </CardContent>
-            </Card>
-
-            {/* Voiceover Transcript */}
-            <Card className="mt-4 border border-purple-200 bg-purple-50/50">
-              <CardContent className="p-4">
-                <div className="flex items-center gap-2 mb-2">
-                  <Volume2Icon className="w-4 h-4 text-purple-600" />
-                  <span className="text-sm font-medium text-purple-700">Voiceover Transcript</span>
-                </div>
-                <p className="text-sm text-purple-600 italic">
-                  "{currentDemo.voiceoverText}"
-                </p>
               </CardContent>
             </Card>
           </div>
