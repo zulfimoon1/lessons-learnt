@@ -15,32 +15,32 @@ const LiveChatMockup = () => {
       
       <div className="space-y-3 mb-4">
         <div className="flex gap-3">
-          <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-xs font-medium">
-            T
+          <div className="w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center text-white text-xs font-medium">
+            Dr
           </div>
-          <div className="flex-1 bg-blue-50 p-3 rounded-lg">
-            <p className="text-sm text-blue-800">{t('demo.mockups.liveChat.teacherMessage')}</p>
-            <span className="text-xs text-blue-600">2 min</span>
+          <div className="flex-1 bg-purple-50 p-3 rounded-lg">
+            <p className="text-sm text-purple-800">Hello! I'm Dr. Sarah, a licensed psychologist. How are you feeling today? This is a safe, anonymous space.</p>
+            <span className="text-xs text-purple-600">2 min</span>
           </div>
         </div>
         
         <div className="flex gap-3 justify-end">
           <div className="flex-1 bg-gray-100 p-3 rounded-lg max-w-xs ml-8">
-            <p className="text-sm text-gray-800">{t('demo.mockups.liveChat.studentMessage')}</p>
+            <p className="text-sm text-gray-800">I've been feeling really anxious about my upcoming exams. I can't seem to focus and I'm worried I'll fail.</p>
             <span className="text-xs text-gray-600">1 min</span>
           </div>
           <div className="w-8 h-8 bg-gray-400 rounded-full flex items-center justify-center text-white text-xs font-medium">
-            S
+            A
           </div>
         </div>
         
         <div className="flex gap-3">
-          <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-xs font-medium">
-            T
+          <div className="w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center text-white text-xs font-medium">
+            Dr
           </div>
-          <div className="flex-1 bg-blue-50 p-3 rounded-lg">
-            <p className="text-sm text-blue-800">{t('demo.mockups.liveChat.teacherReply')}</p>
-            <span className="text-xs text-blue-600">{t('demo.mockups.liveChat.now')}</span>
+          <div className="flex-1 bg-purple-50 p-3 rounded-lg">
+            <p className="text-sm text-purple-800">Thank you for sharing that with me. Exam anxiety is very common and completely understandable. Let's work through some coping strategies together.</p>
+            <span className="text-xs text-purple-600">{t('demo.mockups.liveChat.now')}</span>
           </div>
         </div>
       </div>
@@ -49,11 +49,17 @@ const LiveChatMockup = () => {
         <MessageCircleIcon className="w-4 h-4 text-gray-400" />
         <input 
           type="text" 
-          placeholder={t('demo.mockups.liveChat.placeholder')}
+          placeholder="Type your message anonymously..."
           className="flex-1 bg-transparent text-sm border-none outline-none"
           disabled
         />
-        <SendIcon className="w-4 h-4 text-blue-500" />
+        <SendIcon className="w-4 h-4 text-purple-500" />
+      </div>
+      
+      <div className="mt-3 text-center">
+        <div className="text-xs text-gray-500">
+          🔒 Anonymous • End-to-end encrypted • HIPAA compliant
+        </div>
       </div>
     </div>
   );

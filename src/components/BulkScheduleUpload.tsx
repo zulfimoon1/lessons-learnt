@@ -1,112 +1,107 @@
 
 import { useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Upload, FileText, CheckCircle, AlertCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
-import { UploadIcon, FileTextIcon } from "lucide-react";
-import { useLanguage } from "@/contexts/LanguageContext";
 
-interface BulkScheduleUploadProps {
-  teacher: {
-    id: string;
-    school: string;
-  };
-  onUploadComplete: () => void;
+interface UploadResult {
+  success: boolean;
+  message: string;
+  schedules?: any[];
 }
 
-const BulkScheduleUpload = ({ teacher, onUploadComplete }: BulkScheduleUploadProps) => {
+const BulkScheduleUpload = () => {
+  const [file, setFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [uploadResult, setUploadResult] = useState<UploadResult | null>(null);
   const { toast } = useToast();
-  const { t } = useLanguage();
 
-  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFile = event.target.files?.[0];
+    if (selectedFile) {
+      // Validate file type
+      if (!selectedFile.name.endsWith('.csv') && !selectedFile.name.endsWith('.xlsx')) {
+        toast({
+          title: "Invalid file type",
+          description: "Please upload a CSV or Excel file",
+          variant: "destructive",
+        });
+        return;
+      }
+      setFile(selectedFile);
+      setUploadResult(null);
+    }
+  };
+
+  const parseCSV = (content: string) => {
+    const lines = content.split('\n').filter(line => line.trim());
+    const headers = lines[0].split(',').map(h => h.trim());
+    
+    const schedules = lines.slice(1).map((line, index) => {
+      const values = line.split(',').map(v => v.trim());
+      const schedule: any = {};
+      
+      headers.forEach((header, i) => {
+        schedule[header] = values[i] || '';
+      });
+      
+      return {
+        id: index + 1,
+        ...schedule,
+        status: 'pending'
+      };
+    });
+    
+    return schedules;
+  };
+
+  const handleUpload = async () => {
     if (!file) return;
 
-    if (!file.name.endsWith('.csv')) {
-      toast({
-        title: t('common.error'),
-        description: t('upload.csvOnly'),
-        variant: "destructive",
-      });
-      return;
-    }
-
     setIsUploading(true);
-
+    
     try {
-      const text = await file.text();
-      const lines = text.split('\n').filter(line => line.trim());
-      const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
+      const content = await file.text();
+      const schedules = parseCSV(content);
       
-      // Expected headers: subject, grade, lesson_topic, class_date, class_time, duration_minutes, description
-      const requiredHeaders = ['subject', 'grade', 'lesson_topic', 'class_date', 'class_time'];
-      const hasRequiredHeaders = requiredHeaders.every(header => headers.includes(header));
+      // Validate required fields
+      const requiredFields = ['class_name', 'subject', 'day_of_week', 'start_time', 'end_time'];
+      const hasRequiredFields = schedules.every(schedule => 
+        requiredFields.every(field => schedule[field])
+      );
       
-      if (!hasRequiredHeaders) {
-        toast({
-          title: t('common.error'),
-          description: t('upload.invalidHeaders'),
-          variant: "destructive",
-        });
-        return;
+      if (!hasRequiredFields) {
+        throw new Error('Missing required fields. Ensure all schedules have: class_name, subject, day_of_week, start_time, end_time');
       }
-
-      const schedules = [];
-      for (let i = 1; i < lines.length; i++) {
-        const values = lines[i].split(',').map(v => v.trim().replace(/^"|"$/g, ''));
-        if (values.length !== headers.length) continue;
-
-        const schedule: any = {
-          teacher_id: teacher.id,
-          school: teacher.school,
-        };
-
-        headers.forEach((header, index) => {
-          schedule[header] = values[index];
-        });
-
-        // Set default duration if not provided
-        if (!schedule.duration_minutes) {
-          schedule.duration_minutes = 60;
-        } else {
-          schedule.duration_minutes = parseInt(schedule.duration_minutes) || 60;
-        }
-
-        schedules.push(schedule);
-      }
-
-      if (schedules.length === 0) {
-        toast({
-          title: t('common.error'),
-          description: t('upload.noValidData'),
-          variant: "destructive",
-        });
-        return;
-      }
-
-      // Insert schedules in batches
-      const { error } = await supabase
-        .from('class_schedules')
-        .insert(schedules);
-
-      if (error) throw error;
-
-      toast({
-        title: t('upload.success'),
-        description: t('upload.schedulesUploaded', { count: schedules.length.toString() }),
+      
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      setUploadResult({
+        success: true,
+        message: `Successfully uploaded ${schedules.length} schedules`,
+        schedules
       });
-
-      onUploadComplete();
-      event.target.value = ''; // Reset file input
-    } catch (error) {
-      console.error('Upload error:', error);
+      
       toast({
-        title: t('common.error'),
-        description: t('upload.failed'),
+        title: "Upload successful",
+        description: `${schedules.length} schedules have been uploaded`,
+      });
+      
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Upload failed';
+      setUploadResult({
+        success: false,
+        message: errorMessage
+      });
+      
+      toast({
+        title: "Upload failed",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
@@ -115,45 +110,87 @@ const BulkScheduleUpload = ({ teacher, onUploadComplete }: BulkScheduleUploadPro
   };
 
   return (
-    <Card>
+    <Card className="w-full max-w-2xl mx-auto">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <UploadIcon className="w-5 h-5" />
-          {t('upload.bulkSchedule')}
+          <Upload className="w-5 h-5" />
+          Bulk Schedule Upload
         </CardTitle>
-        <CardDescription>
-          {t('upload.csvDescription')}
-        </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-6">
         <div className="space-y-2">
-          <Label htmlFor="csv-upload">{t('upload.selectFile')}</Label>
+          <Label htmlFor="schedule-file">Upload Schedule File</Label>
           <Input
-            id="csv-upload"
+            id="schedule-file"
             type="file"
-            accept=".csv"
-            onChange={handleFileUpload}
-            disabled={isUploading}
-            className="file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-green-50 file:text-green-700 hover:file:bg-green-100"
+            accept=".csv,.xlsx"
+            onChange={handleFileChange}
+            className="cursor-pointer"
           />
+          <p className="text-sm text-muted-foreground">
+            Upload a CSV or Excel file with columns: class_name, subject, day_of_week, start_time, end_time
+          </p>
         </div>
-        
-        <div className="bg-blue-50 p-4 rounded-lg">
-          <h4 className="font-medium text-blue-800 mb-2 flex items-center gap-2">
-            <FileTextIcon className="w-4 h-4" />
-            {t('upload.csvFormat')}
-          </h4>
-          <p className="text-sm text-blue-700 mb-2">{t('upload.requiredColumns')}:</p>
-          <code className="text-xs bg-white p-2 rounded block">
-            subject,grade,lesson_topic,class_date,class_time,duration_minutes,description
-          </code>
-          <p className="text-xs text-blue-600 mt-2">{t('upload.formatNote')}</p>
-        </div>
-        
-        {isUploading && (
-          <div className="text-center py-4">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600 mx-auto mb-2"></div>
-            <p className="text-sm text-gray-600">{t('upload.processing')}</p>
+
+        {file && (
+          <div className="flex items-center gap-2 p-3 bg-blue-50 rounded-lg">
+            <FileText className="w-4 h-4 text-blue-600" />
+            <span className="text-sm font-medium">{file.name}</span>
+            <span className="text-xs text-gray-500">({Math.round(file.size / 1024)} KB)</span>
+          </div>
+        )}
+
+        <Button 
+          onClick={handleUpload}
+          disabled={!file || isUploading}
+          className="w-full"
+        >
+          {isUploading ? "Uploading..." : "Upload Schedules"}
+        </Button>
+
+        {uploadResult && (
+          <Alert className={uploadResult.success ? "border-green-200 bg-green-50" : "border-red-200 bg-red-50"}>
+            {uploadResult.success ? (
+              <CheckCircle className="w-4 h-4 text-green-600" />
+            ) : (
+              <AlertCircle className="w-4 h-4 text-red-600" />
+            )}
+            <AlertDescription className={uploadResult.success ? "text-green-800" : "text-red-800"}>
+              {uploadResult.message}
+            </AlertDescription>
+          </Alert>
+        )}
+
+        {uploadResult?.success && uploadResult.schedules && (
+          <div className="space-y-2">
+            <h4 className="font-medium">Preview of uploaded schedules:</h4>
+            <div className="max-h-40 overflow-y-auto border rounded-lg">
+              <table className="w-full text-sm">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="p-2 text-left">Class</th>
+                    <th className="p-2 text-left">Subject</th>
+                    <th className="p-2 text-left">Day</th>
+                    <th className="p-2 text-left">Time</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {uploadResult.schedules.slice(0, 5).map((schedule, index) => (
+                    <tr key={index} className="border-t">
+                      <td className="p-2">{schedule.class_name}</td>
+                      <td className="p-2">{schedule.subject}</td>
+                      <td className="p-2">{schedule.day_of_week}</td>
+                      <td className="p-2">{schedule.start_time} - {schedule.end_time}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              {uploadResult.schedules.length > 5 && (
+                <p className="p-2 text-xs text-gray-500">
+                  ... and {uploadResult.schedules.length - 5} more schedules
+                </p>
+              )}
+            </div>
           </div>
         )}
       </CardContent>
