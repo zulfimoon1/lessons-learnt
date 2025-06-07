@@ -21,8 +21,6 @@ import NotFound from "./pages/NotFound";
 const queryClient = new QueryClient();
 
 const App = () => {
-  console.log('App: Rendering main App component');
-  
   return (
     <QueryClientProvider client={queryClient}>
       <PlatformAdminProvider>
