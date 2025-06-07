@@ -11,7 +11,8 @@ import {
   CalendarIcon, 
   LogOutIcon,
   BookOpenIcon,
-  HeartHandshakeIcon
+  HeartHandshakeIcon,
+  MessageCircleIcon
 } from "lucide-react";
 import LessonFeedbackForm from "@/components/LessonFeedbackForm";
 import WeeklySummary from "@/components/WeeklySummary";
@@ -119,6 +120,16 @@ const StudentDashboard = () => {
   const handleLogout = () => {
     clearAuth();
     navigate('/student-login');
+  };
+
+  const handleAskTheDoctor = () => {
+    toast({
+      title: "Live Chat Available",
+      description: "Connect with a mental health professional instantly",
+    });
+    
+    // TODO: Integrate with actual live chat service
+    console.log('Initiating live chat session');
   };
 
   if (isLoading) {
@@ -254,7 +265,13 @@ const StudentDashboard = () => {
                 {psychologists.length > 0 ? (
                   <div className="space-y-6">
                     <div className="flex justify-end">
-                      <AnonymousMessageForm psychologists={psychologists} />
+                      <Button
+                        onClick={handleAskTheDoctor}
+                        className="bg-purple-600 hover:bg-purple-700 text-white"
+                      >
+                        <MessageCircleIcon className="w-4 h-4 mr-2" />
+                        Ask the Doctor - Live Chat
+                      </Button>
                     </div>
                     <div className="space-y-4">
                       {psychologists.map((psychologist) => (
@@ -269,6 +286,15 @@ const StudentDashboard = () => {
                     <p className="text-sm text-muted-foreground mt-2">
                       {t('dashboard.contactAdmin')}
                     </p>
+                    <div className="mt-4">
+                      <Button
+                        onClick={handleAskTheDoctor}
+                        className="bg-purple-600 hover:bg-purple-700 text-white"
+                      >
+                        <MessageCircleIcon className="w-4 h-4 mr-2" />
+                        Ask the Doctor - Live Chat
+                      </Button>
+                    </div>
                   </div>
                 )}
               </CardContent>
