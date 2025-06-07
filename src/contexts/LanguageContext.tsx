@@ -1,933 +1,345 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 
-type Language = 'en' | 'lt';
+interface LanguageContextProps {
+  language: 'en' | 'lt';
+  setLanguage: (lang: 'en' | 'lt') => void;
+  t: (key: string) => string;
+}
 
-interface LanguageContextType {
-  language: Language;
-  setLanguage: (lang: Language) => void;
-  t: (key: string, params?: Record<string, string>) => string;
+const LanguageContext = createContext<LanguageContextProps | undefined>(undefined);
+
+interface LanguageProviderProps {
+  children: React.ReactNode;
 }
 
 const translations = {
   en: {
-    // Navigation
-    'nav.home': 'Home',
-    'nav.about': 'About',
-    'nav.contact': 'Contact',
-    
-    // Authentication
-    'auth.login': 'Login',
-    'auth.logout': 'Logout',
-    'auth.studentLogin': 'Student Login',
-    'auth.teacherLogin': 'Teacher Login',
-    'auth.email': 'Email',
-    'auth.password': 'Password',
-    'auth.confirmPassword': 'Confirm Password',
-    'auth.name': 'Name',
-    'auth.school': 'School',
-    'auth.signUp': 'Sign Up',
-    'auth.alreadyHaveAccount': 'Already have an account?',
-    'auth.dontHaveAccount': "Don't have an account?",
-    'auth.forgotPassword': 'Forgot Password?',
-
-    // Student Login Page
-    'student.portal': 'Student Portal',
-    'student.loginDescription': 'Login to your account or create a new one',
-    'student.fullName': 'Full Name',
-    'student.fullNamePlaceholder': 'Enter your full name exactly as registered',
-    'student.fullNameSignupPlaceholder': 'Enter your full name',
-    'student.schoolPlaceholder': 'Enter your school name',
-    'student.gradePlaceholder': 'e.g., Grade 5, Class 10A, Year 9',
-    'student.classGrade': 'Class/Grade',
-    'student.createPassword': 'Create a password',
-    'student.confirmPasswordPlaceholder': 'Confirm your password',
-    'student.loggingIn': 'Logging in...',
-    'student.creatingAccount': 'Creating account...',
-    'student.createAccount': 'Create Account',
-    'student.passwordMismatch': 'Password mismatch',
-    'student.passwordsDoNotMatch': 'Passwords do not match',
-    'student.loginFailed': 'Login failed',
-    'student.signupFailed': 'Signup failed',
-    'student.welcomeBack': 'Welcome back! 📚',
-    'student.loginSuccess': "You've successfully logged in.",
-    'student.accountCreated': 'Account created! 🎉',
-    'student.welcomeToApp': 'Welcome to Lesson Lens!',
-
-    // Teacher Login Page
-    'login.teacher.title': 'Teacher & Admin Portal',
-    'login.teacher.subtitle': 'Access your classroom dashboard and school management tools',
-    'login.teacher.login': 'Login',
-    'login.teacher.signup': 'Sign Up',
-    'login.teacher.email': 'Email',
-    'login.teacher.password': 'Password',
-    'login.teacher.fullName': 'Full Name',
-    'login.teacher.school': 'School Name',
-    'login.teacher.role': 'Role',
-    'login.teacher.roleTeacher': 'Teacher',
-    'login.teacher.roleAdmin': 'School Administrator',
-    'login.teacher.adminHint': 'School Admins can manage teachers and view all feedback',
-    'login.teacher.confirmPassword': 'Confirm Password',
-    'login.teacher.createAccount': 'Create Account',
-    'login.teacher.loggingIn': 'Logging in...',
-    'login.teacher.creatingAccount': 'Creating account...',
-    
-    // Welcome messages
-    'welcome.title': 'Transform Your School with Real-Time Feedback',
-    'welcome.subtitle': 'Empower teachers with student insights and help administrators monitor school-wide performance',
-    
-    // Features
-    'features.studentFeedback.title': 'Student Feedback',
-    'features.studentFeedback.description': 'Students can easily provide feedback on their learning experience',
-    'features.teacherInsights.title': 'Teacher Insights',
-    'features.teacherInsights.description': 'Teachers get real-time insights to improve their teaching methods',
-    'features.mentalHealth.title': 'Mental Health',
-    'features.mentalHealth.description': 'Early detection and support for student well-being and mental health concerns',
-    'features.dataAnalytics.title': 'Data Analytics',
-    'features.dataAnalytics.description': 'Comprehensive analytics to track student progress and well-being',
-    
-    // Platform overview
-    'platform.whySchools': 'Why Schools Choose Lessons Learnt',
-    'platform.whySchoolsSubtitle': 'Our platform empowers schools with actionable insights to create better learning environments, support student well-being, and drive educational excellence through data-driven decisions.',
-    'platform.studentInsights': 'Comprehensive Student Insights',
-    'platform.realTimeAnalytics': 'Real-Time Analytics',
-    'platform.realTimeAnalyticsDesc': 'Track student engagement, learning progress, and classroom dynamics with instant feedback collection and analysis.',
-    'platform.mentalHealthMonitoring': 'Mental Health Monitoring',
-    'platform.mentalHealthMonitoringDesc': 'Early detection of student well-being concerns through intelligent content analysis and immediate alerts to school counselors.',
-    'platform.privacySecurity': 'Privacy & Security',
-    'platform.privacySecurityDesc': 'Enterprise-grade security ensures student data protection while maintaining compliance with educational privacy standards.',
-    'platform.improvementPercent': '85%',
-    'platform.improvementTitle': 'Improvement in Student Engagement',
-    'platform.improvementDesc': 'Schools using our platform report significant increases in student participation and learning outcomes.',
-    'platform.readyToTransform': 'Ready to Transform Your School?',
-    'platform.readyToTransformDesc': 'Join hundreds of schools already using Lessons Learnt to create better learning environments.',
-    
-    // Dashboard
-    'dashboard.overview': 'Overview',
-    'dashboard.classes': 'Classes',
-    'dashboard.feedback': 'Feedback',
-    'dashboard.analytics': 'Analytics',
-    'dashboard.settings': 'Settings',
-    'dashboard.schoolOverview': 'School Overview',
-    'dashboard.teacherOverview': 'Teacher Overview',
-    'dashboard.totalTeachers': 'Total Teachers',
-    'dashboard.totalClasses': 'Total Classes',
-    'dashboard.avgSatisfaction': 'Avg Satisfaction',
-    'dashboard.feedbackReceived': 'Feedback Received',
-    'dashboard.recentFeedback': 'Recent Feedback',
-    'dashboard.subscribeNow': 'Subscribe Now',
-    'dashboard.manageSubscription': 'Manage Subscription',
-    'dashboard.title': 'Student Dashboard',
-    'dashboard.grade': 'Grade',
-    'dashboard.upcomingClasses': 'Upcoming Classes',
-    'dashboard.mentalHealthSupport': 'Mental Health Support',
-    'dashboard.weeklySummary': 'Weekly Summary',
-    'dashboard.scheduledClasses': 'Your scheduled classes',
-    'dashboard.noClasses': 'No upcoming classes scheduled',
-    'dashboard.noPsychologists': 'No school psychologists are currently available.',
-    'dashboard.contactAdmin': 'If you need support, please contact your school administration.',
-    
-    // Teacher Dashboard specific
-    'teacher.subscriptionNeeded': 'Subscribe to unlock all features and start creating class schedules for',
-    'teacher.activePlan': 'Your {planType} plan is active until {date}',
-    'teacher.classSchedulingAvailable': 'Class scheduling is available with an active subscription',
-    'teacher.subscribeToContinue': 'Subscribe to Continue',
-    
-    // Class management
-    'class.create': 'Create Class',
-    'class.edit': 'Edit Class',
-    'class.delete': 'Delete Class',
-    'class.name': 'Class Name',
-    'class.subject': 'Subject',
-    'class.schedule': 'Schedule',
-    'class.students': 'Students',
-    'class.upcomingClasses': 'Upcoming Classes',
-    'class.duration': 'min',
-    
-    // Feedback Form
-    'feedback.title': 'Share Your Learning Experience',
-    'feedback.subtitle': 'Help your teacher understand how to make lessons even better',
-    'feedback.lessonDetails': 'Lesson Details',
-    'feedback.lessonDetailsDesc': 'Tell us about today\'s lesson',
-    'feedback.lessonTopic': 'Lesson Topic',
-    'feedback.lessonTopicPlaceholder': 'e.g., Fractions, Photosynthesis, Shakespeare',
-    'feedback.learningAssessment': 'Learning Assessment',
-    'feedback.learningAssessmentDesc': 'Rate your learning experience',
-    'feedback.understanding': 'Understanding',
-    'feedback.understandingQuestion': 'How well did you understand the lesson content?',
-    'feedback.interest': 'Interest',
-    'feedback.interestQuestion': 'How interesting was the lesson?',
-    'feedback.educationalGrowth': 'Educational Growth',
-    'feedback.educationalGrowthQuestion': 'How much do you feel you learned educationally?',
-    'feedback.emotionalWellbeing': 'Emotional Wellbeing',
-    'feedback.emotionalWellbeingDesc': 'How did you feel during the lesson?',
-    'feedback.detailedFeedback': 'Detailed Feedback',
-    'feedback.detailedFeedbackDesc': 'Help your teacher understand what worked and what could be improved',
-    'feedback.whatWorkedWell': 'What worked well in this lesson?',
-    'feedback.whatWorkedWellPlaceholder': 'What did you enjoy? What helped you learn?',
-    'feedback.whatWasConfusing': 'What was confusing or difficult?',
-    'feedback.whatWasConfusingPlaceholder': 'What parts were hard to understand?',
-    'feedback.howToImprove': 'How could the teacher make the lesson better?',
-    'feedback.howToImprovePlaceholder': 'Your suggestions for improvement...',
-    'feedback.additionalComments': 'Any other comments?',
-    'feedback.additionalCommentsPlaceholder': 'Anything else you\'d like to share...',
-    'feedback.submit': 'Submit Feedback',
-    'feedback.submitted': 'Feedback submitted',
-    'feedback.submittedDesc': 'Thank you for your feedback!',
-    'feedback.submitError': 'Error',
-    'feedback.submitErrorDesc': 'Failed to submit feedback',
-    'feedback.average': 'Average',
-    'feedback.excellent': 'Excellent',
-    'feedback.good': 'Good',
-    'feedback.fair': 'Fair',
-    'feedback.poor': 'Poor',
-    'feedback.anonymous': 'Submit anonymously',
-    'feedback.whatWentWell': 'What went well',
-    'feedback.whatWentWellPlaceholder': 'What did you enjoy? What helped you learn?',
-    'feedback.suggestions': 'Suggestions for improvement',
-    'feedback.suggestionsPlaceholder': 'Your suggestions for improvement...',
-    'feedback.emotionalState': 'How are you feeling?',
-    'feedback.growth': 'Educational Growth',
-    'feedback.submitSuccess': 'Thank you for your feedback!',
-    'feedback.submitFailed': 'Failed to submit feedback. Please try again.',
-    'feedback.unexpectedError': 'An unexpected error occurred. Please try again.',
-
-    // Rating Labels
-    'rating.understanding.1': 'Very Confused',
-    'rating.understanding.2': 'Confused',
-    'rating.understanding.3': 'Somewhat Clear',
-    'rating.understanding.4': 'Clear',
-    'rating.understanding.5': 'Very Clear',
-    'rating.interest.1': 'Very Boring',
-    'rating.interest.2': 'Boring',
-    'rating.interest.3': 'Okay',
-    'rating.interest.4': 'Interesting',
-    'rating.interest.5': 'Very Interesting',
-    'rating.growth.1': 'Learned Nothing',
-    'rating.growth.2': 'Learned Little',
-    'rating.growth.3': 'Learned Some',
-    'rating.growth.4': 'Learned Much',
-    'rating.growth.5': 'Learned A Lot',
-
-    // Weekly Summary
-    'weekly.title': 'Weekly Check-In',
-    'weekly.subtitle': 'How has your week been? Share your thoughts with us.',
-    'weekly.howFeeling': 'How are you feeling this week?',
-    'weekly.emotional': 'Emotional Wellbeing',
-    'weekly.emotionalPlaceholder': 'Share any emotional concerns, stress, friendship issues, or how you\'re feeling about school...',
-    'weekly.academic': 'Academic Concerns',
-    'weekly.academicPlaceholder': 'Share any concerns about homework, understanding subjects, keeping up with classes, or academic challenges...',
-    'weekly.optional': 'Optional',
-    'weekly.submit': 'Submit Weekly Summary',
-    'weekly.submitting': 'Submitting...',
-    'weekly.fillAtLeastOne': 'Please fill in at least one concern',
-    'weekly.shareThoughts': 'Share your thoughts about this week',
-    'weekly.submitted': 'Weekly summary submitted',
-    'weekly.submittedDesc': 'Your weekly summary helps us understand how to better support you.',
-    'weekly.submitFailed': 'Submission failed',
-    'weekly.submitFailedDesc': 'Failed to submit weekly summary. Please try again.',
-    'weekly.submitAnonymously': 'Submit anonymously',
-
-    // Subject options
-    'subject.mathematics': 'Mathematics',
-    'subject.science': 'Science',
-    'subject.english': 'English',
-    'subject.history': 'History',
-    'subject.art': 'Art',
-    'subject.music': 'Music',
-    'subject.physicalEducation': 'Physical Education',
-    'subject.other': 'Other',
-    'subject.selectSubject': 'Select subject',
-
-    // Admin Dashboard
-    'admin.title': 'School Admin Dashboard',
-    'admin.welcome': 'Welcome',
-    'admin.logout': 'Logout',
-    'admin.loading': 'Loading dashboard...',
-    'admin.subscription': 'Subscription',
-    'admin.subscribe': 'Subscribe Now',
-    'admin.stats.teachers': 'Total Teachers',
-    'admin.stats.feedback': 'Total Feedback',
-    'admin.teachers.title': 'Teachers',
-    'admin.teachers.description': 'Manage teachers at your school',
-    'admin.teachers.empty': 'No teachers found',
-    'admin.feedback.title': 'Feedback Summary',
-    'admin.feedback.description': 'Overview of student feedback per teacher and class',
-    'admin.feedback.teacher': 'Teacher',
-    'admin.feedback.subject': 'Subject',
-    'admin.feedback.date': 'Date',
-    'admin.feedback.scores': 'Scores',
-    'admin.feedback.understanding': 'Understanding',
-    'admin.feedback.interest': 'Interest',
-    'admin.feedback.growth': 'Growth',
-    'admin.feedback.responses': 'responses',
-    'admin.feedback.empty': 'No feedback data available yet',
-    'admin.error.title': 'Error loading data',
-    'admin.error.description': 'Failed to load dashboard data',
-    'admin.activeTeachers': 'Active Teachers',
-    'admin.psychologists': 'Psychologists',
-    'admin.inviteTeacher': 'Invite Teacher',
-    'admin.subscriptionNeeded': 'You need an active subscription to access all admin features and invite teachers.',
-    'admin.joined': 'Joined',
-
-    // Pricing Page
-    'pricing.title': 'Subscription Pricing',
-    'pricing.backToDashboard': 'Back to Dashboard',
-    'pricing.welcome': 'Welcome',
-    'pricing.choosePlan': 'Choose Your School Plan',
-    'pricing.subtitle': 'Simple, transparent pricing for your entire school',
-    'pricing.school': 'School',
-    'pricing.configurePlan': 'Configure Your Plan',
-    'pricing.configureDesc': 'Customize your subscription based on the number of teachers',
-    'pricing.numberOfTeachers': 'Number of Teachers',
-    'pricing.teacherDesc': 'Each teacher can create unlimited classes and collect student feedback',
-    'pricing.discountCode': 'Discount Code (Optional)',
-    'pricing.enterDiscount': 'Enter discount code',
-    'pricing.validating': 'Validating...',
-    'pricing.apply': 'Apply',
-    'pricing.discountAppliedShort': 'discount applied!',
-    'pricing.whatsIncluded': "What's included",
-    'pricing.unlimitedClasses': 'Unlimited class schedules',
-    'pricing.feedbackCollection': 'Student feedback collection',
-    'pricing.analytics': 'Analytics and reporting',
-    'pricing.mentalHealth': 'Mental health monitoring',
-    'pricing.multiLanguage': 'Multi-language support',
-    'pricing.orderSummary': 'Order Summary',
-    'pricing.reviewDetails': 'Review your subscription details',
-    'pricing.teachers': 'Teachers',
-    'pricing.each': 'each',
-    'pricing.subtotal': 'Subtotal',
-    'pricing.discount': 'Discount',
-    'pricing.totalMonthly': 'Total (Monthly)',
-    'pricing.billing': 'Billing',
-    'pricing.billingDesc': 'You will be charged ${amount} monthly. You can cancel or modify your subscription at any time.',
-    'pricing.processing': 'Processing...',
-    'pricing.subscribeFor': 'Subscribe for',
-    'pricing.securePayment': 'Secure payment powered by Stripe. Cancel anytime.',
-    'pricing.discountApplied': 'Discount Applied!',
-    'pricing.discountAppliedDesc': '{percent}% discount has been applied to your order.',
-    'pricing.invalidDiscount': 'Invalid Discount Code',
-    'pricing.invalidDiscountDesc': 'The discount code you entered is not valid.',
-    'pricing.paymentError': 'Payment Error',
-    'pricing.paymentErrorDesc': 'Failed to create subscription. Please try again.',
-    
-    // Common
-    'common.save': 'Save',
-    'common.cancel': 'Cancel',
-    'common.edit': 'Edit',
-    'common.delete': 'Delete',
-    'common.loading': 'Loading...',
-    'common.error': 'Error',
-    'common.success': 'Success',
-    'common.close': 'Close',
-    'common.back': 'Back',
-    'common.next': 'Next',
-    'common.previous': 'Previous',
-    'common.submitting': 'Submitting...',
-    
-    // Tagline
-    'tagline.studentLead': 'When students lead, teachers succeed',
-
-    // Upload translations
-    'upload.bulkSchedule': 'Bulk Schedule Upload',
-    'upload.bulkUpload': 'Bulk Upload',
-    'upload.csvDescription': 'Upload multiple class schedules at once using a CSV file',
-    'upload.selectFile': 'Select CSV File',
-    'upload.csvFormat': 'CSV Format',
-    'upload.requiredColumns': 'Required columns',
-    'upload.formatNote': 'Date format: YYYY-MM-DD, Time format: HH:MM (24-hour)',
-    'upload.processing': 'Processing upload...',
-    'upload.csvOnly': 'Please select a CSV file',
-    'upload.invalidHeaders': 'Invalid CSV headers. Please check the required format.',
-    'upload.noValidData': 'No valid data found in the CSV file',
-    'upload.success': 'Upload successful',
-    'upload.schedulesUploaded': '{count} schedules uploaded successfully',
-    'upload.failed': 'Upload failed. Please check your file and try again.',
-    'upload.subscriptionRequired': 'An active subscription is required for bulk uploads',
-
-    // Articles translations
-    'articles.title': 'Mental Health Articles',
-    'articles.mentalHealth': 'Mental Health',
-    'articles.description': 'Share helpful mental health resources with your students',
-    'articles.addNew': 'Add New Article',
-    'articles.articleTitle': 'Article Title',
-    'articles.titlePlaceholder': 'Enter a descriptive title for the article',
-    'articles.ageGroup': 'Age Group',
-    'articles.selectAgeGroup': 'Select target age group',
-    'articles.elementary': 'Elementary (Ages 6-11)',
-    'articles.middle': 'Middle School (Ages 12-14)',
-    'articles.high': 'High School (Ages 15-18)',
-    'articles.allAges': 'All Ages',
-    'articles.content': 'Article Content',
-    'articles.contentPlaceholder': 'Write your article content here. Include helpful tips, resources, or guidance...',
-    'articles.create': 'Create Article',
-    'articles.fillRequired': 'Please fill in all required fields',
-    'articles.updated': 'Article Updated',
-    'articles.updatedSuccess': 'Article has been updated successfully',
-    'articles.created': 'Article Created',
-    'articles.createdSuccess': 'Article has been created successfully',
-    'articles.saveFailed': 'Failed to save article. Please try again.',
-    'articles.confirmDelete': 'Are you sure you want to delete this article?',
-    'articles.deleted': 'Article Deleted',
-    'articles.deletedSuccess': 'Article has been deleted successfully',
-    'articles.deleteFailed': 'Failed to delete article',
-    'articles.loadFailed': 'Failed to load articles',
-    'articles.noArticles': 'No articles have been created yet',
-    'articles.getStarted': 'Click "Add New Article" to get started',
-    'articles.subscriptionRequired': 'An active subscription is required to manage mental health articles',
-
-    // Performance translations
-    'performance.filters': 'Performance Analysis',
-    'performance.filtersDesc': 'Analyze and compare school and teacher performance metrics',
-    'performance.school': 'School',
-    'performance.allSchools': 'All Schools',
-    'performance.sortBy': 'Sort By',
-    'performance.overallScore': 'Overall Score',
-    'performance.totalResponses': 'Total Responses',
-    'performance.minResponses': 'Minimum Responses',
-    'performance.topSchools': 'Top Performing Schools',
-    'performance.schoolPerformance': 'Based on student feedback scores',
-    'performance.score': 'Score',
-    'performance.responses': 'Responses',
-    'performance.rating': 'Rating',
-    'performance.topTeachers': 'Top Performing Teachers',
-    'performance.allTeachers': 'All teachers across schools',
-    'performance.teachersFromSchool': 'Teachers from {school}',
-    'performance.teacher': 'Teacher',
-
-    // Compliance and Privacy
-    'compliance.gdpr.title': 'GDPR Compliance',
-    'compliance.gdpr.description': 'We are committed to protecting your personal data in accordance with GDPR regulations.',
-    'compliance.hipaa.title': 'HIPAA Compliance',
-    'compliance.hipaa.description': 'Student health information is protected under HIPAA standards.',
-    'compliance.soc2.title': 'SOC 2 Compliance',
-    'compliance.soc2.description': 'Our systems meet SOC 2 Type II security standards.',
-    'compliance.dataProcessing': 'Data Processing Agreement',
-    'compliance.privacyPolicy': 'Privacy Policy',
-    'compliance.cookiePolicy': 'Cookie Policy',
-    'compliance.dataRetention': 'Data Retention Policy',
-    'compliance.consentManagement': 'Consent Management',
-    'compliance.rightToDelete': 'Right to Delete Data',
-    'compliance.dataPortability': 'Data Portability',
-    'compliance.breachNotification': 'Data Breach Notification',
-    'compliance.dpo': 'Data Protection Officer',
-    'compliance.auditLog': 'Audit Log',
-    'compliance.encryption': 'End-to-End Encryption',
-    'compliance.accessControl': 'Role-Based Access Control',
-    'compliance.dataMinimization': 'Data Minimization',
-    'compliance.consentWithdrawal': 'Withdraw Consent',
-
-    // Demo Section
-    'demo.subtitle': 'Experience our comprehensive education platform through this interactive demonstration showcasing features for students, teachers, and mental health professionals.',
-    'demo.compliance.gdpr': 'GDPR Compliant',
-    'demo.compliance.soc2': 'SOC 2 Certified',
-    'demo.compliance.hipaa': 'HIPAA Compliant',
-    'demo.compliance.description': 'Robust, secure platform with enterprise-grade compliance',
-    'demo.liveVoiceover': 'Live Voiceover',
-    'demo.exploreFeatures': 'Explore Platform Features',
-    'demo.userType.student': 'Student View',
-    'demo.userType.teacher': 'Teacher View',
-    'demo.userType.psychologist': 'Psychologist View',
-    'demo.stats.coreFeatures': 'Core Features',
-    'demo.stats.userTypes': 'User Types',
-    'demo.stats.mentalHealthSupport': 'Mental Health Support',
-    
-    // Demo Features
-    'demo.studentFeedback.title': 'Student Feedback System',
-    'demo.studentFeedback.description': 'Students provide real-time feedback on lessons and emotional state',
-    'demo.studentFeedback.voiceover': 'Welcome to our comprehensive student feedback system. Students can easily share their thoughts about lessons and track their emotional well-being in a safe, supportive environment. All feedback is completely anonymous and helps teachers improve their teaching methods.',
-    
-    'demo.teacherInsights.title': 'Teacher Analytics Dashboard',
-    'demo.teacherInsights.description': 'Teachers access detailed insights and performance analytics',
-    'demo.teacherInsights.voiceover': 'Our teacher dashboard provides powerful analytics and insights, helping educators understand student progress and adapt their teaching methods for maximum effectiveness. Real-time data helps identify students who may need additional support.',
-    
-    'demo.mentalHealth.title': 'Anonymous Mental Health Support',
-    'demo.mentalHealth.description': 'Integrated mental health resources with complete anonymity and GDPR compliance',
-    'demo.mentalHealth.voiceover': 'Mental health support is seamlessly integrated into our platform with complete anonymity protection. Our GDPR, SOC 2, and HIPAA compliant system connects students with qualified professionals through secure, anonymous live chat features.',
-    
-    'demo.classManagement.title': 'Class Schedule Management',
-    'demo.classManagement.description': 'Comprehensive class scheduling and management tools',
-    'demo.classManagement.voiceover': 'Efficient class management tools help teachers organize schedules, track attendance, and manage lesson plans all in one integrated platform. Students can easily view their daily schedules and upcoming assignments.',
-    
-    'demo.liveChat.title': 'Anonymous Live Mental Health Chat',
-    'demo.liveChat.description': 'Instant anonymous access to mental health professionals',
-    'demo.liveChat.voiceover': 'Students have instant access to mental health support through our completely anonymous live chat system. Our robust, compliant platform ensures help is always available when needed while protecting student privacy.',
+    welcome: {
+      title: "Lessons Learnt: Personalized Education for Every Student",
+      subtitle: "Empowering students and teachers with AI-driven insights and mental health support."
+    },
+    auth: {
+      studentLogin: "Login as Student",
+      teacherLogin: "Login as Teacher"
+    },
+    tagline: {
+      studentLead: "Where students lead and innovation lights the way."
+    },
+    features: {
+      studentFeedback: {
+        title: "AI-Driven Student Feedback",
+        description: "Collect and analyze student feedback in real-time to improve teaching methods and curriculum."
+      },
+      teacherInsights: {
+        title: "Teacher Insights & Analytics",
+        description: "Gain actionable insights into student performance and engagement with comprehensive analytics dashboards."
+      },
+      mentalHealth: {
+        title: "Mental Health Support",
+        description: "Provide students with access to mental health resources and support through a secure and confidential platform."
+      }
+    },
+    platform: {
+      whySchools: "Why Lessons Learnt for Your School?",
+      whySchoolsSubtitle: "Transform your educational environment with data-driven insights and comprehensive support for students and teachers.",
+      studentInsights: "Unlock Student Potential with Data-Driven Insights",
+      realTimeAnalytics: "Real-Time Analytics",
+      realTimeAnalyticsDesc: "Monitor student performance and engagement in real-time to identify areas for improvement.",
+      mentalHealthMonitoring: "Mental Health Monitoring",
+      mentalHealthMonitoringDesc: "Provide early intervention and support for students' mental health needs through proactive monitoring.",
+      privacySecurity: "Privacy & Security",
+      privacySecurityDesc: "Ensure the privacy and security of student data with our secure and compliant platform.",
+      improvementPercent: "30%",
+      improvementTitle: "Improvement in Student Outcomes",
+      improvementDesc: "Schools using Lessons Learnt have seen a 30% improvement in student outcomes and engagement.",
+      readyToTransform: "Ready to Transform Your School?",
+      readyToTransformDesc: "Schedule a demo to learn how Lessons Learnt can revolutionize your educational environment."
+    },
+    demo: {
+      subtitle: "Explore our platform's key features with interactive demos tailored for students, teachers, and psychologists.",
+      exploreFeatures: "Explore Key Features",
+      liveVoiceover: "Live Voiceover:",
+      userType: {
+        student: "Student",
+        teacher: "Teacher",
+        psychologist: "Psychologist"
+      },
+      studentFeedback: {
+        title: "Student Feedback",
+        description: "Collect real-time feedback from students to improve teaching methods.",
+        voiceover: "Explore how students can provide instant feedback on lessons, helping teachers adapt and improve their teaching methods in real-time."
+      },
+      teacherInsights: {
+        title: "Teacher Insights",
+        description: "Gain insights into student performance and engagement.",
+        voiceover: "Discover how teachers can access comprehensive analytics dashboards to gain insights into student performance and engagement."
+      },
+      mentalHealth: {
+        title: "Mental Health Support",
+        description: "Provide mental health resources and support for students.",
+        voiceover: "Learn how students can access mental health resources and support through a secure and confidential platform."
+      },
+      classManagement: {
+        title: "Class Management",
+        description: "Manage classes, assignments, and student progress efficiently.",
+        voiceover: "See how teachers can efficiently manage classes, assignments, and track student progress using our intuitive class management tools."
+      },
+      liveChat: {
+        title: "Live Chat",
+        description: "Enable real-time communication between students and teachers.",
+        voiceover: "Experience real-time communication between students and teachers, fostering a collaborative learning environment."
+      },
+      compliance: {
+        gdpr: "GDPR Compliant",
+        soc2: "SOC 2 Certified",
+        hipaa: "HIPAA Compliant",
+        description: "We are committed to data privacy and security. Our platform is fully compliant with GDPR, SOC 2, and HIPAA regulations."
+      },
+      stats: {
+        coreFeatures: "Core Features",
+        userTypes: "User Types",
+        mentalHealthSupport: "24/7 Mental Health Support"
+      },
+      mockups: {
+        studentFeedback: {
+          title: "Student Feedback",
+          live: "Live",
+          rating: "Excellent lesson!",
+          subject: "Mathematics - Algebra",
+          comment: "I understood everything clearly. The examples were very helpful.",
+          understood: "I understood this lesson",
+          excellent: "Excellent",
+          anonymous: "Submit feedback anonymously"
+        },
+        mentalHealth: {
+          title: "Mental Health Support",
+          available: "24/7 Available",
+          anonymous: "100% Anonymous & Confidential",
+          description: "Safe space to share feelings and get support from qualified professionals.",
+          support: "Professional Support",
+          psychologist: "Licensed school psychologist",
+          chat: "Instant Chat Support",
+          immediate: "Get immediate help when needed"
+        },
+        classManagement: {
+          title: "Today's Schedule",
+          grade: "Grade 8A",
+          math: "Mathematics",
+          mathTopic: "Algebra & Linear Equations",
+          mathTime: "9:00 AM - 10:30 AM",
+          current: "Current",
+          science: "Science Lab",
+          scienceTopic: "Chemical Reactions & Experiments",
+          scienceTime: "11:00 - 12:30",
+          next: "Next",
+          lunch: "Lunch Break",
+          lunchDesc: "Free time for students",
+          lunchTime: "1:00 PM - 2:00 PM"
+        },
+        teacherDashboard: {
+          title: "Class Performance Analytics",
+          live: "Live Data",
+          understanding: "Average Understanding",
+          improvement: "↑ 5% from last week",
+          students: "Active Students",
+          attendance: "100% attendance today",
+          mathClass: "Math Class - Period 3",
+          mathTopic: "Algebra & Functions",
+          mathUnderstood: "92% understood",
+          scienceClass: "Science Lab - Period 5",
+          scienceTopic: "Chemical Reactions",
+          scienceUnderstood: "89% understood"
+        },
+        liveChat: {
+          title: "Live Class Chat",
+          online: "Online",
+          teacherMessage: "Great question! Let me explain this concept step by step...",
+          studentMessage: "Can you clarify the third step?",
+          teacherReply: "Of course! The key is to isolate the variable first.",
+          now: "now",
+          placeholder: "Type your question..."
+        }
+      }
+    }
   },
   lt: {
-    // Navigation
-    'nav.home': 'Pagrindinis',
-    'nav.about': 'Apie mus',
-    'nav.contact': 'Kontaktai',
-    
-    // Authentication
-    'auth.login': 'Prisijungti',
-    'auth.logout': 'Atsijungti',
-    'auth.studentLogin': 'Mokinių prisijungimas',
-    'auth.teacherLogin': 'Mokytojų prisijungimas',
-    'auth.email': 'El. paštas',
-    'auth.password': 'Slaptažodis',
-    'auth.confirmPassword': 'Patvirtinti slaptažodį',
-    'auth.name': 'Vardas',
-    'auth.school': 'Mokykla',
-    'auth.signUp': 'Registruotis',
-    'auth.alreadyHaveAccount': 'Jau turite paskyrą?',
-    'auth.dontHaveAccount': 'Neturite paskyros?',
-    'auth.forgotPassword': 'Pamiršote slaptažodį?',
-
-    // Student Login Page
-    'student.portal': 'Mokinių portalas',
-    'student.loginDescription': 'Prisijunkite prie savo paskyros arba sukurkite naują',
-    'student.fullName': 'Pilnas vardas',
-    'student.fullNamePlaceholder': 'Įveskite savo pilną vardą tiksliai kaip registravotės',
-    'student.fullNameSignupPlaceholder': 'Įveskite savo pilną vardą',
-    'student.schoolPlaceholder': 'Įveskite mokyklos pavadinimą',
-    'student.gradePlaceholder': 'pvz., 5 klasė, 10A klasė, 9 kursas',
-    'student.classGrade': 'Klasė/Kursas',
-    'student.createPassword': 'Sukurkite slaptažodį',
-    'student.confirmPasswordPlaceholder': 'Patvirtinkite slaptažodį',
-    'student.loggingIn': 'Prisijungiama...',
-    'student.creatingAccount': 'Kuriama paskyra...',
-    'student.createAccount': 'Sukurti paskyrą',
-    'student.passwordMismatch': 'Slaptažodžiai nesutampa',
-    'student.passwordsDoNotMatch': 'Slaptažodžiai nesutampa',
-    'student.loginFailed': 'Prisijungimas nepavyko',
-    'student.signupFailed': 'Registracija nepavyko',
-    'student.welcomeBack': 'Sveiki sugrįžę! 📚',
-    'student.loginSuccess': 'Sėkmingai prisijungėte.',
-    'student.accountCreated': 'Paskyra sukurta! 🎉',
-    'student.welcomeToApp': 'Sveiki atvykę į Lesson Lens!',
-
-    // Teacher Login Page
-    'login.teacher.title': 'Mokytojų ir administratorių portalas',
-    'login.teacher.subtitle': 'Prieiga prie jūsų klasės skydelio ir mokyklos valdymo įrankių',
-    'login.teacher.login': 'Prisijungti',
-    'login.teacher.signup': 'Registruotis',
-    'login.teacher.email': 'El. paštas',
-    'login.teacher.password': 'Slaptažodis',
-    'login.teacher.fullName': 'Pilnas vardas',
-    'login.teacher.school': 'Mokyklos pavadinimas',
-    'login.teacher.role': 'Rolė',
-    'login.teacher.roleTeacher': 'Mokytojas',
-    'login.teacher.roleAdmin': 'Mokyklos administratorius',
-    'login.teacher.adminHint': 'Mokyklos administratoriai gali valdyti mokytojus ir peržiūrėti visą grįžtamąjį ryšį',
-    'login.teacher.confirmPassword': 'Patvirtinti slaptažodį',
-    'login.teacher.createAccount': 'Sukurti paskyrą',
-    'login.teacher.loggingIn': 'Prisijungiama...',
-    'login.teacher.creatingAccount': 'Kuriama paskyra...',
-    
-    // Welcome messages
-    'welcome.title': 'Transformuokite savo mokyklą su realaus laiko grįžtamuoju ryšiu',
-    'welcome.subtitle': 'Įgalinkite mokytojus mokinių įžvalgomis ir padėkite administratoriams stebėti visos mokyklos veiklą',
-    
-    // Features
-    'features.studentFeedback.title': 'Mokinių grįžtamasis ryšys',
-    'features.studentFeedback.description': 'Mokiniai gali lengvai pateikti grįžtamąjį ryšį apie savo mokymosi patirtį',
-    'features.teacherInsights.title': 'Mokytojų įžvalgos',
-    'features.teacherInsights.description': 'Mokytojai gauna realaus laiko įžvalgas, kad pagerintų savo mokymo metodus',
-    'features.mentalHealth.title': 'Psichikos sveikata',
-    'features.mentalHealth.description': 'Ankstyvos mokinių gerovės ir psichikos sveikatos problemų aptikimas ir pagalba',
-    'features.dataAnalytics.title': 'Duomenų analitika',
-    'features.dataAnalytics.description': 'Išsami analitika mokinių pažangai ir gerovei sekti',
-    
-    // Platform overview
-    'platform.whySchools': 'Kodėl mokyklos renkasi Lessons Learnt',
-    'platform.whySchoolsSubtitle': 'Mūsų platforma įgalina mokyklas veiksmingomis įžvalgomis kurti geresnę mokymosi aplinką, palaikyti mokinių gerovę ir skatinti švietimo puikumą per duomenimis grįstus sprendimus.',
-    'platform.studentInsights': 'Išsamios mokinių įžvalgos',
-    'platform.realTimeAnalytics': 'Realaus laiko analitika',
-    'platform.realTimeAnalyticsDesc': 'Sekite mokinių įsitraukimą, mokymosi pažangą ir klasės dinamiką su momentaliu grįžtamojo ryšio rinkiniu ir analize.',
-    'platform.mentalHealthMonitoring': 'Psichikos sveikatos stebėjimas',
-    'platform.mentalHealthMonitoringDesc': 'Ankstyvos mokinių gerovės problemų aptikimas per protingą turinio analizę ir momentalius įspėjimus mokyklos konsultantams.',
-    'platform.privacySecurity': 'Privatumas ir saugumas',
-    'platform.privacySecurityDesc': 'Įmonių lygio saugumas užtikrina mokinių duomenų apsaugą ir atitikimą švietimo privatumo standartams.',
-    'platform.improvementPercent': '85%',
-    'platform.improvementTitle': 'Pagerėjimas mokinių įsitraukime',
-    'platform.improvementDesc': 'Mokyklos, naudojančios mūsų platformą, praneša apie žymų mokinių dalyvavimo ir mokymosi rezultatų padidėjimą.',
-    'platform.readyToTransform': 'Pasiruošę transformuoti savo mokyklą?',
-    'platform.readyToTransformDesc': 'Prisijunkite prie šimtų mokyklų, jau naudojančių Lessons Learnt geresnei mokymosi aplinkai kurti.',
-    
-    // Dashboard
-    'dashboard.overview': 'Apžvalga',
-    'dashboard.classes': 'Klasės',
-    'dashboard.feedback': 'Grįžtamasis ryšys',
-    'dashboard.analytics': 'Analitika',
-    'dashboard.settings': 'Nustatymai',
-    'dashboard.schoolOverview': 'Mokyklos apžvalga',
-    'dashboard.teacherOverview': 'Mokytojo apžvalga',
-    'dashboard.totalTeachers': 'Iš viso mokytojų',
-    'dashboard.totalClasses': 'Iš viso klasių',
-    'dashboard.avgSatisfaction': 'Vid. pasitenkinimas',
-    'dashboard.feedbackReceived': 'Gautas grįžtamasis ryšys',
-    'dashboard.recentFeedback': 'Naujausi atsiliepimai',
-    'dashboard.subscribeNow': 'Prenumeruoti dabar',
-    'dashboard.manageSubscription': 'Valdyti prenumeratą',
-    'dashboard.title': 'Mokinio skydelis',
-    'dashboard.grade': 'Klasė',
-    'dashboard.upcomingClasses': 'Artėjančios pamokos',
-    'dashboard.mentalHealthSupport': 'Psichikos sveikatos pagalba',
-    'dashboard.weeklySummary': 'Savaitės suvestinė',
-    'dashboard.scheduledClasses': 'Jūsų suplanuotos pamokos',
-    'dashboard.noClasses': 'Nėra suplanuotų artėjančių pamokų',
-    'dashboard.noPsychologists': 'Šiuo metu mokyklos psichologų nėra.',
-    'dashboard.contactAdmin': 'Jei reikia pagalbos, kreipkitės į mokyklos administraciją.',
-    
-    // Teacher Dashboard specific
-    'teacher.subscriptionNeeded': 'Prenumeruokite, kad atrakintumėte visas funkcijas ir pradėtumėte kurti klasių tvarkaraščius',
-    'teacher.activePlan': 'Jūsų {planType} planas aktyvus iki {date}',
-    'teacher.classSchedulingAvailable': 'Klasių planavimas galimas su aktyvia prenumerata',
-    'teacher.subscribeToContinue': 'Prenumeruokite, kad tęstumėte',
-    
-    // Class management
-    'class.create': 'Sukurti klasę',
-    'class.edit': 'Redaguoti klasę',
-    'class.delete': 'Ištrinti klasę',
-    'class.name': 'Klasės pavadinimas',
-    'class.subject': 'Dalykas',
-    'class.schedule': 'Tvarkaraštis',
-    'class.students': 'Mokiniai',
-    'class.upcomingClasses': 'Artėjančios pamokos',
-    'class.duration': 'min',
-    
-    // Feedback Form
-    'feedback.title': 'Pasidalinkite savo mokymosi patirtimi',
-    'feedback.subtitle': 'Padėkite mokytojui suprasti, kaip dar labiau pagerinti pamokas',
-    'feedback.lessonDetails': 'Pamokos detalės',
-    'feedback.lessonDetailsDesc': 'Papasakokite apie šiandienos pamoką',
-    'feedback.lessonTopic': 'Pamokos tema',
-    'feedback.lessonTopicPlaceholder': 'pvz., Trupmenys, Fotosintezė, Šekspyras',
-    'feedback.learningAssessment': 'Mokymosi vertinimas',
-    'feedback.learningAssessmentDesc': 'Įvertinkite savo mokymosi patirtį',
-    'feedback.understanding': 'Supratimas',
-    'feedback.understandingQuestion': 'Kaip gerai supratote pamokos turinį?',
-    'feedback.interest': 'Susidomėjimas',
-    'feedback.interestQuestion': 'Kiek įdomi buvo pamoka?',
-    'feedback.educationalGrowth': 'Mokymosi pažanga',
-    'feedback.educationalGrowthQuestion': 'Kiek, jūsų manymu, išmokote per pamoką?',
-    'feedback.emotionalWellbeing': 'Emocinė savijauta',
-    'feedback.emotionalWellbeingDesc': 'Kaip jautėtės pamokos metu?',
-    'feedback.detailedFeedback': 'Išsamus grįžtamasis ryšys',
-    'feedback.detailedFeedbackDesc': 'Padėkite mokytojui suprasti, kas pavyko ir ką galima pagerinti',
-    'feedback.whatWorkedWell': 'Kas gerai pavyko šioje pamokoje?',
-    'feedback.whatWorkedWellPlaceholder': 'Kas jums patiko? Kas padėjo mokytis?',
-    'feedback.whatWasConfusing': 'Kas buvo neaišku ar sunku?',
-    'feedback.whatWasConfusingPlaceholder': 'Kurios dalys buvo sunkiai suprantamos?',
-    'feedback.howToImprove': 'Kaip mokytojas galėtų pagerinti pamoką?',
-    'feedback.howToImprovePlaceholder': 'Jūsų pasiūlymai gerinimui...',
-    'feedback.additionalComments': 'Kokie dar komentarai?',
-    'feedback.additionalCommentsPlaceholder': 'Kas dar norėtumėte pasidalinti...',
-    'feedback.submit': 'Pateikti grįžtamąjį ryšį',
-    'feedback.submitted': 'Grįžtamasis ryšys pateiktas',
-    'feedback.submittedDesc': 'Ačiū už jūsų grįžtamąjį ryšį!',
-    'feedback.submitError': 'Klaida',
-    'feedback.submitErrorDesc': 'Nepavyko pateikti grįžtamojo ryšio',
-    'feedback.average': 'Vidurkis',
-    'feedback.excellent': 'Puiku',
-    'feedback.good': 'Gerai',
-    'feedback.fair': 'Vidutiniškai',
-    'feedback.poor': 'Blogai',
-    'feedback.anonymous': 'Pateikti anonimnai',
-    'feedback.whatWentWell': 'Kas pavyko gerai',
-    'feedback.whatWentWellPlaceholder': 'Kas jums patiko? Kas padėjo mokytis?',
-    'feedback.suggestions': 'Pasiūlymai gerinimui',
-    'feedback.suggestionsPlaceholder': 'Jūsų pasiūlymai gerinimui...',
-    'feedback.emotionalState': 'Kaip jūs jaučiatės?',
-    'feedback.growth': 'Mokymosi pažanga',
-    'feedback.submitSuccess': 'Ačiū už jūsų grįžtamąjį ryšį!',
-    'feedback.submitFailed': 'Nepavyko pateikti grįžtamojo ryšio. Bandykite dar kartą.',
-    'feedback.unexpectedError': 'Įvyko netikėta klaida. Bandykite dar kartą.',
-
-    // Rating Labels
-    'rating.understanding.1': 'Visiškai neaišku',
-    'rating.understanding.2': 'Neaišku',
-    'rating.understanding.3': 'Šiek tiek aišku',
-    'rating.understanding.4': 'Aišku',
-    'rating.understanding.5': 'Visiškai aišku',
-    'rating.interest.1': 'Labai nuobodu',
-    'rating.interest.2': 'Nuobodu',
-    'rating.interest.3': 'Nieko',
-    'rating.interest.4': 'Įdomu',
-    'rating.interest.5': 'Labai įdomu',
-    'rating.growth.1': 'Nieko neišmokau',
-    'rating.growth.2': 'Mažai išmokau',
-    'rating.growth.3': 'Šiek tiek išmokau',
-    'rating.growth.4': 'Daug išmokau',
-    'rating.growth.5': 'Labai daug išmokau',
-
-    // Weekly Summary
-    'weekly.title': 'Savaitės patikrinimas',
-    'weekly.subtitle': 'Kaip praėjo jūsų savaitė? Pasidalinkite savo mintimis.',
-    'weekly.howFeeling': 'Kaip jūs jaučiatės šią savaitę?',
-    'weekly.emotional': 'Emocinė savijauta',
-    'weekly.emotionalPlaceholder': 'Pasidalinkite emocinio pobūdžio rūpesčiais, stresu, draugystės problemomis ar tuo, kaip jaučiatės mokykloje...',
-    'weekly.academic': 'Akademiniai rūpesčiai',
-    'weekly.academicPlaceholder': 'Pasidalinkite rūpesčiais dėl namų darbų, dalykų supratimo, mokyklos tempo ar akademinių iššūkių...',
-    'weekly.optional': 'Neprivaloma',
-    'weekly.submit': 'Pateikti savaitės suvestinę',
-    'weekly.submitting': 'Pateikiama...',
-    'weekly.fillAtLeastOne': 'Prašome užpildyti bent vieną rūpestį',
-    'weekly.shareThoughts': 'Pasidalinkite mintimis apie šią savaitę',
-    'weekly.submitted': 'Savaitės suvestinė pateikta',
-    'weekly.submittedDesc': 'Jūsų savaitės suvestinė padeda mums suprasti, kaip geriau jus palaikyti.',
-    'weekly.submitFailed': 'Pateikimas nepavyko',
-    'weekly.submitFailedDesc': 'Nepavyko pateikti savaitės suvestinės. Bandykite dar kartą.',
-    'weekly.submitAnonymously': 'Pateikti anonimnai',
-
-    // Subject options
-    'subject.mathematics': 'Matematika',
-    'subject.science': 'Gamtos mokslai',
-    'subject.english': 'Anglų kalba',
-    'subject.history': 'Istorija',
-    'subject.art': 'Dailė',
-    'subject.music': 'Muzika',
-    'subject.physicalEducation': 'Kūno kultūra',
-    'subject.other': 'Kita',
-    'subject.selectSubject': 'Pasirinkite dalyką',
-
-    // Admin Dashboard - Lithuanian translations
-    'admin.title': 'Mokyklos administratoriaus skydelis',
-    'admin.welcome': 'Sveiki',
-    'admin.logout': 'Atsijungti',
-    'admin.loading': 'Kraunamas skydelis...',
-    'admin.subscription': 'Prenumerata',
-    'admin.subscribe': 'Prenumeruoti dabar',
-    'admin.stats.teachers': 'Iš viso mokytojų',
-    'admin.stats.feedback': 'Iš viso grįžtamojo ryšio',
-    'admin.teachers.title': 'Mokytojai',
-    'admin.teachers.description': 'Valdyti mokyklos mokytojus',
-    'admin.teachers.empty': 'Mokytojų nerasta',
-    'admin.feedback.title': 'Grįžtamojo ryšio suvestinė',
-    'admin.feedback.description': 'Mokinių grįžtamojo ryšio apžvalga pagal mokytoją ir klasę',
-    'admin.feedback.teacher': 'Mokytojas',
-    'admin.feedback.subject': 'Dalykas',
-    'admin.feedback.date': 'Data',
-    'admin.feedback.scores': 'Įvertinimai',
-    'admin.feedback.understanding': 'Supratimas',
-    'admin.feedback.interest': 'Susidomėjimas',
-    'admin.feedback.growth': 'Augimas',
-    'admin.feedback.responses': 'atsakymai',
-    'admin.feedback.empty': 'Grįžtamojo ryšio duomenų dar nėra',
-    'admin.error.title': 'Klaida kraunant duomenis',
-    'admin.error.description': 'Nepavyko įkelti skydelio duomenų',
-    'admin.activeTeachers': 'Aktyvūs mokytojai',
-    'admin.psychologists': 'Psichologai',
-    'admin.inviteTeacher': 'Pakviesti mokytoją',
-    'admin.subscriptionNeeded': 'Jums reikia aktyvios prenumeratos, kad galėtumėte naudotis visomis administratoriaus funkcijomis ir kviesti mokytojus.',
-    'admin.joined': 'Prisijungė',
-
-    // Pricing Page - Lithuanian
-    'pricing.title': 'Prenumeratos kainos',
-    'pricing.backToDashboard': 'Grįžti į skydelį',
-    'pricing.welcome': 'Sveiki',
-    'pricing.choosePlan': 'Pasirinkite mokyklos planą',
-    'pricing.subtitle': 'Paprastos, skaidrios kainos visai jūsų mokyklai',
-    'pricing.school': 'Mokykla',
-    'pricing.configurePlan': 'Konfigūruokite savo planą',
-    'pricing.configureDesc': 'Pritaikykite prenumeratą pagal mokytojų skaičių',
-    'pricing.numberOfTeachers': 'Mokytojų skaičius',
-    'pricing.teacherDesc': 'Kiekvienas mokytojas gali sukurti neribotą klasių skaičių ir rinkti mokinių grįžtamąjį ryšį',
-    'pricing.discountCode': 'Nuolaidos kodas (neprivaloma)',
-    'pricing.enterDiscount': 'Įveskite nuolaidos kodą',
-    'pricing.validating': 'Tikrinama...',
-    'pricing.apply': 'Taikyti',
-    'pricing.discountAppliedShort': 'nuolaida pritaikyta!',
-    'pricing.whatsIncluded': 'Kas įtraukta',
-    'pricing.unlimitedClasses': 'Neriboti klasių tvarkaraščiai',
-    'pricing.feedbackCollection': 'Mokinių grįžtamojo ryšio rinkimas',
-    'pricing.analytics': 'Analitika ir ataskaitos',
-    'pricing.mentalHealth': 'Psichikos sveikatos stebėjimas',
-    'pricing.multiLanguage': 'Daugiakalbė pagalba',
-    'pricing.orderSummary': 'Užsakymo suvestinė',
-    'pricing.reviewDetails': 'Peržiūrėkite prenumeratos informaciją',
-    'pricing.teachers': 'Mokytojai',
-    'pricing.each': 'kiekvienas',
-    'pricing.subtotal': 'Tarpinė suma',
-    'pricing.discount': 'Nuolaida',
-    'pricing.totalMonthly': 'Iš viso (mėnesinis)',
-    'pricing.billing': 'Atsiskaitymas',
-    'pricing.billingDesc': 'Jums bus apmokestinta ${amount} per mėnesį. Galite atšaukti ar keisti prenumeratą bet kada.',
-    'pricing.processing': 'Apdorojama...',
-    'pricing.subscribeFor': 'Prenumeruoti už',
-    'pricing.securePayment': 'Saugus mokėjimas naudojant Stripe. Atšaukite bet kada.',
-    'pricing.discountApplied': 'Nuolaida pritaikyta!',
-    'pricing.discountAppliedDesc': 'Jūsų užsakymui pritaikyta {percent}% nuolaida.',
-    'pricing.invalidDiscount': 'Neteisingas nuolaidos kodas',
-    'pricing.invalidDiscountDesc': 'Įvestas nuolaidos kodas nėra galiojantis.',
-    'pricing.paymentError': 'Mokėjimo klaida',
-    'pricing.paymentErrorDesc': 'Nepavyko sukurti prenumeratos. Bandykite dar kartą.',
-    
-    // Common
-    'common.save': 'Išsaugoti',
-    'common.cancel': 'Atšaukti',
-    'common.edit': 'Redaguoti',
-    'common.delete': 'Ištrinti',
-    'common.loading': 'Kraunama...',
-    'common.error': 'Klaida',
-    'common.success': 'Sėkmė',
-    'common.close': 'Uždaryti',
-    'common.back': 'Atgal',
-    'common.next': 'Toliau',
-    'common.previous': 'Ankstesnis',
-    'common.submitting': 'Pateikiama...',
-    
-    // Tagline
-    'tagline.studentLead': 'Kai mokiniai veda, mokytojai sėkmingai dirba',
-
-    // Upload translations
-    'upload.bulkSchedule': 'Masinis tvarkaraščių įkėlimas',
-    'upload.bulkUpload': 'Masinis įkėlimas',
-    'upload.csvDescription': 'Įkelkite kelis pamokų tvarkaraščius naudodami CSV failą',
-    'upload.selectFile': 'Pasirinkite CSV failą',
-    'upload.csvFormat': 'CSV formato reikalavimai',
-    'upload.requiredColumns': 'Būtini stulpeliai',
-    'upload.formatNote': 'Datos formatas: YYYY-MM-DD, Laiko formatas: HH:MM',
-    'upload.csvOnly': 'Prašome pasirinkti CSV failą',
-    'upload.invalidHeaders': 'Neteisingi CSV antraštės. Patikrinkite reikiamą formatą.',
-    'upload.noValidData': 'CSV faile nerasta tinkamų duomenų',
-    'upload.success': 'Įkėlimas sėkmingas',
-    'upload.schedulesUploaded': 'Sėkmingai įkelta {count} tvarkaraščių',
-    'upload.failed': 'Įkėlimas nepavyko. Bandykite dar kartą.',
-    'upload.processing': 'Apdorojamas įkėlimas...',
-    'upload.subscriptionRequired': 'Aktyvios prenumeratos reikia masiniams įkėlimams',
-
-    // Articles translations
-    'articles.title': 'Psichikos sveikatos straipsniai',
-    'articles.mentalHealth': 'Psichikos sveikata',
-    'articles.description': 'Kurkite ir tvarkykite psichikos sveikatos straipsnius mokiniams',
-    'articles.addNew': 'Pridėti naują straipsnį',
-    'articles.articleTitle': 'Straipsnio pavadinimas',
-    'articles.titlePlaceholder': 'Įveskite aprašomąjį straipsnio pavadinimą',
-    'articles.ageGroup': 'Amžiaus grupė',
-    'articles.selectAgeGroup': 'Pasirinkite tikslinę amžiaus grupę',
-    'articles.elementary': 'Pradinės klasės (6-11 metų)',
-    'articles.middle': 'Vidurinės klasės (12-14 metų)',
-    'articles.high': 'Aukštesnės klasės (15-18 metų)',
-    'articles.allAges': 'Visi amžiai',
-    'articles.content': 'Turinys',
-    'articles.contentPlaceholder': 'Rašykite straipsnio turinį čia...',
-    'articles.create': 'Sukurti straipsnį',
-    'articles.created': 'Straipsnis sukurtas',
-    'articles.createdSuccess': 'Psichikos sveikatos straipsnis sėkmingai sukurtas',
-    'articles.updated': 'Straipsnis atnaujintas',
-    'articles.updatedSuccess': 'Psichikos sveikatos straipsnis sėkmingai atnaujintas',
-    'articles.deleted': 'Straipsnis ištrintas',
-    'articles.deletedSuccess': 'Psichikos sveikatos straipsnis sėkmingai ištrintas',
-    'articles.confirmDelete': 'Ar tikrai norite ištrinti šį straipsnį?',
-    'articles.loadFailed': 'Nepavyko įkelti psichikos sveikatos straipsnių',
-    'articles.saveFailed': 'Nepavyko išsaugoti psichikos sveikatos straipsnio',
-    'articles.deleteFailed': 'Nepavyko ištrinti psichikos sveikatos straipsnio',
-    'articles.fillRequired': 'Prašome užpildyti visus privalomust laukus',
-    'articles.noArticles': 'Dar nėra psichikos sveikatos straipsnių',
-    'articles.getStarted': 'Spustelėkite "Pridėti naują straipsnį", kad sukurtumėte pirmą psichikos sveikatos išteklių',
-    'articles.subscriptionRequired': 'Reikalingas aktyvus prenumeratos planas psichikos sveikatos straipsnių tvarkymui',
-    
-    // Performance translations
-    'performance.filters': 'Veiklos analizė',
-    'performance.filtersDesc': 'Analizuokite ir lyginkite mokyklų ir mokytojų veiklos rodiklius',
-    'performance.school': 'Mokykla',
-    'performance.allSchools': 'Visos mokyklos',
-    'performance.sortBy': 'Rūšiuoti pagal',
-    'performance.overallScore': 'Bendras balas',
-    'performance.totalResponses': 'Iš viso atsakymų',
-    'performance.minResponses': 'Mažiausiai atsakymų',
-    'performance.topSchools': 'Geriausiai veikiančios mokyklos',
-    'performance.schoolPerformance': 'Pagal mokinių grįžtamojo ryšio balus',
-    'performance.score': 'Balas',
-    'performance.responses': 'Atsakymai',
-    'performance.rating': 'Įvertinimas',
-    'performance.topTeachers': 'Geriausiai veikiantys mokytojai',
-    'performance.allTeachers': 'Visi mokytojai iš visų mokyklų',
-    'performance.teachersFromSchool': 'Mokytojai iš {school}',
-    'performance.teacher': 'Mokytojas',
-
-    // Compliance and Privacy - Lithuanian
-    'compliance.gdpr.title': 'GDPR atitiktis',
-    'compliance.gdpr.description': 'Esame įsipareigoję apsaugoti jūsų asmens duomenis pagal GDPR reglamentus.',
-    'compliance.hipaa.title': 'HIPAA atitiktis',
-    'compliance.hipaa.description': 'Mokinių sveikatos informacija apsaugota HIPAA standartais.',
-    'compliance.soc2.title': 'SOC 2 atitiktis',
-    'compliance.soc2.description': 'Mūsų sistemos atitinka SOC 2 Type II saugumo standartus.',
-    'compliance.dataProcessing': 'Duomenų apdorojimo sutartis',
-    'compliance.privacyPolicy': 'Privatumo politika',
-    'compliance.cookiePolicy': 'Slapukų politika',
-    'compliance.dataRetention': 'Duomenų saugojimo politika',
-    'compliance.consentManagement': 'Sutikimų valdymas',
-    'compliance.rightToDelete': 'Teisė ištrinti duomenis',
-    'compliance.dataPortability': 'Duomenų perkeliamumas',
-    'compliance.breachNotification': 'Duomenų pažeidimo pranešimas',
-    'compliance.dpo': 'Duomenų apsaugos pareigūnas',
-    'compliance.auditLog': 'Audito žurnalas',
-    'compliance.encryption': 'Ištisinis šifravimas',
-    'compliance.accessControl': 'Vaidmenimis grįsta prieigos kontrolė',
-    'compliance.dataMinimization': 'Duomenų minimizavimas',
-    'compliance.consentWithdrawal': 'Atšaukti sutikimą',
-
-    // Demo Section
-    'demo.subtitle': 'Išbandykite mūsų išsamią švietimo platformą per šią interaktyvią demonstraciją, pristatančią funkcijas mokiniams, mokytojams ir psichikos sveikatos specialistams.',
-    'demo.compliance.gdpr': 'GDPR atitiktis',
-    'demo.compliance.soc2': 'SOC 2 sertifikatas',
-    'demo.compliance.hipaa': 'HIPAA atitiktis',
-    'demo.compliance.description': 'Patikima, saugi platforma su įmonių lygio atitiktimi',
-    'demo.liveVoiceover': 'Gyvasis komentaras',
-    'demo.exploreFeatures': 'Tyrinėkite platformos funkcijas',
-    'demo.userType.student': 'Mokinio vaizdas',
-    'demo.userType.teacher': 'Mokytojo vaizdas',
-    'demo.userType.psychologist': 'Psichologo vaizdas',
-    'demo.stats.coreFeatures': 'Pagrindinės funkcijos',
-    'demo.stats.userTypes': 'Vartotojų tipai',
-    'demo.stats.mentalHealthSupport': 'Psichikos sveikatos pagalba',
-    
-    // Demo Features
-    'demo.studentFeedback.title': 'Mokinių grįžtamojo ryšio sistema',
-    'demo.studentFeedback.description': 'Mokiniai teikia realaus laiko grįžtamąjį ryšį apie pamokas ir emocinę būseną',
-    'demo.studentFeedback.voiceover': 'Sveiki atvykę į mūsų išsamią mokinių grįžtamojo ryšio sistemą. Mokiniai gali lengvai pasidalinti mintimis apie pamokas ir sekti savo emocinę gerovę saugioje, palaikančioje aplinkoje. Visas grįžtamasis ryšys yra visiškai anoniminis ir padeda mokytojams tobulinti mokymo metodus.',
-    
-    'demo.teacherInsights.title': 'Mokytojų analitikos skydelis',
-    'demo.teacherInsights.description': 'Mokytojai gauna išsamias įžvalgas ir veiklos analitikos duomenis',
-    'demo.teacherInsights.voiceover': 'Mūsų mokytojų skydelis suteikia galingą analitiką ir įžvalgas, padedančias pedagogams suprasti mokinių pažangą ir pritaikyti mokymo metodus maksimaliam efektyvumui. Realaus laiko duomenys padeda identifikuoti mokinius, kuriems gali reikėti papildomos pagalbos.',
-    
-    'demo.mentalHealth.title': 'Anoniminis psichikos sveikatos palaikymas',
-    'demo.mentalHealth.description': 'Integruoti psichikos sveikatos ištekliai su visiška anonimiškumo ir GDPR atitiktimi',
-    'demo.mentalHealth.voiceover': 'Psichikos sveikatos pagalba sklandžiai integruota į mūsų platformą su visiška anonimiškumo apsauga. Mūsų GDPR, SOC 2 ir HIPAA atitinkanti sistema sujungia mokinius su kvalifikuotais specialistais per saugias, anonimines gyvojo pokalbio funkcijas.',
-    
-    'demo.classManagement.title': 'Klasių tvarkaraščių valdymas',
-    'demo.classManagement.description': 'Išsamūs klasių planavimo ir valdymo įrankiai',
-    'demo.classManagement.voiceover': 'Efektyvūs klasių valdymo įrankiai padeda mokytojams organizuoti tvarkaraščius, sekti lankymąsi ir valdyti pamokų planus vienoje integruotoje platformoje. Mokiniai gali lengvai peržiūrėti savo dienos tvarkaraščius ir artėjančius užduotis.',
-    
-    'demo.liveChat.title': 'Anoniminis gyvasis psichikos sveikatos pokalbis',
-    'demo.liveChat.description': 'Momentinė anoniminė prieiga prie psichikos sveikatos specialistų',
-    'demo.liveChat.voiceover': 'Mokiniai turi momentinę prieigą prie psichikos sveikatos pagalbos per mūsų visiškai anoniminę gyvojo pokalbio sistemą. Mūsų patikima, atitinkanti platforma užtikrina, kad pagalba visada būtų prieinama, kai reikia, kartu apsaugant mokinių privatumą.',
+    welcome: {
+      title: "Pamokos Išmoktos: Individualizuotas ugdymas kiekvienam mokiniui",
+      subtitle: "Suteikiame galių mokiniams ir mokytojams naudojant dirbtinio intelekto įžvalgas ir psichikos sveikatos palaikymą."
+    },
+    auth: {
+      studentLogin: "Prisijungti kaip mokinys",
+      teacherLogin: "Prisijungti kaip mokytojas"
+    },
+    tagline: {
+      studentLead: "Čia mokiniai vadovauja, o inovacijos nušviečia kelią."
+    },
+    features: {
+      studentFeedback: {
+        title: "Dirbtinio intelekto pagrindu veikiantys mokinių atsiliepimai",
+        description: "Rinkite ir analizuokite mokinių atsiliepimus realiuoju laiku, kad patobulintumėte mokymo metodus ir mokymo programą."
+      },
+      teacherInsights: {
+        title: "Mokytojų įžvalgos ir analizė",
+        description: "Gaukite praktinių įžvalgų apie mokinių rezultatus ir įsitraukimą naudodami išsamias analizės prietaisų skydelius."
+      },
+      mentalHealth: {
+        title: "Psichikos sveikatos palaikymas",
+        description: "Suteikite mokiniams prieigą prie psichikos sveikatos išteklių ir palaikymo per saugią ir konfidencialią platformą."
+      }
+    },
+    platform: {
+      whySchools: "Kodėl Pamokos Išmoktos jūsų mokyklai?",
+      whySchoolsSubtitle: "Pakeiskite savo ugdymo aplinką naudodami duomenimis pagrįstas įžvalgas ir visapusišką paramą mokiniams ir mokytojams.",
+      studentInsights: "Atraskite mokinių potencialą naudodami duomenimis pagrįstas įžvalgas",
+      realTimeAnalytics: "Realaus laiko analizė",
+      realTimeAnalyticsDesc: "Stebėkite mokinių rezultatus ir įsitraukimą realiuoju laiku, kad nustatytumėte tobulintinas sritis.",
+      mentalHealthMonitoring: "Psichikos sveikatos stebėjimas",
+      mentalHealthMonitoringDesc: "Užtikrinkite ankstyvą intervenciją ir paramą mokinių psichikos sveikatos poreikiams, vykdydami aktyvų stebėjimą.",
+      privacySecurity: "Privatumas ir saugumas",
+      privacySecurityDesc: "Užtikrinkite mokinių duomenų privatumą ir saugumą naudodami mūsų saugią ir reikalavimus atitinkančią platformą.",
+      improvementPercent: "30%",
+      improvementTitle: "Mokinių rezultatų pagerėjimas",
+      improvementDesc: "Mokyklos, naudojančios Pamokos Išmoktos, pastebėjo 30% mokinių rezultatų ir įsitraukimo pagerėjimą.",
+      readyToTransform: "Pasirengę pakeisti savo mokyklą?",
+      readyToTransformDesc: "Suplanuokite demonstraciją, kad sužinotumėte, kaip Pamokos Išmoktos gali iš esmės pakeisti jūsų ugdymo aplinką."
+    },
+    demo: {
+      subtitle: "Naršykite pagrindines mūsų platformos funkcijas naudodami interaktyvias demonstracijas, pritaikytas studentams, mokytojams ir psichologams.",
+      exploreFeatures: "Naršyti pagrindines funkcijas",
+      liveVoiceover: "Tiesioginis balso perdavimas:",
+      userType: {
+        student: "Studentas",
+        teacher: "Mokytojas",
+        psychologist: "Psichologas"
+      },
+      studentFeedback: {
+        title: "Mokinių atsiliepimai",
+        description: "Rinkite realaus laiko atsiliepimus iš mokinių, kad patobulintumėte mokymo metodus.",
+        voiceover: "Sužinokite, kaip mokiniai gali teikti tiesioginius atsiliepimus apie pamokas, padėdami mokytojams prisitaikyti ir tobulinti savo mokymo metodus realiuoju laiku."
+      },
+      teacherInsights: {
+        title: "Mokytojų įžvalgos",
+        description: "Gaukite įžvalgų apie mokinių rezultatus ir įsitraukimą.",
+        voiceover: "Atraskite, kaip mokytojai gali pasiekti išsamius analizės prietaisų skydelius, kad gautų įžvalgų apie mokinių rezultatus ir įsitraukimą."
+      },
+      mentalHealth: {
+        title: "Psichikos sveikatos palaikymas",
+        description: "Teikite psichikos sveikatos išteklius ir paramą mokiniams.",
+        voiceover: "Sužinokite, kaip mokiniai gali pasiekti psichikos sveikatos išteklius ir paramą per saugią ir konfidencialią platformą."
+      },
+      classManagement: {
+        title: "Klasės valdymas",
+        description: "Efektyviai valdykite klases, užduotis ir mokinių pažangą.",
+        voiceover: "Pažiūrėkite, kaip mokytojai gali efektyviai valdyti klases, užduotis ir sekti mokinių pažangą naudodami mūsų intuityvius klasės valdymo įrankius."
+      },
+      liveChat: {
+        title: "Tiesioginis pokalbis",
+        description: "Įgalinkite realaus laiko bendravimą tarp mokinių ir mokytojų.",
+        voiceover: "Patirkite realaus laiko bendravimą tarp mokinių ir mokytojų, skatinantį bendradarbiavimo mokymosi aplinką."
+      },
+      compliance: {
+        gdpr: "Atitinka GDPR",
+        soc2: "SOC 2 sertifikuota",
+        hipaa: "Atitinka HIPAA",
+        description: "Esame įsipareigoję užtikrinti duomenų privatumą ir saugumą. Mūsų platforma visiškai atitinka GDPR, SOC 2 ir HIPAA reglamentus."
+      },
+      stats: {
+        coreFeatures: "Pagrindinės funkcijos",
+        userTypes: "Naudotojų tipai",
+        mentalHealthSupport: "24/7 Psichikos sveikatos palaikymas"
+      },
+      mockups: {
+        studentFeedback: {
+          title: "Mokinių atsiliepimai",
+          live: "Tiesiogiai",
+          rating: "Puiki pamoka!",
+          subject: "Matematika - Algebra",
+          comment: "Viską supratau aiškiai. Pavyzdžiai buvo labai naudingi.",
+          understood: "Supratau šią pamoką",
+          excellent: "Puiku",
+          anonymous: "Pateikti atsiliepimą anonimiškai"
+        },
+        mentalHealth: {
+          title: "Psichikos sveikatos pagalba",
+          available: "Prieinama 24/7",
+          anonymous: "100% Anonimiška ir konfidenciali",
+          description: "Saugi erdvė dalintis jausmais ir gauti kvalifikuotų specialistų pagalbą.",
+          support: "Profesionali pagalba",
+          psychologist: "Licencijuotas mokyklos psichologas",
+          chat: "Momentinė pokalbio pagalba",
+          immediate: "Gauti nedelsiant pagalbą, kai reikia"
+        },
+        classManagement: {
+          title: "Šiandienos tvarkaraštis",
+          grade: "8A klasė",
+          math: "Matematika",
+          mathTopic: "Algebra ir tiesiniai lygtys",
+          mathTime: "9:00 - 10:30",
+          current: "Dabar",
+          science: "Gamtos mokslų laboratorija",
+          scienceTopic: "Cheminės reakcijos ir eksperimentai",
+          scienceTime: "11:00 - 12:30",
+          next: "Kitas",
+          lunch: "Pietų pertrauka",
+          lunchDesc: "Laisvas laikas mokiniams",
+          lunchTime: "13:00 - 14:00"
+        },
+        teacherDashboard: {
+          title: "Klasės veiklos analitika",
+          live: "Tiesioginis duomenys",
+          understanding: "Vidutinis supratimas",
+          improvement: "↑ 5% nuo praėjusios savaitės",
+          students: "Aktyvūs mokiniai",
+          attendance: "100% lankumas šiandien",
+          mathClass: "Matematikos pamoka - 3 pamoką",
+          mathTopic: "Algebra ir funkcijos",
+          mathUnderstood: "92% suprato",
+          scienceClass: "Gamtos mokslų laboratorija - 5 pamoka",
+          scienceTopic: "Cheminės reakcijos",
+          scienceUnderstood: "89% suprato"
+        },
+        liveChat: {
+          title: "Tiesioginis klasės pokalbis",
+          online: "Prisijungę",
+          teacherMessage: "Puikus klausimas! Leiskite man paaiškinti šią sąvoką žingsnis po žingsnio...",
+          studentMessage: "Ar galite paaiškinti trečią žingsnį?",
+          teacherReply: "Žinoma! Pagrindas yra pirmiausia izoliuoti kintamąjį.",
+          now: "dabar",
+          placeholder: "Įveskite savo klausimą..."
+        }
+      }
+    }
   }
 };
 
-const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
-
-export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [language, setLanguage] = useState<Language>('en');
+export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) => {
+  const [language, setLanguage] = useState<'en' | 'lt'>((localStorage.getItem('language') as 'en' | 'lt') || 'en');
 
   useEffect(() => {
-    const savedLanguage = localStorage.getItem('language') as Language;
-    if (savedLanguage && (savedLanguage === 'en' || savedLanguage === 'lt')) {
-      setLanguage(savedLanguage);
-    }
-  }, []);
+    localStorage.setItem('language', language);
+  }, [language]);
 
-  const changeLanguage = (lang: Language) => {
-    setLanguage(lang);
-    localStorage.setItem('language', lang);
-  };
-
-  const t = (key: string, params?: Record<string, string>): string => {
-    let translation = translations[language][key] || key;
-    
-    if (params) {
-      Object.entries(params).forEach(([param, value]) => {
-        translation = translation.replace(`{${param}}`, value);
-      });
+  const t = (key: string) => {
+    try {
+      const keys = key.split('.');
+      let value: any = translations[language];
+      for (const k of keys) {
+        value = value[k];
+        if (!value) {
+          console.warn(`Translation not found for key: ${key} in language: ${language}`);
+          return key;
+        }
+      }
+      return value || key;
+    } catch (error) {
+      console.error(`Error translating key: ${key} in language: ${language}`, error);
+      return key;
     }
-    
-    return translation;
   };
 
   return (
-    <LanguageContext.Provider value={{ language, setLanguage: changeLanguage, t }}>
+    <LanguageContext.Provider value={{ language, setLanguage, t }}>
       {children}
     </LanguageContext.Provider>
   );
@@ -935,8 +347,8 @@ export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }
 
 export const useLanguage = () => {
   const context = useContext(LanguageContext);
-  if (context === undefined) {
-    throw new Error('useLanguage must be used within a LanguageProvider');
+  if (!context) {
+    throw new Error("useLanguage must be used within a LanguageProvider");
   }
   return context;
 };
