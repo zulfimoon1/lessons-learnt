@@ -1,392 +1,206 @@
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
-interface LanguageContextProps {
-  language: 'en' | 'lt';
-  setLanguage: (lang: 'en' | 'lt') => void;
-  t: (key: string) => string;
+type Language = 'en' | 'lt';
+
+interface Translations {
+  [key: string]: any;
 }
 
-const LanguageContext = createContext<LanguageContextProps | undefined>(undefined);
-
-interface LanguageProviderProps {
-  children: React.ReactNode;
-}
-
-const translations = {
+const translations: Record<Language, Translations> = {
   en: {
-    welcome: {
-      title: "Lessons Learnt: Personalized Education for Every Student",
-      subtitle: "Empowering students and teachers with AI-driven insights and mental health support."
-    },
-    auth: {
-      studentLogin: "Login as Student",
-      teacherLogin: "Login as Teacher"
-    },
-    tagline: {
-      studentLead: "Where students lead and innovation lights the way."
-    },
-    features: {
-      studentFeedback: {
-        title: "AI-Driven Student Feedback",
-        description: "Collect and analyze student feedback in real-time to improve teaching methods and curriculum."
-      },
-      teacherInsights: {
-        title: "Teacher Insights & Analytics",
-        description: "Gain actionable insights into student performance and engagement with comprehensive analytics dashboards."
-      },
-      mentalHealth: {
-        title: "Mental Health Support",
-        description: "Provide students with access to mental health resources and support through a secure and confidential platform."
-      }
-    },
-    platform: {
-      whySchools: "Why Lessons Learnt for Your School?",
-      whySchoolsSubtitle: "Transform your educational environment with data-driven insights and comprehensive support for students and teachers.",
-      studentInsights: "Unlock Student Potential with Data-Driven Insights",
-      realTimeAnalytics: "Real-Time Analytics",
-      realTimeAnalyticsDesc: "Monitor student performance and engagement in real-time to identify areas for improvement.",
-      mentalHealthMonitoring: "Mental Health Monitoring",
-      mentalHealthMonitoringDesc: "Provide early intervention and support for students' mental health needs through proactive monitoring.",
-      privacySecurity: "Privacy & Security",
-      privacySecurityDesc: "Ensure the privacy and security of student data with our secure and compliant platform.",
-      improvementPercent: "30%",
-      improvementTitle: "Improvement in Student Outcomes",
-      improvementDesc: "Schools using Lessons Learnt have seen a 30% improvement in student outcomes and engagement.",
-      readyToTransform: "Ready to Transform Your School?",
-      readyToTransformDesc: "Schedule a demo to learn how Lessons Learnt can revolutionize your educational environment."
-    },
-    compliance: {
-      privacyPolicy: "Privacy Policy",
-      cookiePolicy: "Cookie Policy",
-      dataProcessing: "Data Processing Agreement",
-      dataRetention: "Data Retention Policy",
-      rightToDelete: "Right to be Forgotten",
-      gdpr: {
-        title: "GDPR Compliance",
-        description: "Full compliance with European General Data Protection Regulation including data subject rights, consent management, and breach notification."
-      },
-      soc2: {
-        title: "SOC 2 Type II",
-        description: "Independently audited security controls covering security, availability, processing integrity, confidentiality, and privacy."
-      },
-      hipaa: {
-        title: "HIPAA Compliance",
-        description: "Healthcare-grade security for student mental health data with proper safeguards, access controls, and audit trails."
-      }
-    },
-    demo: {
-      subtitle: "Explore our platform's key features with interactive demos tailored for students, teachers, and psychologists.",
-      exploreFeatures: "Explore Key Features",
-      liveVoiceover: "Live Voiceover:",
-      userType: {
-        student: "Student",
-        teacher: "Teacher",
-        psychologist: "Psychologist"
-      },
-      studentFeedback: {
-        title: "Student Feedback",
-        description: "Collect real-time feedback from students to improve teaching methods.",
-        voiceover: "Explore how students can provide instant feedback on lessons, helping teachers adapt and improve their teaching methods in real-time."
-      },
-      teacherInsights: {
-        title: "Teacher Insights",
-        description: "Gain insights into student performance and engagement.",
-        voiceover: "Discover how teachers can access comprehensive analytics dashboards to gain insights into student performance and engagement."
-      },
-      mentalHealth: {
-        title: "Mental Health Support",
-        description: "Provide mental health resources and support for students.",
-        voiceover: "Learn how students can access mental health resources and support through a secure and confidential platform."
-      },
-      classManagement: {
-        title: "Class Management",
-        description: "Manage classes, assignments, and student progress efficiently.",
-        voiceover: "See how teachers can efficiently manage classes, assignments, and track student progress using our intuitive class management tools."
-      },
-      liveChat: {
-        title: "Live Chat",
-        description: "Enable real-time communication between students and teachers.",
-        voiceover: "Experience real-time communication between students and teachers, fostering a collaborative learning environment."
-      },
-      compliance: {
-        gdpr: "GDPR Compliant",
-        soc2: "SOC 2 Certified",
-        hipaa: "HIPAA Compliant",
-        description: "We are committed to data privacy and security. Our platform is fully compliant with GDPR, SOC 2, and HIPAA regulations."
-      },
-      stats: {
-        coreFeatures: "Core Features",
-        userTypes: "User Types",
-        mentalHealthSupport: "24/7 Mental Health Support"
-      },
-      mockups: {
-        studentFeedback: {
-          title: "Student Feedback",
-          live: "Live",
-          rating: "Excellent lesson!",
-          subject: "Mathematics - Algebra",
-          comment: "I understood everything clearly. The examples were very helpful.",
-          understood: "I understood this lesson",
-          excellent: "Excellent",
-          anonymous: "Submit feedback anonymously"
-        },
-        mentalHealth: {
-          title: "Mental Health Support",
-          available: "24/7 Available",
-          anonymous: "100% Anonymous & Confidential",
-          description: "Safe space to share feelings and get support from qualified professionals.",
-          support: "Professional Support",
-          psychologist: "Licensed school psychologist",
-          chat: "Instant Chat Support",
-          immediate: "Get immediate help when needed"
-        },
-        classManagement: {
-          title: "Today's Schedule",
-          grade: "Grade 8A",
-          math: "Mathematics",
-          mathTopic: "Algebra & Linear Equations",
-          mathTime: "9:00 AM - 10:30 AM",
-          current: "Current",
-          science: "Science Lab",
-          scienceTopic: "Chemical Reactions & Experiments",
-          scienceTime: "11:00 - 12:30",
-          next: "Next",
-          lunch: "Lunch Break",
-          lunchDesc: "Free time for students",
-          lunchTime: "1:00 PM - 2:00 PM"
-        },
-        teacherDashboard: {
-          title: "Class Performance Analytics",
-          live: "Live Data",
-          understanding: "Average Understanding",
-          improvement: "↑ 5% from last week",
-          students: "Active Students",
-          attendance: "100% attendance today",
-          mathClass: "Math Class - Period 3",
-          mathTopic: "Algebra & Functions",
-          mathUnderstood: "92% understood",
-          scienceClass: "Science Lab - Period 5",
-          scienceTopic: "Chemical Reactions",
-          scienceUnderstood: "89% understood"
-        },
-        liveChat: {
-          title: "Live Class Chat",
-          online: "Online",
-          teacherMessage: "Great question! Let me explain this concept step by step...",
-          studentMessage: "Can you clarify the third step?",
-          teacherReply: "Of course! The key is to isolate the variable first.",
-          now: "now",
-          placeholder: "Type your question..."
-        }
-      }
-    }
+    'welcome.title': 'Transform Education with Student-Led Feedback',
+    'welcome.subtitle': 'Empowering schools with real-time insights from students to create better learning environments and support mental health.',
+    'tagline.studentLead': 'Because students know best what they need.',
+    'auth.studentLogin': 'Student Login',
+    'auth.teacherLogin': 'Teacher Login',
+    'features.studentFeedback.title': 'Student Feedback',
+    'features.studentFeedback.description': 'Real-time feedback collection from students to improve teaching methods and classroom environment.',
+    'features.teacherInsights.title': 'Teacher Insights',
+    'features.teacherInsights.description': 'Comprehensive analytics and reports to help teachers understand and respond to student needs.',
+    'features.mentalHealth.title': 'Mental Health Support',
+    'features.mentalHealth.description': 'Early detection and support systems for student mental health and wellbeing.',
+    'platform.whySchools': 'Why Schools Choose Our Platform',
+    'platform.whySchoolsSubtitle': 'Join thousands of educators already transforming their classrooms',
+    'platform.studentInsights': 'Real-Time Student Insights',
+    'platform.realTimeAnalytics': 'Real-Time Analytics',
+    'platform.realTimeAnalyticsDesc': 'Get instant feedback on lesson effectiveness and student engagement levels.',
+    'platform.mentalHealthMonitoring': 'Mental Health Monitoring',
+    'platform.mentalHealthMonitoringDesc': 'Early warning systems to identify students who may need additional support.',
+    'platform.privacySecurity': 'Privacy & Security',
+    'platform.privacySecurityDesc': 'GDPR compliant with end-to-end encryption and secure data handling.',
+    'platform.improvementPercent': '89%',
+    'platform.improvementTitle': 'Improvement in Student Engagement',
+    'platform.improvementDesc': 'Schools report significant improvements in classroom dynamics and student satisfaction.',
+    'platform.readyToTransform': 'Ready to Transform Your School?',
+    'platform.readyToTransformDesc': 'Book a personalized demo to see how our platform can benefit your institution.',
+    'demo.exploreFeatures': 'Explore Our Features',
+    'demo.liveVoiceover': 'Live Voiceover',
+    'demo.userType.student': 'Student View',
+    'demo.userType.teacher': 'Teacher View',
+    'demo.userType.psychologist': 'Psychologist View',
+    'demo.studentFeedback.title': 'Student Feedback Collection',
+    'demo.studentFeedback.description': 'Simple, anonymous feedback forms that students can complete quickly.',
+    'demo.studentFeedback.voiceover': 'Discover how students can provide direct, anonymous feedback about their learning experience in real-time.',
+    'demo.teacherInsights.title': 'Teacher Analytics Dashboard',
+    'demo.teacherInsights.description': 'Comprehensive insights and actionable recommendations for educators.',
+    'demo.teacherInsights.voiceover': 'Explore how teachers can access comprehensive analytics and insights to improve their teaching methods.',
+    'demo.mentalHealth.title': 'Mental Health Support',
+    'demo.mentalHealth.description': 'Early detection and intervention tools for student wellbeing.',
+    'demo.mentalHealth.voiceover': 'Learn how students can access mental health resources and support when they need it most.',
+    'demo.classManagement.title': 'Class Management Tools',
+    'demo.classManagement.description': 'Streamlined tools for managing classroom activities and student progress.',
+    'demo.classManagement.voiceover': 'See how teachers can efficiently manage their classes and track student progress in real-time.',
+    'demo.liveChat.title': 'Live Communication',
+    'demo.liveChat.description': 'Real-time communication between students, teachers, and support staff.',
+    'demo.liveChat.voiceover': 'Experience real-time communication between students and teachers for immediate support and guidance.',
+    'compliance.privacyPolicy': 'Privacy Policy',
+    'compliance.gdprCompliant': 'GDPR Compliant',
+    'compliance.soc2': 'SOC 2 Type II',
+    'compliance.hipaaReady': 'HIPAA Ready',
+    'compliance.dataProtection': 'Data Protection',
+    'compliance.cookiePolicy': 'Cookie Policy',
+    'compliance.termsOfService': 'Terms of Service'
   },
   lt: {
-    welcome: {
-      title: "Pamokos Išmoktos: Individualizuotas ugdymas kiekvienam mokiniui",
-      subtitle: "Suteikiame galių mokiniams ir mokytojams naudojant dirbtinio intelekto įžvalgas ir psichikos sveikatos palaikymą."
-    },
-    auth: {
-      studentLogin: "Prisijungti kaip mokinys",
-      teacherLogin: "Prisijungti kaip mokytojas"
-    },
-    tagline: {
-      studentLead: "Čia mokiniai vadovauja, o inovacijos nušviečia kelią."
-    },
-    features: {
-      studentFeedback: {
-        title: "Dirbtinio intelekto pagrindu veikiantys mokinių atsiliepimai",
-        description: "Rinkite ir analizuokite mokinių atsiliepimus realiuoju laiku, kad patobulintumėte mokymo metodus ir mokymo programą."
-      },
-      teacherInsights: {
-        title: "Mokytojų įžvalgos ir analizė",
-        description: "Gaukite praktinių įžvalgų apie mokinių rezultatus ir įsitraukimą naudodami išsamias analizės prietaisų skydelius."
-      },
-      mentalHealth: {
-        title: "Psichikos sveikatos palaikymas",
-        description: "Suteikite mokiniams prieigą prie psichikos sveikatos išteklių ir palaikymo per saugią ir konfidencialią platformą."
-      }
-    },
-    platform: {
-      whySchools: "Kodėl Pamokos Išmoktos jūsų mokyklai?",
-      whySchoolsSubtitle: "Pakeiskite savo ugdymo aplinką naudodami duomenimis pagrįstas įžvalgas ir visapusišką paramą mokiniams ir mokytojams.",
-      studentInsights: "Atraskite mokinių potencialą naudodami duomenimis pagrįstas įžvalgas",
-      realTimeAnalytics: "Realaus laiko analizė",
-      realTimeAnalyticsDesc: "Stebėkite mokinių rezultatus ir įsitraukimą realiuoju laiku, kad nustatytumėte tobulintinas sritis.",
-      mentalHealthMonitoring: "Psichikos sveikatos stebėjimas",
-      mentalHealthMonitoringDesc: "Užtikrinkite ankstyvą intervenciją ir paramą mokinių psichikos sveikatos poreikiams, vykdydami aktyvų stebėjimą.",
-      privacySecurity: "Privatumas ir saugumas",
-      privacySecurityDesc: "Užtikrinkite mokinių duomenų privatumą ir saugumą naudodami mūsų saugią ir reikalavimus atitinkančią platformą.",
-      improvementPercent: "30%",
-      improvementTitle: "Mokinių rezultatų pagerėjimas",
-      improvementDesc: "Mokyklos, naudojančios Pamokos Išmoktos, pastebėjo 30% mokinių rezultatų ir įsitraukimo pagerėjimą.",
-      readyToTransform: "Pasirengę pakeisti savo mokyklą?",
-      readyToTransformDesc: "Suplanuokite demonstraciją, kad sužinotumėte, kaip Pamokos Išmoktos gali iš esmės pakeisti jūsų ugdymo aplinką."
-    },
-    compliance: {
-      privacyPolicy: "Privatumo politika",
-      cookiePolicy: "Slapukų politika",
-      dataProcessing: "Duomenų apdorojimo sutartis",
-      dataRetention: "Duomenų saugojimo politika",
-      rightToDelete: "Teisė būti pamirštam",
-      gdpr: {
-        title: "GDPR atitiktis",
-        description: "Visiškas atitikimas Europos bendrajam duomenų apsaugos reglamentui, įskaitant duomenų subjektų teises, sutikimo valdymą ir pažeidimų pranešimą."
-      },
-      soc2: {
-        title: "SOC 2 Type II",
-        description: "Nepriklausomai audituoti saugumo kontrolės mechanizmai, apimantys saugumą, prieinamumą, apdorojimo integralumą, konfidencialumą ir privatumą."
-      },
-      hipaa: {
-        title: "HIPAA atitiktis",
-        description: "Sveikatos priežiūros lygio saugumas mokinių psichikos sveikatos duomenims su tinkamomis apsaugos priemonėmis, prieigos kontrole ir audito pėdsakais."
-      }
-    },
-    demo: {
-      subtitle: "Naršykite pagrindines mūsų platformos funkcijas naudodami interaktyvias demonstracijas, pritaikytas studentams, mokytojams ir psichologams.",
-      exploreFeatures: "Naršyti pagrindines funkcijas",
-      liveVoiceover: "Tiesioginis balso perdavimas:",
-      userType: {
-        student: "Studentas",
-        teacher: "Mokytojas",
-        psychologist: "Psichologas"
-      },
-      studentFeedback: {
-        title: "Mokinių atsiliepimai",
-        description: "Rinkite realaus laiko atsiliepimus iš mokinių, kad patobulintumėte mokymo metodus.",
-        voiceover: "Sužinokite, kaip mokiniai gali teikti tiesioginius atsiliepimus apie pamokas, padėdami mokytojams prisitaikyti ir tobulinti savo mokymo metodus realiuoju laiku."
-      },
-      teacherInsights: {
-        title: "Mokytojų įžvalgos",
-        description: "Gaukite įžvalgų apie mokinių rezultatus ir įsitraukimą.",
-        voiceover: "Atraskite, kaip mokytojai gali pasiekti išsamius analizės prietaisų skydelius, kad gautų įžvalgų apie mokinių rezultatus ir įsitraukimą."
-      },
-      mentalHealth: {
-        title: "Psichikos sveikatos palaikymas",
-        description: "Teikite psichikos sveikatos išteklius ir paramą mokiniams.",
-        voiceover: "Sužinokite, kaip mokiniai gali pasiekti psichikos sveikatos išteklius ir paramą per saugią ir konfidencialią platformą."
-      },
-      classManagement: {
-        title: "Klasės valdymas",
-        description: "Efektyviai valdykite klases, užduotis ir mokinių pažangą.",
-        voiceover: "Pažiūrėkite, kaip mokytojai gali efektyviai valdyti klases, užduotis ir sekti mokinių pažangą naudodami mūsų intuityvius klasės valdymo įrankius."
-      },
-      liveChat: {
-        title: "Tiesioginis pokalbis",
-        description: "Įgalinkite realaus laiko bendravimą tarp mokinių ir mokytojų.",
-        voiceover: "Patirkite realaus laiko bendravimą tarp mokinių ir mokytojų, skatinantį bendradarbiavimo mokymosi aplinką."
-      },
-      compliance: {
-        gdpr: "Atitinka GDPR",
-        soc2: "SOC 2 sertifikuota",
-        hipaa: "Atitinka HIPAA",
-        description: "Esame įsipareigoję užtikrinti duomenų privatumą ir saugumą. Mūsų platforma visiškai atitinka GDPR, SOC 2 ir HIPAA reglamentus."
-      },
-      stats: {
-        coreFeatures: "Pagrindinės funkcijos",
-        userTypes: "Naudotojų tipai",
-        mentalHealthSupport: "24/7 Psichikos sveikatos palaikymas"
-      },
-      mockups: {
-        studentFeedback: {
-          title: "Mokinių atsiliepimai",
-          live: "Tiesiogiai",
-          rating: "Puiki pamoka!",
-          subject: "Matematika - Algebra",
-          comment: "Viską supratau aiškiai. Pavyzdžiai buvo labai naudingi.",
-          understood: "Supratau šią pamoką",
-          excellent: "Puiku",
-          anonymous: "Pateikti atsiliepimą anonimiškai"
-        },
-        mentalHealth: {
-          title: "Psichikos sveikatos pagalba",
-          available: "Prieinama 24/7",
-          anonymous: "100% Anonimiška ir konfidenciali",
-          description: "Saugi erdvė dalintis jausmais ir gauti kvalifikuotų specialistų pagalbą.",
-          support: "Profesionali pagalba",
-          psychologist: "Licencijuotas mokyklos psichologas",
-          chat: "Momentinė pokalbio pagalba",
-          immediate: "Gauti nedelsiant pagalbą, kai reikia"
-        },
-        classManagement: {
-          title: "Šiandienos tvarkaraštis",
-          grade: "8A klasė",
-          math: "Matematika",
-          mathTopic: "Algebra ir tiesiniai lygtys",
-          mathTime: "9:00 - 10:30",
-          current: "Dabar",
-          science: "Gamtos mokslų laboratorija",
-          scienceTopic: "Cheminės reakcijos ir eksperimentai",
-          scienceTime: "11:00 - 12:30",
-          next: "Kitas",
-          lunch: "Pietų pertrauka",
-          lunchDesc: "Laisvas laikas mokiniams",
-          lunchTime: "13:00 - 14:00"
-        },
-        teacherDashboard: {
-          title: "Klasės veiklos analitika",
-          live: "Tiesioginis duomenys",
-          understanding: "Vidutinis supratimas",
-          improvement: "↑ 5% nuo praėjusios savaitės",
-          students: "Aktyvūs mokiniai",
-          attendance: "100% lankumas šiandien",
-          mathClass: "Matematikos pamoka - 3 pamoką",
-          mathTopic: "Algebra ir funkcijos",
-          mathUnderstood: "92% suprato",
-          scienceClass: "Gamtos mokslų laboratorija - 5 pamoka",
-          scienceTopic: "Cheminės reakcijos",
-          scienceUnderstood: "89% suprato"
-        },
-        liveChat: {
-          title: "Tiesioginis klasės pokalbis",
-          online: "Prisijungę",
-          teacherMessage: "Puikus klausimas! Leiskite man paaiškinti šią sąvoką žingsnis po žingsnio...",
-          studentMessage: "Ar galite paaiškinti trečią žingsnį?",
-          teacherReply: "Žinoma! Pagrindas yra pirmiausia izoliuoti kintamąjį.",
-          now: "dabar",
-          placeholder: "Įveskite savo klausimą..."
-        }
-      }
-    }
+    'welcome.title': 'Transformuokite švietimą su mokinių vedamu grįžtuoju ryšiu',
+    'welcome.subtitle': 'Suteikiame mokykloms realaus laiko įžvalgas iš mokinių, kad sukurtume geresnę mokymosi aplinką ir palaikytume psichikos sveikatą.',
+    'tagline.studentLead': 'Nes mokiniai geriausiai žino, ko jiems reikia.',
+    'auth.studentLogin': 'Mokinio prisijungimas',
+    'auth.teacherLogin': 'Mokytojo prisijungimas',
+    'features.studentFeedback.title': 'Mokinių grįžtamasis ryšys',
+    'features.studentFeedback.description': 'Realaus laiko grįžtamojo ryšio rinkimas iš mokinių, siekiant pagerinti mokymo metodus ir klasės aplinką.',
+    'features.teacherInsights.title': 'Mokytojų įžvalgos',
+    'features.teacherInsights.description': 'Išsamūs analitikos duomenys ir ataskaitos, padedančios mokytojams suprasti ir reaguoti į mokinių poreikius.',
+    'features.mentalHealth.title': 'Psichikos sveikatos palaikymas',
+    'features.mentalHealth.description': 'Ankstyvos diagnostikos ir palaikymo sistemos mokinių psichikos sveikatai ir gerovei.',
+    'platform.whySchools': 'Kodėl mokyklos renkasi mūsų platformą',
+    'platform.whySchoolsSubtitle': 'Prisijunkite prie tūkstančių pedagogų, jau transformuojančių savo klases',
+    'platform.studentInsights': 'Realaus laiko mokinių įžvalgos',
+    'platform.realTimeAnalytics': 'Realaus laiko analitika',
+    'platform.realTimeAnalyticsDesc': 'Gaukite momentinį grįžtamąjį ryšį apie pamokos efektyvumą ir mokinių įsitraukimo lygį.',
+    'platform.mentalHealthMonitoring': 'Psichikos sveikatos stebėjimas',
+    'platform.mentalHealthMonitoringDesc': 'Ankstyvojo perspėjimo sistemos, skirtos identifikuoti mokinius, kuriems gali prireikti papildomos pagalbos.',
+    'platform.privacySecurity': 'Privatumas ir saugumas',
+    'platform.privacySecurityDesc': 'BDAR atitiktis su visapusiu šifravimu ir saugiu duomenų tvarkymu.',
+    'platform.improvementPercent': '89%',
+    'platform.improvementTitle': 'Pagerinimas mokinių įsitraukime',
+    'platform.improvementDesc': 'Mokyklos praneša apie reikšmingus pagerinimus klasės dinamikoje ir mokinių pasitenkinime.',
+    'platform.readyToTransform': 'Pasiruošę transformuoti savo mokyklą?',
+    'platform.readyToTransformDesc': 'Užsisakykite personalizuotą demonstraciją, kad pamatytumėte, kaip mūsų platforma gali naudoti jūsų institucijai.',
+    'demo.exploreFeatures': 'Tyrinėkite mūsų funkcijas',
+    'demo.liveVoiceover': 'Tiesioginė garso takelis',
+    'demo.userType.student': 'Mokinio vaizdas',
+    'demo.userType.teacher': 'Mokytojo vaizdas',
+    'demo.userType.psychologist': 'Psichologo vaizdas',
+    'demo.studentFeedback.title': 'Mokinių grįžtamojo ryšio rinkimas',
+    'demo.studentFeedback.description': 'Paprastos, anoniminės grįžtamojo ryšio formos, kurias mokiniai gali užpildyti greitai.',
+    'demo.studentFeedback.voiceover': 'Sužinokite, kaip mokiniai gali teikti tiesioginius, anoniminius atsiliepimus apie savo mokymosi patirtį realiu laiku.',
+    'demo.teacherInsights.title': 'Mokytojų analitikos skydelis',
+    'demo.teacherInsights.description': 'Išsamūs įžvalgos ir veiksmingi rekomendacijos pedagogams.',
+    'demo.teacherInsights.voiceover': 'Atraskite, kaip mokytojai gali pasiekti išsamius analitikos duomenis ir įžvalgas, kad pagerintų savo mokymo metodus.',
+    'demo.mentalHealth.title': 'Psichikos sveikatos palaikymas',
+    'demo.mentalHealth.description': 'Ankstyvos diagnostikos ir intervencijos įrankiai mokinių gerovei.',
+    'demo.mentalHealth.voiceover': 'Sužinokite, kaip mokiniai gali pasiekti psichikos sveikatos išteklius ir palaikymą, kai jiems to labiausiai reikia.',
+    'demo.classManagement.title': 'Klasės valdymo įrankiai',
+    'demo.classManagement.description': 'Supaprastinti įrankiai klasės veiklai ir mokinių pažangai valdyti.',
+    'demo.classManagement.voiceover': 'Pažiūrėkite, kaip mokytojai gali efektyviai valdyti savo klases ir sekti mokinių pažangą realiu laiku.',
+    'demo.liveChat.title': 'Tiesioginis bendravimas',
+    'demo.liveChat.description': 'Realaus laiko bendravimas tarp mokinių, mokytojų ir palaikymo personalo.',
+    'demo.liveChat.voiceover': 'Patirkite realaus laiko bendravimą tarp mokinių ir mokytojų, kad gautumėte momentinę pagalbą ir vadovavimą.',
+    'compliance.privacyPolicy': 'Privatumo politika',
+    'compliance.gdprCompliant': 'BDAR atitiktis',
+    'compliance.soc2': 'SOC 2 Type II',
+    'compliance.hipaaReady': 'HIPAA paruoštas',
+    'compliance.dataProtection': 'Duomenų apsauga',
+    'compliance.cookiePolicy': 'Slapukų politika',
+    'compliance.termsOfService': 'Paslaugų teikimo sąlygos'
   }
 };
 
-export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) => {
-  const [language, setLanguage] = useState<'en' | 'lt'>((localStorage.getItem('language') as 'en' | 'lt') || 'en');
+interface LanguageContextType {
+  language: Language;
+  setLanguage: (lang: Language) => void;
+  t: (key: string) => string;
+}
+
+const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
+
+export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [language, setLanguage] = useState<Language>('en');
 
   useEffect(() => {
-    localStorage.setItem('language', language);
-  }, [language]);
-
-  const t = (key: string) => {
-    try {
-      const keys = key.split('.');
-      let value: any = translations[language];
-      for (const k of keys) {
-        value = value[k];
-        if (!value) {
-          console.warn(`Translation not found for key: ${key} in language: ${language}`);
-          return key;
-        }
-      }
-      return value || key;
-    } catch (error) {
-      console.error(`Error translating key: ${key} in language: ${language}`, error);
-      return key;
+    const savedLanguage = localStorage.getItem('language') as Language;
+    if (savedLanguage && (savedLanguage === 'en' || savedLanguage === 'lt')) {
+      setLanguage(savedLanguage);
     }
+  }, []);
+
+  const handleSetLanguage = (lang: Language) => {
+    setLanguage(lang);
+    localStorage.setItem('language', lang);
+  };
+
+  const t = (key: string): string => {
+    const keys = key.split('.');
+    let value: any = translations[language];
+    
+    for (const k of keys) {
+      value = value?.[k];
+    }
+    
+    return value || key;
   };
 
   return (
-    <LanguageContext.Provider value={{ language, setLanguage, t }}>
+    <LanguageContext.Provider value={{ language, setLanguage: handleSetLanguage, t }}>
       {children}
     </LanguageContext.Provider>
   );
 };
 
-export const useLanguage = () => {
+export const useLanguage = (): LanguageContextType => {
   const context = useContext(LanguageContext);
-  if (!context) {
-    throw new Error("useLanguage must be used within a LanguageProvider");
+  if (context === undefined) {
+    console.error('useLanguage must be used within a LanguageProvider. Providing fallback...');
+    
+    // Provide a fallback context to prevent crashes
+    return {
+      language: 'en' as Language,
+      setLanguage: () => {},
+      t: (key: string) => {
+        // Fallback translation function
+        const fallbackTranslations: Record<string, string> = {
+          'welcome.title': 'Transform Education with Student-Led Feedback',
+          'welcome.subtitle': 'Empowering schools with real-time insights from students to create better learning environments and support mental health.',
+          'tagline.studentLead': 'Because students know best what they need.',
+          'auth.studentLogin': 'Student Login',
+          'auth.teacherLogin': 'Teacher Login',
+          'demo.exploreFeatures': 'Explore Our Features',
+          'demo.liveVoiceover': 'Live Voiceover',
+          'demo.userType.student': 'Student View',
+          'demo.userType.teacher': 'Teacher View',
+          'demo.userType.psychologist': 'Psychologist View',
+          'demo.studentFeedback.title': 'Student Feedback Collection',
+          'demo.studentFeedback.description': 'Simple, anonymous feedback forms that students can complete quickly.',
+          'demo.studentFeedback.voiceover': 'Discover how students can provide direct, anonymous feedback about their learning experience in real-time.',
+          'demo.teacherInsights.title': 'Teacher Analytics Dashboard',
+          'demo.teacherInsights.description': 'Comprehensive insights and actionable recommendations for educators.',
+          'demo.teacherInsights.voiceover': 'Explore how teachers can access comprehensive analytics and insights to improve their teaching methods.',
+          'demo.mentalHealth.title': 'Mental Health Support',
+          'demo.mentalHealth.description': 'Early detection and intervention tools for student wellbeing.',
+          'demo.mentalHealth.voiceover': 'Learn how students can access mental health resources and support when they need it most.',
+          'demo.classManagement.title': 'Class Management Tools',
+          'demo.classManagement.description': 'Streamlined tools for managing classroom activities and student progress.',
+          'demo.classManagement.voiceover': 'See how teachers can efficiently manage their classes and track student progress in real-time.',
+          'demo.liveChat.title': 'Live Communication',
+          'demo.liveChat.description': 'Real-time communication between students, teachers, and support staff.',
+          'demo.liveChat.voiceover': 'Experience real-time communication between students and teachers for immediate support and guidance.'
+        };
+        
+        return fallbackTranslations[key] || key;
+      }
+    };
   }
   return context;
 };
