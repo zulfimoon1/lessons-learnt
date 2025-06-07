@@ -16,8 +16,8 @@ import { useLanguage } from "@/contexts/LanguageContext";
 
 interface DemoFeature {
   id: string;
-  title: string;
-  description: string;
+  titleKey: string;
+  descriptionKey: string;
   userType: "student" | "teacher" | "psychologist";
   icon: any;
   mockupComponent: React.ReactNode;
@@ -31,10 +31,10 @@ const DemoSection = () => {
   // Student Feedback Mockup
   const StudentFeedbackMockup = () => (
     <div className="bg-white p-6 rounded-lg shadow-sm">
-      <h3 className="text-lg font-semibold mb-4 text-gray-800">Lesson Feedback</h3>
+      <h3 className="text-lg font-semibold mb-4 text-gray-800">{t('demo.mockup.lessonFeedback')}</h3>
       <div className="space-y-4">
         <div>
-          <label className="text-sm font-medium text-gray-700">Understanding Level</label>
+          <label className="text-sm font-medium text-gray-700">{t('demo.mockup.understandingLevel')}</label>
           <div className="flex gap-1 mt-1">
             {[1,2,3,4,5].map(star => (
               <StarIcon key={star} className="w-5 h-5 fill-yellow-400 text-yellow-400" />
@@ -42,14 +42,14 @@ const DemoSection = () => {
           </div>
         </div>
         <div>
-          <label className="text-sm font-medium text-gray-700">How are you feeling?</label>
+          <label className="text-sm font-medium text-gray-700">{t('demo.mockup.howFeeling')}</label>
           <div className="flex gap-2 mt-2">
-            <div className="bg-green-100 px-3 py-1 rounded-full text-sm">😊 Happy</div>
-            <div className="bg-gray-100 px-3 py-1 rounded-full text-sm">😐 Neutral</div>
+            <div className="bg-green-100 px-3 py-1 rounded-full text-sm">{t('demo.mockup.happy')}</div>
+            <div className="bg-gray-100 px-3 py-1 rounded-full text-sm">{t('demo.mockup.neutral')}</div>
           </div>
         </div>
-        <textarea className="w-full p-3 border rounded-md text-sm" placeholder="What went well in today's lesson?" rows={3}></textarea>
-        <button className="bg-green-600 text-white px-4 py-2 rounded-md text-sm">Submit Feedback</button>
+        <textarea className="w-full p-3 border rounded-md text-sm" placeholder={t('demo.mockup.whatWentWell')} rows={3}></textarea>
+        <button className="bg-green-600 text-white px-4 py-2 rounded-md text-sm">{t('demo.mockup.submitFeedback')}</button>
       </div>
     </div>
   );
@@ -57,24 +57,24 @@ const DemoSection = () => {
   // Teacher Dashboard Mockup
   const TeacherDashboardMockup = () => (
     <div className="bg-white p-6 rounded-lg shadow-sm">
-      <h3 className="text-lg font-semibold mb-4 text-gray-800">Teacher Analytics</h3>
+      <h3 className="text-lg font-semibold mb-4 text-gray-800">{t('demo.mockup.teacherAnalytics')}</h3>
       <div className="grid grid-cols-2 gap-4 mb-4">
         <div className="bg-blue-50 p-3 rounded-lg">
           <div className="text-2xl font-bold text-blue-600">87%</div>
-          <div className="text-sm text-blue-800">Avg Understanding</div>
+          <div className="text-sm text-blue-800">{t('demo.mockup.avgUnderstanding')}</div>
         </div>
         <div className="bg-green-50 p-3 rounded-lg">
           <div className="text-2xl font-bold text-green-600">23</div>
-          <div className="text-sm text-green-800">Active Students</div>
+          <div className="text-sm text-green-800">{t('demo.mockup.activeStudents')}</div>
         </div>
       </div>
       <div className="space-y-2">
         <div className="flex justify-between items-center p-2 bg-gray-50 rounded">
-          <span className="text-sm">Math Class - Period 3</span>
+          <span className="text-sm">{t('demo.mockup.mathClass')}</span>
           <span className="text-xs text-gray-500">4.2★</span>
         </div>
         <div className="flex justify-between items-center p-2 bg-gray-50 rounded">
-          <span className="text-sm">Science Lab - Period 5</span>
+          <span className="text-sm">{t('demo.mockup.scienceLab')}</span>
           <span className="text-xs text-gray-500">4.7★</span>
         </div>
       </div>
@@ -84,25 +84,25 @@ const DemoSection = () => {
   // Mental Health Support Mockup
   const MentalHealthMockup = () => (
     <div className="bg-white p-6 rounded-lg shadow-sm">
-      <h3 className="text-lg font-semibold mb-4 text-gray-800">Anonymous Mental Health Support</h3>
+      <h3 className="text-lg font-semibold mb-4 text-gray-800">{t('demo.mockup.anonymousSupport')}</h3>
       <div className="space-y-4">
         <div className="bg-purple-50 p-4 rounded-lg border-l-4 border-purple-500">
           <div className="flex items-center gap-2 mb-2">
             <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-            <span className="text-sm font-medium">Dr. Sarah - Online</span>
+            <span className="text-sm font-medium">{t('demo.mockup.drSarahOnline')}</span>
           </div>
-          <p className="text-sm text-purple-700">Available for anonymous chat support</p>
+          <p className="text-sm text-purple-700">{t('demo.mockup.availableChat')}</p>
         </div>
         <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
-          <p className="text-sm text-blue-800 font-medium">🔒 Your identity is completely protected</p>
-          <p className="text-xs text-blue-600 mt-1">All conversations are confidential and anonymous</p>
+          <p className="text-sm text-blue-800 font-medium">{t('demo.mockup.identityProtected')}</p>
+          <p className="text-xs text-blue-600 mt-1">{t('demo.mockup.conversationsConfidential')}</p>
         </div>
         <div className="space-y-2">
-          <button className="w-full bg-purple-600 text-white p-3 rounded-md text-sm">Start Anonymous Chat</button>
-          <button className="w-full border border-purple-600 text-purple-600 p-3 rounded-md text-sm">Book Anonymous Appointment</button>
+          <button className="w-full bg-purple-600 text-white p-3 rounded-md text-sm">{t('demo.mockup.startAnonymousChat')}</button>
+          <button className="w-full border border-purple-600 text-purple-600 p-3 rounded-md text-sm">{t('demo.mockup.bookAnonymousAppointment')}</button>
         </div>
         <div className="bg-gray-50 p-3 rounded-lg">
-          <p className="text-xs text-gray-600">24/7 anonymous crisis support available</p>
+          <p className="text-xs text-gray-600">{t('demo.mockup.crisisSupport')}</p>
         </div>
       </div>
     </div>
@@ -111,26 +111,26 @@ const DemoSection = () => {
   // Class Management Mockup
   const ClassManagementMockup = () => (
     <div className="bg-white p-6 rounded-lg shadow-sm">
-      <h3 className="text-lg font-semibold mb-4 text-gray-800">Class Schedule</h3>
+      <h3 className="text-lg font-semibold mb-4 text-gray-800">{t('demo.mockup.classSchedule')}</h3>
       <div className="space-y-3">
         <div className="flex items-center gap-3 p-3 bg-blue-50 rounded-lg border-l-4 border-blue-500">
           <ClockIcon className="w-5 h-5 text-blue-600" />
           <div>
-            <div className="font-medium text-sm">Mathematics</div>
+            <div className="font-medium text-sm">{t('demo.mockup.mathematics')}</div>
             <div className="text-xs text-gray-600">9:00 AM - 10:30 AM</div>
           </div>
         </div>
         <div className="flex items-center gap-3 p-3 bg-green-50 rounded-lg border-l-4 border-green-500">
           <ClockIcon className="w-5 h-5 text-green-600" />
           <div>
-            <div className="font-medium text-sm">Science Lab</div>
+            <div className="font-medium text-sm">{t('demo.mockup.scienceLab2')}</div>
             <div className="text-xs text-gray-600">11:00 AM - 12:30 PM</div>
           </div>
         </div>
         <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
           <CalendarIcon className="w-5 h-5 text-gray-400" />
           <div>
-            <div className="font-medium text-sm text-gray-500">Free Period</div>
+            <div className="font-medium text-sm text-gray-500">{t('demo.mockup.freePeriod')}</div>
             <div className="text-xs text-gray-400">1:00 PM - 2:00 PM</div>
           </div>
         </div>
@@ -141,30 +141,30 @@ const DemoSection = () => {
   // Live Chat Mockup
   const LiveChatMockup = () => (
     <div className="bg-white p-6 rounded-lg shadow-sm">
-      <h3 className="text-lg font-semibold mb-4 text-gray-800">Anonymous Live Chat with Dr. Sarah</h3>
+      <h3 className="text-lg font-semibold mb-4 text-gray-800">{t('demo.mockup.anonymousChat')}</h3>
       <div className="bg-blue-50 p-3 rounded-lg border border-blue-200 mb-4">
-        <p className="text-sm text-blue-800 font-medium">🔒 Anonymous & Confidential</p>
-        <p className="text-xs text-blue-600">Your identity is completely protected</p>
+        <p className="text-sm text-blue-800 font-medium">{t('demo.mockup.anonymousConfidential')}</p>
+        <p className="text-xs text-blue-600">{t('demo.mockup.identityCompletelyProtected')}</p>
       </div>
       <div className="bg-gray-50 rounded-lg p-4 h-40 mb-4 overflow-y-auto">
         <div className="space-y-3">
           <div className="bg-purple-100 p-2 rounded-lg max-w-xs">
-            <p className="text-sm">Hello! This is a safe, anonymous space. How can I help you today?</p>
-            <span className="text-xs text-gray-500">Dr. Sarah</span>
+            <p className="text-sm">{t('demo.mockup.helloSafeSpace')}</p>
+            <span className="text-xs text-gray-500">{t('demo.mockup.drSarah')}</span>
           </div>
           <div className="bg-blue-100 p-2 rounded-lg max-w-xs ml-auto">
-            <p className="text-sm">I'm feeling overwhelmed with my studies...</p>
-            <span className="text-xs text-gray-500">Anonymous Student</span>
+            <p className="text-sm">{t('demo.mockup.feelingOverwhelmed')}</p>
+            <span className="text-xs text-gray-500">{t('demo.mockup.anonymousStudent')}</span>
           </div>
           <div className="bg-purple-100 p-2 rounded-lg max-w-xs">
-            <p className="text-sm">I understand. Your feelings are valid. Let's talk about some strategies that might help...</p>
-            <span className="text-xs text-gray-500">Dr. Sarah</span>
+            <p className="text-sm">{t('demo.mockup.understandValid')}</p>
+            <span className="text-xs text-gray-500">{t('demo.mockup.drSarah')}</span>
           </div>
         </div>
       </div>
       <div className="flex gap-2">
-        <input className="flex-1 p-2 border rounded-md text-sm" placeholder="Type your anonymous message..." />
-        <button className="bg-purple-600 text-white px-4 py-2 rounded-md text-sm">Send</button>
+        <input className="flex-1 p-2 border rounded-md text-sm" placeholder={t('demo.mockup.typeAnonymousMessage')} />
+        <button className="bg-purple-600 text-white px-4 py-2 rounded-md text-sm">{t('demo.mockup.send')}</button>
       </div>
     </div>
   );
@@ -172,40 +172,40 @@ const DemoSection = () => {
   const demoFeatures: DemoFeature[] = [
     {
       id: "student-feedback",
-      title: "Student Feedback System",
-      description: "Students provide real-time feedback on lessons and emotional state",
+      titleKey: "demo.studentFeedback.title",
+      descriptionKey: "demo.studentFeedback.description",
       userType: "student",
       icon: UsersIcon,
       mockupComponent: <StudentFeedbackMockup />
     },
     {
       id: "teacher-insights",
-      title: "Teacher Analytics Dashboard",
-      description: "Teachers access detailed insights and performance analytics",
+      titleKey: "demo.teacherAnalytics.title",
+      descriptionKey: "demo.teacherAnalytics.description",
       userType: "teacher",
       icon: BarChart3Icon,
       mockupComponent: <TeacherDashboardMockup />
     },
     {
       id: "mental-health-support",
-      title: "Anonymous Mental Health Support",
-      description: "Anonymous mental health resources and professional support",
+      titleKey: "demo.mentalHealthSupport.title",
+      descriptionKey: "demo.mentalHealthSupport.description",
       userType: "psychologist",
       icon: HeartIcon,
       mockupComponent: <MentalHealthMockup />
     },
     {
       id: "class-management",
-      title: "Class Schedule Management",
-      description: "Comprehensive class scheduling and management tools",
+      titleKey: "demo.classManagement.title",
+      descriptionKey: "demo.classManagement.description",
       userType: "teacher",
       icon: BookOpenIcon,
       mockupComponent: <ClassManagementMockup />
     },
     {
       id: "live-chat",
-      title: "Anonymous Live Mental Health Chat",
-      description: "Anonymous instant access to mental health professionals",
+      titleKey: "demo.liveChat.title",
+      descriptionKey: "demo.liveChat.description",
       userType: "student",
       icon: MessageCircleIcon,
       mockupComponent: <LiveChatMockup />
@@ -238,6 +238,10 @@ const DemoSection = () => {
     }
   };
 
+  const getUserTypeLabel = (userType: string) => {
+    return t(`demo.userType.${userType}`);
+  };
+
   const currentDemo = demoFeatures[currentFeature];
 
   return (
@@ -245,7 +249,7 @@ const DemoSection = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-12">
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-            Experience our comprehensive education platform through this interactive demonstration showcasing features for students, teachers, and mental health professionals.
+            {t('demo.subtitle')}
           </p>
         </div>
 
@@ -263,7 +267,7 @@ const DemoSection = () => {
                   {/* Feature Badge */}
                   <div className="absolute top-4 right-4">
                     <Badge className={getUserTypeColor(currentDemo.userType)}>
-                      {currentDemo.userType.charAt(0).toUpperCase() + currentDemo.userType.slice(1)} View
+                      {getUserTypeLabel(currentDemo.userType)}
                     </Badge>
                   </div>
                 </div>
@@ -275,7 +279,7 @@ const DemoSection = () => {
           <div className="order-1 lg:order-2">
             <div className="space-y-4">
               <h3 className="text-2xl font-bold text-foreground mb-6">
-                Explore Platform Features
+                {t('demo.title')}
               </h3>
               
               <div className="space-y-3">
@@ -297,11 +301,11 @@ const DemoSection = () => {
                           <feature.icon className="w-5 h-5" />
                         </div>
                         <div className="flex-1">
-                          <h4 className="font-semibold text-foreground">{feature.title}</h4>
-                          <p className="text-sm text-muted-foreground">{feature.description}</p>
+                          <h4 className="font-semibold text-foreground">{t(feature.titleKey)}</h4>
+                          <p className="text-sm text-muted-foreground">{t(feature.descriptionKey)}</p>
                         </div>
                         <Badge className={getUserTypeColor(feature.userType)}>
-                          {feature.userType}
+                          {getUserTypeLabel(feature.userType)}
                         </Badge>
                       </div>
                     </CardContent>
@@ -317,15 +321,15 @@ const DemoSection = () => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div className="text-center">
               <div className="text-3xl font-bold text-primary mb-2">5+</div>
-              <p className="text-muted-foreground">Core Features</p>
+              <p className="text-muted-foreground">{t('demo.stats.features')}</p>
             </div>
             <div className="text-center">
               <div className="text-3xl font-bold text-primary mb-2">3</div>
-              <p className="text-muted-foreground">User Types</p>
+              <p className="text-muted-foreground">{t('demo.stats.userTypes')}</p>
             </div>
             <div className="text-center">
               <div className="text-3xl font-bold text-primary mb-2">24/7</div>
-              <p className="text-muted-foreground">Anonymous Mental Health Support</p>
+              <p className="text-muted-foreground">{t('demo.stats.support')}</p>
             </div>
           </div>
         </div>
