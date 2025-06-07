@@ -58,22 +58,24 @@ const AnonymousMessageForm = ({ psychologists }: AnonymousMessageFormProps) => {
     setIsSubmitting(true);
 
     try {
-      const messageData = {
+      // For now, we'll store these as mental health alerts until the proper table is created
+      const alertData = {
         student_id: formData.isAnonymous ? null : student?.id,
-        psychologist_id: formData.selectedPsychologist || psychologists[0]?.id,
+        student_name: formData.isAnonymous ? "Anonymous Student" : (formData.studentName || student?.full_name || "Unknown"),
         school: student?.school || "",
         grade: student?.grade || "",
-        student_name: formData.isAnonymous ? null : (formData.studentName || student?.full_name),
-        is_anonymous: formData.isAnonymous,
-        message: formData.message.trim(),
-        status: 'pending'
+        content: `SUPPORT REQUEST: ${formData.message.trim()}`,
+        source_table: 'student_support_request',
+        source_id: crypto.randomUUID(),
+        severity_level: 1,
+        alert_type: 'support_request'
       };
 
-      console.log('Submitting message:', messageData);
+      console.log('Submitting support request:', alertData);
 
       const { error } = await supabase
-        .from('student_psychologist_messages')
-        .insert([messageData]);
+        .from('mental_health_alerts')
+        .insert([alertData]);
 
       if (error) throw error;
 
