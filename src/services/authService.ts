@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { Teacher, Student } from '@/types/auth';
 
@@ -11,11 +12,17 @@ export const teacherLoginService = async (
   try {
     console.log('teacherLoginService: Starting login for email:', email);
     
+    if (!email.trim() || !password.trim()) {
+      console.log('teacherLoginService: Missing email or password');
+      return { error: 'Email and password are required' };
+    }
+
     // First check if a teacher with this email exists
     const { data: teachers, error: queryError } = await supabase
       .from('teachers')
       .select('*')
-      .eq('email', email);
+      .eq('email', email.trim())
+      .limit(1);
 
     console.log('teacherLoginService: Database query result:', { teachers, queryError });
 
@@ -24,27 +31,25 @@ export const teacherLoginService = async (
       return { error: 'Database error occurred. Please try again.' };
     }
 
-    console.log('teacherLoginService: Found teachers:', teachers?.length || 0);
-
     // If no teacher exists with this email, create one (auto-signup)
     if (!teachers || teachers.length === 0) {
       console.log('teacherLoginService: No existing teacher found, creating new one');
       
       // Ensure we have all required data for signup
-      if (!name || !school) {
-        console.log('teacherLoginService: Missing required signup data, name:', name, 'school:', school);
-        return { error: 'Missing required fields for signup. Please provide name and school.' };
+      if (!name?.trim() || !school?.trim()) {
+        console.log('teacherLoginService: Missing required signup data');
+        return { error: 'For new accounts, please provide your name and school.' };
       }
 
-      console.log('teacherLoginService: Creating new teacher with data:', { email, name, school, role: role || 'teacher' });
+      console.log('teacherLoginService: Creating new teacher');
 
       const { data: newTeacher, error: createError } = await supabase
         .from('teachers')
         .insert({
-          email: email,
-          password_hash: password, // In production, this should be properly hashed
-          name: name,
-          school: school,
+          email: email.trim(),
+          password_hash: password.trim(),
+          name: name.trim(),
+          school: school.trim(),
           role: role || 'teacher'
         })
         .select()
@@ -54,6 +59,14 @@ export const teacherLoginService = async (
 
       if (createError) {
         console.error('teacherLoginService: Error creating teacher:', createError);
+        if (createError.code === '23505') {
+          return { error: 'An account with this email already exists.' };
+        }
+        return { error: 'Failed to create account. Please try again.' };
+      }
+
+      if (!newTeacher) {
+        console.error('teacherLoginService: No teacher data returned after creation');
         return { error: 'Failed to create account. Please try again.' };
       }
 
@@ -71,16 +84,10 @@ export const teacherLoginService = async (
 
     // Otherwise, check password and login
     const teacher = teachers[0];
-    console.log('teacherLoginService: Found existing teacher:', { 
-      id: teacher.id, 
-      email: teacher.email, 
-      name: teacher.name,
-      storedPasswordHash: teacher.password_hash ? 'EXISTS' : 'MISSING'
-    });
-    console.log('teacherLoginService: Comparing passwords - provided:', password, 'stored:', teacher.password_hash);
+    console.log('teacherLoginService: Found existing teacher:', teacher.email);
     
-    if (teacher.password_hash !== password) {
-      console.log('teacherLoginService: Password mismatch - login failed');
+    if (!teacher.password_hash || teacher.password_hash !== password.trim()) {
+      console.log('teacherLoginService: Password mismatch');
       return { error: 'Invalid email or password' };
     }
 
@@ -100,17 +107,68 @@ export const teacherLoginService = async (
   }
 };
 
+export const studentSimpleLoginService = async (fullName: string, password: string) => {
+  try {
+    console.log('studentSimpleLoginService: Starting login for:', fullName);
+    
+    if (!fullName.trim() || !password.trim()) {
+      console.log('studentSimpleLoginService: Missing name or password');
+      return { error: 'Full name and password are required' };
+    }
+    
+    // Find student with matching name and password
+    const { data: students, error } = await supabase
+      .from('students')
+      .select('*')
+      .eq('full_name', fullName.trim())
+      .eq('password_hash', password.trim())
+      .limit(1);
+
+    console.log('studentSimpleLoginService: Database result:', { studentsFound: students?.length || 0, error });
+
+    if (error) {
+      console.error('studentSimpleLoginService: Database error:', error);
+      return { error: 'Database error occurred. Please try again.' };
+    }
+
+    if (!students || students.length === 0) {
+      console.log('studentSimpleLoginService: No student found with matching credentials');
+      return { error: 'Invalid name or password. Please check your credentials and try again.' };
+    }
+
+    const student = students[0];
+    console.log('studentSimpleLoginService: Login successful for student:', student.full_name);
+
+    const studentData: Student = {
+      id: student.id,
+      full_name: student.full_name,
+      school: student.school,
+      grade: student.grade
+    };
+
+    return { student: studentData };
+  } catch (error) {
+    console.error('studentSimpleLoginService: Unexpected error:', error);
+    return { error: 'An unexpected error occurred during login.' };
+  }
+};
+
 export const studentSignupService = async (fullName: string, school: string, grade: string, password: string) => {
   try {
     console.log('studentSignupService: Starting signup for:', fullName);
     
+    if (!fullName.trim() || !school.trim() || !grade.trim() || !password.trim()) {
+      console.log('studentSignupService: Missing required fields');
+      return { error: 'All fields are required' };
+    }
+    
     const { data: newStudent, error } = await supabase
       .from('students')
       .insert({
-        full_name: fullName,
-        school: school,
-        grade: grade,
-        password_hash: password
+        full_name: fullName.trim(),
+        school: school.trim(),
+        grade: grade.trim(),
+        password_hash: password.trim()
       })
       .select()
       .single();
@@ -122,6 +180,11 @@ export const studentSignupService = async (fullName: string, school: string, gra
       if (error.code === '23505') {
         return { error: 'A student with this name already exists in this school and grade.' };
       }
+      return { error: 'Signup failed. Please try again.' };
+    }
+
+    if (!newStudent) {
+      console.error('studentSignupService: No student data returned after creation');
       return { error: 'Signup failed. Please try again.' };
     }
 
@@ -137,53 +200,5 @@ export const studentSignupService = async (fullName: string, school: string, gra
   } catch (error) {
     console.error('studentSignupService: Unexpected error:', error);
     return { error: 'An unexpected error occurred during signup.' };
-  }
-};
-
-export const studentSimpleLoginService = async (fullName: string, password: string) => {
-  try {
-    console.log('studentSimpleLoginService: Starting login for:', fullName);
-    console.log('studentSimpleLoginService: Password provided:', password ? 'YES' : 'NO');
-    
-    // Find student with matching name and password
-    const { data: students, error } = await supabase
-      .from('students')
-      .select('*')
-      .eq('full_name', fullName)
-      .eq('password_hash', password);
-
-    console.log('studentSimpleLoginService: Database result:', { students, error });
-
-    if (error) {
-      console.error('studentSimpleLoginService: Database error:', error);
-      return { error: 'Database error occurred. Please try again.' };
-    }
-
-    console.log('studentSimpleLoginService: Students found with matching credentials:', students?.length || 0);
-
-    if (!students || students.length === 0) {
-      console.log('studentSimpleLoginService: No student found with matching credentials');
-      return { error: 'Invalid name or password. Please check your credentials.' };
-    }
-
-    const student = students[0];
-    console.log('studentSimpleLoginService: Login successful for student:', {
-      id: student.id,
-      name: student.full_name,
-      school: student.school,
-      grade: student.grade
-    });
-
-    const studentData: Student = {
-      id: student.id,
-      full_name: student.full_name,
-      school: student.school,
-      grade: student.grade
-    };
-
-    return { student: studentData };
-  } catch (error) {
-    console.error('studentSimpleLoginService: Unexpected error:', error);
-    return { error: 'An unexpected error occurred during login.' };
   }
 };

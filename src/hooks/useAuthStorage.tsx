@@ -22,7 +22,7 @@ export const useAuthStorage = () => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    console.log('useAuthStorage: Loading auth data from localStorage');
+    console.log('useAuthStorage: Initializing auth state');
     
     try {
       // Load from localStorage on mount
@@ -30,19 +30,29 @@ export const useAuthStorage = () => {
       const savedStudent = localStorage.getItem('student');
       
       if (savedTeacher) {
-        const teacherData = JSON.parse(savedTeacher);
-        console.log('useAuthStorage: Loaded teacher from storage:', teacherData);
-        setTeacher(teacherData);
+        try {
+          const teacherData = JSON.parse(savedTeacher);
+          console.log('useAuthStorage: Loaded teacher from storage:', teacherData);
+          setTeacher(teacherData);
+        } catch (error) {
+          console.error('useAuthStorage: Error parsing teacher data:', error);
+          localStorage.removeItem('teacher');
+        }
       }
       
       if (savedStudent) {
-        const studentData = JSON.parse(savedStudent);
-        console.log('useAuthStorage: Loaded student from storage:', studentData);
-        setStudent(studentData);
+        try {
+          const studentData = JSON.parse(savedStudent);
+          console.log('useAuthStorage: Loaded student from storage:', studentData);
+          setStudent(studentData);
+        } catch (error) {
+          console.error('useAuthStorage: Error parsing student data:', error);
+          localStorage.removeItem('student');
+        }
       }
     } catch (error) {
-      console.error('useAuthStorage: Error loading from storage:', error);
-      // Clear corrupted data
+      console.error('useAuthStorage: Error during initialization:', error);
+      // Clear all data on error
       localStorage.removeItem('teacher');
       localStorage.removeItem('student');
     } finally {
@@ -53,26 +63,41 @@ export const useAuthStorage = () => {
 
   const saveTeacher = (teacherData: Teacher) => {
     console.log('useAuthStorage: Saving teacher to storage:', teacherData);
-    setTeacher(teacherData);
-    setStudent(null); // Clear student when teacher logs in
-    localStorage.setItem('teacher', JSON.stringify(teacherData));
-    localStorage.removeItem('student');
+    try {
+      setTeacher(teacherData);
+      setStudent(null); // Clear student when teacher logs in
+      localStorage.setItem('teacher', JSON.stringify(teacherData));
+      localStorage.removeItem('student');
+      console.log('useAuthStorage: Teacher saved successfully');
+    } catch (error) {
+      console.error('useAuthStorage: Error saving teacher:', error);
+    }
   };
 
   const saveStudent = (studentData: Student) => {
     console.log('useAuthStorage: Saving student to storage:', studentData);
-    setStudent(studentData);
-    setTeacher(null); // Clear teacher when student logs in
-    localStorage.setItem('student', JSON.stringify(studentData));
-    localStorage.removeItem('teacher');
+    try {
+      setStudent(studentData);
+      setTeacher(null); // Clear teacher when student logs in
+      localStorage.setItem('student', JSON.stringify(studentData));
+      localStorage.removeItem('teacher');
+      console.log('useAuthStorage: Student saved successfully');
+    } catch (error) {
+      console.error('useAuthStorage: Error saving student:', error);
+    }
   };
 
   const clearAuth = () => {
-    console.log('useAuthStorage: Clearing auth data');
-    setTeacher(null);
-    setStudent(null);
-    localStorage.removeItem('teacher');
-    localStorage.removeItem('student');
+    console.log('useAuthStorage: Clearing all auth data');
+    try {
+      setTeacher(null);
+      setStudent(null);
+      localStorage.removeItem('teacher');
+      localStorage.removeItem('student');
+      console.log('useAuthStorage: Auth data cleared successfully');
+    } catch (error) {
+      console.error('useAuthStorage: Error clearing auth data:', error);
+    }
   };
 
   return {

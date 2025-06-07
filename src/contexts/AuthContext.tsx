@@ -17,7 +17,7 @@ export const useAuth = () => {
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { teacher, student, isLoading, saveTeacher, saveStudent, clearAuth } = useAuthStorage();
 
-  console.log('AuthContext: Rendering AuthProvider with state:', { 
+  console.log('AuthContext: Rendering with state:', { 
     hasTeacher: !!teacher, 
     hasStudent: !!student, 
     isLoading 
@@ -34,12 +34,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     
     try {
       const result = await teacherLoginService(email, password, name, school, role);
-      console.log('AuthContext: Teacher login service result:', result);
+      console.log('AuthContext: Teacher login service result:', result.teacher ? 'SUCCESS' : 'FAILED');
       
       if (result.teacher) {
-        console.log('AuthContext: Saving teacher to storage:', result.teacher);
         saveTeacher(result.teacher);
-        console.log('AuthContext: Teacher saved successfully');
         return { teacher: result.teacher };
       }
       
@@ -55,12 +53,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     
     try {
       const result = await studentSimpleLoginService(fullName, password);
-      console.log('AuthContext: Student login service result:', result);
+      console.log('AuthContext: Student login service result:', result.student ? 'SUCCESS' : 'FAILED');
       
       if (result.student) {
-        console.log('AuthContext: Saving student to storage:', result.student);
         saveStudent(result.student);
-        console.log('AuthContext: Student saved successfully');
         return { student: result.student };
       }
       
@@ -76,12 +72,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     
     try {
       const result = await studentSignupService(fullName, school, grade, password);
-      console.log('AuthContext: Student signup service result:', result);
+      console.log('AuthContext: Student signup service result:', result.student ? 'SUCCESS' : 'FAILED');
       
       if (result.student) {
-        console.log('AuthContext: Saving student to storage after signup:', result.student);
         saveStudent(result.student);
-        console.log('AuthContext: Student saved after signup successfully');
         return { student: result.student };
       }
       
