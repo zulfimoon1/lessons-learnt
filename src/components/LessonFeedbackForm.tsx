@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -209,7 +208,6 @@ const LessonFeedbackForm = ({ student }: LessonFeedbackFormProps) => {
               <StarRating
                 rating={understanding}
                 onRatingChange={setUnderstanding}
-                label={t('feedback.rate')}
               />
             </div>
 
@@ -218,7 +216,6 @@ const LessonFeedbackForm = ({ student }: LessonFeedbackFormProps) => {
               <StarRating
                 rating={interest}
                 onRatingChange={setInterest}
-                label={t('feedback.rate')}
               />
             </div>
 
@@ -227,7 +224,6 @@ const LessonFeedbackForm = ({ student }: LessonFeedbackFormProps) => {
               <StarRating
                 rating={educationalGrowth}
                 onRatingChange={setEducationalGrowth}
-                label={t('feedback.rate')}
               />
             </div>
           </div>
