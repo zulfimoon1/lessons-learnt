@@ -5,7 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { HeartIcon, BookOpenIcon, CalendarIcon } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { HeartIcon, BookOpenIcon, CalendarIcon, EyeOffIcon } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -24,6 +25,7 @@ interface WeeklySummaryProps {
 const WeeklySummary = ({ student }: WeeklySummaryProps) => {
   const [emotionalConcerns, setEmotionalConcerns] = useState("");
   const [academicConcerns, setAcademicConcerns] = useState("");
+  const [isAnonymous, setIsAnonymous] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
   const { t } = useLanguage();
@@ -46,13 +48,14 @@ const WeeklySummary = ({ student }: WeeklySummaryProps) => {
       const { error } = await supabase
         .from('weekly_summaries')
         .insert({
-          student_id: student?.id,
-          student_name: student?.full_name || '',
+          student_id: isAnonymous ? null : student?.id,
+          student_name: isAnonymous ? 'Anonymous' : student?.full_name || '',
           school: student?.school || '',
           grade: student?.grade || '',
           emotional_concerns: emotionalConcerns.trim() || null,
           academic_concerns: academicConcerns.trim() || null,
-          week_start_date: getStartOfWeek(new Date())
+          week_start_date: getStartOfWeek(new Date()),
+          is_anonymous: isAnonymous
         });
 
       if (error) throw error;
@@ -65,6 +68,7 @@ const WeeklySummary = ({ student }: WeeklySummaryProps) => {
       // Reset form
       setEmotionalConcerns("");
       setAcademicConcerns("");
+      setIsAnonymous(false);
     } catch (error) {
       toast({
         title: t('weekly.submitFailed'),
@@ -136,6 +140,18 @@ const WeeklySummary = ({ student }: WeeklySummaryProps) => {
                 onChange={(e) => setAcademicConcerns(e.target.value)}
                 className="min-h-[100px] resize-none"
               />
+            </div>
+
+            <div className="flex items-center space-x-2 p-4 bg-gray-50 rounded-lg">
+              <Checkbox
+                id="anonymous"
+                checked={isAnonymous}
+                onCheckedChange={(checked) => setIsAnonymous(checked as boolean)}
+              />
+              <Label htmlFor="anonymous" className="flex items-center gap-2 text-sm">
+                <EyeOffIcon className="w-4 h-4 text-gray-500" />
+                {t('weekly.submitAnonymously')}
+              </Label>
             </div>
           </div>
 

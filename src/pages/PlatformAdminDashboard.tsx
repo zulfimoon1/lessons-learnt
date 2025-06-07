@@ -26,6 +26,7 @@ import { getStudentStatistics, StudentStatistics } from "@/services/platformAdmi
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { useLanguage } from "@/contexts/LanguageContext";
 import DiscountCodeManagement from "@/components/DiscountCodeManagement";
+import PerformanceFilters from "@/components/PerformanceFilters";
 
 interface SchoolStats {
   school: string;
@@ -303,11 +304,12 @@ const PlatformAdminDashboard = () => {
 
         {/* Tabs for different views */}
         <Tabs defaultValue="payments" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-6">
+          <TabsList className="grid w-full grid-cols-7">
             <TabsTrigger value="payments">Payments</TabsTrigger>
             <TabsTrigger value="students">Students</TabsTrigger>
             <TabsTrigger value="analytics">Analytics</TabsTrigger>
             <TabsTrigger value="schools">Schools</TabsTrigger>
+            <TabsTrigger value="performance">Performance</TabsTrigger>
             <TabsTrigger value="mental-health">Mental Health</TabsTrigger>
             <TabsTrigger value="discount-codes">Discount Codes</TabsTrigger>
           </TabsList>
@@ -537,6 +539,10 @@ const PlatformAdminDashboard = () => {
                 </Table>
               </CardContent>
             </Card>
+          </TabsContent>
+
+          <TabsContent value="performance" className="space-y-6">
+            <PerformanceFilters />
           </TabsContent>
 
           <TabsContent value="discount-codes" className="space-y-6">

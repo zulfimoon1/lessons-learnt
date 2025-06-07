@@ -14,6 +14,8 @@ import ClassScheduleForm from "@/components/ClassScheduleForm";
 import { useNavigate } from "react-router-dom";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { useLanguage } from "@/contexts/LanguageContext";
+import BulkScheduleUpload from "@/components/BulkScheduleUpload";
+import MentalHealthArticles from "@/components/MentalHealthArticles";
 
 interface Subscription {
   id: string;
@@ -32,6 +34,7 @@ const TeacherDashboard = () => {
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isCreatingCheckout, setIsCreatingCheckout] = useState(false);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   useEffect(() => {
     if (!teacher) {
@@ -112,6 +115,10 @@ const TeacherDashboard = () => {
     } finally {
       setIsCreatingCheckout(false);
     }
+  };
+
+  const handleScheduleUploadComplete = () => {
+    setRefreshTrigger(prev => prev + 1);
   };
 
   if (isLoading) {
@@ -219,11 +226,15 @@ const TeacherDashboard = () => {
         <Tabs defaultValue="schedule" className="space-y-6">
           <TabsList className="bg-green-50 border-green-200">
             <TabsTrigger value="schedule" className="data-[state=active]:bg-green-600 data-[state=active]:text-white">{t('class.schedule')}</TabsTrigger>
+            <TabsTrigger value="bulk-upload" className="data-[state=active]:bg-green-600 data-[state=active]:text-white">{t('upload.bulkUpload')}</TabsTrigger>
+            {teacher?.role === 'admin' && (
+              <TabsTrigger value="articles" className="data-[state=active]:bg-green-600 data-[state=active]:text-white">{t('articles.mentalHealth')}</TabsTrigger>
+            )}
           </TabsList>
 
           <TabsContent value="schedule" className="space-y-6">
             {subscription ? (
-              <ClassScheduleForm teacher={teacher} />
+              <ClassScheduleForm teacher={teacher} key={refreshTrigger} />
             ) : (
               <Card className="border-green-100">
                 <CardHeader>
@@ -245,6 +256,61 @@ const TeacherDashboard = () => {
               </Card>
             )}
           </TabsContent>
+
+          <TabsContent value="bulk-upload" className="space-y-6">
+            {subscription ? (
+              <BulkScheduleUpload 
+                teacher={teacher} 
+                onUploadComplete={handleScheduleUploadComplete}
+              />
+            ) : (
+              <Card className="border-green-100">
+                <CardHeader>
+                  <CardTitle>{t('upload.bulkUpload')}</CardTitle>
+                  <CardDescription>
+                    {t('upload.subscriptionRequired')}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="text-center py-8">
+                  <p className="text-gray-600 mb-4">{t('upload.subscriptionRequired')}</p>
+                  <Button 
+                    onClick={handleCreateCheckout}
+                    disabled={isCreatingCheckout}
+                    className="bg-green-600 hover:bg-green-700 text-white"
+                  >
+                    {isCreatingCheckout ? t('pricing.processing') : t('teacher.subscribeToContinue')}
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
+          </TabsContent>
+
+          {teacher?.role === 'admin' && (
+            <TabsContent value="articles" className="space-y-6">
+              {subscription ? (
+                <MentalHealthArticles teacher={teacher} />
+              ) : (
+                <Card className="border-green-100">
+                  <CardHeader>
+                    <CardTitle>{t('articles.mentalHealth')}</CardTitle>
+                    <CardDescription>
+                      {t('articles.subscriptionRequired')}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="text-center py-8">
+                    <p className="text-gray-600 mb-4">{t('articles.subscriptionRequired')}</p>
+                    <Button 
+                      onClick={handleCreateCheckout}
+                      disabled={isCreatingCheckout}
+                      className="bg-green-600 hover:bg-green-700 text-white"
+                    >
+                      {isCreatingCheckout ? t('pricing.processing') : t('teacher.subscribeToContinue')}
+                    </Button>
+                  </CardContent>
+                </Card>
+              )}
+            </TabsContent>
+          )}
         </Tabs>
       </main>
     </div>

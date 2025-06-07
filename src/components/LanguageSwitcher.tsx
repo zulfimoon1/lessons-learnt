@@ -12,13 +12,13 @@ const LanguageSwitcher = () => {
         <Select value={language} onValueChange={(value: 'en' | 'lt') => setLanguage(value)}>
           <SelectTrigger className="w-20 border-gray-200">
             <SelectValue>
-              {language === 'en' ? '🇺🇸' : '🇱🇹'}
+              {language === 'en' ? '🇬🇧' : '🇱🇹'}
             </SelectValue>
           </SelectTrigger>
           <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
             <SelectItem value="en" className="hover:bg-gray-50">
               <div className="flex items-center gap-2">
-                <span className="text-lg">🇺🇸</span>
+                <span className="text-lg">🇬🇧</span>
                 <span>English</span>
               </div>
             </SelectItem>
@@ -40,13 +40,13 @@ const LanguageSwitcher = () => {
         <Select defaultValue="en" onValueChange={() => {}}>
           <SelectTrigger className="w-20 border-gray-200">
             <SelectValue>
-              🇺🇸
+              🇬🇧
             </SelectValue>
           </SelectTrigger>
           <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
             <SelectItem value="en" className="hover:bg-gray-50">
               <div className="flex items-center gap-2">
-                <span className="text-lg">🇺🇸</span>
+                <span className="text-lg">🇬🇧</span>
                 <span>English</span>
               </div>
             </SelectItem>
