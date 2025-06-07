@@ -45,10 +45,10 @@ export const useAuthStorage = () => {
       // Clear corrupted data
       localStorage.removeItem('teacher');
       localStorage.removeItem('student');
+    } finally {
+      setIsLoading(false);
+      console.log('useAuthStorage: Initialization complete');
     }
-    
-    setIsLoading(false);
-    console.log('useAuthStorage: Initialization complete');
   }, []);
 
   const saveTeacher = (teacherData: Teacher) => {

@@ -65,7 +65,7 @@ const TeacherLogin = () => {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!loginData.email || !loginData.password) {
+    if (!loginData.email.trim() || !loginData.password) {
       toast({
         title: "Missing information",
         description: "Please enter both email and password",
@@ -78,7 +78,7 @@ const TeacherLogin = () => {
     console.log('TeacherLogin: Starting login process with email:', loginData.email);
 
     try {
-      const result = await teacherLogin(loginData.email, loginData.password);
+      const result = await teacherLogin(loginData.email.trim(), loginData.password);
       console.log('TeacherLogin: Login result received:', result);
 
       if (result.error) {
@@ -121,7 +121,7 @@ const TeacherLogin = () => {
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!signupData.name || !signupData.email || !signupData.school || !signupData.password || !signupData.confirmPassword) {
+    if (!signupData.name.trim() || !signupData.email.trim() || !signupData.school.trim() || !signupData.password || !signupData.confirmPassword) {
       toast({
         title: "Missing information",
         description: "Please fill in all required fields",
@@ -145,10 +145,10 @@ const TeacherLogin = () => {
 
     try {
       const result = await teacherLogin(
-        signupData.email, 
+        signupData.email.trim(), 
         signupData.password, 
-        signupData.name, 
-        signupData.school, 
+        signupData.name.trim(), 
+        signupData.school.trim(), 
         signupData.role
       );
 
@@ -201,16 +201,16 @@ const TeacherLogin = () => {
           <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full mx-auto flex items-center justify-center mb-4">
             <GraduationCapIcon className="w-8 h-8 text-white" />
           </div>
-          <CardTitle className="text-2xl text-gray-900">{t('login.teacher.title')}</CardTitle>
+          <CardTitle className="text-2xl text-gray-900">{t('login.teacher.title') || "Teacher Portal"}</CardTitle>
           <CardDescription>
-            {t('login.teacher.subtitle')}
+            {t('login.teacher.subtitle') || "Access your teaching dashboard"}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="login" className="space-y-4">
             <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="login">{t('login.teacher.login')}</TabsTrigger>
-              <TabsTrigger value="signup">{t('login.teacher.signup')}</TabsTrigger>
+              <TabsTrigger value="login">{t('login.teacher.login') || "Login"}</TabsTrigger>
+              <TabsTrigger value="signup">{t('login.teacher.signup') || "Sign Up"}</TabsTrigger>
             </TabsList>
 
             <TabsContent value="login">
@@ -218,7 +218,7 @@ const TeacherLogin = () => {
                 <div className="space-y-2">
                   <Label htmlFor="loginEmail" className="flex items-center gap-2">
                     <Mail className="w-4 h-4" />
-                    {t('login.teacher.email')}
+                    {t('login.teacher.email') || "Email"}
                   </Label>
                   <Input
                     id="loginEmail"
@@ -231,7 +231,7 @@ const TeacherLogin = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="loginPassword">{t('login.teacher.password')}</Label>
+                  <Label htmlFor="loginPassword">{t('login.teacher.password') || "Password"}</Label>
                   <Input
                     id="loginPassword"
                     type="password"
@@ -247,10 +247,10 @@ const TeacherLogin = () => {
                   className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
                   disabled={isLoading}
                 >
-                  {isLoading ? t('login.teacher.loggingIn') : (
+                  {isLoading ? (t('login.teacher.loggingIn') || "Logging in...") : (
                     <>
                       <LogInIcon className="w-4 h-4 mr-2" />
-                      {t('login.teacher.login')}
+                      {t('login.teacher.login') || "Login"}
                     </>
                   )}
                 </Button>
@@ -262,7 +262,7 @@ const TeacherLogin = () => {
                 <div className="space-y-2">
                   <Label htmlFor="signupName" className="flex items-center gap-2">
                     <UserIcon className="w-4 h-4" />
-                    {t('login.teacher.fullName')}
+                    {t('login.teacher.fullName') || "Full Name"}
                   </Label>
                   <Input
                     id="signupName"
@@ -277,7 +277,7 @@ const TeacherLogin = () => {
                 <div className="space-y-2">
                   <Label htmlFor="signupEmail" className="flex items-center gap-2">
                     <Mail className="w-4 h-4" />
-                    {t('login.teacher.email')}
+                    {t('login.teacher.email') || "Email"}
                   </Label>
                   <Input
                     id="signupEmail"
@@ -292,7 +292,7 @@ const TeacherLogin = () => {
                 <div className="space-y-2">
                   <Label htmlFor="signupSchool" className="flex items-center gap-2">
                     <School className="w-4 h-4" />
-                    {t('login.teacher.school')}
+                    {t('login.teacher.school') || "School"}
                   </Label>
                   <Input
                     id="signupSchool"
@@ -331,7 +331,7 @@ const TeacherLogin = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="signupPassword">{t('login.teacher.password')}</Label>
+                  <Label htmlFor="signupPassword">{t('login.teacher.password') || "Password"}</Label>
                   <Input
                     id="signupPassword"
                     type="password"
@@ -343,7 +343,7 @@ const TeacherLogin = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="confirmPassword">{t('login.teacher.confirmPassword')}</Label>
+                  <Label htmlFor="confirmPassword">{t('login.teacher.confirmPassword') || "Confirm Password"}</Label>
                   <Input
                     id="confirmPassword"
                     type="password"
@@ -359,7 +359,7 @@ const TeacherLogin = () => {
                   className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700"
                   disabled={isLoading}
                 >
-                  {isLoading ? t('login.teacher.creatingAccount') : t('login.teacher.createAccount')}
+                  {isLoading ? (t('login.teacher.creatingAccount') || "Creating account...") : (t('login.teacher.createAccount') || "Create Account")}
                 </Button>
               </form>
             </TabsContent>
