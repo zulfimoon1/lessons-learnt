@@ -301,7 +301,7 @@ const PerformanceFilters = () => {
             <CardDescription>
               {selectedSchool === "all" 
                 ? t('performance.allTeachers')
-                : t('performance.teachersFromSchool', { school: selectedSchool })
+                : `Teachers from ${selectedSchool}`
               }
             </CardDescription>
           </CardHeader>
