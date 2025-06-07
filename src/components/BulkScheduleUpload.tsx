@@ -122,10 +122,17 @@ const BulkScheduleUpload = ({ teacher, onUploadComplete }: BulkScheduleUploadPro
           {t('upload.bulkSchedule')}
         </CardTitle>
         <CardDescription>
-          {t('upload.csvDescription')}
+          {t('upload.csvDescription')} {/* Schedule uploads are free for all teachers */}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
+        <div className="bg-green-50 p-4 rounded-lg border border-green-200">
+          <p className="text-green-800 font-medium mb-2">✅ Free Feature</p>
+          <p className="text-green-700 text-sm">
+            Schedule uploads are available for free to all teachers. Upload your class schedules without needing a subscription.
+          </p>
+        </div>
+        
         <div className="space-y-2">
           <Label htmlFor="csv-upload">{t('upload.selectFile')}</Label>
           <Input

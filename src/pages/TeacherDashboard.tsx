@@ -176,7 +176,7 @@ const TeacherDashboard = () => {
                 {t('admin.subscription')}
               </CardTitle>
               <CardDescription className="text-yellow-700">
-                {t('teacher.subscriptionNeeded')} {teacher?.school}.
+                {t('teacher.scheduleUploadFree')} {t('teacher.feedbackFeaturesPaywalled')}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -308,56 +308,14 @@ const TeacherDashboard = () => {
           ) : (
             <>
               <TabsContent value="schedule" className="space-y-6">
-                {subscription ? (
-                  <ClassScheduleForm teacher={teacher} />
-                ) : (
-                  <Card className="border-green-100">
-                    <CardHeader>
-                      <CardTitle>{t('class.schedule')}</CardTitle>
-                      <CardDescription>
-                        {t('teacher.classSchedulingAvailable')}
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent className="text-center py-8">
-                      <p className="text-gray-600 mb-4">{t('teacher.classSchedulingAvailable')}</p>
-                      <Button 
-                        onClick={handleCreateCheckout}
-                        disabled={isCreatingCheckout}
-                        className="bg-green-600 hover:bg-green-700 text-white"
-                      >
-                        {isCreatingCheckout ? t('pricing.processing') : t('teacher.subscribeToContinue')}
-                      </Button>
-                    </CardContent>
-                  </Card>
-                )}
+                <ClassScheduleForm teacher={teacher} />
               </TabsContent>
 
               <TabsContent value="bulk-upload" className="space-y-6">
-                {subscription ? (
-                  <BulkScheduleUpload 
-                    teacher={teacher} 
-                    onUploadComplete={handleScheduleUploadComplete}
-                  />
-                ) : (
-                  <Card className="border-green-100">
-                    <CardHeader>
-                      <CardTitle>{t('upload.bulkUpload')}</CardTitle>
-                      <CardDescription>
-                        {t('upload.subscriptionRequired')}
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent className="text-center py-8">
-                      <p className="text-gray-600 mb-4">{t('upload.subscriptionRequired')}</p>
-                      <Button 
-                        onClick={handleCreateCheckout}
-                        disabled={isCreatingCheckout}
-                        className="bg-green-600 hover:bg-green-700 text-white"
-                      >
-                        {isCreatingCheckout ? t('pricing.processing') : t('teacher.subscribeToContinue')}
-                      </Button>
-                    </CardContent>
-                  </Card>
-                )}
+                <BulkScheduleUpload 
+                  teacher={teacher} 
+                  onUploadComplete={handleScheduleUploadComplete}
+                />
               </TabsContent>
 
               {teacher?.role === 'admin' && (
