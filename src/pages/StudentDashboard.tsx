@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -17,6 +16,7 @@ import {
 import LessonFeedbackForm from "@/components/LessonFeedbackForm";
 import WeeklySummary from "@/components/WeeklySummary";
 import PsychologistInfo from "@/components/PsychologistInfo";
+import AnonymousMessageForm from "@/components/AnonymousMessageForm";
 import { useNavigate } from "react-router-dom";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -252,10 +252,15 @@ const StudentDashboard = () => {
               </CardHeader>
               <CardContent>
                 {psychologists.length > 0 ? (
-                  <div className="space-y-4">
-                    {psychologists.map((psychologist) => (
-                      <PsychologistInfo key={psychologist.id} psychologist={psychologist} />
-                    ))}
+                  <div className="space-y-6">
+                    <div className="flex justify-end">
+                      <AnonymousMessageForm psychologists={psychologists} />
+                    </div>
+                    <div className="space-y-4">
+                      {psychologists.map((psychologist) => (
+                        <PsychologistInfo key={psychologist.id} psychologist={psychologist} />
+                      ))}
+                    </div>
                   </div>
                 ) : (
                   <div className="text-center py-8">
