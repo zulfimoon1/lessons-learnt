@@ -284,6 +284,39 @@ export type Database = {
           },
         ]
       }
+      mental_health_articles: {
+        Row: {
+          age_group: string
+          content: string
+          created_at: string
+          created_by: string
+          id: string
+          school: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          age_group: string
+          content: string
+          created_at?: string
+          created_by: string
+          id?: string
+          school: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          age_group?: string
+          content?: string
+          created_at?: string
+          created_by?: string
+          id?: string
+          school?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       platform_admins: {
         Row: {
           created_at: string

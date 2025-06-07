@@ -1,14 +1,16 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState } from 'react';
 
-interface LanguageContextProps {
-  language: string;
-  setLanguage: (language: string) => void;
-  t: (key: string) => string;
+type Language = 'en' | 'lt';
+
+interface LanguageContextType {
+  language: Language;
+  setLanguage: (lang: Language) => void;
+  t: (key: string, params?: Record<string, string>) => string;
 }
 
-const LanguageContext = createContext<LanguageContextProps | undefined>(undefined);
+const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
-const translations: Record<string, Record<string, string>> = {
+const translations = {
   en: {
     // Navigation
     'nav.home': 'Home',
@@ -694,24 +696,24 @@ const translations: Record<string, Record<string, string>> = {
     // Upload translations
     'upload.bulkSchedule': 'Masinis tvarkaraščių įkėlimas',
     'upload.bulkUpload': 'Masinis įkėlimas',
-    'upload.csvDescription': 'Įkelkite kelis klasių tvarkaraščius vienu metu naudodami CSV failą',
+    'upload.csvDescription': 'Įkelkite kelis pamokų tvarkaraščius naudodami CSV failą',
     'upload.selectFile': 'Pasirinkite CSV failą',
-    'upload.csvFormat': 'CSV formatas',
+    'upload.csvFormat': 'CSV formato reikalavimai',
     'upload.requiredColumns': 'Būtini stulpeliai',
-    'upload.formatNote': 'Datos formatas: YYYY-MM-DD, Laiko formatas: HH:MM (24 valandų)',
-    'upload.processing': 'Apdorojamas įkėlimas...',
+    'upload.formatNote': 'Datos formatas: YYYY-MM-DD, Laiko formatas: HH:MM',
     'upload.csvOnly': 'Prašome pasirinkti CSV failą',
-    'upload.invalidHeaders': 'Neteisingi CSV antraštės. Patikrinkite reikalaujamą formatą.',
-    'upload.noValidData': 'CSV faile nerasta teisingų duomenų',
+    'upload.invalidHeaders': 'Neteisingi CSV antraštės. Patikrinkite reikiamą formatą.',
+    'upload.noValidData': 'CSV faile nerasta tinkamų duomenų',
     'upload.success': 'Įkėlimas sėkmingas',
-    'upload.schedulesUploaded': '{count} tvarkaraščių sėkmingai įkelta',
-    'upload.failed': 'Įkėlimas nepavyko. Patikrinkite failą ir bandykite dar kartą.',
+    'upload.schedulesUploaded': 'Sėkmingai įkelta {count} tvarkaraščių',
+    'upload.failed': 'Įkėlimas nepavyko. Bandykite dar kartą.',
+    'upload.processing': 'Apdorojamas įkėlimas...',
     'upload.subscriptionRequired': 'Aktyvios prenumeratos reikia masiniams įkėlimams',
 
     // Articles translations
     'articles.title': 'Psichikos sveikatos straipsniai',
     'articles.mentalHealth': 'Psichikos sveikata',
-    'articles.description': 'Pasidalinkite naudingais psichikos sveikatos ištekliais su mokiniais',
+    'articles.description': 'Kurkite ir tvarkykite psichikos sveikatos straipsnius mokiniams',
     'articles.addNew': 'Pridėti naują straipsnį',
     'articles.articleTitle': 'Straipsnio pavadinimas',
     'articles.titlePlaceholder': 'Įveskite aprašomąjį straipsnio pavadinimą',
@@ -721,67 +723,42 @@ const translations: Record<string, Record<string, string>> = {
     'articles.middle': 'Vidurinės klasės (12-14 metų)',
     'articles.high': 'Aukštesnės klasės (15-18 metų)',
     'articles.allAges': 'Visi amžiai',
-    'articles.content': 'Straipsnio turinys',
-    'articles.contentPlaceholder': 'Rašykite straipsnio turinį čia. Įtraukite naudingus patarimus, išteklius ar gaires...',
+    'articles.content': 'Turinys',
+    'articles.contentPlaceholder': 'Rašykite straipsnio turinį čia...',
     'articles.create': 'Sukurti straipsnį',
-    'articles.fillRequired': 'Prašome užpildyti visus privalomybius laukus',
+    'articles.fillRequired': 'Prašome užpildyti visus privalomiuslaukus',
     'articles.updated': 'Straipsnis atnaujintas',
     'articles.updatedSuccess': 'Straipsnis sėkmingai atnaujintas',
     'articles.created': 'Straipsnis sukurtas',
     'articles.createdSuccess': 'Straipsnis sėkmingai sukurtas',
-    'articles.saveFailed': 'Nepavyko išsaugoti straipsnio. Bandykite dar kartą.',
+    'articles.saveFailed': 'Nepavyko išsaugoti straipsnio',
     'articles.confirmDelete': 'Ar tikrai norite ištrinti šį straipsnį?',
     'articles.deleted': 'Straipsnis ištrintas',
     'articles.deletedSuccess': 'Straipsnis sėkmingai ištrintas',
     'articles.deleteFailed': 'Nepavyko ištrinti straipsnio',
     'articles.loadFailed': 'Nepavyko įkelti straipsnių',
-    'articles.noArticles': 'Dar nebuvo sukurta jokių straipsnių',
-    'articles.getStarted': 'Spustelėkite "Pridėti naują straipsnį" pradėjimui',
-    'articles.subscriptionRequired': 'Aktyvi prenumerata reikalinga psichikos sveikatos straipsnių valdymui',
-
-    // Performance translations
-    'performance.filters': 'Veiklos analizė',
-    'performance.filtersDesc': 'Analizuokite ir palyginkite mokyklų bei mokytojų veiklos rodiklius',
-    'performance.school': 'Mokykla',
-    'performance.allSchools': 'Visos mokyklos',
-    'performance.sortBy': 'Rikiuoti pagal',
-    'performance.overallScore': 'Bendras įvertinimas',
-    'performance.totalResponses': 'Iš viso atsakymų',
-    'performance.minResponses': 'Mažiausiai atsakymų',
-    'performance.topSchools': 'Geriausiai veikiančios mokyklos',
-    'performance.schoolPerformance': 'Pagal mokinių grįžtamojo ryšio įvertinimus',
-    'performance.score': 'Įvertinimas',
-    'performance.responses': 'Atsakymai',
-    'performance.rating': 'Reitingas',
-    'performance.topTeachers': 'Geriausiai veikiantys mokytojai',
-    'performance.allTeachers': 'Visi mokyklos mokytojai',
-    'performance.teachersFromSchool': 'Mokytojai iš {school}',
-    'performance.teacher': 'Mokytojas',
-
-    // Weekly Summary updates
-    'weekly.submitAnonymously': 'Pateikti anonimiškam',
+    'articles.noArticles': 'Straipsnių nerasta',
+    'articles.getStarted': 'Spustelėkite "Pridėti naują straipsnį" norėdami pradėti'
   }
 };
 
 const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [language, setLanguage] = useState(localStorage.getItem('language') || 'en');
+  const [language, setLanguage] = useState<Language>('en');
 
-  useEffect(() => {
-    localStorage.setItem('language', language);
-  }, [language]);
-
-  const t = (key: string): string => {
-    return translations[language][key] || key;
-  };
-
-  const value: LanguageContextProps = {
-    language,
-    setLanguage,
-    t,
+  const t = (key: string, params?: Record<string, string>): string => {
+    let translation = translations[language][key as keyof typeof translations[typeof language]] || key;
+    
+    if (params) {
+      Object.entries(params).forEach(([paramKey, paramValue]) => {
+        translation = translation.replace(`{${paramKey}}`, paramValue);
+      });
+    }
+    
+    return translation;
   };
 
   return (
-    <LanguageContext.Provider value={value}>
+    <LanguageContext.Provider value={{ language, setLanguage, t }}>
       {children}
     </LanguageContext.Provider>
   );
