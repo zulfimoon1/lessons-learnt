@@ -2,6 +2,20 @@
 import { supabase } from '@/integrations/supabase/client';
 import { Teacher, Student } from '@/types/auth';
 
+// Rate limiting helper
+const createRateLimiter = (maxCalls: number, timeWindow: number) => {
+  const calls: number[] = [];
+  return () => {
+    const now = Date.now();
+    const validCalls = calls.filter(time => now - time < timeWindow);
+    calls.length = 0;
+    calls.push(...validCalls, now);
+    return calls.length <= maxCalls;
+  };
+};
+
+const loginRateLimit = createRateLimiter(5, 60000); // 5 attempts per minute
+
 export const teacherLoginService = async (
   email: string, 
   password: string,
@@ -10,11 +24,21 @@ export const teacherLoginService = async (
   role?: 'teacher' | 'admin'
 ) => {
   try {
+    if (!loginRateLimit()) {
+      return { error: 'Too many login attempts. Please wait a minute before trying again.' };
+    }
+
     console.log('teacherLoginService: Starting login for email:', email);
     
-    if (!email.trim() || !password.trim()) {
+    if (!email?.trim() || !password?.trim()) {
       console.log('teacherLoginService: Missing email or password');
       return { error: 'Email and password are required' };
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email.trim())) {
+      return { error: 'Please enter a valid email address' };
     }
 
     // First check if a teacher with this email exists
@@ -41,12 +65,23 @@ export const teacherLoginService = async (
         return { error: 'For new accounts, please provide your name and school.' };
       }
 
+      // Validate input lengths
+      if (name.trim().length < 2) {
+        return { error: 'Name must be at least 2 characters long' };
+      }
+      if (school.trim().length < 2) {
+        return { error: 'School name must be at least 2 characters long' };
+      }
+      if (password.trim().length < 6) {
+        return { error: 'Password must be at least 6 characters long' };
+      }
+
       console.log('teacherLoginService: Creating new teacher');
 
       const { data: newTeacher, error: createError } = await supabase
         .from('teachers')
         .insert({
-          email: email.trim(),
+          email: email.trim().toLowerCase(),
           password_hash: password.trim(),
           name: name.trim(),
           school: school.trim(),
@@ -109,11 +144,23 @@ export const teacherLoginService = async (
 
 export const studentSimpleLoginService = async (fullName: string, password: string) => {
   try {
+    if (!loginRateLimit()) {
+      return { error: 'Too many login attempts. Please wait a minute before trying again.' };
+    }
+
     console.log('studentSimpleLoginService: Starting login for:', fullName);
     
-    if (!fullName.trim() || !password.trim()) {
+    if (!fullName?.trim() || !password?.trim()) {
       console.log('studentSimpleLoginService: Missing name or password');
       return { error: 'Full name and password are required' };
+    }
+
+    // Validate input lengths
+    if (fullName.trim().length < 2) {
+      return { error: 'Name must be at least 2 characters long' };
+    }
+    if (password.trim().length < 3) {
+      return { error: 'Password must be at least 3 characters long' };
     }
     
     // Find student with matching name and password
@@ -155,11 +202,29 @@ export const studentSimpleLoginService = async (fullName: string, password: stri
 
 export const studentSignupService = async (fullName: string, school: string, grade: string, password: string) => {
   try {
+    if (!loginRateLimit()) {
+      return { error: 'Too many signup attempts. Please wait a minute before trying again.' };
+    }
+
     console.log('studentSignupService: Starting signup for:', fullName);
     
-    if (!fullName.trim() || !school.trim() || !grade.trim() || !password.trim()) {
+    if (!fullName?.trim() || !school?.trim() || !grade?.trim() || !password?.trim()) {
       console.log('studentSignupService: Missing required fields');
       return { error: 'All fields are required' };
+    }
+
+    // Validate input lengths
+    if (fullName.trim().length < 2) {
+      return { error: 'Name must be at least 2 characters long' };
+    }
+    if (school.trim().length < 2) {
+      return { error: 'School name must be at least 2 characters long' };
+    }
+    if (grade.trim().length < 1) {
+      return { error: 'Grade is required' };
+    }
+    if (password.trim().length < 3) {
+      return { error: 'Password must be at least 3 characters long' };
     }
     
     const { data: newStudent, error } = await supabase

@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -54,20 +54,7 @@ const StudentDashboard = () => {
   const [psychologists, setPsychologists] = useState<SchoolPsychologist[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    if (!student) {
-      navigate('/student-login');
-      return;
-    }
-    loadData();
-  }, [student, navigate]);
-
-  const loadData = async () => {
-    await Promise.all([loadUpcomingClasses(), loadPsychologists()]);
-    setIsLoading(false);
-  };
-
-  const loadUpcomingClasses = async () => {
+  const loadUpcomingClasses = useCallback(async () => {
     if (!student?.school || !student?.grade) return;
     
     try {
@@ -93,9 +80,9 @@ const StudentDashboard = () => {
         variant: "destructive",
       });
     }
-  };
+  }, [student?.school, student?.grade, toast, t]);
 
-  const loadPsychologists = async () => {
+  const loadPsychologists = useCallback(async () => {
     if (!student?.school) return;
     
     try {
@@ -115,12 +102,29 @@ const StudentDashboard = () => {
         variant: "destructive",
       });
     }
-  };
+  }, [student?.school, toast, t]);
 
-  const handleLogout = () => {
+  const loadData = useCallback(async () => {
+    await Promise.all([loadUpcomingClasses(), loadPsychologists()]);
+    setIsLoading(false);
+  }, [loadUpcomingClasses, loadPsychologists]);
+
+  useEffect(() => {
+    if (!student) {
+      navigate('/student-login');
+      return;
+    }
+    loadData();
+  }, [student, navigate, loadData]);
+
+  const handleLogout = useCallback(() => {
     clearAuth();
     navigate('/student-login');
-  };
+  }, [clearAuth, navigate]);
+
+  const formatDate = useMemo(() => {
+    return (dateString: string) => new Date(dateString).toLocaleDateString();
+  }, []);
 
   if (isLoading) {
     return (
@@ -131,6 +135,10 @@ const StudentDashboard = () => {
         </div>
       </div>
     );
+  }
+
+  if (!student) {
+    return null;
   }
 
   return (
@@ -144,7 +152,7 @@ const StudentDashboard = () => {
           </div>
           <div className="flex items-center gap-4">
             <LanguageSwitcher />
-            <span className="text-sm text-muted-foreground">{t('admin.welcome')}, {student?.full_name}</span>
+            <span className="text-sm text-muted-foreground">{t('admin.welcome')}, {student.full_name}</span>
             <Button
               onClick={handleLogout}
               variant="outline"
@@ -165,7 +173,7 @@ const StudentDashboard = () => {
               <SchoolIcon className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-lg font-semibold">{student?.school}</div>
+              <div className="text-lg font-semibold">{student.school}</div>
             </CardContent>
           </Card>
           
@@ -175,7 +183,7 @@ const StudentDashboard = () => {
               <BookOpenIcon className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-lg font-semibold">{student?.grade}</div>
+              <div className="text-lg font-semibold">{student.grade}</div>
             </CardContent>
           </Card>
 
@@ -207,7 +215,7 @@ const StudentDashboard = () => {
               <CardHeader>
                 <CardTitle>{t('class.upcomingClasses')}</CardTitle>
                 <CardDescription>
-                  {t('dashboard.scheduledClasses')} {student?.grade} {t('auth.school').toLowerCase()} {student?.school}
+                  {t('dashboard.scheduledClasses')} {student.grade} {t('auth.school').toLowerCase()} {student.school}
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -223,7 +231,7 @@ const StudentDashboard = () => {
                         </div>
                       </div>
                       <div className="text-right">
-                        <p className="font-medium">{new Date(classItem.class_date).toLocaleDateString()}</p>
+                        <p className="font-medium">{formatDate(classItem.class_date)}</p>
                         <p className="text-sm text-muted-foreground">{classItem.class_time}</p>
                       </div>
                     </div>
@@ -248,7 +256,7 @@ const StudentDashboard = () => {
                   {t('dashboard.mentalHealthSupport')}
                 </CardTitle>
                 <CardDescription>
-                  Access mental health resources and support at {student?.school}
+                  Access mental health resources and support at {student.school}
                 </CardDescription>
               </CardHeader>
               <CardContent>
