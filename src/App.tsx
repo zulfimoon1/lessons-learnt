@@ -25,9 +25,9 @@ const App = () => {
   
   return (
     <QueryClientProvider client={queryClient}>
-      <PlatformAdminProvider>
-        <AuthProvider>
-          <LanguageProvider>
+      <LanguageProvider>
+        <PlatformAdminProvider>
+          <AuthProvider>
             <TooltipProvider>
               <BrowserRouter>
                 <Toaster />
@@ -46,9 +46,9 @@ const App = () => {
                 </Routes>
               </BrowserRouter>
             </TooltipProvider>
-          </LanguageProvider>
-        </AuthProvider>
-      </PlatformAdminProvider>
+          </AuthProvider>
+        </PlatformAdminProvider>
+      </LanguageProvider>
     </QueryClientProvider>
   );
 };
