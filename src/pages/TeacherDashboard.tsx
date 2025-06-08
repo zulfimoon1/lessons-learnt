@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -196,10 +195,7 @@ const TeacherDashboard = () => {
             <CardHeader>
               <CardTitle className="text-green-800">{t('admin.subscription')}</CardTitle>
               <CardDescription className="text-green-700">
-                {t('teacher.activePlan', { 
-                  planType: subscription.plan_type, 
-                  date: new Date(subscription.current_period_end).toLocaleDateString() 
-                })}
+                {`${t('teacher.activePlan')} ${subscription.plan_type} - ${t('teacher.renewsOn')} ${new Date(subscription.current_period_end).toLocaleDateString()}`}
               </CardDescription>
             </CardHeader>
           </Card>
@@ -218,7 +214,7 @@ const TeacherDashboard = () => {
           
           <Card className="border-green-100">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{t('login.teacher.role')}</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('teacher.role')}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-lg font-semibold capitalize">
@@ -257,8 +253,8 @@ const TeacherDashboard = () => {
               </>
             ) : (
               <>
-                <TabsTrigger value="schedule" className="data-[state=active]:bg-green-600 data-[state=active]:text-white">{t('class.schedule')}</TabsTrigger>
-                <TabsTrigger value="bulk-upload" className="data-[state=active]:bg-green-600 data-[state=active]:text-white">{t('upload.bulkUpload')}</TabsTrigger>
+                <TabsTrigger value="schedule" className="data-[state=active]:bg-green-600 data-[state=active]:text-white">{t('teacher.classSchedule')}</TabsTrigger>
+                <TabsTrigger value="bulk-upload" className="data-[state=active]:bg-green-600 data-[state=active]:text-white">{t('teacher.bulkUpload')}</TabsTrigger>
                 {teacher?.role === 'admin' && (
                   <TabsTrigger value="articles" className="data-[state=active]:bg-green-600 data-[state=active]:text-white">{t('articles.mentalHealth')}</TabsTrigger>
                 )}

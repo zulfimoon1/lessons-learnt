@@ -97,7 +97,7 @@ const BulkScheduleUpload = ({ teacher, onUploadComplete }: BulkScheduleUploadPro
 
       toast({
         title: t('upload.success'),
-        description: t('upload.schedulesUploaded', { count: schedules.length.toString() }),
+        description: `${schedules.length} ${t('upload.schedulesUploaded')}`,
       });
 
       onUploadComplete();

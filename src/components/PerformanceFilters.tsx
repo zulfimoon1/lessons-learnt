@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -301,7 +300,7 @@ const PerformanceFilters = () => {
             <CardDescription>
               {selectedSchool === "all" 
                 ? t('performance.allTeachers')
-                : t('performance.teachersFromSchool', { school: selectedSchool })
+                : `${t('performance.teachersFromSchool')} ${selectedSchool}`
               }
             </CardDescription>
           </CardHeader>
