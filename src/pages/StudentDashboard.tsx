@@ -248,7 +248,7 @@ const StudentDashboard = () => {
                   {t('dashboard.mentalHealthSupport')}
                 </CardTitle>
                 <CardDescription>
-                  {`${t('student.accessMentalHealthResources')} ${student?.school}`}
+                  {t('student.accessMentalHealthResources', { school: student?.school })}
                 </CardDescription>
               </CardHeader>
               <CardContent>
