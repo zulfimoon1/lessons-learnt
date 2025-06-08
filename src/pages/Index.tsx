@@ -1,15 +1,30 @@
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { GraduationCapIcon, UsersIcon, BookOpenIcon, HeartIcon, BarChart3Icon, ShieldCheckIcon } from "lucide-react";
+import { GraduationCapIcon, UsersIcon, BookOpenIcon, HeartIcon, BarChart3Icon, ShieldCheckIcon, MenuIcon, UserPlusIcon } from "lucide-react";
 import { Link } from "react-router-dom";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
-import CalendarBooking from "@/components/CalendarBooking";
 import DemoSection from "@/components/DemoSection";
 import { useLanguage } from "@/contexts/LanguageContext";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { useState } from "react";
 
 const Index = () => {
   const { t } = useLanguage();
+  const [isRegisterDialogOpen, setIsRegisterDialogOpen] = useState(false);
 
   return (
     <div className="min-h-screen bg-background">
@@ -21,7 +36,31 @@ const Index = () => {
               <GraduationCapIcon className="w-8 h-8 text-primary" />
               <h1 className="text-2xl font-bold text-foreground">Lessons Learnt</h1>
             </div>
-            <LanguageSwitcher />
+            <div className="flex items-center gap-4">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="sm">
+                    <MenuIcon className="w-4 h-4 mr-2" />
+                    {t('nav.login')}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem asChild>
+                    <Link to="/student-login" className="flex items-center">
+                      <UsersIcon className="w-4 h-4 mr-2" />
+                      {t('auth.studentLogin')}
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/teacher-login" className="flex items-center">
+                      <BookOpenIcon className="w-4 h-4 mr-2" />
+                      {t('auth.teacherLogin')}
+                    </Link>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+              <LanguageSwitcher />
+            </div>
           </div>
         </div>
       </header>
@@ -36,27 +75,48 @@ const Index = () => {
             {t('welcome.subtitle')}
           </p>
           
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-md mx-auto">
-            <Link to="/student-login">
-              <Button 
-                size="lg" 
-                className="w-full min-h-16 py-3 px-4 text-base flex items-center justify-center"
-              >
-                <UsersIcon className="w-5 h-5 mr-2 flex-shrink-0" />
-                <span className="text-center leading-tight whitespace-normal">{t('auth.studentLogin')}</span>
-              </Button>
-            </Link>
-            
-            <Link to="/teacher-login">
-              <Button 
-                size="lg" 
-                variant="outline" 
-                className="w-full border-2 border-border hover:bg-accent min-h-16 py-3 px-4 text-base flex items-center justify-center"
-              >
-                <BookOpenIcon className="w-5 h-5 mr-2 flex-shrink-0" />
-                <span className="text-center leading-tight whitespace-normal">{t('auth.teacherLogin')}</span>
-              </Button>
-            </Link>
+          <div className="flex justify-center mb-6">
+            <Dialog open={isRegisterDialogOpen} onOpenChange={setIsRegisterDialogOpen}>
+              <DialogTrigger asChild>
+                <Button 
+                  size="lg" 
+                  className="min-h-16 py-3 px-8 text-lg flex items-center justify-center"
+                >
+                  <UserPlusIcon className="w-5 h-5 mr-2 flex-shrink-0" />
+                  <span className="text-center leading-tight whitespace-normal">{t('auth.register')}</span>
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-md">
+                <DialogHeader>
+                  <DialogTitle>{t('auth.chooseRegistrationType')}</DialogTitle>
+                  <DialogDescription>
+                    {t('auth.chooseRegistrationDesc')}
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="grid grid-cols-1 gap-4 mt-4">
+                  <Link to="/student-login" onClick={() => setIsRegisterDialogOpen(false)}>
+                    <Button 
+                      size="lg" 
+                      className="w-full min-h-16 py-3 px-4 text-base flex items-center justify-center"
+                    >
+                      <UsersIcon className="w-5 h-5 mr-2 flex-shrink-0" />
+                      <span className="text-center leading-tight whitespace-normal">{t('auth.registerAsStudent')}</span>
+                    </Button>
+                  </Link>
+                  
+                  <Link to="/teacher-login" onClick={() => setIsRegisterDialogOpen(false)}>
+                    <Button 
+                      size="lg" 
+                      variant="outline" 
+                      className="w-full border-2 border-border hover:bg-accent min-h-16 py-3 px-4 text-base flex items-center justify-center"
+                    >
+                      <BookOpenIcon className="w-5 h-5 mr-2 flex-shrink-0" />
+                      <span className="text-center leading-tight whitespace-normal">{t('auth.registerAsTeacher')}</span>
+                    </Button>
+                  </Link>
+                </div>
+              </DialogContent>
+            </Dialog>
           </div>
           
           <div className="max-w-2xl mx-auto mt-6">
@@ -176,7 +236,47 @@ const Index = () => {
             <p className="text-lg text-muted-foreground mb-8">
               {t('platform.readyToTransformDesc')}
             </p>
-            <CalendarBooking />
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button 
+                  size="lg" 
+                  className="text-lg px-8 py-4"
+                >
+                  <UserPlusIcon className="w-5 h-5 mr-2" />
+                  {t('auth.registerNow')}
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-md">
+                <DialogHeader>
+                  <DialogTitle>{t('auth.chooseRegistrationType')}</DialogTitle>
+                  <DialogDescription>
+                    {t('auth.chooseRegistrationDesc')}
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="grid grid-cols-1 gap-4 mt-4">
+                  <Link to="/student-login">
+                    <Button 
+                      size="lg" 
+                      className="w-full min-h-16 py-3 px-4 text-base flex items-center justify-center"
+                    >
+                      <UsersIcon className="w-5 h-5 mr-2 flex-shrink-0" />
+                      <span className="text-center leading-tight whitespace-normal">{t('auth.registerAsStudent')}</span>
+                    </Button>
+                  </Link>
+                  
+                  <Link to="/teacher-login">
+                    <Button 
+                      size="lg" 
+                      variant="outline" 
+                      className="w-full border-2 border-border hover:bg-accent min-h-16 py-3 px-4 text-base flex items-center justify-center"
+                    >
+                      <BookOpenIcon className="w-5 h-5 mr-2 flex-shrink-0" />
+                      <span className="text-center leading-tight whitespace-normal">{t('auth.registerAsTeacher')}</span>
+                    </Button>
+                  </Link>
+                </div>
+              </DialogContent>
+            </Dialog>
           </div>
         </div>
       </section>
