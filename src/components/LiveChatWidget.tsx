@@ -2,13 +2,13 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { MessageCircleIcon, XIcon, SendIcon, ShieldCheckIcon } from "lucide-react";
+import { MessageCircleIcon, XIcon, ShieldCheckIcon } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { createChatSession, endChatSession } from "@/services/liveChatService";
 import { LiveChatSession } from "@/types/auth";
+import RealtimeChat from "./RealtimeChat";
 
 interface LiveChatWidgetProps {
   studentId?: string;
@@ -21,17 +21,15 @@ interface LiveChatWidgetProps {
 const LiveChatWidget = ({ studentId, studentName, school, grade, onClose }: LiveChatWidgetProps) => {
   const { toast } = useToast();
   const [isOpen, setIsOpen] = useState(false);
-  const [message, setMessage] = useState("");
   const [isConnecting, setIsConnecting] = useState(false);
   const [isAnonymous, setIsAnonymous] = useState(true);
-  const [chatStarted, setChatStarted] = useState(false);
   const [currentSession, setCurrentSession] = useState<LiveChatSession | null>(null);
 
   const handleOpenChat = async () => {
     setIsConnecting(true);
     
     try {
-      console.log('Starting chat session for:', { studentId, studentName, school, grade, isAnonymous });
+      console.log('LiveChatWidget: Starting chat session for:', { studentId, studentName, school, grade, isAnonymous });
       
       const { error, session } = await createChatSession(
         isAnonymous ? null : studentId || null,
@@ -53,15 +51,13 @@ const LiveChatWidget = ({ studentId, studentName, school, grade, onClose }: Live
 
       setCurrentSession(session || null);
       setIsConnecting(false);
-      setIsOpen(true);
-      setChatStarted(true);
       
       toast({
-        title: "Connected to Live Chat",
-        description: `A mental health professional will be with you shortly${isAnonymous ? ' (Anonymous mode)' : ''}`,
+        title: "Chat Session Created",
+        description: "A doctor from your school will join the conversation shortly.",
       });
     } catch (error) {
-      console.error('Error starting chat:', error);
+      console.error('LiveChatWidget: Error starting chat:', error);
       toast({
         title: "Connection Failed",
         description: "Failed to start chat session. Please try again.",
@@ -71,53 +67,40 @@ const LiveChatWidget = ({ studentId, studentName, school, grade, onClose }: Live
     }
   };
 
-  const handleSendMessage = () => {
-    if (!message.trim()) return;
-    
-    toast({
-      title: "Message Sent",
-      description: "Your message has been sent to the mental health professional",
-    });
-    
-    setMessage("");
-    
-    // Simulate response after a short delay
-    setTimeout(() => {
-      toast({
-        title: "Dr. Sarah is typing...",
-        description: "Please wait while our specialist prepares a response",
-      });
-    }, 1000);
-  };
-
   const handleClose = async () => {
     if (currentSession) {
       await endChatSession(currentSession.id);
     }
     
     setIsOpen(false);
-    setChatStarted(false);
     setCurrentSession(null);
     if (onClose) onClose();
   };
 
-  const handleStartChat = () => {
-    handleOpenChat();
-  };
+  if (currentSession) {
+    return (
+      <RealtimeChat
+        session={currentSession}
+        studentName={studentName}
+        isAnonymous={isAnonymous}
+        onClose={handleClose}
+      />
+    );
+  }
 
-  if (isOpen && !chatStarted) {
+  if (isOpen) {
     return (
       <Card className="fixed bottom-4 right-4 w-96 z-50 shadow-lg border-purple-200">
         <CardHeader className="bg-purple-600 text-white p-4">
           <div className="flex items-center justify-between">
             <CardTitle className="text-lg flex items-center gap-2">
               <MessageCircleIcon className="w-5 h-5" />
-              Ask the Doctor - Live Chat
+              Start Live Chat with Doctor
             </CardTitle>
             <Button
               variant="ghost"
               size="sm"
-              onClick={handleClose}
+              onClick={() => setIsOpen(false)}
               className="text-white hover:bg-purple-700"
             >
               <XIcon className="w-4 h-4" />
@@ -128,7 +111,7 @@ const LiveChatWidget = ({ studentId, studentName, school, grade, onClose }: Live
           <div className="text-center">
             <h3 className="font-semibold text-lg mb-2">Chat Preferences</h3>
             <p className="text-sm text-muted-foreground mb-4">
-              Choose how you'd like to chat with our mental health professional
+              Connect with a qualified doctor from your school for mental health support
             </p>
           </div>
 
@@ -146,8 +129,8 @@ const LiveChatWidget = ({ studentId, studentName, school, grade, onClose }: Live
                 </Label>
                 <p className="text-xs text-muted-foreground mt-1">
                   {isAnonymous 
-                    ? "Your identity will be completely protected. The psychologist won't see your name or personal details."
-                    : "Your name and school information will be visible to the psychologist for personalized support."
+                    ? "Your identity will be completely protected. The doctor won't see your name or personal details."
+                    : "Your name and school information will be visible to the doctor for personalized support."
                   }
                 </p>
               </div>
@@ -167,84 +150,12 @@ const LiveChatWidget = ({ studentId, studentName, school, grade, onClose }: Live
           )}
 
           <Button
-            onClick={handleStartChat}
+            onClick={handleOpenChat}
             disabled={isConnecting}
             className="w-full bg-purple-600 hover:bg-purple-700"
           >
-            {isConnecting ? "Connecting..." : "Start Chat"}
+            {isConnecting ? "Creating Session..." : "Start Chat with Doctor"}
           </Button>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  if (isOpen && chatStarted) {
-    return (
-      <Card className="fixed bottom-4 right-4 w-96 h-96 z-50 shadow-lg border-purple-200">
-        <CardHeader className="bg-purple-600 text-white p-4">
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-lg flex items-center gap-2">
-              <MessageCircleIcon className="w-5 h-5" />
-              Ask the Doctor - Live Chat
-              {isAnonymous && (
-                <span className="text-xs bg-purple-800 px-2 py-1 rounded">Anonymous</span>
-              )}
-            </CardTitle>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleClose}
-              className="text-white hover:bg-purple-700"
-            >
-              <XIcon className="w-4 h-4" />
-            </Button>
-          </div>
-        </CardHeader>
-        <CardContent className="p-4 flex flex-col h-80">
-          <div className="flex-1 bg-gray-50 rounded-lg p-4 mb-4 overflow-y-auto">
-            <div className="text-center text-gray-500 mb-4">
-              <p className="text-sm">Connected to Live Chat Support</p>
-              <p className="text-xs">
-                {isAnonymous 
-                  ? "You are chatting anonymously - your identity is protected"
-                  : "A mental health professional will respond shortly"
-                }
-              </p>
-            </div>
-            
-            {/* Simulated chat messages */}
-            <div className="space-y-3">
-              <div className="bg-purple-100 p-3 rounded-lg">
-                <p className="text-sm font-medium text-purple-800">Dr. Sarah</p>
-                <p className="text-sm text-purple-700">
-                  Hello! I'm here to help. How are you feeling today?
-                  {isAnonymous && " Please know that our conversation is completely confidential."}
-                </p>
-              </div>
-            </div>
-          </div>
-          
-          <div className="flex gap-2">
-            <Textarea
-              placeholder="Type your message here..."
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              className="flex-1 min-h-[60px] resize-none"
-              onKeyPress={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                  e.preventDefault();
-                  handleSendMessage();
-                }
-              }}
-            />
-            <Button
-              onClick={handleSendMessage}
-              className="bg-purple-600 hover:bg-purple-700"
-              disabled={!message.trim()}
-            >
-              <SendIcon className="w-4 h-4" />
-            </Button>
-          </div>
         </CardContent>
       </Card>
     );
@@ -257,7 +168,7 @@ const LiveChatWidget = ({ studentId, studentName, school, grade, onClose }: Live
       className="bg-purple-600 hover:bg-purple-700 text-white"
     >
       <MessageCircleIcon className="w-4 h-4 mr-2" />
-      {isConnecting ? "Connecting..." : "Ask the Doctor - Live Chat"}
+      Chat with Doctor
     </Button>
   );
 };
