@@ -41,10 +41,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     password: string, 
     name?: string, 
     school?: string,
-    role?: 'teacher' | 'admin' | 'doctor',
-    language?: 'en' | 'lt'
+    role?: 'teacher' | 'admin' | 'doctor'
   ) => {
-    const result = await teacherLoginService(email, password, name, school, role, language);
+    const result = await teacherLoginService(email, password, name, school, role);
     
     if (result.teacher) {
       setTeacher(result.teacher);

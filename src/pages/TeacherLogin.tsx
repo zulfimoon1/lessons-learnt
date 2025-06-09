@@ -78,7 +78,7 @@ const TeacherLogin = () => {
     console.log('TeacherLogin: Starting login process with email:', loginData.email);
 
     try {
-      const result = await teacherLogin(loginData.email.trim(), loginData.password, undefined, undefined, undefined, language);
+      const result = await teacherLogin(loginData.email.trim(), loginData.password);
       console.log('TeacherLogin: Login result received:', result);
 
       if (result.error) {
@@ -149,8 +149,7 @@ const TeacherLogin = () => {
         signupData.password, 
         signupData.name.trim(), 
         signupData.school.trim(), 
-        signupData.role,
-        language
+        signupData.role
       );
 
       console.log('TeacherLogin: Signup result received:', result);
