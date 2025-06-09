@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { GraduationCapIcon, UsersIcon, BookOpenIcon, HeartIcon, BarChart3Icon, ShieldCheckIcon } from "lucide-react";
@@ -29,7 +30,7 @@ const Index = () => {
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 text-center">
         <div className="max-w-3xl mx-auto">
           <h2 className="text-5xl font-bold text-foreground mb-6">
-            Transform Your School with Real&#8209;Time Feedback
+            {t('welcome.title')}
           </h2>
           <p className="text-xl text-muted-foreground mb-12">
             {t('welcome.subtitle')}
