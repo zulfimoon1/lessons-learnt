@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -119,16 +118,19 @@ const StudentDashboard = () => {
         .eq('school', student.school)
         .order('name', { ascending: true });
 
-      if (error) throw error;
+      if (error) {
+        // Don't show error toast for missing psychologists data - it's not critical
+        console.log('StudentDashboard: No psychologists found or error loading:', error);
+        setPsychologists([]);
+        return;
+      }
+      
       console.log('StudentDashboard: Loaded psychologists successfully', data);
       setPsychologists(data || []);
     } catch (error) {
-      console.error('StudentDashboard: Error loading psychologists:', error);
-      toast({
-        title: t('common.error'),
-        description: t('student.failedToLoadPsychologists'),
-        variant: "destructive",
-      });
+      // Log the error but don't show user notification - this is not critical functionality
+      console.log('StudentDashboard: Error loading psychologists (non-critical):', error);
+      setPsychologists([]);
     }
   };
 
