@@ -70,6 +70,7 @@ export const ltTranslations = {
   'common.close': 'Uždaryti',
   'common.open': 'Atidaryti',
   'common.refresh': 'Atnaujinti',
+  'common.preview': 'Peržiūra',
   
   // Dashboard translations
   'dashboard.title': 'Studentų skydelis',
