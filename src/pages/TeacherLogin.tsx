@@ -14,7 +14,7 @@ import { useNavigate } from "react-router-dom";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const TeacherLogin = () => {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const navigate = useNavigate();
   const { toast } = useToast();
   
@@ -67,8 +67,8 @@ const TeacherLogin = () => {
     
     if (!loginData.email.trim() || !loginData.password) {
       toast({
-        title: t('teacher.missingInfo') || "Missing information",
-        description: t('auth.emailRequired') + " " + t('auth.passwordRequired'),
+        title: t('teacher.missingInfo'),
+        description: `${t('auth.emailRequired')} ${t('auth.passwordRequired')}`,
         variant: "destructive",
       });
       return;
@@ -78,7 +78,7 @@ const TeacherLogin = () => {
     console.log('TeacherLogin: Starting login process with email:', loginData.email);
 
     try {
-      const result = await teacherLogin(loginData.email.trim(), loginData.password);
+      const result = await teacherLogin(loginData.email.trim(), loginData.password, undefined, undefined, undefined, language);
       console.log('TeacherLogin: Login result received:', result);
 
       if (result.error) {
@@ -93,7 +93,7 @@ const TeacherLogin = () => {
         
         toast({
           title: t('auth.loginSuccess'),
-          description: `Sėkmingai prisijungėte prie „Lessons Learnt"`,
+          description: t('auth.loginSuccess'),
         });
         
         // Navigation will be handled by useEffect when teacher state updates
@@ -102,7 +102,7 @@ const TeacherLogin = () => {
         console.error('TeacherLogin: No error but no teacher data returned');
         toast({
           title: t('auth.loginFailed'),
-          description: "Neteisingas atsakymas iš serverio. Bandykite dar kartą.",
+          description: t('auth.loginFailed'),
           variant: "destructive",
         });
       }
@@ -110,7 +110,7 @@ const TeacherLogin = () => {
       console.error('TeacherLogin: Unexpected error during login:', err);
       toast({
         title: t('auth.loginFailed'),
-        description: "Įvyko netikėta klaida. Bandykite dar kartą.",
+        description: t('auth.loginFailed'),
         variant: "destructive",
       });
     } finally {
@@ -123,8 +123,8 @@ const TeacherLogin = () => {
     
     if (!signupData.name.trim() || !signupData.email.trim() || !signupData.school.trim() || !signupData.password || !signupData.confirmPassword) {
       toast({
-        title: t('teacher.missingInfo') || "Trūksta informacijos",
-        description: "Užpildykite visus reikalingus laukus",
+        title: t('teacher.missingInfo'),
+        description: t('auth.nameRequired') + ', ' + t('auth.emailRequired') + ', ' + t('auth.schoolCodeRequired') + ', ' + t('auth.passwordRequired'),
         variant: "destructive",
       });
       return;
@@ -149,7 +149,8 @@ const TeacherLogin = () => {
         signupData.password, 
         signupData.name.trim(), 
         signupData.school.trim(), 
-        signupData.role
+        signupData.role,
+        language
       );
 
       console.log('TeacherLogin: Signup result received:', result);
@@ -166,7 +167,7 @@ const TeacherLogin = () => {
         
         toast({
           title: t('auth.registerSuccess'),
-          description: `Sveiki atvykę į „Lessons Learnt"!`,
+          description: t('auth.registerSuccess'),
         });
         
         // Navigation will be handled by useEffect when teacher state updates
@@ -175,7 +176,7 @@ const TeacherLogin = () => {
         console.error('TeacherLogin: No error but no teacher data returned');
         toast({
           title: t('auth.registerError'),
-          description: "Neteisingas atsakymas iš serverio. Bandykite dar kartą.",
+          description: t('auth.registerError'),
           variant: "destructive",
         });
       }
@@ -183,7 +184,7 @@ const TeacherLogin = () => {
       console.error('TeacherLogin: Unexpected error during signup:', err);
       toast({
         title: t('auth.registerError'),
-        description: "Įvyko netikėta klaida. Bandykite dar kartą.",
+        description: t('auth.registerError'),
         variant: "destructive",
       });
     } finally {
@@ -223,7 +224,7 @@ const TeacherLogin = () => {
                   <Input
                     id="loginEmail"
                     type="email"
-                    placeholder="mokytojas@mokykla.lt"
+                    placeholder={language === 'lt' ? 'mokytojas@mokykla.lt' : 'teacher@school.com'}
                     value={loginData.email}
                     onChange={(e) => setLoginData(prev => ({ ...prev, email: e.target.value }))}
                     required
@@ -235,7 +236,7 @@ const TeacherLogin = () => {
                   <Input
                     id="loginPassword"
                     type="password"
-                    placeholder="Įveskite slaptažodį"
+                    placeholder={language === 'lt' ? 'Įveskite slaptažodį' : 'Enter your password'}
                     value={loginData.password}
                     onChange={(e) => setLoginData(prev => ({ ...prev, password: e.target.value }))}
                     required
@@ -267,7 +268,7 @@ const TeacherLogin = () => {
                   <Input
                     id="signupName"
                     type="text"
-                    placeholder="Įveskite vardą ir pavardę"
+                    placeholder={language === 'lt' ? 'Įveskite vardą ir pavardę' : 'Enter your full name'}
                     value={signupData.name}
                     onChange={(e) => setSignupData(prev => ({ ...prev, name: e.target.value }))}
                     required
@@ -282,7 +283,7 @@ const TeacherLogin = () => {
                   <Input
                     id="signupEmail"
                     type="email"
-                    placeholder="mokytojas@mokykla.lt"
+                    placeholder={language === 'lt' ? 'mokytojas@mokykla.lt' : 'teacher@school.com'}
                     value={signupData.email}
                     onChange={(e) => setSignupData(prev => ({ ...prev, email: e.target.value }))}
                     required
@@ -297,7 +298,7 @@ const TeacherLogin = () => {
                   <Input
                     id="signupSchool"
                     type="text"
-                    placeholder="Įveskite mokyklos pavadinimą"
+                    placeholder={language === 'lt' ? 'Įveskite mokyklos pavadinimą' : 'Enter school name'}
                     value={signupData.school}
                     onChange={(e) => setSignupData(prev => ({ ...prev, school: e.target.value }))}
                     required
@@ -316,12 +317,14 @@ const TeacherLogin = () => {
                     }
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Pasirinkite vaidmenį" />
+                      <SelectValue placeholder={language === 'lt' ? 'Pasirinkite vaidmenį' : 'Select role'} />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="teacher">{t('login.teacher.roleTeacher')}</SelectItem>
                       <SelectItem value="admin">{t('login.teacher.roleAdmin')}</SelectItem>
-                      <SelectItem value="doctor">Psichinės sveikatos specialistas</SelectItem>
+                      <SelectItem value="doctor">
+                        {language === 'lt' ? 'Psichinės sveikatos specialistas' : 'Mental Health Professional'}
+                      </SelectItem>
                     </SelectContent>
                   </Select>
                   {signupData.role === "admin" && (
@@ -331,7 +334,10 @@ const TeacherLogin = () => {
                   )}
                   {signupData.role === "doctor" && (
                     <p className="text-xs text-muted-foreground mt-1">
-                      Psichinės sveikatos specialistai gali prisijungti prie gyvų pokalbių ir studentų gerovės ataskaitų
+                      {language === 'lt' 
+                        ? 'Psichinės sveikatos specialistai gali prisijungti prie gyvų pokalbių ir studentų gerovės ataskaitų'
+                        : 'Mental health professionals can access live chats and student wellbeing reports'
+                      }
                     </p>
                   )}
                 </div>
@@ -341,7 +347,7 @@ const TeacherLogin = () => {
                   <Input
                     id="signupPassword"
                     type="password"
-                    placeholder="Sukurkite slaptažodį"
+                    placeholder={language === 'lt' ? 'Sukurkite slaptažodį' : 'Create a password'}
                     value={signupData.password}
                     onChange={(e) => setSignupData(prev => ({ ...prev, password: e.target.value }))}
                     required
@@ -353,7 +359,7 @@ const TeacherLogin = () => {
                   <Input
                     id="confirmPassword"
                     type="password"
-                    placeholder="Patvirtinkite slaptažodį"
+                    placeholder={language === 'lt' ? 'Patvirtinkite slaptažodį' : 'Confirm your password'}
                     value={signupData.confirmPassword}
                     onChange={(e) => setSignupData(prev => ({ ...prev, confirmPassword: e.target.value }))}
                     required

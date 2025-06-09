@@ -6,14 +6,19 @@ export const teacherLoginService = async (
   password: string,
   name?: string,
   school?: string,
-  role?: 'teacher' | 'admin' | 'doctor'
+  role?: 'teacher' | 'admin' | 'doctor',
+  language: 'en' | 'lt' = 'en'
 ) => {
   try {
     console.log('teacherLoginService: Starting login for email:', email);
     
     if (!email.trim() || !password.trim()) {
       console.log('teacherLoginService: Missing email or password');
-      return { error: 'El. paštas ir slaptažodis yra privalomi' };
+      return { 
+        error: language === 'lt' 
+          ? 'El. paštas ir slaptažodis yra privalomi' 
+          : 'Email and password are required'
+      };
     }
 
     // First check if a teacher with this email exists
@@ -27,7 +32,11 @@ export const teacherLoginService = async (
 
     if (queryError) {
       console.error('teacherLoginService: Database query error:', queryError);
-      return { error: 'Duomenų bazės klaida. Bandykite dar kartą.' };
+      return { 
+        error: language === 'lt' 
+          ? 'Duomenų bazės klaida. Bandykite dar kartą.' 
+          : 'Database error. Please try again.'
+      };
     }
 
     // If no teacher exists with this email, create one (auto-signup)
@@ -37,7 +46,11 @@ export const teacherLoginService = async (
       // Ensure we have all required data for signup
       if (!name?.trim() || !school?.trim()) {
         console.log('teacherLoginService: Missing required signup data');
-        return { error: 'Naujoms paskyroms reikalingas vardas ir mokykla.' };
+        return { 
+          error: language === 'lt' 
+            ? 'Naujoms paskyroms reikalingas vardas ir mokykla.' 
+            : 'Name and school are required for new accounts.'
+        };
       }
 
       console.log('teacherLoginService: Creating new teacher');
@@ -59,14 +72,26 @@ export const teacherLoginService = async (
       if (createError) {
         console.error('teacherLoginService: Error creating teacher:', createError);
         if (createError.code === '23505') {
-          return { error: 'Paskyra su šiuo el. paštu jau egzistuoja.' };
+          return { 
+            error: language === 'lt' 
+              ? 'Paskyra su šiuo el. paštu jau egzistuoja.' 
+              : 'An account with this email already exists.'
+          };
         }
-        return { error: 'Nepavyko sukurti paskyros. Bandykite dar kartą.' };
+        return { 
+          error: language === 'lt' 
+            ? 'Nepavyko sukurti paskyros. Bandykite dar kartą.' 
+            : 'Failed to create account. Please try again.'
+        };
       }
 
       if (!newTeacher) {
         console.error('teacherLoginService: No teacher data returned after creation');
-        return { error: 'Nepavyko sukurti paskyros. Bandykite dar kartą.' };
+        return { 
+          error: language === 'lt' 
+            ? 'Nepavyko sukurti paskyros. Bandykite dar kartą.' 
+            : 'Failed to create account. Please try again.'
+        };
       }
 
       const teacherData: Teacher = {
@@ -90,7 +115,11 @@ export const teacherLoginService = async (
     
     if (!teacher.password_hash || teacher.password_hash !== password.trim()) {
       console.log('teacherLoginService: Password mismatch');
-      return { error: 'Neteisingas el. paštas arba slaptažodis' };
+      return { 
+        error: language === 'lt' 
+          ? 'Neteisingas el. paštas arba slaptažodis' 
+          : 'Invalid email or password'
+      };
     }
 
     const teacherData: Teacher = {
@@ -108,7 +137,11 @@ export const teacherLoginService = async (
     return { teacher: teacherData };
   } catch (error) {
     console.error('teacherLoginService: Unexpected error:', error);
-    return { error: 'Įvyko netikėta klaida. Bandykite dar kartą.' };
+    return { 
+      error: language === 'lt' 
+        ? 'Įvyko netikėta klaida. Bandykite dar kartą.' 
+        : 'An unexpected error occurred. Please try again.'
+    };
   }
 };
 
