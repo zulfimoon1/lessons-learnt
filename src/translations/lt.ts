@@ -1,3 +1,4 @@
+
 import { ltDemoTranslations } from './lt/demo';
 import { ltAuthTranslations } from './lt/auth';
 import { ltChatTranslations } from './lt/chat';
@@ -90,6 +91,16 @@ export const ltTranslations = {
   'admin.welcome': 'Sveiki',
   'admin.subscription': 'Prenumerata',
   'admin.school': 'Mokykla',
+  'admin.loading': 'Kraunama...',
+  'admin.title': 'Administratoriaus skydelis',
+  'admin.logout': 'Atsijungti',
+  'admin.subscribe': 'Prenumeruoti',
+  'admin.error.title': 'Klaida',
+  'admin.error.description': 'Nepavyko įkelti duomenų',
+  'admin.stats.teachers': 'Mokytojai',
+  'admin.teachers.title': 'Mokytojai',
+  'admin.teachers.description': 'Valdykite mokyklos mokytojus',
+  'admin.teachers.empty': 'Mokytojų nėra',
   
   // Student specific translations
   'student.portal': 'Studentų portalas',
