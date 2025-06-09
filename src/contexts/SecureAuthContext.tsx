@@ -2,7 +2,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
-import { Profile, TeacherProfile, AuthContextType } from '@/types/auth';
+import { Profile, TeacherProfile, Teacher, Student, AuthContextType } from '@/types/auth';
 import { signUpWithSupabase, signInWithSupabase, signOutWithSupabase, fetchUserProfile } from '@/services/secureAuthService';
 
 const SecureAuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -95,6 +95,9 @@ export const SecureAuthProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     user,
     profile,
     teacherProfile,
+    // Legacy compatibility - map new types to old structure
+    teacher: teacherProfile,
+    student: profile,
     isLoading,
     signUp,
     signIn,
