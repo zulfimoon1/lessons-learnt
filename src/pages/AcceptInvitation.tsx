@@ -1,43 +1,48 @@
-import { useState, useEffect } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+
+import React, { useState, useEffect } from 'react';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { SchoolIcon, XCircleIcon, ArrowLeftIcon } from "lucide-react";
+import bcrypt from 'bcryptjs';
 
 const AcceptInvitation = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { toast } = useToast();
-  
-  const token = searchParams.get('token');
-  const [isLoading, setIsLoading] = useState(false);
-  const [invitation, setInvitation] = useState<any>(null);
+  const [invitation, setInvitation] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isAccepting, setIsAccepting] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
-    email: '',
     password: '',
     confirmPassword: ''
   });
 
+  const token = searchParams.get('token');
+
   useEffect(() => {
     if (!token) {
       toast({
-        title: "Invalid invitation",
-        description: "No invitation token provided",
+        title: "Invalid Link",
+        description: "This invitation link is invalid or missing required parameters.",
         variant: "destructive",
       });
       navigate('/teacher-login');
       return;
     }
-    
+
     loadInvitation();
-  }, [token, navigate]);
+  }, [token]);
 
   const loadInvitation = async () => {
     try {
+      console.log('Loading invitation with token:', token);
+
       const { data, error } = await supabase
         .from('invitations')
         .select('*')
@@ -45,11 +50,11 @@ const AcceptInvitation = () => {
         .eq('status', 'pending')
         .single();
 
-      if (error) {
-        console.error('Error loading invitation:', error);
+      if (error || !data) {
+        console.error('Invitation not found:', error);
         toast({
-          title: "Invalid invitation",
-          description: "This invitation link is invalid or has expired",
+          title: "Invalid Invitation",
+          description: "This invitation link is invalid, expired, or has already been used.",
           variant: "destructive",
         });
         navigate('/teacher-login');
@@ -59,7 +64,7 @@ const AcceptInvitation = () => {
       // Check if invitation has expired
       if (new Date(data.expires_at) < new Date()) {
         toast({
-          title: "Invitation expired",
+          title: "Invitation Expired",
           description: "This invitation has expired. Please request a new one.",
           variant: "destructive",
         });
@@ -67,82 +72,86 @@ const AcceptInvitation = () => {
         return;
       }
 
+      console.log('Invitation loaded:', data);
       setInvitation(data);
-      setFormData(prev => ({
-        ...prev,
-        email: data.email
-      }));
     } catch (error) {
       console.error('Error loading invitation:', error);
       toast({
         title: "Error",
-        description: "Failed to load invitation details",
+        description: "Failed to load invitation details.",
         variant: "destructive",
       });
+      navigate('/teacher-login');
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const handleAcceptInvitation = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.name.trim() || !formData.password) {
-      toast({
-        title: "Missing information",
-        description: "Please fill in all required fields",
-        variant: "destructive",
-      });
-      return;
-    }
-
     if (formData.password !== formData.confirmPassword) {
       toast({
-        title: "Password mismatch",
-        description: "Passwords do not match",
+        title: "Password Mismatch",
+        description: "Passwords do not match.",
         variant: "destructive",
       });
       return;
     }
 
-    setIsLoading(true);
+    if (formData.password.length < 6) {
+      toast({
+        title: "Password Too Short",
+        description: "Password must be at least 6 characters long.",
+        variant: "destructive",
+      });
+      return;
+    }
 
+    setIsAccepting(true);
     try {
-      // Create teacher profile
-      const { data: newTeacher, error: teacherError } = await supabase
-        .from('teacher_profiles')
+      console.log('Accepting invitation for:', invitation.email);
+
+      // Hash the password
+      const passwordHash = await bcrypt.hash(formData.password, 10);
+
+      // Create teacher account
+      const { data: teacher, error: teacherError } = await supabase
+        .from('teachers')
         .insert({
-          id: crypto.randomUUID(),
           name: formData.name.trim(),
-          email: formData.email,
+          email: invitation.email,
+          password_hash: passwordHash,
           school: invitation.school,
           role: invitation.role,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
         })
         .select()
         .single();
 
       if (teacherError) {
         console.error('Error creating teacher:', teacherError);
-        toast({
-          title: "Registration failed",
-          description: "Failed to create teacher account",
-          variant: "destructive",
-        });
-        return;
+        throw teacherError;
       }
 
-      // Mark invitation as accepted
-      await supabase
+      console.log('Teacher created:', teacher);
+
+      // Update invitation status
+      const { error: updateError } = await supabase
         .from('invitations')
-        .update({ 
+        .update({
           status: 'accepted',
-          accepted_at: new Date().toISOString()
+          accepted_at: new Date().toISOString(),
         })
         .eq('id', invitation.id);
 
+      if (updateError) {
+        console.error('Error updating invitation:', updateError);
+      }
+
       toast({
-        title: "Welcome!",
-        description: "Your account has been created successfully",
+        title: "Account Created",
+        description: "Your teacher account has been created successfully! You can now log in.",
+        variant: "default",
       });
 
       navigate('/teacher-login');
@@ -150,92 +159,141 @@ const AcceptInvitation = () => {
       console.error('Error accepting invitation:', error);
       toast({
         title: "Error",
-        description: "Failed to accept invitation",
+        description: `Failed to create account: ${error.message}`,
         variant: "destructive",
       });
     } finally {
-      setIsLoading(false);
+      setIsAccepting(false);
     }
   };
 
-  if (!invitation) {
+  if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p>Loading invitation...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
+          <p>Loading invitation details...</p>
         </div>
       </div>
     );
   }
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center p-4">
-      <Card className="w-full max-w-md bg-white/80 backdrop-blur-sm border-blue-100">
-        <CardHeader className="text-center">
-          <CardTitle className="text-2xl text-gray-900">Accept Invitation</CardTitle>
-          <CardDescription>Create your account to join Lesson Lens</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleAcceptInvitation} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">Full Name</Label>
-              <Input
-                id="name"
-                type="text"
-                placeholder="Enter your full name"
-                value={formData.name}
-                onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                required
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="teacher@school.edu"
-                value={formData.email}
-                onChange={() => {}}
-                readOnly
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                placeholder="Create a password"
-                value={formData.password}
-                onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
-                required
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="confirmPassword">Confirm Password</Label>
-              <Input
-                id="confirmPassword"
-                type="password"
-                placeholder="Confirm your password"
-                value={formData.confirmPassword}
-                onChange={(e) => setFormData(prev => ({ ...prev, confirmPassword: e.target.value }))}
-                required
-              />
-            </div>
-
-            <Button 
-              type="submit" 
-              className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700"
-              disabled={isLoading}
+  if (!invitation) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+        <Card className="w-full max-w-md">
+          <CardHeader className="text-center">
+            <XCircleIcon className="w-16 h-16 text-red-500 mx-auto mb-4" />
+            <CardTitle>Invalid Invitation</CardTitle>
+            <CardDescription>
+              This invitation link is invalid or has expired.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <Button
+              onClick={() => navigate('/teacher-login')}
+              className="w-full"
             >
-              {isLoading ? "Creating account..." : "Create Account"}
+              Go to Login
             </Button>
-          </form>
-        </CardContent>
-      </Card>
+            <Button
+              onClick={() => navigate('/')}
+              variant="outline"
+              className="w-full flex items-center gap-2"
+            >
+              <ArrowLeftIcon className="w-4 h-4" />
+              Back to Home
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 py-12 px-4">
+      <div className="max-w-md mx-auto">
+        <div className="mb-6">
+          <Button
+            onClick={() => navigate('/')}
+            variant="outline"
+            className="flex items-center gap-2"
+          >
+            <ArrowLeftIcon className="w-4 h-4" />
+            Back to Home
+          </Button>
+        </div>
+        
+        <Card>
+          <CardHeader className="text-center">
+            <SchoolIcon className="w-16 h-16 text-purple-600 mx-auto mb-4" />
+            <CardTitle>Accept Teacher Invitation</CardTitle>
+            <CardDescription>
+              You've been invited to join <strong>{invitation.school}</strong> as a teacher.
+              Please create your account to get started.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <Label htmlFor="email">Email Address</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={invitation.email}
+                  disabled
+                  className="bg-gray-50"
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="name">Full Name</Label>
+                <Input
+                  id="name"
+                  type="text"
+                  value={formData.name}
+                  onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                  placeholder="Enter your full name"
+                  required
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="password">Password</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  value={formData.password}
+                  onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
+                  placeholder="Create a password (min 6 characters)"
+                  required
+                  minLength={6}
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="confirmPassword">Confirm Password</Label>
+                <Input
+                  id="confirmPassword"
+                  type="password"
+                  value={formData.confirmPassword}
+                  onChange={(e) => setFormData(prev => ({ ...prev, confirmPassword: e.target.value }))}
+                  placeholder="Confirm your password"
+                  required
+                />
+              </div>
+              
+              <Button
+                type="submit"
+                disabled={isAccepting}
+                className="w-full"
+              >
+                {isAccepting ? 'Creating Account...' : 'Accept Invitation & Create Account'}
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 };

@@ -1,27 +1,8 @@
 
-import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
-import { LiveChatSession } from '@/types/auth';
-
-interface ChatSession {
-  id: string;
-  student_name: string;
-  school: string;
-  grade: string;
-  status: string;
-  doctor_id: string | null;
-  is_anonymous: boolean;
-  created_at: string;
-}
-
-interface Teacher {
-  id: string;
-  name: string;
-  email: string;
-  school: string;
-  role: string;
-}
+import { useState, useEffect } from "react";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { LiveChatSession } from "@/types/auth";
 
 interface ChatMessage {
   id: string;
@@ -32,165 +13,37 @@ interface ChatMessage {
   sent_at: string;
 }
 
-interface DoctorInfo {
-  name: string;
-  id: string;
-}
-
-// Hook for chat session management (admin/teacher view)
-export const useChatSession = (teacherId: string, school: string) => {
-  const [sessions, setSessions] = useState<ChatSession[]>([]);
-  const [doctors, setDoctors] = useState<Teacher[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+export const useChatSession = (session: LiveChatSession, isDoctorView: boolean, studentName: string) => {
   const { toast } = useToast();
-
-  useEffect(() => {
-    loadSessions();
-    loadDoctors();
-  }, [teacherId, school]);
-
-  const loadSessions = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('live_chat_sessions')
-        .select('*')
-        .eq('school', school)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      setSessions(data || []);
-    } catch (error) {
-      console.error('Error loading chat sessions:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load chat sessions",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const loadDoctors = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('teacher_profiles')
-        .select('*')
-        .eq('school', school)
-        .eq('role', 'doctor');
-
-      if (error) throw error;
-      setDoctors(data || []);
-    } catch (error) {
-      console.error('Error loading doctors:', error);
-    }
-  };
-
-  const assignDoctor = async (sessionId: string, doctorId: string) => {
-    try {
-      const { error } = await supabase
-        .from('live_chat_sessions')
-        .update({ 
-          doctor_id: doctorId, 
-          status: 'active',
-          started_at: new Date().toISOString()
-        })
-        .eq('id', sessionId);
-
-      if (error) throw error;
-      
-      await loadSessions();
-      
-      toast({
-        title: "Success",
-        description: "Doctor assigned to chat session",
-      });
-    } catch (error) {
-      console.error('Error assigning doctor:', error);
-      toast({
-        title: "Error",
-        description: "Failed to assign doctor",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const endSession = async (sessionId: string) => {
-    try {
-      const { error } = await supabase
-        .from('live_chat_sessions')
-        .update({ 
-          status: 'ended',
-          ended_at: new Date().toISOString()
-        })
-        .eq('id', sessionId);
-
-      if (error) throw error;
-      
-      await loadSessions();
-      
-      toast({
-        title: "Success",
-        description: "Chat session ended",
-      });
-    } catch (error) {
-      console.error('Error ending session:', error);
-      toast({
-        title: "Error",
-        description: "Failed to end session",
-        variant: "destructive",
-      });
-    }
-  };
-
-  return {
-    sessions,
-    doctors,
-    isLoading,
-    assignDoctor,
-    endSession,
-    loadSessions
-  };
-};
-
-// Hook for real-time chat functionality (used in RealtimeChat component)
-export const useRealtimeChatSession = (session: LiveChatSession, isDoctorView: boolean, studentName: string) => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isConnected, setIsConnected] = useState(false);
-  const [doctorInfo, setDoctorInfo] = useState<DoctorInfo | null>(null);
-  const { toast } = useToast();
+  const [doctorInfo, setDoctorInfo] = useState<any>(null);
 
   useEffect(() => {
+    console.log('useChatSession: Setting up chat for session:', session.id);
     loadMessages();
-    loadDoctorInfo();
     
-    // Set up real-time subscription for messages
-    const messageSubscription = supabase
-      .channel('chat-messages')
-      .on('postgres_changes', 
-        { 
-          event: 'INSERT', 
-          schema: 'public', 
-          table: 'chat_messages',
-          filter: `session_id=eq.${session.id}`
-        }, 
-        (payload) => {
-          setMessages(prev => [...prev, payload.new as ChatMessage]);
-        }
-      )
-      .subscribe();
+    // Set up real-time subscription and store the cleanup function
+    const cleanup = setupRealtimeSubscription();
+    
+    if (session.status === 'active' && session.doctor_id) {
+      setIsConnected(true);
+      if (!isDoctorView) {
+        loadDoctorInfo(session.doctor_id);
+      }
+    }
 
-    return () => {
-      supabase.removeChannel(messageSubscription);
-    };
+    if (isDoctorView && !session.doctor_id) {
+      notifyStudentDoctorJoined();
+    }
+
+    // Return the cleanup function
+    return cleanup;
   }, [session.id]);
-
-  useEffect(() => {
-    setIsConnected(session.status === 'active');
-  }, [session.status]);
 
   const loadMessages = async () => {
     try {
+      console.log('useChatSession: Loading messages for session:', session.id);
       const { data, error } = await supabase
         .from('chat_messages')
         .select('*')
@@ -198,26 +51,102 @@ export const useRealtimeChatSession = (session: LiveChatSession, isDoctorView: b
         .order('sent_at', { ascending: true });
 
       if (error) throw error;
-      setMessages(data || []);
+      console.log('useChatSession: Loaded messages:', data);
+      
+      // Transform data to ensure proper typing
+      const typedMessages: ChatMessage[] = (data || []).map(msg => ({
+        ...msg,
+        sender_type: msg.sender_type as 'student' | 'doctor'
+      }));
+      
+      setMessages(typedMessages);
     } catch (error) {
-      console.error('Error loading messages:', error);
+      console.error('useChatSession: Error loading messages:', error);
     }
   };
 
-  const loadDoctorInfo = async () => {
-    if (session.doctor_id) {
-      try {
-        const { data, error } = await supabase
-          .from('teacher_profiles')
-          .select('name, id')
-          .eq('id', session.doctor_id)
-          .single();
+  const setupRealtimeSubscription = () => {
+    console.log('useChatSession: Setting up real-time subscription');
+    const channel = supabase
+      .channel(`chat_${session.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'chat_messages',
+          filter: `session_id=eq.${session.id}`
+        },
+        (payload) => {
+          console.log('useChatSession: New message received:', payload);
+          const newMessage = {
+            ...payload.new,
+            sender_type: payload.new.sender_type as 'student' | 'doctor'
+          } as ChatMessage;
+          setMessages(current => [...current, newMessage]);
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'live_chat_sessions',
+          filter: `id=eq.${session.id}`
+        },
+        (payload) => {
+          console.log('useChatSession: Session updated:', payload);
+          if (payload.new.status === 'active' && payload.new.doctor_id) {
+            setIsConnected(true);
+            if (!isDoctorView) {
+              loadDoctorInfo(payload.new.doctor_id);
+            }
+          }
+        }
+      )
+      .subscribe((status) => {
+        console.log('useChatSession: Subscription status:', status);
+      });
 
-        if (error) throw error;
-        setDoctorInfo(data);
-      } catch (error) {
-        console.error('Error loading doctor info:', error);
-      }
+    // Return cleanup function that removes the channel
+    return () => {
+      console.log('useChatSession: Cleaning up chat subscription');
+      supabase.removeChannel(channel);
+    };
+  };
+
+  const loadDoctorInfo = async (doctorId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('teachers')
+        .select('name, email')
+        .eq('id', doctorId)
+        .eq('role', 'doctor')
+        .single();
+
+      if (error) throw error;
+      console.log('useChatSession: Loaded doctor info:', data);
+      setDoctorInfo(data);
+    } catch (error) {
+      console.error('useChatSession: Error loading doctor info:', error);
+    }
+  };
+
+  const notifyStudentDoctorJoined = async () => {
+    try {
+      console.log('useChatSession: Sending doctor joined notification');
+      const { error } = await supabase
+        .from('chat_messages')
+        .insert({
+          session_id: session.id,
+          sender_type: 'doctor',
+          sender_name: 'System',
+          message: `Dr. ${studentName} has joined the conversation. How can I help you today?`
+        });
+
+      if (error) throw error;
+    } catch (error) {
+      console.error('useChatSession: Error sending doctor joined notification:', error);
     }
   };
 
@@ -225,25 +154,22 @@ export const useRealtimeChatSession = (session: LiveChatSession, isDoctorView: b
     if (!message.trim()) return;
 
     try {
-      const senderName = isDoctorView 
-        ? (doctorInfo?.name || 'Doctor')
-        : (isAnonymous ? 'Anonymous Student' : studentName);
-
+      console.log('useChatSession: Sending message:', message);
       const { error } = await supabase
         .from('chat_messages')
         .insert({
           session_id: session.id,
           sender_type: isDoctorView ? 'doctor' : 'student',
-          sender_name: senderName,
+          sender_name: isDoctorView ? `Dr. ${studentName}` : (isAnonymous ? 'Anonymous Student' : studentName),
           message: message.trim()
         });
 
       if (error) throw error;
     } catch (error) {
-      console.error('Error sending message:', error);
+      console.error('useChatSession: Error sending message:', error);
       toast({
         title: "Error",
-        description: "Failed to send message",
+        description: "Failed to send message. Please try again.",
         variant: "destructive",
       });
     }

@@ -36,39 +36,46 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setIsLoading(false);
   }, []);
 
-  const signUp = async (email: string, password: string, userData: any) => {
-    // Legacy compatibility - redirect to secure auth
-    return { error: 'Please use the new secure authentication system' };
-  };
-
-  const signIn = async (email: string, password: string) => {
-    // Legacy compatibility - redirect to secure auth
-    return { error: 'Please use the new secure authentication system' };
-  };
-
   const teacherLogin = async (
     email: string, 
     password: string, 
     name?: string, 
-    school?: string, 
+    school?: string,
     role?: 'teacher' | 'admin' | 'doctor'
   ) => {
-    try {
-      const result = await teacherLoginService(email, password, name, school, role);
-      
-      if (result.teacher) {
-        setTeacher(result.teacher);
-        localStorage.setItem('teacher', JSON.stringify(result.teacher));
-      }
-      
-      return result;
-    } catch (error) {
-      console.error('Teacher login error:', error);
-      return { error: 'Login failed. Please try again.' };
+    const result = await teacherLoginService(email, password, name, school, role);
+    
+    if (result.teacher) {
+      setTeacher(result.teacher);
+      localStorage.setItem('teacher', JSON.stringify(result.teacher));
     }
+    
+    return result;
   };
 
-  const signOut = async () => {
+  const studentLogin = async (fullName: string, password: string) => {
+    const result = await studentSimpleLoginService(fullName, password);
+    
+    if (result.student) {
+      setStudent(result.student);
+      localStorage.setItem('student', JSON.stringify(result.student));
+    }
+    
+    return result;
+  };
+
+  const studentSignup = async (fullName: string, school: string, grade: string, password: string) => {
+    const result = await studentSignupService(fullName, school, grade, password);
+    
+    if (result.student) {
+      setStudent(result.student);
+      localStorage.setItem('student', JSON.stringify(result.student));
+    }
+    
+    return result;
+  };
+
+  const logout = () => {
     setTeacher(null);
     setStudent(null);
     localStorage.removeItem('teacher');
@@ -76,16 +83,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const value: AuthContextType = {
-    user: teacher || student,
-    profile: student,
-    teacherProfile: teacher,
     teacher,
     student,
     isLoading,
-    signUp,
-    signIn,
-    signOut,
     teacherLogin,
+    studentLogin,
+    studentSignup,
+    logout,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
