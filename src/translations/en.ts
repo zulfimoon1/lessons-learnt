@@ -1,4 +1,3 @@
-
 export const enTranslations = {
   // Navigation
   'nav.home': 'Home',
@@ -529,4 +528,9 @@ export const enTranslations = {
   'demo.userType.student': 'Student View',
   'demo.userType.teacher': 'Teacher View',
   'demo.userType.psychologist': 'Psychologist View',
+  
+  // Navigation
+  'navigation': {
+    home: "Home"
+  }
 };
