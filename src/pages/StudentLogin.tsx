@@ -16,7 +16,7 @@ import LanguageSwitcher from "@/components/LanguageSwitcher";
 const StudentLogin = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { studentLogin, studentSignup } = useAuth();
+  const { login } = useAuth();
   const { t } = useLanguage();
   
   const [loginData, setLoginData] = useState({
@@ -39,17 +39,35 @@ const StudentLogin = () => {
     setIsLoading(true);
 
     try {
-      const result = await studentLogin(loginData.fullName.trim(), loginData.password);
+      const { data, error } = await supabase
+        .from('students')
+        .select('*')
+        .eq('full_name', loginData.fullName.trim())
+        .single();
 
-      if (result.error) {
+      if (error || !data) {
         toast({
           title: t('student.loginFailed'),
-          description: result.error,
+          description: t('student.loginFailed'),
           variant: "destructive",
         });
         return;
       }
 
+      const bcrypt = await import('bcryptjs');
+      const isValidPassword = await bcrypt.compare(loginData.password, data.password_hash);
+
+      if (!isValidPassword) {
+        toast({
+          title: t('student.loginFailed'),
+          description: t('student.loginFailed'),
+          variant: "destructive",
+        });
+        return;
+      }
+
+      login(data, 'student');
+      
       toast({
         title: t('student.welcomeBack'),
         description: t('student.loginSuccess'),
@@ -83,21 +101,26 @@ const StudentLogin = () => {
     setIsLoading(true);
 
     try {
-      const result = await studentSignup(
-        signupData.fullName.trim(),
-        signupData.school.trim(),
-        signupData.grade.trim(),
-        signupData.password
-      );
+      const bcrypt = await import('bcryptjs');
+      const saltRounds = 12;
+      const hashedPassword = await bcrypt.hash(signupData.password, saltRounds);
 
-      if (result.error) {
-        toast({
-          title: t('student.signupFailed'),
-          description: result.error,
-          variant: "destructive",
-        });
-        return;
-      }
+      const { data, error } = await supabase
+        .from('students')
+        .insert([
+          {
+            full_name: signupData.fullName.trim(),
+            school: signupData.school.trim(),
+            grade: signupData.grade.trim(),
+            password_hash: hashedPassword
+          }
+        ])
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      login(data, 'student');
       
       toast({
         title: t('student.accountCreated'),
