@@ -20,6 +20,7 @@ import MentalHealthArticles from "@/components/MentalHealthArticles";
 import ComplianceFooter from "@/components/ComplianceFooter";
 import CookieConsent from "@/components/CookieConsent";
 import WeeklySummaryReview from "@/components/WeeklySummaryReview";
+import Breadcrumbs from "@/components/navigation/Breadcrumbs";
 
 interface Subscription {
   id: string;
@@ -38,6 +39,13 @@ const TeacherDashboard = () => {
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isCreatingCheckout, setIsCreatingCheckout] = useState(false);
+
+  const breadcrumbItems = [
+    {
+      label: teacher?.role === 'doctor' ? t('dashboard.doctorOverview') : t('dashboard.teacherOverview'),
+      current: true
+    }
+  ];
 
   useEffect(() => {
     if (!teacher) {
@@ -168,6 +176,8 @@ const TeacherDashboard = () => {
       </header>
 
       <main className="max-w-7xl mx-auto p-6 space-y-6">
+        <Breadcrumbs items={breadcrumbItems} />
+        
         {!subscription && (
           <Card className="border-yellow-200 bg-yellow-50">
             <CardHeader>

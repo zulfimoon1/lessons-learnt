@@ -49,5 +49,20 @@ export const ltTeacherTranslations = {
   'teacher.curriculumPlanning': 'Mokymo programos planavimas',
   'teacher.assessmentTools': 'Vertinimo įrankiai',
   'teacher.professionalDevelopment': 'Profesinis tobulėjimas',
-  'teacher.collaborationTools': 'Bendradarbiavimo įrankiai'
+  'teacher.collaborationTools': 'Bendradarbiavimo įrankiai',
+  
+  // Subscription related translations
+  'teacher.subscriptionDescription': 'Įkelkite savo pamokų tvarkaraštį nemokamai. Atrakinkite visas mokamas „Lessons Learnt" funkcijas, įskaitant studentų atsiliepimus, klausimus ir susirūpinimus.',
+  'teacher.doctorSubscriptionDescription': 'Prisijunkite prie „Lessons Learnt" ir gaukite prieigą prie studentų savaitės suvestinių ir psichinės sveikatos išteklių.',
+  'teacher.activePlan': 'Aktyvus {planType} planas galioja iki {date}',
+  'teacher.active': 'Aktyvus',
+  'teacher.inactive': 'Neaktyvus',
+  'teacher.missingInfo': 'Trūksta mokytojo informacijos',
+  'teacher.checkoutFailed': 'Mokėjimo sesijos sukūrimas nepavyko',
+  'teacher.subscriptionRequiredForSummaries': 'Prenumerata reikalinga savaitės suvestinėms peržiūrėti',
+  'teacher.subscribeToContinue': 'Prenumeruokite, kad galėtumėte tęsti',
+  'teacher.mentalHealthProfessional': 'Psichinės sveikatos specialistas',
+  'teacher.availability': 'Prieinamumas',
+  'teacher.available': 'Prieinamas',
+  'teacher.busy': 'Užsiėmęs'
 };
