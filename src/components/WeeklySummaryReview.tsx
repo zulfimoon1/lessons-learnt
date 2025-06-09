@@ -18,7 +18,6 @@ interface WeeklySummary {
   academic_concerns: string | null;
   week_start_date: string;
   submitted_at: string;
-  is_anonymous: boolean;
 }
 
 interface WeeklySummaryReviewProps {
@@ -105,7 +104,7 @@ const WeeklySummaryReview = ({ school }: WeeklySummaryReviewProps) => {
                 <div className="flex items-center gap-2">
                   <UserIcon className="w-4 h-4 text-gray-500" />
                   <span className="font-medium">
-                    {summary.is_anonymous ? t('weekly.anonymous') : summary.student_name}
+                    {summary.student_name}
                   </span>
                   <Badge variant="outline">{summary.grade}</Badge>
                   {hasConcerns(summary) && (
