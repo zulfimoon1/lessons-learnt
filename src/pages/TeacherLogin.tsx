@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { GraduationCapIcon, LogInIcon, School, UserIcon, Mail, ShieldIcon } from "lucide-react";
+import { BookOpenIcon, LogInIcon, School, UserIcon, Mail, ShieldIcon } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -53,10 +53,10 @@ const TeacherLogin = () => {
   // Don't render if still loading auth state
   if (authLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-2 text-gray-600">Loading...</p>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+          <p className="mt-2 text-muted-foreground">Loading...</p>
         </div>
       </div>
     );
@@ -84,7 +84,7 @@ const TeacherLogin = () => {
       if (result.error) {
         console.error('TeacherLogin: Login failed with error:', result.error);
         toast({
-          title: "Login failed",
+          title: t('auth.loginFailed') || "Login failed",
           description: result.error,
           variant: "destructive",
         });
@@ -92,8 +92,8 @@ const TeacherLogin = () => {
         console.log('TeacherLogin: Login successful, teacher data:', result.teacher);
         
         toast({
-          title: "Welcome back! 👨‍🏫",
-          description: `Successfully logged in as ${result.teacher.name}`,
+          title: t('auth.loginSuccess') || "Welcome back! 👨‍🏫",
+          description: `Successfully logged in to Lessons Learnt`,
         });
         
         // Navigation will be handled by useEffect when teacher state updates
@@ -101,7 +101,7 @@ const TeacherLogin = () => {
       } else {
         console.error('TeacherLogin: No error but no teacher data returned');
         toast({
-          title: "Login failed",
+          title: t('auth.loginFailed') || "Login failed",
           description: "Invalid response from server. Please try again.",
           variant: "destructive",
         });
@@ -109,7 +109,7 @@ const TeacherLogin = () => {
     } catch (err) {
       console.error('TeacherLogin: Unexpected error during login:', err);
       toast({
-        title: "Login failed",
+        title: t('auth.loginFailed') || "Login failed",
         description: "An unexpected error occurred. Please try again.",
         variant: "destructive",
       });
@@ -133,8 +133,8 @@ const TeacherLogin = () => {
     // Validate passwords match
     if (signupData.password !== signupData.confirmPassword) {
       toast({
-        title: "Password mismatch",
-        description: "Passwords do not match",
+        title: t('auth.passwordMismatch') || "Password mismatch",
+        description: t('auth.passwordsDoNotMatch') || "Passwords do not match",
         variant: "destructive",
       });
       return;
@@ -157,7 +157,7 @@ const TeacherLogin = () => {
       if (result.error) {
         console.error('TeacherLogin: Signup failed with error:', result.error);
         toast({
-          title: "Signup failed",
+          title: t('auth.registerError') || "Signup failed",
           description: result.error,
           variant: "destructive",
         });
@@ -165,8 +165,8 @@ const TeacherLogin = () => {
         console.log('TeacherLogin: Signup successful, teacher data:', result.teacher);
         
         toast({
-          title: "Account created! 🎉",
-          description: `Welcome to Lesson Lens, ${result.teacher.name}!`,
+          title: t('auth.registerSuccess') || "Account created! 🎉",
+          description: `Welcome to Lessons Learnt!`,
         });
         
         // Navigation will be handled by useEffect when teacher state updates
@@ -174,7 +174,7 @@ const TeacherLogin = () => {
       } else {
         console.error('TeacherLogin: No error but no teacher data returned');
         toast({
-          title: "Signup failed",
+          title: t('auth.registerError') || "Signup failed",
           description: "Invalid response from server. Please try again.",
           variant: "destructive",
         });
@@ -182,7 +182,7 @@ const TeacherLogin = () => {
     } catch (err) {
       console.error('TeacherLogin: Unexpected error during signup:', err);
       toast({
-        title: "Signup failed",
+        title: t('auth.registerError') || "Signup failed",
         description: "An unexpected error occurred. Please try again.",
         variant: "destructive",
       });
@@ -192,16 +192,16 @@ const TeacherLogin = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <div className="absolute top-4 right-4">
         <LanguageSwitcher />
       </div>
-      <Card className="w-full max-w-md bg-white/80 backdrop-blur-sm border-blue-100">
+      <Card className="w-full max-w-md bg-card/80 backdrop-blur-sm border-border">
         <CardHeader className="text-center">
-          <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full mx-auto flex items-center justify-center mb-4">
-            <GraduationCapIcon className="w-8 h-8 text-white" />
+          <div className="w-16 h-16 bg-primary rounded-full mx-auto flex items-center justify-center mb-4">
+            <BookOpenIcon className="w-8 h-8 text-primary-foreground" />
           </div>
-          <CardTitle className="text-2xl text-gray-900">{t('login.teacher.title') || "Teacher Portal"}</CardTitle>
+          <CardTitle className="text-2xl text-foreground">{t('login.teacher.title') || "Teacher Portal"}</CardTitle>
           <CardDescription>
             {t('login.teacher.subtitle') || "Access your teaching dashboard"}
           </CardDescription>
@@ -209,8 +209,8 @@ const TeacherLogin = () => {
         <CardContent>
           <Tabs defaultValue="login" className="space-y-4">
             <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="login">{t('login.teacher.login') || "Login"}</TabsTrigger>
-              <TabsTrigger value="signup">{t('login.teacher.signup') || "Sign Up"}</TabsTrigger>
+              <TabsTrigger value="login">{t('auth.login') || "Login"}</TabsTrigger>
+              <TabsTrigger value="signup">{t('auth.signUp') || "Sign Up"}</TabsTrigger>
             </TabsList>
 
             <TabsContent value="login">
@@ -218,7 +218,7 @@ const TeacherLogin = () => {
                 <div className="space-y-2">
                   <Label htmlFor="loginEmail" className="flex items-center gap-2">
                     <Mail className="w-4 h-4" />
-                    {t('login.teacher.email') || "Email"}
+                    {t('auth.email') || "Email"}
                   </Label>
                   <Input
                     id="loginEmail"
@@ -231,7 +231,7 @@ const TeacherLogin = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="loginPassword">{t('login.teacher.password') || "Password"}</Label>
+                  <Label htmlFor="loginPassword">{t('auth.password') || "Password"}</Label>
                   <Input
                     id="loginPassword"
                     type="password"
@@ -244,13 +244,13 @@ const TeacherLogin = () => {
 
                 <Button 
                   type="submit" 
-                  className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
+                  className="w-full"
                   disabled={isLoading}
                 >
-                  {isLoading ? (t('login.teacher.loggingIn') || "Logging in...") : (
+                  {isLoading ? (t('auth.loggingIn') || "Logging in...") : (
                     <>
                       <LogInIcon className="w-4 h-4 mr-2" />
-                      {t('login.teacher.login') || "Login"}
+                      {t('auth.login') || "Login"}
                     </>
                   )}
                 </Button>
@@ -262,7 +262,7 @@ const TeacherLogin = () => {
                 <div className="space-y-2">
                   <Label htmlFor="signupName" className="flex items-center gap-2">
                     <UserIcon className="w-4 h-4" />
-                    {t('login.teacher.fullName') || "Full Name"}
+                    {t('auth.fullName') || "Full Name"}
                   </Label>
                   <Input
                     id="signupName"
@@ -277,7 +277,7 @@ const TeacherLogin = () => {
                 <div className="space-y-2">
                   <Label htmlFor="signupEmail" className="flex items-center gap-2">
                     <Mail className="w-4 h-4" />
-                    {t('login.teacher.email') || "Email"}
+                    {t('auth.email') || "Email"}
                   </Label>
                   <Input
                     id="signupEmail"
@@ -292,7 +292,7 @@ const TeacherLogin = () => {
                 <div className="space-y-2">
                   <Label htmlFor="signupSchool" className="flex items-center gap-2">
                     <School className="w-4 h-4" />
-                    {t('login.teacher.school') || "School"}
+                    {t('auth.school') || "School"}
                   </Label>
                   <Input
                     id="signupSchool"
@@ -325,19 +325,19 @@ const TeacherLogin = () => {
                     </SelectContent>
                   </Select>
                   {signupData.role === "admin" && (
-                    <p className="text-xs text-gray-500 mt-1">
+                    <p className="text-xs text-muted-foreground mt-1">
                       {t('login.teacher.adminHint') || "School Admins can manage teachers and view all feedback"}
                     </p>
                   )}
                   {signupData.role === "doctor" && (
-                    <p className="text-xs text-gray-500 mt-1">
+                    <p className="text-xs text-muted-foreground mt-1">
                       Mental Health Professionals can access live chat sessions and student wellness reports
                     </p>
                   )}
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="signupPassword">{t('login.teacher.password') || "Password"}</Label>
+                  <Label htmlFor="signupPassword">{t('auth.password') || "Password"}</Label>
                   <Input
                     id="signupPassword"
                     type="password"
@@ -349,7 +349,7 @@ const TeacherLogin = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="confirmPassword">{t('login.teacher.confirmPassword') || "Confirm Password"}</Label>
+                  <Label htmlFor="confirmPassword">{t('auth.confirmPassword') || "Confirm Password"}</Label>
                   <Input
                     id="confirmPassword"
                     type="password"
@@ -362,10 +362,10 @@ const TeacherLogin = () => {
 
                 <Button 
                   type="submit" 
-                  className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700"
+                  className="w-full"
                   disabled={isLoading}
                 >
-                  {isLoading ? (t('login.teacher.creatingAccount') || "Creating account...") : (t('login.teacher.createAccount') || "Create Account")}
+                  {isLoading ? (t('auth.creatingAccount') || "Creating account...") : (t('auth.createAccount') || "Create Account")}
                 </Button>
               </form>
             </TabsContent>

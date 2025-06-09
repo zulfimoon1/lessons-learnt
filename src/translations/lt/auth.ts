@@ -1,5 +1,4 @@
 
-
 export const ltAuthTranslations = {
   'auth.login': 'Prisijungti',
   'auth.logout': 'Atsijungti',
@@ -33,6 +32,9 @@ export const ltAuthTranslations = {
   'auth.emailRequired': 'El. paštas privalomas',
   'auth.nameRequired': 'Vardas privalomas',
   'auth.gradeRequired': 'Klasė privaloma',
-  'auth.schoolCodeRequired': 'Mokyklos kodas privalomas'
+  'auth.schoolCodeRequired': 'Mokyklos kodas privalomas',
+  'auth.school': 'Mokykla',
+  'auth.passwordMismatch': 'Slaptažodžiai nesutampa',
+  'auth.passwordsDoNotMatch': 'Slaptažodžiai nesutampa',
+  'auth.creatingAccount': 'Kuriama paskyra...'
 };
-
