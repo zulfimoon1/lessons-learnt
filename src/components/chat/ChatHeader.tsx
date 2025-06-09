@@ -3,6 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { CardTitle } from "@/components/ui/card";
 import { XIcon, StethoscopeIcon } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface ChatHeaderProps {
   isDoctorView: boolean;
@@ -21,15 +22,17 @@ const ChatHeader = ({
   doctorName, 
   onClose 
 }: ChatHeaderProps) => {
+  const { t } = useLanguage();
+
   return (
     <div className="bg-purple-600 text-white p-4">
       <div className="flex items-center justify-between">
         <CardTitle className="text-lg flex items-center gap-2">
           <StethoscopeIcon className="w-5 h-5" />
-          {isDoctorView ? 'Chat with Student' : 'Live Chat with Doctor'}
+          {isDoctorView ? t('chat.chatWithStudent') : t('chat.liveChatWithDoctor')}
           {isAnonymous && !isDoctorView && (
             <Badge variant="secondary" className="bg-purple-800 text-white">
-              Anonymous
+              {t('chat.anonymous')}
             </Badge>
           )}
         </CardTitle>
@@ -47,14 +50,18 @@ const ChatHeader = ({
           <span className="flex items-center gap-1">
             <div className="w-2 h-2 bg-green-400 rounded-full"></div>
             {isDoctorView 
-              ? `Connected with ${isAnonymous ? 'Anonymous Student' : studentName}`
-              : `Connected with Dr. ${doctorName || 'Doctor'}`
+              ? t('chat.connectedWithStudent', { 
+                  student: isAnonymous ? t('demo.mockup.anonymousStudent') : studentName 
+                })
+              : t('chat.connectedWithDoctor', { 
+                  doctor: doctorName || t('chat.doctor') 
+                })
             }
           </span>
         ) : (
           <span className="flex items-center gap-1">
             <div className="w-2 h-2 bg-yellow-400 rounded-full animate-pulse"></div>
-            {isDoctorView ? "Connecting..." : "Waiting for doctor..."}
+            {isDoctorView ? t('chat.connecting') : t('chat.waitingForDoctor')}
           </span>
         )}
       </div>

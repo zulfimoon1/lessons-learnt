@@ -1,4 +1,3 @@
-
 export const ltTranslations = {
   // Navigation
   'nav.home': 'Pagrindinis',
@@ -35,6 +34,24 @@ export const ltTranslations = {
   'chat.doctorJoined': 'Gydytojas prisijungė prie pokalbio',
   'chat.endChat': 'Baigti pokalbį',
   'chat.closeChat': 'Uždaryti pokalbį',
+  'chat.chatWithDoctor': 'Pokalbis su gydytoju',
+  'chat.liveChatWithDoctor': 'Tiesioginis pokalbis su gydytoju',
+  'chat.chatWithStudent': 'Pokalbis su mokiniu',
+  'chat.startLiveChatWithDoctor': 'Pradėti tiesioginį pokalbį su gydytoju',
+  'chat.chatPreferences': 'Pokalbio nustatymai',
+  'chat.connectWithDoctor': 'Prisijunkite prie kvalifikuoto gydytojo iš jūsų mokyklos psichikos sveikatos pagalbai',
+  'chat.anonymous': 'Anoniminis',
+  'chat.identityProtected': 'Jūsų tapatybė bus visiškai apsaugota. Gydytojas nematys jūsų vardo ar asmeninių duomenų.',
+  'chat.nameVisible': 'Jūsų vardas ir mokyklos informacija bus matoma gydytojui personalizuotai pagalbai.',
+  'chat.privacyProtected': 'Privatumas apsaugotas',
+  'chat.conversationConfidential': 'Jūsų pokalbis yra visiškai konfidencialus ir anoniminis.',
+  'chat.creatingSession': 'Kuriama sesija...',
+  'chat.startChatWithDoctor': 'Pradėti pokalbį su gydytoju',
+  'chat.connectionFailed': 'Prisijungimas nepavyko',
+  'chat.connectedWithStudent': 'Prisijungta su {student}',
+  'chat.connectedWithDoctor': 'Prisijungta su gyd. {doctor}',
+  'chat.doctor': 'Gydytojas',
+  'chat.waitingForDoctor': 'Laukiama gydytojo...',
 
   // Student Login Page
   'student.portal': 'Mokinių portalas',
@@ -452,7 +469,7 @@ export const ltTranslations = {
   'demo.mentalHealthSupport.description': 'Anoniminiai psichikos sveikatos ištekliai ir profesionali pagalba',
   'demo.classManagement.title': 'Klasių tvarkaraščių valdymas',
   'demo.classManagement.description': 'Išsamūs klasių planavimo ir valdymo įrankiai',
-  'demo.liveChat.title': 'Anoniminės tiesioginio pokalbio psichikos sveikatos pagalba',
+  'demo.liveChat.title': 'Anoniminė tiesioginio pokalbio psichikos sveikatos pagalba',
   'demo.liveChat.description': 'Anoniminė momentali prieiga prie psichikos sveikatos specialistų',
   'demo.stats.features': 'Pagrindinės funkcijos',
   'demo.stats.userTypes': 'Vartotojų tipai',

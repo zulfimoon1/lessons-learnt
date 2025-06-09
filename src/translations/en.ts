@@ -1,4 +1,3 @@
-
 export const enTranslations = {
   // Navigation
   'nav.home': 'Home',
@@ -35,6 +34,24 @@ export const enTranslations = {
   'chat.doctorJoined': 'Doctor has joined the chat',
   'chat.endChat': 'End Chat',
   'chat.closeChat': 'Close Chat',
+  'chat.chatWithDoctor': 'Chat with Doctor',
+  'chat.liveChatWithDoctor': 'Live Chat with Doctor',
+  'chat.chatWithStudent': 'Chat with Student',
+  'chat.startLiveChatWithDoctor': 'Start Live Chat with Doctor',
+  'chat.chatPreferences': 'Chat Preferences',
+  'chat.connectWithDoctor': 'Connect with a qualified doctor from your school for mental health support',
+  'chat.anonymous': 'Anonymous',
+  'chat.identityProtected': 'Your identity will be completely protected. The doctor won\'t see your name or personal details.',
+  'chat.nameVisible': 'Your name and school information will be visible to the doctor for personalized support.',
+  'chat.privacyProtected': 'Privacy Protected',
+  'chat.conversationConfidential': 'Your conversation is completely confidential and anonymous.',
+  'chat.creatingSession': 'Creating Session...',
+  'chat.startChatWithDoctor': 'Start Chat with Doctor',
+  'chat.connectionFailed': 'Connection Failed',
+  'chat.connectedWithStudent': 'Connected with {student}',
+  'chat.connectedWithDoctor': 'Connected with Dr. {doctor}',
+  'chat.doctor': 'Doctor',
+  'chat.waitingForDoctor': 'Waiting for doctor...',
 
   // Student Login Page
   'student.portal': 'Student Portal',
