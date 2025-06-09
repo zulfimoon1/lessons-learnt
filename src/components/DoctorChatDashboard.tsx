@@ -54,8 +54,20 @@ const DoctorChatDashboard = ({ doctorId, doctorName, school }: DoctorChatDashboa
       if (activeError) throw activeError;
 
       console.log('Loaded sessions:', { waiting, active });
-      setWaitingSessions(waiting || []);
-      setActiveSessions(active || []);
+      
+      // Transform data to ensure proper typing
+      const typedWaiting: LiveChatSession[] = (waiting || []).map(session => ({
+        ...session,
+        status: session.status as 'waiting' | 'active' | 'ended'
+      }));
+      
+      const typedActive: LiveChatSession[] = (active || []).map(session => ({
+        ...session,
+        status: session.status as 'waiting' | 'active' | 'ended'
+      }));
+      
+      setWaitingSessions(typedWaiting);
+      setActiveSessions(typedActive);
       setIsLoading(false);
     } catch (error) {
       console.error('Error loading sessions:', error);
