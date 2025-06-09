@@ -1,37 +1,29 @@
-import { useState, useEffect } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { BookOpenIcon, LogInIcon, UserIcon, School, GraduationCap } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { GraduationCapIcon, UserIcon, SchoolIcon, BookOpenIcon } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
-import { useAuthStorage } from "@/hooks/useAuthStorage";
-import { studentSimpleLoginService, studentSignupService } from "@/services/authService";
 
 const StudentLogin = () => {
-  const { t } = useLanguage();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { student, saveStudent, isLoading: authLoading } = useAuthStorage();
-
-  // Redirect if already logged in - simplified logic
-  useEffect(() => {
-    console.log('StudentLogin: Checking auth state', { student, authLoading });
-    if (student && !authLoading) {
-      console.log('StudentLogin: Student already logged in, redirecting...');
-      navigate("/student-dashboard", { replace: true });
-    }
-  }, [student, authLoading, navigate]);
-
+  const { login } = useAuth();
+  const { t } = useLanguage();
+  
   const [loginData, setLoginData] = useState({
     fullName: "",
     password: ""
   });
-
+  
   const [signupData, setSignupData] = useState({
     fullName: "",
     school: "",
@@ -39,66 +31,54 @@ const StudentLogin = () => {
     password: "",
     confirmPassword: ""
   });
-
+  
   const [isLoading, setIsLoading] = useState(false);
-
-  // Don't render if still loading auth state
-  if (authLoading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-          <p className="mt-2 text-muted-foreground">Loading...</p>
-        </div>
-      </div>
-    );
-  }
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!loginData.fullName.trim() || !loginData.password) {
-      toast({
-        title: "Missing information",
-        description: "Please enter both your full name and password",
-        variant: "destructive",
-      });
-      return;
-    }
-
     setIsLoading(true);
 
     try {
-      console.log('StudentLogin: Attempting login for:', loginData.fullName);
-      const result = await studentSimpleLoginService(
-        loginData.fullName.trim(),
-        loginData.password
-      );
+      const { data, error } = await supabase
+        .from('students')
+        .select('*')
+        .eq('full_name', loginData.fullName.trim())
+        .single();
 
-      if (result.error) {
-        console.log('StudentLogin: Login failed with error:', result.error);
+      if (error || !data) {
         toast({
-          title: t('student.loginFailed') || "Login failed",
-          description: result.error,
+          title: t('student.loginFailed'),
+          description: t('student.loginFailed'),
           variant: "destructive",
         });
-      } else if (result.student) {
-        console.log('StudentLogin: Login successful, saving student and redirecting:', result.student);
-        saveStudent(result.student);
-        toast({
-          title: t('student.welcomeBack') || "Welcome back!",
-          description: t('student.loginSuccess') || "Login successful",
-        });
-        // Force immediate redirect
-        setTimeout(() => {
-          navigate("/student-dashboard", { replace: true });
-        }, 100);
+        return;
       }
-    } catch (err) {
-      console.error('StudentLogin: Unexpected error during login:', err);
+
+      const bcrypt = await import('bcryptjs');
+      const isValidPassword = await bcrypt.compare(loginData.password, data.password_hash);
+
+      if (!isValidPassword) {
+        toast({
+          title: t('student.loginFailed'),
+          description: t('student.loginFailed'),
+          variant: "destructive",
+        });
+        return;
+      }
+
+      login(data, 'student');
+      
       toast({
-        title: t('student.loginFailed') || "Login failed",
-        description: "An unexpected error occurred. Please try again.",
+        title: t('student.welcomeBack'),
+        description: t('student.loginSuccess'),
+      });
+
+      navigate('/student-dashboard');
+    } catch (error) {
+      console.error('Login error:', error);
+      toast({
+        title: t('student.loginFailed'),
+        description: t('student.loginFailed'),
         variant: "destructive",
       });
     } finally {
@@ -109,19 +89,10 @@ const StudentLogin = () => {
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!signupData.fullName.trim() || !signupData.school.trim() || !signupData.grade.trim() || !signupData.password || !signupData.confirmPassword) {
-      toast({
-        title: "Missing information",
-        description: "Please fill in all required fields",
-        variant: "destructive",
-      });
-      return;
-    }
-
     if (signupData.password !== signupData.confirmPassword) {
       toast({
-        title: t('student.passwordMismatch') || "Password mismatch",
-        description: t('student.passwordsDoNotMatch') || "Passwords do not match",
+        title: t('student.passwordMismatch'),
+        description: t('student.passwordsDoNotMatch'),
         variant: "destructive",
       });
       return;
@@ -130,38 +101,38 @@ const StudentLogin = () => {
     setIsLoading(true);
 
     try {
-      console.log('StudentLogin: Attempting signup for:', signupData.fullName);
-      const result = await studentSignupService(
-        signupData.fullName.trim(),
-        signupData.school.trim(),
-        signupData.grade.trim(),
-        signupData.password
-      );
+      const bcrypt = await import('bcryptjs');
+      const saltRounds = 12;
+      const hashedPassword = await bcrypt.hash(signupData.password, saltRounds);
 
-      if (result.error) {
-        console.log('StudentLogin: Signup failed with error:', result.error);
-        toast({
-          title: t('student.signupFailed') || "Signup failed",
-          description: result.error,
-          variant: "destructive",
-        });
-      } else if (result.student) {
-        console.log('StudentLogin: Signup successful, saving student and redirecting:', result.student);
-        saveStudent(result.student);
-        toast({
-          title: t('student.accountCreated') || "Account created!",
-          description: t('student.welcomeToApp') || "Welcome to Lesson Lens!",
-        });
-        // Force immediate redirect
-        setTimeout(() => {
-          navigate("/student-dashboard", { replace: true });
-        }, 100);
-      }
-    } catch (err) {
-      console.error('StudentLogin: Unexpected error during signup:', err);
+      const { data, error } = await supabase
+        .from('students')
+        .insert([
+          {
+            full_name: signupData.fullName.trim(),
+            school: signupData.school.trim(),
+            grade: signupData.grade.trim(),
+            password_hash: hashedPassword
+          }
+        ])
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      login(data, 'student');
+      
       toast({
-        title: t('student.signupFailed') || "Signup failed",
-        description: "An unexpected error occurred. Please try again.",
+        title: t('student.accountCreated'),
+        description: t('student.welcomeToApp'),
+      });
+
+      navigate('/student-dashboard');
+    } catch (error) {
+      console.error('Signup error:', error);
+      toast({
+        title: t('student.signupFailed'),
+        description: t('student.signupFailed'),
         variant: "destructive",
       });
     } finally {
@@ -170,154 +141,148 @@ const StudentLogin = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4">
-      <div className="absolute top-4 right-4">
-        <LanguageSwitcher />
-      </div>
-      <Card className="w-full max-w-md bg-card/80 backdrop-blur-sm border-border">
-        <CardHeader className="text-center">
-          <div className="w-16 h-16 bg-primary rounded-full mx-auto flex items-center justify-center mb-4">
-            <BookOpenIcon className="w-8 h-8 text-primary-foreground" />
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center p-4">
+      <div className="w-full max-w-md">
+        <div className="text-center mb-8">
+          <div className="flex justify-center mb-4">
+            <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+              <GraduationCapIcon className="w-8 h-8 text-white" />
+            </div>
           </div>
-          <CardTitle className="text-2xl text-foreground">{t('student.portal') || "Student Portal"}</CardTitle>
-          <CardDescription>
-            {t('student.loginDescription') || "Access your learning dashboard"}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Tabs defaultValue="login" className="space-y-4">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="login">{t('auth.login') || "Login"}</TabsTrigger>
-              <TabsTrigger value="signup">{t('auth.signUp') || "Sign Up"}</TabsTrigger>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">{t('student.portal')}</h1>
+          <p className="text-gray-600">{t('student.loginDescription')}</p>
+          <div className="flex justify-center mt-4">
+            <LanguageSwitcher />
+          </div>
+        </div>
+
+        <Card className="bg-white/80 backdrop-blur-sm border-blue-100">
+          <Tabs defaultValue="login" className="w-full">
+            <TabsList className="grid w-full grid-cols-2 mb-6">
+              <TabsTrigger value="login" className="data-[state=active]:bg-blue-500 data-[state=active]:text-white">
+                {t('auth.login')}
+              </TabsTrigger>
+              <TabsTrigger value="signup" className="data-[state=active]:bg-blue-500 data-[state=active]:text-white">
+                {t('auth.signUp')}
+              </TabsTrigger>
             </TabsList>
 
             <TabsContent value="login">
-              <form onSubmit={handleLogin} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="loginFullName" className="flex items-center gap-2">
-                    <UserIcon className="w-4 h-4" />
-                    {t('student.fullName') || "Full Name"}
-                  </Label>
-                  <Input
-                    id="loginFullName"
-                    type="text"
-                    placeholder={t('student.fullNamePlaceholder') || "Enter your full name"}
-                    value={loginData.fullName}
-                    onChange={(e) => setLoginData(prev => ({ ...prev, fullName: e.target.value }))}
-                    required
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="loginPassword">{t('auth.password') || "Password"}</Label>
-                  <Input
-                    id="loginPassword"
-                    type="password"
-                    placeholder="Enter your password"
-                    value={loginData.password}
-                    onChange={(e) => setLoginData(prev => ({ ...prev, password: e.target.value }))}
-                    required
-                  />
-                </div>
-
-                <Button 
-                  type="submit" 
-                  className="w-full"
-                  disabled={isLoading}
-                >
-                  {isLoading ? (t('student.loggingIn') || "Logging in...") : (
-                    <>
-                      <LogInIcon className="w-4 h-4 mr-2" />
-                      {t('auth.login') || "Login"}
-                    </>
-                  )}
-                </Button>
-              </form>
+              <CardHeader className="text-center pb-4">
+                <CardTitle className="flex items-center justify-center gap-2 text-xl">
+                  <UserIcon className="w-5 h-5" />
+                  {t('auth.login')}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={handleLogin} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="fullName">{t('student.fullName')}</Label>
+                    <Input
+                      id="fullName"
+                      type="text"
+                      placeholder={t('student.fullNamePlaceholder')}
+                      value={loginData.fullName}
+                      onChange={(e) => setLoginData({...loginData, fullName: e.target.value})}
+                      required
+                      className="border-blue-200 focus:border-blue-500"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="password">{t('auth.password')}</Label>
+                    <Input
+                      id="password"
+                      type="password"
+                      value={loginData.password}
+                      onChange={(e) => setLoginData({...loginData, password: e.target.value})}
+                      required
+                      className="border-blue-200 focus:border-blue-500"
+                    />
+                  </div>
+                  <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700" disabled={isLoading}>
+                    {isLoading ? t('student.loggingIn') : t('auth.login')}
+                  </Button>
+                </form>
+              </CardContent>
             </TabsContent>
 
             <TabsContent value="signup">
-              <form onSubmit={handleSignup} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="signupFullName" className="flex items-center gap-2">
-                    <UserIcon className="w-4 h-4" />
-                    {t('student.fullName') || "Full Name"}
-                  </Label>
-                  <Input
-                    id="signupFullName"
-                    type="text"
-                    placeholder={t('student.fullNameSignupPlaceholder') || "Enter your full name"}
-                    value={signupData.fullName}
-                    onChange={(e) => setSignupData(prev => ({ ...prev, fullName: e.target.value }))}
-                    required
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="signupSchool" className="flex items-center gap-2">
-                    <School className="w-4 h-4" />
-                    {t('auth.school') || "School"}
-                  </Label>
-                  <Input
-                    id="signupSchool"
-                    type="text"
-                    placeholder={t('student.schoolPlaceholder') || "Enter your school name"}
-                    value={signupData.school}
-                    onChange={(e) => setSignupData(prev => ({ ...prev, school: e.target.value }))}
-                    required
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="signupGrade" className="flex items-center gap-2">
-                    <GraduationCap className="w-4 h-4" />
-                    {t('student.classGrade') || "Class/Grade"}
-                  </Label>
-                  <Input
-                    id="signupGrade"
-                    type="text"
-                    placeholder={t('student.gradePlaceholder') || "e.g., Grade 5, Year 7"}
-                    value={signupData.grade}
-                    onChange={(e) => setSignupData(prev => ({ ...prev, grade: e.target.value }))}
-                    required
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="signupPassword">{t('auth.password') || "Password"}</Label>
-                  <Input
-                    id="signupPassword"
-                    type="password"
-                    placeholder={t('student.createPassword') || "Create a password"}
-                    value={signupData.password}
-                    onChange={(e) => setSignupData(prev => ({ ...prev, password: e.target.value }))}
-                    required
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="confirmPassword">{t('auth.confirmPassword') || "Confirm Password"}</Label>
-                  <Input
-                    id="confirmPassword"
-                    type="password"
-                    placeholder={t('student.confirmPasswordPlaceholder') || "Confirm your password"}
-                    value={signupData.confirmPassword}
-                    onChange={(e) => setSignupData(prev => ({ ...prev, confirmPassword: e.target.value }))}
-                    required
-                  />
-                </div>
-
-                <Button 
-                  type="submit" 
-                  className="w-full"
-                  disabled={isLoading}
-                >
-                  {isLoading ? (t('student.creatingAccount') || "Creating account...") : (t('student.createAccount') || "Create Account")}
-                </Button>
-              </form>
+              <CardHeader className="text-center pb-4">
+                <CardTitle className="flex items-center justify-center gap-2 text-xl">
+                  <BookOpenIcon className="w-5 h-5" />
+                  {t('student.createAccount')}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={handleSignup} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="signupFullName">{t('student.fullName')}</Label>
+                    <Input
+                      id="signupFullName"
+                      type="text"
+                      placeholder={t('student.fullNameSignupPlaceholder')}
+                      value={signupData.fullName}
+                      onChange={(e) => setSignupData({...signupData, fullName: e.target.value})}
+                      required
+                      className="border-blue-200 focus:border-blue-500"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="school">{t('auth.school')}</Label>
+                    <Input
+                      id="school"
+                      type="text"
+                      placeholder={t('student.schoolPlaceholder')}
+                      value={signupData.school}
+                      onChange={(e) => setSignupData({...signupData, school: e.target.value})}
+                      required
+                      className="border-blue-200 focus:border-blue-500"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="grade">{t('student.classGrade')}</Label>
+                    <Input
+                      id="grade"
+                      type="text"
+                      placeholder={t('student.gradePlaceholder')}
+                      value={signupData.grade}
+                      onChange={(e) => setSignupData({...signupData, grade: e.target.value})}
+                      required
+                      className="border-blue-200 focus:border-blue-500"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="signupPassword">{t('student.createPassword')}</Label>
+                    <Input
+                      id="signupPassword"
+                      type="password"
+                      value={signupData.password}
+                      onChange={(e) => setSignupData({...signupData, password: e.target.value})}
+                      required
+                      className="border-blue-200 focus:border-blue-500"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="confirmPassword">{t('auth.confirmPassword')}</Label>
+                    <Input
+                      id="confirmPassword"
+                      type="password"
+                      placeholder={t('student.confirmPasswordPlaceholder')}
+                      value={signupData.confirmPassword}
+                      onChange={(e) => setSignupData({...signupData, confirmPassword: e.target.value})}
+                      required
+                      className="border-blue-200 focus:border-blue-500"
+                    />
+                  </div>
+                  <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700" disabled={isLoading}>
+                    {isLoading ? t('student.creatingAccount') : t('student.createAccount')}
+                  </Button>
+                </form>
+              </CardContent>
             </TabsContent>
           </Tabs>
-        </CardContent>
-      </Card>
+        </Card>
+      </div>
     </div>
   );
 };
