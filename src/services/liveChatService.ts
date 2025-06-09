@@ -32,6 +32,9 @@ export const createChatSession = async (
 
     console.log('Chat session created successfully:', session);
     
+    // Notify available doctors
+    await notifyAvailableDoctors(school, session.id);
+    
     // Transform the database response to match our interface
     const chatSession: LiveChatSession = {
       id: session.id,
@@ -51,6 +54,63 @@ export const createChatSession = async (
   } catch (error) {
     console.error('Unexpected error creating chat session:', error);
     return { error: 'An unexpected error occurred. Please try again.' };
+  }
+};
+
+const notifyAvailableDoctors = async (school: string, sessionId: string) => {
+  try {
+    console.log('Notifying available doctors for school:', school);
+    
+    // Get available doctors for the school
+    const { data: doctors, error } = await supabase
+      .from('teachers')
+      .select('id, name, email')
+      .eq('school', school)
+      .eq('role', 'doctor')
+      .eq('is_available', true);
+
+    if (error) {
+      console.error('Error fetching doctors:', error);
+      return;
+    }
+
+    console.log('Found available doctors:', doctors);
+    
+    // In a real implementation, you would send notifications here
+    // For now, we'll just log the notification
+    doctors?.forEach(doctor => {
+      console.log(`Notifying Dr. ${doctor.name} (${doctor.email}) about new chat session: ${sessionId}`);
+    });
+    
+  } catch (error) {
+    console.error('Error notifying doctors:', error);
+  }
+};
+
+export const joinChatSession = async (sessionId: string, doctorId: string): Promise<{ error?: string }> => {
+  try {
+    console.log('Doctor joining chat session:', { sessionId, doctorId });
+    
+    const { error } = await supabase
+      .from('live_chat_sessions')
+      .update({
+        doctor_id: doctorId,
+        status: 'active',
+        started_at: new Date().toISOString()
+      })
+      .eq('id', sessionId)
+      .eq('status', 'waiting');
+
+    if (error) {
+      console.error('Error joining chat session:', error);
+      return { error: 'Failed to join chat session.' };
+    }
+
+    console.log('Doctor joined chat session successfully');
+    return {};
+  } catch (error) {
+    console.error('Unexpected error joining chat session:', error);
+    return { error: 'An unexpected error occurred.' };
   }
 };
 

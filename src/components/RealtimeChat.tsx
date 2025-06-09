@@ -24,9 +24,10 @@ interface RealtimeChatProps {
   studentName: string;
   isAnonymous: boolean;
   onClose: () => void;
+  isDoctorView?: boolean;
 }
 
-const RealtimeChat = ({ session, studentName, isAnonymous, onClose }: RealtimeChatProps) => {
+const RealtimeChat = ({ session, studentName, isAnonymous, onClose, isDoctorView = false }: RealtimeChatProps) => {
   const { toast } = useToast();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [newMessage, setNewMessage] = useState("");
@@ -38,7 +39,17 @@ const RealtimeChat = ({ session, studentName, isAnonymous, onClose }: RealtimeCh
     console.log('RealtimeChat: Setting up real-time chat for session:', session.id);
     loadMessages();
     setupRealtimeSubscription();
-    notifyDoctors();
+    
+    if (session.status === 'active' && session.doctor_id) {
+      setIsConnected(true);
+      if (!isDoctorView) {
+        loadDoctorInfo(session.doctor_id);
+      }
+    }
+
+    if (isDoctorView && !session.doctor_id) {
+      notifyStudentDoctorJoined();
+    }
 
     return () => {
       console.log('RealtimeChat: Cleaning up chat subscription');
@@ -99,7 +110,9 @@ const RealtimeChat = ({ session, studentName, isAnonymous, onClose }: RealtimeCh
           console.log('RealtimeChat: Session updated:', payload);
           if (payload.new.status === 'active' && payload.new.doctor_id) {
             setIsConnected(true);
-            loadDoctorInfo(payload.new.doctor_id);
+            if (!isDoctorView) {
+              loadDoctorInfo(payload.new.doctor_id);
+            }
           }
         }
       )
@@ -129,16 +142,21 @@ const RealtimeChat = ({ session, studentName, isAnonymous, onClose }: RealtimeCh
     }
   };
 
-  const notifyDoctors = async () => {
+  const notifyStudentDoctorJoined = async () => {
     try {
-      console.log('RealtimeChat: Notifying doctors of new chat session');
-      // This could be enhanced with push notifications or email alerts
-      toast({
-        title: "Chat Session Started",
-        description: "Waiting for a doctor to join the conversation...",
-      });
+      console.log('RealtimeChat: Sending doctor joined notification');
+      const { error } = await supabase
+        .from('chat_messages')
+        .insert({
+          session_id: session.id,
+          sender_type: 'doctor',
+          sender_name: 'System',
+          message: `Dr. ${studentName} has joined the conversation. How can I help you today?`
+        });
+
+      if (error) throw error;
     } catch (error) {
-      console.error('RealtimeChat: Error notifying doctors:', error);
+      console.error('RealtimeChat: Error sending doctor joined notification:', error);
     }
   };
 
@@ -151,8 +169,8 @@ const RealtimeChat = ({ session, studentName, isAnonymous, onClose }: RealtimeCh
         .from('chat_messages')
         .insert({
           session_id: session.id,
-          sender_type: 'student',
-          sender_name: isAnonymous ? 'Anonymous Student' : studentName,
+          sender_type: isDoctorView ? 'doctor' : 'student',
+          sender_name: isDoctorView ? `Dr. ${studentName}` : (isAnonymous ? 'Anonymous Student' : studentName),
           message: newMessage.trim()
         });
 
@@ -175,14 +193,16 @@ const RealtimeChat = ({ session, studentName, isAnonymous, onClose }: RealtimeCh
     }
   };
 
+  const currentUserType = isDoctorView ? 'doctor' : 'student';
+
   return (
     <Card className="fixed bottom-4 right-4 w-96 h-96 z-50 shadow-lg border-purple-200">
       <CardHeader className="bg-purple-600 text-white p-4">
         <div className="flex items-center justify-between">
           <CardTitle className="text-lg flex items-center gap-2">
             <StethoscopeIcon className="w-5 h-5" />
-            Live Chat with Doctor
-            {isAnonymous && (
+            {isDoctorView ? 'Chat with Student' : 'Live Chat with Doctor'}
+            {isAnonymous && !isDoctorView && (
               <Badge variant="secondary" className="bg-purple-800 text-white">
                 Anonymous
               </Badge>
@@ -198,15 +218,18 @@ const RealtimeChat = ({ session, studentName, isAnonymous, onClose }: RealtimeCh
           </Button>
         </div>
         <div className="text-sm">
-          {isConnected && doctorInfo ? (
+          {isConnected ? (
             <span className="flex items-center gap-1">
               <div className="w-2 h-2 bg-green-400 rounded-full"></div>
-              Connected with Dr. {doctorInfo.name}
+              {isDoctorView 
+                ? `Connected with ${isAnonymous ? 'Anonymous Student' : session.student_name}`
+                : `Connected with Dr. ${doctorInfo?.name || 'Doctor'}`
+              }
             </span>
           ) : (
             <span className="flex items-center gap-1">
               <div className="w-2 h-2 bg-yellow-400 rounded-full animate-pulse"></div>
-              Waiting for doctor...
+              {isDoctorView ? "Connecting..." : "Waiting for doctor..."}
             </span>
           )}
         </div>
@@ -219,6 +242,8 @@ const RealtimeChat = ({ session, studentName, isAnonymous, onClose }: RealtimeCh
                 <p className="text-sm">
                   {isConnected 
                     ? "Start the conversation by sending a message below"
+                    : isDoctorView
+                    ? "Waiting for connection..."
                     : "Your chat session has been created. A doctor will join shortly."
                   }
                 </p>
@@ -227,11 +252,11 @@ const RealtimeChat = ({ session, studentName, isAnonymous, onClose }: RealtimeCh
               messages.map((message) => (
                 <div
                   key={message.id}
-                  className={`flex ${message.sender_type === 'student' ? 'justify-end' : 'justify-start'}`}
+                  className={`flex ${message.sender_type === currentUserType ? 'justify-end' : 'justify-start'}`}
                 >
                   <div
                     className={`max-w-[80%] p-3 rounded-lg ${
-                      message.sender_type === 'student'
+                      message.sender_type === currentUserType
                         ? 'bg-purple-600 text-white'
                         : 'bg-gray-100 text-gray-800'
                     }`}
