@@ -155,7 +155,7 @@ const StudentLogin = () => {
         // Show success message
         toast({
           title: t('student.accountCreated') || "Account created!",
-          description: t('student.welcomeToApp') || "Welcome to Lesson Lens!",
+          description: "Welcome to Lessons Learnt!",
         });
         
         // Clear the signup form
