@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -147,29 +146,16 @@ const StudentLogin = () => {
           variant: "destructive",
         });
       } else if (result.student) {
-        console.log('StudentLogin: Signup successful, saving student:', result.student);
-        
-        // Save the student data immediately
+        console.log('StudentLogin: Signup successful, saving student and redirecting:', result.student);
         saveStudent(result.student);
-        
-        // Show success message
         toast({
           title: t('student.accountCreated') || "Account created!",
-          description: "Welcome to Lessons Learnt!",
+          description: t('student.welcomeToApp') || "Welcome to Lesson Lens!",
         });
-        
-        // Clear the signup form
-        setSignupData({
-          fullName: "",
-          school: "",
-          grade: "",
-          password: "",
-          confirmPassword: ""
-        });
-        
-        console.log('StudentLogin: Redirecting to dashboard after successful signup');
-        // Redirect to dashboard immediately after successful signup
-        navigate("/student-dashboard", { replace: true });
+        // Force immediate redirect
+        setTimeout(() => {
+          navigate("/student-dashboard", { replace: true });
+        }, 100);
       }
     } catch (err) {
       console.error('StudentLogin: Unexpected error during signup:', err);

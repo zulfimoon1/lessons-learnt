@@ -1,4 +1,5 @@
 
+
 export const ltAuthTranslations = {
   'auth.login': 'Prisijungti',
   'auth.logout': 'Atsijungti',
@@ -32,24 +33,6 @@ export const ltAuthTranslations = {
   'auth.emailRequired': 'El. paštas privalomas',
   'auth.nameRequired': 'Vardas privalomas',
   'auth.gradeRequired': 'Klasė privaloma',
-  'auth.schoolCodeRequired': 'Mokyklos kodas privalomas',
-  'auth.school': 'Mokykla',
-  
-  // Teacher login specific translations
-  'login.teacher.title': 'Mokytojų portalas',
-  'login.teacher.subtitle': 'Prisijunkite prie savo mokymo skydelio',
-  'login.teacher.login': 'Prisijungti',
-  'login.teacher.signup': 'Registruotis',
-  'login.teacher.email': 'El. paštas',
-  'login.teacher.password': 'Slaptažodis',
-  'login.teacher.confirmPassword': 'Patvirtinti slaptažodį',
-  'login.teacher.fullName': 'Vardas ir pavardė',
-  'login.teacher.school': 'Mokykla',
-  'login.teacher.role': 'Vaidmuo',
-  'login.teacher.roleTeacher': 'Mokytojas',
-  'login.teacher.roleAdmin': 'Mokyklos administratorius',
-  'login.teacher.loggingIn': 'Prisijungiama...',
-  'login.teacher.creatingAccount': 'Kuriama paskyra...',
-  'login.teacher.createAccount': 'Sukurti paskyrą',
-  'login.teacher.adminHint': 'Mokyklos administratoriai gali valdyti mokytojus ir peržiūrėti visus atsiliepimus'
+  'auth.schoolCodeRequired': 'Mokyklos kodas privalomas'
 };
+

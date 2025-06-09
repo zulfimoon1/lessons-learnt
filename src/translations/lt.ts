@@ -1,10 +1,8 @@
-
 import { ltDemoTranslations } from './lt/demo';
 import { ltAuthTranslations } from './lt/auth';
 import { ltChatTranslations } from './lt/chat';
 import { ltTeacherTranslations } from './lt/teacher';
 import { ltWeeklyTranslations } from './lt/weekly';
-import { ltFeedbackTranslations } from './lt/feedback';
 
 export const ltTranslations = {
   'welcome.title': 'Išmoktos pamokos: paprastas būdas tobulėti',
@@ -71,7 +69,6 @@ export const ltTranslations = {
   'common.close': 'Uždaryti',
   'common.open': 'Atidaryti',
   'common.refresh': 'Atnaujinti',
-  'common.submitting': 'Pateikiama...',
   
   // Dashboard translations
   'dashboard.title': 'Studentų skydelis',
@@ -143,7 +140,6 @@ export const ltTranslations = {
   ...ltChatTranslations,
   ...ltTeacherTranslations,
   ...ltWeeklyTranslations,
-  ...ltFeedbackTranslations,
   
   // Dashboard translations - Platform Admin specific
   'dashboard.platformAdmin': 'Platformos administratoriaus skydelis',
