@@ -1,6 +1,7 @@
 
 import { useRef, useEffect } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { useLanguage } from "@/contexts/LanguageContext";
 import ChatMessage from "./ChatMessage";
 
 interface ChatMessageData {
@@ -21,6 +22,7 @@ interface ChatMessagesProps {
 
 const ChatMessages = ({ messages, currentUserType, isConnected, isDoctorView }: ChatMessagesProps) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const { t } = useLanguage();
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -33,10 +35,10 @@ const ChatMessages = ({ messages, currentUserType, isConnected, isDoctorView }: 
           <div className="text-center text-gray-500 py-8">
             <p className="text-sm">
               {isConnected 
-                ? "Start the conversation by sending a message below"
+                ? t('chat.startConversation')
                 : isDoctorView
-                ? "Waiting for connection..."
-                : "Your chat session has been created. A doctor will join shortly."
+                ? t('chat.waitingConnection')
+                : t('chat.doctorWillJoin')
               }
             </p>
           </div>

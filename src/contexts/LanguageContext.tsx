@@ -30,6 +30,12 @@ const translations = {
     'auth.dontHaveAccount': "Don't have an account?",
     'auth.forgotPassword': 'Forgot Password?',
 
+    // Chat translations
+    'chat.typePlaceholder': 'Type your message here...',
+    'chat.startConversation': 'Start the conversation by sending a message below',
+    'chat.waitingConnection': 'Waiting for connection...',
+    'chat.doctorWillJoin': 'Your chat session has been created. A doctor will join shortly.',
+
     // Student Login Page
     'student.portal': 'Student Portal',
     'student.loginDescription': 'Login to your account or create a new one',
@@ -509,6 +515,12 @@ const translations = {
     'auth.alreadyHaveAccount': 'Jau turite paskyrą?',
     'auth.dontHaveAccount': 'Neturite paskyros?',
     'auth.forgotPassword': 'Pamiršote slaptažodį?',
+
+    // Chat translations
+    'chat.typePlaceholder': 'Rašykite žinutę čia...',
+    'chat.startConversation': 'Pradėkite pokalbį parašydami žinutę žemiau',
+    'chat.waitingConnection': 'Laukiama prisijungimo...',
+    'chat.doctorWillJoin': 'Jūsų pokalbio sesija sukurta. Gydytojas prisijungs netrukus.',
 
     // Student Login Page
     'student.portal': 'Mokinių portalas',

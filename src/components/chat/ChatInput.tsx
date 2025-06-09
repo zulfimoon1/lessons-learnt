@@ -2,6 +2,7 @@
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { SendIcon } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface ChatInputProps {
   newMessage: string;
@@ -11,11 +12,13 @@ interface ChatInputProps {
 }
 
 const ChatInput = ({ newMessage, setNewMessage, onSendMessage, onKeyPress }: ChatInputProps) => {
+  const { t } = useLanguage();
+
   return (
     <div className="p-4 border-t">
       <div className="flex gap-2">
         <Textarea
-          placeholder="Type your message here..."
+          placeholder={t('chat.typePlaceholder')}
           value={newMessage}
           onChange={(e) => setNewMessage(e.target.value)}
           onKeyPress={onKeyPress}
