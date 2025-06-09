@@ -39,39 +39,10 @@ export const secureTeacherSignup = async (
       return { error: 'Failed to create user account' };
     }
 
-    // Create teacher profile
-    const { data: teacherData, error: teacherError } = await supabase
-      .from('teachers')
-      .insert({
-        id: authData.user.id,
-        email,
-        name,
-        school,
-        role,
-        specialization,
-        license_number
-      })
-      .select()
-      .single();
-
-    if (teacherError) {
-      console.error('secureTeacherSignup: Teacher profile error:', teacherError);
-      return { error: 'Failed to create teacher profile' };
-    }
-
-    const teacher: Teacher = {
-      id: teacherData.id,
-      name: teacherData.name,
-      email: teacherData.email,
-      school: teacherData.school,
-      role: teacherData.role as 'teacher' | 'admin' | 'doctor',
-      specialization: teacherData.specialization,
-      license_number: teacherData.license_number,
-      is_available: teacherData.is_available
-    };
-
-    console.log('secureTeacherSignup: Success');
-    return { teacher };
+    // The teacher profile will be created automatically by the handle_new_user trigger
+    // So we just need to return success
+    console.log('secureTeacherSignup: Success - profile will be created by trigger');
+    return { success: true };
   } catch (error) {
     console.error('secureTeacherSignup: Unexpected error:', error);
     return { error: 'An unexpected error occurred during signup' };
@@ -112,32 +83,9 @@ export const secureStudentSignup = async (
       return { error: 'Failed to create user account' };
     }
 
-    // Create student profile
-    const { data: studentData, error: studentError } = await supabase
-      .from('students')
-      .insert({
-        id: authData.user.id,
-        full_name: fullName,
-        school,
-        grade
-      })
-      .select()
-      .single();
-
-    if (studentError) {
-      console.error('secureStudentSignup: Student profile error:', studentError);
-      return { error: 'Failed to create student profile' };
-    }
-
-    const student: Student = {
-      id: studentData.id,
-      full_name: studentData.full_name,
-      school: studentData.school,
-      grade: studentData.grade
-    };
-
-    console.log('secureStudentSignup: Success');
-    return { student };
+    // The student profile will be created automatically by the handle_new_user trigger
+    console.log('secureStudentSignup: Success - profile will be created by trigger');
+    return { success: true };
   } catch (error) {
     console.error('secureStudentSignup: Unexpected error:', error);
     return { error: 'An unexpected error occurred during signup' };

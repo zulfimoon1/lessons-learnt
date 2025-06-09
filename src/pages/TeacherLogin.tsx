@@ -7,24 +7,23 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BookOpenIcon, LogInIcon, School, UserIcon, Mail, ShieldIcon } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/contexts/AuthContext";
+import { useSupabaseAuth } from "@/contexts/SupabaseAuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { useNavigate } from "react-router-dom";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { secureTeacherSignup, secureSignIn } from "@/services/secureAuthService";
 
 const TeacherLogin = () => {
   const { t, language } = useLanguage();
   const navigate = useNavigate();
   const { toast } = useToast();
   
-  // Safe auth hook usage with error boundary
-  const auth = useAuth();
-  const { teacher, teacherLogin, isLoading: authLoading } = auth;
+  const { user, teacher, isLoading: authLoading } = useSupabaseAuth();
 
   // Redirect if already logged in
   useEffect(() => {
-    if (teacher && !authLoading) {
+    if (user && teacher && !authLoading) {
       console.log('TeacherLogin: User already logged in, redirecting...');
       if (teacher.role === "admin") {
         navigate("/admin-dashboard");
@@ -32,7 +31,7 @@ const TeacherLogin = () => {
         navigate("/teacher-dashboard");
       }
     }
-  }, [teacher, navigate, authLoading]);
+  }, [user, teacher, navigate, authLoading]);
 
   const [loginData, setLoginData] = useState({
     email: "",
@@ -78,7 +77,7 @@ const TeacherLogin = () => {
     console.log('TeacherLogin: Starting login process with email:', loginData.email);
 
     try {
-      const result = await teacherLogin(loginData.email.trim(), loginData.password);
+      const result = await secureSignIn(loginData.email.trim(), loginData.password);
       console.log('TeacherLogin: Login result received:', result);
 
       if (result.error) {
@@ -88,18 +87,17 @@ const TeacherLogin = () => {
           description: result.error,
           variant: "destructive",
         });
-      } else if (result.teacher) {
-        console.log('TeacherLogin: Login successful, teacher data:', result.teacher);
+      } else if (result.user) {
+        console.log('TeacherLogin: Login successful');
         
         toast({
           title: t('auth.loginSuccess'),
           description: t('auth.loginSuccess'),
         });
         
-        // Navigation will be handled by useEffect when teacher state updates
-        console.log('TeacherLogin: Teacher role is:', result.teacher.role);
+        // Navigation will be handled by useEffect when auth state updates
       } else {
-        console.error('TeacherLogin: No error but no teacher data returned');
+        console.error('TeacherLogin: No error but no user data returned');
         toast({
           title: t('auth.loginFailed'),
           description: t('auth.loginFailed'),
@@ -144,7 +142,7 @@ const TeacherLogin = () => {
     console.log('TeacherLogin: Starting signup process for:', signupData.email);
 
     try {
-      const result = await teacherLogin(
+      const result = await secureTeacherSignup(
         signupData.email.trim(), 
         signupData.password, 
         signupData.name.trim(), 
@@ -161,18 +159,25 @@ const TeacherLogin = () => {
           description: result.error,
           variant: "destructive",
         });
-      } else if (result.teacher) {
-        console.log('TeacherLogin: Signup successful, teacher data:', result.teacher);
+      } else if (result.success) {
+        console.log('TeacherLogin: Signup successful');
         
         toast({
           title: t('auth.registerSuccess'),
-          description: t('auth.registerSuccess'),
+          description: "Please check your email to verify your account before signing in.",
         });
         
-        // Navigation will be handled by useEffect when teacher state updates
-        console.log('TeacherLogin: New teacher role is:', result.teacher.role);
+        // Reset form and switch to login tab
+        setSignupData({
+          name: "",
+          email: "",
+          school: "",
+          role: "teacher",
+          password: "",
+          confirmPassword: ""
+        });
       } else {
-        console.error('TeacherLogin: No error but no teacher data returned');
+        console.error('TeacherLogin: No error but no success returned');
         toast({
           title: t('auth.registerError'),
           description: t('auth.registerError'),
