@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -19,13 +18,14 @@ const StudentLogin = () => {
   const { toast } = useToast();
   const { student, saveStudent, isLoading: authLoading } = useAuthStorage();
 
-  // Redirect if already logged in
+  // Redirect if already logged in - simplified logic
   useEffect(() => {
+    console.log('StudentLogin: Checking auth state', { student, authLoading });
     if (student && !authLoading) {
       console.log('StudentLogin: Student already logged in, redirecting...');
-      navigate("/student-dashboard");
+      navigate("/student-dashboard", { replace: true });
     }
-  }, [student, navigate, authLoading]);
+  }, [student, authLoading, navigate]);
 
   const [loginData, setLoginData] = useState({
     fullName: "",
@@ -69,24 +69,30 @@ const StudentLogin = () => {
     setIsLoading(true);
 
     try {
+      console.log('StudentLogin: Attempting login for:', loginData.fullName);
       const result = await studentSimpleLoginService(
         loginData.fullName.trim(),
         loginData.password
       );
 
       if (result.error) {
+        console.log('StudentLogin: Login failed with error:', result.error);
         toast({
           title: t('student.loginFailed') || "Login failed",
           description: result.error,
           variant: "destructive",
         });
       } else if (result.student) {
+        console.log('StudentLogin: Login successful, saving student and redirecting:', result.student);
         saveStudent(result.student);
         toast({
           title: t('student.welcomeBack') || "Welcome back!",
           description: t('student.loginSuccess') || "Login successful",
         });
-        navigate("/student-dashboard");
+        // Force immediate redirect
+        setTimeout(() => {
+          navigate("/student-dashboard", { replace: true });
+        }, 100);
       }
     } catch (err) {
       console.error('StudentLogin: Unexpected error during login:', err);
@@ -124,6 +130,7 @@ const StudentLogin = () => {
     setIsLoading(true);
 
     try {
+      console.log('StudentLogin: Attempting signup for:', signupData.fullName);
       const result = await studentSignupService(
         signupData.fullName.trim(),
         signupData.school.trim(),
@@ -132,18 +139,23 @@ const StudentLogin = () => {
       );
 
       if (result.error) {
+        console.log('StudentLogin: Signup failed with error:', result.error);
         toast({
           title: t('student.signupFailed') || "Signup failed",
           description: result.error,
           variant: "destructive",
         });
       } else if (result.student) {
+        console.log('StudentLogin: Signup successful, saving student and redirecting:', result.student);
         saveStudent(result.student);
         toast({
           title: t('student.accountCreated') || "Account created!",
           description: t('student.welcomeToApp') || "Welcome to Lesson Lens!",
         });
-        navigate("/student-dashboard");
+        // Force immediate redirect
+        setTimeout(() => {
+          navigate("/student-dashboard", { replace: true });
+        }, 100);
       }
     } catch (err) {
       console.error('StudentLogin: Unexpected error during signup:', err);
