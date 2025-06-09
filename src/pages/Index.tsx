@@ -4,7 +4,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { GraduationCapIcon, UsersIcon, BookOpenIcon, HeartIcon, BarChart3Icon, ShieldCheckIcon } from "lucide-react";
 import { Link } from "react-router-dom";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
-import CalendarBooking from "@/components/CalendarBooking";
 import DemoSection from "@/components/DemoSection";
 import { useLanguage } from "@/contexts/LanguageContext";
 
@@ -62,6 +61,9 @@ const Index = () => {
           <div className="max-w-2xl mx-auto mt-6">
             <p className="text-2xl text-foreground font-bold italic leading-relaxed">
               {t('tagline.studentLead')}
+            </p>
+            <p className="text-lg text-primary font-semibold mt-2">
+              100% free for all students
             </p>
           </div>
         </div>
@@ -176,7 +178,11 @@ const Index = () => {
             <p className="text-lg text-muted-foreground mb-8">
               {t('platform.readyToTransformDesc')}
             </p>
-            <CalendarBooking />
+            <Link to="/teacher-login">
+              <Button size="lg" className="text-lg px-8 py-3">
+                Sign Up Now
+              </Button>
+            </Link>
           </div>
         </div>
       </section>
