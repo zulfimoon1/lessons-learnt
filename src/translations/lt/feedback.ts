@@ -18,5 +18,6 @@ export const ltFeedbackTranslations = {
   'feedback.submitSuccess': 'Jūsų atsiliepimas sėkmingai pateiktas',
   'feedback.submitFailed': 'Nepavyko pateikti atsiliepimo',
   'feedback.unexpectedError': 'Įvyko netikėta klaida',
-  'common.submitting': 'Pateikiama...'
+  'feedback.shareExperience': 'Pasidalinkite savo mokymosi patirtimi',
+  'feedback.shareExperienceDescription': 'Jūsų atsiliepimai padeda mums pagerinti mokymo kokybę'
 };
