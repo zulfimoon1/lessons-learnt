@@ -21,7 +21,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import ComplianceFooter from "@/components/ComplianceFooter";
 import CookieConsent from "@/components/CookieConsent";
 
-interface Teacher {
+interface TeacherProfile {
   id: string;
   name: string;
   email: string;
@@ -43,7 +43,7 @@ const AdminDashboard = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const { t } = useLanguage();
-  const [teachers, setTeachers] = useState<Teacher[]>([]);
+  const [teachers, setTeachers] = useState<TeacherProfile[]>([]);
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -65,7 +65,7 @@ const AdminDashboard = () => {
     
     try {
       const { data, error } = await supabase
-        .from('teachers')
+        .from('teacher_profiles')
         .select('*')
         .eq('school', teacher.school)
         .order('created_at', { ascending: false });

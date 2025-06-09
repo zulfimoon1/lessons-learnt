@@ -36,46 +36,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setIsLoading(false);
   }, []);
 
-  const teacherLogin = async (
-    email: string, 
-    password: string, 
-    name?: string, 
-    school?: string,
-    role?: 'teacher' | 'admin' | 'doctor'
-  ) => {
-    const result = await teacherLoginService(email, password, name, school, role);
-    
-    if (result.teacher) {
-      setTeacher(result.teacher);
-      localStorage.setItem('teacher', JSON.stringify(result.teacher));
-    }
-    
-    return result;
+  const signUp = async (email: string, password: string, userData: any) => {
+    // Legacy compatibility - redirect to secure auth
+    return { error: 'Please use the new secure authentication system' };
   };
 
-  const studentLogin = async (fullName: string, password: string) => {
-    const result = await studentSimpleLoginService(fullName, password);
-    
-    if (result.student) {
-      setStudent(result.student);
-      localStorage.setItem('student', JSON.stringify(result.student));
-    }
-    
-    return result;
+  const signIn = async (email: string, password: string) => {
+    // Legacy compatibility - redirect to secure auth
+    return { error: 'Please use the new secure authentication system' };
   };
 
-  const studentSignup = async (fullName: string, school: string, grade: string, password: string) => {
-    const result = await studentSignupService(fullName, school, grade, password);
-    
-    if (result.student) {
-      setStudent(result.student);
-      localStorage.setItem('student', JSON.stringify(result.student));
-    }
-    
-    return result;
-  };
-
-  const logout = () => {
+  const signOut = async () => {
     setTeacher(null);
     setStudent(null);
     localStorage.removeItem('teacher');
@@ -83,13 +54,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const value: AuthContextType = {
+    user: teacher || student,
+    profile: student,
+    teacherProfile: teacher,
     teacher,
     student,
     isLoading,
-    teacherLogin,
-    studentLogin,
-    studentSignup,
-    logout,
+    signUp,
+    signIn,
+    signOut,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
