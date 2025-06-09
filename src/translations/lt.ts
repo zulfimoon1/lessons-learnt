@@ -1,10 +1,10 @@
-
 import { navigationTranslations } from './lt/navigation';
 import { authTranslations } from './lt/auth';
 import { studentTranslations } from './lt/student';
 import { teacherTranslations } from './lt/teacher';
 import { commonTranslations } from './lt/common';
 import { dashboardTranslations } from './lt/dashboard';
+import { demoTranslations } from './lt/demo';
 
 export const ltTranslations = {
   'welcome.title': 'Išmoktos pamokos: paprastas būdas tobulėti',
@@ -67,4 +67,5 @@ export const ltTranslations = {
   ...teacherTranslations,
   ...commonTranslations,
   ...dashboardTranslations,
+  ...demoTranslations,
 };
