@@ -55,22 +55,31 @@ const StudentDashboard = () => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    console.log('StudentDashboard: Component mounted, checking auth state', { student });
     if (!student) {
+      console.log('StudentDashboard: No student found, redirecting to login');
       navigate('/student-login');
       return;
     }
+    console.log('StudentDashboard: Student authenticated, loading data');
     loadData();
   }, [student, navigate]);
 
   const loadData = async () => {
+    console.log('StudentDashboard: Starting to load data');
     await Promise.all([loadUpcomingClasses(), loadPsychologists()]);
     setIsLoading(false);
+    console.log('StudentDashboard: Data loading complete');
   };
 
   const loadUpcomingClasses = async () => {
-    if (!student?.school || !student?.grade) return;
+    if (!student?.school || !student?.grade) {
+      console.log('StudentDashboard: Missing school or grade data', { school: student?.school, grade: student?.grade });
+      return;
+    }
     
     try {
+      console.log('StudentDashboard: Loading upcoming classes for', { school: student.school, grade: student.grade });
       const today = new Date().toISOString().split('T')[0];
       
       const { data, error } = await supabase
@@ -84,9 +93,10 @@ const StudentDashboard = () => {
         .limit(5);
 
       if (error) throw error;
+      console.log('StudentDashboard: Loaded classes successfully', data);
       setUpcomingClasses(data || []);
     } catch (error) {
-      console.error('Error loading classes:', error);
+      console.error('StudentDashboard: Error loading classes:', error);
       toast({
         title: t('common.error'),
         description: t('student.failedToLoadClasses'),
@@ -96,9 +106,13 @@ const StudentDashboard = () => {
   };
 
   const loadPsychologists = async () => {
-    if (!student?.school) return;
+    if (!student?.school) {
+      console.log('StudentDashboard: Missing school data for psychologists');
+      return;
+    }
     
     try {
+      console.log('StudentDashboard: Loading psychologists for school:', student.school);
       const { data, error } = await supabase
         .from('school_psychologists')
         .select('*')
@@ -106,9 +120,10 @@ const StudentDashboard = () => {
         .order('name', { ascending: true });
 
       if (error) throw error;
+      console.log('StudentDashboard: Loaded psychologists successfully', data);
       setPsychologists(data || []);
     } catch (error) {
-      console.error('Error loading psychologists:', error);
+      console.error('StudentDashboard: Error loading psychologists:', error);
       toast({
         title: t('common.error'),
         description: t('student.failedToLoadPsychologists'),
@@ -118,6 +133,7 @@ const StudentDashboard = () => {
   };
 
   const handleLogout = () => {
+    console.log('StudentDashboard: Logging out student');
     clearAuth();
     navigate('/student-login');
   };
