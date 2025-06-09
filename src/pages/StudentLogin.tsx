@@ -16,7 +16,7 @@ import LanguageSwitcher from "@/components/LanguageSwitcher";
 const StudentLogin = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { login } = useAuth();
+  const { studentLogin, studentSignup } = useAuth();
   const { t } = useLanguage();
   
   const [loginData, setLoginData] = useState({
@@ -39,35 +39,17 @@ const StudentLogin = () => {
     setIsLoading(true);
 
     try {
-      const { data, error } = await supabase
-        .from('students')
-        .select('*')
-        .eq('full_name', loginData.fullName.trim())
-        .single();
+      const result = await studentLogin(loginData.fullName.trim(), loginData.password);
 
-      if (error || !data) {
+      if (result.error) {
         toast({
           title: t('student.loginFailed'),
-          description: t('student.loginFailed'),
+          description: result.error,
           variant: "destructive",
         });
         return;
       }
 
-      const bcrypt = await import('bcryptjs');
-      const isValidPassword = await bcrypt.compare(loginData.password, data.password_hash);
-
-      if (!isValidPassword) {
-        toast({
-          title: t('student.loginFailed'),
-          description: t('student.loginFailed'),
-          variant: "destructive",
-        });
-        return;
-      }
-
-      login(data, 'student');
-      
       toast({
         title: t('student.welcomeBack'),
         description: t('student.loginSuccess'),
@@ -101,26 +83,21 @@ const StudentLogin = () => {
     setIsLoading(true);
 
     try {
-      const bcrypt = await import('bcryptjs');
-      const saltRounds = 12;
-      const hashedPassword = await bcrypt.hash(signupData.password, saltRounds);
+      const result = await studentSignup(
+        signupData.fullName.trim(),
+        signupData.school.trim(),
+        signupData.grade.trim(),
+        signupData.password
+      );
 
-      const { data, error } = await supabase
-        .from('students')
-        .insert([
-          {
-            full_name: signupData.fullName.trim(),
-            school: signupData.school.trim(),
-            grade: signupData.grade.trim(),
-            password_hash: hashedPassword
-          }
-        ])
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      login(data, 'student');
+      if (result.error) {
+        toast({
+          title: t('student.signupFailed'),
+          description: result.error,
+          variant: "destructive",
+        });
+        return;
+      }
       
       toast({
         title: t('student.accountCreated'),

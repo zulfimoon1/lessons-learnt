@@ -17,7 +17,7 @@ import LanguageSwitcher from "@/components/LanguageSwitcher";
 const TeacherLogin = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { login } = useAuth();
+  const { teacherLogin } = useAuth();
   const { t } = useLanguage();
   
   const [loginData, setLoginData] = useState({
@@ -41,22 +41,19 @@ const TeacherLogin = () => {
     setIsLoading(true);
 
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email: loginData.email,
-        password: loginData.password,
-      });
+      const result = await teacherLogin(loginData.email, loginData.password);
 
-      if (error) throw error;
+      if (result.error) {
+        toast({
+          title: t('common.error'),
+          description: result.error,
+          variant: "destructive",
+        });
+        return;
+      }
 
-      const { data: profile } = await supabase
-        .from('teachers')
-        .select('*')
-        .eq('email', loginData.email)
-        .single();
-
-      if (profile) {
-        login(profile, profile.role === 'admin' ? 'admin' : 'teacher');
-        navigate(profile.role === 'admin' ? '/admin-dashboard' : '/teacher-dashboard');
+      if (result.teacher) {
+        navigate(result.teacher.role === 'admin' ? '/admin-dashboard' : '/teacher-dashboard');
       }
     } catch (error) {
       console.error('Login error:', error);
@@ -85,32 +82,26 @@ const TeacherLogin = () => {
     setIsLoading(true);
 
     try {
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email: signupData.email,
-        password: signupData.password,
-      });
+      const role = signupData.role as 'teacher' | 'admin' | 'doctor';
+      const result = await teacherLogin(
+        signupData.email, 
+        signupData.password, 
+        signupData.fullName, 
+        signupData.school, 
+        role
+      );
 
-      if (authError) throw authError;
+      if (result.error) {
+        toast({
+          title: t('common.error'),
+          description: result.error,
+          variant: "destructive",
+        });
+        return;
+      }
 
-      if (authData.user) {
-        const { data, error } = await supabase
-          .from('teachers')
-          .insert([
-            {
-              id: authData.user.id,
-              email: signupData.email,
-              full_name: signupData.fullName,
-              school: signupData.school,
-              role: signupData.role
-            }
-          ])
-          .select()
-          .single();
-
-        if (error) throw error;
-
-        login(data, data.role === 'admin' ? 'admin' : 'teacher');
-        navigate(data.role === 'admin' ? '/admin-dashboard' : '/teacher-dashboard');
+      if (result.teacher) {
+        navigate(result.teacher.role === 'admin' ? '/admin-dashboard' : '/teacher-dashboard');
       }
     } catch (error) {
       console.error('Signup error:', error);
