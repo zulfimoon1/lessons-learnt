@@ -17,10 +17,9 @@ export const platformAdminLoginService = async (email: string, password: string)
   try {
     console.log('Attempting login for email:', email);
     
-    // Since platform_admins table doesn't exist, we'll use a fallback approach
-    // For now, we'll check against teacher_profiles for admin access
+    // Use the teachers table which has password_hash field
     const { data: admin, error } = await supabase
-      .from('teacher_profiles')
+      .from('teachers')
       .select('*')
       .eq('email', email)
       .eq('role', 'admin')
@@ -64,7 +63,7 @@ export const platformAdminLoginService = async (email: string, password: string)
 export const createTestAdmin = async () => {
   try {
     const { data, error } = await supabase
-      .from('teacher_profiles')
+      .from('teachers')
       .insert([
         {
           name: 'Test Admin',

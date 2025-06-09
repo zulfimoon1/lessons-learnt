@@ -226,7 +226,7 @@ const PlatformAdminDashboard = () => {
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p>Loading dashboard...</p>
+          <p>{t('common.loading')}</p>
         </div>
       </div>
     );
@@ -245,50 +245,50 @@ const PlatformAdminDashboard = () => {
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
               <SchoolIcon className="w-8 h-8 text-primary" />
-              <h1 className="text-2xl font-bold text-foreground">Platform Admin Dashboard</h1>
+              <h1 className="text-2xl font-bold text-foreground">{t('dashboard.platformAdmin')}</h1>
             </div>
             <Button onClick={refreshData} variant="outline" size="sm" className="flex items-center gap-2">
               <RefreshCwIcon className="w-4 h-4" />
-              Refresh
+              {t('common.refresh')}
             </Button>
           </div>
           <div className="flex items-center gap-4">
             <LanguageSwitcher />
-            <span className="text-sm text-muted-foreground">Welcome, {admin?.name}</span>
+            <span className="text-sm text-muted-foreground">{t('admin.welcome')}, {admin?.name}</span>
             <Button
               onClick={logout}
               variant="outline"
               className="flex items-center gap-2"
             >
               <LogOutIcon className="w-4 h-4" />
-              Logout
+              {t('auth.logout')}
             </Button>
           </div>
         </div>
       </header>
 
       <main className="max-w-7xl mx-auto p-6 space-y-6">
-        {/* Debug Information */}
+        {/* System Information Card */}
         <Card className="border-blue-200 bg-blue-50">
           <CardHeader>
-            <CardTitle className="text-blue-800">System Information</CardTitle>
+            <CardTitle className="text-blue-800">{t('dashboard.systemInformation')}</CardTitle>
           </CardHeader>
           <CardContent className="text-sm text-blue-700">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div>
-                <p><strong>Schools:</strong> {totalSchools}</p>
-                <p><strong>Teachers:</strong> {totalTeachers}</p>
+                <p><strong>{t('dashboard.schools')}:</strong> {totalSchools}</p>
+                <p><strong>{t('dashboard.teachers')}:</strong> {totalTeachers}</p>
               </div>
               <div>
-                <p><strong>Students:</strong> {totalStudents}</p>
-                <p><strong>Responses:</strong> {totalResponses}</p>
+                <p><strong>{t('dashboard.students')}:</strong> {totalStudents}</p>
+                <p><strong>{t('dashboard.responses')}:</strong> {totalResponses}</p>
               </div>
               <div>
-                <p><strong>Subscriptions:</strong> {subscriptions.length}</p>
-                <p><strong>Active:</strong> {subscriptions.filter(s => s.status === 'active').length}</p>
+                <p><strong>{t('dashboard.subscriptions')}:</strong> {subscriptions.length}</p>
+                <p><strong>{t('dashboard.active')}:</strong> {subscriptions.filter(s => s.status === 'active').length}</p>
               </div>
               <div>
-                <p><strong>Revenue:</strong> ${(subscriptions.reduce((sum, s) => sum + (s.amount || 0), 0) / 100).toFixed(2)}/month</p>
+                <p><strong>{t('dashboard.revenue')}:</strong> ${(subscriptions.reduce((sum, s) => sum + (s.amount || 0), 0) / 100).toFixed(2)}/month</p>
               </div>
             </div>
           </CardContent>
@@ -298,7 +298,7 @@ const PlatformAdminDashboard = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Students</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('dashboard.totalStudents')}</CardTitle>
               <UserIcon className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
@@ -308,7 +308,7 @@ const PlatformAdminDashboard = () => {
           
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Schools</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('dashboard.totalSchools')}</CardTitle>
               <SchoolIcon className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
@@ -318,7 +318,7 @@ const PlatformAdminDashboard = () => {
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Teachers</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('dashboard.totalTeachers')}</CardTitle>
               <UsersIcon className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
@@ -328,7 +328,7 @@ const PlatformAdminDashboard = () => {
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Responses</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('dashboard.totalResponses')}</CardTitle>
               <MessageSquareIcon className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
@@ -340,13 +340,13 @@ const PlatformAdminDashboard = () => {
         {/* Tabs for different views */}
         <Tabs defaultValue="payments" className="space-y-6">
           <TabsList className="grid w-full grid-cols-7">
-            <TabsTrigger value="payments">Payments</TabsTrigger>
-            <TabsTrigger value="students">Students</TabsTrigger>
-            <TabsTrigger value="analytics">Analytics</TabsTrigger>
-            <TabsTrigger value="schools">Schools</TabsTrigger>
-            <TabsTrigger value="performance">Performance</TabsTrigger>
-            <TabsTrigger value="mental-health">Mental Health</TabsTrigger>
-            <TabsTrigger value="discount-codes">Discount Codes</TabsTrigger>
+            <TabsTrigger value="payments">{t('dashboard.payments')}</TabsTrigger>
+            <TabsTrigger value="students">{t('dashboard.students')}</TabsTrigger>
+            <TabsTrigger value="analytics">{t('dashboard.analytics')}</TabsTrigger>
+            <TabsTrigger value="schools">{t('dashboard.schools')}</TabsTrigger>
+            <TabsTrigger value="performance">{t('dashboard.performance')}</TabsTrigger>
+            <TabsTrigger value="mental-health">{t('dashboard.mentalHealth')}</TabsTrigger>
+            <TabsTrigger value="discount-codes">{t('dashboard.discountCodes')}</TabsTrigger>
           </TabsList>
 
           <TabsContent value="payments" className="space-y-6">

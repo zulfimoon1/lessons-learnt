@@ -1,4 +1,3 @@
-
 import { ltDemoTranslations } from './lt/demo';
 import { ltAuthTranslations } from './lt/auth';
 import { ltChatTranslations } from './lt/chat';
@@ -83,9 +82,14 @@ export const ltTranslations = {
   'dashboard.noClasses': 'Šiuo metu nėra suplanuotų pamokų',
   'dashboard.noPsychologists': 'Mokykloje nėra psichologų',
   'dashboard.contactAdmin': 'Susisiekite su administratoriumi dėl psichinės sveikatos paslaugų.',
+  'dashboard.teacherOverview': 'Mokytojo apžvalga',
+  'dashboard.doctorOverview': 'Gydytojo apžvalga',
+  'dashboard.subscribeNow': 'Prenumeruoti dabar',
   
   // Admin translations
   'admin.welcome': 'Sveiki',
+  'admin.subscription': 'Prenumerata',
+  'admin.school': 'Mokykla',
   
   // Student specific translations
   'student.portal': 'Studentų portalas',
@@ -117,6 +121,18 @@ export const ltTranslations = {
   // Class translations
   'class.upcomingClasses': 'Artėjančios pamokos',
   'class.duration': 'min.',
+  'class.schedule': 'Tvarkaraštis',
+  
+  // Upload translations
+  'upload.bulkUpload': 'Masinis įkėlimas',
+  'upload.uploadComplete': 'Įkėlimas baigtas',
+  
+  // Articles translations
+  'articles.mentalHealth': 'Psichinės sveikatos straipsniai',
+  'articles.subscriptionRequired': 'Reikalinga prenumerata',
+  
+  // Pricing translations
+  'pricing.processing': 'Apdorojama...',
   
   // Include all modular translations
   ...ltDemoTranslations,
@@ -124,4 +140,24 @@ export const ltTranslations = {
   ...ltChatTranslations,
   ...ltTeacherTranslations,
   ...ltWeeklyTranslations,
+  
+  // Dashboard translations - Platform Admin specific
+  'dashboard.platformAdmin': 'Platformos administratoriaus skydelis',
+  'dashboard.systemInformation': 'Sistemos informacija',
+  'dashboard.schools': 'Mokyklos',
+  'dashboard.teachers': 'Mokytojai',
+  'dashboard.students': 'Studentai',
+  'dashboard.responses': 'Atsiliepimai',
+  'dashboard.subscriptions': 'Prenumeratos',
+  'dashboard.active': 'Aktyvūs',
+  'dashboard.revenue': 'Pajamos',
+  'dashboard.totalStudents': 'Iš viso studentų',
+  'dashboard.totalSchools': 'Iš viso mokyklų',
+  'dashboard.totalTeachers': 'Iš viso mokytojų',
+  'dashboard.totalResponses': 'Iš viso atsiliepimų',
+  'dashboard.payments': 'Mokėjimai',
+  'dashboard.analytics': 'Analizė',
+  'dashboard.performance': 'Veiklos rodikliai',
+  'dashboard.mentalHealth': 'Psichinė sveikata',
+  'dashboard.discountCodes': 'Nuolaidos kodai',
 };
