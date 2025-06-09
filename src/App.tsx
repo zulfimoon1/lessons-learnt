@@ -30,8 +30,8 @@ const App = () => {
         <PlatformAdminProvider>
           <AuthProvider>
             <TooltipProvider>
+              <Toaster />
               <BrowserRouter>
-                <Toaster />
                 <Routes>
                   <Route path="/" element={<Index />} />
                   <Route path="/student-login" element={<StudentLogin />} />
