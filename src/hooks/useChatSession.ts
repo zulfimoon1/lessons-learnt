@@ -22,7 +22,9 @@ export const useChatSession = (session: LiveChatSession, isDoctorView: boolean, 
   useEffect(() => {
     console.log('useChatSession: Setting up chat for session:', session.id);
     loadMessages();
-    setupRealtimeSubscription();
+    
+    // Set up real-time subscription and store the cleanup function
+    const cleanup = setupRealtimeSubscription();
     
     if (session.status === 'active' && session.doctor_id) {
       setIsConnected(true);
@@ -35,9 +37,8 @@ export const useChatSession = (session: LiveChatSession, isDoctorView: boolean, 
       notifyStudentDoctorJoined();
     }
 
-    return () => {
-      console.log('useChatSession: Cleaning up chat subscription');
-    };
+    // Return the cleanup function
+    return cleanup;
   }, [session.id]);
 
   const loadMessages = async () => {
@@ -107,7 +108,9 @@ export const useChatSession = (session: LiveChatSession, isDoctorView: boolean, 
         console.log('useChatSession: Subscription status:', status);
       });
 
+    // Return cleanup function that removes the channel
     return () => {
+      console.log('useChatSession: Cleaning up chat subscription');
       supabase.removeChannel(channel);
     };
   };
