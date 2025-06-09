@@ -3,6 +3,7 @@ import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { LiveChatSession } from "@/types/auth";
 import { useChatSession } from "@/hooks/useChatSession";
+import { useLanguage } from "@/contexts/LanguageContext";
 import ChatHeader from "./chat/ChatHeader";
 import ChatMessages from "./chat/ChatMessages";
 import ChatInput from "./chat/ChatInput";
@@ -17,6 +18,7 @@ interface RealtimeChatProps {
 
 const RealtimeChat = ({ session, studentName, isAnonymous, onClose, isDoctorView = false }: RealtimeChatProps) => {
   const [newMessage, setNewMessage] = useState("");
+  const { t } = useLanguage();
   const { messages, isConnected, doctorInfo, sendMessage } = useChatSession(session, isDoctorView, studentName);
 
   const handleSendMessage = async () => {

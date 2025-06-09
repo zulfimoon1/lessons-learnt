@@ -35,6 +35,16 @@ const translations = {
     'chat.startConversation': 'Start the conversation by sending a message below',
     'chat.waitingConnection': 'Waiting for connection...',
     'chat.doctorWillJoin': 'Your chat session has been created. A doctor will join shortly.',
+    'chat.withDoctor': 'Chat with Doctor',
+    'chat.anonymousChat': 'Anonymous Chat',
+    'chat.connecting': 'Connecting...',
+    'chat.connected': 'Connected',
+    'chat.disconnected': 'Disconnected',
+    'chat.sendMessage': 'Send Message',
+    'chat.chatStarted': 'Chat Started',
+    'chat.doctorJoined': 'Doctor has joined the chat',
+    'chat.endChat': 'End Chat',
+    'chat.closeChat': 'Close Chat',
 
     // Student Login Page
     'student.portal': 'Student Portal',
@@ -521,6 +531,16 @@ const translations = {
     'chat.startConversation': 'Pradėkite pokalbį parašydami žinutę žemiau',
     'chat.waitingConnection': 'Laukiama prisijungimo...',
     'chat.doctorWillJoin': 'Jūsų pokalbio sesija sukurta. Gydytojas prisijungs netrukus.',
+    'chat.withDoctor': 'Pokalbis su gydytoju',
+    'chat.anonymousChat': 'Anoniminis pokalbis',
+    'chat.connecting': 'Jungiamasi...',
+    'chat.connected': 'Prisijungta',
+    'chat.disconnected': 'Atsijungta',
+    'chat.sendMessage': 'Siųsti žinutę',
+    'chat.chatStarted': 'Pokalbis pradėtas',
+    'chat.doctorJoined': 'Gydytojas prisijungė prie pokalbio',
+    'chat.endChat': 'Baigti pokalbį',
+    'chat.closeChat': 'Uždaryti pokalbį',
 
     // Student Login Page
     'student.portal': 'Mokinių portalas',
