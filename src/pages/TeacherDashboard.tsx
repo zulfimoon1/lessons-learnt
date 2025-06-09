@@ -132,9 +132,9 @@ const TeacherDashboard = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-white">
+      <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
           <p>{t('common.loading')}</p>
         </div>
       </div>
@@ -142,23 +142,23 @@ const TeacherDashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-background">
       <CookieConsent />
-      <header className="bg-white border-b border-green-200 p-4">
+      <header className="bg-card/80 backdrop-blur-sm border-b border-border p-4">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
           <div className="flex items-center gap-4">
-            <SchoolIcon className="w-8 h-8 text-green-600" />
-            <h1 className="text-2xl font-bold text-gray-900">
+            <SchoolIcon className="w-8 h-8 text-primary" />
+            <h1 className="text-2xl font-bold text-foreground">
               {teacher?.role === 'doctor' ? t('dashboard.doctorOverview') : t('dashboard.teacherOverview')}
             </h1>
           </div>
           <div className="flex items-center gap-4">
             <LanguageSwitcher />
-            <span className="text-sm text-gray-600">{t('admin.welcome')}, {teacher?.name}</span>
+            <span className="text-sm text-muted-foreground">{t('admin.welcome')}, {teacher?.name}</span>
             <Button
               onClick={handleLogout}
               variant="outline"
-              className="flex items-center gap-2 border-green-200 text-green-700 hover:bg-green-50"
+              className="flex items-center gap-2"
             >
               <LogOutIcon className="w-4 h-4" />
               {t('auth.logout')}
@@ -186,7 +186,7 @@ const TeacherDashboard = () => {
               <Button 
                 onClick={handleCreateCheckout}
                 disabled={isCreatingCheckout}
-                className="bg-green-600 hover:bg-green-700 text-white"
+                className="bg-primary hover:bg-primary/90 text-primary-foreground"
               >
                 {isCreatingCheckout ? t('pricing.processing') : t('dashboard.subscribeNow')}
               </Button>
@@ -209,17 +209,17 @@ const TeacherDashboard = () => {
         )}
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <Card className="border-green-100">
+          <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">{t('auth.school')}</CardTitle>
-              <SchoolIcon className="h-4 w-4 text-gray-500" />
+              <SchoolIcon className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-lg font-semibold">{teacher?.school}</div>
             </CardContent>
           </Card>
           
-          <Card className="border-green-100">
+          <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">{t('login.teacher.role')}</CardTitle>
             </CardHeader>
@@ -228,17 +228,17 @@ const TeacherDashboard = () => {
                 {teacher?.role === 'doctor' ? t('teacher.mentalHealthProfessional') : teacher?.role}
               </div>
               {teacher?.role === 'doctor' && teacher?.specialization && (
-                <div className="text-sm text-gray-600 mt-1">{teacher.specialization}</div>
+                <div className="text-sm text-muted-foreground mt-1">{teacher.specialization}</div>
               )}
             </CardContent>
           </Card>
 
-          <Card className="border-green-100">
+          <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">
                 {teacher?.role === 'doctor' ? t('teacher.availability') : t('admin.subscription')}
               </CardTitle>
-              <CreditCardIcon className="h-4 w-4 text-gray-500" />
+              <CreditCardIcon className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-lg font-semibold">
@@ -252,18 +252,18 @@ const TeacherDashboard = () => {
         </div>
 
         <Tabs defaultValue={teacher?.role === 'doctor' ? 'weekly-summaries' : 'schedule'} className="space-y-6">
-          <TabsList className="bg-green-50 border-green-200">
+          <TabsList>
             {teacher?.role === 'doctor' ? (
               <>
-                <TabsTrigger value="weekly-summaries" className="data-[state=active]:bg-green-600 data-[state=active]:text-white">{t('dashboard.weeklySummaries')}</TabsTrigger>
-                <TabsTrigger value="mental-health" className="data-[state=active]:bg-green-600 data-[state=active]:text-white">{t('dashboard.mentalHealthSupport')}</TabsTrigger>
+                <TabsTrigger value="weekly-summaries">{t('dashboard.weeklySummaries')}</TabsTrigger>
+                <TabsTrigger value="mental-health">{t('dashboard.mentalHealthSupport')}</TabsTrigger>
               </>
             ) : (
               <>
-                <TabsTrigger value="schedule" className="data-[state=active]:bg-green-600 data-[state=active]:text-white">{t('class.schedule')}</TabsTrigger>
-                <TabsTrigger value="bulk-upload" className="data-[state=active]:bg-green-600 data-[state=active]:text-white">{t('upload.bulkUpload')}</TabsTrigger>
+                <TabsTrigger value="schedule">{t('class.schedule')}</TabsTrigger>
+                <TabsTrigger value="bulk-upload">{t('upload.bulkUpload')}</TabsTrigger>
                 {teacher?.role === 'admin' && (
-                  <TabsTrigger value="articles" className="data-[state=active]:bg-green-600 data-[state=active]:text-white">{t('articles.mentalHealth')}</TabsTrigger>
+                  <TabsTrigger value="articles">{t('articles.mentalHealth')}</TabsTrigger>
                 )}
               </>
             )}
@@ -275,7 +275,7 @@ const TeacherDashboard = () => {
                 {subscription ? (
                   <WeeklySummaryReview school={teacher?.school} />
                 ) : (
-                  <Card className="border-green-100">
+                  <Card>
                     <CardHeader>
                       <CardTitle>{t('dashboard.weeklySummaries')}</CardTitle>
                       <CardDescription>
@@ -283,11 +283,11 @@ const TeacherDashboard = () => {
                       </CardDescription>
                     </CardHeader>
                     <CardContent className="text-center py-8">
-                      <p className="text-gray-600 mb-4">{t('teacher.subscriptionRequiredForSummaries')}</p>
+                      <p className="text-muted-foreground mb-4">{t('teacher.subscriptionRequiredForSummaries')}</p>
                       <Button 
                         onClick={handleCreateCheckout}
                         disabled={isCreatingCheckout}
-                        className="bg-green-600 hover:bg-green-700 text-white"
+                        className="bg-primary hover:bg-primary/90 text-primary-foreground"
                       >
                         {isCreatingCheckout ? t('pricing.processing') : t('teacher.subscribeToContinue')}
                       </Button>
@@ -300,7 +300,7 @@ const TeacherDashboard = () => {
                 {subscription ? (
                   <MentalHealthArticles teacher={teacher} />
                 ) : (
-                  <Card className="border-green-100">
+                  <Card>
                     <CardHeader>
                       <CardTitle>{t('dashboard.mentalHealthSupport')}</CardTitle>
                       <CardDescription>
@@ -308,11 +308,11 @@ const TeacherDashboard = () => {
                       </CardDescription>
                     </CardHeader>
                     <CardContent className="text-center py-8">
-                      <p className="text-gray-600 mb-4">{t('articles.subscriptionRequired')}</p>
+                      <p className="text-muted-foreground mb-4">{t('articles.subscriptionRequired')}</p>
                       <Button 
                         onClick={handleCreateCheckout}
                         disabled={isCreatingCheckout}
-                        className="bg-green-600 hover:bg-green-700 text-white"
+                        className="bg-primary hover:bg-primary/90 text-primary-foreground"
                       >
                         {isCreatingCheckout ? t('pricing.processing') : t('teacher.subscribeToContinue')}
                       </Button>
@@ -339,7 +339,7 @@ const TeacherDashboard = () => {
                   {subscription ? (
                     <MentalHealthArticles teacher={teacher} />
                   ) : (
-                    <Card className="border-green-100">
+                    <Card>
                       <CardHeader>
                         <CardTitle>{t('articles.mentalHealth')}</CardTitle>
                         <CardDescription>
@@ -347,11 +347,11 @@ const TeacherDashboard = () => {
                         </CardDescription>
                       </CardHeader>
                       <CardContent className="text-center py-8">
-                        <p className="text-gray-600 mb-4">{t('articles.subscriptionRequired')}</p>
+                        <p className="text-muted-foreground mb-4">{t('articles.subscriptionRequired')}</p>
                         <Button 
                           onClick={handleCreateCheckout}
                           disabled={isCreatingCheckout}
-                          className="bg-green-600 hover:bg-green-700 text-white"
+                          className="bg-primary hover:bg-primary/90 text-primary-foreground"
                         >
                           {isCreatingCheckout ? t('pricing.processing') : t('teacher.subscribeToContinue')}
                         </Button>
