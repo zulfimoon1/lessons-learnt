@@ -16,6 +16,7 @@ import PlatformAdminLogin from "./pages/PlatformAdminLogin";
 import PlatformAdminDashboard from "./pages/PlatformAdminDashboard";
 import PricingPage from "./pages/PricingPage";
 import AcceptInvitation from "./pages/AcceptInvitation";
+import HowItWorks from "./pages/HowItWorks";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -42,6 +43,7 @@ const App = () => {
                   <Route path="/platform-admin-dashboard" element={<PlatformAdminDashboard />} />
                   <Route path="/pricing" element={<PricingPage />} />
                   <Route path="/accept-invitation" element={<AcceptInvitation />} />
+                  <Route path="/how-it-works" element={<HowItWorks />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </BrowserRouter>
