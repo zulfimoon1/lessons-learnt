@@ -1,116 +1,65 @@
 
-import { useState, useEffect } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { GraduationCapIcon, LogInIcon, School, UserIcon, Mail, ShieldIcon } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { BookOpenIcon, UserIcon, GraduationCapIcon } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
-import { useNavigate } from "react-router-dom";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const TeacherLogin = () => {
-  const { t } = useLanguage();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { teacherLogin } = useAuth();
+  const { t } = useLanguage();
   
-  // Safe auth hook usage with error boundary
-  const auth = useAuth();
-  const { teacher, teacherLogin, isLoading: authLoading } = auth;
-
-  // Redirect if already logged in
-  useEffect(() => {
-    if (teacher && !authLoading) {
-      console.log('TeacherLogin: User already logged in, redirecting...');
-      if (teacher.role === "admin") {
-        navigate("/admin-dashboard");
-      } else {
-        navigate("/teacher-dashboard");
-      }
-    }
-  }, [teacher, navigate, authLoading]);
-
   const [loginData, setLoginData] = useState({
     email: "",
     password: ""
   });
-
+  
   const [signupData, setSignupData] = useState({
-    name: "",
     email: "",
-    school: "",
-    role: "teacher" as "teacher" | "admin" | "doctor",
     password: "",
-    confirmPassword: ""
+    confirmPassword: "",
+    fullName: "",
+    school: "",
+    role: ""
   });
-
+  
   const [isLoading, setIsLoading] = useState(false);
-
-  // Don't render if still loading auth state
-  if (authLoading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-2 text-gray-600">Loading...</p>
-        </div>
-      </div>
-    );
-  }
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!loginData.email.trim() || !loginData.password) {
-      toast({
-        title: "Missing information",
-        description: "Please enter both email and password",
-        variant: "destructive",
-      });
-      return;
-    }
-
     setIsLoading(true);
-    console.log('TeacherLogin: Starting login process with email:', loginData.email);
 
     try {
-      const result = await teacherLogin(loginData.email.trim(), loginData.password);
-      console.log('TeacherLogin: Login result received:', result);
+      const result = await teacherLogin(loginData.email, loginData.password);
 
       if (result.error) {
-        console.error('TeacherLogin: Login failed with error:', result.error);
         toast({
-          title: "Login failed",
+          title: t('common.error'),
           description: result.error,
           variant: "destructive",
         });
-      } else if (result.teacher) {
-        console.log('TeacherLogin: Login successful, teacher data:', result.teacher);
-        
-        toast({
-          title: "Welcome back! 👨‍🏫",
-          description: `Successfully logged in as ${result.teacher.name}`,
-        });
-        
-        // Navigation will be handled by useEffect when teacher state updates
-        console.log('TeacherLogin: Teacher role is:', result.teacher.role);
-      } else {
-        console.error('TeacherLogin: No error but no teacher data returned');
-        toast({
-          title: "Login failed",
-          description: "Invalid response from server. Please try again.",
-          variant: "destructive",
-        });
+        return;
       }
-    } catch (err) {
-      console.error('TeacherLogin: Unexpected error during login:', err);
+
+      if (result.teacher) {
+        navigate(result.teacher.role === 'admin' ? '/admin-dashboard' : '/teacher-dashboard');
+      }
+    } catch (error) {
+      console.error('Login error:', error);
       toast({
-        title: "Login failed",
-        description: "An unexpected error occurred. Please try again.",
+        title: t('common.error'),
+        description: t('common.error'),
         variant: "destructive",
       });
     } finally {
@@ -121,69 +70,44 @@ const TeacherLogin = () => {
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!signupData.name.trim() || !signupData.email.trim() || !signupData.school.trim() || !signupData.password || !signupData.confirmPassword) {
-      toast({
-        title: "Missing information",
-        description: "Please fill in all required fields",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    // Validate passwords match
     if (signupData.password !== signupData.confirmPassword) {
       toast({
-        title: "Password mismatch",
-        description: "Passwords do not match",
+        title: t('student.passwordMismatch'),
+        description: t('student.passwordsDoNotMatch'),
         variant: "destructive",
       });
       return;
     }
 
     setIsLoading(true);
-    console.log('TeacherLogin: Starting signup process for:', signupData.email);
 
     try {
+      const role = signupData.role as 'teacher' | 'admin' | 'doctor';
       const result = await teacherLogin(
-        signupData.email.trim(), 
+        signupData.email, 
         signupData.password, 
-        signupData.name.trim(), 
-        signupData.school.trim(), 
-        signupData.role
+        signupData.fullName, 
+        signupData.school, 
+        role
       );
 
-      console.log('TeacherLogin: Signup result received:', result);
-
       if (result.error) {
-        console.error('TeacherLogin: Signup failed with error:', result.error);
         toast({
-          title: "Signup failed",
+          title: t('common.error'),
           description: result.error,
           variant: "destructive",
         });
-      } else if (result.teacher) {
-        console.log('TeacherLogin: Signup successful, teacher data:', result.teacher);
-        
-        toast({
-          title: "Account created! 🎉",
-          description: `Welcome to Lesson Lens, ${result.teacher.name}!`,
-        });
-        
-        // Navigation will be handled by useEffect when teacher state updates
-        console.log('TeacherLogin: New teacher role is:', result.teacher.role);
-      } else {
-        console.error('TeacherLogin: No error but no teacher data returned');
-        toast({
-          title: "Signup failed",
-          description: "Invalid response from server. Please try again.",
-          variant: "destructive",
-        });
+        return;
       }
-    } catch (err) {
-      console.error('TeacherLogin: Unexpected error during signup:', err);
+
+      if (result.teacher) {
+        navigate(result.teacher.role === 'admin' ? '/admin-dashboard' : '/teacher-dashboard');
+      }
+    } catch (error) {
+      console.error('Signup error:', error);
       toast({
-        title: "Signup failed",
-        description: "An unexpected error occurred. Please try again.",
+        title: t('common.error'),
+        description: t('common.error'),
         variant: "destructive",
       });
     } finally {
@@ -192,186 +116,156 @@ const TeacherLogin = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center p-4">
-      <div className="absolute top-4 right-4">
-        <LanguageSwitcher />
-      </div>
-      <Card className="w-full max-w-md bg-white/80 backdrop-blur-sm border-blue-100">
-        <CardHeader className="text-center">
-          <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full mx-auto flex items-center justify-center mb-4">
-            <GraduationCapIcon className="w-8 h-8 text-white" />
+    <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-blue-50 flex items-center justify-center p-4">
+      <div className="w-full max-w-md">
+        <div className="text-center mb-8">
+          <div className="flex justify-center mb-4">
+            <div className="w-16 h-16 bg-gradient-to-br from-green-500 to-blue-600 rounded-full flex items-center justify-center">
+              <BookOpenIcon className="w-8 h-8 text-white" />
+            </div>
           </div>
-          <CardTitle className="text-2xl text-gray-900">{t('login.teacher.title') || "Teacher Portal"}</CardTitle>
-          <CardDescription>
-            {t('login.teacher.subtitle') || "Access your teaching dashboard"}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Tabs defaultValue="login" className="space-y-4">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="login">{t('login.teacher.login') || "Login"}</TabsTrigger>
-              <TabsTrigger value="signup">{t('login.teacher.signup') || "Sign Up"}</TabsTrigger>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">{t('login.teacher.title')}</h1>
+          <p className="text-gray-600">{t('login.teacher.subtitle')}</p>
+          <div className="flex justify-center mt-4">
+            <LanguageSwitcher />
+          </div>
+        </div>
+
+        <Card className="bg-white/80 backdrop-blur-sm border-green-100">
+          <Tabs defaultValue="login" className="w-full">
+            <TabsList className="grid w-full grid-cols-2 mb-6">
+              <TabsTrigger value="login" className="data-[state=active]:bg-green-500 data-[state=active]:text-white">
+                {t('login.teacher.login')}
+              </TabsTrigger>
+              <TabsTrigger value="signup" className="data-[state=active]:bg-green-500 data-[state=active]:text-white">
+                {t('login.teacher.signup')}
+              </TabsTrigger>
             </TabsList>
 
             <TabsContent value="login">
-              <form onSubmit={handleLogin} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="loginEmail" className="flex items-center gap-2">
-                    <Mail className="w-4 h-4" />
-                    {t('login.teacher.email') || "Email"}
-                  </Label>
-                  <Input
-                    id="loginEmail"
-                    type="email"
-                    placeholder="teacher@school.edu"
-                    value={loginData.email}
-                    onChange={(e) => setLoginData(prev => ({ ...prev, email: e.target.value }))}
-                    required
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="loginPassword">{t('login.teacher.password') || "Password"}</Label>
-                  <Input
-                    id="loginPassword"
-                    type="password"
-                    placeholder="Enter your password"
-                    value={loginData.password}
-                    onChange={(e) => setLoginData(prev => ({ ...prev, password: e.target.value }))}
-                    required
-                  />
-                </div>
-
-                <Button 
-                  type="submit" 
-                  className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
-                  disabled={isLoading}
-                >
-                  {isLoading ? (t('login.teacher.loggingIn') || "Logging in...") : (
-                    <>
-                      <LogInIcon className="w-4 h-4 mr-2" />
-                      {t('login.teacher.login') || "Login"}
-                    </>
-                  )}
-                </Button>
-              </form>
+              <CardHeader className="text-center pb-4">
+                <CardTitle className="flex items-center justify-center gap-2 text-xl">
+                  <UserIcon className="w-5 h-5" />
+                  {t('login.teacher.login')}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={handleLogin} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="email">{t('login.teacher.email')}</Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      value={loginData.email}
+                      onChange={(e) => setLoginData({...loginData, email: e.target.value})}
+                      required
+                      className="border-green-200 focus:border-green-500"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="password">{t('login.teacher.password')}</Label>
+                    <Input
+                      id="password"
+                      type="password"
+                      value={loginData.password}
+                      onChange={(e) => setLoginData({...loginData, password: e.target.value})}
+                      required
+                      className="border-green-200 focus:border-green-500"
+                    />
+                  </div>
+                  <Button type="submit" className="w-full bg-green-600 hover:bg-green-700" disabled={isLoading}>
+                    {isLoading ? t('login.teacher.loggingIn') : t('login.teacher.login')}
+                  </Button>
+                </form>
+              </CardContent>
             </TabsContent>
 
             <TabsContent value="signup">
-              <form onSubmit={handleSignup} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="signupName" className="flex items-center gap-2">
-                    <UserIcon className="w-4 h-4" />
-                    {t('login.teacher.fullName') || "Full Name"}
-                  </Label>
-                  <Input
-                    id="signupName"
-                    type="text"
-                    placeholder="Enter your full name"
-                    value={signupData.name}
-                    onChange={(e) => setSignupData(prev => ({ ...prev, name: e.target.value }))}
-                    required
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="signupEmail" className="flex items-center gap-2">
-                    <Mail className="w-4 h-4" />
-                    {t('login.teacher.email') || "Email"}
-                  </Label>
-                  <Input
-                    id="signupEmail"
-                    type="email"
-                    placeholder="teacher@school.edu"
-                    value={signupData.email}
-                    onChange={(e) => setSignupData(prev => ({ ...prev, email: e.target.value }))}
-                    required
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="signupSchool" className="flex items-center gap-2">
-                    <School className="w-4 h-4" />
-                    {t('login.teacher.school') || "School"}
-                  </Label>
-                  <Input
-                    id="signupSchool"
-                    type="text"
-                    placeholder="Enter your school name"
-                    value={signupData.school}
-                    onChange={(e) => setSignupData(prev => ({ ...prev, school: e.target.value }))}
-                    required
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="role" className="flex items-center gap-2">
-                    <ShieldIcon className="w-4 h-4" />
-                    {t('login.teacher.role') || "Role"}
-                  </Label>
-                  <Select 
-                    value={signupData.role} 
-                    onValueChange={(value: "teacher" | "admin" | "doctor") => 
-                      setSignupData(prev => ({ ...prev, role: value }))
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select role" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="teacher">{t('login.teacher.roleTeacher') || "Teacher"}</SelectItem>
-                      <SelectItem value="admin">{t('login.teacher.roleAdmin') || "School Admin"}</SelectItem>
-                      <SelectItem value="doctor">Mental Health Professional</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  {signupData.role === "admin" && (
-                    <p className="text-xs text-gray-500 mt-1">
-                      {t('login.teacher.adminHint') || "School Admins can manage teachers and view all feedback"}
-                    </p>
-                  )}
-                  {signupData.role === "doctor" && (
-                    <p className="text-xs text-gray-500 mt-1">
-                      Mental Health Professionals can access live chat sessions and student wellness reports
-                    </p>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="signupPassword">{t('login.teacher.password') || "Password"}</Label>
-                  <Input
-                    id="signupPassword"
-                    type="password"
-                    placeholder="Create a password"
-                    value={signupData.password}
-                    onChange={(e) => setSignupData(prev => ({ ...prev, password: e.target.value }))}
-                    required
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="confirmPassword">{t('login.teacher.confirmPassword') || "Confirm Password"}</Label>
-                  <Input
-                    id="confirmPassword"
-                    type="password"
-                    placeholder="Confirm your password"
-                    value={signupData.confirmPassword}
-                    onChange={(e) => setSignupData(prev => ({ ...prev, confirmPassword: e.target.value }))}
-                    required
-                  />
-                </div>
-
-                <Button 
-                  type="submit" 
-                  className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700"
-                  disabled={isLoading}
-                >
-                  {isLoading ? (t('login.teacher.creatingAccount') || "Creating account...") : (t('login.teacher.createAccount') || "Create Account")}
-                </Button>
-              </form>
+              <CardHeader className="text-center pb-4">
+                <CardTitle className="flex items-center justify-center gap-2 text-xl">
+                  <GraduationCapIcon className="w-5 h-5" />
+                  {t('login.teacher.createAccount')}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={handleSignup} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="signupEmail">{t('login.teacher.email')}</Label>
+                    <Input
+                      id="signupEmail"
+                      type="email"
+                      value={signupData.email}
+                      onChange={(e) => setSignupData({...signupData, email: e.target.value})}
+                      required
+                      className="border-green-200 focus:border-green-500"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="signupFullName">{t('login.teacher.fullName')}</Label>
+                    <Input
+                      id="signupFullName"
+                      type="text"
+                      value={signupData.fullName}
+                      onChange={(e) => setSignupData({...signupData, fullName: e.target.value})}
+                      required
+                      className="border-green-200 focus:border-green-500"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="signupSchool">{t('login.teacher.school')}</Label>
+                    <Input
+                      id="signupSchool"
+                      type="text"
+                      value={signupData.school}
+                      onChange={(e) => setSignupData({...signupData, school: e.target.value})}
+                      required
+                      className="border-green-200 focus:border-green-500"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="role">{t('login.teacher.role')}</Label>
+                    <Select value={signupData.role} onValueChange={(value) => setSignupData({...signupData, role: value})}>
+                      <SelectTrigger className="border-green-200 focus:border-green-500">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="teacher">{t('login.teacher.roleTeacher')}</SelectItem>
+                        <SelectItem value="admin">{t('login.teacher.roleAdmin')}</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <p className="text-sm text-muted-foreground">{t('login.teacher.adminHint')}</p>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="signupPassword">{t('login.teacher.password')}</Label>
+                    <Input
+                      id="signupPassword"
+                      type="password"
+                      value={signupData.password}
+                      onChange={(e) => setSignupData({...signupData, password: e.target.value})}
+                      required
+                      className="border-green-200 focus:border-green-500"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="signupConfirmPassword">{t('login.teacher.confirmPassword')}</Label>
+                    <Input
+                      id="signupConfirmPassword"
+                      type="password"
+                      value={signupData.confirmPassword}
+                      onChange={(e) => setSignupData({...signupData, confirmPassword: e.target.value})}
+                      required
+                      className="border-green-200 focus:border-green-500"
+                    />
+                  </div>
+                  <Button type="submit" className="w-full bg-green-600 hover:bg-green-700" disabled={isLoading}>
+                    {isLoading ? t('login.teacher.creatingAccount') : t('login.teacher.createAccount')}
+                  </Button>
+                </form>
+              </CardContent>
             </TabsContent>
           </Tabs>
-        </CardContent>
-      </Card>
+        </Card>
+      </div>
     </div>
   );
 };

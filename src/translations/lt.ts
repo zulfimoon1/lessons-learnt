@@ -1,19 +1,17 @@
 
-import { authTranslations } from './lt/auth';
 import { navigationTranslations } from './lt/navigation';
-import { commonTranslations } from './lt/common';
+import { authTranslations } from './lt/auth';
 import { studentTranslations } from './lt/student';
 import { teacherTranslations } from './lt/teacher';
+import { commonTranslations } from './lt/common';
 
 export const ltTranslations = {
-  ...authTranslations,
-  ...navigationTranslations,
-  ...commonTranslations,
-  ...studentTranslations,
-  ...teacherTranslations,
   'welcome.title': 'Išmoktos pamokos: paprastas būdas tobulėti',
   'welcome.subtitle': 'Įgalinkite mokinių gerovę ir akademinius pasiekimus naudodami mūsų įžvalgomis pagrįstą platformą.',
   'welcome.freeForStudents': 'Visiškai nemokama studentams!',
+  'auth.studentLogin': 'Prisijungti kaip studentas',
+  'auth.teacherLogin': 'Prisijungti kaip mokytojas',
+  'auth.signUpNow': 'Registruokitės dabar',
   'tagline.studentLead': 'Į studentą orientuotas požiūris į švietimą',
   'features.studentFeedback.title': 'Studentų atsiliepimai realiuoju laiku',
   'features.studentFeedback.description': 'Surinkite momentinius atsiliepimus, kad suprastumėte studentų patirtį ir poreikius.',
@@ -60,4 +58,11 @@ export const ltTranslations = {
   'compliance.dataProcessing': 'Duomenų apdorojimo susitarimas',
   'compliance.dataRetention': 'Duomenų saugojimo politika',
   'compliance.rightToDelete': 'Teisė būti pamirštam',
+  
+  // Include modular translations
+  ...navigationTranslations,
+  ...authTranslations,
+  ...studentTranslations,
+  ...teacherTranslations,
+  ...commonTranslations,
 };
