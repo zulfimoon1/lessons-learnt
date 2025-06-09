@@ -69,6 +69,52 @@ export const ltTranslations = {
   'common.open': 'Atidaryti',
   'common.refresh': 'Atnaujinti',
   
+  // Dashboard translations
+  'dashboard.title': 'Studentų skydelis',
+  'dashboard.grade': 'Klasė',
+  'dashboard.upcomingClasses': 'Artėjančios pamokos',
+  'dashboard.feedback': 'Atsiliepimai',
+  'dashboard.weeklySummary': 'Savaitės suvestinė',
+  'dashboard.mentalHealthSupport': 'Psichinės sveikatos palaikymas',
+  'dashboard.scheduledClasses': 'Suplanuotos pamokos',
+  'dashboard.noClasses': 'Šiuo metu nėra suplanuotų pamokų',
+  'dashboard.noPsychologists': 'Mokykloje nėra psichologų',
+  'dashboard.contactAdmin': 'Susisiekite su administratoriumi dėl psichinės sveikatos paslaugų.',
+  
+  // Admin translations
+  'admin.welcome': 'Sveiki',
+  
+  // Student specific translations
+  'student.portal': 'Studentų portalas',
+  'student.loginDescription': 'Prisijunkite prie savo mokymosi skydelio',
+  'student.fullName': 'Vardas ir pavardė',
+  'student.fullNamePlaceholder': 'Įveskite savo vardą ir pavardę',
+  'student.fullNameSignupPlaceholder': 'Įveskite savo vardą ir pavardę',
+  'student.schoolPlaceholder': 'Įveskite mokyklos pavadinimą',
+  'student.classGrade': 'Klasė/Kursas',
+  'student.gradePlaceholder': 'pvz., 5 klasė, 7 kursas',
+  'student.createPassword': 'Sukurkite slaptažodį',
+  'student.confirmPasswordPlaceholder': 'Patvirtinkite slaptažodį',
+  'student.loggingIn': 'Prisijungiama...',
+  'student.creatingAccount': 'Kuriama paskyra...',
+  'student.createAccount': 'Sukurti paskyrą',
+  'student.passwordMismatch': 'Slaptažodžiai nesutampa',
+  'student.passwordsDoNotMatch': 'Slaptažodžiai nesutampa',
+  'student.signupFailed': 'Registracija nepavyko',
+  'student.accountCreated': 'Paskyra sukurta!',
+  'student.welcomeToApp': 'Sveiki atvykę į Lesson Lens!',
+  'student.welcomeBack': 'Sveiki sugrįžę!',
+  'student.loginSuccess': 'Sėkmingai prisijungėte',
+  'student.loginFailed': 'Prisijungimas nepavyko',
+  'student.defaultName': 'Studentas',
+  'student.failedToLoadClasses': 'Nepavyko įkelti pamokų',
+  'student.failedToLoadPsychologists': 'Nepavyko įkelti psichologų informacijos',
+  'student.accessMentalHealthResources': 'Prisijunkite prie {school} psichinės sveikatos išteklių',
+  
+  // Class translations
+  'class.upcomingClasses': 'Artėjančios pamokos',
+  'class.duration': 'min.',
+  
   // Include all modular translations
   ...ltDemoTranslations,
   ...ltAuthTranslations,
