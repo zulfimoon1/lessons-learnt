@@ -7,33 +7,17 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BookOpenIcon, LogInIcon, UserIcon, School, GraduationCap } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
+import { useAuthStorage } from "@/hooks/useAuthStorage";
+import { studentSimpleLoginService, studentSignupService } from "@/services/authService";
 
 const StudentLogin = () => {
   const { t } = useLanguage();
   const navigate = useNavigate();
   const { toast } = useToast();
-  
-  // Safe auth hook usage with error boundary
-  let auth;
-  try {
-    auth = useAuth();
-  } catch (error) {
-    console.error('StudentLogin: Auth context error:', error);
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-red-600 mb-4">Authentication Error</h1>
-          <p className="text-muted-foreground">Unable to access authentication. Please refresh the page.</p>
-        </div>
-      </div>
-    );
-  }
-
-  const { student, studentLogin, studentSignup, isLoading: authLoading } = auth;
+  const { student, saveStudent, isLoading: authLoading } = useAuthStorage();
 
   // Redirect if already logged in
   useEffect(() => {
@@ -85,7 +69,7 @@ const StudentLogin = () => {
     setIsLoading(true);
 
     try {
-      const result = await studentLogin(
+      const result = await studentSimpleLoginService(
         loginData.fullName.trim(),
         loginData.password
       );
@@ -97,10 +81,12 @@ const StudentLogin = () => {
           variant: "destructive",
         });
       } else if (result.student) {
+        saveStudent(result.student);
         toast({
           title: t('student.welcomeBack') || "Welcome back!",
           description: t('student.loginSuccess') || "Login successful",
         });
+        navigate("/student-dashboard");
       }
     } catch (err) {
       console.error('StudentLogin: Unexpected error during login:', err);
@@ -138,7 +124,7 @@ const StudentLogin = () => {
     setIsLoading(true);
 
     try {
-      const result = await studentSignup(
+      const result = await studentSignupService(
         signupData.fullName.trim(),
         signupData.school.trim(),
         signupData.grade.trim(),
@@ -152,10 +138,12 @@ const StudentLogin = () => {
           variant: "destructive",
         });
       } else if (result.student) {
+        saveStudent(result.student);
         toast({
           title: t('student.accountCreated') || "Account created!",
           description: t('student.welcomeToApp') || "Welcome to Lesson Lens!",
         });
+        navigate("/student-dashboard");
       }
     } catch (err) {
       console.error('StudentLogin: Unexpected error during signup:', err);

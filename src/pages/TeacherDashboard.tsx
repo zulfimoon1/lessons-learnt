@@ -19,6 +19,7 @@ import BulkScheduleUpload from "@/components/BulkScheduleUpload";
 import MentalHealthArticles from "@/components/MentalHealthArticles";
 import ComplianceFooter from "@/components/ComplianceFooter";
 import CookieConsent from "@/components/CookieConsent";
+import WeeklySummaryReview from "@/components/WeeklySummaryReview";
 
 interface Subscription {
   id: string;
@@ -123,7 +124,6 @@ const TeacherDashboard = () => {
   };
 
   const handleScheduleUploadComplete = () => {
-    // Removed unnecessary refresh trigger - components handle their own state
     toast({
       title: t('common.success'),
       description: t('upload.uploadComplete'),
@@ -176,7 +176,10 @@ const TeacherDashboard = () => {
                 {t('admin.subscription')}
               </CardTitle>
               <CardDescription className="text-yellow-700">
-                {t('teacher.subscriptionDescription')}
+                {teacher?.role === 'doctor' 
+                  ? t('teacher.doctorSubscriptionDescription')
+                  : t('teacher.subscriptionDescription')
+                }
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -248,12 +251,12 @@ const TeacherDashboard = () => {
           </Card>
         </div>
 
-        <Tabs defaultValue={teacher?.role === 'doctor' ? 'chat-sessions' : 'schedule'} className="space-y-6">
+        <Tabs defaultValue={teacher?.role === 'doctor' ? 'weekly-summaries' : 'schedule'} className="space-y-6">
           <TabsList className="bg-green-50 border-green-200">
             {teacher?.role === 'doctor' ? (
               <>
-                <TabsTrigger value="chat-sessions" className="data-[state=active]:bg-green-600 data-[state=active]:text-white">{t('teacher.liveChatSessions')}</TabsTrigger>
-                <TabsTrigger value="articles" className="data-[state=active]:bg-green-600 data-[state=active]:text-white">{t('articles.mentalHealth')}</TabsTrigger>
+                <TabsTrigger value="weekly-summaries" className="data-[state=active]:bg-green-600 data-[state=active]:text-white">{t('dashboard.weeklySummaries')}</TabsTrigger>
+                <TabsTrigger value="mental-health" className="data-[state=active]:bg-green-600 data-[state=active]:text-white">{t('dashboard.mentalHealthSupport')}</TabsTrigger>
               </>
             ) : (
               <>
@@ -268,28 +271,38 @@ const TeacherDashboard = () => {
 
           {teacher?.role === 'doctor' ? (
             <>
-              <TabsContent value="chat-sessions" className="space-y-6">
-                <Card className="border-green-100">
-                  <CardHeader>
-                    <CardTitle>{t('teacher.liveChatSessions')}</CardTitle>
-                    <CardDescription>
-                      {t('teacher.manageChatSessions')}
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="text-center py-8">
-                    <p className="text-gray-600 mb-4">{t('teacher.noActiveSessions')}</p>
-                    <p className="text-sm text-gray-500">{t('teacher.studentsCanConnect')}</p>
-                  </CardContent>
-                </Card>
+              <TabsContent value="weekly-summaries" className="space-y-6">
+                {subscription ? (
+                  <WeeklySummaryReview school={teacher?.school} />
+                ) : (
+                  <Card className="border-green-100">
+                    <CardHeader>
+                      <CardTitle>{t('dashboard.weeklySummaries')}</CardTitle>
+                      <CardDescription>
+                        {t('teacher.subscriptionRequiredForSummaries')}
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="text-center py-8">
+                      <p className="text-gray-600 mb-4">{t('teacher.subscriptionRequiredForSummaries')}</p>
+                      <Button 
+                        onClick={handleCreateCheckout}
+                        disabled={isCreatingCheckout}
+                        className="bg-green-600 hover:bg-green-700 text-white"
+                      >
+                        {isCreatingCheckout ? t('pricing.processing') : t('teacher.subscribeToContinue')}
+                      </Button>
+                    </CardContent>
+                  </Card>
+                )}
               </TabsContent>
               
-              <TabsContent value="articles" className="space-y-6">
+              <TabsContent value="mental-health" className="space-y-6">
                 {subscription ? (
                   <MentalHealthArticles teacher={teacher} />
                 ) : (
                   <Card className="border-green-100">
                     <CardHeader>
-                      <CardTitle>{t('articles.mentalHealth')}</CardTitle>
+                      <CardTitle>{t('dashboard.mentalHealthSupport')}</CardTitle>
                       <CardDescription>
                         {t('articles.subscriptionRequired')}
                       </CardDescription>
