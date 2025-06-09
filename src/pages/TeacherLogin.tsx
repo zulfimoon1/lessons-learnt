@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -58,10 +59,10 @@ const TeacherLogin = () => {
   // Don't render if still loading auth state
   if (authLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-2 text-gray-600">Loading...</p>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+          <p className="mt-2 text-muted-foreground">Loading...</p>
         </div>
       </div>
     );
@@ -197,7 +198,7 @@ const TeacherLogin = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <div className="absolute top-4 right-4">
         <LanguageSwitcher />
       </div>
@@ -206,12 +207,12 @@ const TeacherLogin = () => {
           <Breadcrumbs items={breadcrumbItems} />
         </div>
         <div className="flex justify-center">
-          <Card className="w-full max-w-md bg-white/80 backdrop-blur-sm border-blue-100">
+          <Card className="w-full max-w-md bg-card/80 backdrop-blur-sm border-border">
             <CardHeader className="text-center">
-              <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full mx-auto flex items-center justify-center mb-4">
-                <GraduationCapIcon className="w-8 h-8 text-white" />
+              <div className="w-16 h-16 bg-primary rounded-full mx-auto flex items-center justify-center mb-4">
+                <GraduationCapIcon className="w-8 h-8 text-primary-foreground" />
               </div>
-              <CardTitle className="text-2xl text-gray-900">{t('login.teacher.title') || "Teacher Portal"}</CardTitle>
+              <CardTitle className="text-2xl text-foreground">{t('login.teacher.title') || "Teacher Portal"}</CardTitle>
               <CardDescription>
                 {t('login.teacher.subtitle') || "Access your teaching dashboard"}
               </CardDescription>
@@ -254,7 +255,7 @@ const TeacherLogin = () => {
 
                     <Button 
                       type="submit" 
-                      className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
+                      className="w-full"
                       disabled={isLoading}
                     >
                       {isLoading ? (t('login.teacher.loggingIn') || "Logging in...") : (
@@ -335,12 +336,12 @@ const TeacherLogin = () => {
                         </SelectContent>
                       </Select>
                       {signupData.role === "admin" && (
-                        <p className="text-xs text-gray-500 mt-1">
+                        <p className="text-xs text-muted-foreground mt-1">
                           {t('login.teacher.adminHint') || "School Admins can manage teachers and view all feedback"}
                         </p>
                       )}
                       {signupData.role === "doctor" && (
-                        <p className="text-xs text-gray-500 mt-1">
+                        <p className="text-xs text-muted-foreground mt-1">
                           Mental Health Professionals can access live chat sessions and student wellness reports
                         </p>
                       )}
@@ -372,7 +373,7 @@ const TeacherLogin = () => {
 
                     <Button 
                       type="submit" 
-                      className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700"
+                      className="w-full"
                       disabled={isLoading}
                     >
                       {isLoading ? (t('login.teacher.creatingAccount') || "Creating account...") : (t('login.teacher.createAccount') || "Create Account")}
