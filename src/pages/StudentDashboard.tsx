@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import LessonFeedbackForm from "@/components/LessonFeedbackForm";
 import WeeklySummary from "@/components/WeeklySummary";
+import CompiledWeeklySummary from "@/components/CompiledWeeklySummary";
 import PsychologistInfo from "@/components/PsychologistInfo";
 import LiveChatWidget from "@/components/LiveChatWidget";
 import { useNavigate } from "react-router-dom";
@@ -253,7 +254,16 @@ const StudentDashboard = () => {
           </TabsContent>
 
           <TabsContent value="weekly" className="space-y-6">
-            <WeeklySummary student={student} />
+            <div className="space-y-6">
+              <CompiledWeeklySummary student={student} />
+              <div className="border-t pt-6">
+                <h3 className="text-lg font-semibold mb-4">Manual Weekly Check-In</h3>
+                <p className="text-sm text-muted-foreground mb-4">
+                  You can also manually add additional thoughts or concerns below:
+                </p>
+                <WeeklySummary student={student} />
+              </div>
+            </div>
           </TabsContent>
 
           <TabsContent value="support" className="space-y-6">
