@@ -5,6 +5,7 @@ import { GraduationCapIcon, UsersIcon, BookOpenIcon, HeartIcon, BarChart3Icon, S
 import { Link } from "react-router-dom";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import DemoSection from "@/components/DemoSection";
+import ComplianceFooter from "@/components/ComplianceFooter";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 const Index = () => {
@@ -63,7 +64,7 @@ const Index = () => {
               {t('tagline.studentLead')}
             </p>
             <p className="text-lg text-primary font-black mt-2">
-              100% free for all students
+              {t('welcome.freeForStudents')}
             </p>
           </div>
         </div>
@@ -186,6 +187,128 @@ const Index = () => {
           </div>
         </div>
       </section>
+
+      {/* How It Works Section */}
+      <section className="bg-background py-20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl font-bold text-foreground mb-6">
+              {t('howItWorks.title')}
+            </h2>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16">
+            {/* For School Administrators */}
+            <div>
+              <h3 className="text-2xl font-bold text-foreground mb-8 text-center">
+                {t('howItWorks.forAdmins')}
+              </h3>
+              <div className="space-y-6">
+                <div className="flex items-start gap-4">
+                  <div className="flex-shrink-0 w-8 h-8 bg-primary text-primary-foreground rounded-full flex items-center justify-center font-bold">
+                    1
+                  </div>
+                  <p className="text-muted-foreground">
+                    {t('howItWorks.admin.step1')}
+                  </p>
+                </div>
+                <div className="flex items-start gap-4">
+                  <div className="flex-shrink-0 w-8 h-8 bg-primary text-primary-foreground rounded-full flex items-center justify-center font-bold">
+                    2
+                  </div>
+                  <p className="text-muted-foreground">
+                    {t('howItWorks.admin.step2')}
+                  </p>
+                </div>
+                <div className="flex items-start gap-4">
+                  <div className="flex-shrink-0 w-8 h-8 bg-primary text-primary-foreground rounded-full flex items-center justify-center font-bold">
+                    3
+                  </div>
+                  <p className="text-muted-foreground">
+                    {t('howItWorks.admin.step3')}
+                  </p>
+                </div>
+                <div className="flex items-start gap-4">
+                  <div className="flex-shrink-0 w-8 h-8 bg-primary text-primary-foreground rounded-full flex items-center justify-center font-bold">
+                    4
+                  </div>
+                  <p className="text-muted-foreground">
+                    {t('howItWorks.admin.step4')}
+                  </p>
+                </div>
+                <div className="flex items-start gap-4">
+                  <div className="flex-shrink-0 w-8 h-8 bg-primary text-primary-foreground rounded-full flex items-center justify-center font-bold">
+                    5
+                  </div>
+                  <p className="text-muted-foreground">
+                    {t('howItWorks.admin.step5')}
+                  </p>
+                </div>
+                <div className="flex items-start gap-4">
+                  <div className="flex-shrink-0 w-8 h-8 bg-primary text-primary-foreground rounded-full flex items-center justify-center font-bold">
+                    6
+                  </div>
+                  <p className="text-muted-foreground">
+                    {t('howItWorks.admin.step6')}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* For Students */}
+            <div>
+              <h3 className="text-2xl font-bold text-foreground mb-8 text-center">
+                {t('howItWorks.forStudents')}
+              </h3>
+              <div className="space-y-6">
+                <div className="flex items-start gap-4">
+                  <div className="flex-shrink-0 w-8 h-8 bg-secondary text-secondary-foreground rounded-full flex items-center justify-center font-bold">
+                    1
+                  </div>
+                  <p className="text-muted-foreground">
+                    {t('howItWorks.student.step1')}
+                  </p>
+                </div>
+                <div className="flex items-start gap-4">
+                  <div className="flex-shrink-0 w-8 h-8 bg-secondary text-secondary-foreground rounded-full flex items-center justify-center font-bold">
+                    2
+                  </div>
+                  <p className="text-muted-foreground">
+                    {t('howItWorks.student.step2')}
+                  </p>
+                </div>
+                <div className="flex items-start gap-4">
+                  <div className="flex-shrink-0 w-8 h-8 bg-secondary text-secondary-foreground rounded-full flex items-center justify-center font-bold">
+                    3
+                  </div>
+                  <p className="text-muted-foreground">
+                    {t('howItWorks.student.step3')}
+                  </p>
+                </div>
+                <div className="flex items-start gap-4">
+                  <div className="flex-shrink-0 w-8 h-8 bg-secondary text-secondary-foreground rounded-full flex items-center justify-center font-bold">
+                    4
+                  </div>
+                  <p className="text-muted-foreground">
+                    {t('howItWorks.student.step4')}
+                  </p>
+                </div>
+                <div className="flex items-start gap-4">
+                  <div className="flex-shrink-0 w-8 h-8 bg-secondary text-secondary-foreground rounded-full flex items-center justify-center font-bold">
+                    5
+                  </div>
+                  <p className="text-muted-foreground">
+                    {t('howItWorks.student.step5')}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Compliance Footer */}
+      <ComplianceFooter />
     </div>
   );
 };
