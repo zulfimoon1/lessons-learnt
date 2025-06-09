@@ -28,42 +28,19 @@ export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }
   };
 
   const t = (key: string, params?: Record<string, string>): string => {
-    try {
-      const keys = key.split('.');
-      let translation: any = translations[language];
-      
-      for (const k of keys) {
-        if (translation && typeof translation === 'object' && k in translation) {
-          translation = translation[k];
-        } else {
-          console.warn(`Translation key not found: ${key}`);
-          return key;
-        }
-      }
-      
-      let result = typeof translation === 'string' ? translation : key;
-      
-      if (params) {
-        Object.entries(params).forEach(([param, value]) => {
-          result = result.replace(`{${param}}`, value);
-        });
-      }
-      
-      return result;
-    } catch (error) {
-      console.error('Translation error:', error);
-      return key;
+    let translation = translations[language][key] || key;
+    
+    if (params) {
+      Object.entries(params).forEach(([param, value]) => {
+        translation = translation.replace(`{${param}}`, value);
+      });
     }
-  };
-
-  const value = {
-    language,
-    setLanguage: changeLanguage,
-    t
+    
+    return translation;
   };
 
   return (
-    <LanguageContext.Provider value={value}>
+    <LanguageContext.Provider value={{ language, setLanguage: changeLanguage, t }}>
       {children}
     </LanguageContext.Provider>
   );
