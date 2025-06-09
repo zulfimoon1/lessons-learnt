@@ -2,6 +2,8 @@
 import { ltDemoTranslations } from './lt/demo';
 import { ltAuthTranslations } from './lt/auth';
 import { ltChatTranslations } from './lt/chat';
+import { ltTeacherTranslations } from './lt/teacher';
+import { ltWeeklyTranslations } from './lt/weekly';
 
 export const ltTranslations = {
   'welcome.title': 'Išmoktos pamokos: paprastas būdas tobulėti',
@@ -75,6 +77,7 @@ export const ltTranslations = {
   'dashboard.upcomingClasses': 'Artėjančios pamokos',
   'dashboard.feedback': 'Atsiliepimai',
   'dashboard.weeklySummary': 'Savaitės suvestinė',
+  'dashboard.weeklySummaries': 'Savaitės suvestinės',
   'dashboard.mentalHealthSupport': 'Psichinės sveikatos palaikymas',
   'dashboard.scheduledClasses': 'Suplanuotos pamokos',
   'dashboard.noClasses': 'Šiuo metu nėra suplanuotų pamokų',
@@ -119,4 +122,6 @@ export const ltTranslations = {
   ...ltDemoTranslations,
   ...ltAuthTranslations,
   ...ltChatTranslations,
+  ...ltTeacherTranslations,
+  ...ltWeeklyTranslations,
 };
