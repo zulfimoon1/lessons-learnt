@@ -36,5 +36,13 @@ export const ltAuthTranslations = {
   'auth.school': 'Mokykla',
   'auth.passwordMismatch': 'Slaptažodžiai nesutampa',
   'auth.passwordsDoNotMatch': 'Slaptažodžiai nesutampa',
-  'auth.creatingAccount': 'Kuriama paskyra...'
+  'auth.creatingAccount': 'Kuriama paskyra...',
+  
+  // Add missing login form translations
+  'login.teacher.title': 'Mokytojų portalas',
+  'login.teacher.subtitle': 'Prisijunkite prie mokytojų skydelio',
+  'login.teacher.role': 'Vaidmuo',
+  'login.teacher.roleTeacher': 'Mokytojas',
+  'login.teacher.roleAdmin': 'Mokyklos administratorius',
+  'login.teacher.adminHint': 'Mokyklos administratoriai gali valdyti mokytojus ir peržiūrėti visus atsiliepimus'
 };

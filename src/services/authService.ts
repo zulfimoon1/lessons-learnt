@@ -13,7 +13,7 @@ export const teacherLoginService = async (
     
     if (!email.trim() || !password.trim()) {
       console.log('teacherLoginService: Missing email or password');
-      return { error: 'Email and password are required' };
+      return { error: 'El. paštas ir slaptažodis yra privalomi' };
     }
 
     // First check if a teacher with this email exists
@@ -27,7 +27,7 @@ export const teacherLoginService = async (
 
     if (queryError) {
       console.error('teacherLoginService: Database query error:', queryError);
-      return { error: 'Database error occurred. Please try again.' };
+      return { error: 'Duomenų bazės klaida. Bandykite dar kartą.' };
     }
 
     // If no teacher exists with this email, create one (auto-signup)
@@ -37,7 +37,7 @@ export const teacherLoginService = async (
       // Ensure we have all required data for signup
       if (!name?.trim() || !school?.trim()) {
         console.log('teacherLoginService: Missing required signup data');
-        return { error: 'For new accounts, please provide your name and school.' };
+        return { error: 'Naujoms paskyroms reikalingas vardas ir mokykla.' };
       }
 
       console.log('teacherLoginService: Creating new teacher');
@@ -59,14 +59,14 @@ export const teacherLoginService = async (
       if (createError) {
         console.error('teacherLoginService: Error creating teacher:', createError);
         if (createError.code === '23505') {
-          return { error: 'An account with this email already exists.' };
+          return { error: 'Paskyra su šiuo el. paštu jau egzistuoja.' };
         }
-        return { error: 'Failed to create account. Please try again.' };
+        return { error: 'Nepavyko sukurti paskyros. Bandykite dar kartą.' };
       }
 
       if (!newTeacher) {
         console.error('teacherLoginService: No teacher data returned after creation');
-        return { error: 'Failed to create account. Please try again.' };
+        return { error: 'Nepavyko sukurti paskyros. Bandykite dar kartą.' };
       }
 
       const teacherData: Teacher = {
@@ -90,7 +90,7 @@ export const teacherLoginService = async (
     
     if (!teacher.password_hash || teacher.password_hash !== password.trim()) {
       console.log('teacherLoginService: Password mismatch');
-      return { error: 'Invalid email or password' };
+      return { error: 'Neteisingas el. paštas arba slaptažodis' };
     }
 
     const teacherData: Teacher = {
@@ -108,7 +108,7 @@ export const teacherLoginService = async (
     return { teacher: teacherData };
   } catch (error) {
     console.error('teacherLoginService: Unexpected error:', error);
-    return { error: 'An unexpected error occurred. Please try again.' };
+    return { error: 'Įvyko netikėta klaida. Bandykite dar kartą.' };
   }
 };
 
@@ -118,7 +118,7 @@ export const studentSimpleLoginService = async (fullName: string, password: stri
     
     if (!fullName.trim() || !password.trim()) {
       console.log('studentSimpleLoginService: Missing name or password');
-      return { error: 'Full name and password are required' };
+      return { error: 'Vardas ir slaptažodis yra privalomi' };
     }
     
     // Find student with matching name and password
@@ -133,12 +133,12 @@ export const studentSimpleLoginService = async (fullName: string, password: stri
 
     if (error) {
       console.error('studentSimpleLoginService: Database error:', error);
-      return { error: 'Database error occurred. Please try again.' };
+      return { error: 'Duomenų bazės klaida. Bandykite dar kartą.' };
     }
 
     if (!students || students.length === 0) {
       console.log('studentSimpleLoginService: No student found with matching credentials');
-      return { error: 'Invalid name or password. Please check your credentials and try again.' };
+      return { error: 'Neteisingas vardas arba slaptažodis. Patikrinkite duomenis ir bandykite dar kartą.' };
     }
 
     const student = students[0];
@@ -154,7 +154,7 @@ export const studentSimpleLoginService = async (fullName: string, password: stri
     return { student: studentData };
   } catch (error) {
     console.error('studentSimpleLoginService: Unexpected error:', error);
-    return { error: 'An unexpected error occurred during login.' };
+    return { error: 'Įvyko netikėta klaida prisijungiant.' };
   }
 };
 
@@ -164,7 +164,7 @@ export const studentSignupService = async (fullName: string, school: string, gra
     
     if (!fullName.trim() || !school.trim() || !grade.trim() || !password.trim()) {
       console.log('studentSignupService: Missing required fields');
-      return { error: 'All fields are required' };
+      return { error: 'Visi laukai yra privalomi' };
     }
     
     const { data: newStudent, error } = await supabase
@@ -183,14 +183,14 @@ export const studentSignupService = async (fullName: string, school: string, gra
     if (error) {
       console.error('studentSignupService: Database error:', error);
       if (error.code === '23505') {
-        return { error: 'A student with this name already exists in this school and grade.' };
+        return { error: 'Studentas su šiuo vardu jau egzistuoja šioje mokykloje ir klasėje.' };
       }
-      return { error: 'Signup failed. Please try again.' };
+      return { error: 'Registracija nepavyko. Bandykite dar kartą.' };
     }
 
     if (!newStudent) {
       console.error('studentSignupService: No student data returned after creation');
-      return { error: 'Signup failed. Please try again.' };
+      return { error: 'Registracija nepavyko. Bandykite dar kartą.' };
     }
 
     const studentData: Student = {
@@ -204,6 +204,6 @@ export const studentSignupService = async (fullName: string, school: string, gra
     return { student: studentData };
   } catch (error) {
     console.error('studentSignupService: Unexpected error:', error);
-    return { error: 'An unexpected error occurred during signup.' };
+    return { error: 'Įvyko netikėta klaida registruojantis.' };
   }
 };

@@ -56,7 +56,7 @@ const TeacherLogin = () => {
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-          <p className="mt-2 text-muted-foreground">Loading...</p>
+          <p className="mt-2 text-muted-foreground">{t('common.loading')}</p>
         </div>
       </div>
     );
@@ -67,8 +67,8 @@ const TeacherLogin = () => {
     
     if (!loginData.email.trim() || !loginData.password) {
       toast({
-        title: "Missing information",
-        description: "Please enter both email and password",
+        title: t('teacher.missingInfo') || "Missing information",
+        description: t('auth.emailRequired') + " " + t('auth.passwordRequired'),
         variant: "destructive",
       });
       return;
@@ -84,7 +84,7 @@ const TeacherLogin = () => {
       if (result.error) {
         console.error('TeacherLogin: Login failed with error:', result.error);
         toast({
-          title: t('auth.loginFailed') || "Login failed",
+          title: t('auth.loginFailed'),
           description: result.error,
           variant: "destructive",
         });
@@ -92,8 +92,8 @@ const TeacherLogin = () => {
         console.log('TeacherLogin: Login successful, teacher data:', result.teacher);
         
         toast({
-          title: t('auth.loginSuccess') || "Welcome back! 👨‍🏫",
-          description: `Successfully logged in to Lessons Learnt`,
+          title: t('auth.loginSuccess'),
+          description: `Sėkmingai prisijungėte prie „Lessons Learnt"`,
         });
         
         // Navigation will be handled by useEffect when teacher state updates
@@ -101,16 +101,16 @@ const TeacherLogin = () => {
       } else {
         console.error('TeacherLogin: No error but no teacher data returned');
         toast({
-          title: t('auth.loginFailed') || "Login failed",
-          description: "Invalid response from server. Please try again.",
+          title: t('auth.loginFailed'),
+          description: "Neteisingas atsakymas iš serverio. Bandykite dar kartą.",
           variant: "destructive",
         });
       }
     } catch (err) {
       console.error('TeacherLogin: Unexpected error during login:', err);
       toast({
-        title: t('auth.loginFailed') || "Login failed",
-        description: "An unexpected error occurred. Please try again.",
+        title: t('auth.loginFailed'),
+        description: "Įvyko netikėta klaida. Bandykite dar kartą.",
         variant: "destructive",
       });
     } finally {
@@ -123,8 +123,8 @@ const TeacherLogin = () => {
     
     if (!signupData.name.trim() || !signupData.email.trim() || !signupData.school.trim() || !signupData.password || !signupData.confirmPassword) {
       toast({
-        title: "Missing information",
-        description: "Please fill in all required fields",
+        title: t('teacher.missingInfo') || "Trūksta informacijos",
+        description: "Užpildykite visus reikalingus laukus",
         variant: "destructive",
       });
       return;
@@ -133,8 +133,8 @@ const TeacherLogin = () => {
     // Validate passwords match
     if (signupData.password !== signupData.confirmPassword) {
       toast({
-        title: t('auth.passwordMismatch') || "Password mismatch",
-        description: t('auth.passwordsDoNotMatch') || "Passwords do not match",
+        title: t('auth.passwordMismatch'),
+        description: t('auth.passwordsDoNotMatch'),
         variant: "destructive",
       });
       return;
@@ -157,7 +157,7 @@ const TeacherLogin = () => {
       if (result.error) {
         console.error('TeacherLogin: Signup failed with error:', result.error);
         toast({
-          title: t('auth.registerError') || "Signup failed",
+          title: t('auth.registerError'),
           description: result.error,
           variant: "destructive",
         });
@@ -165,8 +165,8 @@ const TeacherLogin = () => {
         console.log('TeacherLogin: Signup successful, teacher data:', result.teacher);
         
         toast({
-          title: t('auth.registerSuccess') || "Account created! 🎉",
-          description: `Welcome to Lessons Learnt!`,
+          title: t('auth.registerSuccess'),
+          description: `Sveiki atvykę į „Lessons Learnt"!`,
         });
         
         // Navigation will be handled by useEffect when teacher state updates
@@ -174,16 +174,16 @@ const TeacherLogin = () => {
       } else {
         console.error('TeacherLogin: No error but no teacher data returned');
         toast({
-          title: t('auth.registerError') || "Signup failed",
-          description: "Invalid response from server. Please try again.",
+          title: t('auth.registerError'),
+          description: "Neteisingas atsakymas iš serverio. Bandykite dar kartą.",
           variant: "destructive",
         });
       }
     } catch (err) {
       console.error('TeacherLogin: Unexpected error during signup:', err);
       toast({
-        title: t('auth.registerError') || "Signup failed",
-        description: "An unexpected error occurred. Please try again.",
+        title: t('auth.registerError'),
+        description: "Įvyko netikėta klaida. Bandykite dar kartą.",
         variant: "destructive",
       });
     } finally {
@@ -198,19 +198,19 @@ const TeacherLogin = () => {
       </div>
       <Card className="w-full max-w-md bg-card/80 backdrop-blur-sm border-border">
         <CardHeader className="text-center">
-          <div className="w-16 h-16 bg-primary rounded-full mx-auto flex items-center justify-center mb-4">
-            <BookOpenIcon className="w-8 h-8 text-primary-foreground" />
+          <div className="w-16 h-16 bg-emerald-600 rounded-full mx-auto flex items-center justify-center mb-4">
+            <BookOpenIcon className="w-8 h-8 text-white" />
           </div>
-          <CardTitle className="text-2xl text-foreground">{t('login.teacher.title') || "Teacher Portal"}</CardTitle>
+          <CardTitle className="text-2xl text-foreground">{t('login.teacher.title')}</CardTitle>
           <CardDescription>
-            {t('login.teacher.subtitle') || "Access your teaching dashboard"}
+            {t('login.teacher.subtitle')}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="login" className="space-y-4">
             <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="login">{t('auth.login') || "Login"}</TabsTrigger>
-              <TabsTrigger value="signup">{t('auth.signUp') || "Sign Up"}</TabsTrigger>
+              <TabsTrigger value="login">{t('auth.login')}</TabsTrigger>
+              <TabsTrigger value="signup">{t('auth.signUp')}</TabsTrigger>
             </TabsList>
 
             <TabsContent value="login">
@@ -218,12 +218,12 @@ const TeacherLogin = () => {
                 <div className="space-y-2">
                   <Label htmlFor="loginEmail" className="flex items-center gap-2">
                     <Mail className="w-4 h-4" />
-                    {t('auth.email') || "Email"}
+                    {t('auth.email')}
                   </Label>
                   <Input
                     id="loginEmail"
                     type="email"
-                    placeholder="teacher@school.edu"
+                    placeholder="mokytojas@mokykla.lt"
                     value={loginData.email}
                     onChange={(e) => setLoginData(prev => ({ ...prev, email: e.target.value }))}
                     required
@@ -231,11 +231,11 @@ const TeacherLogin = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="loginPassword">{t('auth.password') || "Password"}</Label>
+                  <Label htmlFor="loginPassword">{t('auth.password')}</Label>
                   <Input
                     id="loginPassword"
                     type="password"
-                    placeholder="Enter your password"
+                    placeholder="Įveskite slaptažodį"
                     value={loginData.password}
                     onChange={(e) => setLoginData(prev => ({ ...prev, password: e.target.value }))}
                     required
@@ -244,13 +244,13 @@ const TeacherLogin = () => {
 
                 <Button 
                   type="submit" 
-                  className="w-full"
+                  className="w-full bg-emerald-600 hover:bg-emerald-700"
                   disabled={isLoading}
                 >
-                  {isLoading ? (t('auth.loggingIn') || "Logging in...") : (
+                  {isLoading ? t('auth.loggingIn') : (
                     <>
                       <LogInIcon className="w-4 h-4 mr-2" />
-                      {t('auth.login') || "Login"}
+                      {t('auth.login')}
                     </>
                   )}
                 </Button>
@@ -262,12 +262,12 @@ const TeacherLogin = () => {
                 <div className="space-y-2">
                   <Label htmlFor="signupName" className="flex items-center gap-2">
                     <UserIcon className="w-4 h-4" />
-                    {t('auth.fullName') || "Full Name"}
+                    {t('auth.fullName')}
                   </Label>
                   <Input
                     id="signupName"
                     type="text"
-                    placeholder="Enter your full name"
+                    placeholder="Įveskite vardą ir pavardę"
                     value={signupData.name}
                     onChange={(e) => setSignupData(prev => ({ ...prev, name: e.target.value }))}
                     required
@@ -277,12 +277,12 @@ const TeacherLogin = () => {
                 <div className="space-y-2">
                   <Label htmlFor="signupEmail" className="flex items-center gap-2">
                     <Mail className="w-4 h-4" />
-                    {t('auth.email') || "Email"}
+                    {t('auth.email')}
                   </Label>
                   <Input
                     id="signupEmail"
                     type="email"
-                    placeholder="teacher@school.edu"
+                    placeholder="mokytojas@mokykla.lt"
                     value={signupData.email}
                     onChange={(e) => setSignupData(prev => ({ ...prev, email: e.target.value }))}
                     required
@@ -292,12 +292,12 @@ const TeacherLogin = () => {
                 <div className="space-y-2">
                   <Label htmlFor="signupSchool" className="flex items-center gap-2">
                     <School className="w-4 h-4" />
-                    {t('auth.school') || "School"}
+                    {t('auth.school')}
                   </Label>
                   <Input
                     id="signupSchool"
                     type="text"
-                    placeholder="Enter your school name"
+                    placeholder="Įveskite mokyklos pavadinimą"
                     value={signupData.school}
                     onChange={(e) => setSignupData(prev => ({ ...prev, school: e.target.value }))}
                     required
@@ -307,7 +307,7 @@ const TeacherLogin = () => {
                 <div className="space-y-2">
                   <Label htmlFor="role" className="flex items-center gap-2">
                     <ShieldIcon className="w-4 h-4" />
-                    {t('login.teacher.role') || "Role"}
+                    {t('login.teacher.role')}
                   </Label>
                   <Select 
                     value={signupData.role} 
@@ -316,32 +316,32 @@ const TeacherLogin = () => {
                     }
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Select role" />
+                      <SelectValue placeholder="Pasirinkite vaidmenį" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="teacher">{t('login.teacher.roleTeacher') || "Teacher"}</SelectItem>
-                      <SelectItem value="admin">{t('login.teacher.roleAdmin') || "School Admin"}</SelectItem>
-                      <SelectItem value="doctor">Mental Health Professional</SelectItem>
+                      <SelectItem value="teacher">{t('login.teacher.roleTeacher')}</SelectItem>
+                      <SelectItem value="admin">{t('login.teacher.roleAdmin')}</SelectItem>
+                      <SelectItem value="doctor">Psichinės sveikatos specialistas</SelectItem>
                     </SelectContent>
                   </Select>
                   {signupData.role === "admin" && (
                     <p className="text-xs text-muted-foreground mt-1">
-                      {t('login.teacher.adminHint') || "School Admins can manage teachers and view all feedback"}
+                      {t('login.teacher.adminHint')}
                     </p>
                   )}
                   {signupData.role === "doctor" && (
                     <p className="text-xs text-muted-foreground mt-1">
-                      Mental Health Professionals can access live chat sessions and student wellness reports
+                      Psichinės sveikatos specialistai gali prisijungti prie gyvų pokalbių ir studentų gerovės ataskaitų
                     </p>
                   )}
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="signupPassword">{t('auth.password') || "Password"}</Label>
+                  <Label htmlFor="signupPassword">{t('auth.password')}</Label>
                   <Input
                     id="signupPassword"
                     type="password"
-                    placeholder="Create a password"
+                    placeholder="Sukurkite slaptažodį"
                     value={signupData.password}
                     onChange={(e) => setSignupData(prev => ({ ...prev, password: e.target.value }))}
                     required
@@ -349,11 +349,11 @@ const TeacherLogin = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="confirmPassword">{t('auth.confirmPassword') || "Confirm Password"}</Label>
+                  <Label htmlFor="confirmPassword">{t('auth.confirmPassword')}</Label>
                   <Input
                     id="confirmPassword"
                     type="password"
-                    placeholder="Confirm your password"
+                    placeholder="Patvirtinkite slaptažodį"
                     value={signupData.confirmPassword}
                     onChange={(e) => setSignupData(prev => ({ ...prev, confirmPassword: e.target.value }))}
                     required
@@ -362,10 +362,10 @@ const TeacherLogin = () => {
 
                 <Button 
                   type="submit" 
-                  className="w-full"
+                  className="w-full bg-emerald-600 hover:bg-emerald-700"
                   disabled={isLoading}
                 >
-                  {isLoading ? (t('auth.creatingAccount') || "Creating account...") : (t('auth.createAccount') || "Create Account")}
+                  {isLoading ? t('auth.creatingAccount') : t('auth.createAccount')}
                 </Button>
               </form>
             </TabsContent>
