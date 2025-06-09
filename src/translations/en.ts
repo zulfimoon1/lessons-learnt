@@ -1,3 +1,4 @@
+
 export const enTranslations = {
   // Navigation
   'nav.home': 'Home',
@@ -15,6 +16,7 @@ export const enTranslations = {
   'auth.name': 'Name',
   'auth.school': 'School',
   'auth.signUp': 'Sign Up',
+  'auth.signUpNow': 'Sign Up Now',
   'auth.alreadyHaveAccount': 'Already have an account?',
   'auth.dontHaveAccount': "Don't have an account?",
   'auth.forgotPassword': 'Forgot Password?',
