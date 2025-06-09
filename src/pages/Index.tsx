@@ -62,7 +62,7 @@ const Index = () => {
             <p className="text-2xl text-foreground font-bold italic leading-relaxed">
               {t('tagline.studentLead')}
             </p>
-            <p className="text-lg text-primary font-semibold mt-2">
+            <p className="text-lg text-primary font-black mt-2">
               100% free for all students
             </p>
           </div>
