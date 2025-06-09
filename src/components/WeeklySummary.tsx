@@ -49,7 +49,7 @@ const WeeklySummary = ({ student }: WeeklySummaryProps) => {
         .from('weekly_summaries')
         .insert({
           student_id: isAnonymous ? null : student?.id,
-          student_name: isAnonymous ? 'Anonymous' : student?.full_name || '',
+          student_name: isAnonymous ? t('weekly.anonymous') : student?.full_name || '',
           school: student?.school || '',
           grade: student?.grade || '',
           emotional_concerns: emotionalConcerns.trim() || null,

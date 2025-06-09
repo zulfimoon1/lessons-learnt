@@ -28,5 +28,13 @@ export const ltWeeklyTranslations = {
   'weekly.good': 'Gerai',
   'weekly.okay': 'Neblogai',
   'weekly.difficult': 'Sunku',
-  'weekly.veryDifficult': 'Labai sunku'
+  'weekly.veryDifficult': 'Labai sunku',
+  'weekly.howFeeling': 'Kaip jautėtės šią savaitę?',
+  'weekly.submitAnonymously': 'Pateikti anonimiškai',
+  'weekly.fillAtLeastOne': 'Užpildykite bent vieną lauką',
+  'weekly.shareThoughts': 'Pasidalinkite savo mintimis apie šią savaitę',
+  'weekly.submitted': 'Pateikta',
+  'weekly.submittedDesc': 'Jūsų savaitės suvestinė sėkmingai pateikta',
+  'weekly.submitFailed': 'Pateikimas nepavyko',
+  'weekly.submitFailedDesc': 'Nepavyko pateikti savaitės suvestinės. Bandykite dar kartą.'
 };
