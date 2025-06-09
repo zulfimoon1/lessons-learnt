@@ -70,4 +70,11 @@ export interface AuthContextType {
   signUp: (email: string, password: string, userData: any) => Promise<{ error?: string }>;
   signIn: (email: string, password: string) => Promise<{ error?: string }>;
   signOut: () => Promise<void>;
+  teacherLogin?: (
+    email: string, 
+    password: string, 
+    name?: string, 
+    school?: string, 
+    role?: 'teacher' | 'admin' | 'doctor'
+  ) => Promise<{ teacher?: Teacher; error?: string }>;
 }

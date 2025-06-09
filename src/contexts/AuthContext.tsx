@@ -46,6 +46,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return { error: 'Please use the new secure authentication system' };
   };
 
+  const teacherLogin = async (
+    email: string, 
+    password: string, 
+    name?: string, 
+    school?: string, 
+    role?: 'teacher' | 'admin' | 'doctor'
+  ) => {
+    try {
+      const result = await teacherLoginService(email, password, name, school, role);
+      
+      if (result.teacher) {
+        setTeacher(result.teacher);
+        localStorage.setItem('teacher', JSON.stringify(result.teacher));
+      }
+      
+      return result;
+    } catch (error) {
+      console.error('Teacher login error:', error);
+      return { error: 'Login failed. Please try again.' };
+    }
+  };
+
   const signOut = async () => {
     setTeacher(null);
     setStudent(null);
@@ -63,6 +85,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     signUp,
     signIn,
     signOut,
+    teacherLogin,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
