@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -81,14 +82,45 @@ const PlatformAdminDashboard = () => {
     try {
       console.log('=== PLATFORM ADMIN DASHBOARD DEBUG START ===');
       
-      // Load school statistics
-      const { data: schoolData, error: schoolError } = await supabase
-        .from('school_statistics')
-        .select('*');
+      // Load school statistics from class_schedules and aggregate manually
+      const { data: classSchedules, error: classError } = await supabase
+        .from('class_schedules')
+        .select('school, grade, subject, teacher_id');
 
-      if (schoolError) throw schoolError;
-      setSchoolStats(schoolData || []);
-      console.log('School stats loaded:', schoolData?.length);
+      if (classError) {
+        console.error('Class schedules error:', classError);
+      } else {
+        // Aggregate school statistics manually
+        const schoolStatsMap: Record<string, SchoolStats> = {};
+        classSchedules?.forEach((cs) => {
+          const school = cs.school;
+          if (!schoolStatsMap[school]) {
+            schoolStatsMap[school] = {
+              school,
+              total_grades: new Set(),
+              total_subjects: new Set(),
+              total_classes: 0,
+              total_teachers: new Set()
+            } as any;
+          }
+          (schoolStatsMap[school].total_grades as any).add(cs.grade);
+          (schoolStatsMap[school].total_subjects as any).add(cs.subject);
+          schoolStatsMap[school].total_classes++;
+          (schoolStatsMap[school].total_teachers as any).add(cs.teacher_id);
+        });
+
+        // Convert sets to counts
+        const aggregatedStats: SchoolStats[] = Object.values(schoolStatsMap).map(stat => ({
+          school: stat.school,
+          total_grades: (stat.total_grades as any).size,
+          total_subjects: (stat.total_subjects as any).size,
+          total_classes: stat.total_classes,
+          total_teachers: (stat.total_teachers as any).size
+        }));
+
+        setSchoolStats(aggregatedStats);
+        console.log('School stats loaded:', aggregatedStats.length);
+      }
 
       // Load feedback analytics
       const { data: feedbackData, error: feedbackError } = await supabase
@@ -96,9 +128,12 @@ const PlatformAdminDashboard = () => {
         .select('*')
         .order('total_responses', { ascending: false });
 
-      if (feedbackError) throw feedbackError;
-      setFeedbackStats(feedbackData || []);
-      console.log('Feedback stats loaded:', feedbackData?.length);
+      if (feedbackError) {
+        console.error('Feedback analytics error:', feedbackError);
+      } else {
+        setFeedbackStats(feedbackData || []);
+        console.log('Feedback stats loaded:', feedbackData?.length);
+      }
 
       // Load subscriptions with detailed logging
       const { data: subscriptionData, error: subscriptionError } = await supabase
@@ -391,25 +426,27 @@ const PlatformAdminDashboard = () => {
               </CardHeader>
               <CardContent>
                 <div className="space-y-8">
-                  <ChartContainer config={studentChartConfig} className="h-[400px]">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={studentChartData} barSize={40}>
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis 
-                          dataKey="name" 
-                          tick={{ fontSize: 11 }}
-                          angle={-45}
-                          textAnchor="end"
-                          height={100}
-                        />
-                        <YAxis yAxisId="left" orientation="left" stroke="#94c270" />
-                        <YAxis yAxisId="right" orientation="right" stroke="#6b7280" domain={[0, 100]} />
-                        <ChartTooltip content={<ChartTooltipContent />} />
-                        <Bar dataKey="students" fill="var(--color-students)" yAxisId="left" />
-                        <Bar dataKey="responseRate" fill="var(--color-responseRate)" yAxisId="right" />
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </ChartContainer>
+                  {studentChartData.length > 0 && (
+                    <ChartContainer config={studentChartConfig} className="h-[400px]">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <BarChart data={studentChartData} barSize={40}>
+                          <CartesianGrid strokeDasharray="3 3" />
+                          <XAxis 
+                            dataKey="name" 
+                            tick={{ fontSize: 11 }}
+                            angle={-45}
+                            textAnchor="end"
+                            height={100}
+                          />
+                          <YAxis yAxisId="left" orientation="left" stroke="#94c270" />
+                          <YAxis yAxisId="right" orientation="right" stroke="#6b7280" domain={[0, 100]} />
+                          <ChartTooltip content={<ChartTooltipContent />} />
+                          <Bar dataKey="students" fill="var(--color-students)" yAxisId="left" />
+                          <Bar dataKey="responseRate" fill="var(--color-responseRate)" yAxisId="right" />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </ChartContainer>
+                  )}
                   
                   <Table>
                     <TableHeader>
@@ -453,23 +490,25 @@ const PlatformAdminDashboard = () => {
                 <CardDescription>Student feedback responses by school and subject</CardDescription>
               </CardHeader>
               <CardContent>
-                <ChartContainer config={chartConfig} className="h-[400px]">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={chartData}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis 
-                        dataKey="name" 
-                        tick={{ fontSize: 10 }}
-                        angle={-45}
-                        textAnchor="end"
-                        height={100}
-                      />
-                      <YAxis />
-                      <ChartTooltip content={<ChartTooltipContent />} />
-                      <Bar dataKey="responses" fill="var(--color-responses)" />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </ChartContainer>
+                {chartData.length > 0 && (
+                  <ChartContainer config={chartConfig} className="h-[400px]">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={chartData}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis 
+                          dataKey="name" 
+                          tick={{ fontSize: 10 }}
+                          angle={-45}
+                          textAnchor="end"
+                          height={100}
+                        />
+                        <YAxis />
+                        <ChartTooltip content={<ChartTooltipContent />} />
+                        <Bar dataKey="responses" fill="var(--color-responses)" />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </ChartContainer>
+                )}
               </CardContent>
             </Card>
 

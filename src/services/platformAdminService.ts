@@ -17,10 +17,13 @@ export const platformAdminLoginService = async (email: string, password: string)
   try {
     console.log('Attempting login for email:', email);
     
+    // Since platform_admins table doesn't exist, we'll use a fallback approach
+    // For now, we'll check against teacher_profiles for admin access
     const { data: admin, error } = await supabase
-      .from('platform_admins')
+      .from('teacher_profiles')
       .select('*')
       .eq('email', email)
+      .eq('role', 'admin')
       .single();
 
     console.log('Database query result:', { admin, error });
@@ -61,12 +64,14 @@ export const platformAdminLoginService = async (email: string, password: string)
 export const createTestAdmin = async () => {
   try {
     const { data, error } = await supabase
-      .from('platform_admins')
+      .from('teacher_profiles')
       .insert([
         {
           name: 'Test Admin',
           email: 'admin@test.com',
-          password_hash: 'admin123' // In production, this should be properly hashed
+          password_hash: 'admin123', // In production, this should be properly hashed
+          role: 'admin',
+          school: 'Platform Admin'
         }
       ])
       .select()
@@ -88,10 +93,11 @@ export const createTestAdmin = async () => {
 // Function to get student statistics by school
 export const getStudentStatistics = async () => {
   try {
-    // Get all students first
+    // Get all students from profiles table with role 'student'
     const { data: allStudents, error: studentError } = await supabase
-      .from('students')
-      .select('school');
+      .from('profiles')
+      .select('school')
+      .eq('role', 'student');
       
     if (studentError) {
       console.error('Error fetching students:', studentError);
@@ -103,7 +109,9 @@ export const getStudentStatistics = async () => {
     // Count students by school manually
     const studentCounts: Record<string, number> = {};
     allStudents?.forEach((student) => {
-      studentCounts[student.school] = (studentCounts[student.school] || 0) + 1;
+      if (student.school) {
+        studentCounts[student.school] = (studentCounts[student.school] || 0) + 1;
+      }
     });
 
     // Get count of feedback responses per school
@@ -125,7 +133,9 @@ export const getStudentStatistics = async () => {
     const responseCounts: Record<string, number> = {};
     feedbackData?.forEach((feedback) => {
       const school = (feedback.class_schedules as any).school;
-      responseCounts[school] = (responseCounts[school] || 0) + 1;
+      if (school) {
+        responseCounts[school] = (responseCounts[school] || 0) + 1;
+      }
     });
 
     // Combine the data
