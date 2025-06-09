@@ -1,10 +1,12 @@
+
+import { ltDemoTranslations } from './lt/demo';
+import { ltAuthTranslations } from './lt/auth';
+import { ltChatTranslations } from './lt/chat';
+
 export const ltTranslations = {
   'welcome.title': 'Išmoktos pamokos: paprastas būdas tobulėti',
   'welcome.subtitle': 'Įgalinkite mokinių gerovę ir akademinius pasiekimus naudodami mūsų įžvalgomis pagrįstą platformą.',
   'welcome.freeForStudents': 'Visiškai nemokama studentams!',
-  'auth.studentLogin': 'Prisijungti kaip studentas',
-  'auth.teacherLogin': 'Prisijungti kaip mokytojas',
-  'auth.signUpNow': 'Registruokitės dabar',
   'tagline.studentLead': 'Į studentą orientuotas požiūris į švietimą',
   'features.studentFeedback.title': 'Studentų atsiliepimai realiuoju laiku',
   'features.studentFeedback.description': 'Surinkite momentinius atsiliepimus, kad suprastumėte studentų patirtį ir poreikius.',
@@ -12,7 +14,7 @@ export const ltTranslations = {
   'features.teacherInsights.description': 'Gaukite praktinių įžvalgų apie klasės dinamiką ir mokinių pažangą.',
   'features.mentalHealth.title': 'Psichinės sveikatos stebėjimas',
   'features.mentalHealth.description': 'Stebėkite mokinių psichinę sveikatą ir teikite pagalbą, kai to reikia.',
-  'platform.whySchools': 'Kodėl mokyklos turėtų naudoti „Lessons Learnt“?',
+  'platform.whySchools': 'Kodėl mokyklos turėtų naudoti „Lessons Learnt"?',
   'platform.whySchoolsSubtitle': 'Mūsų platforma suteikia mokykloms galimybę sukurti palankesnę ir efektyvesnę mokymosi aplinką.',
   'platform.studentInsights': 'Studentų įžvalgos',
   'platform.realTimeAnalytics': 'Realaus laiko analizė',
@@ -23,9 +25,9 @@ export const ltTranslations = {
   'platform.privacySecurityDesc': 'Užtikrinkite studentų duomenų privatumą ir saugumą.',
   'platform.improvementPercent': '30% +',
   'platform.improvementTitle': 'Pagerėjo studentų rezultatai',
-  'platform.improvementDesc': 'Mokyklos, naudojančios „Lessons Learnt“, pastebi didelį studentų rezultatų pagerėjimą.',
+  'platform.improvementDesc': 'Mokyklos, naudojančios „Lessons Learnt", pastebi didelį studentų rezultatų pagerėjimą.',
   'platform.readyToTransform': 'Pasiruošę transformuoti savo mokyklą?',
-  'platform.readyToTransformDesc': 'Prisijunkite prie „Lessons Learnt“ ir sukurkite palankesnę ir efektyvesnę mokymosi aplinką.',
+  'platform.readyToTransformDesc': 'Prisijunkite prie „Lessons Learnt" ir sukurkite palankesnę ir efektyvesnę mokymosi aplinką.',
   'howItWorks.title': 'Kaip tai veikia',
   'howItWorks.forAdmins': 'Mokyklų administratoriams',
   'howItWorks.forStudents': 'Studentams',
@@ -51,7 +53,24 @@ export const ltTranslations = {
   'compliance.dataProcessing': 'Duomenų apdorojimo susitarimas',
   'compliance.dataRetention': 'Duomenų saugojimo politika',
   'compliance.rightToDelete': 'Teisė būti pamirštam',
-  navigation: {
-    home: "Namai"
-  }
+  'navigation.home': 'Namai',
+  'common.loading': 'Kraunama...',
+  'common.error': 'Klaida',
+  'common.success': 'Sėkmė',
+  'common.cancel': 'Atšaukti',
+  'common.save': 'Išsaugoti',
+  'common.delete': 'Ištrinti',
+  'common.edit': 'Redaguoti',
+  'common.submit': 'Pateikti',
+  'common.back': 'Grįžti',
+  'common.next': 'Toliau',
+  'common.previous': 'Ankstesnis',
+  'common.close': 'Uždaryti',
+  'common.open': 'Atidaryti',
+  'common.refresh': 'Atnaujinti',
+  
+  // Include all modular translations
+  ...ltDemoTranslations,
+  ...ltAuthTranslations,
+  ...ltChatTranslations,
 };
