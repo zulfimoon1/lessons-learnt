@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { EyeOffIcon, LockIcon } from "lucide-react";
+import { EyeOffIcon } from "lucide-react";
 import StarRating from "./StarRating";
 import EmotionalStateSelector from "./EmotionalStateSelector";
 import DataProtectionBanner from "./DataProtectionBanner";
@@ -27,13 +27,11 @@ interface FeedbackData {
 interface LessonFeedbackFormProps {
   classScheduleId?: string;
   student?: any;
-  hasSubscription?: boolean;
 }
 
 const LessonFeedbackForm: React.FC<LessonFeedbackFormProps> = ({ 
   classScheduleId, 
-  student, 
-  hasSubscription = false 
+  student
 }) => {
   const [feedbackData, setFeedbackData] = useState<FeedbackData>({
     understanding: 0,
@@ -51,15 +49,6 @@ const LessonFeedbackForm: React.FC<LessonFeedbackFormProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    if (!hasSubscription) {
-      toast({
-        title: t('common.error'),
-        description: "Feedback submission requires a subscription. Please upgrade to access this feature.",
-        variant: "destructive",
-      });
-      return;
-    }
 
     setIsSubmitting(true);
     try {
@@ -128,42 +117,6 @@ const LessonFeedbackForm: React.FC<LessonFeedbackFormProps> = ({
   const handleEmotionalStateChange = (state: string) => {
     setFeedbackData(prev => ({ ...prev, emotionalState: state }));
   };
-
-  if (!hasSubscription) {
-    return (
-      <div className="space-y-6">
-        <DataProtectionBanner />
-        <Card className="border-yellow-200 bg-yellow-50">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-yellow-800">
-              <LockIcon className="w-5 h-5" />
-              {t('feedback.title')} - Premium Feature
-            </CardTitle>
-            <CardDescription className="text-yellow-700">
-              Lesson feedback submission is a premium feature. Upgrade your subscription to access detailed feedback collection and analysis.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div className="bg-white p-4 rounded-lg border border-yellow-200">
-                <h4 className="font-medium text-gray-800 mb-2">Premium Features Include:</h4>
-                <ul className="text-sm text-gray-600 space-y-1">
-                  <li>• Student lesson feedback collection</li>
-                  <li>• Emotional state tracking</li>
-                  <li>• Anonymous feedback options</li>
-                  <li>• Detailed feedback analytics</li>
-                  <li>• Export feedback reports</li>
-                </ul>
-              </div>
-              <Button className="bg-green-600 hover:bg-green-700 text-white">
-                Upgrade to Premium
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-6">
