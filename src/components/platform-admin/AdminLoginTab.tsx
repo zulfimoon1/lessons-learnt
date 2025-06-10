@@ -23,7 +23,7 @@ const AdminLoginTab = ({
   return (
     <div className="space-y-4">
       <div className="text-center mb-4">
-        <h2 className="text-xl font-semibold">Admin Login</h2>
+        <h2 className="text-xl font-semibold text-gray-900">Admin Login</h2>
         <p className="text-gray-600">Sign in to your admin account</p>
       </div>
       

@@ -70,11 +70,11 @@ const PlatformAdminLogin = () => {
         <div className="w-full max-w-md">
           <div className="text-center mb-6">
             <ShieldIcon className="w-12 h-12 text-blue-600 mx-auto mb-4" />
-            <h1 className="text-2xl font-bold">Platform Console</h1>
+            <h1 className="text-2xl font-bold text-gray-900">Platform Console</h1>
             <p className="text-gray-600">Admin access to platform management dashboard</p>
           </div>
 
-          <Card className="shadow-lg">
+          <Card className="shadow-lg border border-gray-200">
             <CardContent className="p-6">
               <TabNavigation activeTab={activeTab} onTabChange={setActiveTab} />
 
