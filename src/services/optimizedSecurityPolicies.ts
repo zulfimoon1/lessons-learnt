@@ -101,7 +101,7 @@ export const securityPolicyService = {
       );
 
       logUserSecurityEvent({
-        type: 'security_audit',
+        type: 'suspicious_activity', // Use existing valid type instead of 'security_audit'
         timestamp: new Date().toISOString(),
         details: `Policy validation completed: ${issues.length} issues found`,
         userAgent: navigator.userAgent
@@ -114,7 +114,7 @@ export const securityPolicyService = {
       };
     } catch (error) {
       logUserSecurityEvent({
-        type: 'security_error',
+        type: 'session_error', // Use existing valid type instead of 'security_error'
         timestamp: new Date().toISOString(),
         details: `Policy validation failed: ${error}`,
         userAgent: navigator.userAgent

@@ -81,11 +81,11 @@ class EnhancedSecureSessionV2 {
       canvasFingerprint = canvas.toDataURL();
     }
 
-    // WebGL fingerprinting
+    // WebGL fingerprinting - Fix TypeScript errors
     let webglFingerprint = '';
     try {
       const webglCanvas = document.createElement('canvas');
-      const gl = webglCanvas.getContext('webgl') || webglCanvas.getContext('experimental-webgl');
+      const gl = webglCanvas.getContext('webgl') as WebGLRenderingContext | null;
       if (gl) {
         const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
         if (debugInfo) {
@@ -210,7 +210,7 @@ class EnhancedSecureSessionV2 {
       await enhancedSecureSessionService.detectSuspiciousActivity();
 
       logUserSecurityEvent({
-        type: 'session_validation',
+        type: 'session_error', // Use existing valid type instead of 'session_validation'
         userId: session.userId,
         timestamp: new Date().toISOString(),
         details: `Session security validation: ${issues.length} issues found, risk level: ${riskLevel}`,

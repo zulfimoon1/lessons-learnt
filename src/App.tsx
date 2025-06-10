@@ -1,10 +1,10 @@
+
 import React from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
-import Home from './pages/Home';
-import About from './pages/About';
-import Contact from './pages/Contact';
+import Index from './pages/Index';
 import NotFound from './pages/NotFound';
-import Login from './pages/Login';
+import TeacherLogin from './pages/TeacherLogin';
+import StudentLogin from './pages/StudentLogin';
 import StudentDashboard from './pages/StudentDashboard';
 import TeacherDashboard from './pages/TeacherDashboard';
 import PlatformAdminDashboard from './pages/PlatformAdminDashboard';
@@ -19,10 +19,9 @@ function App() {
       <SecurityHeaders />
       <div className="min-h-screen bg-background font-sans antialiased">
         <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/about" element={<About />} />
-          <Route path="/contact" element={<Contact />} />
-          <Route path="/login" element={<Login />} />
+          <Route path="/" element={<Index />} />
+          <Route path="/teacher-login" element={<TeacherLogin />} />
+          <Route path="/student-login" element={<StudentLogin />} />
           <Route path="/student" element={<StudentDashboard />} />
           <Route path="/teacher" element={<TeacherDashboard />} />
           <Route path="/admin" element={<PlatformAdminDashboard />} />
