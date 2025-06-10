@@ -10,7 +10,7 @@ export const enhancedSecureStudentLogin = async (fullName: string, school: strin
     console.log('Enhanced secure student login: Starting process');
     
     logUserSecurityEvent({
-      type: 'login_attempt',
+      type: 'suspicious_activity',
       timestamp: new Date().toISOString(),
       details: `Enhanced student login attempt for: ${fullName}`,
       userAgent: navigator.userAgent
@@ -57,7 +57,7 @@ export const enhancedSecureStudentSignup = async (fullName: string, school: stri
     console.log('Enhanced secure student signup: Starting process');
     
     logUserSecurityEvent({
-      type: 'signup_attempt',
+      type: 'suspicious_activity',
       timestamp: new Date().toISOString(),
       details: `Enhanced student signup attempt for: ${fullName}`,
       userAgent: navigator.userAgent
@@ -69,7 +69,7 @@ export const enhancedSecureStudentSignup = async (fullName: string, school: stri
     if (result.user) {
       console.log('Enhanced secure student signup: Success');
       logUserSecurityEvent({
-        type: 'signup_success',
+        type: 'login_success',
         userId: result.user.id,
         timestamp: new Date().toISOString(),
         details: `Enhanced student signup successful for: ${fullName}`,
@@ -78,7 +78,7 @@ export const enhancedSecureStudentSignup = async (fullName: string, school: stri
     } else if (result.error) {
       console.log('Enhanced secure student signup: Failed -', result.error);
       logUserSecurityEvent({
-        type: 'signup_failed',
+        type: 'login_failed',
         timestamp: new Date().toISOString(),
         details: `Enhanced student signup failed for: ${fullName} - ${result.error}`,
         userAgent: navigator.userAgent
@@ -104,7 +104,7 @@ export const enhancedSecureTeacherLogin = async (email: string, password: string
     console.log('Enhanced secure teacher login: Starting process');
     
     logUserSecurityEvent({
-      type: 'login_attempt',
+      type: 'suspicious_activity',
       timestamp: new Date().toISOString(),
       details: `Enhanced teacher login attempt for: ${email}`,
       userAgent: navigator.userAgent
@@ -150,7 +150,7 @@ export const enhancedSecureTeacherSignup = async (name: string, email: string, s
     console.log('Enhanced secure teacher signup: Starting process');
     
     logUserSecurityEvent({
-      type: 'signup_attempt',
+      type: 'suspicious_activity',
       timestamp: new Date().toISOString(),
       details: `Enhanced teacher signup attempt for: ${email}`,
       userAgent: navigator.userAgent
@@ -161,7 +161,7 @@ export const enhancedSecureTeacherSignup = async (name: string, email: string, s
     if (result.user) {
       console.log('Enhanced secure teacher signup: Success');
       logUserSecurityEvent({
-        type: 'signup_success',
+        type: 'login_success',
         userId: result.user.id,
         timestamp: new Date().toISOString(),
         details: `Enhanced teacher signup successful for: ${email}`,
@@ -170,7 +170,7 @@ export const enhancedSecureTeacherSignup = async (name: string, email: string, s
     } else if (result.error) {
       console.log('Enhanced secure teacher signup: Failed -', result.error);
       logUserSecurityEvent({
-        type: 'signup_failed',
+        type: 'login_failed',
         timestamp: new Date().toISOString(),
         details: `Enhanced teacher signup failed for: ${email} - ${result.error}`,
         userAgent: navigator.userAgent
