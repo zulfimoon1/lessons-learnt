@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { Teacher, Student, AuthContextType, SecurityEvent } from '@/types/auth';
 import { useTeacherAuth } from '@/hooks/useTeacherAuth';
@@ -185,20 +184,26 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         return { error: result.error };
       }
       
-      // Type guard to ensure we have teacher data
+      // Type guard to ensure we have teacher data with proper role casting
       if ('teacher' in result && result.teacher) {
+        // Ensure the role is properly typed
+        const teacher: Teacher = {
+          ...result.teacher,
+          role: result.teacher.role as 'teacher' | 'admin' | 'doctor'
+        };
+        
         // Store user data securely
-        secureSessionService.securelyStoreUserData('teacher', result.teacher);
+        secureSessionService.securelyStoreUserData('teacher', teacher);
         
         logSecurityEvent({
           type: 'login_success',
-          userId: result.teacher.id,
+          userId: teacher.id,
           timestamp: new Date().toISOString(),
           details: 'Teacher login successful',
           userAgent: navigator.userAgent
         });
         
-        return { teacher: result.teacher };
+        return { teacher };
       }
 
       return { error: 'Unknown error occurred' };
@@ -357,3 +362,5 @@ export const useAuth = (): AuthContextType => {
   }
   return context;
 };
+
+}

@@ -30,7 +30,7 @@ export const enhancedValidateInput = {
     ];
     
     for (const pattern of suspiciousPatterns) {
-      if (pattern.test(trimmed)) {
+      if (pattern && pattern.test(trimmed)) {
         return { isValid: false, message: 'Name contains suspicious patterns' };
       }
     }
@@ -118,7 +118,7 @@ export const enhancedValidateInput = {
     ];
     
     for (const pattern of suspiciousEmailPatterns) {
-      if (pattern.test(trimmed)) {
+      if (pattern && pattern.test(trimmed)) {
         return { isValid: false, message: 'Email address appears to be invalid or suspicious' };
       }
     }
@@ -187,10 +187,10 @@ export const enhancedValidateInput = {
     const allPatterns = [...criticalPatterns, ...highRiskPatterns, ...mediumRiskPatterns];
     
     for (const patternData of allPatterns) {
-      if (!patternData) continue; // Handle potential undefined
+      if (!patternData || !patternData.pattern) continue; // Handle potential undefined
       
       const { pattern, reason, severity } = patternData;
-      // Add null check for pattern
+      // Add comprehensive null check for pattern
       if (pattern && typeof pattern.test === 'function' && pattern.test(input)) {
         return { isSuspicious: true, reason, severity };
       }
