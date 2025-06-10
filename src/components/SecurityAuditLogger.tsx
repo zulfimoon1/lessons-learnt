@@ -2,7 +2,7 @@
 import { securityService } from '@/services/securityService';
 
 interface SecurityEvent {
-  type: 'login_success' | 'login_failed' | 'logout' | 'unauthorized_access' | 'suspicious_activity' | 'rate_limit_exceeded' | 'session_restored' | 'session_error' | 'csrf_violation';
+  type: 'login_success' | 'login_failed' | 'logout' | 'unauthorized_access' | 'suspicious_activity' | 'rate_limit_exceeded' | 'session_restored' | 'session_error' | 'csrf_violation' | 'test_admin_created' | 'forced_password_reset';
   userId?: string;
   timestamp: string;
   details: string;
@@ -62,3 +62,13 @@ export const exportSecurityAuditLog = (): string => {
     return '[]';
   }
 };
+
+// Default export for backward compatibility
+const SecurityAuditLogger = {
+  logUserSecurityEvent,
+  getSecurityAuditLog,
+  clearSecurityAuditLog,
+  exportSecurityAuditLog
+};
+
+export default SecurityAuditLogger;
