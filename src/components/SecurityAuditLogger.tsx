@@ -1,15 +1,7 @@
 
 import { useEffect } from 'react';
 import { getCurrentUser } from '@/services/authService';
-
-interface SecurityEvent {
-  type: 'login_success' | 'login_failed' | 'logout' | 'unauthorized_access' | 'suspicious_activity' | 'rate_limit_exceeded';
-  userId?: string;
-  timestamp: string;
-  details: string;
-  ipAddress?: string;
-  userAgent?: string;
-}
+import { SecurityEvent } from '@/types/auth';
 
 const SecurityAuditLogger: React.FC = () => {
   useEffect(() => {
