@@ -126,6 +126,26 @@ export const ltDemoTranslations = {
   'demo.simulation.steps.9': 'Psichinės sveikatos palaikymas',
   'demo.simulation.steps.10': 'Pateikti atsiliepimą',
 
+  // Teacher simulation steps
+  'demo.teacher.steps.1': 'Skydelio apžvalga',
+  'demo.teacher.steps.2': 'Klasės analizė',
+  'demo.teacher.steps.3': 'Studentų įspėjimai',
+  'demo.teacher.steps.4': 'Nuotaikos sekimas',
+  'demo.teacher.steps.5': 'Individualūs ataskaitos',
+  'demo.teacher.steps.6': 'Veiksmų planavimas',
+  'demo.teacher.steps.7': 'Savaitės tendencijos',
+  'demo.teacher.steps.8': 'Pamokų planavimas',
+
+  // Teacher dashboard content
+  'demo.teacher.dashboardOverview': 'Mokytojo skydelio apžvalga',
+  'demo.teacher.totalStudents': 'Iš viso studentų',
+  'demo.teacher.avgUnderstanding': 'Vid. supratimas',
+  'demo.teacher.studentsNeedSupport': 'Studentai reikalauja pagalbos',
+  'demo.teacher.recentClassPerformance': 'Naujausi klasės rezultatai',
+  'demo.teacher.mathematicsAlgebra': 'Matematika - Algebra II',
+  'demo.teacher.chemistryLabWork': 'Chemija - Laboratorijos darbas',
+  'demo.teacher.analyzeDescription': 'Mokytojai analizuoja studentų veiklos ir gerovės duomenis',
+
   // Dashboard content
   'demo.dashboard.studentDashboard': 'Studento skydelis',
   'demo.dashboard.welcomeBack': 'Sveiki sugrįžę, Emma!',

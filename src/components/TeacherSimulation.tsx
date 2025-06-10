@@ -23,14 +23,14 @@ const TeacherSimulation = () => {
   const totalSteps = 8;
 
   const simulationSteps = [
-    { id: 1, name: 'Dashboard Overview' },
-    { id: 2, name: 'Class Analytics' },
-    { id: 3, name: 'Student Alerts' },
-    { id: 4, name: 'Mood Tracking' },
-    { id: 5, name: 'Individual Reports' },
-    { id: 6, name: 'Action Planning' },
-    { id: 7, name: 'Weekly Trends' },
-    { id: 8, name: 'Lesson Planning' }
+    { id: 1, name: t('demo.teacher.steps.1') },
+    { id: 2, name: t('demo.teacher.steps.2') },
+    { id: 3, name: t('demo.teacher.steps.3') },
+    { id: 4, name: t('demo.teacher.steps.4') },
+    { id: 5, name: t('demo.teacher.steps.5') },
+    { id: 6, name: t('demo.teacher.steps.6') },
+    { id: 7, name: t('demo.teacher.steps.7') },
+    { id: 8, name: t('demo.teacher.steps.8') }
   ];
 
   useEffect(() => {
@@ -52,7 +52,7 @@ const TeacherSimulation = () => {
       case 1:
         return (
           <div className="bg-white p-6 rounded-lg shadow-lg border">
-            <h3 className="text-lg font-semibold mb-4">Teacher Dashboard Overview</h3>
+            <h3 className="text-lg font-semibold mb-4">{t('demo.teacher.dashboardOverview')}</h3>
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
               <div className="bg-blue-50 p-4 rounded-lg">
@@ -60,7 +60,7 @@ const TeacherSimulation = () => {
                   <UsersIcon className="w-8 h-8 text-blue-600" />
                   <div>
                     <div className="text-2xl font-bold text-blue-600">142</div>
-                    <div className="text-sm text-blue-800">Total Students</div>
+                    <div className="text-sm text-blue-800">{t('demo.teacher.totalStudents')}</div>
                   </div>
                 </div>
               </div>
@@ -70,7 +70,7 @@ const TeacherSimulation = () => {
                   <TrendingUpIcon className="w-8 h-8 text-green-600" />
                   <div>
                     <div className="text-2xl font-bold text-green-600">87%</div>
-                    <div className="text-sm text-green-800">Avg. Understanding</div>
+                    <div className="text-sm text-green-800">{t('demo.teacher.avgUnderstanding')}</div>
                   </div>
                 </div>
               </div>
@@ -80,24 +80,24 @@ const TeacherSimulation = () => {
                   <AlertTriangleIcon className="w-8 h-8 text-red-600" />
                   <div>
                     <div className="text-2xl font-bold text-red-600">3</div>
-                    <div className="text-sm text-red-800">Students Need Support</div>
+                    <div className="text-sm text-red-800">{t('demo.teacher.studentsNeedSupport')}</div>
                   </div>
                 </div>
               </div>
             </div>
 
             <div className="space-y-3">
-              <h4 className="font-semibold">Recent Class Performance</h4>
+              <h4 className="font-semibold">{t('demo.teacher.recentClassPerformance')}</h4>
               <div className="space-y-2">
                 <div className="flex justify-between items-center p-3 bg-green-50 rounded-lg">
-                  <span className="font-medium">Mathematics - Algebra II</span>
+                  <span className="font-medium">{t('demo.teacher.mathematicsAlgebra')}</span>
                   <div className="flex items-center gap-2">
                     <Badge className="bg-green-100 text-green-700">4.2★</Badge>
                     <CheckCircleIcon className="w-4 h-4 text-green-600" />
                   </div>
                 </div>
                 <div className="flex justify-between items-center p-3 bg-yellow-50 rounded-lg">
-                  <span className="font-medium">Chemistry - Lab Work</span>
+                  <span className="font-medium">{t('demo.teacher.chemistryLabWork')}</span>
                   <div className="flex items-center gap-2">
                     <Badge className="bg-yellow-100 text-yellow-700">3.8★</Badge>
                     <AlertTriangleIcon className="w-4 h-4 text-yellow-600" />
@@ -119,7 +119,7 @@ const TeacherSimulation = () => {
                 {simulationSteps[currentStep - 1]?.name}
               </h3>
               <p className="text-gray-600 text-sm">
-                Teachers analyze student performance and well-being data
+                {t('demo.teacher.analyzeDescription')}
               </p>
             </div>
           </div>
