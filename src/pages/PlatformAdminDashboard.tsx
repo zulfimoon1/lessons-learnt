@@ -224,7 +224,7 @@ const PlatformAdminDashboard = () => {
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p>{t('common.loading')}</p>
+          <p>Loading...</p>
         </div>
       </div>
     );
@@ -243,23 +243,23 @@ const PlatformAdminDashboard = () => {
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
               <SchoolIcon className="w-8 h-8 text-primary" />
-              <h1 className="text-2xl font-bold text-foreground">{t('dashboard.platformAdmin')}</h1>
+              <h1 className="text-2xl font-bold text-foreground">Platform Admin</h1>
             </div>
             <Button onClick={refreshData} variant="outline" size="sm" className="flex items-center gap-2">
               <RefreshCwIcon className="w-4 h-4" />
-              {t('common.refresh')}
+              Refresh
             </Button>
           </div>
           <div className="flex items-center gap-4">
             <LanguageSwitcher />
-            <span className="text-sm text-muted-foreground">{t('admin.welcome')}, {admin?.name}</span>
+            <span className="text-sm text-muted-foreground">Welcome, {admin?.name}</span>
             <Button
               onClick={logout}
               variant="outline"
               className="flex items-center gap-2"
             >
               <LogOutIcon className="w-4 h-4" />
-              {t('auth.logout')}
+              Logout
             </Button>
           </div>
         </div>
@@ -269,24 +269,24 @@ const PlatformAdminDashboard = () => {
         {/* System Information Card */}
         <Card className="border-blue-200 bg-blue-50">
           <CardHeader>
-            <CardTitle className="text-blue-800">{t('dashboard.systemInformation')}</CardTitle>
+            <CardTitle className="text-blue-800">System Information</CardTitle>
           </CardHeader>
           <CardContent className="text-sm text-blue-700">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div>
-                <p><strong>{t('dashboard.schools')}:</strong> {totalSchools}</p>
-                <p><strong>{t('dashboard.teachers')}:</strong> {totalTeachers}</p>
+                <p><strong>Schools:</strong> {totalSchools}</p>
+                <p><strong>Teachers:</strong> {totalTeachers}</p>
               </div>
               <div>
-                <p><strong>{t('dashboard.students')}:</strong> {totalStudents}</p>
-                <p><strong>{t('dashboard.responses')}:</strong> {totalResponses}</p>
+                <p><strong>Students:</strong> {totalStudents}</p>
+                <p><strong>Responses:</strong> {totalResponses}</p>
               </div>
               <div>
-                <p><strong>{t('dashboard.subscriptions')}:</strong> {subscriptions.length}</p>
-                <p><strong>{t('dashboard.active')}:</strong> {subscriptions.filter(s => s.status === 'active').length}</p>
+                <p><strong>Subscriptions:</strong> {subscriptions.length}</p>
+                <p><strong>Active:</strong> {subscriptions.filter(s => s.status === 'active').length}</p>
               </div>
               <div>
-                <p><strong>{t('dashboard.revenue')}:</strong> ${(subscriptions.reduce((sum, s) => sum + (s.amount || 0), 0) / 100).toFixed(2)}/month</p>
+                <p><strong>Revenue:</strong> ${(subscriptions.reduce((sum, s) => sum + (s.amount || 0), 0) / 100).toFixed(2)}/month</p>
               </div>
             </div>
           </CardContent>
@@ -296,7 +296,7 @@ const PlatformAdminDashboard = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{t('dashboard.totalStudents')}</CardTitle>
+              <CardTitle className="text-sm font-medium">Total Students</CardTitle>
               <UserIcon className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
@@ -306,7 +306,7 @@ const PlatformAdminDashboard = () => {
           
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{t('dashboard.totalSchools')}</CardTitle>
+              <CardTitle className="text-sm font-medium">Total Schools</CardTitle>
               <SchoolIcon className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
@@ -316,7 +316,7 @@ const PlatformAdminDashboard = () => {
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{t('dashboard.totalTeachers')}</CardTitle>
+              <CardTitle className="text-sm font-medium">Total Teachers</CardTitle>
               <UsersIcon className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
@@ -326,7 +326,7 @@ const PlatformAdminDashboard = () => {
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{t('dashboard.totalResponses')}</CardTitle>
+              <CardTitle className="text-sm font-medium">Total Responses</CardTitle>
               <MessageSquareIcon className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
