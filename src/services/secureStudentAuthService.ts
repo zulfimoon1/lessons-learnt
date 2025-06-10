@@ -4,26 +4,7 @@ import { hashPassword, verifyPassword, validatePasswordStrength } from './secure
 import { validateInput } from './secureInputValidation';
 import { logUserSecurityEvent } from '@/components/SecurityAuditLogger';
 
-// Enhanced rate limiting with server-side validation
-const checkServerSideRateLimit = async (identifier: string): Promise<{ allowed: boolean; message?: string }> => {
-  try {
-    const { data, error } = await supabase.rpc('check_rate_limit', { 
-      p_identifier: identifier 
-    });
-    
-    if (error) {
-      console.warn('Rate limit check failed:', error);
-      return { allowed: true }; // Fail open for availability
-    }
-    
-    return data || { allowed: true };
-  } catch (error) {
-    console.warn('Rate limit service unavailable:', error);
-    return { allowed: true }; // Fail open for availability
-  }
-};
-
-// Client-side rate limiting as backup (enhanced with progressive delays)
+// Enhanced client-side rate limiting with progressive delays
 const loginAttempts = new Map<string, { count: number; lastAttempt: number; blocked: boolean }>();
 const MAX_ATTEMPTS = 5;
 const LOCKOUT_DURATION = 15 * 60 * 1000; // 15 minutes
@@ -113,18 +94,7 @@ export const secureStudentLogin = async (fullName: string, school: string, grade
 
     const identifier = `${sanitizedName}-${sanitizedSchool}-${sanitizedGrade}`;
     
-    // Enhanced rate limiting check (both server and client-side)
-    const serverRateCheck = await checkServerSideRateLimit(identifier);
-    if (!serverRateCheck.allowed) {
-      logUserSecurityEvent({
-        type: 'rate_limit_exceeded',
-        timestamp: new Date().toISOString(),
-        details: `Server-side rate limit exceeded: ${sanitizedName}`,
-        userAgent: navigator.userAgent
-      });
-      return { error: serverRateCheck.message };
-    }
-
+    // Client-side rate limiting check
     const clientRateCheck = checkClientRateLimit(identifier);
     if (!clientRateCheck.allowed) {
       logUserSecurityEvent({
@@ -143,34 +113,38 @@ export const secureStudentLogin = async (fullName: string, school: string, grade
 
     console.log('Secure student login attempt:', { fullName: sanitizedName, school: sanitizedSchool, grade: sanitizedGrade });
 
-    // Use the secure authentication function instead of direct table access
-    const { data: authResult, error } = await supabase.rpc('secure_student_auth', {
-      p_full_name: sanitizedName,
-      p_school: sanitizedSchool,
-      p_grade: sanitizedGrade,
-      p_password: password
-    });
+    // Direct database query with proper validation
+    const { data: students, error } = await supabase
+      .from('students')
+      .select('id, full_name, school, grade, password_hash')
+      .eq('full_name', sanitizedName)
+      .eq('school', sanitizedSchool)
+      .eq('grade', sanitizedGrade)
+      .limit(1);
 
-    if (error || !authResult || authResult.length === 0) {
-      console.log('Student authentication failed');
+    if (error || !students || students.length === 0) {
+      console.log('Student not found');
       recordFailedAttempt(identifier);
       logUserSecurityEvent({
         type: 'login_failed',
         timestamp: new Date().toISOString(),
-        details: `Failed student login attempt: ${sanitizedName}`,
+        details: `Student not found: ${sanitizedName}`,
         userAgent: navigator.userAgent
       });
       return { error: 'Invalid credentials' };
     }
 
-    const student = authResult[0];
-    if (!student.auth_success) {
-      console.log('Invalid credentials');
+    const student = students[0];
+    
+    // Verify password
+    const isPasswordValid = await verifyPassword(password, student.password_hash);
+    if (!isPasswordValid) {
+      console.log('Invalid password');
       recordFailedAttempt(identifier);
       logUserSecurityEvent({
         type: 'login_failed',
         timestamp: new Date().toISOString(),
-        details: `Invalid credentials for student: ${sanitizedName}`,
+        details: `Invalid password for student: ${sanitizedName}`,
         userAgent: navigator.userAgent
       });
       return { error: 'Invalid credentials' };
@@ -181,7 +155,7 @@ export const secureStudentLogin = async (fullName: string, school: string, grade
 
     logUserSecurityEvent({
       type: 'login_success',
-      userId: student.student_id,
+      userId: student.id,
       timestamp: new Date().toISOString(),
       details: `Successful student login: ${sanitizedName}`,
       userAgent: navigator.userAgent
@@ -190,7 +164,7 @@ export const secureStudentLogin = async (fullName: string, school: string, grade
     console.log('Secure student login successful');
     return { 
       user: {
-        id: student.student_id,
+        id: student.id,
         fullName: student.full_name,
         school: student.school,
         grade: student.grade,
@@ -238,15 +212,16 @@ export const secureStudentSignup = async (fullName: string, school: string, grad
       return { error: passwordValidation.message };
     }
 
-    // Check if student already exists using secure function
-    const { data: existingCheck } = await supabase.rpc('secure_student_auth', {
-      p_full_name: sanitizedName,
-      p_school: sanitizedSchool,
-      p_grade: sanitizedGrade,
-      p_password: 'dummy_password_for_existence_check'
-    });
+    // Check if student already exists
+    const { data: existingStudents } = await supabase
+      .from('students')
+      .select('id')
+      .eq('full_name', sanitizedName)
+      .eq('school', sanitizedSchool)
+      .eq('grade', sanitizedGrade)
+      .limit(1);
 
-    if (existingCheck && existingCheck.length > 0 && existingCheck[0].student_id) {
+    if (existingStudents && existingStudents.length > 0) {
       return { error: 'Student already exists with these details' };
     }
 
