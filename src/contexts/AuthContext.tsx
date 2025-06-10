@@ -1,7 +1,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Teacher, Student, AuthContextType } from '@/types/auth';
-import { teacherSimpleLoginService, studentSimpleLoginService, studentSignupService } from '@/services/authService';
+import { teacherEmailLoginService, studentSimpleLoginService, studentSignupService } from '@/services/authService';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -57,15 +57,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     role?: 'teacher' | 'admin' | 'doctor'
   ) => {
     try {
-      console.log('AuthContext teacherLogin: Starting login process', { name, school });
+      console.log('AuthContext teacherLogin: Starting login process with email:', email);
       
-      // For the simple login system, we need name and school
-      if (!name || !school) {
-        return { error: 'Name and school are required for login.' };
-      }
-      
-      // Use teacherSimpleLoginService with name and school for simple login
-      const result = await teacherSimpleLoginService(name, password, school);
+      // Use email-based login for the new system
+      const result = await teacherEmailLoginService(email, password);
       console.log('AuthContext teacherLogin: Service result', { 
         success: !!result.teacher, 
         error: result.error 
