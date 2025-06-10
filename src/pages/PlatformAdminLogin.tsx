@@ -15,7 +15,7 @@ const PlatformAdminLogin = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState("create");
+  const [activeTab, setActiveTab] = useState("create"); // Default to create tab
   const { login } = usePlatformAdmin();
   const { toast } = useToast();
   const navigate = useNavigate();

@@ -1,11 +1,7 @@
 
-import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { UserPlusIcon } from "lucide-react";
-import { createTestAdmin } from "@/services/platformAdminService";
-import { useToast } from "@/hooks/use-toast";
 
 interface AdminLoginTabProps {
   email: string;
@@ -24,40 +20,6 @@ const AdminLoginTab = ({
   onPasswordChange, 
   onSubmit 
 }: AdminLoginTabProps) => {
-  const [isCreatingAdmin, setIsCreatingAdmin] = useState(false);
-  const { toast } = useToast();
-
-  const handleCreateTestAdmin = async () => {
-    setIsCreatingAdmin(true);
-    
-    try {
-      const result = await createTestAdmin();
-      
-      if (result.error) {
-        toast({
-          title: "Error",
-          description: result.error,
-          variant: "destructive",
-        });
-      } else {
-        toast({
-          title: "Test Admin Created",
-          description: "Email: admin@test.com, Password: admin123",
-        });
-        onEmailChange("admin@test.com");
-        onPasswordChange("admin123");
-      }
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to create test admin",
-        variant: "destructive",
-      });
-    } finally {
-      setIsCreatingAdmin(false);
-    }
-  };
-
   return (
     <div className="space-y-4">
       <div className="text-center mb-4">
@@ -95,21 +57,6 @@ const AdminLoginTab = ({
           {isLoading ? "Signing In..." : "Access Console"}
         </Button>
       </form>
-      
-      <div className="text-center pt-4 border-t">
-        <Button
-          variant="outline"
-          onClick={handleCreateTestAdmin}
-          disabled={isCreatingAdmin}
-          className="w-full"
-        >
-          <UserPlusIcon className="w-4 h-4 mr-2" />
-          {isCreatingAdmin ? "Creating..." : "Create Test Admin"}
-        </Button>
-        <p className="text-xs text-gray-500 mt-2">
-          Development only: Creates admin@test.com with password admin123
-        </p>
-      </div>
     </div>
   );
 };
