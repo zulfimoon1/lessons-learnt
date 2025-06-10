@@ -20,19 +20,28 @@ serve(async (req) => {
       apiVersion: "2023-10-16",
     });
 
-    // Create Supabase client with service role key for writing subscription data
     const supabaseAdmin = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
       { auth: { persistSession: false } }
     );
 
-    // Parse request body for pricing details
     const body = await req.json();
-    const { teacherCount = 1, discountCode = null, discountPercent = 0, teacherEmail, teacherName, schoolName } = body;
-    console.log("Request body:", { teacherCount, discountCode, discountPercent, teacherEmail, schoolName });
+    const { 
+      teacherCount = 1, 
+      tierType = 'teacher',
+      isAnnual = false,
+      discountCode = null, 
+      discountPercent = 0, 
+      teacherEmail, 
+      teacherName, 
+      schoolName,
+      amount,
+      trialDays = 30
+    } = body;
+    
+    console.log("Request body:", { teacherCount, tierType, isAnnual, discountCode, discountPercent, teacherEmail, schoolName, amount });
 
-    // Validate required fields
     if (!teacherEmail || !schoolName) {
       throw new Error("Teacher email and school name are required");
     }
@@ -53,12 +62,10 @@ serve(async (req) => {
         throw new Error("Invalid discount code");
       }
 
-      // Check if expired
       if (discountData.expires_at && new Date(discountData.expires_at) < new Date()) {
         throw new Error("Discount code has expired");
       }
 
-      // Check if usage limit reached
       if (discountData.max_uses && discountData.current_uses >= discountData.max_uses) {
         throw new Error("Discount code usage limit reached");
       }
@@ -69,13 +76,6 @@ serve(async (req) => {
     }
 
     console.log("Teacher authenticated:", teacherEmail);
-
-    const basePrice = 999; // $9.99 in cents
-    const subtotal = teacherCount * basePrice;
-    const discountAmount = Math.round(subtotal * (validatedDiscountPercent / 100));
-    const finalAmount = subtotal - discountAmount;
-
-    console.log("Pricing:", { basePrice, subtotal, discountAmount, finalAmount });
 
     // Check if customer exists
     const customers = await stripe.customers.list({
@@ -88,13 +88,13 @@ serve(async (req) => {
       customerId = customers.data[0].id;
       console.log("Existing customer found:", customerId);
     } else {
-      // Create new customer
       const customer = await stripe.customers.create({
         email: teacherEmail,
         name: teacherName || teacherEmail.split('@')[0],
         metadata: {
           school: schoolName,
-          teacherCount: teacherCount.toString()
+          teacherCount: teacherCount.toString(),
+          tierType: tierType
         }
       });
       customerId = customer.id;
@@ -102,20 +102,23 @@ serve(async (req) => {
     }
 
     // Create line items
+    const planName = tierType === 'admin' ? 'School Admin Bundle' : 'Teacher Plan';
+    const billingInterval = isAnnual ? 'year' : 'month';
+    
     const lineItems = [
       {
         price_data: {
           currency: "usd",
           product_data: {
-            name: "LessonLens School Subscription",
-            description: `Monthly subscription for ${teacherCount} teacher${teacherCount > 1 ? 's' : ''} - ${schoolName}`,
+            name: `LessonLens ${planName}`,
+            description: `${isAnnual ? 'Annual' : 'Monthly'} subscription for ${teacherCount} teacher${teacherCount > 1 ? 's' : ''} - ${schoolName}`,
           },
-          unit_amount: finalAmount,
+          unit_amount: amount || (tierType === 'admin' ? 1499 : 999),
           recurring: {
-            interval: "month",
+            interval: billingInterval,
           },
         },
-        quantity: 1,
+        quantity: teacherCount,
       },
     ];
 
@@ -125,22 +128,26 @@ serve(async (req) => {
       mode: "subscription",
       success_url: `${req.headers.get("origin")}/teacher-dashboard?success=true`,
       cancel_url: `${req.headers.get("origin")}/pricing?canceled=true`,
+      subscription_data: {
+        trial_period_days: trialDays,
+      },
       metadata: {
         teacherCount: teacherCount.toString(),
-        originalAmount: subtotal.toString(),
+        tierType: tierType,
+        isAnnual: isAnnual.toString(),
+        originalAmount: amount?.toString() || '0',
         discountCode: discountCode || '',
         discountPercent: validatedDiscountPercent.toString(),
         schoolName: schoolName,
         adminEmail: teacherEmail,
         adminName: teacherName || teacherEmail.split('@')[0],
-        discountCodeId: discountCodeId || ''
+        discountCodeId: discountCodeId || '',
+        trialDays: trialDays.toString()
       },
     };
 
-    // Add discount information to metadata if applicable
     if (discountCode && validatedDiscountPercent > 0) {
       sessionData.metadata.discountApplied = 'true';
-      sessionData.metadata.discountAmount = discountAmount.toString();
     }
 
     const session = await stripe.checkout.sessions.create(sessionData);
@@ -158,21 +165,20 @@ serve(async (req) => {
 
       if (incrementError) {
         console.error("Error incrementing discount code usage:", incrementError);
-        // Don't fail the request, just log the error
       } else {
         console.log("Discount code usage incremented");
       }
     }
 
-    // Store subscription intent in our database for tracking
+    // Store subscription intent
     const subscriptionData = {
       school_name: schoolName,
       stripe_customer_id: customerId,
-      amount: finalAmount,
-      plan_type: 'monthly',
-      status: 'pending',
+      amount: amount || (tierType === 'admin' ? 1499 : 999),
+      plan_type: `${tierType}_${isAnnual ? 'annual' : 'monthly'}`,
+      status: 'trialing',
       current_period_start: new Date().toISOString(),
-      current_period_end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days from now
+      current_period_end: new Date(Date.now() + (trialDays * 24 * 60 * 60 * 1000)).toISOString(),
     };
 
     console.log("Inserting subscription data:", subscriptionData);
@@ -183,7 +189,6 @@ serve(async (req) => {
 
     if (insertError) {
       console.error("Error storing subscription:", insertError);
-      // Don't fail the request, just log the error
     } else {
       console.log("Subscription data stored successfully");
     }

@@ -1,59 +1,51 @@
+import React from 'react';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { Toaster } from '@/components/ui/toaster';
+import AuthProvider from '@/contexts/AuthContext';
+import LanguageProvider from '@/contexts/LanguageContext';
+import PlatformAdminProvider from '@/contexts/PlatformAdminContext';
+import AdminDashboard from '@/pages/AdminDashboard';
+import TeacherDashboard from '@/pages/TeacherDashboard';
+import StudentDashboard from '@/pages/StudentDashboard';
+import AuthPage from '@/pages/AuthPage';
+import UnauthorizedPage from '@/pages/UnauthorizedPage';
+import StudentSignupPage from '@/pages/StudentSignupPage';
+import TeacherSignupPage from '@/pages/TeacherSignupPage';
+import { QueryClient } from '@tanstack/react-query';
+import HomePage from './pages/HomePage';
+import SubscriptionManagementPage from './pages/SubscriptionManagementPage';
+import PricingPage from './pages/PricingPage';
+import EnhancedPricingPage from "./pages/EnhancedPricingPage";
 
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { AuthProvider } from "./contexts/AuthContext";
-import { LanguageProvider } from "./contexts/LanguageContext";
-import { PlatformAdminProvider } from "./contexts/PlatformAdminContext";
-
-import Index from "./pages/Index";
-import Demo from "./pages/Demo";
-import StudentLogin from "./pages/StudentLogin";
-import TeacherLogin from "./pages/TeacherLogin";
-import StudentDashboard from "./pages/StudentDashboard";
-import TeacherDashboard from "./pages/TeacherDashboard";
-import AdminDashboard from "./pages/AdminDashboard";
-import PlatformAdminLogin from "./pages/PlatformAdminLogin";
-import PlatformAdminDashboard from "./pages/PlatformAdminDashboard";
-import AcceptInvitation from "./pages/AcceptInvitation";
-import ResetPassword from "./pages/ResetPassword";
-import SecureAuth from "./pages/SecureAuth";
-import NotFound from "./pages/NotFound";
-
-const queryClient = new QueryClient();
-
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <LanguageProvider>
-      <AuthProvider>
-        <PlatformAdminProvider>
-          <TooltipProvider>
-            <Toaster />
-            <Sonner />
-            <BrowserRouter>
-              <Routes>
-                <Route path="/" element={<Index />} />
-                <Route path="/demo" element={<Demo />} />
-                <Route path="/student-login" element={<StudentLogin />} />
-                <Route path="/teacher-login" element={<TeacherLogin />} />
-                <Route path="/student-dashboard" element={<StudentDashboard />} />
-                <Route path="/teacher-dashboard" element={<TeacherDashboard />} />
-                <Route path="/admin-dashboard" element={<AdminDashboard />} />
-                <Route path="/platform-admin-login" element={<PlatformAdminLogin />} />
-                <Route path="/platform-admin-dashboard" element={<PlatformAdminDashboard />} />
-                <Route path="/accept-invitation" element={<AcceptInvitation />} />
-                <Route path="/reset-password" element={<ResetPassword />} />
-                <Route path="/secure-auth" element={<SecureAuth />} />
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </BrowserRouter>
-          </TooltipProvider>
-        </PlatformAdminProvider>
-      </AuthProvider>
-    </LanguageProvider>
-  </QueryClientProvider>
-);
+function App() {
+  return (
+    <QueryClient>
+      <BrowserRouter>
+        <AuthProvider>
+          <LanguageProvider>
+            <PlatformAdminProvider>
+              <div className="min-h-screen bg-background">
+                <Toaster />
+                <Routes>
+                  <Route path="/" element={<HomePage />} />
+                  <Route path="/admin-dashboard" element={<AdminDashboard />} />
+                  <Route path="/teacher-dashboard" element={<TeacherDashboard />} />
+                  <Route path="/student-dashboard" element={<StudentDashboard />} />
+                  <Route path="/auth" element={<AuthPage />} />
+                  <Route path="/unauthorized" element={<UnauthorizedPage />} />
+                  <Route path="/student-signup" element={<StudentSignupPage />} />
+                  <Route path="/teacher-signup" element={<TeacherSignupPage />} />
+                  <Route path="/subscription-management" element={<SubscriptionManagementPage />} />
+                  <Route path="/pricing" element={<PricingPage />} />
+                  <Route path="/enhanced-pricing" element={<EnhancedPricingPage />} />
+                </Routes>
+              </div>
+            </PlatformAdminProvider>
+          </LanguageProvider>
+        </AuthProvider>
+      </BrowserRouter>
+    </QueryClient>
+  );
+}
 
 export default App;
