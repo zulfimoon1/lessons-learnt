@@ -19,6 +19,7 @@ const PlatformAdminLogin = () => {
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isCreatingAdmin, setIsCreatingAdmin] = useState(false);
+  const [activeTab, setActiveTab] = useState("login");
   const { login } = usePlatformAdmin();
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -110,23 +111,35 @@ const PlatformAdminLogin = () => {
 
           <Card className="shadow-lg">
             <CardContent className="p-6">
-              <Tabs defaultValue="login" className="w-full">
-                <TabsList className="grid w-full grid-cols-2 mb-6 bg-gray-100 p-1 rounded-lg">
-                  <TabsTrigger 
-                    value="login" 
-                    className="data-[state=active]:bg-white data-[state=active]:shadow-sm font-medium px-4 py-2 rounded-md transition-all"
+              {/* Custom Tab Implementation */}
+              <div className="w-full mb-6">
+                <div className="flex bg-gray-100 p-1 rounded-lg">
+                  <button
+                    className={`flex-1 px-4 py-2 rounded-md font-medium transition-all ${
+                      activeTab === 'login'
+                        ? 'bg-white text-gray-900 shadow-sm'
+                        : 'text-gray-600 hover:text-gray-900'
+                    }`}
+                    onClick={() => setActiveTab('login')}
                   >
                     Login
-                  </TabsTrigger>
-                  <TabsTrigger 
-                    value="create" 
-                    className="data-[state=active]:bg-white data-[state=active]:shadow-sm font-medium px-4 py-2 rounded-md transition-all"
+                  </button>
+                  <button
+                    className={`flex-1 px-4 py-2 rounded-md font-medium transition-all ${
+                      activeTab === 'create'
+                        ? 'bg-white text-gray-900 shadow-sm'
+                        : 'text-gray-600 hover:text-gray-900'
+                    }`}
+                    onClick={() => setActiveTab('create')}
                   >
                     Create Account
-                  </TabsTrigger>
-                </TabsList>
+                  </button>
+                </div>
+              </div>
 
-                <TabsContent value="login" className="space-y-4 mt-0">
+              {/* Login Tab Content */}
+              {activeTab === 'login' && (
+                <div className="space-y-4">
                   <div className="text-center mb-4">
                     <h2 className="text-xl font-semibold">Admin Login</h2>
                     <p className="text-gray-600">Sign in to your admin account</p>
@@ -177,12 +190,15 @@ const PlatformAdminLogin = () => {
                       Development only: Creates admin@test.com with password admin123
                     </p>
                   </div>
-                </TabsContent>
+                </div>
+              )}
 
-                <TabsContent value="create" className="space-y-4 mt-0">
+              {/* Create Account Tab Content */}
+              {activeTab === 'create' && (
+                <div>
                   <CustomAdminCreation />
-                </TabsContent>
-              </Tabs>
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>
