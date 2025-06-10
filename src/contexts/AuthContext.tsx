@@ -37,7 +37,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     role?: 'teacher' | 'admin' | 'doctor'
   ) => {
     const result = await teacherAuth.login(email, password);
-    if (result.teacher && !result.error) {
+    if ('teacher' in result && result.teacher && !result.error) {
       studentAuth.setStudent(null);
     }
     return result;
@@ -45,7 +45,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const studentLogin = async (fullName: string, password: string) => {
     const result = await studentAuth.login(fullName, password);
-    if (result.student && !result.error) {
+    if ('student' in result && result.student && !result.error) {
       teacherAuth.setTeacher(null);
     }
     return result;
@@ -53,7 +53,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const studentSignup = async (fullName: string, school: string, grade: string, password: string) => {
     const result = await studentAuth.signup(fullName, school, grade, password);
-    if (result.student && !result.error) {
+    if ('student' in result && result.student && !result.error) {
       teacherAuth.setTeacher(null);
     }
     return result;
