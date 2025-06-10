@@ -20,9 +20,9 @@ const PricingShowcase = () => {
     t('pricing.analytics'),
     t('pricing.mentalHealth'),
     t('pricing.multiLanguage'),
-    "School-wide insights",
-    "Teacher management tools",
-    "Privacy compliant"
+    t('pricing.schoolWideInsights'),
+    t('pricing.teacherManagement'),
+    t('pricing.privacyCompliant')
   ];
 
   const formatEuroPrice = (cents: number) => {
@@ -57,39 +57,38 @@ const PricingShowcase = () => {
           <div className="flex justify-center items-center gap-2 mb-4">
             <Badge className="bg-green-100 text-green-800 border-green-200">
               <TrendingDownIcon className="w-4 h-4 mr-1" />
-              Incredible Value
+              {t('pricing.unbeatable')} {t('pricing.value')}
             </Badge>
             <Badge className="bg-blue-100 text-blue-800 border-blue-200">
               <StarIcon className="w-4 h-4 mr-1" />
-              Most Popular
+              {t('pricing.mostPopular')}
             </Badge>
           </div>
           
           <h2 className="text-5xl font-bold text-foreground mb-6">
-            Transform Your School for Less Than
+            {t('pricing.transformSchoolLess')}
             <span className="text-primary block mt-2 flex items-center justify-center gap-2">
               <EuroIcon className="w-12 h-12" />
-              10 Per Teacher/Month
+              10 {t('pricing.perTeacherMonth')}
             </span>
           </h2>
           
           <p className="text-xl text-muted-foreground mb-8 max-w-3xl mx-auto">
-            Get world-class student feedback analytics, mental health monitoring, and teaching insights 
-            at an unbeatable price. Plus, pause anytime during school holidays!
+            {t('pricing.worldClass')}
           </p>
 
           <div className="flex justify-center items-center gap-6 mb-8">
             <div className="text-center">
               <div className="text-3xl font-bold text-green-600">85%</div>
-              <div className="text-sm text-muted-foreground">Cost Savings vs Competitors</div>
+              <div className="text-sm text-muted-foreground">{t('pricing.costSavings')}</div>
             </div>
             <div className="text-center">
-              <div className="text-3xl font-bold text-blue-600">30 Days</div>
-              <div className="text-sm text-muted-foreground">Free Trial</div>
+              <div className="text-3xl font-bold text-blue-600">30 {t('common.days') || 'Days'}</div>
+              <div className="text-sm text-muted-foreground">{t('pricing.freeTrial')}</div>
             </div>
             <div className="text-center">
               <div className="text-3xl font-bold text-purple-600">24/7</div>
-              <div className="text-sm text-muted-foreground">Support Included</div>
+              <div className="text-sm text-muted-foreground">{t('pricing.supportIncluded')}</div>
             </div>
           </div>
         </div>
@@ -97,8 +96,8 @@ const PricingShowcase = () => {
         {/* Volume Discount Info */}
         <div className="bg-gradient-to-r from-green-50 to-blue-50 border border-green-200 rounded-lg p-6 mb-12">
           <div className="text-center mb-4">
-            <h3 className="text-2xl font-bold text-foreground mb-2">Volume Discounts Available</h3>
-            <p className="text-muted-foreground">The more teachers, the more you save!</p>
+            <h3 className="text-2xl font-bold text-foreground mb-2">{t('pricing.volumeDiscounts')}</h3>
+            <p className="text-muted-foreground">{t('pricing.moreTeachersMoreSave')}</p>
           </div>
           <div className="grid md:grid-cols-3 gap-6">
             <div className="text-center">
@@ -107,7 +106,7 @@ const PricingShowcase = () => {
                 {formatEuroPrice(999)}
               </div>
               <div className="text-sm text-muted-foreground">1-4 {t('pricing.teachers')}</div>
-              <div className="text-xs text-muted-foreground">Standard Price</div>
+              <div className="text-xs text-muted-foreground">{t('pricing.standardPrice')}</div>
             </div>
             <div className="text-center bg-green-100 rounded-lg p-4">
               <div className="text-3xl font-bold text-green-700 flex items-center justify-center gap-1">
@@ -135,10 +134,10 @@ const PricingShowcase = () => {
             <CardHeader>
               <div className="flex items-center justify-between">
                 <div>
-                  <CardTitle className="text-2xl">Teacher Plan</CardTitle>
-                  <CardDescription>Perfect for individual educators</CardDescription>
+                  <CardTitle className="text-2xl">{t('pricing.teacherPlan')}</CardTitle>
+                  <CardDescription>{t('pricing.perfectIndividual')}</CardDescription>
                 </div>
-                <Badge variant="secondary">Best Value</Badge>
+                <Badge variant="secondary">{t('pricing.bestValue')}</Badge>
               </div>
               
               <div className="mt-4">
@@ -150,10 +149,10 @@ const PricingShowcase = () => {
                   <span className="text-muted-foreground">/month per teacher</span>
                 </div>
                 <div className="text-sm text-green-600 font-medium flex items-center gap-1">
-                  Annual: <EuroIcon className="w-3 h-3" />99/year (Save €20!)
+                  {t('pricing.annual')}: <EuroIcon className="w-3 h-3" />99/year ({t('pricing.saveExclamation')})
                 </div>
                 <div className="text-xs text-muted-foreground mt-1">
-                  Volume discounts: 10% off for 5+ teachers, 20% off for 10+ teachers
+                  {t('pricing.volumeDiscountsDetails')}
                 </div>
               </div>
             </CardHeader>
@@ -170,7 +169,7 @@ const PricingShowcase = () => {
               
               <Link to="/enhanced-pricing">
                 <Button className="w-full bg-primary hover:bg-primary/90 text-lg py-6">
-                  Start 30-Day Free Trial
+                  {t('pricing.startFreeTrial')}
                 </Button>
               </Link>
             </CardContent>
@@ -181,17 +180,17 @@ const PricingShowcase = () => {
             <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
               <Badge className="bg-purple-600 text-white px-4 py-1">
                 <TrendingUpIcon className="w-4 h-4 mr-1" />
-                Maximum Impact
+                {t('pricing.maximumImpact')}
               </Badge>
             </div>
             
             <CardHeader>
               <div className="flex items-center justify-between">
                 <div>
-                  <CardTitle className="text-2xl">School Admin</CardTitle>
-                  <CardDescription>Complete school transformation</CardDescription>
+                  <CardTitle className="text-2xl">{t('pricing.schoolAdmin')}</CardTitle>
+                  <CardDescription>{t('pricing.completeTransformation')}</CardDescription>
                 </div>
-                <Badge className="bg-purple-100 text-purple-800">Premium</Badge>
+                <Badge className="bg-purple-100 text-purple-800">{t('pricing.premium')}</Badge>
               </div>
               
               <div className="mt-4">
@@ -203,7 +202,7 @@ const PricingShowcase = () => {
                   <span className="text-muted-foreground">/month per admin</span>
                 </div>
                 <div className="text-sm text-green-600 font-medium flex items-center gap-1">
-                  Annual: <EuroIcon className="w-3 h-3" />149/year (Save €30!)
+                  {t('pricing.annual')}: <EuroIcon className="w-3 h-3" />149/year ({t('pricing.saveThirty')})
                 </div>
               </div>
             </CardHeader>
@@ -220,7 +219,7 @@ const PricingShowcase = () => {
               
               <Link to="/enhanced-pricing">
                 <Button className="w-full bg-purple-600 hover:bg-purple-700 text-lg py-6">
-                  Transform Your School
+                  {t('pricing.transformYourSchool')}
                 </Button>
               </Link>
             </CardContent>
@@ -234,12 +233,11 @@ const PricingShowcase = () => {
               <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <TrendingDownIcon className="w-8 h-8 text-green-600" />
               </div>
-              <CardTitle className="text-xl text-green-800">Unbeatable Price</CardTitle>
+              <CardTitle className="text-xl text-green-800">{t('pricing.unbeatablePrice')}</CardTitle>
             </CardHeader>
             <CardContent>
               <p className="text-sm text-green-700">
-                85% less than competitors while offering more features. 
-                Get enterprise-level insights at a fraction of the cost.
+                {t('pricing.lessThanCompetitors')}
               </p>
             </CardContent>
           </Card>
@@ -249,12 +247,11 @@ const PricingShowcase = () => {
               <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <PauseIcon className="w-8 h-8 text-blue-600" />
               </div>
-              <CardTitle className="text-xl text-blue-800">Holiday Pause</CardTitle>
+              <CardTitle className="text-xl text-blue-800">{t('pricing.holidayPause')}</CardTitle>
             </CardHeader>
             <CardContent>
               <p className="text-sm text-blue-700">
-                Pause your subscription during summer break (June-August) 
-                and winter holidays. Only pay when school is in session!
+                {t('pricing.pauseSubscription')}
               </p>
             </CardContent>
           </Card>
@@ -264,12 +261,11 @@ const PricingShowcase = () => {
               <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <TrendingUpIcon className="w-8 h-8 text-purple-600" />
               </div>
-              <CardTitle className="text-xl text-purple-800">Maximum ROI</CardTitle>
+              <CardTitle className="text-xl text-purple-800">{t('pricing.maximumRoi')}</CardTitle>
             </CardHeader>
             <CardContent>
               <p className="text-sm text-purple-700">
-                Schools see 300% improvement in student engagement and 
-                85% reduction in mental health incidents within 3 months.
+                {t('pricing.schoolsSeeImprovement')}
               </p>
             </CardContent>
           </Card>
@@ -278,31 +274,30 @@ const PricingShowcase = () => {
         {/* CTA Section */}
         <div className="text-center">
           <h3 className="text-3xl font-bold text-foreground mb-4">
-            Ready to Transform Your School at an Unbeatable Price?
+            {t('pricing.readyTransformUnbeatable')}
           </h3>
           <p className="text-lg text-muted-foreground mb-8">
-            Start your 30-day free trial today. No credit card required. 
-            Cancel anytime or pause during holidays.
+            {t('pricing.startTrialToday')}
           </p>
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link to="/enhanced-pricing">
               <Button size="lg" className="text-lg px-8 py-6 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700">
-                Start Free Trial Now
+                {t('pricing.startFreeTrialNow')}
               </Button>
             </Link>
             
             {!teacher && (
               <Link to="/teacher-login">
                 <Button size="lg" variant="outline" className="text-lg px-8 py-6 border-2">
-                  Sign Up as Educator
+                  {t('pricing.signUpEducator')}
                 </Button>
               </Link>
             )}
           </div>
           
           <p className="text-sm text-muted-foreground mt-4">
-            Questions? Contact our team for a personalized demo and pricing consultation.
+            {t('pricing.questionsContact')}
           </p>
         </div>
       </main>
