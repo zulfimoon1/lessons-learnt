@@ -2,7 +2,7 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { resetAdminPassword } from "@/services/platformAdminService";
+import { resetAdminPassword, testPasswordVerification } from "@/services/platformAdminService";
 import { useToast } from "@/hooks/use-toast";
 
 interface AdminLoginTabProps {
@@ -57,6 +57,39 @@ const AdminLoginTab = ({
     }
   };
 
+  const handlePasswordTest = async () => {
+    if (!email) {
+      toast({
+        title: "Email Required",
+        description: "Please enter your email address first",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const result = await testPasswordVerification(email, password || 'admin123');
+      if (result.error) {
+        toast({
+          title: "Test Failed",
+          description: result.error,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Test Successful",
+          description: result.message || "Password verification test completed",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Test Failed",
+        description: "An error occurred during password test",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <div className="space-y-4">
       <div className="text-center mb-4">
@@ -95,7 +128,7 @@ const AdminLoginTab = ({
         </Button>
       </form>
       
-      <div className="mt-4 pt-4 border-t">
+      <div className="mt-4 pt-4 border-t space-y-2">
         <Button 
           type="button" 
           variant="outline" 
@@ -105,8 +138,19 @@ const AdminLoginTab = ({
         >
           Reset Password to 'admin123'
         </Button>
-        <p className="text-xs text-gray-500 mt-2 text-center">
-          Development only: This will reset the password for the entered email
+        
+        <Button 
+          type="button" 
+          variant="secondary" 
+          className="w-full text-sm" 
+          onClick={handlePasswordTest}
+          disabled={!email}
+        >
+          Test Password Verification
+        </Button>
+        
+        <p className="text-xs text-gray-500 text-center">
+          Development only: These buttons help debug authentication issues
         </p>
       </div>
     </div>

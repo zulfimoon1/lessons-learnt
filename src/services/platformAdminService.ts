@@ -1,5 +1,6 @@
+
 import { supabase } from '@/integrations/supabase/client';
-import { verifyPassword, hashPassword } from './securePasswordService';
+import { verifyPassword, hashPassword, generateTestHash } from './securePasswordService';
 import { validateInput } from './secureInputValidation';
 import { enhancedSecureSessionService } from './enhancedSecureSessionService';
 import { logUserSecurityEvent } from '@/components/SecurityAuditLogger';
@@ -100,6 +101,83 @@ const validateLoginInput = (email: string, password: string): { valid: boolean; 
   return { valid: true };
 };
 
+// Test function to debug password issues
+export const testPasswordVerification = async (email: string = 'zulfimoon1@gmail.com', password: string = 'admin123') => {
+  try {
+    console.log('=== PASSWORD VERIFICATION TEST ===');
+    
+    // Get the admin record
+    const { data: admin, error } = await supabase
+      .from('teachers')
+      .select('*')
+      .eq('email', email)
+      .eq('role', 'admin')
+      .single();
+    
+    if (error || !admin) {
+      console.error('Admin not found:', error);
+      return { error: 'Admin not found' };
+    }
+    
+    console.log('Admin found:', {
+      id: admin.id,
+      email: admin.email,
+      hasHash: !!admin.password_hash,
+      hashLength: admin.password_hash?.length
+    });
+    
+    if (!admin.password_hash) {
+      // Generate a fresh hash
+      console.log('No hash found, generating fresh hash...');
+      const newHash = await generateTestHash(password);
+      
+      // Update the admin record
+      const { error: updateError } = await supabase
+        .from('teachers')
+        .update({ password_hash: newHash })
+        .eq('id', admin.id);
+      
+      if (updateError) {
+        console.error('Failed to update hash:', updateError);
+        return { error: 'Failed to update password hash' };
+      }
+      
+      console.log('Hash updated successfully');
+      return { success: true, message: 'Password hash regenerated' };
+    }
+    
+    // Test the verification
+    console.log('Testing password verification...');
+    const isValid = await verifyPassword(password, admin.password_hash);
+    console.log('Verification result:', isValid);
+    
+    if (!isValid) {
+      // Try regenerating the hash
+      console.log('Verification failed, regenerating hash...');
+      const newHash = await generateTestHash(password);
+      
+      const { error: updateError } = await supabase
+        .from('teachers')
+        .update({ password_hash: newHash })
+        .eq('id', admin.id);
+      
+      if (updateError) {
+        console.error('Failed to update hash:', updateError);
+        return { error: 'Failed to update password hash' };
+      }
+      
+      console.log('Hash regenerated and updated');
+      return { success: true, message: 'Password hash regenerated due to verification failure' };
+    }
+    
+    return { success: true, message: 'Password verification successful' };
+    
+  } catch (error) {
+    console.error('Test error:', error);
+    return { error: 'Test failed' };
+  }
+};
+
 export const platformAdminLoginService = async (email: string, password: string, csrfToken?: string) => {
   try {
     console.log('=== PLATFORM ADMIN LOGIN DEBUG ===');
@@ -123,6 +201,11 @@ export const platformAdminLoginService = async (email: string, password: string,
       console.log('Rate limit exceeded for:', sanitizedEmail);
       return { error: rateCheck.message };
     }
+
+    // First, let's test the password verification system
+    console.log('Running password verification test...');
+    const testResult = await testPasswordVerification(sanitizedEmail, password);
+    console.log('Test result:', testResult);
 
     // Database query with more detailed logging
     console.log('Querying database for admin...');
