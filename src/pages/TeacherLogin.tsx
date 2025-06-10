@@ -13,6 +13,7 @@ import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { useNavigate } from "react-router-dom";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { secureTeacherSignup, secureSignIn } from "@/services/secureAuthService";
+import ForgotPasswordDialog from "@/components/ForgotPasswordDialog";
 
 const TeacherLogin = () => {
   const { t, language } = useLanguage();
@@ -245,6 +246,18 @@ const TeacherLogin = () => {
                     onChange={(e) => setLoginData(prev => ({ ...prev, password: e.target.value }))}
                     required
                   />
+                </div>
+
+                <div className="text-right">
+                  <ForgotPasswordDialog>
+                    <Button 
+                      type="button" 
+                      variant="link" 
+                      className="text-sm p-0 h-auto text-emerald-600 hover:text-emerald-700"
+                    >
+                      {language === 'lt' ? 'Pamiršau slaptažodį' : 'Forgot password?'}
+                    </Button>
+                  </ForgotPasswordDialog>
                 </div>
 
                 <Button 
