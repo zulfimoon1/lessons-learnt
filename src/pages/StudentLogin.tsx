@@ -1,21 +1,22 @@
+
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { BookOpenIcon, LogInIcon, UserIcon, School, GraduationCap, ArrowLeftIcon } from "lucide-react";
+import { BookOpenIcon } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
-import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { useAuth } from "@/contexts/AuthContext";
+import AuthHeader from "@/components/auth/AuthHeader";
+import StudentLoginForm from "@/components/auth/StudentLoginForm";
+import StudentSignupForm from "@/components/auth/StudentSignupForm";
 
 const StudentLogin = () => {
-  const { t, language } = useLanguage();
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const { toast } = useToast();
   const { student, studentLogin, studentSignup, isLoading: authLoading } = useAuth();
+  const [isLoading, setIsLoading] = useState(false);
 
   // Redirect if already logged in
   useEffect(() => {
@@ -25,21 +26,6 @@ const StudentLogin = () => {
       navigate("/student-dashboard", { replace: true });
     }
   }, [student, authLoading, navigate]);
-
-  const [loginData, setLoginData] = useState({
-    fullName: "",
-    password: ""
-  });
-
-  const [signupData, setSignupData] = useState({
-    fullName: "",
-    school: "",
-    grade: "",
-    password: "",
-    confirmPassword: ""
-  });
-
-  const [isLoading, setIsLoading] = useState(false);
 
   // Don't render if still loading auth state
   if (authLoading) {
@@ -53,14 +39,8 @@ const StudentLogin = () => {
     );
   }
 
-  const handleBackToHome = () => {
-    navigate("/");
-  };
-
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!loginData.fullName.trim() || !loginData.password) {
+  const handleLogin = async (fullName: string, password: string) => {
+    if (!fullName.trim() || !password) {
       toast({
         title: t('teacher.missingInfo') || "Missing information",
         description: "Please enter both your full name and password",
@@ -72,13 +52,8 @@ const StudentLogin = () => {
     setIsLoading(true);
 
     try {
-      console.log('StudentLogin: Attempting login for:', loginData.fullName);
-      const result = await studentLogin(
-        loginData.fullName.trim(),
-        loginData.password
-      );
-
-      console.log('StudentLogin: Login result:', result);
+      console.log('StudentLogin: Attempting login for:', fullName);
+      const result = await studentLogin(fullName.trim(), password);
 
       if (result.error) {
         console.log('StudentLogin: Login failed with error:', result.error);
@@ -93,7 +68,6 @@ const StudentLogin = () => {
           title: t('student.welcomeBack') || "Welcome back!",
           description: t('student.loginSuccess') || "Login successful",
         });
-        // Force immediate navigation
         setTimeout(() => {
           navigate("/student-dashboard", { replace: true });
         }, 100);
@@ -110,10 +84,8 @@ const StudentLogin = () => {
     }
   };
 
-  const handleSignup = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!signupData.fullName.trim() || !signupData.school.trim() || !signupData.grade.trim() || !signupData.password || !signupData.confirmPassword) {
+  const handleSignup = async (fullName: string, school: string, grade: string, password: string, confirmPassword: string) => {
+    if (!fullName.trim() || !school.trim() || !grade.trim() || !password || !confirmPassword) {
       toast({
         title: t('teacher.missingInfo') || "Missing information",
         description: "Please fill in all required fields",
@@ -122,7 +94,7 @@ const StudentLogin = () => {
       return;
     }
 
-    if (signupData.password !== signupData.confirmPassword) {
+    if (password !== confirmPassword) {
       toast({
         title: t('student.passwordMismatch') || "Password mismatch",
         description: t('student.passwordsDoNotMatch') || "Passwords do not match",
@@ -134,13 +106,8 @@ const StudentLogin = () => {
     setIsLoading(true);
 
     try {
-      console.log('StudentLogin: Attempting signup for:', signupData.fullName);
-      const result = await studentSignup(
-        signupData.fullName.trim(),
-        signupData.school.trim(),
-        signupData.grade.trim(),
-        signupData.password
-      );
+      console.log('StudentLogin: Attempting signup for:', fullName);
+      const result = await studentSignup(fullName.trim(), school.trim(), grade.trim(), password);
 
       if (result.error) {
         console.log('StudentLogin: Signup failed with error:', result.error);
@@ -155,7 +122,6 @@ const StudentLogin = () => {
           title: t('student.accountCreated') || "Account created!",
           description: t('student.welcomeToApp') || "Welcome to Lesson Lens!",
         });
-        // Force immediate navigation
         setTimeout(() => {
           navigate("/student-dashboard", { replace: true });
         }, 100);
@@ -174,19 +140,7 @@ const StudentLogin = () => {
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
-      <div className="absolute top-4 left-4">
-        <Button
-          variant="outline"
-          onClick={handleBackToHome}
-          className="flex items-center gap-2"
-        >
-          <ArrowLeftIcon className="w-4 h-4" />
-          {language === 'lt' ? 'Grįžti į pradžią' : 'Back to Home'}
-        </Button>
-      </div>
-      <div className="absolute top-4 right-4">
-        <LanguageSwitcher />
-      </div>
+      <AuthHeader />
       <Card className="w-full max-w-md bg-card/80 backdrop-blur-sm border-border">
         <CardHeader className="text-center">
           <div className="w-16 h-16 bg-primary rounded-full mx-auto flex items-center justify-center mb-4">
@@ -205,128 +159,11 @@ const StudentLogin = () => {
             </TabsList>
 
             <TabsContent value="login">
-              <form onSubmit={handleLogin} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="loginFullName" className="flex items-center gap-2">
-                    <UserIcon className="w-4 h-4" />
-                    {t('auth.fullName')}
-                  </Label>
-                  <Input
-                    id="loginFullName"
-                    type="text"
-                    placeholder={t('student.fullNamePlaceholder') || "Enter your full name"}
-                    value={loginData.fullName}
-                    onChange={(e) => setLoginData(prev => ({ ...prev, fullName: e.target.value }))}
-                    required
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="loginPassword">{t('auth.password')}</Label>
-                  <Input
-                    id="loginPassword"
-                    type="password"
-                    placeholder="Enter your password"
-                    value={loginData.password}
-                    onChange={(e) => setLoginData(prev => ({ ...prev, password: e.target.value }))}
-                    required
-                  />
-                </div>
-
-                <Button 
-                  type="submit" 
-                  className="w-full"
-                  disabled={isLoading}
-                >
-                  {isLoading ? t('auth.loggingIn') : (
-                    <>
-                      <LogInIcon className="w-4 h-4 mr-2" />
-                      {t('auth.login')}
-                    </>
-                  )}
-                </Button>
-              </form>
+              <StudentLoginForm onLogin={handleLogin} isLoading={isLoading} />
             </TabsContent>
 
             <TabsContent value="signup">
-              <form onSubmit={handleSignup} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="signupFullName" className="flex items-center gap-2">
-                    <UserIcon className="w-4 h-4" />
-                    {t('auth.fullName')}
-                  </Label>
-                  <Input
-                    id="signupFullName"
-                    type="text"
-                    placeholder={t('student.fullNameSignupPlaceholder') || "Enter your full name"}
-                    value={signupData.fullName}
-                    onChange={(e) => setSignupData(prev => ({ ...prev, fullName: e.target.value }))}
-                    required
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="signupSchool" className="flex items-center gap-2">
-                    <School className="w-4 h-4" />
-                    {t('auth.school')}
-                  </Label>
-                  <Input
-                    id="signupSchool"
-                    type="text"
-                    placeholder={t('student.schoolPlaceholder') || "Enter your school name"}
-                    value={signupData.school}
-                    onChange={(e) => setSignupData(prev => ({ ...prev, school: e.target.value }))}
-                    required
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="signupGrade" className="flex items-center gap-2">
-                    <GraduationCap className="w-4 h-4" />
-                    {t('student.classGrade') || "Class/Grade"}
-                  </Label>
-                  <Input
-                    id="signupGrade"
-                    type="text"
-                    placeholder={t('student.gradePlaceholder') || "e.g., Grade 5, Year 7"}
-                    value={signupData.grade}
-                    onChange={(e) => setSignupData(prev => ({ ...prev, grade: e.target.value }))}
-                    required
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="signupPassword">{t('auth.password')}</Label>
-                  <Input
-                    id="signupPassword"
-                    type="password"
-                    placeholder={t('student.createPassword') || "Create a password"}
-                    value={signupData.password}
-                    onChange={(e) => setSignupData(prev => ({ ...prev, password: e.target.value }))}
-                    required
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="confirmPassword">{t('auth.confirmPassword')}</Label>
-                  <Input
-                    id="confirmPassword"
-                    type="password"
-                    placeholder={t('student.confirmPasswordPlaceholder') || "Confirm your password"}
-                    value={signupData.confirmPassword}
-                    onChange={(e) => setSignupData(prev => ({ ...prev, confirmPassword: e.target.value }))}
-                    required
-                  />
-                </div>
-
-                <Button 
-                  type="submit" 
-                  className="w-full"
-                  disabled={isLoading}
-                >
-                  {isLoading ? t('auth.creatingAccount') : t('auth.createAccount')}
-                </Button>
-              </form>
+              <StudentSignupForm onSignup={handleSignup} isLoading={isLoading} />
             </TabsContent>
           </Tabs>
         </CardContent>

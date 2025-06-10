@@ -1,25 +1,24 @@
-
 import { useState, useEffect } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuthStorage } from "@/hooks/useAuthStorage";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { 
   SchoolIcon, 
-  LogOutIcon,
   CreditCardIcon
 } from "lucide-react";
 import ClassScheduleForm from "@/components/ClassScheduleForm";
 import { useNavigate } from "react-router-dom";
-import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { useLanguage } from "@/contexts/LanguageContext";
 import BulkScheduleUpload from "@/components/BulkScheduleUpload";
 import MentalHealthArticles from "@/components/MentalHealthArticles";
 import ComplianceFooter from "@/components/ComplianceFooter";
 import CookieConsent from "@/components/CookieConsent";
 import WeeklySummaryReview from "@/components/WeeklySummaryReview";
+import DashboardHeader from "@/components/dashboard/DashboardHeader";
+import StatsCard from "@/components/dashboard/StatsCard";
+import SubscriptionBanner from "@/components/dashboard/SubscriptionBanner";
+import ActiveSubscriptionCard from "@/components/dashboard/ActiveSubscriptionCard";
 
 interface Subscription {
   id: string;
@@ -144,113 +143,51 @@ const TeacherDashboard = () => {
   return (
     <div className="min-h-screen bg-background">
       <CookieConsent />
-      <header className="bg-card/80 backdrop-blur-sm border-b border-border p-4">
-        <div className="max-w-7xl mx-auto flex justify-between items-center">
-          <div className="flex items-center gap-4">
-            <SchoolIcon className="w-8 h-8 text-primary" />
-            <h1 className="text-2xl font-bold text-foreground">
-              {teacher?.role === 'doctor' ? t('dashboard.doctorOverview') : t('dashboard.teacherOverview')}
-            </h1>
-          </div>
-          <div className="flex items-center gap-4">
-            <LanguageSwitcher />
-            <span className="text-sm text-muted-foreground">{t('admin.welcome')}, {teacher?.name}</span>
-            <Button
-              onClick={handleLogout}
-              variant="outline"
-              className="flex items-center gap-2"
-            >
-              <LogOutIcon className="w-4 h-4" />
-              {t('auth.logout')}
-            </Button>
-          </div>
-        </div>
-      </header>
+      <DashboardHeader 
+        title={teacher?.role === 'doctor' ? t('dashboard.doctorOverview') : t('dashboard.teacherOverview')}
+        userName={teacher?.name || ""}
+        onLogout={handleLogout}
+      />
 
       <main className="max-w-7xl mx-auto p-6 space-y-6">
-        {!subscription && (
-          <Card className="border-yellow-200 bg-yellow-50">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-yellow-800">
-                <CreditCardIcon className="w-5 h-5" />
-                {t('admin.subscription')}
-              </CardTitle>
-              <CardDescription className="text-yellow-700">
-                {teacher?.role === 'doctor' 
-                  ? t('teacher.doctorSubscriptionDescription')
-                  : t('teacher.subscriptionDescription')
-                }
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Button 
-                onClick={handleCreateCheckout}
-                disabled={isCreatingCheckout}
-                className="bg-primary hover:bg-primary/90 text-primary-foreground"
-              >
-                {isCreatingCheckout ? t('pricing.processing') : t('dashboard.subscribeNow')}
-              </Button>
-            </CardContent>
-          </Card>
+        {/* Subscription Status */}
+        {!subscription ? (
+          <SubscriptionBanner 
+            isDoctor={teacher?.role === 'doctor'} 
+            onSubscribe={handleCreateCheckout}
+            isCreatingCheckout={isCreatingCheckout}
+          />
+        ) : (
+          <ActiveSubscriptionCard 
+            plan={subscription.plan_type} 
+            expiryDate={subscription.current_period_end} 
+          />
         )}
-
-        {subscription && (
-          <Card className="border-green-200 bg-green-50">
-            <CardHeader>
-              <CardTitle className="text-green-800">{t('admin.subscription')}</CardTitle>
-              <CardDescription className="text-green-700">
-                {t('teacher.activePlan', { 
-                  planType: subscription.plan_type, 
-                  date: new Date(subscription.current_period_end).toLocaleDateString() 
-                })}
-              </CardDescription>
-            </CardHeader>
-          </Card>
-        )}
-
+        
+        {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{t('auth.school')}</CardTitle>
-              <SchoolIcon className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-lg font-semibold">{teacher?.school}</div>
-            </CardContent>
-          </Card>
+          <StatsCard
+            title={t('auth.school')}
+            value={teacher?.school || ""}
+            icon={SchoolIcon}
+          />
           
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{t('login.teacher.role')}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-lg font-semibold capitalize">
-                {teacher?.role === 'doctor' ? t('teacher.mentalHealthProfessional') : teacher?.role}
-              </div>
-              {teacher?.role === 'doctor' && teacher?.specialization && (
-                <div className="text-sm text-muted-foreground mt-1">{teacher.specialization}</div>
-              )}
-            </CardContent>
-          </Card>
+          <StatsCard
+            title={t('login.teacher.role')}
+            value={teacher?.role === 'doctor' ? t('teacher.mentalHealthProfessional') : (teacher?.role || "")}
+            icon={SchoolIcon}
+          />
 
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-                {teacher?.role === 'doctor' ? t('teacher.availability') : t('admin.subscription')}
-              </CardTitle>
-              <CreditCardIcon className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-lg font-semibold">
-                {teacher?.role === 'doctor' 
-                  ? (teacher?.is_available ? t('teacher.available') : t('teacher.busy'))
-                  : (subscription ? t('teacher.active') : t('teacher.inactive'))
-                }
-              </div>
-            </CardContent>
-          </Card>
+          <StatsCard
+            title={teacher?.role === 'doctor' ? t('teacher.availability') : t('admin.subscription')}
+            value={teacher?.role === 'doctor' 
+              ? (teacher?.is_available ? t('teacher.available') : t('teacher.busy'))
+              : (subscription ? t('teacher.active') : t('teacher.inactive'))}
+            icon={CreditCardIcon}
+          />
         </div>
 
+        {/* Tabs */}
         <Tabs defaultValue={teacher?.role === 'doctor' ? 'weekly-summaries' : 'schedule'} className="space-y-6">
           <TabsList>
             {teacher?.role === 'doctor' ? (

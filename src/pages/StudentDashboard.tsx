@@ -1,27 +1,21 @@
 import { useState, useEffect } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Badge } from "@/components/ui/badge";
 import { useAuthStorage } from "@/hooks/useAuthStorage";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { 
   SchoolIcon, 
-  CalendarIcon, 
-  LogOutIcon,
-  BookOpenIcon,
-  HeartHandshakeIcon
+  CalendarIcon,
+  BookOpenIcon
 } from "lucide-react";
 import LessonFeedbackForm from "@/components/LessonFeedbackForm";
 import WeeklySummary from "@/components/WeeklySummary";
-import PsychologistInfo from "@/components/PsychologistInfo";
-import LiveChatWidget from "@/components/LiveChatWidget";
 import { useNavigate } from "react-router-dom";
-import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { useLanguage } from "@/contexts/LanguageContext";
 import ComplianceFooter from "@/components/ComplianceFooter";
 import CookieConsent from "@/components/CookieConsent";
+import DashboardHeader from "@/components/dashboard/DashboardHeader";
+import StatsCard from "@/components/dashboard/StatsCard";
 
 interface ClassSchedule {
   id: string;
@@ -152,58 +146,31 @@ const StudentDashboard = () => {
   return (
     <div className="min-h-screen bg-background">
       <CookieConsent />
-      <header className="bg-card/80 backdrop-blur-sm border-b border-border p-4">
-        <div className="max-w-7xl mx-auto flex justify-between items-center">
-          <div className="flex items-center gap-4">
-            <SchoolIcon className="w-8 h-8 text-primary" />
-            <h1 className="text-2xl font-bold text-foreground">{t('dashboard.title')}</h1>
-          </div>
-          <div className="flex items-center gap-4">
-            <LanguageSwitcher />
-            <span className="text-sm text-muted-foreground">{t('admin.welcome')}, {student?.full_name}</span>
-            <Button
-              onClick={handleLogout}
-              variant="outline"
-              className="flex items-center gap-2"
-            >
-              <LogOutIcon className="w-4 h-4" />
-              {t('auth.logout')}
-            </Button>
-          </div>
-        </div>
-      </header>
+      <DashboardHeader 
+        title={t('dashboard.title')}
+        userName={student?.full_name || ""}
+        onLogout={handleLogout}
+      />
 
       <main className="max-w-7xl mx-auto p-6 space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{t('auth.school')}</CardTitle>
-              <SchoolIcon className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-lg font-semibold">{student?.school}</div>
-            </CardContent>
-          </Card>
+          <StatsCard 
+            title={t('auth.school')}
+            value={student?.school || ""}
+            icon={SchoolIcon}
+          />
           
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{t('dashboard.grade')}</CardTitle>
-              <BookOpenIcon className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-lg font-semibold">{student?.grade}</div>
-            </CardContent>
-          </Card>
+          <StatsCard 
+            title={t('dashboard.grade')}
+            value={student?.grade || ""}
+            icon={BookOpenIcon}
+          />
 
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{t('dashboard.upcomingClasses')}</CardTitle>
-              <CalendarIcon className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-lg font-semibold">{upcomingClasses.length}</div>
-            </CardContent>
-          </Card>
+          <StatsCard 
+            title={t('dashboard.upcomingClasses')}
+            value={upcomingClasses.length}
+            icon={CalendarIcon}
+          />
         </div>
 
         <Tabs defaultValue="feedback" className="space-y-6">
