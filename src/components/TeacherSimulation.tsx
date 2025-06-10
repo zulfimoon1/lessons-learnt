@@ -606,3 +606,5 @@ const PlanImprovementsStep = () => (
 );
 
 export default TeacherSimulation;
+
+</edits_to_apply>
