@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Progress } from "@/components/ui/progress";
 import { 
   UsersIcon,
   BookOpenIcon,
@@ -16,115 +17,279 @@ import {
   GraduationCapIcon,
   ArrowLeftIcon,
   PlayCircleIcon,
-  PauseCircleIcon
+  PauseCircleIcon,
+  TrendingUpIcon,
+  AlertTriangleIcon,
+  CheckCircleIcon,
+  SchoolIcon,
+  BellIcon,
+  SettingsIcon
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 const Demo = () => {
   const { t } = useLanguage();
-  const [activeDemo, setActiveDemo] = useState("student-feedback");
+  const [activeDemo, setActiveDemo] = useState("student-dashboard");
   const [isPlaying, setIsPlaying] = useState(true);
 
-  // Student Feedback Demo
-  const StudentFeedbackDemo = () => (
+  // Complete Student Dashboard Demo
+  const StudentDashboardDemo = () => (
     <div className="space-y-6">
       <div className="bg-white rounded-lg shadow-lg p-6 border">
-        <div className="flex items-center gap-3 mb-4">
-          <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-            <UsersIcon className="w-4 h-4 text-blue-600" />
-          </div>
-          <h3 className="text-lg font-semibold">Mathematics Lesson Feedback</h3>
-          <Badge className="bg-blue-100 text-blue-700">Live Session</Badge>
-        </div>
-        
-        <div className="space-y-4">
-          <div>
-            <label className="text-sm font-medium text-gray-700 block mb-2">How well did you understand today's lesson?</label>
-            <div className="flex gap-1">
-              {[1,2,3,4,5].map(star => (
-                <StarIcon key={star} className="w-6 h-6 fill-yellow-400 text-yellow-400 cursor-pointer" />
-              ))}
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+              <GraduationCapIcon className="w-5 h-5 text-blue-600" />
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold">Student Dashboard</h3>
+              <p className="text-sm text-gray-600">Welcome back, Emma!</p>
             </div>
           </div>
-          
-          <div>
-            <label className="text-sm font-medium text-gray-700 block mb-2">How are you feeling?</label>
+          <div className="flex gap-2">
+            <BellIcon className="w-5 h-5 text-gray-400" />
+            <SettingsIcon className="w-5 h-5 text-gray-400" />
+          </div>
+        </div>
+        
+        {/* Stats Cards */}
+        <div className="grid grid-cols-3 gap-4 mb-6">
+          <div className="bg-blue-50 p-4 rounded-lg text-center">
+            <div className="text-2xl font-bold text-blue-600">Grade 10</div>
+            <div className="text-sm text-blue-800">Current Grade</div>
+          </div>
+          <div className="bg-green-50 p-4 rounded-lg text-center">
+            <div className="text-2xl font-bold text-green-600">5</div>
+            <div className="text-sm text-green-800">Classes Today</div>
+          </div>
+          <div className="bg-purple-50 p-4 rounded-lg text-center">
+            <div className="text-2xl font-bold text-purple-600">4.2★</div>
+            <div className="text-sm text-purple-800">Avg. Rating</div>
+          </div>
+        </div>
+
+        {/* Today's Schedule */}
+        <div className="mb-6">
+          <h4 className="font-semibold mb-3 flex items-center gap-2">
+            <CalendarIcon className="w-4 h-4" />
+            Today's Schedule
+          </h4>
+          <div className="space-y-2">
+            <div className="flex items-center justify-between p-3 bg-blue-50 rounded border-l-4 border-blue-500">
+              <div>
+                <span className="font-medium">Mathematics</span>
+                <div className="text-sm text-gray-600">9:00 AM - Algebra II</div>
+              </div>
+              <Badge className="bg-blue-100 text-blue-700">Current</Badge>
+            </div>
+            <div className="flex items-center justify-between p-3 bg-gray-50 rounded border-l-4 border-gray-300">
+              <div>
+                <span className="font-medium">Chemistry</span>
+                <div className="text-sm text-gray-600">10:30 AM - Lab Work</div>
+              </div>
+              <Badge variant="outline">Upcoming</Badge>
+            </div>
+          </div>
+        </div>
+
+        {/* Quick Feedback */}
+        <div className="mb-6">
+          <h4 className="font-semibold mb-3">Quick Lesson Feedback</h4>
+          <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
+            <p className="text-sm mb-3">How did you find today's Math lesson?</p>
+            <div className="flex gap-1 mb-3">
+              {[1,2,3,4,5].map(star => (
+                <StarIcon key={star} className="w-5 h-5 fill-yellow-400 text-yellow-400 cursor-pointer" />
+              ))}
+            </div>
             <div className="flex gap-2">
-              <Button size="sm" className="bg-green-100 text-green-700 hover:bg-green-200">😊 Happy</Button>
-              <Button size="sm" variant="outline">😐 Neutral</Button>
+              <Button size="sm" className="bg-green-100 text-green-700 hover:bg-green-200">😊 Great</Button>
+              <Button size="sm" variant="outline">😐 Okay</Button>
               <Button size="sm" variant="outline">😔 Confused</Button>
             </div>
           </div>
-          
-          <div>
-            <label className="text-sm font-medium text-gray-700 block mb-2">What went well in this lesson?</label>
-            <textarea 
-              className="w-full p-3 border rounded-md text-sm" 
-              placeholder="The examples were clear and helped me understand..."
-              rows={3}
-              defaultValue="The examples were clear and helped me understand fractions better."
-            />
+        </div>
+
+        {/* Mental Health Check */}
+        <div>
+          <h4 className="font-semibold mb-3 flex items-center gap-2">
+            <HeartIcon className="w-4 h-4" />
+            How are you feeling today?
+          </h4>
+          <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
+            <div className="flex gap-2 mb-3">
+              <Button size="sm" className="bg-green-100 text-green-700">😊 Happy</Button>
+              <Button size="sm" variant="outline">😐 Neutral</Button>
+              <Button size="sm" variant="outline">😟 Stressed</Button>
+              <Button size="sm" variant="outline">😔 Sad</Button>
+            </div>
+            <Button className="w-full bg-purple-600 hover:bg-purple-700 text-white">
+              Anonymous Chat with Counselor
+            </Button>
           </div>
-          
-          <div>
-            <label className="text-sm font-medium text-gray-700 block mb-2">What could be improved?</label>
-            <textarea 
-              className="w-full p-3 border rounded-md text-sm" 
-              placeholder="Maybe we could have more practice problems..."
-              rows={2}
-            />
-          </div>
-          
-          <Button className="w-full">Submit Feedback</Button>
         </div>
       </div>
     </div>
   );
 
-  // Teacher Dashboard Demo
+  // Complete Teacher Dashboard Demo
   const TeacherDashboardDemo = () => (
     <div className="space-y-6">
       <div className="bg-white rounded-lg shadow-lg p-6 border">
-        <h3 className="text-lg font-semibold mb-4">Teacher Analytics Dashboard</h3>
-        
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-          <div className="bg-blue-50 p-4 rounded-lg">
-            <div className="text-2xl font-bold text-blue-600">87%</div>
-            <div className="text-sm text-blue-800">Average Understanding</div>
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+              <BookOpenIcon className="w-5 h-5 text-green-600" />
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold">Teacher Dashboard</h3>
+              <p className="text-sm text-gray-600">Welcome, Ms. Johnson</p>
+            </div>
           </div>
-          <div className="bg-green-50 p-4 rounded-lg">
-            <div className="text-2xl font-bold text-green-600">23</div>
-            <div className="text-sm text-green-800">Active Students</div>
-          </div>
-          <div className="bg-purple-50 p-4 rounded-lg">
-            <div className="text-2xl font-bold text-purple-600">4.2★</div>
-            <div className="text-sm text-purple-800">Lesson Rating</div>
+          <div className="flex gap-2">
+            <Badge className="bg-red-100 text-red-700">3 Alerts</Badge>
+            <BellIcon className="w-5 h-5 text-gray-400" />
           </div>
         </div>
-        
-        <div className="space-y-3">
-          <h4 className="font-medium">Recent Lessons</h4>
-          <div className="space-y-2">
-            <div className="flex justify-between items-center p-3 bg-gray-50 rounded border-l-4 border-blue-500">
+
+        {/* Overview Stats */}
+        <div className="grid grid-cols-4 gap-4 mb-6">
+          <div className="bg-blue-50 p-4 rounded-lg text-center">
+            <div className="text-2xl font-bold text-blue-600">156</div>
+            <div className="text-sm text-blue-800">Total Students</div>
+          </div>
+          <div className="bg-green-50 p-4 rounded-lg text-center">
+            <div className="text-2xl font-bold text-green-600">87%</div>
+            <div className="text-sm text-green-800">Avg Understanding</div>
+          </div>
+          <div className="bg-purple-50 p-4 rounded-lg text-center">
+            <div className="text-2xl font-bold text-purple-600">4.3★</div>
+            <div className="text-sm text-purple-800">Lesson Rating</div>
+          </div>
+          <div className="bg-yellow-50 p-4 rounded-lg text-center">
+            <div className="text-2xl font-bold text-yellow-600">12</div>
+            <div className="text-sm text-yellow-800">Need Support</div>
+          </div>
+        </div>
+
+        {/* Today's Classes */}
+        <div className="mb-6">
+          <h4 className="font-semibold mb-3 flex items-center gap-2">
+            <ClockIcon className="w-4 h-4" />
+            Today's Classes
+          </h4>
+          <div className="space-y-3">
+            <div className="flex justify-between items-center p-4 bg-blue-50 rounded border-l-4 border-blue-500">
               <div>
-                <span className="font-medium">Mathematics - Fractions</span>
-                <div className="text-sm text-gray-600">Today, 9:00 AM</div>
+                <div className="font-medium">Mathematics - Grade 10A</div>
+                <div className="text-sm text-gray-600">9:00 AM - Algebra II</div>
+                <div className="flex gap-2 mt-1">
+                  <Badge variant="outline">25 students</Badge>
+                  <Badge className="bg-green-100 text-green-700">Live</Badge>
+                </div>
               </div>
               <div className="text-right">
-                <div className="text-sm font-medium">4.2★</div>
+                <div className="text-sm font-medium">89% Understanding</div>
                 <div className="text-xs text-gray-500">23 responses</div>
               </div>
             </div>
-            <div className="flex justify-between items-center p-3 bg-gray-50 rounded border-l-4 border-green-500">
+            <div className="flex justify-between items-center p-4 bg-gray-50 rounded border-l-4 border-gray-300">
               <div>
-                <span className="font-medium">Science - Plant Biology</span>
-                <div className="text-sm text-gray-600">Yesterday, 2:00 PM</div>
+                <div className="font-medium">Mathematics - Grade 10B</div>
+                <div className="text-sm text-gray-600">11:00 AM - Geometry</div>
+                <div className="flex gap-2 mt-1">
+                  <Badge variant="outline">22 students</Badge>
+                  <Badge variant="outline">Upcoming</Badge>
+                </div>
               </div>
               <div className="text-right">
-                <div className="text-sm font-medium">4.7★</div>
-                <div className="text-xs text-gray-500">25 responses</div>
+                <div className="text-sm font-medium">Previous: 4.5★</div>
+                <div className="text-xs text-gray-500">Last lesson</div>
               </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Student Mood Overview */}
+        <div className="mb-6">
+          <h4 className="font-semibold mb-3 flex items-center gap-2">
+            <HeartIcon className="w-4 h-4" />
+            Class Mood Overview
+          </h4>
+          <div className="grid grid-cols-4 gap-2">
+            <div className="bg-green-50 p-3 rounded text-center">
+              <div className="text-lg font-bold text-green-600">😊 65%</div>
+              <div className="text-xs text-green-800">Happy</div>
+            </div>
+            <div className="bg-yellow-50 p-3 rounded text-center">
+              <div className="text-lg font-bold text-yellow-600">😐 25%</div>
+              <div className="text-xs text-yellow-800">Neutral</div>
+            </div>
+            <div className="bg-orange-50 p-3 rounded text-center">
+              <div className="text-lg font-bold text-orange-600">😟 8%</div>
+              <div className="text-xs text-orange-800">Stressed</div>
+            </div>
+            <div className="bg-red-50 p-3 rounded text-center">
+              <div className="text-lg font-bold text-red-600">😔 2%</div>
+              <div className="text-xs text-red-800">Need Support</div>
+            </div>
+          </div>
+        </div>
+
+        {/* Recent Alerts */}
+        <div className="mb-6">
+          <h4 className="font-semibold mb-3 flex items-center gap-2">
+            <AlertTriangleIcon className="w-4 h-4" />
+            Recent Alerts
+          </h4>
+          <div className="space-y-2">
+            <div className="flex items-center gap-3 p-3 bg-red-50 rounded border border-red-200">
+              <AlertTriangleIcon className="w-4 h-4 text-red-600" />
+              <div className="flex-1">
+                <div className="text-sm font-medium">Student showing signs of distress</div>
+                <div className="text-xs text-gray-600">Grade 10A - Anonymous student</div>
+              </div>
+              <Button size="sm" className="bg-red-600 hover:bg-red-700 text-white">Review</Button>
+            </div>
+            <div className="flex items-center gap-3 p-3 bg-yellow-50 rounded border border-yellow-200">
+              <AlertTriangleIcon className="w-4 h-4 text-yellow-600" />
+              <div className="flex-1">
+                <div className="text-sm font-medium">Low understanding in Chemistry</div>
+                <div className="text-xs text-gray-600">15 students struggling with today's topic</div>
+              </div>
+              <Button size="sm" variant="outline">Address</Button>
+            </div>
+          </div>
+        </div>
+
+        {/* Performance Trends */}
+        <div>
+          <h4 className="font-semibold mb-3 flex items-center gap-2">
+            <TrendingUpIcon className="w-4 h-4" />
+            Weekly Performance Trends
+          </h4>
+          <div className="space-y-3">
+            <div>
+              <div className="flex justify-between text-sm mb-1">
+                <span>Understanding Level</span>
+                <span>87%</span>
+              </div>
+              <Progress value={87} className="h-2" />
+            </div>
+            <div>
+              <div className="flex justify-between text-sm mb-1">
+                <span>Student Engagement</span>
+                <span>92%</span>
+              </div>
+              <Progress value={92} className="h-2" />
+            </div>
+            <div>
+              <div className="flex justify-between text-sm mb-1">
+                <span>Lesson Satisfaction</span>
+                <span>94%</span>
+              </div>
+              <Progress value={94} className="h-2" />
             </div>
           </div>
         </div>
@@ -132,38 +297,62 @@ const Demo = () => {
     </div>
   );
 
-  // Mental Health Support Demo
+  // Enhanced Mental Health Support Demo
   const MentalHealthDemo = () => (
     <div className="space-y-6">
       <div className="bg-white rounded-lg shadow-lg p-6 border">
-        <h3 className="text-lg font-semibold mb-4">Anonymous Mental Health Support</h3>
+        <h3 className="text-lg font-semibold mb-4">Mental Health Support Center</h3>
         
-        <div className="bg-purple-50 p-4 rounded-lg border-l-4 border-purple-500 mb-4">
-          <div className="flex items-center gap-2 mb-2">
-            <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-            <span className="text-sm font-medium">Dr. Sarah Wilson - Online</span>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+          <div className="bg-purple-50 p-4 rounded-lg border-l-4 border-purple-500">
+            <div className="flex items-center gap-2 mb-2">
+              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+              <span className="text-sm font-medium">Dr. Sarah Wilson - Online</span>
+            </div>
+            <p className="text-sm text-purple-700">School Psychologist</p>
+            <div className="mt-2">
+              <Badge className="bg-green-100 text-green-700">Available Now</Badge>
+            </div>
           </div>
-          <p className="text-sm text-purple-700">School Psychologist available for chat</p>
+          
+          <div className="bg-blue-50 p-4 rounded-lg border-l-4 border-blue-500">
+            <div className="flex items-center gap-2 mb-2">
+              <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
+              <span className="text-sm font-medium">Mr. James Chen - Busy</span>
+            </div>
+            <p className="text-sm text-blue-700">Counselor</p>
+            <div className="mt-2">
+              <Badge className="bg-yellow-100 text-yellow-700">Back at 2:00 PM</Badge>
+            </div>
+          </div>
         </div>
         
         <div className="bg-blue-50 p-3 rounded-lg border border-blue-200 mb-4">
-          <p className="text-sm text-blue-800 font-medium">🔒 Your identity is completely protected</p>
+          <p className="text-sm text-blue-800 font-medium">🔒 Complete Privacy Guaranteed</p>
           <p className="text-xs text-blue-600 mt-1">All conversations are confidential and anonymous</p>
         </div>
         
-        <div className="bg-gray-50 rounded-lg p-4 h-48 mb-4 overflow-y-auto">
+        <div className="bg-gray-50 rounded-lg p-4 h-64 mb-4 overflow-y-auto">
           <div className="space-y-3">
             <div className="bg-purple-100 p-3 rounded-lg max-w-xs">
               <p className="text-sm">Hello! This is a safe space for you to share anything that's on your mind. How are you feeling today?</p>
               <span className="text-xs text-gray-500">Dr. Sarah - 2:30 PM</span>
             </div>
             <div className="bg-blue-100 p-3 rounded-lg max-w-xs ml-auto">
-              <p className="text-sm">I've been feeling really stressed about upcoming exams. I can't seem to focus.</p>
-              <span className="text-xs text-gray-500">You - 2:32 PM</span>
+              <p className="text-sm">I've been feeling really overwhelmed with schoolwork lately. I can't seem to keep up and it's affecting my sleep.</p>
+              <span className="text-xs text-gray-500">Anonymous Student - 2:32 PM</span>
             </div>
             <div className="bg-purple-100 p-3 rounded-lg max-w-xs">
-              <p className="text-sm">I understand that exam stress can feel overwhelming. Your feelings are completely valid. Let's talk about some strategies that might help you manage this stress.</p>
+              <p className="text-sm">I understand that feeling overwhelmed can be really challenging. It's completely normal to feel this way sometimes. Would you like to talk about what specific aspects of your schoolwork are causing the most stress?</p>
               <span className="text-xs text-gray-500">Dr. Sarah - 2:33 PM</span>
+            </div>
+            <div className="bg-blue-100 p-3 rounded-lg max-w-xs ml-auto">
+              <p className="text-sm">Mostly the upcoming exams. I feel like no matter how much I study, I'm not retaining the information.</p>
+              <span className="text-xs text-gray-500">Anonymous Student - 2:35 PM</span>
+            </div>
+            <div className="bg-purple-100 p-3 rounded-lg max-w-xs">
+              <p className="text-sm">That sounds really frustrating. Let's work on some study strategies that might help you feel more confident. Have you tried breaking your study sessions into smaller chunks?</p>
+              <span className="text-xs text-gray-500">Dr. Sarah - 2:36 PM</span>
             </div>
           </div>
         </div>
@@ -177,13 +366,18 @@ const Demo = () => {
             <Button size="sm">Send</Button>
           </div>
           
-          <div className="flex gap-2">
-            <Button className="flex-1 bg-purple-600 hover:bg-purple-700">Start Anonymous Chat</Button>
-            <Button variant="outline" className="flex-1">Book Appointment</Button>
+          <div className="grid grid-cols-2 gap-2">
+            <Button className="bg-purple-600 hover:bg-purple-700">Start Anonymous Chat</Button>
+            <Button variant="outline">Book Private Appointment</Button>
+          </div>
+          
+          <div className="grid grid-cols-2 gap-2">
+            <Button variant="outline" className="text-sm">Self-Help Resources</Button>
+            <Button variant="outline" className="text-sm">Mood Tracking</Button>
           </div>
           
           <div className="bg-red-50 p-3 rounded-lg border border-red-200">
-            <p className="text-xs text-red-700 font-medium">🚨 Crisis Support: If you're in immediate danger, call 116 123 (24/7 helpline)</p>
+            <p className="text-xs text-red-700 font-medium">🚨 Crisis Support: If you're in immediate danger, call 988 (24/7 crisis helpline)</p>
           </div>
         </div>
       </div>
@@ -192,23 +386,23 @@ const Demo = () => {
 
   const demos = [
     {
-      id: "student-feedback",
-      title: "Student Feedback Collection",
-      description: "Real-time lesson feedback and emotional check-ins",
+      id: "student-dashboard",
+      title: "Complete Student Dashboard",
+      description: "Full view of student experience with schedule, feedback, and wellness check-ins",
       icon: UsersIcon,
-      component: <StudentFeedbackDemo />
+      component: <StudentDashboardDemo />
     },
     {
       id: "teacher-dashboard",
-      title: "Teacher Analytics Dashboard",
-      description: "Comprehensive insights into student engagement and performance",
+      title: "Complete Teacher Dashboard",
+      description: "Comprehensive teacher view with analytics, alerts, and class management",
       icon: BarChart3Icon,
       component: <TeacherDashboardDemo />
     },
     {
       id: "mental-health",
-      title: "Mental Health Support",
-      description: "Anonymous counseling and psychological support",
+      title: "Mental Health Support Center",
+      description: "Full mental health support system with counselors and crisis support",
       icon: HeartIcon,
       component: <MentalHealthDemo />
     }
@@ -228,7 +422,7 @@ const Demo = () => {
               <div className="h-6 border-l border-gray-300"></div>
               <div className="flex items-center gap-2">
                 <GraduationCapIcon className="w-8 h-8 text-primary" />
-                <h1 className="text-2xl font-bold">Platform Demo</h1>
+                <h1 className="text-2xl font-bold">Complete Platform Demo</h1>
               </div>
             </div>
             <div className="flex items-center gap-2">
@@ -250,10 +444,11 @@ const Demo = () => {
         {/* Introduction */}
         <div className="text-center mb-12">
           <h2 className="text-4xl font-bold text-gray-900 mb-4">
-            Experience Our Platform in Action
+            Complete Platform Experience
           </h2>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-            Explore interactive demos of our key features designed to transform education through student feedback, teacher insights, and mental health support.
+            Explore comprehensive demos showing every aspect of our platform - from student daily experience 
+            to teacher analytics and mental health support systems.
           </p>
         </div>
 
@@ -288,30 +483,36 @@ const Demo = () => {
                     <CardContent>
                       <div className="space-y-4">
                         <div>
-                          <h4 className="font-semibold mb-2">Key Features:</h4>
+                          <h4 className="font-semibold mb-2">Key Features Shown:</h4>
                           <ul className="text-sm text-gray-600 space-y-1">
-                            {demo.id === "student-feedback" && (
+                            {demo.id === "student-dashboard" && (
                               <>
-                                <li>• Real-time lesson understanding ratings</li>
-                                <li>• Emotional state tracking</li>
-                                <li>• Anonymous feedback collection</li>
-                                <li>• Instant teacher notifications</li>
+                                <li>• Complete daily schedule view</li>
+                                <li>• Real-time lesson feedback system</li>
+                                <li>• Mental wellness check-ins</li>
+                                <li>• Academic progress tracking</li>
+                                <li>• Anonymous counselor access</li>
+                                <li>• Personalized notifications</li>
                               </>
                             )}
                             {demo.id === "teacher-dashboard" && (
                               <>
-                                <li>• Student engagement analytics</li>
-                                <li>• Lesson performance metrics</li>
-                                <li>• Class mood monitoring</li>
-                                <li>• Historical trend analysis</li>
+                                <li>• Comprehensive class analytics</li>
+                                <li>• Real-time student mood monitoring</li>
+                                <li>• Alert system for at-risk students</li>
+                                <li>• Performance trend analysis</li>
+                                <li>• Multi-class management</li>
+                                <li>• Engagement metrics tracking</li>
                               </>
                             )}
                             {demo.id === "mental-health" && (
                               <>
-                                <li>• Anonymous counseling sessions</li>
-                                <li>• 24/7 crisis support access</li>
-                                <li>• Secure, encrypted communications</li>
-                                <li>• Professional mental health staff</li>
+                                <li>• Multiple counselor availability</li>
+                                <li>• Anonymous chat system</li>
+                                <li>• Crisis support protocols</li>
+                                <li>• Self-help resource library</li>
+                                <li>• Mood tracking tools</li>
+                                <li>• Appointment scheduling</li>
                               </>
                             )}
                           </ul>
@@ -319,8 +520,8 @@ const Demo = () => {
                         
                         <div className="bg-blue-50 p-4 rounded-lg">
                           <p className="text-sm text-blue-800">
-                            <strong>Privacy First:</strong> All student data is anonymized and encrypted. 
-                            Mental health conversations are completely confidential.
+                            <strong>Full Integration:</strong> All components work seamlessly together, 
+                            sharing data securely while maintaining complete privacy for mental health services.
                           </p>
                         </div>
                       </div>
@@ -341,10 +542,10 @@ const Demo = () => {
         <div className="mt-16 text-center">
           <Card className="bg-gradient-to-r from-primary/5 to-primary/10 border-primary/20">
             <CardContent className="p-8">
-              <h3 className="text-2xl font-bold mb-4">Ready to Transform Your School?</h3>
+              <h3 className="text-2xl font-bold mb-4">Experience the Complete Platform</h3>
               <p className="text-gray-600 mb-6 max-w-2xl mx-auto">
-                Join schools worldwide that are already using our platform to improve student outcomes, 
-                support mental wellness, and empower educators with actionable insights.
+                This demo shows the full scope of our platform's capabilities. See how students, teachers, 
+                and mental health professionals work together to create a supportive learning environment.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Link to="/teacher-login">
