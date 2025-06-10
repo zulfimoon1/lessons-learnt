@@ -102,5 +102,47 @@ export const ltDemoTranslations = {
   'demo.cta.title': 'Patirkite pilną platformą',
   'demo.cta.description': 'Nuo interaktyvių studentų modeliavimų iki išsamios mokytojų analitikos - pamatykite, kaip mūsų platforma sukuria palaikančią ir įtraukiančią mokymosi aplinką.',
   'demo.cta.startTrial': 'Pradėti nemokamą bandymą',
-  'demo.cta.studentAccess': 'Studento prieiga'
+  'demo.cta.studentAccess': 'Studento prieiga',
+
+  // Student Journey Simulation specific translations
+  'demo.simulation.studentJourney': 'Studento kelionės simuliacija',
+  'demo.simulation.play': 'Paleisti',
+  'demo.simulation.pause': 'Pristabdyti', 
+  'demo.simulation.reset': 'Nustatyti iš naujo',
+  'demo.simulation.step': 'Žingsnis',
+  'demo.simulation.of': 'iš',
+  'demo.simulation.completeStudentDashboard': 'Užpildyti studento skydelį',
+  'demo.simulation.emmaLogsInto': 'Emma prisijungia prie savo pilno studento skydelio su visomis funkcijomis',
+  
+  // Student simulation steps
+  'demo.simulation.steps.1': 'Užpildyti studento skydelį',
+  'demo.simulation.steps.2': 'Klasės tvarkaraštis',
+  'demo.simulation.steps.3': 'Pasirinkti užbaigtą pamoką',
+  'demo.simulation.steps.4': 'Atsiliepimų forma',
+  'demo.simulation.steps.5': 'Įvertinti supratimą',
+  'demo.simulation.steps.6': 'Įvertinti susidomėjimą',
+  'demo.simulation.steps.7': 'Emocinis patikrinimas',
+  'demo.simulation.steps.8': 'Rašytinis atsiliepimas',
+  'demo.simulation.steps.9': 'Psichinės sveikatos palaikymas',
+  'demo.simulation.steps.10': 'Pateikti atsiliepimą',
+
+  // Dashboard content
+  'demo.dashboard.studentDashboard': 'Studento skydelis',
+  'demo.dashboard.welcomeBack': 'Sveiki sugrįžę, Emma!',
+  'demo.dashboard.grade10': 'Klasė 10',
+  'demo.dashboard.currentGrade': 'Dabartinė klasė',
+  'demo.dashboard.classesToday': 'Pamokos šiandien',
+  'demo.dashboard.avgRating': 'Vid. įvertinimas',
+  'demo.dashboard.todaysSchedule': 'Šiandienos tvarkaraštis',
+  'demo.dashboard.mathematics': 'Matematika',
+  'demo.dashboard.algebraII': 'Algebra II',
+  'demo.dashboard.completed': 'Užbaigta',
+  'demo.dashboard.chemistry': 'Chemija',
+  'demo.dashboard.labWork': 'Laboratorijos darbas',
+  'demo.dashboard.current': 'Dabar',
+  'demo.dashboard.history': 'Istorija',
+  'demo.dashboard.worldWarI': 'Pirmasis pasaulinis karas',
+  'demo.dashboard.upcoming': 'Artėjanti',
+  'demo.dashboard.quickLessonFeedback': 'Greitas pamokos atsiliepimas',
+  'demo.dashboard.howDidYouFind': 'Kaip jums patiko šiandienos matematikos pamoka?'
 };

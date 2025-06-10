@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,561 +9,234 @@ import {
   PauseIcon,
   RotateCcwIcon,
   StarIcon,
-  CalendarIcon,
   ClockIcon,
-  BookOpenIcon,
-  CheckCircleIcon,
-  ArrowRightIcon,
   MessageCircleIcon,
   HeartIcon,
-  ShieldCheckIcon,
-  GraduationCapIcon,
   BellIcon,
   SettingsIcon
 } from "lucide-react";
-
-interface SimulationStep {
-  id: string;
-  title: string;
-  description: string;
-  duration: number;
-  component: React.ReactNode;
-}
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const StudentSimulation = () => {
-  const [currentStep, setCurrentStep] = useState(0);
+  const { t } = useLanguage();
+  const [currentStep, setCurrentStep] = useState(1);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [progress, setProgress] = useState(0);
+  const totalSteps = 10;
 
-  // Simulation steps
-  const steps: SimulationStep[] = [
-    {
-      id: "complete-dashboard",
-      title: "Complete Student Dashboard",
-      description: "Emma logs into her complete student dashboard with all features",
-      duration: 5000,
-      component: <CompleteDashboardStep />
-    },
-    {
-      id: "schedule",
-      title: "Class Schedule",
-      description: "Emma views her today's class schedule",
-      duration: 2500,
-      component: <ScheduleStep />
-    },
-    {
-      id: "select-class",
-      title: "Select Completed Class",
-      description: "Emma clicks on her completed Mathematics class",
-      duration: 2000,
-      component: <SelectClassStep />
-    },
-    {
-      id: "feedback-form",
-      title: "Feedback Form",
-      description: "Emma opens the lesson feedback form",
-      duration: 2000,
-      component: <FeedbackFormStep />
-    },
-    {
-      id: "fill-understanding",
-      title: "Rate Understanding",
-      description: "Emma rates her understanding of the lesson",
-      duration: 2500,
-      component: <FillUnderstandingStep />
-    },
-    {
-      id: "fill-interest",
-      title: "Rate Interest",
-      description: "Emma rates how interesting the lesson was",
-      duration: 2500,
-      component: <FillInterestStep />
-    },
-    {
-      id: "emotional-state",
-      title: "Emotional Check-in",
-      description: "Emma selects her emotional state",
-      duration: 2500,
-      component: <EmotionalStateStep />
-    },
-    {
-      id: "written-feedback",
-      title: "Written Feedback",
-      description: "Emma writes detailed feedback about the lesson",
-      duration: 4000,
-      component: <WrittenFeedbackStep />
-    },
-    {
-      id: "mental-health-chat",
-      title: "Mental Health Support",
-      description: "Emma notices she can access mental health support and opens the chat widget",
-      duration: 3500,
-      component: <MentalHealthChatStep />
-    },
-    {
-      id: "submit",
-      title: "Submit Feedback",
-      description: "Emma submits her feedback successfully",
-      duration: 2000,
-      component: <SubmitStep />
-    }
+  const simulationSteps = [
+    { id: 1, name: t('demo.simulation.steps.1') },
+    { id: 2, name: t('demo.simulation.steps.2') },
+    { id: 3, name: t('demo.simulation.steps.3') },
+    { id: 4, name: t('demo.simulation.steps.4') },
+    { id: 5, name: t('demo.simulation.steps.5') },
+    { id: 6, name: t('demo.simulation.steps.6') },
+    { id: 7, name: t('demo.simulation.steps.7') },
+    { id: 8, name: t('demo.simulation.steps.8') },
+    { id: 9, name: t('demo.simulation.steps.9') },
+    { id: 10, name: t('demo.simulation.steps.10') }
   ];
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
-    
-    if (isPlaying && currentStep < steps.length - 1) {
+    if (isPlaying) {
       interval = setInterval(() => {
-        setProgress(prev => {
-          if (prev >= 100) {
-            setCurrentStep(current => current + 1);
-            return 0;
-          }
-          return prev + (100 / (steps[currentStep].duration / 100));
-        });
-      }, 100);
+        setCurrentStep(prev => prev < totalSteps ? prev + 1 : 1);
+      }, 3000);
     }
-
     return () => clearInterval(interval);
-  }, [isPlaying, currentStep, steps]);
+  }, [isPlaying, totalSteps]);
 
-  const handlePlay = () => setIsPlaying(true);
-  const handlePause = () => setIsPlaying(false);
-  const handleReset = () => {
-    setCurrentStep(0);
-    setProgress(0);
-    setIsPlaying(false);
+  const handleStepClick = (stepId: number) => {
+    setCurrentStep(stepId);
   };
 
-  const handleStepSelect = (stepIndex: number) => {
-    setCurrentStep(stepIndex);
-    setProgress(0);
-    setIsPlaying(false);
+  const getCurrentStepContent = () => {
+    switch (currentStep) {
+      case 1:
+        return (
+          <div className="bg-white p-6 rounded-lg shadow-lg border">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                <MessageCircleIcon className="w-5 h-5 text-blue-600" />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold">{t('demo.dashboard.studentDashboard')}</h3>
+                <p className="text-sm text-gray-600">{t('demo.dashboard.welcomeBack')}</p>
+              </div>
+              <div className="ml-auto flex gap-2">
+                <BellIcon className="w-5 h-5 text-gray-400" />
+                <SettingsIcon className="w-5 h-5 text-gray-400" />
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-3 gap-4 mb-6">
+              <div className="text-center">
+                <div className="text-2xl font-bold text-blue-600">{t('demo.dashboard.grade10')}</div>
+                <div className="text-sm text-gray-600">{t('demo.dashboard.currentGrade')}</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-green-600">5</div>
+                <div className="text-sm text-gray-600">{t('demo.dashboard.classesToday')}</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-purple-600 flex items-center justify-center gap-1">
+                  4.2<StarIcon className="w-4 h-4 fill-purple-600" />
+                </div>
+                <div className="text-sm text-gray-600">{t('demo.dashboard.avgRating')}</div>
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <h4 className="font-semibold">{t('demo.dashboard.todaysSchedule')}</h4>
+              <div className="space-y-2">
+                <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg border-l-4 border-green-500">
+                  <div className="flex items-center gap-3">
+                    <ClockIcon className="w-4 h-4 text-green-600" />
+                    <div>
+                      <div className="font-medium">{t('demo.dashboard.mathematics')}</div>
+                      <div className="text-sm text-gray-600">9:00 AM - {t('demo.dashboard.algebraII')}</div>
+                    </div>
+                  </div>
+                  <Badge className="bg-green-100 text-green-700">{t('demo.dashboard.completed')}</Badge>
+                </div>
+                
+                <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg border-l-4 border-blue-500">
+                  <div className="flex items-center gap-3">
+                    <ClockIcon className="w-4 h-4 text-blue-600" />
+                    <div>
+                      <div className="font-medium">{t('demo.dashboard.chemistry')}</div>
+                      <div className="text-sm text-gray-600">10:30 AM - {t('demo.dashboard.labWork')}</div>
+                    </div>
+                  </div>
+                  <Badge className="bg-blue-100 text-blue-700">{t('demo.dashboard.current')}</Badge>
+                </div>
+                
+                <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <ClockIcon className="w-4 h-4 text-gray-400" />
+                    <div>
+                      <div className="font-medium text-gray-600">{t('demo.dashboard.history')}</div>
+                      <div className="text-sm text-gray-500">2:00 PM - {t('demo.dashboard.worldWarI')}</div>
+                    </div>
+                  </div>
+                  <Badge variant="outline">{t('demo.dashboard.upcoming')}</Badge>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-6 p-4 bg-yellow-50 rounded-lg border border-yellow-200">
+              <h5 className="font-medium mb-2">{t('demo.dashboard.quickLessonFeedback')}</h5>
+              <p className="text-sm text-gray-600 mb-3">{t('demo.dashboard.howDidYouFind')}</p>
+              <div className="flex gap-1">
+                {[1,2,3,4,5].map(star => (
+                  <StarIcon key={star} className="w-5 h-5 fill-yellow-400 text-yellow-400 cursor-pointer" />
+                ))}
+              </div>
+            </div>
+          </div>
+        );
+      
+      default:
+        return (
+          <div className="bg-white p-6 rounded-lg shadow-lg border">
+            <div className="text-center">
+              <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <MessageCircleIcon className="w-8 h-8 text-blue-600" />
+              </div>
+              <h3 className="text-lg font-semibold mb-2">
+                {simulationSteps[currentStep - 1]?.name}
+              </h3>
+              <p className="text-gray-600 text-sm">
+                {t('demo.simulation.emmaLogsInto')}
+              </p>
+            </div>
+          </div>
+        );
+    }
   };
 
   return (
     <div className="space-y-6">
-      {/* Simulation Controls */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center justify-between">
-            <span>Student Journey Simulation</span>
+          <div className="flex items-center justify-between">
+            <CardTitle className="flex items-center gap-2">
+              {t('demo.simulation.studentJourney')}
+            </CardTitle>
             <div className="flex gap-2">
               <Button
-                onClick={handlePlay}
-                disabled={isPlaying}
+                variant="outline"
                 size="sm"
+                onClick={() => setIsPlaying(!isPlaying)}
                 className="flex items-center gap-2"
               >
-                <PlayIcon className="w-4 h-4" />
-                Play
+                {isPlaying ? (
+                  <>
+                    <PauseIcon className="w-4 h-4" />
+                    {t('demo.simulation.pause')}
+                  </>
+                ) : (
+                  <>
+                    <PlayIcon className="w-4 h-4" />
+                    {t('demo.simulation.play')}
+                  </>
+                )}
               </Button>
               <Button
-                onClick={handlePause}
-                disabled={!isPlaying}
-                size="sm"
                 variant="outline"
-                className="flex items-center gap-2"
-              >
-                <PauseIcon className="w-4 h-4" />
-                Pause
-              </Button>
-              <Button
-                onClick={handleReset}
                 size="sm"
-                variant="outline"
+                onClick={() => setCurrentStep(1)}
                 className="flex items-center gap-2"
               >
                 <RotateCcwIcon className="w-4 h-4" />
-                Reset
+                {t('demo.simulation.reset')}
               </Button>
             </div>
-          </CardTitle>
+          </div>
+          <div className="flex items-center justify-between text-sm text-gray-600">
+            <span>{t('demo.simulation.step')} {currentStep} {t('demo.simulation.of')} {totalSteps}</span>
+            <span>{simulationSteps[currentStep - 1]?.name}</span>
+          </div>
+          <Progress value={(currentStep / totalSteps) * 100} className="mt-2" />
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            <div className="flex justify-between text-sm">
-              <span>Step {currentStep + 1} of {steps.length}</span>
-              <span>{steps[currentStep].title}</span>
-            </div>
-            <Progress value={progress} className="h-2" />
-            <p className="text-sm text-gray-600">{steps[currentStep].description}</p>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Step Navigation */}
-      <Card>
-        <CardContent className="p-4">
-          <div className="flex flex-wrap gap-2">
-            {steps.map((step, index) => (
+          <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 mb-6">
+            {simulationSteps.slice(0, 5).map((step) => (
               <Button
                 key={step.id}
-                onClick={() => handleStepSelect(index)}
+                variant={currentStep === step.id ? "default" : "outline"}
                 size="sm"
-                variant={currentStep === index ? "default" : "outline"}
-                className="text-xs"
+                onClick={() => handleStepClick(step.id)}
+                className="text-xs p-2 h-auto"
               >
-                {index + 1}. {step.title}
+                <div className="text-center">
+                  <div>{step.id}. {step.name.split(' ').slice(0, 2).join(' ')}</div>
+                </div>
               </Button>
             ))}
           </div>
-        </CardContent>
-      </Card>
-
-      {/* Simulation Display */}
-      <Card className="min-h-[600px]">
-        <CardContent className="p-6">
-          {steps[currentStep].component}
+          
+          <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 mb-6">
+            {simulationSteps.slice(5).map((step) => (
+              <Button
+                key={step.id}
+                variant={currentStep === step.id ? "default" : "outline"}
+                size="sm"
+                onClick={() => handleStepClick(step.id)}
+                className="text-xs p-2 h-auto"
+              >
+                <div className="text-center">
+                  <div>{step.id}. {step.name.split(' ').slice(0, 2).join(' ')}</div>
+                </div>
+              </Button>
+            ))}
+          </div>
+          
+          {getCurrentStepContent()}
         </CardContent>
       </Card>
     </div>
   );
 };
-
-// Individual step components
-const CompleteDashboardStep = () => (
-  <div className="space-y-6">
-    <div className="bg-white rounded-lg shadow-lg p-6 border">
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-            <GraduationCapIcon className="w-5 h-5 text-blue-600" />
-          </div>
-          <div>
-            <h3 className="text-lg font-semibold">Student Dashboard</h3>
-            <p className="text-sm text-gray-600">Welcome back, Emma!</p>
-          </div>
-        </div>
-        <div className="flex gap-2">
-          <BellIcon className="w-5 h-5 text-gray-400" />
-          <SettingsIcon className="w-5 h-5 text-gray-400" />
-        </div>
-      </div>
-      
-      {/* Stats Cards */}
-      <div className="grid grid-cols-3 gap-4 mb-6">
-        <div className="bg-blue-50 p-4 rounded-lg text-center">
-          <div className="text-2xl font-bold text-blue-600">Grade 10</div>
-          <div className="text-sm text-blue-800">Current Grade</div>
-        </div>
-        <div className="bg-green-50 p-4 rounded-lg text-center">
-          <div className="text-2xl font-bold text-green-600">5</div>
-          <div className="text-sm text-green-800">Classes Today</div>
-        </div>
-        <div className="bg-purple-50 p-4 rounded-lg text-center">
-          <div className="text-2xl font-bold text-purple-600">4.2★</div>
-          <div className="text-sm text-purple-800">Avg. Rating</div>
-        </div>
-      </div>
-
-      {/* Today's Schedule */}
-      <div className="mb-6">
-        <h4 className="font-semibold mb-3 flex items-center gap-2">
-          <CalendarIcon className="w-4 h-4" />
-          Today's Schedule
-        </h4>
-        <div className="space-y-2">
-          <div className="flex items-center justify-between p-3 bg-green-50 rounded border-l-4 border-green-500">
-            <div>
-              <span className="font-medium">Mathematics</span>
-              <div className="text-sm text-gray-600">9:00 AM - Algebra II</div>
-            </div>
-            <Badge className="bg-green-100 text-green-700">Completed</Badge>
-          </div>
-          <div className="flex items-center justify-between p-3 bg-blue-50 rounded border-l-4 border-blue-500">
-            <div>
-              <span className="font-medium">Chemistry</span>
-              <div className="text-sm text-gray-600">10:30 AM - Lab Work</div>
-            </div>
-            <Badge className="bg-blue-100 text-blue-700">Current</Badge>
-          </div>
-          <div className="flex items-center justify-between p-3 bg-gray-50 rounded border-l-4 border-gray-300">
-            <div>
-              <span className="font-medium">History</span>
-              <div className="text-sm text-gray-600">2:00 PM - World War I</div>
-            </div>
-            <Badge variant="outline">Upcoming</Badge>
-          </div>
-        </div>
-      </div>
-
-      {/* Quick Feedback */}
-      <div className="mb-6">
-        <h4 className="font-semibold mb-3">Quick Lesson Feedback</h4>
-        <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
-          <p className="text-sm mb-3">How did you find today's Math lesson?</p>
-          <div className="flex gap-1 mb-3">
-            {[1,2,3,4,5].map(star => (
-              <StarIcon key={star} className="w-5 h-5 fill-yellow-400 text-yellow-400 cursor-pointer" />
-            ))}
-          </div>
-          <div className="flex gap-2">
-            <Button size="sm" className="bg-green-100 text-green-700 hover:bg-green-200">😊 Great</Button>
-            <Button size="sm" variant="outline">😐 Okay</Button>
-            <Button size="sm" variant="outline">😔 Confused</Button>
-          </div>
-        </div>
-      </div>
-
-      {/* Mental Health Check */}
-      <div>
-        <h4 className="font-semibold mb-3 flex items-center gap-2">
-          <HeartIcon className="w-4 h-4" />
-          How are you feeling today?
-        </h4>
-        <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
-          <div className="flex gap-2 mb-3">
-            <Button size="sm" className="bg-green-100 text-green-700">😊 Happy</Button>
-            <Button size="sm" variant="outline">😐 Neutral</Button>
-            <Button size="sm" variant="outline">😟 Stressed</Button>
-            <Button size="sm" variant="outline">😔 Sad</Button>
-          </div>
-          <Button className="w-full bg-purple-600 hover:bg-purple-700 text-white">
-            Anonymous Chat with Counselor
-          </Button>
-        </div>
-      </div>
-    </div>
-  </div>
-);
-
-const DashboardStep = () => (
-  <div className="space-y-4">
-    <div className="flex items-center justify-between mb-6">
-      <div className="flex items-center gap-3">
-        <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-          <BookOpenIcon className="w-5 h-5 text-blue-600" />
-        </div>
-        <div>
-          <h3 className="text-lg font-semibold">Welcome back, Emma!</h3>
-          <p className="text-sm text-gray-600">Grade 10 Student</p>
-        </div>
-      </div>
-    </div>
-    
-    <div className="grid grid-cols-3 gap-4">
-      <div className="bg-blue-50 p-4 rounded-lg text-center">
-        <div className="text-2xl font-bold text-blue-600">Grade 10</div>
-        <div className="text-sm text-blue-800">Current Grade</div>
-      </div>
-      <div className="bg-green-50 p-4 rounded-lg text-center">
-        <div className="text-2xl font-bold text-green-600">4</div>
-        <div className="text-sm text-green-800">Classes Today</div>
-      </div>
-      <div className="bg-purple-50 p-4 rounded-lg text-center">
-        <div className="text-2xl font-bold text-purple-600">3</div>
-        <div className="text-sm text-purple-800">Pending Feedback</div>
-      </div>
-    </div>
-  </div>
-);
-
-const ScheduleStep = () => (
-  <div className="space-y-4">
-    <h3 className="text-lg font-semibold flex items-center gap-2">
-      <CalendarIcon className="w-5 h-5" />
-      Today's Schedule
-    </h3>
-    <div className="space-y-3">
-      <div className="flex items-center justify-between p-4 bg-green-50 rounded-lg border-l-4 border-green-500">
-        <div>
-          <div className="font-medium">Mathematics</div>
-          <div className="text-sm text-gray-600">9:00 AM - Algebra II</div>
-        </div>
-        <Badge className="bg-green-100 text-green-700">Completed</Badge>
-      </div>
-      <div className="flex items-center justify-between p-4 bg-blue-50 rounded-lg border-l-4 border-blue-500">
-        <div>
-          <div className="font-medium">Chemistry</div>
-          <div className="text-sm text-gray-600">10:30 AM - Lab Work</div>
-        </div>
-        <Badge className="bg-blue-100 text-blue-700">In Progress</Badge>
-      </div>
-      <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border-l-4 border-gray-300">
-        <div>
-          <div className="font-medium">History</div>
-          <div className="text-sm text-gray-600">2:00 PM - World War I</div>
-        </div>
-        <Badge variant="outline">Upcoming</Badge>
-      </div>
-    </div>
-  </div>
-);
-
-const SelectClassStep = () => (
-  <div className="space-y-4">
-    <h3 className="text-lg font-semibold">Select Class for Feedback</h3>
-    <div className="space-y-3">
-      <div className="flex items-center justify-between p-4 bg-green-50 rounded-lg border-l-4 border-green-500 ring-2 ring-green-300 ring-offset-2">
-        <div>
-          <div className="font-medium">Mathematics</div>
-          <div className="text-sm text-gray-600">9:00 AM - Algebra II</div>
-          <div className="text-xs text-green-600 mt-1">Click to provide feedback</div>
-        </div>
-        <div className="flex items-center gap-2">
-          <Badge className="bg-green-100 text-green-700">Completed</Badge>
-          <ArrowRightIcon className="w-4 h-4 text-green-600" />
-        </div>
-      </div>
-    </div>
-  </div>
-);
-
-const FeedbackFormStep = () => (
-  <div className="space-y-4">
-    <h3 className="text-lg font-semibold">Lesson Feedback - Mathematics</h3>
-    <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-      <p className="text-sm text-blue-800">Your feedback helps improve teaching and learning</p>
-    </div>
-    <div className="space-y-6">
-      <div>
-        <label className="text-sm font-medium text-gray-700">How well did you understand today's lesson?</label>
-        <div className="flex gap-1 mt-2">
-          {[1,2,3,4,5].map(star => (
-            <StarIcon key={star} className="w-6 h-6 text-gray-300" />
-          ))}
-        </div>
-      </div>
-    </div>
-  </div>
-);
-
-const FillUnderstandingStep = () => (
-  <div className="space-y-4">
-    <h3 className="text-lg font-semibold">Rating Understanding</h3>
-    <div>
-      <label className="text-sm font-medium text-gray-700">How well did you understand today's lesson?</label>
-      <div className="flex gap-1 mt-2">
-        {[1,2,3,4,5].map(star => (
-          <StarIcon 
-            key={star} 
-            className={`w-6 h-6 ${star <= 4 ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}`} 
-          />
-        ))}
-      </div>
-      <p className="text-xs text-gray-500 mt-1">Emma rates 4 stars - Good understanding</p>
-    </div>
-  </div>
-);
-
-const FillInterestStep = () => (
-  <div className="space-y-4">
-    <h3 className="text-lg font-semibold">Rating Interest</h3>
-    <div>
-      <label className="text-sm font-medium text-gray-700">How interesting was today's lesson?</label>
-      <div className="flex gap-1 mt-2">
-        {[1,2,3,4,5].map(star => (
-          <StarIcon 
-            key={star} 
-            className={`w-6 h-6 ${star <= 5 ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}`} 
-          />
-        ))}
-      </div>
-      <p className="text-xs text-gray-500 mt-1">Emma rates 5 stars - Very interesting!</p>
-    </div>
-  </div>
-);
-
-const EmotionalStateStep = () => (
-  <div className="space-y-4">
-    <h3 className="text-lg font-semibold">Emotional Check-in</h3>
-    <div>
-      <label className="text-sm font-medium text-gray-700">How are you feeling about this lesson?</label>
-      <div className="flex gap-3 mt-3">
-        <Button size="sm" className="bg-green-100 text-green-700 hover:bg-green-200">😊 Happy</Button>
-        <Button size="sm" variant="outline">😐 Neutral</Button>
-        <Button size="sm" variant="outline">😟 Confused</Button>
-        <Button size="sm" variant="outline">😔 Frustrated</Button>
-      </div>
-      <p className="text-xs text-gray-500 mt-2">Emma selects "Happy" - feeling good about the lesson</p>
-    </div>
-  </div>
-);
-
-const WrittenFeedbackStep = () => (
-  <div className="space-y-4">
-    <h3 className="text-lg font-semibold">Written Feedback</h3>
-    <div>
-      <label className="text-sm font-medium text-gray-700">What went well in today's lesson?</label>
-      <textarea 
-        className="w-full p-3 border rounded-md text-sm mt-2" 
-        rows={3}
-        value="The algebra concepts were explained very clearly with good examples. I especially liked the real-world applications shown in the problems."
-        readOnly
-      />
-    </div>
-    <div>
-      <label className="text-sm font-medium text-gray-700">Any suggestions for improvement?</label>
-      <textarea 
-        className="w-full p-3 border rounded-md text-sm mt-2" 
-        rows={2}
-        value="Maybe more practice problems would help reinforce the concepts."
-        readOnly
-      />
-    </div>
-  </div>
-);
-
-const MentalHealthChatStep = () => (
-  <div className="space-y-4">
-    <h3 className="text-lg font-semibold">Mental Health Support Available</h3>
-    <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
-      <div className="flex items-center gap-3 mb-3">
-        <HeartIcon className="w-5 h-5 text-purple-600" />
-        <div>
-          <h4 className="font-medium text-purple-800">Need someone to talk to?</h4>
-          <p className="text-sm text-purple-600">Professional support is always available</p>
-        </div>
-      </div>
-      
-      <div className="space-y-3">
-        <div className="bg-white p-3 rounded border">
-          <div className="flex items-center gap-2 mb-2">
-            <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-            <span className="text-sm font-medium">Dr. Sarah Wilson - Available</span>
-          </div>
-          <p className="text-xs text-gray-600">School Psychologist</p>
-        </div>
-        
-        <div className="bg-blue-50 p-3 rounded border border-blue-200">
-          <div className="flex items-center gap-2 mb-2">
-            <ShieldCheckIcon className="w-4 h-4 text-blue-600" />
-            <span className="text-sm font-medium text-blue-800">Complete Privacy Guaranteed</span>
-          </div>
-          <p className="text-xs text-blue-600">All conversations are confidential and anonymous</p>
-        </div>
-        
-        <Button className="w-full bg-purple-600 hover:bg-purple-700 text-white flex items-center gap-2">
-          <MessageCircleIcon className="w-4 h-4" />
-          Start Anonymous Chat
-        </Button>
-        
-        <p className="text-xs text-gray-500 text-center">
-          Emma sees this option is always available when she needs support
-        </p>
-      </div>
-    </div>
-  </div>
-);
-
-const SubmitStep = () => (
-  <div className="space-y-4 text-center">
-    <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto">
-      <CheckCircleIcon className="w-8 h-8 text-green-600" />
-    </div>
-    <h3 className="text-lg font-semibold text-green-600">Feedback Submitted Successfully!</h3>
-    <p className="text-gray-600">Thank you Emma! Your feedback helps improve the learning experience.</p>
-    <div className="bg-green-50 p-4 rounded-lg border border-green-200">
-      <p className="text-sm text-green-800">Your teacher will review this feedback to enhance future lessons.</p>
-    </div>
-    <div className="bg-purple-50 p-3 rounded-lg border border-purple-200 mt-4">
-      <p className="text-sm text-purple-800">
-        <HeartIcon className="w-4 h-4 inline mr-1" />
-        Remember: Mental health support is always available if you need it.
-      </p>
-    </div>
-  </div>
-);
 
 export default StudentSimulation;
