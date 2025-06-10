@@ -40,10 +40,16 @@ export const useTeacherAuth = () => {
       });
       
       if (result.teacher) {
-        setTeacher(result.teacher);
+        // Ensure role is properly typed
+        const teacherData: Teacher = {
+          ...result.teacher,
+          role: result.teacher.role as 'teacher' | 'admin' | 'doctor'
+        };
+        
+        setTeacher(teacherData);
         // Securely store teacher data
         try {
-          secureSessionService.securelyStoreUserData('teacher', result.teacher);
+          secureSessionService.securelyStoreUserData('teacher', teacherData);
           localStorage.removeItem('student');
           console.log('useTeacherAuth: Teacher data saved successfully');
           
@@ -107,10 +113,16 @@ export const useTeacherAuth = () => {
       });
       
       if (result.teacher) {
-        setTeacher(result.teacher);
+        // Ensure role is properly typed
+        const teacherData: Teacher = {
+          ...result.teacher,
+          role: result.teacher.role as 'teacher' | 'admin' | 'doctor'
+        };
+        
+        setTeacher(teacherData);
         // Securely store teacher data
         try {
-          secureSessionService.securelyStoreUserData('teacher', result.teacher);
+          secureSessionService.securelyStoreUserData('teacher', teacherData);
           localStorage.removeItem('student');
           console.log('useTeacherAuth: Teacher signup data saved successfully');
           

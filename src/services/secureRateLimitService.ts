@@ -22,12 +22,17 @@ class SecureRateLimitService {
     try {
       const finalConfig = { ...this.defaultConfig, ...config };
       
-      // Use server-side rate limiting function
-      const { data, error } = await supabase.rpc('check_rate_limit', {
-        identifier: `${identifier}-${action}`,
-        max_attempts: finalConfig.maxAttempts,
-        window_minutes: finalConfig.windowMinutes
-      });
+      // Use client-side rate limiting with audit log table
+      const windowStart = new Date();
+      windowStart.setMinutes(windowStart.getMinutes() - finalConfig.windowMinutes);
+      
+      const { data, error } = await supabase
+        .from('audit_log')
+        .select('*')
+        .eq('table_name', 'rate_limit_check')
+        .gte('timestamp', windowStart.toISOString())
+        .like('new_data->>identifier', `${identifier}-${action}%`)
+        .order('timestamp', { ascending: false });
 
       if (error) {
         console.error('Rate limit check failed:', error);
@@ -38,8 +43,9 @@ class SecureRateLimitService {
         };
       }
 
-      if (!data) {
-        // Rate limit exceeded
+      const attemptCount = data?.length || 0;
+      
+      if (attemptCount >= finalConfig.maxAttempts) {
         const resetTime = new Date();
         resetTime.setMinutes(resetTime.getMinutes() + (finalConfig.blockDurationMinutes || 30));
         
@@ -50,7 +56,10 @@ class SecureRateLimitService {
         };
       }
 
-      return { allowed: true };
+      return { 
+        allowed: true,
+        remainingAttempts: finalConfig.maxAttempts - attemptCount
+      };
     } catch (error) {
       console.error('Rate limiting error:', error);
       return { 

@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { Teacher, Student, AuthContextType, SecurityEvent } from '@/types/auth';
 import { useTeacherAuth } from '@/hooks/useTeacherAuth';
@@ -150,7 +151,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     name?: string, 
     school?: string,
     role: 'teacher' | 'admin' | 'doctor' = 'teacher'
-  ) => {
+  ): Promise<{ teacher?: Teacher; error?: string }> => {
     console.log('AuthContext: Enhanced secure teacher login attempt');
     
     // Validate session before login

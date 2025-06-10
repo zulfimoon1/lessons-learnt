@@ -59,7 +59,8 @@ export const enhancedValidateInput = {
     }
     
     // Enhanced suspicious pattern detection
-    if (this.detectAdvancedThreats(trimmed).isSuspicious) {
+    const threatCheck = this.detectAdvancedThreats(trimmed);
+    if (threatCheck.isSuspicious) {
       return { isValid: false, message: 'School name contains suspicious content' };
     }
     
