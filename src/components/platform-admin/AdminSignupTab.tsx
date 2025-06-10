@@ -1,5 +1,5 @@
 
-import { CustomAdminCreation } from "@/components/CustomAdminCreation";
+import CustomAdminCreation from "@/components/CustomAdminCreation";
 
 const AdminSignupTab = () => {
   return (
