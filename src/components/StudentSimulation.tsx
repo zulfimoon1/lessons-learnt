@@ -13,7 +13,10 @@ import {
   ClockIcon,
   BookOpenIcon,
   CheckCircleIcon,
-  ArrowRightIcon
+  ArrowRightIcon,
+  MessageCircleIcon,
+  HeartIcon,
+  ShieldCheckIcon
 } from "lucide-react";
 
 interface SimulationStep {
@@ -86,6 +89,13 @@ const StudentSimulation = () => {
       description: "Emma writes detailed feedback about the lesson",
       duration: 4000,
       component: <WrittenFeedbackStep />
+    },
+    {
+      id: "mental-health-chat",
+      title: "Mental Health Support",
+      description: "Emma notices she can access mental health support and opens the chat widget",
+      duration: 3500,
+      component: <MentalHealthChatStep />
     },
     {
       id: "submit",
@@ -386,6 +396,48 @@ const WrittenFeedbackStep = () => (
   </div>
 );
 
+const MentalHealthChatStep = () => (
+  <div className="space-y-4">
+    <h3 className="text-lg font-semibold">Mental Health Support Available</h3>
+    <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
+      <div className="flex items-center gap-3 mb-3">
+        <HeartIcon className="w-5 h-5 text-purple-600" />
+        <div>
+          <h4 className="font-medium text-purple-800">Need someone to talk to?</h4>
+          <p className="text-sm text-purple-600">Professional support is always available</p>
+        </div>
+      </div>
+      
+      <div className="space-y-3">
+        <div className="bg-white p-3 rounded border">
+          <div className="flex items-center gap-2 mb-2">
+            <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+            <span className="text-sm font-medium">Dr. Sarah Wilson - Available</span>
+          </div>
+          <p className="text-xs text-gray-600">School Psychologist</p>
+        </div>
+        
+        <div className="bg-blue-50 p-3 rounded border border-blue-200">
+          <div className="flex items-center gap-2 mb-2">
+            <ShieldCheckIcon className="w-4 h-4 text-blue-600" />
+            <span className="text-sm font-medium text-blue-800">Complete Privacy Guaranteed</span>
+          </div>
+          <p className="text-xs text-blue-600">All conversations are confidential and anonymous</p>
+        </div>
+        
+        <Button className="w-full bg-purple-600 hover:bg-purple-700 text-white flex items-center gap-2">
+          <MessageCircleIcon className="w-4 h-4" />
+          Start Anonymous Chat
+        </Button>
+        
+        <p className="text-xs text-gray-500 text-center">
+          Emma sees this option is always available when she needs support
+        </p>
+      </div>
+    </div>
+  </div>
+);
+
 const SubmitStep = () => (
   <div className="space-y-4 text-center">
     <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto">
@@ -395,6 +447,12 @@ const SubmitStep = () => (
     <p className="text-gray-600">Thank you Emma! Your feedback helps improve the learning experience.</p>
     <div className="bg-green-50 p-4 rounded-lg border border-green-200">
       <p className="text-sm text-green-800">Your teacher will review this feedback to enhance future lessons.</p>
+    </div>
+    <div className="bg-purple-50 p-3 rounded-lg border border-purple-200 mt-4">
+      <p className="text-sm text-purple-800">
+        <HeartIcon className="w-4 h-4 inline mr-1" />
+        Remember: Mental health support is always available if you need it.
+      </p>
     </div>
   </div>
 );
