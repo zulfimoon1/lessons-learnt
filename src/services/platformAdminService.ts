@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { verifyPassword, hashPassword } from './securePasswordService';
 import { validateInput } from './secureInputValidation';
@@ -10,6 +11,12 @@ export interface PlatformAdmin {
   email: string;
   role: string;
   school: string;
+}
+
+export interface StudentStatistics {
+  school: string;
+  total_students: number;
+  student_response_rate: number;
 }
 
 // Enhanced rate limiting with progressive delays
