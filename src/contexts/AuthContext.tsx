@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import { Teacher, Student, AuthContextType, SecurityEvent } from '@/types/auth';
 import { useTeacherAuth } from '@/hooks/useTeacherAuth';
 import { useStudentAuth } from '@/hooks/useStudentAuth';
+import { secureSessionService } from '@/services/secureSessionService';
 
 interface AuthProviderProps {
   children: ReactNode;
@@ -9,7 +10,7 @@ interface AuthProviderProps {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Simple CSRF token functions
+// Enhanced CSRF token functions with stronger security
 const generateCSRFToken = (): string => {
   const array = new Uint8Array(32);
   crypto.getRandomValues(array);
@@ -19,6 +20,19 @@ const generateCSRFToken = (): string => {
 const validateCSRFToken = (token: string): boolean => {
   try {
     const storedToken = sessionStorage.getItem('csrf_token');
+    const tokenTimestamp = sessionStorage.getItem('csrf_token_timestamp');
+    
+    if (!storedToken || !tokenTimestamp) return false;
+    
+    // Check if token is expired (1 hour)
+    const now = Date.now();
+    const tokenAge = now - parseInt(tokenTimestamp);
+    if (tokenAge > 60 * 60 * 1000) {
+      sessionStorage.removeItem('csrf_token');
+      sessionStorage.removeItem('csrf_token_timestamp');
+      return false;
+    }
+    
     return storedToken === token && token.length === 64;
   } catch (error) {
     console.error('CSRF token validation failed:', error);
@@ -33,14 +47,20 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const teacherAuth = useTeacherAuth();
   const studentAuth = useStudentAuth();
 
-  // Security event logging
+  // Enhanced security event logging
   const logSecurityEvent = (event: SecurityEvent) => {
     console.log('Security Event:', event);
-    // Store in localStorage for admin review
+    
+    // Store in localStorage for admin review with size limits
     try {
       const events = JSON.parse(localStorage.getItem('security_events') || '[]');
-      events.push(event);
-      // Keep only last 100 events
+      events.push({
+        ...event,
+        sessionId: sessionStorage.getItem('session_id'),
+        fingerprint: sessionStorage.getItem('session_fingerprint')
+      });
+      
+      // Keep only last 100 events to prevent storage overflow
       if (events.length > 100) {
         events.splice(0, events.length - 100);
       }
@@ -50,37 +70,57 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  // Initialize auth state and generate CSRF token
+  // Initialize auth state with enhanced security
   useEffect(() => {
     const initializeAuth = async () => {
-      console.log('AuthContext: Starting secure initialization...');
+      console.log('AuthContext: Starting enhanced secure initialization...');
       
       try {
-        // Generate CSRF token
-        const token = generateCSRFToken();
-        setCsrfToken(token);
-        sessionStorage.setItem('csrf_token', token);
-        
-        // Restore authentication states
-        const teacherRestored = teacherAuth.restoreFromStorage();
-        const studentRestored = studentAuth.restoreFromStorage();
-        
-        if (teacherRestored) {
+        // Check for concurrent sessions
+        if (secureSessionService.detectConcurrentSessions()) {
           logSecurityEvent({
-            type: 'session_restored',
-            userId: teacherAuth.teacher?.id,
+            type: 'unauthorized_access',
             timestamp: new Date().toISOString(),
-            details: 'Teacher session restored from storage',
+            details: 'Concurrent session detected during initialization',
             userAgent: navigator.userAgent
           });
         }
         
-        if (studentRestored) {
+        // Validate session
+        if (!secureSessionService.checkSessionValidity()) {
+          console.log('Session invalid, clearing auth state');
+          setIsLoading(false);
+          return;
+        }
+        
+        // Generate enhanced CSRF token
+        const token = generateCSRFToken();
+        setCsrfToken(token);
+        sessionStorage.setItem('csrf_token', token);
+        sessionStorage.setItem('csrf_token_timestamp', Date.now().toString());
+        
+        // Restore authentication states using secure storage
+        const teacherData = secureSessionService.securelyRetrieveUserData('teacher');
+        const studentData = secureSessionService.securelyRetrieveUserData('student');
+        
+        if (teacherData && teacherData.id && teacherData.name) {
+          teacherAuth.setTeacher(teacherData);
           logSecurityEvent({
             type: 'session_restored',
-            userId: studentAuth.student?.id,
+            userId: teacherData.id,
             timestamp: new Date().toISOString(),
-            details: 'Student session restored from storage',
+            details: 'Teacher session restored from secure storage',
+            userAgent: navigator.userAgent
+          });
+        }
+        
+        if (studentData && studentData.id && studentData.full_name) {
+          studentAuth.setStudent(studentData);
+          logSecurityEvent({
+            type: 'session_restored',
+            userId: studentData.id,
+            timestamp: new Date().toISOString(),
+            details: 'Student session restored from secure storage',
             userAgent: navigator.userAgent
           });
         }
@@ -90,20 +130,20 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         logSecurityEvent({
           type: 'session_error',
           timestamp: new Date().toISOString(),
-          details: 'Failed to initialize auth context',
+          details: 'Failed to initialize enhanced auth context',
           userAgent: navigator.userAgent,
           errorStack: error instanceof Error ? error.stack : String(error)
         });
       } finally {
         setIsLoading(false);
-        console.log('AuthContext: Secure initialization complete');
+        console.log('AuthContext: Enhanced secure initialization complete');
       }
     };
 
     initializeAuth();
   }, []);
 
-  // Enhanced teacher login with security validation
+  // Enhanced teacher login with additional security validation
   const teacherLogin = async (
     email: string, 
     password: string, 
@@ -111,7 +151,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     school?: string,
     role: 'teacher' | 'admin' | 'doctor' = 'teacher'
   ) => {
-    console.log('AuthContext: Secure teacher login attempt');
+    console.log('AuthContext: Enhanced secure teacher login attempt');
+    
+    // Validate session before login
+    if (!secureSessionService.checkSessionValidity()) {
+      return { error: 'Session invalid. Please refresh and try again.' };
+    }
     
     // Validate CSRF token if provided
     if (csrfToken && !validateCSRFToken(csrfToken)) {
@@ -137,6 +182,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           userAgent: navigator.userAgent
         });
       } else if (result.teacher) {
+        // Store user data securely
+        secureSessionService.securelyStoreUserData('teacher', result.teacher);
+        
         logSecurityEvent({
           type: 'login_success',
           userId: result.teacher.id,
@@ -153,9 +201,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  // Enhanced student login with security validation and all required parameters
+  // Enhanced student login with all required parameters and security validation
   const studentLogin = async (fullName: string, school: string, grade: string, password: string) => {
-    console.log('AuthContext: Secure student login attempt');
+    console.log('AuthContext: Enhanced secure student login attempt');
+    
+    // Validate session before login
+    if (!secureSessionService.checkSessionValidity()) {
+      return { error: 'Session invalid. Please refresh and try again.' };
+    }
     
     // Validate CSRF token if provided
     if (csrfToken && !validateCSRFToken(csrfToken)) {
@@ -179,6 +232,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           userAgent: navigator.userAgent
         });
       } else if (result.student) {
+        // Store user data securely
+        secureSessionService.securelyStoreUserData('student', result.student);
+        
         logSecurityEvent({
           type: 'login_success',
           userId: result.student.id,
@@ -197,7 +253,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   // Enhanced student signup with security validation
   const studentSignup = async (fullName: string, school: string, grade: string, password: string) => {
-    console.log('AuthContext: Secure student signup attempt');
+    console.log('AuthContext: Enhanced secure student signup attempt');
     
     try {
       const result = await studentAuth.signup(fullName, school, grade, password);
@@ -211,6 +267,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           userAgent: navigator.userAgent
         });
       } else if (result.student) {
+        // Store user data securely
+        secureSessionService.securelyStoreUserData('student', result.student);
+        
         logSecurityEvent({
           type: 'login_success',
           userId: result.student.id,
@@ -227,9 +286,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  // Secure logout function
+  // Enhanced secure logout function
   const logout = () => {
-    console.log('AuthContext: Secure logout initiated');
+    console.log('AuthContext: Enhanced secure logout initiated');
     
     const currentUser = teacherAuth.teacher || studentAuth.student;
     if (currentUser) {
@@ -242,18 +301,24 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       });
     }
 
+    // Clear auth hooks
     teacherAuth.logout();
     studentAuth.logout();
+    
+    // Clear all session data securely
+    localStorage.clear();
+    sessionStorage.clear();
     
     // Regenerate CSRF token on logout
     const newToken = generateCSRFToken();
     setCsrfToken(newToken);
     sessionStorage.setItem('csrf_token', newToken);
+    sessionStorage.setItem('csrf_token_timestamp', Date.now().toString());
   };
 
   // Debug logging for auth state
   useEffect(() => {
-    console.log('AuthContext: Rendering with secure state:', {
+    console.log('AuthContext: Rendering with enhanced secure state:', {
       hasTeacher: !!teacherAuth.teacher,
       hasStudent: !!studentAuth.student,
       isLoading

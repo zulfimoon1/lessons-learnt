@@ -4,13 +4,32 @@ import { hashPassword, verifyPassword, validatePasswordStrength } from './secure
 import { validateInput } from './secureInputValidation';
 import { logUserSecurityEvent } from '@/components/SecurityAuditLogger';
 
-// Enhanced rate limiting with progressive delays
+// Enhanced rate limiting with server-side validation
+const checkServerSideRateLimit = async (identifier: string): Promise<{ allowed: boolean; message?: string }> => {
+  try {
+    const { data, error } = await supabase.rpc('check_rate_limit', { 
+      p_identifier: identifier 
+    });
+    
+    if (error) {
+      console.warn('Rate limit check failed:', error);
+      return { allowed: true }; // Fail open for availability
+    }
+    
+    return data || { allowed: true };
+  } catch (error) {
+    console.warn('Rate limit service unavailable:', error);
+    return { allowed: true }; // Fail open for availability
+  }
+};
+
+// Client-side rate limiting as backup (enhanced with progressive delays)
 const loginAttempts = new Map<string, { count: number; lastAttempt: number; blocked: boolean }>();
 const MAX_ATTEMPTS = 5;
 const LOCKOUT_DURATION = 15 * 60 * 1000; // 15 minutes
 const PROGRESSIVE_DELAY = [1000, 2000, 5000, 10000, 30000]; // Progressive delays
 
-const checkRateLimit = (identifier: string): { allowed: boolean; message?: string; delay?: number } => {
+const checkClientRateLimit = (identifier: string): { allowed: boolean; message?: string; delay?: number } => {
   const now = Date.now();
   const attempts = loginAttempts.get(identifier);
   
@@ -56,16 +75,34 @@ export const secureStudentLogin = async (fullName: string, school: string, grade
     // Enhanced input validation
     const nameValidation = validateInput.validateName(fullName);
     if (!nameValidation.isValid) {
+      logUserSecurityEvent({
+        type: 'suspicious_activity',
+        timestamp: new Date().toISOString(),
+        details: `Invalid name input during login: ${nameValidation.message}`,
+        userAgent: navigator.userAgent
+      });
       return { error: nameValidation.message };
     }
 
     const schoolValidation = validateInput.validateSchool(school);
     if (!schoolValidation.isValid) {
+      logUserSecurityEvent({
+        type: 'suspicious_activity',
+        timestamp: new Date().toISOString(),
+        details: `Invalid school input during login: ${schoolValidation.message}`,
+        userAgent: navigator.userAgent
+      });
       return { error: schoolValidation.message };
     }
 
     const gradeValidation = validateInput.validateGrade(grade);
     if (!gradeValidation.isValid) {
+      logUserSecurityEvent({
+        type: 'suspicious_activity',
+        timestamp: new Date().toISOString(),
+        details: `Invalid grade input during login: ${gradeValidation.message}`,
+        userAgent: navigator.userAgent
+      });
       return { error: gradeValidation.message };
     }
 
@@ -76,36 +113,46 @@ export const secureStudentLogin = async (fullName: string, school: string, grade
 
     const identifier = `${sanitizedName}-${sanitizedSchool}-${sanitizedGrade}`;
     
-    // Enhanced rate limiting check
-    const rateCheck = checkRateLimit(identifier);
-    if (!rateCheck.allowed) {
+    // Enhanced rate limiting check (both server and client-side)
+    const serverRateCheck = await checkServerSideRateLimit(identifier);
+    if (!serverRateCheck.allowed) {
       logUserSecurityEvent({
         type: 'rate_limit_exceeded',
         timestamp: new Date().toISOString(),
-        details: `Student login rate limit exceeded: ${sanitizedName}`,
+        details: `Server-side rate limit exceeded: ${sanitizedName}`,
         userAgent: navigator.userAgent
       });
-      return { error: rateCheck.message };
+      return { error: serverRateCheck.message };
+    }
+
+    const clientRateCheck = checkClientRateLimit(identifier);
+    if (!clientRateCheck.allowed) {
+      logUserSecurityEvent({
+        type: 'rate_limit_exceeded',
+        timestamp: new Date().toISOString(),
+        details: `Client-side rate limit exceeded: ${sanitizedName}`,
+        userAgent: navigator.userAgent
+      });
+      return { error: clientRateCheck.message };
     }
 
     // Apply progressive delay if needed
-    if (rateCheck.delay) {
-      await new Promise(resolve => setTimeout(resolve, rateCheck.delay));
+    if (clientRateCheck.delay) {
+      await new Promise(resolve => setTimeout(resolve, clientRateCheck.delay));
     }
 
     console.log('Secure student login attempt:', { fullName: sanitizedName, school: sanitizedSchool, grade: sanitizedGrade });
 
-    // Query with minimal data exposure
-    const { data: student, error } = await supabase
-      .from('students')
-      .select('id, full_name, school, grade, password_hash')
-      .eq('full_name', sanitizedName)
-      .eq('school', sanitizedSchool)
-      .eq('grade', sanitizedGrade)
-      .single();
+    // Use the secure authentication function instead of direct table access
+    const { data: authResult, error } = await supabase.rpc('secure_student_auth', {
+      p_full_name: sanitizedName,
+      p_school: sanitizedSchool,
+      p_grade: sanitizedGrade,
+      p_password: password
+    });
 
-    if (error || !student) {
-      console.log('Student not found');
+    if (error || !authResult || authResult.length === 0) {
+      console.log('Student authentication failed');
       recordFailedAttempt(identifier);
       logUserSecurityEvent({
         type: 'login_failed',
@@ -116,16 +163,14 @@ export const secureStudentLogin = async (fullName: string, school: string, grade
       return { error: 'Invalid credentials' };
     }
 
-    // Verify password securely
-    const isPasswordValid = await verifyPassword(password, student.password_hash);
-    if (!isPasswordValid) {
-      console.log('Invalid password');
+    const student = authResult[0];
+    if (!student.auth_success) {
+      console.log('Invalid credentials');
       recordFailedAttempt(identifier);
       logUserSecurityEvent({
         type: 'login_failed',
-        userId: student.id,
         timestamp: new Date().toISOString(),
-        details: `Invalid password for student: ${sanitizedName}`,
+        details: `Invalid credentials for student: ${sanitizedName}`,
         userAgent: navigator.userAgent
       });
       return { error: 'Invalid credentials' };
@@ -136,7 +181,7 @@ export const secureStudentLogin = async (fullName: string, school: string, grade
 
     logUserSecurityEvent({
       type: 'login_success',
-      userId: student.id,
+      userId: student.student_id,
       timestamp: new Date().toISOString(),
       details: `Successful student login: ${sanitizedName}`,
       userAgent: navigator.userAgent
@@ -145,7 +190,7 @@ export const secureStudentLogin = async (fullName: string, school: string, grade
     console.log('Secure student login successful');
     return { 
       user: {
-        id: student.id,
+        id: student.student_id,
         fullName: student.full_name,
         school: student.school,
         grade: student.grade,
@@ -193,16 +238,15 @@ export const secureStudentSignup = async (fullName: string, school: string, grad
       return { error: passwordValidation.message };
     }
 
-    // Check if student already exists
-    const { data: existingStudent } = await supabase
-      .from('students')
-      .select('id')
-      .eq('full_name', sanitizedName)
-      .eq('school', sanitizedSchool)
-      .eq('grade', sanitizedGrade)
-      .single();
+    // Check if student already exists using secure function
+    const { data: existingCheck } = await supabase.rpc('secure_student_auth', {
+      p_full_name: sanitizedName,
+      p_school: sanitizedSchool,
+      p_grade: sanitizedGrade,
+      p_password: 'dummy_password_for_existence_check'
+    });
 
-    if (existingStudent) {
+    if (existingCheck && existingCheck.length > 0 && existingCheck[0].student_id) {
       return { error: 'Student already exists with these details' };
     }
 
@@ -222,6 +266,12 @@ export const secureStudentSignup = async (fullName: string, school: string, grad
 
     if (error) {
       console.error('Student signup error:', error);
+      logUserSecurityEvent({
+        type: 'suspicious_activity',
+        timestamp: new Date().toISOString(),
+        details: `Student signup error: ${error.message}`,
+        userAgent: navigator.userAgent
+      });
       return { error: 'Failed to create student account' };
     }
 
@@ -245,6 +295,12 @@ export const secureStudentSignup = async (fullName: string, school: string, grad
     };
   } catch (error) {
     console.error('Secure student signup error:', error);
+    logUserSecurityEvent({
+      type: 'suspicious_activity',
+      timestamp: new Date().toISOString(),
+      details: `Student signup system error: ${error}`,
+      userAgent: navigator.userAgent
+    });
     return { error: 'Signup failed. Please try again.' };
   }
 };

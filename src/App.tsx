@@ -24,7 +24,20 @@ import Demo from '@/pages/Demo';
 import Index from '@/pages/Index';
 import NotFound from '@/pages/NotFound';
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000, // 5 minutes
+      retry: (failureCount, error: any) => {
+        // Don't retry on authentication errors
+        if (error?.status === 401 || error?.status === 403) {
+          return false;
+        }
+        return failureCount < 3;
+      }
+    }
+  }
+});
 
 function App() {
   return (

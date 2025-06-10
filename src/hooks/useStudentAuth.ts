@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { Student } from '@/types/auth';
 import { enhancedSecureStudentLogin, enhancedSecureStudentSignup } from '@/services/enhancedSecureAuthService';
+import { secureSessionService } from '@/services/secureSessionService';
 
 export const useStudentAuth = () => {
   const [student, setStudent] = useState<Student | null>(null);
@@ -26,14 +27,14 @@ export const useStudentAuth = () => {
         
         setStudent(studentData);
         
-        // Securely store student data
+        // Securely store student data using enhanced session service
         try {
-          localStorage.setItem('student', JSON.stringify(studentData));
+          secureSessionService.securelyStoreUserData('student', studentData);
           localStorage.removeItem('teacher');
           localStorage.removeItem('platformAdmin');
           console.log('useStudentAuth: Student data saved securely');
         } catch (storageError) {
-          console.warn('useStudentAuth: Failed to save student data to localStorage:', storageError);
+          console.warn('useStudentAuth: Failed to save student data to secure storage:', storageError);
         }
         
         return { student: studentData };
@@ -66,14 +67,14 @@ export const useStudentAuth = () => {
         
         setStudent(studentData);
         
-        // Securely store student data
+        // Securely store student data using enhanced session service
         try {
-          localStorage.setItem('student', JSON.stringify(studentData));
+          secureSessionService.securelyStoreUserData('student', studentData);
           localStorage.removeItem('teacher');
           localStorage.removeItem('platformAdmin');
           console.log('useStudentAuth: Student signup data saved securely');
         } catch (storageError) {
-          console.warn('useStudentAuth: Failed to save student signup data to localStorage:', storageError);
+          console.warn('useStudentAuth: Failed to save student signup data to secure storage:', storageError);
         }
         
         return { student: studentData };
@@ -98,11 +99,22 @@ export const useStudentAuth = () => {
 
   const restoreFromStorage = () => {
     try {
-      const savedStudent = localStorage.getItem('student');
-      if (savedStudent) {
-        const parsedStudent = JSON.parse(savedStudent);
+      // Try secure storage first
+      const savedStudent = secureSessionService.securelyRetrieveUserData('student');
+      if (savedStudent && savedStudent.id && savedStudent.full_name && savedStudent.school && savedStudent.grade) {
+        setStudent(savedStudent);
+        return true;
+      }
+      
+      // Fallback to regular localStorage for backward compatibility
+      const legacyStudent = localStorage.getItem('student');
+      if (legacyStudent) {
+        const parsedStudent = JSON.parse(legacyStudent);
         if (parsedStudent && parsedStudent.id && parsedStudent.full_name && parsedStudent.school && parsedStudent.grade) {
           setStudent(parsedStudent);
+          // Migrate to secure storage
+          secureSessionService.securelyStoreUserData('student', parsedStudent);
+          localStorage.removeItem('student');
           return true;
         } else {
           localStorage.removeItem('student');

@@ -3,86 +3,112 @@ import { useEffect } from 'react';
 
 const SecurityHeaders: React.FC = () => {
   useEffect(() => {
-    // Set security-related meta tags and headers
+    // Set Content Security Policy via meta tag (fallback for environments without server control)
     const setSecurityHeaders = () => {
-      // Content Security Policy (basic implementation)
-      const cspMeta = document.createElement('meta');
-      cspMeta.httpEquiv = 'Content-Security-Policy';
-      cspMeta.content = "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https://bjpgloftnlnzndgliqty.supabase.co wss://bjpgloftnlnzndgliqty.supabase.co; font-src 'self' data:;";
-      
-      // Check if CSP meta tag already exists
+      // Remove any existing CSP meta tag
       const existingCSP = document.querySelector('meta[http-equiv="Content-Security-Policy"]');
-      if (!existingCSP) {
-        document.head.appendChild(cspMeta);
+      if (existingCSP) {
+        existingCSP.remove();
       }
 
-      // X-Frame-Options
-      const frameMeta = document.createElement('meta');
-      frameMeta.httpEquiv = 'X-Frame-Options';
-      frameMeta.content = 'DENY';
+      // Create new CSP meta tag
+      const meta = document.createElement('meta');
+      meta.httpEquiv = 'Content-Security-Policy';
+      meta.content = [
+        "default-src 'self'",
+        "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://bjpgloftnlnzndgliqty.supabase.co",
+        "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+        "font-src 'self' https://fonts.gstatic.com",
+        "img-src 'self' data: https: blob:",
+        "connect-src 'self' https://bjpgloftnlnzndgliqty.supabase.co wss://bjpgloftnlnzndgliqty.supabase.co",
+        "frame-ancestors 'none'",
+        "base-uri 'self'",
+        "form-action 'self'"
+      ].join('; ');
       
-      const existingFrame = document.querySelector('meta[http-equiv="X-Frame-Options"]');
-      if (!existingFrame) {
-        document.head.appendChild(frameMeta);
-      }
+      document.head.appendChild(meta);
 
-      // X-Content-Type-Options
-      const contentTypeMeta = document.createElement('meta');
-      contentTypeMeta.httpEquiv = 'X-Content-Type-Options';
-      contentTypeMeta.content = 'nosniff';
-      
-      const existingContentType = document.querySelector('meta[http-equiv="X-Content-Type-Options"]');
-      if (!existingContentType) {
-        document.head.appendChild(contentTypeMeta);
-      }
+      // Set additional security headers via meta tags where possible
+      const securityMetas = [
+        { httpEquiv: 'X-Content-Type-Options', content: 'nosniff' },
+        { httpEquiv: 'X-Frame-Options', content: 'DENY' },
+        { httpEquiv: 'X-XSS-Protection', content: '1; mode=block' },
+        { httpEquiv: 'Referrer-Policy', content: 'strict-origin-when-cross-origin' }
+      ];
 
-      // Referrer Policy
-      const referrerMeta = document.createElement('meta');
-      referrerMeta.name = 'referrer';
-      referrerMeta.content = 'strict-origin-when-cross-origin';
-      
-      const existingReferrer = document.querySelector('meta[name="referrer"]');
-      if (!existingReferrer) {
-        document.head.appendChild(referrerMeta);
-      }
+      securityMetas.forEach(({ httpEquiv, content }) => {
+        const existing = document.querySelector(`meta[http-equiv="${httpEquiv}"]`);
+        if (existing) {
+          existing.remove();
+        }
+        
+        const metaTag = document.createElement('meta');
+        metaTag.httpEquiv = httpEquiv;
+        metaTag.content = content;
+        document.head.appendChild(metaTag);
+      });
     };
 
-    // Apply security headers
     setSecurityHeaders();
 
-    // Disable right-click context menu in production
-    const handleContextMenu = (e: MouseEvent) => {
-      if (process.env.NODE_ENV === 'production') {
-        e.preventDefault();
-      }
+    // Monitor for potential XSS attempts
+    const monitorForXSS = () => {
+      // Override dangerous functions to log attempts
+      const originalEval = window.eval;
+      window.eval = function(code: string) {
+        console.warn('Security Alert: eval() called with:', code);
+        // Log security event
+        const event = new CustomEvent('securityViolation', {
+          detail: {
+            type: 'eval_attempt',
+            code: code,
+            timestamp: new Date().toISOString(),
+            userAgent: navigator.userAgent
+          }
+        });
+        window.dispatchEvent(event);
+        return originalEval.call(this, code);
+      };
+
+      // Monitor for inline script injection attempts
+      const observer = new MutationObserver((mutations) => {
+        mutations.forEach((mutation) => {
+          mutation.addedNodes.forEach((node) => {
+            if (node.nodeType === Node.ELEMENT_NODE) {
+              const element = node as Element;
+              if (element.tagName === 'SCRIPT' && !element.getAttribute('src')) {
+                console.warn('Security Alert: Inline script detected');
+                const event = new CustomEvent('securityViolation', {
+                  detail: {
+                    type: 'inline_script',
+                    content: element.textContent,
+                    timestamp: new Date().toISOString(),
+                    userAgent: navigator.userAgent
+                  }
+                });
+                window.dispatchEvent(event);
+              }
+            }
+          });
+        });
+      });
+
+      observer.observe(document.body, {
+        childList: true,
+        subtree: true
+      });
+
+      return () => observer.disconnect();
     };
 
-    // Disable F12 and other dev tools shortcuts in production
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (process.env.NODE_ENV === 'production') {
-        // F12, Ctrl+Shift+I, Ctrl+Shift+J, Ctrl+U
-        if (
-          e.key === 'F12' ||
-          (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'J')) ||
-          (e.ctrlKey && e.key === 'U')
-        ) {
-          e.preventDefault();
-        }
-      }
-    };
+    const cleanup = monitorForXSS();
 
-    // Add event listeners
-    document.addEventListener('contextmenu', handleContextMenu);
-    document.addEventListener('keydown', handleKeyDown);
-
-    // Cleanup
     return () => {
-      document.removeEventListener('contextmenu', handleContextMenu);
-      document.removeEventListener('keydown', handleKeyDown);
+      cleanup();
     };
   }, []);
 
-  return null; // This component doesn't render anything
+  return null; // This component doesn't render anything visible
 };
 
 export default SecurityHeaders;
