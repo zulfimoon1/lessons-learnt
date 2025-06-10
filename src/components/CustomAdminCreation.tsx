@@ -1,21 +1,22 @@
 
 import { useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { createCustomAdmin, removePlaceholderAdmin } from "@/services/customAdminCreation";
-import { UserPlusIcon, ShieldIcon } from "lucide-react";
+import { UserPlusIcon, TrashIcon } from "lucide-react";
 
 const CustomAdminCreation = () => {
   const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    school: '',
-    password: ''
+    name: "",
+    email: "",
+    school: "",
+    password: ""
   });
   const [isLoading, setIsLoading] = useState(false);
+  const [isRemoving, setIsRemoving] = useState(false);
   const { toast } = useToast();
 
   const handleInputChange = (field: string, value: string) => {
@@ -27,17 +28,8 @@ const CustomAdminCreation = () => {
     
     if (!formData.name || !formData.email || !formData.school || !formData.password) {
       toast({
-        title: "Validation Error",
+        title: "Missing Information",
         description: "Please fill in all fields",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (formData.password.length < 8) {
-      toast({
-        title: "Password Error",
-        description: "Password must be at least 8 characters long",
         variant: "destructive",
       });
       return;
@@ -46,36 +38,32 @@ const CustomAdminCreation = () => {
     setIsLoading(true);
 
     try {
-      // First remove the placeholder admin
-      await removePlaceholderAdmin();
-      
-      // Create the custom admin
       const result = await createCustomAdmin(formData);
       
       if (result.error) {
         toast({
-          title: "Error",
+          title: "Creation Failed",
           description: result.error,
           variant: "destructive",
         });
       } else {
         toast({
           title: "Admin Created Successfully",
-          description: `Admin account created for ${formData.email}. You can now log in with these credentials.`,
+          description: `Admin account created for ${formData.email}`,
         });
         
-        // Clear the form
+        // Clear form
         setFormData({
-          name: '',
-          email: '',
-          school: '',
-          password: ''
+          name: "",
+          email: "",
+          school: "",
+          password: ""
         });
       }
     } catch (error) {
       toast({
-        title: "Error",
-        description: "Failed to create admin account",
+        title: "Creation Failed",
+        description: "An unexpected error occurred",
         variant: "destructive",
       });
     } finally {
@@ -83,82 +71,149 @@ const CustomAdminCreation = () => {
     }
   };
 
+  const handleRemovePlaceholder = async () => {
+    setIsRemoving(true);
+    
+    try {
+      const result = await removePlaceholderAdmin();
+      
+      if (result.error) {
+        toast({
+          title: "Removal Failed",
+          description: result.error,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Placeholder Removed",
+          description: "Placeholder admin account has been removed",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Removal Failed",
+        description: "An unexpected error occurred",
+        variant: "destructive",
+      });
+    } finally {
+      setIsRemoving(false);
+    }
+  };
+
   return (
-    <Card className="w-full max-w-md">
-      <CardHeader className="text-center">
-        <div className="flex justify-center mb-4">
-          <ShieldIcon className="w-12 h-12 text-blue-600" />
-        </div>
-        <CardTitle className="text-xl font-bold">Create Your Admin Account</CardTitle>
-        <CardDescription>
-          Set up your personal platform administrator account
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="name">Full Name</Label>
-            <Input
-              id="name"
-              type="text"
-              placeholder="John Doe"
-              value={formData.name}
-              onChange={(e) => handleInputChange('name', e.target.value)}
-              required
-            />
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="email">Email Address</Label>
-            <Input
-              id="email"
-              type="email"
-              placeholder="admin@yourschool.com"
-              value={formData.email}
-              onChange={(e) => handleInputChange('email', e.target.value)}
-              required
-            />
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="school">School Name</Label>
-            <Input
-              id="school"
-              type="text"
-              placeholder="Your School Name"
-              value={formData.school}
-              onChange={(e) => handleInputChange('school', e.target.value)}
-              required
-            />
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="password">Password</Label>
-            <Input
-              id="password"
-              type="password"
-              placeholder="Choose a secure password"
-              value={formData.password}
-              onChange={(e) => handleInputChange('password', e.target.value)}
-              required
-              minLength={8}
-            />
-            <p className="text-xs text-gray-500">
-              Password must be at least 8 characters long
-            </p>
-          </div>
-          
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <UserPlusIcon className="w-5 h-5" />
+            Create Custom Admin Account
+          </CardTitle>
+          <CardDescription>
+            Create a new admin account for platform access. This will be a permanent admin account.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="admin-name">Full Name</Label>
+                <Input
+                  id="admin-name"
+                  type="text"
+                  placeholder="Admin Name"
+                  value={formData.name}
+                  onChange={(e) => handleInputChange('name', e.target.value)}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="admin-email">Email Address</Label>
+                <Input
+                  id="admin-email"
+                  type="email"
+                  placeholder="admin@yourschool.com"
+                  value={formData.email}
+                  onChange={(e) => handleInputChange('email', e.target.value)}
+                  required
+                />
+              </div>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="admin-school">School/Organization</Label>
+              <Input
+                id="admin-school"
+                type="text"
+                placeholder="Your School Name"
+                value={formData.school}
+                onChange={(e) => handleInputChange('school', e.target.value)}
+                required
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="admin-password">Password</Label>
+              <Input
+                id="admin-password"
+                type="password"
+                placeholder="Create a secure password"
+                value={formData.password}
+                onChange={(e) => handleInputChange('password', e.target.value)}
+                required
+                minLength={8}
+              />
+              <p className="text-xs text-gray-500">
+                Password must be at least 8 characters long
+              </p>
+            </div>
+            
+            <Button 
+              type="submit" 
+              className="w-full"
+              disabled={isLoading}
+            >
+              {isLoading ? "Creating Admin..." : "Create Admin Account"}
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <TrashIcon className="w-5 h-5" />
+            Clean Up
+          </CardTitle>
+          <CardDescription>
+            Remove placeholder or test admin accounts that are no longer needed.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
           <Button 
-            type="submit" 
-            className="w-full" 
-            disabled={isLoading}
+            onClick={handleRemovePlaceholder}
+            variant="outline"
+            disabled={isRemoving}
+            className="w-full"
           >
-            <UserPlusIcon className="w-4 h-4 mr-2" />
-            {isLoading ? "Creating Admin..." : "Create Admin Account"}
+            {isRemoving ? "Removing..." : "Remove Placeholder Admin"}
           </Button>
-        </form>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+        <h3 className="font-semibold text-blue-900 mb-2">Quick Setup for zulfimoon1@gmail.com</h3>
+        <p className="text-sm text-blue-700 mb-3">
+          There's already a database migration prepared to create your admin account. After running the migration, you can log in with:
+        </p>
+        <div className="bg-white border border-blue-200 rounded p-3 font-mono text-sm">
+          <p><strong>Email:</strong> zulfimoon1@gmail.com</p>
+          <p><strong>Password:</strong> admin123</p>
+        </div>
+        <p className="text-xs text-blue-600 mt-2">
+          You can change your password after first login for security.
+        </p>
+      </div>
+    </div>
   );
 };
 
