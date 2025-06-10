@@ -53,53 +53,78 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     role?: 'teacher' | 'admin' | 'doctor'
   ) => {
     try {
+      // For the simple login system, we need name and school
+      if (!name || !school) {
+        return { error: 'Name and school are required for login.' };
+      }
+      
       // Use teacherSimpleLoginService with name and school for simple login
-      const result = await teacherSimpleLoginService(name || email, password, school || '');
+      const result = await teacherSimpleLoginService(name, password, school);
       
       if (result.teacher) {
         setTeacher(result.teacher);
         // Securely store teacher data
-        localStorage.setItem('teacher', JSON.stringify(result.teacher));
+        try {
+          localStorage.setItem('teacher', JSON.stringify(result.teacher));
+        } catch (storageError) {
+          console.warn('Failed to save teacher data to localStorage');
+        }
       }
       
       return result;
     } catch (error) {
       console.error('Teacher login error:', error);
-      return { error: 'Login failed. Please try again.' };
+      return { error: 'Login failed. Please check your connection and try again.' };
     }
   };
 
   const studentLogin = async (fullName: string, password: string) => {
     try {
+      if (!fullName || !password) {
+        return { error: 'Full name and password are required.' };
+      }
+      
       const result = await studentSimpleLoginService(fullName, password);
       
       if (result.student) {
         setStudent(result.student);
         // Securely store student data
-        localStorage.setItem('student', JSON.stringify(result.student));
+        try {
+          localStorage.setItem('student', JSON.stringify(result.student));
+        } catch (storageError) {
+          console.warn('Failed to save student data to localStorage');
+        }
       }
       
       return result;
     } catch (error) {
       console.error('Student login error:', error);
-      return { error: 'Login failed. Please try again.' };
+      return { error: 'Login failed. Please check your connection and try again.' };
     }
   };
 
   const studentSignup = async (fullName: string, school: string, grade: string, password: string) => {
     try {
+      if (!fullName || !school || !grade || !password) {
+        return { error: 'All fields are required for signup.' };
+      }
+      
       const result = await studentSignupService(fullName, school, grade, password);
       
       if (result.student) {
         setStudent(result.student);
         // Securely store student data
-        localStorage.setItem('student', JSON.stringify(result.student));
+        try {
+          localStorage.setItem('student', JSON.stringify(result.student));
+        } catch (storageError) {
+          console.warn('Failed to save student data to localStorage');
+        }
       }
       
       return result;
     } catch (error) {
       console.error('Student signup error:', error);
-      return { error: 'Signup failed. Please try again.' };
+      return { error: 'Signup failed. Please check your connection and try again.' };
     }
   };
 

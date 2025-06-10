@@ -21,7 +21,7 @@ export const teacherSimpleLoginService = async (name: string, password: string, 
       return { error: 'All fields are required.' };
     }
 
-    // First, try to find teacher by name and school
+    // First, try to find teacher by name and school with better error handling
     const { data: teachers, error: searchError } = await supabase
       .from('teachers')
       .select('*')
@@ -29,36 +29,45 @@ export const teacherSimpleLoginService = async (name: string, password: string, 
       .eq('school', school.trim());
 
     if (searchError) {
-      logSecurely('teacherSimpleLoginService: Database error during search');
-      return { error: 'Database error. Please try again.' };
+      logSecurely('teacherSimpleLoginService: Database error during search:', searchError.message);
+      return { error: 'Unable to connect to the database. Please try again.' };
     }
 
     if (!teachers || teachers.length === 0) {
-      return { error: 'Invalid credentials. Please check your name and try again.' };
+      return { error: 'Invalid credentials. Please check your name, school, and try again.' };
     }
 
     // Check password for each matching teacher
     for (const teacher of teachers) {
-      const isValidPassword = await bcrypt.compare(password, teacher.password_hash);
-      if (isValidPassword) {
-        logSecurely('teacherSimpleLoginService: Successful login for teacher ID:', teacher.id);
-        const teacherData: Teacher = {
-          id: teacher.id,
-          name: teacher.name,
-          email: teacher.email,
-          school: teacher.school,
-          role: teacher.role as 'teacher' | 'admin' | 'doctor',
-          specialization: teacher.specialization,
-          license_number: teacher.license_number,
-          is_available: teacher.is_available
-        };
-        return { teacher: teacherData };
+      if (!teacher.password_hash) {
+        continue; // Skip teachers without password hash
+      }
+      
+      try {
+        const isValidPassword = await bcrypt.compare(password, teacher.password_hash);
+        if (isValidPassword) {
+          logSecurely('teacherSimpleLoginService: Successful login for teacher ID:', teacher.id);
+          const teacherData: Teacher = {
+            id: teacher.id,
+            name: teacher.name,
+            email: teacher.email,
+            school: teacher.school,
+            role: teacher.role as 'teacher' | 'admin' | 'doctor',
+            specialization: teacher.specialization,
+            license_number: teacher.license_number,
+            is_available: teacher.is_available
+          };
+          return { teacher: teacherData };
+        }
+      } catch (bcryptError) {
+        logSecurely('teacherSimpleLoginService: Password comparison error');
+        continue; // Continue to next teacher if password comparison fails
       }
     }
 
     return { error: 'Invalid credentials. Please check your password and try again.' };
   } catch (error) {
-    logSecurely('teacherSimpleLoginService: Unexpected error occurred');
+    logSecurely('teacherSimpleLoginService: Unexpected error occurred:', error);
     return { error: 'An unexpected error occurred. Please try again.' };
   }
 };
@@ -73,15 +82,15 @@ export const studentSimpleLoginService = async (fullName: string, password: stri
       return { error: 'All fields are required.' };
     }
 
-    // Search for student by full name
+    // Search for student by full name with better error handling
     const { data: students, error: searchError } = await supabase
       .from('students')
       .select('*')
       .eq('full_name', fullName.trim());
 
     if (searchError) {
-      logSecurely('studentSimpleLoginService: Database error during search');
-      return { error: 'Database error. Please try again.' };
+      logSecurely('studentSimpleLoginService: Database error during search:', searchError.message);
+      return { error: 'Unable to connect to the database. Please try again.' };
     }
 
     if (!students || students.length === 0) {
@@ -90,22 +99,31 @@ export const studentSimpleLoginService = async (fullName: string, password: stri
 
     // Check password for the student
     const student = students[0];
-    const isValidPassword = await bcrypt.compare(password, student.password_hash);
-    
-    if (isValidPassword) {
-      logSecurely('studentSimpleLoginService: Successful login for student ID:', student.id);
-      const studentData: Student = {
-        id: student.id,
-        full_name: student.full_name,
-        school: student.school,
-        grade: student.grade
-      };
-      return { student: studentData };
+    if (!student.password_hash) {
+      return { error: 'Account setup incomplete. Please contact your teacher.' };
+    }
+
+    try {
+      const isValidPassword = await bcrypt.compare(password, student.password_hash);
+      
+      if (isValidPassword) {
+        logSecurely('studentSimpleLoginService: Successful login for student ID:', student.id);
+        const studentData: Student = {
+          id: student.id,
+          full_name: student.full_name,
+          school: student.school,
+          grade: student.grade
+        };
+        return { student: studentData };
+      }
+    } catch (bcryptError) {
+      logSecurely('studentSimpleLoginService: Password comparison error');
+      return { error: 'Authentication failed. Please try again.' };
     }
 
     return { error: 'Invalid credentials. Please check your password and try again.' };
   } catch (error) {
-    logSecurely('studentSimpleLoginService: Unexpected error occurred');
+    logSecurely('studentSimpleLoginService: Unexpected error occurred:', error);
     return { error: 'An unexpected error occurred. Please try again.' };
   }
 };
@@ -146,7 +164,7 @@ export const teacherSignupService = async (
       .eq('email', email.trim());
 
     if (checkError) {
-      logSecurely('teacherSignupService: Database error during duplicate check');
+      logSecurely('teacherSignupService: Database error during duplicate check:', checkError.message);
       return { error: 'Database error. Please try again.' };
     }
 
@@ -173,7 +191,7 @@ export const teacherSignupService = async (
       .single();
 
     if (insertError) {
-      logSecurely('teacherSignupService: Database error during insertion');
+      logSecurely('teacherSignupService: Database error during insertion:', insertError.message);
       return { error: 'Failed to create account. Please try again.' };
     }
 
@@ -191,7 +209,7 @@ export const teacherSignupService = async (
 
     return { teacher: teacherData };
   } catch (error) {
-    logSecurely('teacherSignupService: Unexpected error occurred');
+    logSecurely('teacherSignupService: Unexpected error occurred:', error);
     return { error: 'An unexpected error occurred. Please try again.' };
   }
 };
@@ -224,7 +242,7 @@ export const studentSignupService = async (
       .eq('school', school.trim());
 
     if (checkError) {
-      logSecurely('studentSignupService: Database error during duplicate check');
+      logSecurely('studentSignupService: Database error during duplicate check:', checkError.message);
       return { error: 'Database error. Please try again.' };
     }
 
@@ -248,7 +266,7 @@ export const studentSignupService = async (
       .single();
 
     if (insertError) {
-      logSecurely('studentSignupService: Database error during insertion');
+      logSecurely('studentSignupService: Database error during insertion:', insertError.message);
       return { error: 'Failed to create account. Please try again.' };
     }
 
@@ -262,7 +280,7 @@ export const studentSignupService = async (
 
     return { student: studentData };
   } catch (error) {
-    logSecurely('studentSignupService: Unexpected error occurred');
+    logSecurely('studentSignupService: Unexpected error occurred:', error);
     return { error: 'An unexpected error occurred. Please try again.' };
   }
 };
