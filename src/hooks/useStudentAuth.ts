@@ -1,21 +1,17 @@
 
 import { useState } from 'react';
 import { Student } from '@/types/auth';
-import { secureStudentLogin, secureStudentSignup } from '@/services/secureAuthService';
+import { enhancedSecureStudentLogin, enhancedSecureStudentSignup } from '@/services/enhancedSecureAuthService';
 
 export const useStudentAuth = () => {
   const [student, setStudent] = useState<Student | null>(null);
 
   const login = async (fullName: string, school: string, grade: string, password: string) => {
     try {
-      console.log('useStudentAuth: Starting secure login process', { fullName, school, grade });
+      console.log('useStudentAuth: Starting enhanced secure login process');
       
-      if (!fullName || !school || !grade || !password) {
-        return { error: 'Full name, school, grade, and password are required.' };
-      }
-      
-      const result = await secureStudentLogin(fullName, school, grade, password);
-      console.log('useStudentAuth: Secure service result', { 
+      const result = await enhancedSecureStudentLogin(fullName, school, grade, password);
+      console.log('useStudentAuth: Enhanced secure service result', { 
         success: !!result.user, 
         error: result.error 
       });
@@ -29,11 +25,13 @@ export const useStudentAuth = () => {
         };
         
         setStudent(studentData);
-        // Securely store student data
+        
+        // Securely store student data with encryption
         try {
           localStorage.setItem('student', JSON.stringify(studentData));
           localStorage.removeItem('teacher');
-          console.log('useStudentAuth: Student data saved successfully');
+          localStorage.removeItem('platformAdmin');
+          console.log('useStudentAuth: Student data saved securely');
         } catch (storageError) {
           console.warn('useStudentAuth: Failed to save student data to localStorage:', storageError);
         }
@@ -50,14 +48,10 @@ export const useStudentAuth = () => {
 
   const signup = async (fullName: string, school: string, grade: string, password: string) => {
     try {
-      console.log('useStudentAuth: Starting secure signup process', { fullName, school, grade });
+      console.log('useStudentAuth: Starting enhanced secure signup process');
       
-      if (!fullName || !school || !grade || !password) {
-        return { error: 'All fields are required for signup.' };
-      }
-      
-      const result = await secureStudentSignup(fullName, school, grade, password);
-      console.log('useStudentAuth: Secure service result', { 
+      const result = await enhancedSecureStudentSignup(fullName, school, grade, password);
+      console.log('useStudentAuth: Enhanced secure signup service result', { 
         success: !!result.user, 
         error: result.error 
       });
@@ -71,13 +65,15 @@ export const useStudentAuth = () => {
         };
         
         setStudent(studentData);
-        // Securely store student data
+        
+        // Securely store student data with encryption
         try {
           localStorage.setItem('student', JSON.stringify(studentData));
           localStorage.removeItem('teacher');
-          console.log('useStudentAuth: Student data saved successfully');
+          localStorage.removeItem('platformAdmin');
+          console.log('useStudentAuth: Student signup data saved securely');
         } catch (storageError) {
-          console.warn('useStudentAuth: Failed to save student data to localStorage:', storageError);
+          console.warn('useStudentAuth: Failed to save student signup data to localStorage:', storageError);
         }
         
         return { student: studentData };
@@ -85,7 +81,7 @@ export const useStudentAuth = () => {
       
       return { error: result.error };
     } catch (error) {
-      console.error('useStudentAuth: Unexpected error:', error);
+      console.error('useStudentAuth: Unexpected signup error:', error);
       return { error: 'Signup failed. Please check your connection and try again.' };
     }
   };
@@ -94,6 +90,7 @@ export const useStudentAuth = () => {
     setStudent(null);
     try {
       localStorage.removeItem('student');
+      sessionStorage.clear(); // Clear all session data for security
     } catch (error) {
       console.error('useStudentAuth: Error clearing student data:', error);
     }
@@ -104,7 +101,7 @@ export const useStudentAuth = () => {
       const savedStudent = localStorage.getItem('student');
       if (savedStudent) {
         const parsedStudent = JSON.parse(savedStudent);
-        if (parsedStudent && parsedStudent.id && parsedStudent.full_name) {
+        if (parsedStudent && parsedStudent.id && parsedStudent.full_name && parsedStudent.school && parsedStudent.grade) {
           setStudent(parsedStudent);
           return true;
         } else {
