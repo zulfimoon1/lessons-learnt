@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -28,175 +27,12 @@ import {
 import { Link } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
 import StudentSimulation from "@/components/StudentSimulation";
+import TeacherSimulation from "@/components/TeacherSimulation";
 
 const Demo = () => {
   const { t } = useLanguage();
   const [activeDemo, setActiveDemo] = useState("student-simulation");
   const [isPlaying, setIsPlaying] = useState(true);
-
-  // Complete Teacher Dashboard Demo
-  const TeacherDashboardDemo = () => (
-    <div className="space-y-6">
-      <div className="bg-white rounded-lg shadow-lg p-6 border">
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
-              <BookOpenIcon className="w-5 h-5 text-green-600" />
-            </div>
-            <div>
-              <h3 className="text-lg font-semibold">Teacher Dashboard</h3>
-              <p className="text-sm text-gray-600">Welcome, Ms. Johnson</p>
-            </div>
-          </div>
-          <div className="flex gap-2">
-            <Badge className="bg-red-100 text-red-700">3 Alerts</Badge>
-            <BellIcon className="w-5 h-5 text-gray-400" />
-          </div>
-        </div>
-
-        {/* Overview Stats */}
-        <div className="grid grid-cols-4 gap-4 mb-6">
-          <div className="bg-blue-50 p-4 rounded-lg text-center">
-            <div className="text-2xl font-bold text-blue-600">156</div>
-            <div className="text-sm text-blue-800">Total Students</div>
-          </div>
-          <div className="bg-green-50 p-4 rounded-lg text-center">
-            <div className="text-2xl font-bold text-green-600">87%</div>
-            <div className="text-sm text-green-800">Avg Understanding</div>
-          </div>
-          <div className="bg-purple-50 p-4 rounded-lg text-center">
-            <div className="text-2xl font-bold text-purple-600">4.3★</div>
-            <div className="text-sm text-purple-800">Lesson Rating</div>
-          </div>
-          <div className="bg-yellow-50 p-4 rounded-lg text-center">
-            <div className="text-2xl font-bold text-yellow-600">12</div>
-            <div className="text-sm text-yellow-800">Need Support</div>
-          </div>
-        </div>
-
-        {/* Today's Classes */}
-        <div className="mb-6">
-          <h4 className="font-semibold mb-3 flex items-center gap-2">
-            <ClockIcon className="w-4 h-4" />
-            Today's Classes
-          </h4>
-          <div className="space-y-3">
-            <div className="flex justify-between items-center p-4 bg-blue-50 rounded border-l-4 border-blue-500">
-              <div>
-                <div className="font-medium">Mathematics - Grade 10A</div>
-                <div className="text-sm text-gray-600">9:00 AM - Algebra II</div>
-                <div className="flex gap-2 mt-1">
-                  <Badge variant="outline">25 students</Badge>
-                  <Badge className="bg-green-100 text-green-700">Live</Badge>
-                </div>
-              </div>
-              <div className="text-right">
-                <div className="text-sm font-medium">89% Understanding</div>
-                <div className="text-xs text-gray-500">23 responses</div>
-              </div>
-            </div>
-            <div className="flex justify-between items-center p-4 bg-gray-50 rounded border-l-4 border-gray-300">
-              <div>
-                <div className="font-medium">Mathematics - Grade 10B</div>
-                <div className="text-sm text-gray-600">11:00 AM - Geometry</div>
-                <div className="flex gap-2 mt-1">
-                  <Badge variant="outline">22 students</Badge>
-                  <Badge variant="outline">Upcoming</Badge>
-                </div>
-              </div>
-              <div className="text-right">
-                <div className="text-sm font-medium">Previous: 4.5★</div>
-                <div className="text-xs text-gray-500">Last lesson</div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Student Mood Overview */}
-        <div className="mb-6">
-          <h4 className="font-semibold mb-3 flex items-center gap-2">
-            <HeartIcon className="w-4 h-4" />
-            Class Mood Overview
-          </h4>
-          <div className="grid grid-cols-4 gap-2">
-            <div className="bg-green-50 p-3 rounded text-center">
-              <div className="text-lg font-bold text-green-600">😊 65%</div>
-              <div className="text-xs text-green-800">Happy</div>
-            </div>
-            <div className="bg-yellow-50 p-3 rounded text-center">
-              <div className="text-lg font-bold text-yellow-600">😐 25%</div>
-              <div className="text-xs text-yellow-800">Neutral</div>
-            </div>
-            <div className="bg-orange-50 p-3 rounded text-center">
-              <div className="text-lg font-bold text-orange-600">😟 8%</div>
-              <div className="text-xs text-orange-800">Stressed</div>
-            </div>
-            <div className="bg-red-50 p-3 rounded text-center">
-              <div className="text-lg font-bold text-red-600">😔 2%</div>
-              <div className="text-xs text-red-800">Need Support</div>
-            </div>
-          </div>
-        </div>
-
-        {/* Recent Alerts */}
-        <div className="mb-6">
-          <h4 className="font-semibold mb-3 flex items-center gap-2">
-            <AlertTriangleIcon className="w-4 h-4" />
-            Recent Alerts
-          </h4>
-          <div className="space-y-2">
-            <div className="flex items-center gap-3 p-3 bg-red-50 rounded border border-red-200">
-              <AlertTriangleIcon className="w-4 h-4 text-red-600" />
-              <div className="flex-1">
-                <div className="text-sm font-medium">Student showing signs of distress</div>
-                <div className="text-xs text-gray-600">Grade 10A - Anonymous student</div>
-              </div>
-              <Button size="sm" className="bg-red-600 hover:bg-red-700 text-white">Review</Button>
-            </div>
-            <div className="flex items-center gap-3 p-3 bg-yellow-50 rounded border border-yellow-200">
-              <AlertTriangleIcon className="w-4 h-4 text-yellow-600" />
-              <div className="flex-1">
-                <div className="text-sm font-medium">Low understanding in Chemistry</div>
-                <div className="text-xs text-gray-600">15 students struggling with today's topic</div>
-              </div>
-              <Button size="sm" variant="outline">Address</Button>
-            </div>
-          </div>
-        </div>
-
-        {/* Performance Trends */}
-        <div>
-          <h4 className="font-semibold mb-3 flex items-center gap-2">
-            <TrendingUpIcon className="w-4 h-4" />
-            Weekly Performance Trends
-          </h4>
-          <div className="space-y-3">
-            <div>
-              <div className="flex justify-between text-sm mb-1">
-                <span>Understanding Level</span>
-                <span>87%</span>
-              </div>
-              <Progress value={87} className="h-2" />
-            </div>
-            <div>
-              <div className="flex justify-between text-sm mb-1">
-                <span>Student Engagement</span>
-                <span>92%</span>
-              </div>
-              <Progress value={92} className="h-2" />
-            </div>
-            <div>
-              <div className="flex justify-between text-sm mb-1">
-                <span>Lesson Satisfaction</span>
-                <span>94%</span>
-              </div>
-              <Progress value={94} className="h-2" />
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
 
   // Enhanced Mental Health Support Demo
   const MentalHealthDemo = () => (
@@ -294,11 +130,11 @@ const Demo = () => {
       component: <StudentSimulation />
     },
     {
-      id: "teacher-dashboard",
-      title: "Complete Teacher Dashboard",
-      description: "Comprehensive teacher view with analytics, alerts, and class management",
+      id: "teacher-simulation",
+      title: "Interactive Teacher Journey",
+      description: "Experience how teachers use the platform to monitor students and improve lessons",
       icon: BarChart3Icon,
-      component: <TeacherDashboardDemo />
+      component: <TeacherSimulation />
     },
     {
       id: "mental-health",
@@ -348,7 +184,7 @@ const Demo = () => {
             Interactive Platform Experience
           </h2>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-            Experience how students interact with our platform through an interactive simulation, 
+            Experience how both students and teachers interact with our platform through interactive simulations, 
             plus explore comprehensive demos of all platform features.
           </p>
         </div>
@@ -396,14 +232,16 @@ const Demo = () => {
                                 <li>• Mental health support widget access</li>
                               </>
                             )}
-                            {demo.id === "teacher-dashboard" && (
+                            {demo.id === "teacher-simulation" && (
                               <>
-                                <li>• Comprehensive class analytics</li>
-                                <li>• Real-time student mood monitoring</li>
-                                <li>• Alert system for at-risk students</li>
-                                <li>• Performance trend analysis</li>
-                                <li>• Multi-class management</li>
-                                <li>• Engagement metrics tracking</li>
+                                <li>• Comprehensive teacher dashboard overview</li>
+                                <li>• Real-time class performance monitoring</li>
+                                <li>• Mental health alert system review</li>
+                                <li>• Student mood and emotional state tracking</li>
+                                <li>• Individual feedback analysis</li>
+                                <li>• Action planning based on student needs</li>
+                                <li>• Weekly performance trend analysis</li>
+                                <li>• Lesson improvement planning</li>
                               </>
                             )}
                             {demo.id === "mental-health" && (
@@ -424,6 +262,9 @@ const Demo = () => {
                             {demo.id === "student-simulation" ? (
                               <><strong>Interactive Simulation:</strong> Watch a complete student journey from 
                               dashboard login to feedback submission, including access to mental health support.</>
+                            ) : demo.id === "teacher-simulation" ? (
+                              <><strong>Teacher Workflow:</strong> Experience how teachers monitor student well-being,
+                              analyze performance data, and take action to improve learning outcomes.</>
                             ) : (
                               <><strong>Full Integration:</strong> All components work seamlessly together, 
                               sharing data securely while maintaining complete privacy for mental health services.</>
