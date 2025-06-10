@@ -186,14 +186,18 @@ export const enhancedValidateInput = {
     // Check all patterns in order of severity
     const allPatterns = [...criticalPatterns, ...highRiskPatterns, ...mediumRiskPatterns];
     
-    for (const { pattern, reason, severity } of allPatterns) {
-      if (pattern.test(input)) {
+    for (const patternData of allPatterns) {
+      if (!patternData) continue; // Handle potential undefined
+      
+      const { pattern, reason, severity } = patternData;
+      if (pattern && pattern.test && pattern.test(input)) {
         return { isSuspicious: true, reason, severity };
       }
     }
     
     // Additional heuristic checks
-    const suspiciousCharCount = (input.match(/[<>'"`;\\&]/g) || []).length;
+    const suspiciousCharMatches = input.match(/[<>'"`;\\&]/g);
+    const suspiciousCharCount = suspiciousCharMatches ? suspiciousCharMatches.length : 0;
     if (suspiciousCharCount > 3) {
       return { isSuspicious: true, reason: 'High concentration of suspicious characters', severity: 5 };
     }

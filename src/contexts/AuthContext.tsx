@@ -182,6 +182,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           details: `Teacher login failed: ${result.error}`,
           userAgent: navigator.userAgent
         });
+        return { error: result.error };
       } else if (result.teacher) {
         // Store user data securely
         secureSessionService.securelyStoreUserData('teacher', result.teacher);
@@ -193,9 +194,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           details: 'Teacher login successful',
           userAgent: navigator.userAgent
         });
+        
+        return { teacher: result.teacher };
       }
 
-      return result;
+      return { error: 'Unknown error occurred' };
     } catch (error) {
       console.error('AuthContext: Teacher login error:', error);
       return { error: 'Login failed. Please try again.' };
