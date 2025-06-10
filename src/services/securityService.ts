@@ -268,7 +268,7 @@ class SecurityService {
     return false;
   }
 
-  // Monitor for security violations
+  // Monitor for security violations (simplified)
   monitorSecurityViolations(): void {
     // Monitor for storage tampering
     window.addEventListener('storage', (e) => {
@@ -282,23 +282,24 @@ class SecurityService {
       }
     });
 
-    // Monitor for developer tools
+    // Simplified developer tools detection (less aggressive)
     let devtools = false;
-    setInterval(() => {
-      if (window.outerHeight - window.innerHeight > 160 || window.outerWidth - window.innerWidth > 160) {
+    const checkInterval = setInterval(() => {
+      const threshold = 200; // More lenient threshold
+      if (window.outerHeight - window.innerHeight > threshold || window.outerWidth - window.innerWidth > threshold) {
         if (!devtools) {
           devtools = true;
-          this.logSecurityEvent({
-            type: 'suspicious_activity',
-            timestamp: new Date().toISOString(),
-            details: 'Developer tools opened',
-            userAgent: navigator.userAgent
-          });
+          console.log('Developer tools detected (security monitoring)');
         }
       } else {
         devtools = false;
       }
-    }, 1000);
+    }, 5000); // Check less frequently
+
+    // Clean up interval after 30 seconds to reduce interference
+    setTimeout(() => {
+      clearInterval(checkInterval);
+    }, 30000);
   }
 }
 

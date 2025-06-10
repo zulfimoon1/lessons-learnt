@@ -26,53 +26,50 @@ export const PlatformAdminProvider: React.FC<{ children: React.ReactNode }> = ({
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    console.log('PlatformAdminProvider: Starting secure initialization...');
+    console.log('PlatformAdminProvider: Starting initialization...');
     
-    const restoreSecureAdminSession = async () => {
+    const restoreAdminSession = async () => {
       try {
-        const session = await enhancedSecureSessionService.getSession();
-        
-        if (session && session.userType === 'admin') {
-          const adminData = localStorage.getItem('platformAdmin');
-          if (adminData) {
+        // Check for stored admin data
+        const adminData = localStorage.getItem('platformAdmin');
+        if (adminData) {
+          try {
             const parsedAdmin = JSON.parse(adminData);
-            if (parsedAdmin && parsedAdmin.id === session.userId) {
-              console.log('PlatformAdminProvider: Restoring secure admin session');
+            if (parsedAdmin && parsedAdmin.id && parsedAdmin.email) {
+              console.log('PlatformAdminProvider: Restoring admin session for:', parsedAdmin.email);
               setAdmin(parsedAdmin);
-              await enhancedSecureSessionService.refreshSession(session);
             } else {
-              console.log('PlatformAdminProvider: Invalid admin session data');
-              enhancedSecureSessionService.clearSession();
+              console.log('PlatformAdminProvider: Invalid admin data found, clearing');
+              localStorage.removeItem('platformAdmin');
             }
+          } catch (parseError) {
+            console.error('PlatformAdminProvider: Error parsing admin data:', parseError);
+            localStorage.removeItem('platformAdmin');
           }
         } else {
-          console.log('PlatformAdminProvider: No valid admin session found');
-          localStorage.removeItem('platformAdmin');
+          console.log('PlatformAdminProvider: No admin session found');
         }
       } catch (error) {
         console.error('PlatformAdminProvider: Session restoration error:', error);
-        enhancedSecureSessionService.clearSession();
       }
+      setIsLoading(false);
     };
 
-    restoreSecureAdminSession();
-    setIsLoading(false);
+    restoreAdminSession();
   }, []);
 
   const login = async (email: string, password: string) => {
     try {
-      console.log('PlatformAdminProvider: Secure login attempt for:', email);
+      console.log('PlatformAdminProvider: Login attempt for:', email);
       
       const result = await platformAdminLoginService(email, password);
+      console.log('PlatformAdminProvider: Login service result:', result);
       
       if (result && 'admin' in result && result.admin) {
         console.log('PlatformAdminProvider: Login successful');
         setAdmin(result.admin);
         
-        // Create secure session
-        await enhancedSecureSessionService.createSession(result.admin.id, 'admin', result.admin.school);
-        
-        // Store admin data securely
+        // Store admin data
         try {
           localStorage.setItem('platformAdmin', JSON.stringify(result.admin));
           
@@ -118,7 +115,7 @@ export const PlatformAdminProvider: React.FC<{ children: React.ReactNode }> = ({
   };
 
   const logout = () => {
-    console.log('PlatformAdminProvider: Secure logout initiated');
+    console.log('PlatformAdminProvider: Logout initiated');
     
     // Log the logout event
     if (admin) {
@@ -132,12 +129,12 @@ export const PlatformAdminProvider: React.FC<{ children: React.ReactNode }> = ({
     }
     
     setAdmin(null);
-    enhancedSecureSessionService.clearSession();
+    localStorage.removeItem('platformAdmin');
     
-    console.log('PlatformAdminProvider: Secure logout complete');
+    console.log('PlatformAdminProvider: Logout complete');
   };
 
-  console.log('PlatformAdminProvider: Current secure state - admin:', !!admin, 'isLoading:', isLoading);
+  console.log('PlatformAdminProvider: Current state - admin:', !!admin, 'isLoading:', isLoading);
 
   return (
     <PlatformAdminContext.Provider value={{ admin, isLoading, login, logout }}>
