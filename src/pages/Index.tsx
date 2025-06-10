@@ -1,249 +1,214 @@
 
-import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { useNavigate } from 'react-router-dom';
-import { BookOpen, Users, TrendingUp, Shield, CheckCircle, Star, DollarSign, Calendar, Pause } from 'lucide-react';
-import DemoSection from '@/components/DemoSection';
+import { GraduationCapIcon, UsersIcon, BookOpenIcon, HeartIcon, BarChart3Icon, ShieldCheckIcon, PlayCircleIcon } from "lucide-react";
+import { Link } from "react-router-dom";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
+import DemoSection from "@/components/DemoSection";
+import ComplianceFooter from "@/components/ComplianceFooter";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const Index = () => {
-  const navigate = useNavigate();
+  const { t, isLoading } = useLanguage();
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <GraduationCapIcon className="w-12 h-12 text-primary mx-auto mb-4" />
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
-      {/* Navigation */}
-      <nav className="bg-white/80 backdrop-blur-sm border-b border-blue-100 p-4">
-        <div className="max-w-6xl mx-auto flex justify-between items-center">
-          <div className="flex items-center gap-3">
-            <BookOpen className="w-8 h-8 text-blue-600" />
-            <span className="text-2xl font-bold text-gray-900">LessonLens</span>
-          </div>
-          <div className="flex items-center gap-4">
-            <Button 
-              onClick={() => navigate('/enhanced-pricing')}
-              variant="outline"
-              className="border-blue-200 text-blue-700 hover:bg-blue-50"
-            >
-              Pricing
-            </Button>
-            <Button 
-              onClick={() => navigate('/demo')}
-              variant="outline"
-              className="border-purple-200 text-purple-700 hover:bg-purple-50"
-            >
-              Demo
-            </Button>
-            <Button 
-              onClick={() => navigate('/teacher-login')}
-              className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
-            >
-              Get Started
-            </Button>
+    <div className="min-h-screen bg-background">
+      {/* Header */}
+      <header className="bg-card/80 backdrop-blur-sm border-b border-border">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+          <div className="flex justify-between items-center">
+            <div className="flex items-center gap-2">
+              <GraduationCapIcon className="w-8 h-8 text-primary" />
+              <h1 className="text-2xl font-bold text-foreground">Lessons Learnt</h1>
+            </div>
+            <div className="flex items-center gap-4">
+              <Link to="/demo">
+                <Button variant="outline" size="sm" className="flex items-center gap-2">
+                  <PlayCircleIcon className="w-4 h-4" />
+                  View Demo
+                </Button>
+              </Link>
+              <LanguageSwitcher />
+            </div>
           </div>
         </div>
-      </nav>
+      </header>
 
       {/* Hero Section */}
-      <section className="py-20 px-4">
-        <div className="max-w-6xl mx-auto text-center">
-          <Badge variant="secondary" className="mb-4 bg-blue-100 text-blue-800">
-            Transform Education Today
-          </Badge>
-          <h1 className="text-5xl font-bold text-gray-900 mb-6">
-            Real-Time Student Feedback &
-            <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-              {" "}Mental Health Monitoring
-            </span>
-          </h1>
-          <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
-            Empower teachers with instant insights into student understanding and wellbeing. 
-            Create supportive learning environments with our comprehensive educational platform.
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 text-center">
+        <div className="max-w-3xl mx-auto">
+          <h2 className="text-5xl font-bold text-foreground mb-6">
+            {t('welcome.title')}
+          </h2>
+          <p className="text-xl text-muted-foreground mb-12">
+            {t('welcome.subtitle')}
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button 
-              size="lg"
-              onClick={() => navigate('/enhanced-pricing')}
-              className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-lg px-8 py-6"
-            >
-              View Pricing - Starting at $7.99
-            </Button>
-            <Button 
-              size="lg"
-              variant="outline"
-              onClick={() => navigate('/demo')}
-              className="text-lg px-8 py-6 border-2"
-            >
-              Watch Demo
-            </Button>
+          
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-md mx-auto">
+            <Link to="/student-login">
+              <Button 
+                size="lg" 
+                className="w-full min-h-16 py-3 px-4 text-base flex items-center justify-center"
+              >
+                <UsersIcon className="w-5 h-5 mr-2 flex-shrink-0" />
+                <span className="text-center leading-tight whitespace-normal">{t('auth.studentLogin')}</span>
+              </Button>
+            </Link>
+            
+            <Link to="/teacher-login">
+              <Button 
+                size="lg" 
+                variant="outline" 
+                className="w-full border-2 border-border hover:bg-accent min-h-16 py-3 px-4 text-base flex items-center justify-center"
+              >
+                <BookOpenIcon className="w-5 h-5 mr-2 flex-shrink-0" />
+                <span className="text-center leading-tight whitespace-normal">{t('auth.teacherLogin')}</span>
+              </Button>
+            </Link>
           </div>
           
-          {/* Quick Value Props */}
-          <div className="grid md:grid-cols-3 gap-6 mt-16">
-            <div className="flex items-center gap-3 justify-center">
-              <DollarSign className="w-6 h-6 text-green-600" />
-              <span className="text-gray-700">From $7.99/month per teacher</span>
-            </div>
-            <div className="flex items-center gap-3 justify-center">
-              <Calendar className="w-6 h-6 text-blue-600" />
-              <span className="text-gray-700">30-day free trial</span>
-            </div>
-            <div className="flex items-center gap-3 justify-center">
-              <Pause className="w-6 h-6 text-purple-600" />
-              <span className="text-gray-700">Pause for school holidays</span>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Features Section */}
-      <section className="py-16 px-4 bg-white/50">
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">
-              Everything You Need for Modern Education
-            </h2>
-            <p className="text-lg text-gray-600">
-              Comprehensive tools for teachers, administrators, and students
+          <div className="max-w-2xl mx-auto mt-6">
+            <p className="text-2xl text-foreground font-bold italic leading-relaxed">
+              {t('tagline.studentLead')}
+            </p>
+            <p className="text-lg text-primary font-black mt-2">
+              {t('welcome.freeForStudents')}
             </p>
           </div>
-          
-          <div className="grid md:grid-cols-3 gap-8">
-            <Card className="border-blue-200 hover:shadow-lg transition-shadow">
-              <CardHeader>
-                <Users className="w-12 h-12 text-blue-600 mb-4" />
-                <CardTitle className="text-blue-900">Real-Time Feedback</CardTitle>
-                <CardDescription>
-                  Instant student responses and understanding checks during lessons
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ul className="space-y-2 text-sm text-gray-600">
-                  <li className="flex items-center gap-2">
-                    <CheckCircle className="w-4 h-4 text-green-600" />
-                    Live polls and quizzes
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <CheckCircle className="w-4 h-4 text-green-600" />
-                    Anonymous feedback options
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <CheckCircle className="w-4 h-4 text-green-600" />
-                    Instant analytics
-                  </li>
-                </ul>
-              </CardContent>
-            </Card>
-
-            <Card className="border-purple-200 hover:shadow-lg transition-shadow">
-              <CardHeader>
-                <Shield className="w-12 h-12 text-purple-600 mb-4" />
-                <CardTitle className="text-purple-900">Mental Health Monitoring</CardTitle>
-                <CardDescription>
-                  Early intervention tools for student wellbeing and support
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ul className="space-y-2 text-sm text-gray-600">
-                  <li className="flex items-center gap-2">
-                    <CheckCircle className="w-4 h-4 text-green-600" />
-                    Mood tracking
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <CheckCircle className="w-4 h-4 text-green-600" />
-                    Alert system
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <CheckCircle className="w-4 h-4 text-green-600" />
-                    Resource library
-                  </li>
-                </ul>
-              </CardContent>
-            </Card>
-
-            <Card className="border-green-200 hover:shadow-lg transition-shadow">
-              <CardHeader>
-                <TrendingUp className="w-12 h-12 text-green-600 mb-4" />
-                <CardTitle className="text-green-900">Advanced Analytics</CardTitle>
-                <CardDescription>
-                  Comprehensive reporting and insights for data-driven decisions
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ul className="space-y-2 text-sm text-gray-600">
-                  <li className="flex items-center gap-2">
-                    <CheckCircle className="w-4 h-4 text-green-600" />
-                    Performance trends
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <CheckCircle className="w-4 h-4 text-green-600" />
-                    Custom reports
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <CheckCircle className="w-4 h-4 text-green-600" />
-                    Export capabilities
-                  </li>
-                </ul>
-              </CardContent>
-            </Card>
-          </div>
         </div>
       </section>
 
-      {/* Demo Section */}
+      {/* Demo Section - Moved up right after hero */}
       <DemoSection />
 
-      {/* CTA Section */}
-      <section className="py-16 px-4 bg-gradient-to-r from-blue-600 to-purple-600">
-        <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-3xl font-bold text-white mb-4">
-            Ready to Transform Your Classroom?
-          </h2>
-          <p className="text-xl text-blue-100 mb-8">
-            Join thousands of educators already using LessonLens to improve student outcomes
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button 
-              size="lg"
-              onClick={() => navigate('/enhanced-pricing')}
-              className="bg-white text-blue-600 hover:bg-blue-50 text-lg px-8 py-6"
-            >
-              Start Your Free Trial
-            </Button>
-            <Button 
-              size="lg"
-              variant="outline"
-              onClick={() => navigate('/demo')}
-              className="border-white text-white hover:bg-white/10 text-lg px-8 py-6"
-            >
-              Schedule Demo
-            </Button>
+      {/* Features Section */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <Card className="bg-card/60 backdrop-blur-sm border-border">
+            <CardHeader>
+              <div className="w-12 h-12 bg-primary/20 rounded-lg flex items-center justify-center mb-4">
+                <UsersIcon className="w-6 h-6 text-primary" />
+              </div>
+              <CardTitle className="text-xl">{t('features.studentFeedback.title')}</CardTitle>
+              <CardDescription>
+                {t('features.studentFeedback.description')}
+              </CardDescription>
+            </CardHeader>
+          </Card>
+
+          <Card className="bg-card/60 backdrop-blur-sm border-border">
+            <CardHeader>
+              <div className="w-12 h-12 bg-primary/20 rounded-lg flex items-center justify-center mb-4">
+                <BookOpenIcon className="w-6 h-6 text-primary" />
+              </div>
+              <CardTitle className="text-xl">{t('features.teacherInsights.title')}</CardTitle>
+              <CardDescription>
+                {t('features.teacherInsights.description')}
+              </CardDescription>
+            </CardHeader>
+          </Card>
+
+          <Card className="bg-card/60 backdrop-blur-sm border-border">
+            <CardHeader>
+              <div className="w-12 h-12 bg-primary/20 rounded-lg flex items-center justify-center mb-4">
+                <HeartIcon className="w-6 h-6 text-primary" />
+              </div>
+              <CardTitle className="text-xl">{t('features.mentalHealth.title')}</CardTitle>
+              <CardDescription>
+                {t('features.mentalHealth.description')}
+              </CardDescription>
+            </CardHeader>
+          </Card>
+        </div>
+      </section>
+
+      {/* Platform Overview Section */}
+      <section className="bg-muted/30 py-20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl font-bold text-foreground mb-6">
+              {t('platform.whySchools')}
+            </h2>
+            <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+              {t('platform.whySchoolsSubtitle')}
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center mb-16">
+            <div>
+              <h3 className="text-3xl font-bold text-foreground mb-6">
+                {t('platform.studentInsights')}
+              </h3>
+              <div className="space-y-6">
+                <div className="flex items-start gap-4">
+                  <BarChart3Icon className="w-6 h-6 text-primary mt-1" />
+                  <div>
+                    <h4 className="font-semibold text-lg mb-2">{t('platform.realTimeAnalytics')}</h4>
+                    <p className="text-muted-foreground">
+                      {t('platform.realTimeAnalyticsDesc')}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-4">
+                  <HeartIcon className="w-6 h-6 text-primary mt-1" />
+                  <div>
+                    <h4 className="font-semibold text-lg mb-2">{t('platform.mentalHealthMonitoring')}</h4>
+                    <p className="text-muted-foreground">
+                      {t('platform.mentalHealthMonitoringDesc')}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-4">
+                  <ShieldCheckIcon className="w-6 h-6 text-primary mt-1" />
+                  <div>
+                    <h4 className="font-semibold text-lg mb-2">{t('platform.privacySecurity')}</h4>
+                    <p className="text-muted-foreground">
+                      {t('platform.privacySecurityDesc')}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="bg-gradient-to-br from-primary/10 to-primary/5 rounded-2xl p-8">
+              <div className="text-center">
+                <div className="text-6xl font-bold text-primary mb-4">{t('platform.improvementPercent')}</div>
+                <p className="text-xl font-semibold mb-2">{t('platform.improvementTitle')}</p>
+                <p className="text-muted-foreground">
+                  {t('platform.improvementDesc')}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="text-center">
+            <h3 className="text-2xl font-bold text-foreground mb-4">
+              {t('platform.readyToTransform')}
+            </h3>
+            <p className="text-lg text-muted-foreground mb-8">
+              {t('platform.readyToTransformDesc')}
+            </p>
+            <Link to="/teacher-login">
+              <Button size="lg" className="text-lg px-8 py-3">
+                {t('auth.signUpNow')}
+              </Button>
+            </Link>
           </div>
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="bg-gray-900 text-gray-300 py-12 px-4">
-        <div className="max-w-6xl mx-auto text-center">
-          <div className="flex items-center justify-center gap-3 mb-4">
-            <BookOpen className="w-8 h-8 text-blue-400" />
-            <span className="text-2xl font-bold text-white">LessonLens</span>
-          </div>
-          <p className="text-gray-400 mb-6">
-            Empowering educators with real-time insights and mental health support tools
-          </p>
-          <div className="flex justify-center gap-6 text-sm">
-            <button onClick={() => navigate('/enhanced-pricing')} className="hover:text-white">
-              Pricing
-            </button>
-            <button onClick={() => navigate('/demo')} className="hover:text-white">
-              Demo
-            </button>
-            <span className="hover:text-white cursor-pointer">Support</span>
-            <span className="hover:text-white cursor-pointer">Privacy</span>
-          </div>
-        </div>
-      </footer>
+      {/* Compliance Footer */}
+      <ComplianceFooter />
     </div>
   );
 };
