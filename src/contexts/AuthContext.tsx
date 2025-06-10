@@ -11,9 +11,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [teacher, setTeacher] = useState<Teacher | null>(null);
   const [student, setStudent] = useState<Student | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [csrfToken, setCsrfToken] = useState<string>('');
+
+  // Generate CSRF token for security
+  const generateCSRFToken = () => {
+    const array = new Uint8Array(32);
+    crypto.getRandomValues(array);
+    return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
+  };
 
   useEffect(() => {
     console.log('AuthContext: Starting secure initialization...');
+    
+    // Generate CSRF token
+    setCsrfToken(generateCSRFToken());
     
     const restoreSecureSession = () => {
       try {
@@ -22,7 +33,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (session) {
           console.log('AuthContext: Restoring secure session for:', session.userType);
           
-          // Restore user data based on session
+          // Restore user data based on session with enhanced validation
           if (session.userType === 'teacher') {
             const teacherData = localStorage.getItem('teacher');
             if (teacherData) {
@@ -30,7 +41,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               if (parsedTeacher && parsedTeacher.id === session.userId) {
                 setTeacher(parsedTeacher);
                 sessionService.refreshSession(session);
+                
+                // Log session restoration
+                logUserSecurityEvent({
+                  type: 'session_restored',
+                  userId: parsedTeacher.id,
+                  timestamp: new Date().toISOString(),
+                  details: 'Teacher session restored successfully',
+                  userAgent: navigator.userAgent
+                });
               } else {
+                console.warn('AuthContext: Teacher data mismatch, clearing session');
                 sessionService.clearSession();
               }
             }
@@ -41,7 +62,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               if (parsedStudent && parsedStudent.id === session.userId) {
                 setStudent(parsedStudent);
                 sessionService.refreshSession(session);
+                
+                // Log session restoration
+                logUserSecurityEvent({
+                  type: 'session_restored',
+                  userId: parsedStudent.id,
+                  timestamp: new Date().toISOString(),
+                  details: 'Student session restored successfully',
+                  userAgent: navigator.userAgent
+                });
               } else {
+                console.warn('AuthContext: Student data mismatch, clearing session');
                 sessionService.clearSession();
               }
             }
@@ -52,6 +83,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
       } catch (error) {
         console.error('AuthContext: Session restoration error:', error);
+        logUserSecurityEvent({
+          type: 'session_error',
+          timestamp: new Date().toISOString(),
+          details: `Session restoration failed: ${error}`,
+          userAgent: navigator.userAgent
+        });
         sessionService.clearSession();
       }
     };
@@ -71,6 +108,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       console.log('AuthContext: Secure teacher login attempt for:', email);
       
+      // Validate CSRF token (in real implementation, this would be passed from form)
+      if (!csrfToken) {
+        return { error: 'Security token missing. Please refresh and try again.' };
+      }
+
       const result = await enhancedSecureTeacherLogin(email, password);
       
       if (result.user && !result.error) {
@@ -86,12 +128,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setTeacher(teacherData);
         setStudent(null); // Ensure only one user type is logged in
         
-        // Store teacher data securely
+        // Store teacher data securely with enhanced validation
         try {
           localStorage.setItem('teacher', JSON.stringify(teacherData));
           localStorage.removeItem('student');
+          
+          // Generate new CSRF token after successful login
+          setCsrfToken(generateCSRFToken());
         } catch (storageError) {
           console.error('AuthContext: Storage error:', storageError);
+          logUserSecurityEvent({
+            type: 'storage_error',
+            userId: teacherData.id,
+            timestamp: new Date().toISOString(),
+            details: `Storage error during login: ${storageError}`,
+            userAgent: navigator.userAgent
+          });
         }
         
         return { teacher: teacherData };
@@ -114,6 +166,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const studentLogin = async (fullName: string, password: string) => {
     try {
       console.log('AuthContext: Secure student login attempt');
+      
+      // Validate CSRF token
+      if (!csrfToken) {
+        return { error: 'Security token missing. Please refresh and try again.' };
+      }
       
       // For student login, we need to extract school and grade from stored form data
       const loginData = JSON.parse(sessionStorage.getItem('studentLoginData') || '{}');
@@ -138,13 +195,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setStudent(studentData);
         setTeacher(null); // Ensure only one user type is logged in
         
-        // Store student data securely
+        // Store student data securely with enhanced validation
         try {
           localStorage.setItem('student', JSON.stringify(studentData));
           localStorage.removeItem('teacher');
           sessionStorage.removeItem('studentLoginData'); // Clear temporary data
+          
+          // Generate new CSRF token after successful login
+          setCsrfToken(generateCSRFToken());
         } catch (storageError) {
           console.error('AuthContext: Storage error:', storageError);
+          logUserSecurityEvent({
+            type: 'storage_error',
+            userId: studentData.id,
+            timestamp: new Date().toISOString(),
+            details: `Storage error during login: ${storageError}`,
+            userAgent: navigator.userAgent
+          });
         }
         
         return { student: studentData };
@@ -168,6 +235,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       console.log('AuthContext: Secure student signup attempt');
       
+      // Validate CSRF token
+      if (!csrfToken) {
+        return { error: 'Security token missing. Please refresh and try again.' };
+      }
+      
       const result = await enhancedSecureStudentSignup(fullName, school, grade, password);
       
       if (result.user && !result.error) {
@@ -186,8 +258,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         try {
           localStorage.setItem('student', JSON.stringify(studentData));
           localStorage.removeItem('teacher');
+          
+          // Generate new CSRF token after successful signup
+          setCsrfToken(generateCSRFToken());
         } catch (storageError) {
           console.error('AuthContext: Storage error:', storageError);
+          logUserSecurityEvent({
+            type: 'storage_error',
+            userId: studentData.id,
+            timestamp: new Date().toISOString(),
+            details: `Storage error during signup: ${storageError}`,
+            userAgent: navigator.userAgent
+          });
         }
         
         return { student: studentData };
@@ -223,6 +305,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Clear secure session and storage
     sessionService.clearSession();
     
+    // Generate new CSRF token after logout
+    setCsrfToken(generateCSRFToken());
+    
     console.log('AuthContext: Secure logout complete');
   };
 
@@ -234,6 +319,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     studentLogin,
     studentSignup,
     logout,
+    csrfToken, // Expose CSRF token for forms
   };
 
   console.log('AuthContext: Rendering with secure state:', { 

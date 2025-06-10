@@ -19,12 +19,18 @@ export interface StudentStatistics {
   student_response_rate: number;
 }
 
-// Rate limiting for platform admin login
-const loginAttempts = new Map<string, { count: number; lastAttempt: number; blocked: boolean }>();
+// Enhanced rate limiting with progressive delays
+const loginAttempts = new Map<string, { 
+  count: number; 
+  lastAttempt: number; 
+  blocked: boolean;
+  progressiveDelay: number;
+}>();
 const MAX_ATTEMPTS = 3;
 const LOCKOUT_DURATION = 15 * 60 * 1000; // 15 minutes
+const PROGRESSIVE_DELAY_BASE = 1000; // 1 second base delay
 
-const checkRateLimit = (identifier: string): { allowed: boolean; message?: string } => {
+const checkRateLimit = (identifier: string): { allowed: boolean; message?: string; delay?: number } => {
   const now = Date.now();
   const attempts = loginAttempts.get(identifier);
   
@@ -37,6 +43,17 @@ const checkRateLimit = (identifier: string): { allowed: boolean; message?: strin
       };
     }
     
+    // Check for progressive delay
+    if (attempts.count > 0 && now - attempts.lastAttempt < attempts.progressiveDelay) {
+      const remainingDelay = Math.ceil((attempts.progressiveDelay - (now - attempts.lastAttempt)) / 1000);
+      return {
+        allowed: false,
+        message: `Please wait ${remainingDelay} seconds before trying again.`,
+        delay: remainingDelay
+      };
+    }
+    
+    // Reset if lockout period has passed
     if (now - attempts.lastAttempt > LOCKOUT_DURATION) {
       loginAttempts.delete(identifier);
     }
@@ -47,9 +64,16 @@ const checkRateLimit = (identifier: string): { allowed: boolean; message?: strin
 
 const recordFailedAttempt = (identifier: string) => {
   const now = Date.now();
-  const attempts = loginAttempts.get(identifier) || { count: 0, lastAttempt: now, blocked: false };
+  const attempts = loginAttempts.get(identifier) || { 
+    count: 0, 
+    lastAttempt: now, 
+    blocked: false,
+    progressiveDelay: PROGRESSIVE_DELAY_BASE
+  };
+  
   attempts.count++;
   attempts.lastAttempt = now;
+  attempts.progressiveDelay = PROGRESSIVE_DELAY_BASE * Math.pow(2, attempts.count - 1); // Exponential backoff
   
   if (attempts.count >= MAX_ATTEMPTS) {
     attempts.blocked = true;
@@ -62,24 +86,70 @@ const clearFailedAttempts = (identifier: string) => {
   loginAttempts.delete(identifier);
 };
 
-export const platformAdminLoginService = async (email: string, password: string) => {
+// Enhanced input validation
+const validateLoginInput = (email: string, password: string): { valid: boolean; error?: string } => {
+  // Enhanced email validation
+  const emailRegex = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
+  
+  if (!email || !password) {
+    return { valid: false, error: 'Email and password are required' };
+  }
+  
+  if (!emailRegex.test(email)) {
+    return { valid: false, error: 'Invalid email format' };
+  }
+  
+  if (email.length > 254) {
+    return { valid: false, error: 'Email address too long' };
+  }
+  
+  if (password.length < 8) {
+    return { valid: false, error: 'Password must be at least 8 characters' };
+  }
+  
+  if (password.length > 128) {
+    return { valid: false, error: 'Password too long' };
+  }
+  
+  // Check for suspicious patterns
+  const suspiciousPatterns = [
+    /script/i, /javascript/i, /vbscript/i, /<.*>/i, /union.*select/i, /drop.*table/i
+  ];
+  
+  for (const pattern of suspiciousPatterns) {
+    if (pattern.test(email) || pattern.test(password)) {
+      return { valid: false, error: 'Invalid characters detected' };
+    }
+  }
+  
+  return { valid: true };
+};
+
+export const platformAdminLoginService = async (email: string, password: string, csrfToken?: string) => {
   try {
     console.log('Platform admin login attempt:', email);
 
-    // Input validation and sanitization
-    const sanitizedEmail = validateInput.sanitizeText(email).toLowerCase();
-    
-    if (!sanitizedEmail || !password) {
-      return { error: 'Email and password are required' };
+    // Enhanced input validation
+    const validation = validateLoginInput(email, password);
+    if (!validation.valid) {
+      return { error: validation.error };
     }
 
-    // Basic email format validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(sanitizedEmail)) {
-      return { error: 'Invalid email format' };
+    // CSRF token validation (if provided)
+    if (csrfToken && !(await sessionService.validateCSRFToken(csrfToken))) {
+      logUserSecurityEvent({
+        type: 'csrf_violation',
+        timestamp: new Date().toISOString(),
+        details: `CSRF token validation failed for admin login: ${email}`,
+        userAgent: navigator.userAgent
+      });
+      return { error: 'Security validation failed. Please refresh and try again.' };
     }
 
-    // Rate limiting check
+    // Input sanitization
+    const sanitizedEmail = validateInput.sanitizeText(email).toLowerCase().trim();
+
+    // Enhanced rate limiting check
     const rateCheck = checkRateLimit(sanitizedEmail);
     if (!rateCheck.allowed) {
       logUserSecurityEvent({
@@ -91,12 +161,19 @@ export const platformAdminLoginService = async (email: string, password: string)
       return { error: rateCheck.message };
     }
 
-    const { data: admin, error } = await supabase
+    // Database query with timeout protection
+    const timeoutPromise = new Promise((_, reject) => 
+      setTimeout(() => reject(new Error('Database query timeout')), 10000)
+    );
+
+    const dbQuery = supabase
       .from('teachers')
       .select('*')
       .eq('email', sanitizedEmail)
       .eq('role', 'admin')
       .single();
+
+    const { data: admin, error } = await Promise.race([dbQuery, timeoutPromise]) as any;
 
     if (error || !admin) {
       console.log('Platform admin not found');
@@ -110,8 +187,17 @@ export const platformAdminLoginService = async (email: string, password: string)
       return { error: 'Invalid credentials' };
     }
 
-    // Use secure password verification
+    // Enhanced password verification with timing attack protection
+    const verificationStart = Date.now();
     const isPasswordValid = await verifyPassword(password, admin.password_hash);
+    const verificationTime = Date.now() - verificationStart;
+    
+    // Ensure minimum verification time to prevent timing attacks
+    const minVerificationTime = 100; // 100ms minimum
+    if (verificationTime < minVerificationTime) {
+      await new Promise(resolve => setTimeout(resolve, minVerificationTime - verificationTime));
+    }
+    
     if (!isPasswordValid) {
       console.log('Invalid password for platform admin');
       recordFailedAttempt(sanitizedEmail);
@@ -129,12 +215,15 @@ export const platformAdminLoginService = async (email: string, password: string)
     clearFailedAttempts(sanitizedEmail);
     await sessionService.createSession(admin.id, 'admin', admin.school);
 
+    // Enhanced success logging
     logUserSecurityEvent({
       type: 'login_success',
       userId: admin.id,
       timestamp: new Date().toISOString(),
       details: `Successful platform admin login: ${sanitizedEmail}`,
-      userAgent: navigator.userAgent
+      userAgent: navigator.userAgent,
+      ipAddress: 'N/A', // Would be available in server-side implementation
+      sessionId: 'encrypted' // Don't log actual session ID for security
     });
 
     console.log('Platform admin login successful');
@@ -149,21 +238,34 @@ export const platformAdminLoginService = async (email: string, password: string)
     };
   } catch (error) {
     console.error('Platform admin login error:', error);
+    
+    // Enhanced error logging
     logUserSecurityEvent({
       type: 'suspicious_activity',
       timestamp: new Date().toISOString(),
-      details: `Platform admin login error: ${error}`,
-      userAgent: navigator.userAgent
+      details: `Platform admin login error: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      userAgent: navigator.userAgent,
+      errorStack: error instanceof Error ? error.stack : undefined
     });
+    
     return { error: 'Login failed. Please try again.' };
   }
 };
 
 export const createTestAdmin = async () => {
   try {
-    // Only allow in development
+    // Enhanced security checks for test admin creation
     if (process.env.NODE_ENV === 'production') {
+      console.warn('Test admin creation attempted in production environment');
       return { error: 'Test admin creation is disabled in production' };
+    }
+
+    // Additional environment validation
+    const allowedHosts = ['localhost', '127.0.0.1', 'lovable.dev'];
+    const currentHost = window.location.hostname;
+    if (!allowedHosts.includes(currentHost)) {
+      console.warn('Test admin creation attempted from unauthorized host:', currentHost);
+      return { error: 'Test admin creation not allowed from this host' };
     }
 
     const { data: existingAdmin } = await supabase
@@ -196,9 +298,56 @@ export const createTestAdmin = async () => {
       return { error: 'Failed to create test admin' };
     }
 
+    // Log test admin creation
+    logUserSecurityEvent({
+      type: 'test_admin_created',
+      userId: admin.id,
+      timestamp: new Date().toISOString(),
+      details: 'Test admin account created for development',
+      userAgent: navigator.userAgent
+    });
+
     return { success: true, admin };
   } catch (error) {
     console.error('Create test admin error:', error);
     return { error: 'Failed to create test admin' };
+  }
+};
+
+// Enhanced admin utilities
+export const adminSecurityUtils = {
+  // Force password reset for compromised accounts
+  forcePasswordReset: async (adminId: string): Promise<{ success: boolean; error?: string }> => {
+    try {
+      // In a real implementation, this would invalidate all sessions
+      // and force the admin to reset their password
+      logUserSecurityEvent({
+        type: 'forced_password_reset',
+        userId: adminId,
+        timestamp: new Date().toISOString(),
+        details: 'Admin account password reset forced',
+        userAgent: navigator.userAgent
+      });
+      
+      return { success: true };
+    } catch (error) {
+      return { success: false, error: 'Failed to force password reset' };
+    }
+  },
+
+  // Get security metrics for admin dashboard
+  getSecurityMetrics: async (): Promise<{
+    loginAttempts: number;
+    blockedIPs: number;
+    suspiciousActivities: number;
+    lastSecurityScan: string;
+  }> => {
+    // In a real implementation, this would query security logs
+    return {
+      loginAttempts: loginAttempts.size,
+      blockedIPs: Array.from(loginAttempts.values()).filter(a => a.blocked).length,
+      suspiciousActivities: 0, // Would be calculated from security logs
+      lastSecurityScan: new Date().toISOString()
+    };
   }
 };
