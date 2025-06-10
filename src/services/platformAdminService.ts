@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { verifyPassword, hashPassword } from './securePasswordService';
 import { validateInput } from './secureInputValidation';
@@ -105,6 +104,8 @@ export const platformAdminLoginService = async (email: string, password: string,
   try {
     console.log('=== PLATFORM ADMIN LOGIN DEBUG ===');
     console.log('Login attempt for:', email);
+    console.log('Password provided:', password ? 'Yes' : 'No');
+    console.log('Password length:', password?.length || 0);
 
     // Enhanced input validation
     const validation = validateLoginInput(email, password);
@@ -123,7 +124,7 @@ export const platformAdminLoginService = async (email: string, password: string,
       return { error: rateCheck.message };
     }
 
-    // Database query
+    // Database query with more detailed logging
     console.log('Querying database for admin...');
     
     const { data: admin, error, status } = await supabase
@@ -139,7 +140,7 @@ export const platformAdminLoginService = async (email: string, password: string,
     console.log('- status:', status);
 
     if (error) {
-      console.log('Database error:', error);
+      console.log('Database error details:', error);
       if (error.code === 'PGRST116') {
         console.log('No admin found with this email');
         recordFailedAttempt(sanitizedEmail);
@@ -160,48 +161,50 @@ export const platformAdminLoginService = async (email: string, password: string,
       name: admin.name,
       email: admin.email,
       role: admin.role,
-      hasPasswordHash: !!admin.password_hash
+      school: admin.school,
+      hasPasswordHash: !!admin.password_hash,
+      passwordHashLength: admin.password_hash?.length || 0,
+      passwordHashStart: admin.password_hash?.substring(0, 10) || 'N/A'
     });
 
-    // Password verification
-    console.log('Starting password verification...');
+    // Enhanced password verification with detailed logging
+    console.log('=== PASSWORD VERIFICATION ===');
     
     if (!admin.password_hash) {
-      console.error('No password hash found');
+      console.error('CRITICAL: No password hash found for admin');
       recordFailedAttempt(sanitizedEmail);
       return { error: 'Authentication configuration error' };
     }
 
-    console.log('Password hash found, length:', admin.password_hash.length);
-    console.log('Testing password verification...');
+    console.log('Password hash details:');
+    console.log('- Hash length:', admin.password_hash.length);
+    console.log('- Hash format (first 7 chars):', admin.password_hash.substring(0, 7));
+    console.log('- Is bcrypt format:', admin.password_hash.startsWith('$2b$'));
+    
+    console.log('Testing password:', password);
+    console.log('Against hash (first 20 chars):', admin.password_hash.substring(0, 20));
 
     let isPasswordValid = false;
     try {
-      // Test if the stored hash is actually correct format
-      console.log('Hash format check - starts with $2b$:', admin.password_hash.startsWith('$2b$'));
-      
+      console.log('Calling verifyPassword function...');
       isPasswordValid = await verifyPassword(password, admin.password_hash);
       console.log('Password verification result:', isPasswordValid);
       
-      // If password fails, let's try with a fresh hash for testing
-      if (!isPasswordValid && password === 'admin123') {
-        console.log('Password failed, testing with fresh hash...');
-        const testHash = await hashPassword('admin123');
-        console.log('Fresh hash created for admin123:', testHash.substring(0, 20) + '...');
-        
-        // This is just for debugging - we won't use this in production
-        const testVerify = await verifyPassword('admin123', testHash);
-        console.log('Fresh hash verification test:', testVerify);
-      }
-      
     } catch (verifyError) {
       console.error('Password verification error:', verifyError);
+      console.error('Error details:', {
+        message: verifyError.message,
+        stack: verifyError.stack
+      });
       recordFailedAttempt(sanitizedEmail);
-      return { error: 'Authentication failed' };
+      return { error: 'Authentication failed - verification error' };
     }
     
     if (!isPasswordValid) {
-      console.log('Password verification failed');
+      console.log('=== PASSWORD VERIFICATION FAILED ===');
+      console.log('Provided password:', password);
+      console.log('Expected: admin123');
+      console.log('Hash being tested against:', admin.password_hash);
       recordFailedAttempt(sanitizedEmail);
       return { error: 'Invalid credentials' };
     }
@@ -225,6 +228,7 @@ export const platformAdminLoginService = async (email: string, password: string,
   } catch (error) {
     console.error('=== LOGIN ERROR ===');
     console.error('Unexpected error:', error);
+    console.error('Error stack:', error.stack);
     return { error: 'Login failed. Please try again.' };
   }
 };
