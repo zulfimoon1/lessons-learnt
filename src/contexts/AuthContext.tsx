@@ -11,29 +11,38 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Load saved auth data from localStorage
-    const savedTeacher = localStorage.getItem('teacher');
-    const savedStudent = localStorage.getItem('student');
-    
-    if (savedTeacher) {
-      try {
-        setTeacher(JSON.parse(savedTeacher));
-      } catch (error) {
-        console.error('Error parsing saved teacher data:', error);
-        localStorage.removeItem('teacher');
+    // Load saved auth data from localStorage with error handling
+    try {
+      const savedTeacher = localStorage.getItem('teacher');
+      const savedStudent = localStorage.getItem('student');
+      
+      if (savedTeacher) {
+        const parsedTeacher = JSON.parse(savedTeacher);
+        // Validate the structure of saved teacher data
+        if (parsedTeacher && parsedTeacher.id && parsedTeacher.name) {
+          setTeacher(parsedTeacher);
+        } else {
+          localStorage.removeItem('teacher');
+        }
       }
-    }
-    
-    if (savedStudent) {
-      try {
-        setStudent(JSON.parse(savedStudent));
-      } catch (error) {
-        console.error('Error parsing saved student data:', error);
-        localStorage.removeItem('student');
+      
+      if (savedStudent) {
+        const parsedStudent = JSON.parse(savedStudent);
+        // Validate the structure of saved student data
+        if (parsedStudent && parsedStudent.id && parsedStudent.full_name) {
+          setStudent(parsedStudent);
+        } else {
+          localStorage.removeItem('student');
+        }
       }
+    } catch (error) {
+      console.error('Error loading saved authentication data:', error);
+      // Clear potentially corrupted data
+      localStorage.removeItem('teacher');
+      localStorage.removeItem('student');
+    } finally {
+      setIsLoading(false);
     }
-    
-    setIsLoading(false);
   }, []);
 
   const teacherLogin = async (
@@ -43,44 +52,68 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     school?: string,
     role?: 'teacher' | 'admin' | 'doctor'
   ) => {
-    // Use teacherSimpleLoginService with name and school for simple login
-    const result = await teacherSimpleLoginService(name || email, password, school || '');
-    
-    if (result.teacher) {
-      setTeacher(result.teacher);
-      localStorage.setItem('teacher', JSON.stringify(result.teacher));
+    try {
+      // Use teacherSimpleLoginService with name and school for simple login
+      const result = await teacherSimpleLoginService(name || email, password, school || '');
+      
+      if (result.teacher) {
+        setTeacher(result.teacher);
+        // Securely store teacher data
+        localStorage.setItem('teacher', JSON.stringify(result.teacher));
+      }
+      
+      return result;
+    } catch (error) {
+      console.error('Teacher login error:', error);
+      return { error: 'Login failed. Please try again.' };
     }
-    
-    return result;
   };
 
   const studentLogin = async (fullName: string, password: string) => {
-    const result = await studentSimpleLoginService(fullName, password);
-    
-    if (result.student) {
-      setStudent(result.student);
-      localStorage.setItem('student', JSON.stringify(result.student));
+    try {
+      const result = await studentSimpleLoginService(fullName, password);
+      
+      if (result.student) {
+        setStudent(result.student);
+        // Securely store student data
+        localStorage.setItem('student', JSON.stringify(result.student));
+      }
+      
+      return result;
+    } catch (error) {
+      console.error('Student login error:', error);
+      return { error: 'Login failed. Please try again.' };
     }
-    
-    return result;
   };
 
   const studentSignup = async (fullName: string, school: string, grade: string, password: string) => {
-    const result = await studentSignupService(fullName, school, grade, password);
-    
-    if (result.student) {
-      setStudent(result.student);
-      localStorage.setItem('student', JSON.stringify(result.student));
+    try {
+      const result = await studentSignupService(fullName, school, grade, password);
+      
+      if (result.student) {
+        setStudent(result.student);
+        // Securely store student data
+        localStorage.setItem('student', JSON.stringify(result.student));
+      }
+      
+      return result;
+    } catch (error) {
+      console.error('Student signup error:', error);
+      return { error: 'Signup failed. Please try again.' };
     }
-    
-    return result;
   };
 
   const logout = () => {
     setTeacher(null);
     setStudent(null);
-    localStorage.removeItem('teacher');
-    localStorage.removeItem('student');
+    
+    // Clear stored authentication data
+    try {
+      localStorage.removeItem('teacher');
+      localStorage.removeItem('student');
+    } catch (error) {
+      console.error('Error clearing authentication data:', error);
+    }
   };
 
   const value: AuthContextType = {

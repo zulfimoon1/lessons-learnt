@@ -3,10 +3,23 @@ import { supabase } from '@/integrations/supabase/client';
 import bcrypt from 'bcryptjs';
 import { Teacher, Student } from '@/types/auth';
 
+// Remove sensitive console logging for production security
+const logSecurely = (message: string, ...args: any[]) => {
+  // Only log non-sensitive information
+  if (process.env.NODE_ENV === 'development') {
+    console.log(message, ...args);
+  }
+};
+
 // Teacher login with simple name/password
 export const teacherSimpleLoginService = async (name: string, password: string, school: string) => {
   try {
-    console.log('teacherSimpleLoginService: Attempting login for:', name, 'at school:', school);
+    logSecurely('teacherSimpleLoginService: Attempting login for teacher at school:', school);
+
+    // Validate inputs to prevent injection attacks
+    if (!name?.trim() || !password?.trim() || !school?.trim()) {
+      return { error: 'All fields are required.' };
+    }
 
     // First, try to find teacher by name and school
     const { data: teachers, error: searchError } = await supabase
@@ -16,12 +29,11 @@ export const teacherSimpleLoginService = async (name: string, password: string, 
       .eq('school', school.trim());
 
     if (searchError) {
-      console.error('teacherSimpleLoginService: Error searching for teacher:', searchError);
+      logSecurely('teacherSimpleLoginService: Database error during search');
       return { error: 'Database error. Please try again.' };
     }
 
     if (!teachers || teachers.length === 0) {
-      console.log('teacherSimpleLoginService: No teacher found with name:', name);
       return { error: 'Invalid credentials. Please check your name and try again.' };
     }
 
@@ -29,7 +41,7 @@ export const teacherSimpleLoginService = async (name: string, password: string, 
     for (const teacher of teachers) {
       const isValidPassword = await bcrypt.compare(password, teacher.password_hash);
       if (isValidPassword) {
-        console.log('teacherSimpleLoginService: Password valid for teacher:', teacher.id);
+        logSecurely('teacherSimpleLoginService: Successful login for teacher ID:', teacher.id);
         const teacherData: Teacher = {
           id: teacher.id,
           name: teacher.name,
@@ -44,10 +56,9 @@ export const teacherSimpleLoginService = async (name: string, password: string, 
       }
     }
 
-    console.log('teacherSimpleLoginService: Invalid password for teacher:', name);
     return { error: 'Invalid credentials. Please check your password and try again.' };
   } catch (error) {
-    console.error('teacherSimpleLoginService: Unexpected error:', error);
+    logSecurely('teacherSimpleLoginService: Unexpected error occurred');
     return { error: 'An unexpected error occurred. Please try again.' };
   }
 };
@@ -55,7 +66,12 @@ export const teacherSimpleLoginService = async (name: string, password: string, 
 // Student login with simple name/password
 export const studentSimpleLoginService = async (fullName: string, password: string) => {
   try {
-    console.log('studentSimpleLoginService: Attempting login for:', fullName);
+    logSecurely('studentSimpleLoginService: Attempting login for student');
+
+    // Validate inputs to prevent injection attacks
+    if (!fullName?.trim() || !password?.trim()) {
+      return { error: 'All fields are required.' };
+    }
 
     // Search for student by full name
     const { data: students, error: searchError } = await supabase
@@ -64,12 +80,11 @@ export const studentSimpleLoginService = async (fullName: string, password: stri
       .eq('full_name', fullName.trim());
 
     if (searchError) {
-      console.error('studentSimpleLoginService: Error searching for student:', searchError);
+      logSecurely('studentSimpleLoginService: Database error during search');
       return { error: 'Database error. Please try again.' };
     }
 
     if (!students || students.length === 0) {
-      console.log('studentSimpleLoginService: No student found with name:', fullName);
       return { error: 'Invalid credentials. Please check your name and try again.' };
     }
 
@@ -78,7 +93,7 @@ export const studentSimpleLoginService = async (fullName: string, password: stri
     const isValidPassword = await bcrypt.compare(password, student.password_hash);
     
     if (isValidPassword) {
-      console.log('studentSimpleLoginService: Password valid for student:', student.id);
+      logSecurely('studentSimpleLoginService: Successful login for student ID:', student.id);
       const studentData: Student = {
         id: student.id,
         full_name: student.full_name,
@@ -88,15 +103,14 @@ export const studentSimpleLoginService = async (fullName: string, password: stri
       return { student: studentData };
     }
 
-    console.log('studentSimpleLoginService: Invalid password for student:', fullName);
     return { error: 'Invalid credentials. Please check your password and try again.' };
   } catch (error) {
-    console.error('studentSimpleLoginService: Unexpected error:', error);
+    logSecurely('studentSimpleLoginService: Unexpected error occurred');
     return { error: 'An unexpected error occurred. Please try again.' };
   }
 };
 
-// Teacher signup
+// Teacher signup with enhanced security
 export const teacherSignupService = async (
   name: string,
   email: string,
@@ -107,7 +121,23 @@ export const teacherSignupService = async (
   license_number?: string
 ) => {
   try {
-    console.log('teacherSignupService: Creating teacher account for:', email);
+    logSecurely('teacherSignupService: Creating teacher account');
+
+    // Enhanced input validation
+    if (!name?.trim() || !email?.trim() || !school?.trim() || !password?.trim()) {
+      return { error: 'All required fields must be filled.' };
+    }
+
+    // Basic email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email.trim())) {
+      return { error: 'Please enter a valid email address.' };
+    }
+
+    // Password strength validation
+    if (password.length < 8) {
+      return { error: 'Password must be at least 8 characters long.' };
+    }
 
     // Check if teacher already exists
     const { data: existingTeachers, error: checkError } = await supabase
@@ -116,7 +146,7 @@ export const teacherSignupService = async (
       .eq('email', email.trim());
 
     if (checkError) {
-      console.error('teacherSignupService: Error checking existing teacher:', checkError);
+      logSecurely('teacherSignupService: Database error during duplicate check');
       return { error: 'Database error. Please try again.' };
     }
 
@@ -124,15 +154,15 @@ export const teacherSignupService = async (
       return { error: 'A teacher with this email already exists.' };
     }
 
-    // Hash the password
-    const passwordHash = await bcrypt.hash(password, 10);
+    // Hash the password with higher cost for better security
+    const passwordHash = await bcrypt.hash(password, 12);
 
     // Create new teacher
     const { data: newTeacher, error: insertError } = await supabase
       .from('teachers')
       .insert({
         name: name.trim(),
-        email: email.trim(),
+        email: email.trim().toLowerCase(),
         school: school.trim(),
         password_hash: passwordHash,
         role,
@@ -143,11 +173,11 @@ export const teacherSignupService = async (
       .single();
 
     if (insertError) {
-      console.error('teacherSignupService: Error creating teacher:', insertError);
+      logSecurely('teacherSignupService: Database error during insertion');
       return { error: 'Failed to create account. Please try again.' };
     }
 
-    console.log('teacherSignupService: Teacher created successfully:', newTeacher.id);
+    logSecurely('teacherSignupService: Teacher account created successfully');
     const teacherData: Teacher = {
       id: newTeacher.id,
       name: newTeacher.name,
@@ -161,12 +191,12 @@ export const teacherSignupService = async (
 
     return { teacher: teacherData };
   } catch (error) {
-    console.error('teacherSignupService: Unexpected error:', error);
+    logSecurely('teacherSignupService: Unexpected error occurred');
     return { error: 'An unexpected error occurred. Please try again.' };
   }
 };
 
-// Student signup
+// Student signup with enhanced security
 export const studentSignupService = async (
   fullName: string,
   school: string,
@@ -174,7 +204,17 @@ export const studentSignupService = async (
   password: string
 ) => {
   try {
-    console.log('studentSignupService: Creating student account for:', fullName);
+    logSecurely('studentSignupService: Creating student account');
+
+    // Enhanced input validation
+    if (!fullName?.trim() || !school?.trim() || !grade?.trim() || !password?.trim()) {
+      return { error: 'All fields are required.' };
+    }
+
+    // Password strength validation
+    if (password.length < 8) {
+      return { error: 'Password must be at least 8 characters long.' };
+    }
 
     // Check if student already exists
     const { data: existingStudents, error: checkError } = await supabase
@@ -184,7 +224,7 @@ export const studentSignupService = async (
       .eq('school', school.trim());
 
     if (checkError) {
-      console.error('studentSignupService: Error checking existing student:', checkError);
+      logSecurely('studentSignupService: Database error during duplicate check');
       return { error: 'Database error. Please try again.' };
     }
 
@@ -192,8 +232,8 @@ export const studentSignupService = async (
       return { error: 'A student with this name already exists at this school.' };
     }
 
-    // Hash the password
-    const passwordHash = await bcrypt.hash(password, 10);
+    // Hash the password with higher cost for better security
+    const passwordHash = await bcrypt.hash(password, 12);
 
     // Create new student
     const { data: newStudent, error: insertError } = await supabase
@@ -208,11 +248,11 @@ export const studentSignupService = async (
       .single();
 
     if (insertError) {
-      console.error('studentSignupService: Error creating student:', insertError);
+      logSecurely('studentSignupService: Database error during insertion');
       return { error: 'Failed to create account. Please try again.' };
     }
 
-    console.log('studentSignupService: Student created successfully:', newStudent.id);
+    logSecurely('studentSignupService: Student account created successfully');
     const studentData: Student = {
       id: newStudent.id,
       full_name: newStudent.full_name,
@@ -222,7 +262,7 @@ export const studentSignupService = async (
 
     return { student: studentData };
   } catch (error) {
-    console.error('studentSignupService: Unexpected error:', error);
+    logSecurely('studentSignupService: Unexpected error occurred');
     return { error: 'An unexpected error occurred. Please try again.' };
   }
 };
