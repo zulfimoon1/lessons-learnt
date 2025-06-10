@@ -3,6 +3,7 @@ import React from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Shield, Lock, FileText, Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Link } from 'react-router-dom';
 
 const ComplianceFooter: React.FC = () => {
   const { t } = useLanguage();
@@ -38,6 +39,11 @@ const ComplianceFooter: React.FC = () => {
         
         <div className="border-t pt-6">
           <div className="flex flex-wrap gap-4 text-xs text-gray-500 mb-4">
+            <Link to="/how-it-works">
+              <Button variant="link" className="h-auto p-0 text-xs">
+                {t('howItWorks.title')}
+              </Button>
+            </Link>
             <Button variant="link" className="h-auto p-0 text-xs">
               {t('compliance.privacyPolicy')}
             </Button>
