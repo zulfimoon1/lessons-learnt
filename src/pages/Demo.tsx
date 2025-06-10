@@ -56,7 +56,7 @@ const Demo = () => {
               <div className="w-2 h-2 bg-green-500 rounded-full"></div>
               <span className="text-sm font-medium">{t('demo.mockup.drSarahOnline')}</span>
             </div>
-            <p className="text-sm text-purple-700">{t('demo.mentalHealth.schoolPsychologist')}</p>
+            <p className="text-sm text-purple-700">School Psychologist</p>
             <div className="mt-2">
               <Badge className="bg-green-100 text-green-700">{t('demo.mockup.availableChat')}</Badge>
             </div>
@@ -65,11 +65,11 @@ const Demo = () => {
           <div className="bg-blue-50 p-4 rounded-lg border-l-4 border-blue-500">
             <div className="flex items-center gap-2 mb-2">
               <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
-              <span className="text-sm font-medium">{t('demo.mentalHealth.mrJamesChen')}</span>
+              <span className="text-sm font-medium">Mr. James Chen - Busy</span>
             </div>
-            <p className="text-sm text-blue-700">{t('demo.mentalHealth.counselor')}</p>
+            <p className="text-sm text-blue-700">Counselor</p>
             <div className="mt-2">
-              <Badge className="bg-yellow-100 text-yellow-700">{t('demo.mentalHealth.backAt2PM')}</Badge>
+              <Badge className="bg-yellow-100 text-yellow-700">Back at 2:00 PM</Badge>
             </div>
           </div>
         </div>
@@ -94,11 +94,11 @@ const Demo = () => {
               <span className="text-xs text-gray-500">{t('demo.mockup.drSarah')} - 2:33 PM</span>
             </div>
             <div className="bg-blue-100 p-3 rounded-lg max-w-xs ml-auto">
-              <p className="text-sm">{t('demo.mentalHealth.upcomingExams')}</p>
+              <p className="text-sm">Mostly the upcoming exams. I feel like no matter how much I study, I'm not retaining the information.</p>
               <span className="text-xs text-gray-500">{t('demo.mockup.anonymousStudent')} - 2:35 PM</span>
             </div>
             <div className="bg-purple-100 p-3 rounded-lg max-w-xs">
-              <p className="text-sm">{t('demo.mentalHealth.studyStrategies')}</p>
+              <p className="text-sm">That sounds really frustrating. Let's work on some study strategies that might help you feel more confident. Have you tried breaking your study sessions into smaller chunks?</p>
               <span className="text-xs text-gray-500">{t('demo.mockup.drSarah')} - 2:36 PM</span>
             </div>
           </div>
@@ -119,12 +119,12 @@ const Demo = () => {
           </div>
           
           <div className="grid grid-cols-2 gap-2">
-            <Button variant="outline" className="text-sm">{t('demo.mentalHealth.selfHelpResources')}</Button>
-            <Button variant="outline" className="text-sm">{t('demo.mentalHealth.moodTracking')}</Button>
+            <Button variant="outline" className="text-sm">Self-Help Resources</Button>
+            <Button variant="outline" className="text-sm">Mood Tracking</Button>
           </div>
           
           <div className="bg-red-50 p-3 rounded-lg border border-red-200">
-            <p className="text-xs text-red-700 font-medium">🚨 {t('demo.mentalHealth.crisisSupport')}</p>
+            <p className="text-xs text-red-700 font-medium">🚨 Crisis Support: 116 123 Vilties Linija - Hope Line</p>
           </div>
         </div>
       </div>
@@ -232,7 +232,7 @@ const Demo = () => {
                     <CardContent>
                       <div className="space-y-4">
                         <div>
-                          <h4 className="font-semibold mb-2">{t('demo.keyFeaturesShown')}:</h4>
+                          <h4 className="font-semibold mb-2">Key Features Shown:</h4>
                           <ul className="text-sm text-gray-600 space-y-1">
                             {demo.id === "student-simulation" && (
                               <>
@@ -272,11 +272,11 @@ const Demo = () => {
                         <div className="bg-blue-50 p-4 rounded-lg">
                           <p className="text-sm text-blue-800">
                             {demo.id === "student-simulation" ? (
-                              <><strong>{t('demo.interactiveSimulation')}:</strong> {t('demo.interactive.student')}</>
+                              <><strong>Interactive Simulation:</strong> {t('demo.interactive.student')}</>
                             ) : demo.id === "teacher-simulation" ? (
-                              <><strong>{t('demo.teacherWorkflow')}:</strong> {t('demo.interactive.teacher')}</>
+                              <><strong>Teacher Workflow:</strong> {t('demo.interactive.teacher')}</>
                             ) : (
-                              <><strong>{t('demo.fullIntegration')}:</strong> {t('demo.interactive.integration')}</>
+                              <><strong>Full Integration:</strong> {t('demo.interactive.integration')}</>
                             )}
                           </p>
                         </div>
