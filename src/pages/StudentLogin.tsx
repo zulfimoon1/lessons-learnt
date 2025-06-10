@@ -10,6 +10,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import AuthHeader from "@/components/auth/AuthHeader";
 import StudentLoginForm from "@/components/auth/StudentLoginForm";
 import StudentSignupForm from "@/components/auth/StudentSignupForm";
+import LoginVerificationTester from "@/components/LoginVerificationTester";
 
 const StudentLogin = () => {
   const { t } = useLanguage();
@@ -17,6 +18,7 @@ const StudentLogin = () => {
   const { toast } = useToast();
   const { student, isLoading: authLoading, studentLogin, studentSignup } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
+  const [showTester, setShowTester] = useState(false);
 
   // Redirect if already logged in
   useEffect(() => {
@@ -140,36 +142,72 @@ const StudentLogin = () => {
     }
   };
 
+  // Show verification tester if Ctrl+Shift+T is pressed
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.ctrlKey && e.shiftKey && e.key === 'T') {
+        setShowTester(!showTester);
+      }
+    };
+    
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [showTester]);
+
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <AuthHeader />
-      <Card className="w-full max-w-md bg-card/80 backdrop-blur-sm border-border">
-        <CardHeader className="text-center">
-          <div className="w-16 h-16 bg-primary rounded-full mx-auto flex items-center justify-center mb-4">
-            <BookOpenIcon className="w-8 h-8 text-primary-foreground" />
+      
+      {showTester ? (
+        <div className="w-full max-w-6xl">
+          <LoginVerificationTester />
+          <div className="mt-4 text-center">
+            <button 
+              onClick={() => setShowTester(false)}
+              className="text-sm text-muted-foreground hover:text-foreground"
+            >
+              Hide Login Tester (Ctrl+Shift+T)
+            </button>
           </div>
-          <CardTitle className="text-2xl text-foreground">{t('login.student.title')}</CardTitle>
-          <CardDescription>
-            {t('login.student.subtitle')}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Tabs defaultValue="login" className="space-y-4">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="login">{t('auth.login')}</TabsTrigger>
-              <TabsTrigger value="signup">{t('auth.signUp')}</TabsTrigger>
-            </TabsList>
+        </div>
+      ) : (
+        <Card className="w-full max-w-md bg-card/80 backdrop-blur-sm border-border">
+          <CardHeader className="text-center">
+            <div className="w-16 h-16 bg-primary rounded-full mx-auto flex items-center justify-center mb-4">
+              <BookOpenIcon className="w-8 h-8 text-primary-foreground" />
+            </div>
+            <CardTitle className="text-2xl text-foreground">{t('login.student.title')}</CardTitle>
+            <CardDescription>
+              {t('login.student.subtitle')}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Tabs defaultValue="login" className="space-y-4">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="login">{t('auth.login')}</TabsTrigger>
+                <TabsTrigger value="signup">{t('auth.signUp')}</TabsTrigger>
+              </TabsList>
 
-            <TabsContent value="login">
-              <StudentLoginForm onLogin={handleLogin} isLoading={isLoading} />
-            </TabsContent>
+              <TabsContent value="login">
+                <StudentLoginForm onLogin={handleLogin} isLoading={isLoading} />
+              </TabsContent>
 
-            <TabsContent value="signup">
-              <StudentSignupForm onSignup={handleSignup} isLoading={isLoading} />
-            </TabsContent>
-          </Tabs>
-        </CardContent>
-      </Card>
+              <TabsContent value="signup">
+                <StudentSignupForm onSignup={handleSignup} isLoading={isLoading} />
+              </TabsContent>
+            </Tabs>
+            
+            <div className="mt-4 text-center">
+              <button 
+                onClick={() => setShowTester(true)}
+                className="text-xs text-muted-foreground hover:text-foreground"
+              >
+                Press Ctrl+Shift+T for login verification
+              </button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 };

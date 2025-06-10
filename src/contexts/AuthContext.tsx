@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { Teacher, Student, AuthContextType, SecurityEvent } from '@/types/auth';
 import { useTeacherAuth } from '@/hooks/useTeacherAuth';

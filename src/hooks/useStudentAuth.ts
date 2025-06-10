@@ -26,7 +26,7 @@ export const useStudentAuth = () => {
         
         setStudent(studentData);
         
-        // Securely store student data with encryption
+        // Securely store student data
         try {
           localStorage.setItem('student', JSON.stringify(studentData));
           localStorage.removeItem('teacher');
@@ -66,7 +66,7 @@ export const useStudentAuth = () => {
         
         setStudent(studentData);
         
-        // Securely store student data with encryption
+        // Securely store student data
         try {
           localStorage.setItem('student', JSON.stringify(studentData));
           localStorage.removeItem('teacher');
