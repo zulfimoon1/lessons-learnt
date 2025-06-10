@@ -12,7 +12,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const studentAuth = useStudentAuth();
 
   useEffect(() => {
-    // Load saved auth data from localStorage with error handling
     console.log('AuthContext: Starting initialization...');
     
     const teacherRestored = teacherAuth.restoreFromStorage();
@@ -39,7 +38,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   ) => {
     const result = await teacherAuth.login(email, password);
     if (result.teacher) {
-      studentAuth.setStudent(null); // Clear student if teacher logs in
+      studentAuth.setStudent(null);
     }
     return result;
   };
@@ -47,7 +46,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const studentLogin = async (fullName: string, password: string) => {
     const result = await studentAuth.login(fullName, password);
     if (result.student) {
-      teacherAuth.setTeacher(null); // Clear teacher if student logs in
+      teacherAuth.setTeacher(null);
     }
     return result;
   };
@@ -55,7 +54,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const studentSignup = async (fullName: string, school: string, grade: string, password: string) => {
     const result = await studentAuth.signup(fullName, school, grade, password);
     if (result.student) {
-      teacherAuth.setTeacher(null); // Clear teacher if student signs up
+      teacherAuth.setTeacher(null);
     }
     return result;
   };
@@ -66,7 +65,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     studentAuth.logout();
   };
 
-  // Always provide the context value, even during loading
   const value: AuthContextType = {
     teacher: teacherAuth.teacher,
     student: studentAuth.student,

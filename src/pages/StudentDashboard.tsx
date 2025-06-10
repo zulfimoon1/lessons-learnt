@@ -1,21 +1,29 @@
+
 import { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { useAuthStorage } from "@/hooks/useAuthStorage";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { 
   SchoolIcon, 
   CalendarIcon,
-  BookOpenIcon
+  BookOpenIcon,
+  HeartHandshakeIcon
 } from "lucide-react";
 import LessonFeedbackForm from "@/components/LessonFeedbackForm";
 import WeeklySummary from "@/components/WeeklySummary";
+import LiveChatWidget from "@/components/LiveChatWidget";
+import PsychologistInfo from "@/components/PsychologistInfo";
 import { useNavigate } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
 import ComplianceFooter from "@/components/ComplianceFooter";
 import CookieConsent from "@/components/CookieConsent";
 import DashboardHeader from "@/components/dashboard/DashboardHeader";
 import StatsCard from "@/components/dashboard/StatsCard";
+import UpcomingClassesTab from "@/components/dashboard/UpcomingClassesTab";
+import MentalHealthSupportTab from "@/components/dashboard/MentalHealthSupportTab";
 
 interface ClassSchedule {
   id: string;
@@ -186,37 +194,11 @@ const StudentDashboard = () => {
           </TabsContent>
 
           <TabsContent value="classes" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>{t('class.upcomingClasses')}</CardTitle>
-                <CardDescription>
-                  {t('dashboard.scheduledClasses')} {student?.grade} {t('auth.school').toLowerCase()} {student?.school}
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {upcomingClasses.map((classItem) => (
-                    <div key={classItem.id} className="flex items-center justify-between p-4 border rounded-lg">
-                      <div>
-                        <h3 className="font-medium">{classItem.subject}</h3>
-                        <p className="text-sm text-muted-foreground">{classItem.lesson_topic}</p>
-                        <div className="flex gap-2 mt-2">
-                          <Badge variant="outline">{classItem.grade}</Badge>
-                          <Badge variant="outline">{classItem.duration_minutes} {t('class.duration')}</Badge>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <p className="font-medium">{new Date(classItem.class_date).toLocaleDateString()}</p>
-                        <p className="text-sm text-muted-foreground">{classItem.class_time}</p>
-                      </div>
-                    </div>
-                  ))}
-                  {upcomingClasses.length === 0 && (
-                    <p className="text-center text-muted-foreground py-8">{t('dashboard.noClasses')}</p>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
+            <UpcomingClassesTab 
+              classes={upcomingClasses}
+              studentGrade={student?.grade}
+              studentSchool={student?.school}
+            />
           </TabsContent>
 
           <TabsContent value="weekly" className="space-y-6">
@@ -224,52 +206,13 @@ const StudentDashboard = () => {
           </TabsContent>
 
           <TabsContent value="support" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <HeartHandshakeIcon className="w-5 h-5" />
-                  {t('dashboard.mentalHealthSupport')}
-                </CardTitle>
-                <CardDescription>
-                  {t('student.accessMentalHealthResources', { school: student?.school })}
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                {psychologists.length > 0 ? (
-                  <div className="space-y-6">
-                    <div className="flex justify-end">
-                      <LiveChatWidget
-                        studentId={student?.id}
-                        studentName={student?.full_name || t('student.defaultName')}
-                        school={student?.school || ""}
-                        grade={student?.grade || ""}
-                      />
-                    </div>
-                    <div className="space-y-4">
-                      {psychologists.map((psychologist) => (
-                        <PsychologistInfo key={psychologist.id} psychologist={psychologist} />
-                      ))}
-                    </div>
-                  </div>
-                ) : (
-                  <div className="text-center py-8">
-                    <HeartHandshakeIcon className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                    <p className="text-muted-foreground">{t('dashboard.noPsychologists')}</p>
-                    <p className="text-sm text-muted-foreground mt-2">
-                      {t('dashboard.contactAdmin')}
-                    </p>
-                    <div className="mt-4">
-                      <LiveChatWidget
-                        studentId={student?.id}
-                        studentName={student?.full_name || t('student.defaultName')}
-                        school={student?.school || ""}
-                        grade={student?.grade || ""}
-                      />
-                    </div>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+            <MentalHealthSupportTab 
+              psychologists={psychologists}
+              studentId={student?.id}
+              studentName={student?.full_name}
+              studentSchool={student?.school}
+              studentGrade={student?.grade}
+            />
           </TabsContent>
         </Tabs>
       </main>
