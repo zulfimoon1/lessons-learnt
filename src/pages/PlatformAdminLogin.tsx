@@ -1,23 +1,21 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { usePlatformAdmin } from "@/contexts/PlatformAdminContext";
-import { createTestAdmin } from "@/services/platformAdminService";
-import { ShieldIcon, UserPlusIcon } from "lucide-react";
+import { ShieldIcon } from "lucide-react";
 import ComplianceFooter from "@/components/ComplianceFooter";
 import CookieConsent from "@/components/CookieConsent";
-import CustomAdminCreation from "@/components/CustomAdminCreation";
+import TabNavigation from "@/components/platform-admin/TabNavigation";
+import AdminLoginTab from "@/components/platform-admin/AdminLoginTab";
+import AdminSignupTab from "@/components/platform-admin/AdminSignupTab";
 
 const PlatformAdminLogin = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [isCreatingAdmin, setIsCreatingAdmin] = useState(false);
-  const [activeTab, setActiveTab] = useState("login");
+  const [activeTab, setActiveTab] = useState("create");
   const { login } = usePlatformAdmin();
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -65,37 +63,6 @@ const PlatformAdminLogin = () => {
     }
   };
 
-  const handleCreateTestAdmin = async () => {
-    setIsCreatingAdmin(true);
-    
-    try {
-      const result = await createTestAdmin();
-      
-      if (result.error) {
-        toast({
-          title: "Error",
-          description: result.error,
-          variant: "destructive",
-        });
-      } else {
-        toast({
-          title: "Test Admin Created",
-          description: "Email: admin@test.com, Password: admin123",
-        });
-        setEmail("admin@test.com");
-        setPassword("admin123");
-      }
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to create test admin",
-        variant: "destructive",
-      });
-    } finally {
-      setIsCreatingAdmin(false);
-    }
-  };
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
       <CookieConsent />
@@ -109,96 +76,20 @@ const PlatformAdminLogin = () => {
 
           <Card className="shadow-lg">
             <CardContent className="p-6">
-              {/* Tab Navigation */}
-              <div className="w-full mb-6">
-                <div className="flex bg-gray-100 p-1 rounded-lg border">
-                  <button
-                    type="button"
-                    className={`flex-1 px-4 py-2 rounded-md font-medium text-sm transition-all duration-200 ${
-                      activeTab === 'login'
-                        ? 'bg-white text-gray-900 shadow-sm border border-gray-200'
-                        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-                    }`}
-                    onClick={() => setActiveTab('login')}
-                  >
-                    Login
-                  </button>
-                  <button
-                    type="button"
-                    className={`flex-1 px-4 py-2 rounded-md font-medium text-sm transition-all duration-200 ${
-                      activeTab === 'create'
-                        ? 'bg-white text-gray-900 shadow-sm border border-gray-200'
-                        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-                    }`}
-                    onClick={() => setActiveTab('create')}
-                  >
-                    Create Account
-                  </button>
-                </div>
-              </div>
+              <TabNavigation activeTab={activeTab} onTabChange={setActiveTab} />
 
-              {/* Login Tab Content */}
               {activeTab === 'login' && (
-                <div className="space-y-4">
-                  <div className="text-center mb-4">
-                    <h2 className="text-xl font-semibold">Admin Login</h2>
-                    <p className="text-gray-600">Sign in to your admin account</p>
-                  </div>
-                  
-                  <form onSubmit={handleSubmit} className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="email">Email</Label>
-                      <Input
-                        id="email"
-                        type="email"
-                        placeholder="admin@yourschool.com"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        required
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="password">Password</Label>
-                      <Input
-                        id="password"
-                        type="password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        required
-                      />
-                    </div>
-                    <Button 
-                      type="submit" 
-                      className="w-full" 
-                      disabled={isLoading}
-                    >
-                      {isLoading ? "Signing In..." : "Access Console"}
-                    </Button>
-                  </form>
-                  
-                  <div className="text-center pt-4 border-t">
-                    <Button
-                      variant="outline"
-                      onClick={handleCreateTestAdmin}
-                      disabled={isCreatingAdmin}
-                      className="w-full"
-                    >
-                      <UserPlusIcon className="w-4 h-4 mr-2" />
-                      {isCreatingAdmin ? "Creating..." : "Create Test Admin"}
-                    </Button>
-                    <p className="text-xs text-gray-500 mt-2">
-                      Development only: Creates admin@test.com with password admin123
-                    </p>
-                  </div>
-                </div>
+                <AdminLoginTab
+                  email={email}
+                  password={password}
+                  isLoading={isLoading}
+                  onEmailChange={setEmail}
+                  onPasswordChange={setPassword}
+                  onSubmit={handleSubmit}
+                />
               )}
 
-              {/* Create Account Tab Content */}
-              {activeTab === 'create' && (
-                <div>
-                  <CustomAdminCreation />
-                </div>
-              )}
+              {activeTab === 'create' && <AdminSignupTab />}
             </CardContent>
           </Card>
         </div>
