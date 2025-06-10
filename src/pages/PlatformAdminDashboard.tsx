@@ -1,10 +1,8 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { usePlatformAdmin } from "@/contexts/PlatformAdminContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -337,257 +335,241 @@ const PlatformAdminDashboard = () => {
           </Card>
         </div>
 
-        {/* Tabs for different views */}
-        <Tabs defaultValue="payments" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-7">
-            <TabsTrigger value="payments">{t('dashboard.payments')}</TabsTrigger>
-            <TabsTrigger value="students">{t('dashboard.students')}</TabsTrigger>
-            <TabsTrigger value="analytics">{t('dashboard.analytics')}</TabsTrigger>
-            <TabsTrigger value="schools">{t('dashboard.schools')}</TabsTrigger>
-            <TabsTrigger value="performance">{t('dashboard.performance')}</TabsTrigger>
-            <TabsTrigger value="mental-health">{t('dashboard.mentalHealth')}</TabsTrigger>
-            <TabsTrigger value="discount-codes">{t('dashboard.discountCodes')}</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="payments" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <TrendingUpIcon className="w-5 h-5" />
-                  Subscription Management
-                </CardTitle>
-                <CardDescription>Monitor and manage school subscriptions</CardDescription>
-              </CardHeader>
-              <CardContent>
-                {subscriptions.length > 0 ? (
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>School</TableHead>
-                        <TableHead>Plan</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead>Amount</TableHead>
-                        <TableHead>Period End</TableHead>
-                        <TableHead>Customer ID</TableHead>
-                        <TableHead>Created</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {subscriptions.map((subscription) => (
-                        <TableRow key={subscription.id}>
-                          <TableCell className="font-medium">{subscription.school_name}</TableCell>
-                          <TableCell>{subscription.plan_type}</TableCell>
-                          <TableCell>
-                            <Badge 
-                              variant={subscription.status === 'active' ? 'default' : 'destructive'}
-                            >
-                              {subscription.status}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>
-                            ${(subscription.amount / 100).toFixed(2)} {subscription.currency?.toUpperCase()}
-                          </TableCell>
-                          <TableCell>
-                            {subscription.current_period_end ? 
-                              new Date(subscription.current_period_end).toLocaleDateString() : 
-                              'N/A'
-                            }
-                          </TableCell>
-                          <TableCell className="text-xs font-mono">
-                            {subscription.stripe_customer_id || 'N/A'}
-                          </TableCell>
-                          <TableCell>
-                            {new Date(subscription.created_at).toLocaleDateString()}
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                ) : (
-                  <div className="text-center py-8">
-                    <p className="text-muted-foreground">No subscriptions found in the database</p>
-                    <p className="text-xs text-muted-foreground mt-2">
-                      This could mean subscriptions haven't been created yet or there's an issue with data storage
-                    </p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="students" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <UserIcon className="w-5 h-5" />
-                  Student Statistics by School
-                </CardTitle>
-                <CardDescription>Students enrolled and their response rates</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-8">
-                  {studentChartData.length > 0 && (
-                    <ChartContainer config={studentChartConfig} className="h-[400px]">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <BarChart data={studentChartData} barSize={40}>
-                          <CartesianGrid strokeDasharray="3 3" />
-                          <XAxis 
-                            dataKey="name" 
-                            tick={{ fontSize: 11 }}
-                            angle={-45}
-                            textAnchor="end"
-                            height={100}
-                          />
-                          <YAxis yAxisId="left" orientation="left" stroke="#94c270" />
-                          <YAxis yAxisId="right" orientation="right" stroke="#6b7280" domain={[0, 100]} />
-                          <ChartTooltip content={<ChartTooltipContent />} />
-                          <Bar dataKey="students" fill="var(--color-students)" yAxisId="left" />
-                          <Bar dataKey="responseRate" fill="var(--color-responseRate)" yAxisId="right" />
-                        </BarChart>
-                      </ResponsiveContainer>
-                    </ChartContainer>
-                  )}
-                  
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>School</TableHead>
-                        <TableHead>Total Students</TableHead>
-                        <TableHead>Response Rate</TableHead>
-                        <TableHead>Teachers</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {studentStats.map((stat, index) => {
-                        const schoolTeacherCount = schoolStats.find(s => s.school === stat.school)?.total_teachers || 0;
-                        return (
-                          <TableRow key={index}>
-                            <TableCell className="font-medium">{stat.school}</TableCell>
-                            <TableCell>{stat.total_students}</TableCell>
-                            <TableCell>{stat.student_response_rate}%</TableCell>
-                            <TableCell>{schoolTeacherCount}</TableCell>
-                          </TableRow>
-                        );
-                      })}
-                    </TableBody>
-                  </Table>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="mental-health" className="space-y-6">
-            <MentalHealthAlerts />
-          </TabsContent>
-
-          <TabsContent value="analytics" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <BarChart3Icon className="w-5 h-5" />
-                  Response Analytics
-                </CardTitle>
-                <CardDescription>Student feedback responses by school and subject</CardDescription>
-              </CardHeader>
-              <CardContent>
-                {chartData.length > 0 && (
-                  <ChartContainer config={chartConfig} className="h-[400px]">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={chartData}>
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis 
-                          dataKey="name" 
-                          tick={{ fontSize: 10 }}
-                          angle={-45}
-                          textAnchor="end"
-                          height={100}
-                        />
-                        <YAxis />
-                        <ChartTooltip content={<ChartTooltipContent />} />
-                        <Bar dataKey="responses" fill="var(--color-responses)" />
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </ChartContainer>
-                )}
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Detailed Feedback Analytics</CardTitle>
-              </CardHeader>
-              <CardContent>
+        {/* All content sections displayed directly without tabs */}
+        <div className="space-y-8">
+          {/* Subscription Management */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <TrendingUpIcon className="w-5 h-5" />
+                Subscription Management
+              </CardTitle>
+              <CardDescription>Monitor and manage school subscriptions</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {subscriptions.length > 0 ? (
                 <Table>
                   <TableHeader>
                     <TableRow>
                       <TableHead>School</TableHead>
-                      <TableHead>Subject</TableHead>
-                      <TableHead>Grade</TableHead>
-                      <TableHead>Responses</TableHead>
-                      <TableHead>Avg Understanding</TableHead>
-                      <TableHead>Avg Interest</TableHead>
-                      <TableHead>Avg Growth</TableHead>
+                      <TableHead>Plan</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Amount</TableHead>
+                      <TableHead>Period End</TableHead>
+                      <TableHead>Customer ID</TableHead>
+                      <TableHead>Created</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {feedbackStats.slice(0, 20).map((stat, index) => (
-                      <TableRow key={index}>
-                        <TableCell className="font-medium">{stat.school}</TableCell>
-                        <TableCell>{stat.subject}</TableCell>
-                        <TableCell>{stat.grade}</TableCell>
-                        <TableCell>{stat.total_responses}</TableCell>
-                        <TableCell>{stat.avg_understanding?.toFixed(1) || 'N/A'}</TableCell>
-                        <TableCell>{stat.avg_interest?.toFixed(1) || 'N/A'}</TableCell>
-                        <TableCell>{stat.avg_growth?.toFixed(1) || 'N/A'}</TableCell>
+                    {subscriptions.map((subscription) => (
+                      <TableRow key={subscription.id}>
+                        <TableCell className="font-medium">{subscription.school_name}</TableCell>
+                        <TableCell>{subscription.plan_type}</TableCell>
+                        <TableCell>
+                          <Badge 
+                            variant={subscription.status === 'active' ? 'default' : 'destructive'}
+                          >
+                            {subscription.status}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          ${(subscription.amount / 100).toFixed(2)} {subscription.currency?.toUpperCase()}
+                        </TableCell>
+                        <TableCell>
+                          {subscription.current_period_end ? 
+                            new Date(subscription.current_period_end).toLocaleDateString() : 
+                            'N/A'
+                          }
+                        </TableCell>
+                        <TableCell className="text-xs font-mono">
+                          {subscription.stripe_customer_id || 'N/A'}
+                        </TableCell>
+                        <TableCell>
+                          {new Date(subscription.created_at).toLocaleDateString()}
+                        </TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
                 </Table>
-              </CardContent>
-            </Card>
-          </TabsContent>
+              ) : (
+                <div className="text-center py-8">
+                  <p className="text-muted-foreground">No subscriptions found in the database</p>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    This could mean subscriptions haven't been created yet or there's an issue with data storage
+                  </p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
 
-          <TabsContent value="schools" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>School Overview</CardTitle>
-                <CardDescription>Statistics for all registered schools</CardDescription>
-              </CardHeader>
-              <CardContent>
+          {/* Student Statistics */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <UserIcon className="w-5 h-5" />
+                Student Statistics by School
+              </CardTitle>
+              <CardDescription>Students enrolled and their response rates</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-8">
+                {studentChartData.length > 0 && (
+                  <ChartContainer config={studentChartConfig} className="h-[400px]">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={studentChartData} barSize={40}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis 
+                          dataKey="name" 
+                          tick={{ fontSize: 11 }}
+                          angle={-45}
+                          textAnchor="end"
+                          height={100}
+                        />
+                        <YAxis yAxisId="left" orientation="left" stroke="#94c270" />
+                        <YAxis yAxisId="right" orientation="right" stroke="#6b7280" domain={[0, 100]} />
+                        <ChartTooltip content={<ChartTooltipContent />} />
+                        <Bar dataKey="students" fill="var(--color-students)" yAxisId="left" />
+                        <Bar dataKey="responseRate" fill="var(--color-responseRate)" yAxisId="right" />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </ChartContainer>
+                )}
+                
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>School Name</TableHead>
+                      <TableHead>School</TableHead>
+                      <TableHead>Total Students</TableHead>
+                      <TableHead>Response Rate</TableHead>
                       <TableHead>Teachers</TableHead>
-                      <TableHead>Grades</TableHead>
-                      <TableHead>Subjects</TableHead>
-                      <TableHead>Total Classes</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {schoolStats.map((school, index) => (
-                      <TableRow key={index}>
-                        <TableCell className="font-medium">{school.school}</TableCell>
-                        <TableCell>{school.total_teachers}</TableCell>
-                        <TableCell>{school.total_grades}</TableCell>
-                        <TableCell>{school.total_subjects}</TableCell>
-                        <TableCell>{school.total_classes}</TableCell>
-                      </TableRow>
-                    ))}
+                    {studentStats.map((stat, index) => {
+                      const schoolTeacherCount = schoolStats.find(s => s.school === stat.school)?.total_teachers || 0;
+                      return (
+                        <TableRow key={index}>
+                          <TableCell className="font-medium">{stat.school}</TableCell>
+                          <TableCell>{stat.total_students}</TableCell>
+                          <TableCell>{stat.student_response_rate}%</TableCell>
+                          <TableCell>{schoolTeacherCount}</TableCell>
+                        </TableRow>
+                      );
+                    })}
                   </TableBody>
                 </Table>
-              </CardContent>
-            </Card>
-          </TabsContent>
+              </div>
+            </CardContent>
+          </Card>
 
-          <TabsContent value="performance" className="space-y-6">
-            <PerformanceFilters />
-          </TabsContent>
+          {/* Mental Health Alerts */}
+          <MentalHealthAlerts />
 
-          <TabsContent value="discount-codes" className="space-y-6">
-            <DiscountCodeManagement />
-          </TabsContent>
-        </Tabs>
+          {/* Response Analytics */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <BarChart3Icon className="w-5 h-5" />
+                Response Analytics
+              </CardTitle>
+              <CardDescription>Student feedback responses by school and subject</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {chartData.length > 0 && (
+                <ChartContainer config={chartConfig} className="h-[400px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={chartData}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis 
+                        dataKey="name" 
+                        tick={{ fontSize: 10 }}
+                        angle={-45}
+                        textAnchor="end"
+                        height={100}
+                      />
+                      <YAxis />
+                      <ChartTooltip content={<ChartTooltipContent />} />
+                      <Bar dataKey="responses" fill="var(--color-responses)" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </ChartContainer>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Detailed Feedback Analytics */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Detailed Feedback Analytics</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>School</TableHead>
+                    <TableHead>Subject</TableHead>
+                    <TableHead>Grade</TableHead>
+                    <TableHead>Responses</TableHead>
+                    <TableHead>Avg Understanding</TableHead>
+                    <TableHead>Avg Interest</TableHead>
+                    <TableHead>Avg Growth</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {feedbackStats.slice(0, 20).map((stat, index) => (
+                    <TableRow key={index}>
+                      <TableCell className="font-medium">{stat.school}</TableCell>
+                      <TableCell>{stat.subject}</TableCell>
+                      <TableCell>{stat.grade}</TableCell>
+                      <TableCell>{stat.total_responses}</TableCell>
+                      <TableCell>{stat.avg_understanding?.toFixed(1) || 'N/A'}</TableCell>
+                      <TableCell>{stat.avg_interest?.toFixed(1) || 'N/A'}</TableCell>
+                      <TableCell>{stat.avg_growth?.toFixed(1) || 'N/A'}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+
+          {/* School Overview */}
+          <Card>
+            <CardHeader>
+              <CardTitle>School Overview</CardTitle>
+              <CardDescription>Statistics for all registered schools</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>School Name</TableHead>
+                    <TableHead>Teachers</TableHead>
+                    <TableHead>Grades</TableHead>
+                    <TableHead>Subjects</TableHead>
+                    <TableHead>Total Classes</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {schoolStats.map((school, index) => (
+                    <TableRow key={index}>
+                      <TableCell className="font-medium">{school.school}</TableCell>
+                      <TableCell>{school.total_teachers}</TableCell>
+                      <TableCell>{school.total_grades}</TableCell>
+                      <TableCell>{school.total_subjects}</TableCell>
+                      <TableCell>{school.total_classes}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+
+          {/* Performance Filters */}
+          <PerformanceFilters />
+
+          {/* Discount Code Management */}
+          <DiscountCodeManagement />
+        </div>
       </main>
     </div>
   );
