@@ -211,19 +211,28 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Enhanced Compliance Footer with Admin Access */}
-      <footer className="bg-card/80 backdrop-blur-sm border-t border-border py-8">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <ComplianceFooter />
-          
-          {/* Discreet admin link */}
-          <div className="mt-6 pt-6 border-t border-border/50 text-center">
-            <Link 
-              to="/platform-admin" 
-              className="text-xs text-muted-foreground hover:text-foreground transition-colors opacity-30 hover:opacity-100"
-            >
-              Platform Management
-            </Link>
+      {/* Compliance Footer */}
+      <ComplianceFooter />
+      
+      <footer className="bg-muted py-6 mt-auto">
+        <div className="container mx-auto px-4">
+          <div className="flex flex-col md:flex-row justify-between items-center">
+            <div className="mb-4 md:mb-0">
+              <p className="text-sm text-muted-foreground">
+                &copy; {new Date().getFullYear()} Educational Platform. {t('common.allRightsReserved')}
+              </p>
+            </div>
+            <div className="flex space-x-4">
+              <Link to="/platform-admin" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+                {t('common.adminAccess')}
+              </Link>
+              <Link to="/terms-of-service" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+                {t('common.termsOfService')}
+              </Link>
+              <Link to="/privacy-policy" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+                {t('common.privacyPolicy')}
+              </Link>
+            </div>
           </div>
         </div>
       </footer>
