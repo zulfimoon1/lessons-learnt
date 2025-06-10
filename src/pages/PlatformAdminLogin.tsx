@@ -48,7 +48,7 @@ const PlatformAdminLogin = () => {
       } else {
         toast({
           title: "Login Successful",
-          description: "Welcome to the platform admin dashboard",
+          description: "Welcome to the platform console",
         });
         navigate("/platform-admin");
       }
@@ -104,9 +104,9 @@ const PlatformAdminLogin = () => {
             <div className="flex justify-center mb-4">
               <ShieldIcon className="w-12 h-12 text-blue-600" />
             </div>
-            <CardTitle className="text-2xl font-bold">Platform Admin</CardTitle>
+            <CardTitle className="text-2xl font-bold">Platform Console</CardTitle>
             <CardDescription>
-              Sign in to access the platform management dashboard
+              Admin access to platform management dashboard
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -116,7 +116,7 @@ const PlatformAdminLogin = () => {
                 <Input
                   id="email"
                   type="email"
-                  placeholder="admin@example.com"
+                  placeholder="admin@platform.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
@@ -137,7 +137,7 @@ const PlatformAdminLogin = () => {
                 className="w-full" 
                 disabled={isLoading}
               >
-                {isLoading ? "Signing In..." : "Sign In"}
+                {isLoading ? "Signing In..." : "Access Console"}
               </Button>
             </form>
             
@@ -152,7 +152,7 @@ const PlatformAdminLogin = () => {
                 {isCreatingAdmin ? "Creating..." : "Create Test Admin"}
               </Button>
               <p className="text-xs text-gray-500 mt-2">
-                This will create admin@test.com with password admin123
+                Development only: Creates admin@test.com with password admin123
               </p>
             </div>
           </CardContent>
