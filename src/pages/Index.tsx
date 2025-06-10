@@ -1,6 +1,4 @@
 
-import { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { GraduationCapIcon, UsersIcon, BookOpenIcon, HeartIcon, BarChart3Icon, ShieldCheckIcon } from "lucide-react";
@@ -9,40 +7,9 @@ import LanguageSwitcher from "@/components/LanguageSwitcher";
 import DemoSection from "@/components/DemoSection";
 import ComplianceFooter from "@/components/ComplianceFooter";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { useSupabaseAuth } from "@/contexts/SupabaseAuthContext";
 
 const Index = () => {
   const { t } = useLanguage();
-  const { user, teacher, student, isLoading } = useSupabaseAuth();
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    if (!isLoading && user) {
-      // Redirect authenticated users to appropriate dashboard
-      if (teacher) {
-        if (teacher.role === 'admin') {
-          navigate('/admin-dashboard');
-        } else {
-          navigate('/teacher-dashboard');
-        }
-      } else if (student) {
-        navigate('/student-dashboard');
-      }
-    }
-  }, [user, teacher, student, isLoading, navigate]);
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-      </div>
-    );
-  }
-
-  // Only show landing page if user is not authenticated
-  if (user) {
-    return null; // Will redirect via useEffect
-  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -54,14 +21,7 @@ const Index = () => {
               <GraduationCapIcon className="w-8 h-8 text-primary" />
               <h1 className="text-2xl font-bold text-foreground">Lessons Learnt</h1>
             </div>
-            <div className="flex items-center gap-4">
-              <LanguageSwitcher />
-              <Link to="/auth">
-                <Button variant="outline">
-                  {t('auth.login')}
-                </Button>
-              </Link>
-            </div>
+            <LanguageSwitcher />
           </div>
         </div>
       </header>
@@ -77,7 +37,7 @@ const Index = () => {
           </p>
           
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-md mx-auto">
-            <Link to="/auth">
+            <Link to="/student-login">
               <Button 
                 size="lg" 
                 className="w-full min-h-16 py-3 px-4 text-base flex items-center justify-center"
@@ -87,7 +47,7 @@ const Index = () => {
               </Button>
             </Link>
             
-            <Link to="/auth">
+            <Link to="/teacher-login">
               <Button 
                 size="lg" 
                 variant="outline" 
@@ -219,7 +179,7 @@ const Index = () => {
             <p className="text-lg text-muted-foreground mb-8">
               {t('platform.readyToTransformDesc')}
             </p>
-            <Link to="/auth">
+            <Link to="/teacher-login">
               <Button size="lg" className="text-lg px-8 py-3">
                 {t('auth.signUpNow')}
               </Button>
