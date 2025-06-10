@@ -22,5 +22,8 @@ export const ltAuthTranslations = {
   'auth.schoolCode': 'Mokyklos kodas',
   'auth.enterSchoolCode': 'Įveskite mokyklos kodą',
   'auth.invalidSchoolCode': 'Neteisingas mokyklos kodas',
-  'auth.schoolCodeRequired': 'Mokyklos kodas privalomas'
+  'auth.schoolCodeRequired': 'Mokyklos kodas privalomas',
+  'auth.studentLogin': 'Studentų prisijungimas',
+  'auth.teacherLogin': 'Mokytojų prisijungimas',
+  'auth.signUpNow': 'Registruotis dabar'
 };
