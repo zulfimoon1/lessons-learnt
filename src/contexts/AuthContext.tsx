@@ -53,6 +53,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     role?: 'teacher' | 'admin' | 'doctor'
   ) => {
     try {
+      console.log('AuthContext teacherLogin: Starting login process', { name, school });
+      
       // For the simple login system, we need name and school
       if (!name || !school) {
         return { error: 'Name and school are required for login.' };
@@ -60,12 +62,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       // Use teacherSimpleLoginService with name and school for simple login
       const result = await teacherSimpleLoginService(name, password, school);
+      console.log('AuthContext teacherLogin: Service result', result);
       
       if (result.teacher) {
         setTeacher(result.teacher);
         // Securely store teacher data
         try {
           localStorage.setItem('teacher', JSON.stringify(result.teacher));
+          console.log('AuthContext teacherLogin: Teacher data saved successfully');
         } catch (storageError) {
           console.warn('Failed to save teacher data to localStorage');
         }
@@ -80,17 +84,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const studentLogin = async (fullName: string, password: string) => {
     try {
+      console.log('AuthContext studentLogin: Starting login process', { fullName });
+      
       if (!fullName || !password) {
         return { error: 'Full name and password are required.' };
       }
       
       const result = await studentSimpleLoginService(fullName, password);
+      console.log('AuthContext studentLogin: Service result', result);
       
       if (result.student) {
         setStudent(result.student);
         // Securely store student data
         try {
           localStorage.setItem('student', JSON.stringify(result.student));
+          console.log('AuthContext studentLogin: Student data saved successfully');
         } catch (storageError) {
           console.warn('Failed to save student data to localStorage');
         }
@@ -105,17 +113,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const studentSignup = async (fullName: string, school: string, grade: string, password: string) => {
     try {
+      console.log('AuthContext studentSignup: Starting signup process', { fullName, school, grade });
+      
       if (!fullName || !school || !grade || !password) {
         return { error: 'All fields are required for signup.' };
       }
       
       const result = await studentSignupService(fullName, school, grade, password);
+      console.log('AuthContext studentSignup: Service result', result);
       
       if (result.student) {
         setStudent(result.student);
         // Securely store student data
         try {
           localStorage.setItem('student', JSON.stringify(result.student));
+          console.log('AuthContext studentSignup: Student data saved successfully');
         } catch (storageError) {
           console.warn('Failed to save student data to localStorage');
         }
@@ -129,6 +141,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const logout = () => {
+    console.log('AuthContext logout: Clearing auth data');
     setTeacher(null);
     setStudent(null);
     

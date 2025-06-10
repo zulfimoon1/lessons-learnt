@@ -30,6 +30,12 @@ export const teacherSimpleLoginService = async (name: string, password: string, 
 
     if (searchError) {
       logSecurely('teacherSimpleLoginService: Database error during search:', searchError.message);
+      
+      // Check if it's a permission error and provide better feedback
+      if (searchError.message.includes('permission denied') || searchError.message.includes('RLS')) {
+        return { error: 'Database access issue. Please contact system administrator.' };
+      }
+      
       return { error: 'Unable to connect to the database. Please try again.' };
     }
 
@@ -90,6 +96,12 @@ export const studentSimpleLoginService = async (fullName: string, password: stri
 
     if (searchError) {
       logSecurely('studentSimpleLoginService: Database error during search:', searchError.message);
+      
+      // Check if it's a permission error and provide better feedback
+      if (searchError.message.includes('permission denied') || searchError.message.includes('RLS')) {
+        return { error: 'Database access issue. Please contact system administrator.' };
+      }
+      
       return { error: 'Unable to connect to the database. Please try again.' };
     }
 
@@ -165,6 +177,9 @@ export const teacherSignupService = async (
 
     if (checkError) {
       logSecurely('teacherSignupService: Database error during duplicate check:', checkError.message);
+      if (checkError.message.includes('permission denied') || checkError.message.includes('RLS')) {
+        return { error: 'Database access issue. Please contact system administrator.' };
+      }
       return { error: 'Database error. Please try again.' };
     }
 
@@ -192,6 +207,9 @@ export const teacherSignupService = async (
 
     if (insertError) {
       logSecurely('teacherSignupService: Database error during insertion:', insertError.message);
+      if (insertError.message.includes('permission denied') || insertError.message.includes('RLS')) {
+        return { error: 'Database access issue. Please contact system administrator.' };
+      }
       return { error: 'Failed to create account. Please try again.' };
     }
 
@@ -243,6 +261,9 @@ export const studentSignupService = async (
 
     if (checkError) {
       logSecurely('studentSignupService: Database error during duplicate check:', checkError.message);
+      if (checkError.message.includes('permission denied') || checkError.message.includes('RLS')) {
+        return { error: 'Database access issue. Please contact system administrator.' };
+      }
       return { error: 'Database error. Please try again.' };
     }
 
@@ -267,6 +288,9 @@ export const studentSignupService = async (
 
     if (insertError) {
       logSecurely('studentSignupService: Database error during insertion:', insertError.message);
+      if (insertError.message.includes('permission denied') || insertError.message.includes('RLS')) {
+        return { error: 'Database access issue. Please contact system administrator.' };
+      }
       return { error: 'Failed to create account. Please try again.' };
     }
 
