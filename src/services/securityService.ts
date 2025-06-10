@@ -1,10 +1,9 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { enhancedValidateInput } from './enhancedInputValidation';
 import { hashPassword, verifyPassword } from './securePasswordService';
 
 interface SecurityEvent {
-  type: 'login_success' | 'login_failed' | 'logout' | 'unauthorized_access' | 'suspicious_activity' | 'rate_limit_exceeded' | 'session_restored' | 'session_error' | 'csrf_violation' | 'test_admin_created' | 'forced_password_reset';
+  type: 'login_success' | 'login_failed' | 'logout' | 'unauthorized_access' | 'suspicious_activity' | 'rate_limit_exceeded' | 'session_restored' | 'session_error' | 'csrf_violation';
   userId?: string;
   timestamp: string;
   details: string;
