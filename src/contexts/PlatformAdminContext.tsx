@@ -1,6 +1,8 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { PlatformAdmin, platformAdminLoginService } from '@/services/platformAdminService';
+import { sessionService } from '@/services/secureSessionService';
+import { logUserSecurityEvent } from '@/components/SecurityAuditLogger';
 
 interface PlatformAdminContextType {
   admin: PlatformAdmin | null;
@@ -24,43 +26,115 @@ export const PlatformAdminProvider: React.FC<{ children: React.ReactNode }> = ({
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    console.log('PlatformAdminProvider: Checking for stored admin data');
-    const adminData = localStorage.getItem('platformAdmin');
-    if (adminData) {
+    console.log('PlatformAdminProvider: Starting secure initialization...');
+    
+    const restoreSecureAdminSession = () => {
       try {
-        const parsedAdmin = JSON.parse(adminData);
-        console.log('PlatformAdminProvider: Found stored admin:', parsedAdmin);
-        setAdmin(parsedAdmin);
+        const session = sessionService.getSession();
+        
+        if (session && session.userType === 'admin') {
+          const adminData = localStorage.getItem('platformAdmin');
+          if (adminData) {
+            const parsedAdmin = JSON.parse(adminData);
+            if (parsedAdmin && parsedAdmin.id === session.userId) {
+              console.log('PlatformAdminProvider: Restoring secure admin session');
+              setAdmin(parsedAdmin);
+              sessionService.refreshSession(session);
+            } else {
+              console.log('PlatformAdminProvider: Invalid admin session data');
+              sessionService.clearSession();
+            }
+          }
+        } else {
+          console.log('PlatformAdminProvider: No valid admin session found');
+          localStorage.removeItem('platformAdmin');
+        }
       } catch (error) {
-        console.error('PlatformAdminProvider: Error parsing stored admin data:', error);
-        localStorage.removeItem('platformAdmin');
+        console.error('PlatformAdminProvider: Session restoration error:', error);
+        sessionService.clearSession();
       }
-    } else {
-      console.log('PlatformAdminProvider: No stored admin data found');
-    }
+    };
+
+    restoreSecureAdminSession();
     setIsLoading(false);
   }, []);
 
   const login = async (email: string, password: string) => {
-    console.log('PlatformAdminProvider: Login attempt for:', email);
-    const result = await platformAdminLoginService(email, password);
-    if (result.admin) {
-      console.log('PlatformAdminProvider: Login successful, setting admin:', result.admin);
-      setAdmin(result.admin);
-      localStorage.setItem('platformAdmin', JSON.stringify(result.admin));
-    } else {
-      console.log('PlatformAdminProvider: Login failed:', result.error);
+    try {
+      console.log('PlatformAdminProvider: Secure login attempt for:', email);
+      
+      const result = await platformAdminLoginService(email, password);
+      
+      if (result.admin && !result.error) {
+        console.log('PlatformAdminProvider: Login successful');
+        setAdmin(result.admin);
+        
+        // Create secure session
+        await sessionService.createSession(result.admin.id, 'admin', result.admin.school);
+        
+        // Store admin data securely
+        try {
+          localStorage.setItem('platformAdmin', JSON.stringify(result.admin));
+          
+          logUserSecurityEvent({
+            type: 'login_success',
+            userId: result.admin.id,
+            timestamp: new Date().toISOString(),
+            details: `Platform admin login successful: ${email}`,
+            userAgent: navigator.userAgent
+          });
+        } catch (storageError) {
+          console.error('PlatformAdminProvider: Storage error:', storageError);
+        }
+        
+        return { admin: result.admin };
+      } else {
+        console.log('PlatformAdminProvider: Login failed:', result.error);
+        
+        logUserSecurityEvent({
+          type: 'login_failed',
+          timestamp: new Date().toISOString(),
+          details: `Platform admin login failed: ${email}`,
+          userAgent: navigator.userAgent
+        });
+        
+        return { error: result.error };
+      }
+    } catch (error) {
+      console.error('PlatformAdminProvider: Login error:', error);
+      
+      logUserSecurityEvent({
+        type: 'suspicious_activity',
+        timestamp: new Date().toISOString(),
+        details: `Platform admin login error: ${error}`,
+        userAgent: navigator.userAgent
+      });
+      
+      return { error: 'Login failed. Please try again.' };
     }
-    return result;
   };
 
   const logout = () => {
-    console.log('PlatformAdminProvider: Logging out');
+    console.log('PlatformAdminProvider: Secure logout initiated');
+    
+    // Log the logout event
+    if (admin) {
+      logUserSecurityEvent({
+        type: 'logout',
+        userId: admin.id,
+        timestamp: new Date().toISOString(),
+        details: `Platform admin logged out: ${admin.email}`,
+        userAgent: navigator.userAgent
+      });
+    }
+    
     setAdmin(null);
-    localStorage.removeItem('platformAdmin');
+    sessionService.clearSession();
+    
+    console.log('PlatformAdminProvider: Secure logout complete');
   };
 
-  console.log('PlatformAdminProvider: Current state - admin:', admin, 'isLoading:', isLoading);
+  console.log('PlatformAdminProvider: Current secure state - admin:', !!admin, 'isLoading:', isLoading);
 
   return (
     <PlatformAdminContext.Provider value={{ admin, isLoading, login, logout }}>

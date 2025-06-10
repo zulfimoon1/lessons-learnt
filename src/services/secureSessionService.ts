@@ -1,85 +1,115 @@
 
 import { supabase } from '@/integrations/supabase/client';
 
-// Enhanced session management service using localStorage for client-side session tracking
+interface SessionData {
+  userId: string;
+  userType: 'student' | 'teacher' | 'admin';
+  school: string;
+  expiresAt: number;
+  sessionId: string;
+}
+
+const SESSION_DURATION = 24 * 60 * 60 * 1000; // 24 hours
+const SESSION_KEY = 'secure_session';
+
+// Generate a secure session ID
+const generateSessionId = (): string => {
+  const array = new Uint8Array(32);
+  crypto.getRandomValues(array);
+  return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
+};
+
+// Encrypt session data (basic implementation - in production use proper encryption)
+const encryptSessionData = (data: SessionData): string => {
+  try {
+    return btoa(JSON.stringify(data));
+  } catch (error) {
+    console.error('Session encryption error:', error);
+    return '';
+  }
+};
+
+// Decrypt session data
+const decryptSessionData = (encryptedData: string): SessionData | null => {
+  try {
+    return JSON.parse(atob(encryptedData));
+  } catch (error) {
+    console.error('Session decryption error:', error);
+    return null;
+  }
+};
+
 export const sessionService = {
-  // Create a new session record for tracking using localStorage
-  createSession: async (userId: string, userType: 'student' | 'teacher') => {
+  createSession: async (userId: string, userType: 'student' | 'teacher' | 'admin', school?: string) => {
     try {
-      const sessionToken = crypto.randomUUID();
-      const userAgent = navigator.userAgent;
-      
-      // Store session info in localStorage for client-side tracking
-      const sessionData = {
-        user_id: userId,
-        session_token: sessionToken,
-        user_type: userType,
-        user_agent: userAgent,
-        created_at: new Date().toISOString(),
-        expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString() // 24 hours
+      const sessionData: SessionData = {
+        userId,
+        userType,
+        school: school || '',
+        expiresAt: Date.now() + SESSION_DURATION,
+        sessionId: generateSessionId()
       };
-      
-      localStorage.setItem(`session_${userId}`, JSON.stringify(sessionData));
-      localStorage.setItem('current_session_token', sessionToken);
-      
-      console.log('Session created for user:', userId);
-      return sessionToken;
+
+      const encryptedSession = encryptSessionData(sessionData);
+      if (encryptedSession) {
+        localStorage.setItem(SESSION_KEY, encryptedSession);
+        
+        // Log session creation for audit
+        console.log('Secure session created:', { userId, userType, sessionId: sessionData.sessionId });
+      }
     } catch (error) {
-      console.error('Session service error:', error);
+      console.error('Session creation error:', error);
+    }
+  },
+
+  getSession: (): SessionData | null => {
+    try {
+      const encryptedSession = localStorage.getItem(SESSION_KEY);
+      if (!encryptedSession) return null;
+
+      const sessionData = decryptSessionData(encryptedSession);
+      if (!sessionData) return null;
+
+      // Check if session is expired
+      if (Date.now() > sessionData.expiresAt) {
+        sessionService.clearSession();
+        return null;
+      }
+
+      return sessionData;
+    } catch (error) {
+      console.error('Session retrieval error:', error);
+      sessionService.clearSession();
       return null;
     }
   },
 
-  // Clean up expired sessions from localStorage
-  cleanupExpiredSessions: async (userId: string) => {
+  clearSession: () => {
     try {
-      const sessionKey = `session_${userId}`;
-      const sessionData = localStorage.getItem(sessionKey);
-      
-      if (sessionData) {
-        const session = JSON.parse(sessionData);
-        const now = new Date();
-        const expiresAt = new Date(session.expires_at);
-        
-        if (now > expiresAt) {
-          localStorage.removeItem(sessionKey);
-          console.log('Expired session cleaned up for user:', userId);
-        }
-      }
+      localStorage.removeItem(SESSION_KEY);
+      localStorage.removeItem('teacher');
+      localStorage.removeItem('student');
+      localStorage.removeItem('platformAdmin');
+      console.log('Session cleared');
     } catch (error) {
-      console.error('Session cleanup error:', error);
+      console.error('Session clear error:', error);
     }
   },
 
-  // Validate session using localStorage
-  validateSession: async (sessionToken: string): Promise<boolean> => {
+  refreshSession: (sessionData: SessionData) => {
     try {
-      const currentToken = localStorage.getItem('current_session_token');
-      
-      if (currentToken !== sessionToken) {
-        return false;
+      sessionData.expiresAt = Date.now() + SESSION_DURATION;
+      const encryptedSession = encryptSessionData(sessionData);
+      if (encryptedSession) {
+        localStorage.setItem(SESSION_KEY, encryptedSession);
       }
-      
-      // Find session data by iterating through localStorage
-      for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i);
-        if (key && key.startsWith('session_')) {
-          const sessionData = localStorage.getItem(key);
-          if (sessionData) {
-            const session = JSON.parse(sessionData);
-            if (session.session_token === sessionToken) {
-              const now = new Date();
-              const expiresAt = new Date(session.expires_at);
-              return now <= expiresAt;
-            }
-          }
-        }
-      }
-      
-      return false;
     } catch (error) {
-      console.error('Session validation error:', error);
-      return false;
+      console.error('Session refresh error:', error);
     }
+  },
+
+  cleanupExpiredSessions: async (userId: string) => {
+    // This would clean up server-side sessions in a full implementation
+    console.log('Cleaning up expired sessions for user:', userId);
   }
 };

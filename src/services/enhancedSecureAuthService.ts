@@ -4,26 +4,30 @@ import { validateInput } from './secureInputValidation';
 import { sessionService } from './secureSessionService';
 import { logUserSecurityEvent } from '@/components/SecurityAuditLogger';
 
-// Rate limiting storage
-const loginAttempts = new Map<string, { count: number; lastAttempt: number }>();
+// Rate limiting storage with enhanced security
+const loginAttempts = new Map<string, { count: number; lastAttempt: number; blocked: boolean }>();
 const MAX_ATTEMPTS = 5;
 const LOCKOUT_DURATION = 15 * 60 * 1000; // 15 minutes
+const PROGRESSIVE_DELAY = [1000, 2000, 5000, 10000, 30000]; // Progressive delays
 
-const checkRateLimit = (identifier: string): { allowed: boolean; message?: string } => {
+const checkRateLimit = (identifier: string): { allowed: boolean; message?: string; delay?: number } => {
   const now = Date.now();
   const attempts = loginAttempts.get(identifier);
   
   if (attempts) {
-    if (now - attempts.lastAttempt < LOCKOUT_DURATION && attempts.count >= MAX_ATTEMPTS) {
+    if (attempts.blocked && now - attempts.lastAttempt < LOCKOUT_DURATION) {
       const remainingTime = Math.ceil((LOCKOUT_DURATION - (now - attempts.lastAttempt)) / 1000 / 60);
       return { 
         allowed: false, 
-        message: `Too many failed attempts. Try again in ${remainingTime} minutes.` 
+        message: `Account temporarily locked. Try again in ${remainingTime} minutes.` 
       };
     }
     
     if (now - attempts.lastAttempt > LOCKOUT_DURATION) {
       loginAttempts.delete(identifier);
+    } else if (attempts.count > 0 && attempts.count <= PROGRESSIVE_DELAY.length) {
+      const delay = PROGRESSIVE_DELAY[attempts.count - 1] || PROGRESSIVE_DELAY[PROGRESSIVE_DELAY.length - 1];
+      return { allowed: true, delay };
     }
   }
   
@@ -32,9 +36,14 @@ const checkRateLimit = (identifier: string): { allowed: boolean; message?: strin
 
 const recordFailedAttempt = (identifier: string) => {
   const now = Date.now();
-  const attempts = loginAttempts.get(identifier) || { count: 0, lastAttempt: now };
+  const attempts = loginAttempts.get(identifier) || { count: 0, lastAttempt: now, blocked: false };
   attempts.count++;
   attempts.lastAttempt = now;
+  
+  if (attempts.count >= MAX_ATTEMPTS) {
+    attempts.blocked = true;
+  }
+  
   loginAttempts.set(identifier, attempts);
 };
 
@@ -44,7 +53,7 @@ const clearFailedAttempts = (identifier: string) => {
 
 export const enhancedSecureStudentLogin = async (fullName: string, school: string, grade: string, password: string) => {
   try {
-    // Input validation
+    // Enhanced input validation
     const nameValidation = validateInput.validateName(fullName);
     if (!nameValidation.isValid) {
       return { error: nameValidation.message };
@@ -65,8 +74,10 @@ export const enhancedSecureStudentLogin = async (fullName: string, school: strin
     const sanitizedSchool = validateInput.sanitizeText(school);
     const sanitizedGrade = validateInput.sanitizeText(grade);
 
-    // Rate limiting check
-    const rateCheck = checkRateLimit(`${sanitizedName}-${sanitizedSchool}-${sanitizedGrade}`);
+    const identifier = `${sanitizedName}-${sanitizedSchool}-${sanitizedGrade}`;
+    
+    // Enhanced rate limiting check
+    const rateCheck = checkRateLimit(identifier);
     if (!rateCheck.allowed) {
       logUserSecurityEvent({
         type: 'rate_limit_exceeded',
@@ -75,6 +86,11 @@ export const enhancedSecureStudentLogin = async (fullName: string, school: strin
         userAgent: navigator.userAgent
       });
       return { error: rateCheck.message };
+    }
+
+    // Apply progressive delay if needed
+    if (rateCheck.delay) {
+      await new Promise(resolve => setTimeout(resolve, rateCheck.delay));
     }
 
     console.log('Enhanced secure student login attempt:', { fullName: sanitizedName, school: sanitizedSchool, grade: sanitizedGrade });
@@ -89,7 +105,7 @@ export const enhancedSecureStudentLogin = async (fullName: string, school: strin
 
     if (error || !student) {
       console.log('Student not found');
-      recordFailedAttempt(`${sanitizedName}-${sanitizedSchool}-${sanitizedGrade}`);
+      recordFailedAttempt(identifier);
       logUserSecurityEvent({
         type: 'login_failed',
         timestamp: new Date().toISOString(),
@@ -103,7 +119,7 @@ export const enhancedSecureStudentLogin = async (fullName: string, school: strin
     const isPasswordValid = await verifyPassword(password, student.password_hash);
     if (!isPasswordValid) {
       console.log('Invalid password');
-      recordFailedAttempt(`${sanitizedName}-${sanitizedSchool}-${sanitizedGrade}`);
+      recordFailedAttempt(identifier);
       logUserSecurityEvent({
         type: 'login_failed',
         userId: student.id,
@@ -114,9 +130,9 @@ export const enhancedSecureStudentLogin = async (fullName: string, school: strin
       return { error: 'Invalid credentials' };
     }
 
-    // Clear failed attempts and create session
-    clearFailedAttempts(`${sanitizedName}-${sanitizedSchool}-${sanitizedGrade}`);
-    await sessionService.createSession(student.id, 'student');
+    // Clear failed attempts and create secure session
+    clearFailedAttempts(identifier);
+    await sessionService.createSession(student.id, 'student', student.school);
     await sessionService.cleanupExpiredSessions(student.id);
 
     logUserSecurityEvent({
@@ -164,7 +180,7 @@ export const enhancedSecureTeacherLogin = async (email: string, password: string
       return { error: 'Invalid email format' };
     }
 
-    // Rate limiting check
+    // Enhanced rate limiting check
     const rateCheck = checkRateLimit(sanitizedEmail);
     if (!rateCheck.allowed) {
       logUserSecurityEvent({
@@ -174,6 +190,11 @@ export const enhancedSecureTeacherLogin = async (email: string, password: string
         userAgent: navigator.userAgent
       });
       return { error: rateCheck.message };
+    }
+
+    // Apply progressive delay if needed
+    if (rateCheck.delay) {
+      await new Promise(resolve => setTimeout(resolve, rateCheck.delay));
     }
 
     console.log('Enhanced secure teacher login attempt:', sanitizedEmail);
@@ -211,9 +232,9 @@ export const enhancedSecureTeacherLogin = async (email: string, password: string
       return { error: 'Invalid credentials' };
     }
 
-    // Clear failed attempts and create session
+    // Clear failed attempts and create secure session
     clearFailedAttempts(sanitizedEmail);
-    await sessionService.createSession(teacher.id, 'teacher');
+    await sessionService.createSession(teacher.id, 'teacher', teacher.school);
     await sessionService.cleanupExpiredSessions(teacher.id);
 
     logUserSecurityEvent({
@@ -308,7 +329,7 @@ export const enhancedSecureStudentSignup = async (fullName: string, school: stri
     }
 
     // Create session for new user
-    await sessionService.createSession(student.id, 'student');
+    await sessionService.createSession(student.id, 'student', student.school);
 
     logUserSecurityEvent({
       type: 'login_success',
@@ -402,7 +423,7 @@ export const enhancedSecureTeacherSignup = async (name: string, email: string, s
     }
 
     // Create session for new user
-    await sessionService.createSession(teacher.id, 'teacher');
+    await sessionService.createSession(teacher.id, 'teacher', teacher.school);
 
     logUserSecurityEvent({
       type: 'login_success',
