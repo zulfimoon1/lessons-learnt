@@ -12,7 +12,9 @@ import StudentDashboard from '@/pages/StudentDashboard';
 import PricingPage from '@/pages/PricingPage';
 import EnhancedPricingPage from './pages/EnhancedPricingPage';
 import PricingShowcase from './pages/PricingShowcase';
+import Demo from '@/pages/Demo';
 import Index from '@/pages/Index';
+import NotFound from '@/pages/NotFound';
 
 const queryClient = new QueryClient();
 
@@ -27,12 +29,14 @@ function App() {
                 <Toaster />
                 <Routes>
                   <Route path="/" element={<Index />} />
+                  <Route path="/demo" element={<Demo />} />
                   <Route path="/admin-dashboard" element={<AdminDashboard />} />
                   <Route path="/teacher-dashboard" element={<TeacherDashboard />} />
                   <Route path="/student-dashboard" element={<StudentDashboard />} />
                   <Route path="/pricing" element={<PricingPage />} />
                   <Route path="/enhanced-pricing" element={<EnhancedPricingPage />} />
                   <Route path="/pricing-showcase" element={<PricingShowcase />} />
+                  <Route path="*" element={<NotFound />} />
                 </Routes>
               </div>
             </PlatformAdminProvider>
