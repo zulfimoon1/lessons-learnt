@@ -12,7 +12,6 @@ import StudentDashboard from '@/pages/StudentDashboard';
 import PricingPage from '@/pages/PricingPage';
 import EnhancedPricingPage from './pages/EnhancedPricingPage';
 import PricingShowcase from './pages/PricingShowcase';
-import PlatformAdmin from '@/pages/PlatformAdmin';
 import Demo from '@/pages/Demo';
 import Index from '@/pages/Index';
 import NotFound from '@/pages/NotFound';
@@ -37,7 +36,6 @@ function App() {
                   <Route path="/pricing" element={<PricingPage />} />
                   <Route path="/enhanced-pricing" element={<EnhancedPricingPage />} />
                   <Route path="/pricing-showcase" element={<PricingShowcase />} />
-                  <Route path="/platform-admin" element={<PlatformAdmin />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </div>
