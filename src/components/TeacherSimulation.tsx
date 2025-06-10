@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -404,6 +403,11 @@ const MentalHealthSupportStep = () => (
         All mental health communications are encrypted and confidential. Teachers can only monitor for safety concerns. 
         Individual chat contents are accessible only to licensed mental health professionals.
       </p>
+    </div>
+
+    {/* Crisis Support */}
+    <div className="bg-red-50 p-3 rounded-lg border border-red-200">
+      <p className="text-xs text-red-700 font-medium">🚨 Crisis Support: 116 123 Vilties Linija - Hope Line</p>
     </div>
   </div>
 );
