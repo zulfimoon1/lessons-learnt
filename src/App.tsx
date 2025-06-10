@@ -7,7 +7,7 @@ import { AuthProvider } from '@/contexts/AuthContext';
 import { LanguageProvider } from '@/contexts/LanguageContext';
 import { PlatformAdminProvider } from '@/contexts/PlatformAdminContext';
 import SecureAuthGuard from '@/components/SecureAuthGuard';
-import SecurityHeaders from '@/components/SecurityHeaders';
+import EnhancedSecurityHeaders from '@/components/EnhancedSecurityHeaders';
 import SecurityAuditLogger from '@/components/SecurityAuditLogger';
 import AdminDashboard from '@/pages/AdminDashboard';
 import TeacherDashboard from '@/pages/TeacherDashboard';
@@ -46,7 +46,7 @@ function App() {
         <AuthProvider>
           <LanguageProvider>
             <PlatformAdminProvider>
-              <SecurityHeaders />
+              <EnhancedSecurityHeaders />
               <SecurityAuditLogger />
               <div className="min-h-screen bg-background">
                 <Toaster />

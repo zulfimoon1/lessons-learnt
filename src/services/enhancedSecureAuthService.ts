@@ -1,7 +1,7 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { hashPassword, verifyPassword, validatePasswordStrength } from './securePasswordService';
-import { validateInput } from './secureInputValidation';
+import { enhancedValidateInput } from './enhancedInputValidation';
 import { logUserSecurityEvent } from '@/components/SecurityAuditLogger';
 
 // Enhanced secure authentication with additional security layers
@@ -10,23 +10,23 @@ export const enhancedSecureStudentLogin = async (fullName: string, school: strin
     console.log('Enhanced secure student login attempt');
 
     // Enhanced input validation with security checks
-    const nameValidation = validateInput.validateName(fullName);
+    const nameValidation = enhancedValidateInput.validateName(fullName);
     if (!nameValidation.isValid) {
       return { error: nameValidation.message };
     }
 
-    const schoolValidation = validateInput.validateSchool(school);
+    const schoolValidation = enhancedValidateInput.validateSchool(school);
     if (!schoolValidation.isValid) {
       return { error: schoolValidation.message };
     }
 
-    const gradeValidation = validateInput.validateGrade(grade);
+    const gradeValidation = enhancedValidateInput.validateGrade(grade);
     if (!gradeValidation.isValid) {
       return { error: gradeValidation.message };
     }
 
     // Check for suspicious input patterns
-    const suspiciousCheck = validateInput.detectSuspiciousInput(`${fullName} ${school} ${grade}`);
+    const suspiciousCheck = enhancedValidateInput.detectAdvancedThreats(`${fullName} ${school} ${grade}`);
     if (suspiciousCheck.isSuspicious) {
       logUserSecurityEvent({
         type: 'suspicious_activity',
@@ -38,9 +38,9 @@ export const enhancedSecureStudentLogin = async (fullName: string, school: strin
     }
 
     // Sanitize inputs
-    const sanitizedName = validateInput.sanitizeText(fullName);
-    const sanitizedSchool = validateInput.sanitizeText(school);
-    const sanitizedGrade = validateInput.sanitizeText(grade);
+    const sanitizedName = enhancedValidateInput.sanitizeText(fullName);
+    const sanitizedSchool = enhancedValidateInput.sanitizeText(school);
+    const sanitizedGrade = enhancedValidateInput.sanitizeText(grade);
 
     // Secure database query
     const { data: students, error } = await supabase
@@ -103,31 +103,31 @@ export const enhancedSecureStudentSignup = async (fullName: string, school: stri
     console.log('Enhanced secure student signup attempt');
 
     // Enhanced input validation
-    const nameValidation = validateInput.validateName(fullName);
+    const nameValidation = enhancedValidateInput.validateName(fullName);
     if (!nameValidation.isValid) {
       return { error: nameValidation.message };
     }
 
-    const schoolValidation = validateInput.validateSchool(school);
+    const schoolValidation = enhancedValidateInput.validateSchool(school);
     if (!schoolValidation.isValid) {
       return { error: schoolValidation.message };
     }
 
-    const gradeValidation = validateInput.validateGrade(grade);
+    const gradeValidation = enhancedValidateInput.validateGrade(grade);
     if (!gradeValidation.isValid) {
       return { error: gradeValidation.message };
     }
 
-    // Password strength validation
-    const passwordValidation = validatePasswordStrength(password);
+    // Enhanced password strength validation
+    const passwordValidation = enhancedValidateInput.validatePasswordComplexity(password);
     if (!passwordValidation.isValid) {
       return { error: passwordValidation.message };
     }
 
     // Sanitize inputs
-    const sanitizedName = validateInput.sanitizeText(fullName);
-    const sanitizedSchool = validateInput.sanitizeText(school);
-    const sanitizedGrade = validateInput.sanitizeText(grade);
+    const sanitizedName = enhancedValidateInput.sanitizeText(fullName);
+    const sanitizedSchool = enhancedValidateInput.sanitizeText(school);
+    const sanitizedGrade = enhancedValidateInput.sanitizeText(grade);
 
     // Check for existing student
     const { data: existingStudents } = await supabase
@@ -191,13 +191,13 @@ export const enhancedSecureTeacherLogin = async (email: string, password: string
     console.log('Enhanced secure teacher login attempt');
 
     // Enhanced input validation
-    const emailValidation = validateInput.validateEmail(email);
+    const emailValidation = enhancedValidateInput.validateEmail(email);
     if (!emailValidation.isValid) {
       return { error: emailValidation.message };
     }
 
     // Check for suspicious input patterns
-    const suspiciousCheck = validateInput.detectSuspiciousInput(email);
+    const suspiciousCheck = enhancedValidateInput.detectAdvancedThreats(email);
     if (suspiciousCheck.isSuspicious) {
       logUserSecurityEvent({
         type: 'suspicious_activity',
@@ -209,7 +209,7 @@ export const enhancedSecureTeacherLogin = async (email: string, password: string
     }
 
     // Sanitize inputs
-    const sanitizedEmail = validateInput.sanitizeText(email.toLowerCase());
+    const sanitizedEmail = enhancedValidateInput.sanitizeText(email.toLowerCase());
 
     // Secure database query
     const { data: teachers, error } = await supabase
@@ -270,32 +270,32 @@ export const enhancedSecureTeacherSignup = async (name: string, email: string, s
     console.log('Enhanced secure teacher signup attempt');
 
     // Enhanced input validation
-    const nameValidation = validateInput.validateName(name);
+    const nameValidation = enhancedValidateInput.validateName(name);
     if (!nameValidation.isValid) {
       return { error: nameValidation.message };
     }
 
-    const emailValidation = validateInput.validateEmail(email);
+    const emailValidation = enhancedValidateInput.validateEmail(email);
     if (!emailValidation.isValid) {
       return { error: emailValidation.message };
     }
 
-    const schoolValidation = validateInput.validateSchool(school);
+    const schoolValidation = enhancedValidateInput.validateSchool(school);
     if (!schoolValidation.isValid) {
       return { error: schoolValidation.message };
     }
 
-    // Password strength validation
-    const passwordValidation = validatePasswordStrength(password);
+    // Enhanced password strength validation
+    const passwordValidation = enhancedValidateInput.validatePasswordComplexity(password);
     if (!passwordValidation.isValid) {
       return { error: passwordValidation.message };
     }
 
     // Sanitize inputs
-    const sanitizedName = validateInput.sanitizeText(name);
-    const sanitizedEmail = validateInput.sanitizeText(email.toLowerCase());
-    const sanitizedSchool = validateInput.sanitizeText(school);
-    const sanitizedRole = validateInput.sanitizeText(role);
+    const sanitizedName = enhancedValidateInput.sanitizeText(name);
+    const sanitizedEmail = enhancedValidateInput.sanitizeText(email.toLowerCase());
+    const sanitizedSchool = enhancedValidateInput.sanitizeText(school);
+    const sanitizedRole = enhancedValidateInput.sanitizeText(role);
 
     // Check for existing teacher
     const { data: existingTeachers } = await supabase

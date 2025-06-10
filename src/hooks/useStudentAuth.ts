@@ -3,6 +3,8 @@ import { useState } from 'react';
 import { Student } from '@/types/auth';
 import { enhancedSecureStudentLogin, enhancedSecureStudentSignup } from '@/services/enhancedSecureAuthService';
 import { secureSessionService } from '@/services/secureSessionService';
+import { secureRateLimitService } from '@/services/secureRateLimitService';
+import { enhancedValidateInput } from '@/services/enhancedInputValidation';
 
 export const useStudentAuth = () => {
   const [student, setStudent] = useState<Student | null>(null);
@@ -11,6 +13,37 @@ export const useStudentAuth = () => {
     try {
       console.log('useStudentAuth: Starting enhanced secure login process');
       
+      // Enhanced input validation
+      const nameValidation = enhancedValidateInput.validateName(fullName);
+      if (!nameValidation.isValid) {
+        return { error: nameValidation.message };
+      }
+
+      const schoolValidation = enhancedValidateInput.validateSchool(school);
+      if (!schoolValidation.isValid) {
+        return { error: schoolValidation.message };
+      }
+
+      const gradeValidation = enhancedValidateInput.validateGrade(grade);
+      if (!gradeValidation.isValid) {
+        return { error: gradeValidation.message };
+      }
+
+      // Check rate limiting
+      const identifier = `${fullName}-${school}-${grade}`;
+      const rateLimitCheck = await secureRateLimitService.checkRateLimit(identifier, 'student-login');
+      
+      if (!rateLimitCheck.allowed) {
+        await secureRateLimitService.recordFailedAttempt(identifier, 'student-login', { reason: 'rate_limit' });
+        return { error: rateLimitCheck.message };
+      }
+
+      // Apply progressive delay
+      const delay = await secureRateLimitService.getProgressiveDelay(identifier, 'student-login');
+      if (delay > 1000) {
+        await new Promise(resolve => setTimeout(resolve, delay));
+      }
+
       const result = await enhancedSecureStudentLogin(fullName, school, grade, password);
       console.log('useStudentAuth: Enhanced secure service result', { 
         success: !!result.user, 
@@ -33,11 +66,17 @@ export const useStudentAuth = () => {
           localStorage.removeItem('teacher');
           localStorage.removeItem('platformAdmin');
           console.log('useStudentAuth: Student data saved securely');
+          
+          // Record successful login
+          await secureRateLimitService.recordSuccessfulAttempt(identifier, 'student-login');
         } catch (storageError) {
           console.warn('useStudentAuth: Failed to save student data to secure storage:', storageError);
         }
         
         return { student: studentData };
+      } else {
+        // Record failed attempt
+        await secureRateLimitService.recordFailedAttempt(identifier, 'student-login', { reason: 'invalid_credentials' });
       }
       
       return { error: result.error };
@@ -50,6 +89,39 @@ export const useStudentAuth = () => {
   const signup = async (fullName: string, school: string, grade: string, password: string) => {
     try {
       console.log('useStudentAuth: Starting enhanced secure signup process');
+      
+      // Enhanced input validation
+      const nameValidation = enhancedValidateInput.validateName(fullName);
+      if (!nameValidation.isValid) {
+        return { error: nameValidation.message };
+      }
+
+      const schoolValidation = enhancedValidateInput.validateSchool(school);
+      if (!schoolValidation.isValid) {
+        return { error: schoolValidation.message };
+      }
+
+      const gradeValidation = enhancedValidateInput.validateGrade(grade);
+      if (!gradeValidation.isValid) {
+        return { error: gradeValidation.message };
+      }
+
+      // Enhanced password validation
+      const passwordValidation = enhancedValidateInput.validatePasswordComplexity(password);
+      if (!passwordValidation.isValid) {
+        return { error: passwordValidation.message };
+      }
+
+      // Check rate limiting for signups
+      const identifier = `${fullName}-${school}`;
+      const rateLimitCheck = await secureRateLimitService.checkRateLimit(identifier, 'student-signup', {
+        maxAttempts: 3,
+        windowMinutes: 60
+      });
+      
+      if (!rateLimitCheck.allowed) {
+        return { error: rateLimitCheck.message };
+      }
       
       const result = await enhancedSecureStudentSignup(fullName, school, grade, password);
       console.log('useStudentAuth: Enhanced secure signup service result', { 
@@ -73,6 +145,9 @@ export const useStudentAuth = () => {
           localStorage.removeItem('teacher');
           localStorage.removeItem('platformAdmin');
           console.log('useStudentAuth: Student signup data saved securely');
+          
+          // Record successful signup
+          await secureRateLimitService.recordSuccessfulAttempt(identifier, 'student-signup');
         } catch (storageError) {
           console.warn('useStudentAuth: Failed to save student signup data to secure storage:', storageError);
         }
@@ -91,6 +166,7 @@ export const useStudentAuth = () => {
     setStudent(null);
     try {
       localStorage.removeItem('student');
+      secureSessionService.clearSession('student');
       sessionStorage.clear(); // Clear all session data for security
     } catch (error) {
       console.error('useStudentAuth: Error clearing student data:', error);
@@ -123,6 +199,7 @@ export const useStudentAuth = () => {
     } catch (error) {
       console.error('useStudentAuth: Error restoring student from storage:', error);
       localStorage.removeItem('student');
+      secureSessionService.clearSession('student');
     }
     return false;
   };
