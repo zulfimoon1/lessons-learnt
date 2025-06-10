@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -7,615 +8,191 @@ import {
   PlayIcon,
   PauseIcon,
   RotateCcwIcon,
-  StarIcon,
-  CalendarIcon,
-  ClockIcon,
-  BookOpenIcon,
-  CheckCircleIcon,
-  ArrowRightIcon,
-  MessageCircleIcon,
-  HeartIcon,
-  AlertTriangleIcon,
-  GraduationCapIcon,
-  BellIcon,
-  SettingsIcon,
-  TrendingUpIcon,
   BarChart3Icon,
-  UsersIcon,
-  StethoscopeIcon,
-  ShieldCheckIcon
+  TrendingUpIcon,
+  AlertTriangleIcon,
+  CheckCircleIcon,
+  UsersIcon
 } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 
-interface TeacherSimulationStep {
-  id: string;
-  title: string;
-  description: string;
-  duration: number;
-  component: React.ReactNode;
-}
-
 const TeacherSimulation = () => {
   const { t } = useLanguage();
-  const [currentStep, setCurrentStep] = useState(0);
+  const [currentStep, setCurrentStep] = useState(1);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [progress, setProgress] = useState(0);
+  const totalSteps = 8;
 
-  // Simulation steps
-  const steps: TeacherSimulationStep[] = [
-    {
-      id: "teacher-dashboard",
-      title: t('teacher.dashboard.title') || "Teacher Dashboard Login",
-      description: t('teacher.dashboard.description') || "Ms. Johnson logs into her comprehensive teacher dashboard",
-      duration: 4000,
-      component: <TeacherDashboardStep />
-    },
-    {
-      id: "view-alerts",
-      title: t('teacher.alerts.title') || "Review Alerts",
-      description: t('teacher.alerts.description') || "Ms. Johnson checks mental health alerts and class performance warnings",
-      duration: 3500,
-      component: <ViewAlertsStep />
-    },
-    {
-      id: "mental-health-support",
-      title: t('teacher.mentalHealth.title') || "Mental Health Support System",
-      description: t('teacher.mentalHealth.description') || "Ms. Johnson reviews and manages student mental health support requests",
-      duration: 4500,
-      component: <MentalHealthSupportStep />
-    },
-    {
-      id: "class-performance",
-      title: t('teacher.performance.title') || "Class Performance Analysis",
-      description: t('teacher.performance.description') || "Ms. Johnson reviews today's live class performance metrics",
-      duration: 3000,
-      component: <ClassPerformanceStep />
-    },
-    {
-      id: "student-mood",
-      title: t('teacher.mood.title') || "Student Mood Overview",
-      description: t('teacher.mood.description') || "Ms. Johnson examines the emotional state of her students",
-      duration: 3000,
-      component: <StudentMoodStep />
-    },
-    {
-      id: "individual-feedback",
-      title: t('teacher.feedback.title') || "Individual Student Feedback",
-      description: t('teacher.feedback.description') || "Ms. Johnson reviews detailed feedback from individual students",
-      duration: 4000,
-      component: <IndividualFeedbackStep />
-    },
-    {
-      id: "address-concerns",
-      title: t('teacher.concerns.title') || "Address Student Concerns",
-      description: t('teacher.concerns.description') || "Ms. Johnson takes action on students needing support",
-      duration: 3500,
-      component: <AddressConcernsStep />
-    },
-    {
-      id: "weekly-trends",
-      title: t('teacher.trends.title') || "Weekly Performance Trends",
-      description: t('teacher.trends.description') || "Ms. Johnson analyzes weekly performance and engagement trends",
-      duration: 3000,
-      component: <WeeklyTrendsStep />
-    },
-    {
-      id: "plan-improvements",
-      title: t('teacher.improvements.title') || "Plan Lesson Improvements",
-      description: t('teacher.improvements.description') || "Ms. Johnson plans improvements based on student feedback",
-      duration: 3500,
-      component: <PlanImprovementsStep />
-    }
+  const simulationSteps = [
+    { id: 1, name: 'Dashboard Overview' },
+    { id: 2, name: 'Class Analytics' },
+    { id: 3, name: 'Student Alerts' },
+    { id: 4, name: 'Mood Tracking' },
+    { id: 5, name: 'Individual Reports' },
+    { id: 6, name: 'Action Planning' },
+    { id: 7, name: 'Weekly Trends' },
+    { id: 8, name: 'Lesson Planning' }
   ];
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
-    
-    if (isPlaying && currentStep < steps.length - 1) {
+    if (isPlaying) {
       interval = setInterval(() => {
-        setProgress(prev => {
-          if (prev >= 100) {
-            setCurrentStep(current => current + 1);
-            return 0;
-          }
-          return prev + (100 / (steps[currentStep].duration / 100));
-        });
-      }, 100);
+        setCurrentStep(prev => prev < totalSteps ? prev + 1 : 1);
+      }, 3500);
     }
-
     return () => clearInterval(interval);
-  }, [isPlaying, currentStep, steps]);
+  }, [isPlaying, totalSteps]);
 
-  const handlePlay = () => setIsPlaying(true);
-  const handlePause = () => setIsPlaying(false);
-  const handleReset = () => {
-    setCurrentStep(0);
-    setProgress(0);
-    setIsPlaying(false);
+  const handleStepClick = (stepId: number) => {
+    setCurrentStep(stepId);
   };
 
-  const handleStepSelect = (stepIndex: number) => {
-    setCurrentStep(stepIndex);
-    setProgress(0);
-    setIsPlaying(false);
+  const getCurrentStepContent = () => {
+    switch (currentStep) {
+      case 1:
+        return (
+          <div className="bg-white p-6 rounded-lg shadow-lg border">
+            <h3 className="text-lg font-semibold mb-4">Teacher Dashboard Overview</h3>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+              <div className="bg-blue-50 p-4 rounded-lg">
+                <div className="flex items-center gap-3">
+                  <UsersIcon className="w-8 h-8 text-blue-600" />
+                  <div>
+                    <div className="text-2xl font-bold text-blue-600">142</div>
+                    <div className="text-sm text-blue-800">Total Students</div>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="bg-green-50 p-4 rounded-lg">
+                <div className="flex items-center gap-3">
+                  <TrendingUpIcon className="w-8 h-8 text-green-600" />
+                  <div>
+                    <div className="text-2xl font-bold text-green-600">87%</div>
+                    <div className="text-sm text-green-800">Avg. Understanding</div>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="bg-red-50 p-4 rounded-lg">
+                <div className="flex items-center gap-3">
+                  <AlertTriangleIcon className="w-8 h-8 text-red-600" />
+                  <div>
+                    <div className="text-2xl font-bold text-red-600">3</div>
+                    <div className="text-sm text-red-800">Students Need Support</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <h4 className="font-semibold">Recent Class Performance</h4>
+              <div className="space-y-2">
+                <div className="flex justify-between items-center p-3 bg-green-50 rounded-lg">
+                  <span className="font-medium">Mathematics - Algebra II</span>
+                  <div className="flex items-center gap-2">
+                    <Badge className="bg-green-100 text-green-700">4.2★</Badge>
+                    <CheckCircleIcon className="w-4 h-4 text-green-600" />
+                  </div>
+                </div>
+                <div className="flex justify-between items-center p-3 bg-yellow-50 rounded-lg">
+                  <span className="font-medium">Chemistry - Lab Work</span>
+                  <div className="flex items-center gap-2">
+                    <Badge className="bg-yellow-100 text-yellow-700">3.8★</Badge>
+                    <AlertTriangleIcon className="w-4 h-4 text-yellow-600" />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      
+      default:
+        return (
+          <div className="bg-white p-6 rounded-lg shadow-lg border">
+            <div className="text-center">
+              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <BarChart3Icon className="w-8 h-8 text-green-600" />
+              </div>
+              <h3 className="text-lg font-semibold mb-2">
+                {simulationSteps[currentStep - 1]?.name}
+              </h3>
+              <p className="text-gray-600 text-sm">
+                Teachers analyze student performance and well-being data
+              </p>
+            </div>
+          </div>
+        );
+    }
   };
 
   return (
     <div className="space-y-6">
-      {/* Simulation Controls */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center justify-between">
-            <span>{t('teacher.simulation.title') || "Teacher Journey Simulation"}</span>
+          <div className="flex items-center justify-between">
+            <CardTitle className="flex items-center gap-2">
+              {t('demo.simulation.teacher.title')}
+            </CardTitle>
             <div className="flex gap-2">
               <Button
-                onClick={handlePlay}
-                disabled={isPlaying}
+                variant="outline"
                 size="sm"
+                onClick={() => setIsPlaying(!isPlaying)}
                 className="flex items-center gap-2"
               >
-                <PlayIcon className="w-4 h-4" />
-                {t('common.play') || "Play"}
+                {isPlaying ? (
+                  <>
+                    <PauseIcon className="w-4 h-4" />
+                    {t('demo.simulation.pause')}
+                  </>
+                ) : (
+                  <>
+                    <PlayIcon className="w-4 h-4" />
+                    {t('demo.simulation.play')}
+                  </>
+                )}
               </Button>
               <Button
-                onClick={handlePause}
-                disabled={!isPlaying}
-                size="sm"
                 variant="outline"
-                className="flex items-center gap-2"
-              >
-                <PauseIcon className="w-4 h-4" />
-                {t('common.pause') || "Pause"}
-              </Button>
-              <Button
-                onClick={handleReset}
                 size="sm"
-                variant="outline"
+                onClick={() => setCurrentStep(1)}
                 className="flex items-center gap-2"
               >
                 <RotateCcwIcon className="w-4 h-4" />
-                {t('common.reset') || "Reset"}
+                {t('demo.simulation.reset')}
               </Button>
             </div>
-          </CardTitle>
+          </div>
+          <div className="flex items-center justify-between text-sm text-gray-600">
+            <span>{t('demo.simulation.step')} {currentStep} {t('demo.simulation.of')} {totalSteps}</span>
+            <span>{simulationSteps[currentStep - 1]?.name}</span>
+          </div>
+          <Progress value={(currentStep / totalSteps) * 100} className="mt-2" />
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            <div className="flex justify-between text-sm">
-              <span>Step {currentStep + 1} of {steps.length}</span>
-              <span>{steps[currentStep].title}</span>
-            </div>
-            <Progress value={progress} className="h-2" />
-            <p className="text-sm text-gray-600">{steps[currentStep].description}</p>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Step Navigation */}
-      <Card>
-        <CardContent className="p-4">
-          <div className="flex flex-wrap gap-2">
-            {steps.map((step, index) => (
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-6">
+            {simulationSteps.map((step) => (
               <Button
                 key={step.id}
-                onClick={() => handleStepSelect(index)}
+                variant={currentStep === step.id ? "default" : "outline"}
                 size="sm"
-                variant={currentStep === index ? "default" : "outline"}
-                className="text-xs"
+                onClick={() => handleStepClick(step.id)}
+                className="text-xs p-2 h-auto"
               >
-                {index + 1}. {step.title}
+                <div className="text-center">
+                  <div>{step.id}. {step.name}</div>
+                </div>
               </Button>
             ))}
           </div>
-        </CardContent>
-      </Card>
-
-      {/* Simulation Display */}
-      <Card className="min-h-[600px]">
-        <CardContent className="p-6">
-          {steps[currentStep].component}
+          
+          {getCurrentStepContent()}
         </CardContent>
       </Card>
     </div>
   );
 };
-
-// Individual step components
-const TeacherDashboardStep = () => {
-  const { t } = useLanguage();
-  
-  return (
-    <div className="space-y-6">
-      <div className="bg-white rounded-lg shadow-lg p-6 border">
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
-              <BookOpenIcon className="w-5 h-5 text-green-600" />
-            </div>
-            <div>
-              <h3 className="text-lg font-semibold">{t('teacher.dashboard.welcome') || "Teacher Dashboard"}</h3>
-              <p className="text-sm text-gray-600">{t('teacher.dashboard.welcomeBack') || "Welcome back, Ms. Johnson"}</p>
-            </div>
-          </div>
-          <div className="flex gap-2">
-            <Badge className="bg-red-100 text-red-700">{t('teacher.alerts.count') || "3 Alerts"}</Badge>
-            <BellIcon className="w-5 h-5 text-gray-400" />
-            <SettingsIcon className="w-5 h-5 text-gray-400" />
-          </div>
-        </div>
-
-        {/* Overview Stats */}
-        <div className="grid grid-cols-4 gap-4 mb-6">
-          <div className="bg-blue-50 p-4 rounded-lg text-center">
-            <div className="text-2xl font-bold text-blue-600">156</div>
-            <div className="text-sm text-blue-800">{t('teacher.stats.totalStudents') || "Total Students"}</div>
-          </div>
-          <div className="bg-green-50 p-4 rounded-lg text-center">
-            <div className="text-2xl font-bold text-green-600">87%</div>
-            <div className="text-sm text-green-800">{t('teacher.stats.avgUnderstanding') || "Avg Understanding"}</div>
-          </div>
-          <div className="bg-purple-50 p-4 rounded-lg text-center">
-            <div className="text-2xl font-bold text-purple-600">4.3★</div>
-            <div className="text-sm text-purple-800">{t('teacher.stats.lessonRating') || "Lesson Rating"}</div>
-          </div>
-          <div className="bg-yellow-50 p-4 rounded-lg text-center">
-            <div className="text-2xl font-bold text-yellow-600">12</div>
-            <div className="text-sm text-yellow-800">{t('teacher.stats.needSupport') || "Need Support"}</div>
-          </div>
-        </div>
-
-        {/* Today's Classes */}
-        <div className="mb-6">
-          <h4 className="font-semibold mb-3 flex items-center gap-2">
-            <ClockIcon className="w-4 h-4" />
-            {t('teacher.classes.today') || "Today's Classes"}
-          </h4>
-          <div className="space-y-3">
-            <div className="flex justify-between items-center p-4 bg-blue-50 rounded border-l-4 border-blue-500">
-              <div>
-                <div className="font-medium">{t('teacher.classes.mathematics') || "Mathematics - Grade 10A"}</div>
-                <div className="text-sm text-gray-600">{t('teacher.classes.algebra') || "9:00 AM - Algebra II"}</div>
-                <div className="flex gap-2 mt-1">
-                  <Badge variant="outline">{t('teacher.classes.students') || "25 students"}</Badge>
-                  <Badge className="bg-green-100 text-green-700">{t('teacher.classes.live') || "Live"}</Badge>
-                </div>
-              </div>
-              <div className="text-right">
-                <div className="text-sm font-medium">{t('teacher.classes.understanding') || "89% Understanding"}</div>
-                <div className="text-xs text-gray-500">{t('teacher.classes.responses') || "23 responses"}</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-const ViewAlertsStep = () => {
-  const { t } = useLanguage();
-  
-  return (
-    <div className="space-y-4">
-      <h3 className="text-lg font-semibold flex items-center gap-2">
-        <AlertTriangleIcon className="w-5 h-5 text-red-500" />
-        {t('teacher.alerts.recent') || "Recent Alerts - Priority Review"}
-      </h3>
-      <div className="space-y-3">
-        <div className="flex items-center gap-3 p-4 bg-red-50 rounded border border-red-200 ring-2 ring-red-300 ring-offset-2">
-          <AlertTriangleIcon className="w-5 h-5 text-red-600" />
-          <div className="flex-1">
-            <div className="text-sm font-medium">{t('teacher.alerts.distress') || "Student showing signs of distress"}</div>
-            <div className="text-xs text-gray-600">{t('teacher.alerts.anonymous') || "Grade 10A - Anonymous student in Mathematics"}</div>
-            <div className="text-xs text-red-600 mt-1">{t('teacher.alerts.clickReview') || "Click to review and take action"}</div>
-          </div>
-          <ArrowRightIcon className="w-4 h-4 text-red-600" />
-        </div>
-        <div className="flex items-center gap-3 p-3 bg-yellow-50 rounded border border-yellow-200">
-          <AlertTriangleIcon className="w-4 h-4 text-yellow-600" />
-          <div className="flex-1">
-            <div className="text-sm font-medium">{t('teacher.alerts.lowUnderstanding') || "Low understanding in Chemistry"}</div>
-            <div className="text-xs text-gray-600">{t('teacher.alerts.struggling') || "15 students struggling with today's topic"}</div>
-          </div>
-          <Button size="sm" variant="outline">{t('teacher.alerts.address') || "Address"}</Button>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-const MentalHealthSupportStep = () => {
-  const { t } = useLanguage();
-  
-  return (
-    <div className="space-y-6">
-      <h3 className="text-lg font-semibold flex items-center gap-2">
-        <HeartIcon className="w-5 h-5 text-purple-500" />
-        {t('teacher.mentalHealth.center') || "Mental Health Support Center - Teacher Interface"}
-      </h3>
-      
-      {/* Active Support Sessions */}
-      <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
-        <h4 className="font-medium mb-3 flex items-center gap-2">
-          <StethoscopeIcon className="w-4 h-4" />
-          {t('teacher.mentalHealth.activeSessions') || "Active Support Sessions"}
-        </h4>
-        <div className="space-y-3">
-          <div className="bg-white p-3 rounded border border-purple-300">
-            <div className="flex justify-between items-center mb-2">
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                <span className="text-sm font-medium">{t('teacher.mentalHealth.anonymousStudent') || "Anonymous Student - Grade 10A"}</span>
-                <Badge className="bg-green-100 text-green-700">{t('teacher.mentalHealth.activeChat') || "Active Chat"}</Badge>
-              </div>
-              <span className="text-xs text-gray-500">{t('teacher.mentalHealth.started') || "Started 15 min ago"}</span>
-            </div>
-            <div className="text-xs text-gray-600 mb-2">
-              {t('teacher.mentalHealth.connected') || "Connected with Dr. Sarah Wilson - School Psychologist"}
-            </div>
-            <div className="flex gap-2">
-              <Button size="sm" variant="outline">{t('teacher.mentalHealth.monitor') || "Monitor (Read-Only)"}</Button>
-              <Button size="sm" className="bg-purple-600 hover:bg-purple-700">{t('teacher.mentalHealth.emergency') || "Emergency Override"}</Button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Support Requests Queue */}
-      <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-        <h4 className="font-medium mb-3 flex items-center gap-2">
-          <MessageCircleIcon className="w-4 h-4" />
-          {t('teacher.mentalHealth.pendingRequests') || "Pending Support Requests"}
-        </h4>
-        <div className="space-y-2">
-          <div className="bg-white p-3 rounded border">
-            <div className="flex justify-between items-center">
-              <div>
-                <div className="text-sm font-medium">Emma Thompson - Grade 9B</div>
-                <div className="text-xs text-gray-600">{t('teacher.mentalHealth.examStress') || "Requested counselor session about exam stress"}</div>
-                <div className="text-xs text-blue-600 mt-1">{t('teacher.mentalHealth.waiting') || "Waiting 8 minutes"}</div>
-              </div>
-              <div className="flex gap-1">
-                <Button size="sm" variant="outline">{t('teacher.mentalHealth.assignCounselor') || "Assign Counselor"}</Button>
-                <Button size="sm" className="bg-blue-600 hover:bg-blue-700">{t('teacher.mentalHealth.connectNow') || "Connect Now"}</Button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Mental Health Analytics */}
-      <div className="bg-green-50 p-4 rounded-lg border border-green-200">
-        <h4 className="font-medium mb-3 flex items-center gap-2">
-          <BarChart3Icon className="w-4 h-4" />
-          {t('teacher.mentalHealth.weeklyOverview') || "Weekly Mental Health Overview"}
-        </h4>
-        <div className="grid grid-cols-3 gap-4">
-          <div className="text-center">
-            <div className="text-xl font-bold text-green-600">23</div>
-            <div className="text-xs text-green-800">{t('teacher.mentalHealth.supportSessions') || "Support Sessions"}</div>
-          </div>
-          <div className="text-center">
-            <div className="text-xl font-bold text-blue-600">89%</div>
-            <div className="text-xs text-blue-800">{t('teacher.mentalHealth.positiveOutcomes') || "Positive Outcomes"}</div>
-          </div>
-          <div className="text-center">
-            <div className="text-xl font-bold text-purple-600">4.8★</div>
-            <div className="text-xs text-purple-800">{t('teacher.mentalHealth.supportRating') || "Support Rating"}</div>
-          </div>
-        </div>
-      </div>
-
-      {/* Privacy & Security Notice */}
-      <div className="bg-gray-50 p-3 rounded-lg border border-gray-200">
-        <div className="flex items-center gap-2 mb-2">
-          <ShieldCheckIcon className="w-4 h-4 text-gray-600" />
-          <span className="text-sm font-medium text-gray-800">{t('teacher.mentalHealth.privacy') || "Privacy & Confidentiality"}</span>
-        </div>
-        <p className="text-xs text-gray-600">
-          {t('teacher.mentalHealth.privacyDescription') || "All mental health communications are encrypted and confidential. Teachers can only monitor for safety concerns. Individual chat contents are accessible only to licensed mental health professionals."}
-        </p>
-      </div>
-
-      {/* Crisis Support */}
-      <div className="bg-red-50 p-3 rounded-lg border border-red-200">
-        <p className="text-xs text-red-700 font-medium">🚨 Crisis Support: 116 123 Vilties Linija - Hope Line</p>
-      </div>
-    </div>
-  );
-};
-
-const ClassPerformanceStep = () => (
-  <div className="space-y-4">
-    <h3 className="text-lg font-semibold">Live Class Performance - Mathematics Grade 10A</h3>
-    <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-      <div className="flex justify-between items-center mb-4">
-        <span className="font-medium">Current Lesson: Algebra II - Quadratic Equations</span>
-        <Badge className="bg-green-100 text-green-700">Live Now</Badge>
-      </div>
-      <div className="grid grid-cols-3 gap-4">
-        <div className="text-center">
-          <div className="text-2xl font-bold text-blue-600">89%</div>
-          <div className="text-sm text-blue-800">Understanding</div>
-        </div>
-        <div className="text-center">
-          <div className="text-2xl font-bold text-green-600">92%</div>
-          <div className="text-sm text-green-800">Engagement</div>
-        </div>
-        <div className="text-2xl font-bold text-purple-600 text-center">
-          <div>4.5★</div>
-          <div className="text-sm text-purple-800">Interest</div>
-        </div>
-      </div>
-    </div>
-    <div className="space-y-2">
-      <div className="text-sm font-medium">Real-time Feedback (23/25 responses)</div>
-      <div className="space-y-1">
-        <div className="flex justify-between text-sm">
-          <span>Understanding Level</span>
-          <span>89%</span>
-        </div>
-        <Progress value={89} className="h-2" />
-      </div>
-    </div>
-  </div>
-);
-
-const StudentMoodStep = () => (
-  <div className="space-y-4">
-    <h3 className="text-lg font-semibold flex items-center gap-2">
-      <HeartIcon className="w-4 h-4" />
-      Class Mood Overview - Mathematics Grade 10A
-    </h3>
-    <div className="grid grid-cols-4 gap-3">
-      <div className="bg-green-50 p-4 rounded text-center border border-green-200">
-        <div className="text-xl font-bold text-green-600">😊 65%</div>
-        <div className="text-xs text-green-800">Happy</div>
-        <div className="text-xs text-gray-600">16 students</div>
-      </div>
-      <div className="bg-yellow-50 p-4 rounded text-center border border-yellow-200">
-        <div className="text-xl font-bold text-yellow-600">😐 25%</div>
-        <div className="text-xs text-yellow-800">Neutral</div>
-        <div className="text-xs text-gray-600">6 students</div>
-      </div>
-      <div className="bg-orange-50 p-4 rounded text-center border border-orange-200">
-        <div className="text-xl font-bold text-orange-600">😟 8%</div>
-        <div className="text-xs text-orange-800">Stressed</div>
-        <div className="text-xs text-gray-600">2 students</div>
-      </div>
-      <div className="bg-red-50 p-4 rounded text-center border border-red-200">
-        <div className="text-xl font-bold text-red-600">😔 2%</div>
-        <div className="text-xs text-red-800">Need Support</div>
-        <div className="text-xs text-gray-600">1 student</div>
-      </div>
-    </div>
-    <div className="bg-purple-50 p-3 rounded-lg border border-purple-200">
-      <p className="text-sm text-purple-800">
-        <HeartIcon className="w-4 h-4 inline mr-1" />
-        1 student has been automatically referred to the school counselor for support
-      </p>
-    </div>
-  </div>
-);
-
-const IndividualFeedbackStep = () => (
-  <div className="space-y-4">
-    <h3 className="text-lg font-semibold">Individual Student Feedback Review</h3>
-    <div className="space-y-3">
-      <div className="p-4 bg-green-50 rounded border-l-4 border-green-500">
-        <div className="flex justify-between items-start mb-2">
-          <span className="font-medium">Anonymous Student #1</span>
-          <div className="flex gap-1">
-            {[1,2,3,4,5].map(star => (
-              <StarIcon key={star} className={`w-4 h-4 ${star <= 5 ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}`} />
-            ))}
-          </div>
-        </div>
-        <p className="text-sm text-gray-700 mb-2">"Great explanation of quadratic equations! The real-world examples really helped me understand."</p>
-        <div className="text-xs text-green-600">Emotional state: Happy 😊</div>
-      </div>
-      <div className="p-4 bg-yellow-50 rounded border-l-4 border-yellow-500">
-        <div className="flex justify-between items-start mb-2">
-          <span className="font-medium">Anonymous Student #2</span>
-          <div className="flex gap-1">
-            {[1,2,3,4,5].map(star => (
-              <StarIcon key={star} className={`w-4 h-4 ${star <= 3 ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}`} />
-            ))}
-          </div>
-        </div>
-        <p className="text-sm text-gray-700 mb-2">"I'm still confused about the factoring part. Could we go over it again?"</p>
-        <div className="text-xs text-yellow-600">Emotional state: Confused 😟</div>
-      </div>
-    </div>
-  </div>
-);
-
-const AddressConcernsStep = () => (
-  <div className="space-y-4">
-    <h3 className="text-lg font-semibold">Taking Action on Student Concerns</h3>
-    <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-      <h4 className="font-medium mb-3">Ms. Johnson's Action Plan:</h4>
-      <div className="space-y-3">
-        <div className="flex items-start gap-3">
-          <CheckCircleIcon className="w-5 h-5 text-green-600 mt-0.5" />
-          <div>
-            <div className="text-sm font-medium">Schedule individual help session</div>
-            <div className="text-xs text-gray-600">For students struggling with factoring</div>
-          </div>
-        </div>
-        <div className="flex items-start gap-3">
-          <CheckCircleIcon className="w-5 h-5 text-green-600 mt-0.5" />
-          <div>
-            <div className="text-sm font-medium">Prepare additional practice materials</div>
-            <div className="text-xs text-gray-600">Focus on quadratic factoring techniques</div>
-          </div>
-        </div>
-        <div className="flex items-start gap-3">
-          <CheckCircleIcon className="w-5 h-5 text-green-600 mt-0.5" />
-          <div>
-            <div className="text-sm font-medium">Follow up with counselor</div>
-            <div className="text-xs text-gray-600">Check on student showing signs of distress</div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-);
-
-const WeeklyTrendsStep = () => (
-  <div className="space-y-4">
-    <h3 className="text-lg font-semibold flex items-center gap-2">
-      <TrendingUpIcon className="w-4 h-4" />
-      Weekly Performance Trends
-    </h3>
-    <div className="space-y-4">
-      <div>
-        <div className="flex justify-between text-sm mb-1">
-          <span>Understanding Level</span>
-          <span>87% (+3% from last week)</span>
-        </div>
-        <Progress value={87} className="h-2" />
-      </div>
-      <div>
-        <div className="flex justify-between text-sm mb-1">
-          <span>Student Engagement</span>
-          <span>92% (+5% from last week)</span>
-        </div>
-        <Progress value={92} className="h-2" />
-      </div>
-      <div>
-        <div className="flex justify-between text-sm mb-1">
-          <span>Lesson Satisfaction</span>
-          <span>94% (+2% from last week)</span>
-        </div>
-        <Progress value={94} className="h-2" />
-      </div>
-    </div>
-    <div className="bg-green-50 p-3 rounded-lg border border-green-200">
-      <p className="text-sm text-green-800">
-        📈 Great progress! Your interactive teaching methods are showing positive results.
-      </p>
-    </div>
-  </div>
-);
-
-const PlanImprovementsStep = () => (
-  <div className="space-y-4 text-center">
-    <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto">
-      <CheckCircleIcon className="w-8 h-8 text-green-600" />
-    </div>
-    <h3 className="text-lg font-semibold text-green-600">Action Plan Complete!</h3>
-    <p className="text-gray-600">Ms. Johnson has successfully reviewed all feedback and created an improvement plan.</p>
-    <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-      <h4 className="font-medium mb-2">Next Week's Focus Areas:</h4>
-      <ul className="text-sm text-blue-800 space-y-1">
-        <li>• Extra practice session on quadratic factoring</li>
-        <li>• More interactive problem-solving activities</li>
-        <li>• Check-in with students needing emotional support</li>
-        <li>• Continue monitoring student understanding trends</li>
-      </ul>
-    </div>
-  </div>
-);
 
 export default TeacherSimulation;

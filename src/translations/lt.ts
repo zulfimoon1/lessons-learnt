@@ -71,6 +71,7 @@ export const ltTranslations = {
   'common.open': 'Atidaryti',
   'common.refresh': 'Atnaujinti',
   'common.preview': 'Peržiūra',
+  'common.days': 'Dienos',
   
   // Dashboard translations
   'dashboard.title': 'Studentų skydelis',
@@ -251,4 +252,19 @@ export const ltTranslations = {
   
   // Teacher translations - ADDED MISSING ONES
   'teacher.missingInfo': 'Trūksta informacijos',
+
+  // NEW Demo page specific translations - ADDED MISSING LITHUANIAN TRANSLATIONS
+  'demo.keyFeaturesShown': 'Pagrindinės rodomos funkcijos',
+  'demo.interactiveSimulation': 'Interaktyvus modeliavimas',
+  'demo.teacherWorkflow': 'Mokytojo darbo eiga',
+  'demo.fullIntegration': 'Pilna integracija',
+  'demo.mentalHealth.schoolPsychologist': 'Mokyklos psichologas',
+  'demo.mentalHealth.mrJamesChen': 'Mr. James Chen - Užimtas',
+  'demo.mentalHealth.counselor': 'Konsultantas',
+  'demo.mentalHealth.backAt2PM': 'Grįš 14:00',
+  'demo.mentalHealth.upcomingExams': 'Daugiausia dėl artėjančių egzaminų. Jaučiuosi, kad nesvarbu, kiek mokaus, informacija neliks atmintyje.',
+  'demo.mentalHealth.studyStrategies': 'Tai skamba labai frustruojančiai. Pabandykime rasti mokymosi strategijų, kurios padėtų jums jaustis užtikrintiau. Ar bandėte skaidyti mokymosi sesijas į mažesnius blokus?',
+  'demo.mentalHealth.selfHelpResources': 'Savarankiškos pagalbos ištekliai',
+  'demo.mentalHealth.moodTracking': 'Nuotaikos sekimas',
+  'demo.mentalHealth.crisisSupport': 'Krizių palaikymas: 116 123 Vilties Linija',
 };
