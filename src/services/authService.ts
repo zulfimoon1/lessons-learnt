@@ -1,4 +1,7 @@
+
 import { supabase } from '@/integrations/supabase/client';
+import bcrypt from 'bcryptjs';
+import { Teacher, Student } from '@/types/auth';
 import { 
   secureStudentLogin, 
   secureTeacherLogin, 
