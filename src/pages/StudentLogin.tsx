@@ -75,6 +75,8 @@ const StudentLogin = () => {
         loginData.password
       );
 
+      console.log('StudentLogin: Login result:', result);
+
       if (result.error) {
         console.log('StudentLogin: Login failed with error:', result.error);
         toast({
@@ -82,13 +84,16 @@ const StudentLogin = () => {
           description: result.error,
           variant: "destructive",
         });
-      } else {
-        console.log('StudentLogin: Login successful, redirecting');
+      } else if (result.student) {
+        console.log('StudentLogin: Login successful, redirecting to dashboard');
         toast({
           title: t('student.welcomeBack') || "Welcome back!",
           description: t('student.loginSuccess') || "Login successful",
         });
-        navigate("/student-dashboard", { replace: true });
+        // Force immediate navigation
+        setTimeout(() => {
+          navigate("/student-dashboard", { replace: true });
+        }, 100);
       }
     } catch (err) {
       console.error('StudentLogin: Unexpected error during login:', err);
@@ -141,13 +146,16 @@ const StudentLogin = () => {
           description: result.error,
           variant: "destructive",
         });
-      } else {
-        console.log('StudentLogin: Signup successful, redirecting');
+      } else if (result.student) {
+        console.log('StudentLogin: Signup successful, redirecting to dashboard');
         toast({
           title: t('student.accountCreated') || "Account created!",
           description: t('student.welcomeToApp') || "Welcome to Lesson Lens!",
         });
-        navigate("/student-dashboard", { replace: true });
+        // Force immediate navigation
+        setTimeout(() => {
+          navigate("/student-dashboard", { replace: true });
+        }, 100);
       }
     } catch (err) {
       console.error('StudentLogin: Unexpected error during signup:', err);

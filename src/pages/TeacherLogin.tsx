@@ -7,32 +7,30 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BookOpenIcon, LogInIcon, School, UserIcon, Mail, ShieldIcon } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useSupabaseAuth } from "@/contexts/SupabaseAuthContext";
+import { useNavigage } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
-import { useNavigate } from "react-router-dom";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { secureTeacherSignup, secureSignIn } from "@/services/secureAuthService";
-import ForgotPasswordDialog from "@/components/ForgotPasswordDialog";
+import { useAuth } from "@/contexts/AuthContext";
 
 const TeacherLogin = () => {
   const { t, language } = useLanguage();
   const navigate = useNavigate();
   const { toast } = useToast();
-  
-  const { user, teacher, isLoading: authLoading } = useSupabaseAuth();
+  const { teacher, teacherLogin, isLoading: authLoading } = useAuth();
 
   // Redirect if already logged in
   useEffect(() => {
-    if (user && teacher && !authLoading) {
-      console.log('TeacherLogin: User already logged in, redirecting...');
+    console.log('TeacherLogin: Checking auth state', { teacher, authLoading });
+    if (teacher && !authLoading) {
+      console.log('TeacherLogin: Teacher already logged in, redirecting...');
       if (teacher.role === "admin") {
-        navigate("/admin-dashboard");
+        navigate("/admin-dashboard", { replace: true });
       } else {
-        navigate("/teacher-dashboard");
+        navigate("/teacher-dashboard", { replace: true });
       }
     }
-  }, [user, teacher, navigate, authLoading]);
+  }, [teacher, authLoading, navigate]);
 
   const [loginData, setLoginData] = useState({
     email: "",
@@ -78,7 +76,10 @@ const TeacherLogin = () => {
     console.log('TeacherLogin: Starting login process with email:', loginData.email);
 
     try {
-      const result = await secureSignIn(loginData.email.trim(), loginData.password);
+      const result = await teacherLogin(
+        loginData.email.trim(),
+        loginData.password
+      );
       console.log('TeacherLogin: Login result received:', result);
 
       if (result.error) {
@@ -88,17 +89,24 @@ const TeacherLogin = () => {
           description: result.error,
           variant: "destructive",
         });
-      } else if (result.user) {
-        console.log('TeacherLogin: Login successful');
+      } else if (result.teacher) {
+        console.log('TeacherLogin: Login successful, redirecting');
         
         toast({
           title: t('auth.loginSuccess'),
           description: t('auth.loginSuccess'),
         });
         
-        // Navigation will be handled by useEffect when auth state updates
+        // Force immediate navigation based on role
+        setTimeout(() => {
+          if (result.teacher.role === "admin") {
+            navigate("/admin-dashboard", { replace: true });
+          } else {
+            navigate("/teacher-dashboard", { replace: true });
+          }
+        }, 100);
       } else {
-        console.error('TeacherLogin: No error but no user data returned');
+        console.error('TeacherLogin: No error but no teacher data returned');
         toast({
           title: t('auth.loginFailed'),
           description: t('auth.loginFailed'),
@@ -120,81 +128,12 @@ const TeacherLogin = () => {
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!signupData.name.trim() || !signupData.email.trim() || !signupData.school.trim() || !signupData.password || !signupData.confirmPassword) {
-      toast({
-        title: t('teacher.missingInfo'),
-        description: t('auth.nameRequired') + ', ' + t('auth.emailRequired') + ', ' + t('auth.schoolCodeRequired') + ', ' + t('auth.passwordRequired'),
-        variant: "destructive",
-      });
-      return;
-    }
-
-    // Validate passwords match
-    if (signupData.password !== signupData.confirmPassword) {
-      toast({
-        title: t('auth.passwordMismatch'),
-        description: t('auth.passwordsDoNotMatch'),
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setIsLoading(true);
-    console.log('TeacherLogin: Starting signup process for:', signupData.email);
-
-    try {
-      const result = await secureTeacherSignup(
-        signupData.email.trim(), 
-        signupData.password, 
-        signupData.name.trim(), 
-        signupData.school.trim(), 
-        signupData.role
-      );
-
-      console.log('TeacherLogin: Signup result received:', result);
-
-      if (result.error) {
-        console.error('TeacherLogin: Signup failed with error:', result.error);
-        toast({
-          title: t('auth.registerError'),
-          description: result.error,
-          variant: "destructive",
-        });
-      } else if (result.success) {
-        console.log('TeacherLogin: Signup successful');
-        
-        toast({
-          title: t('auth.registerSuccess'),
-          description: "Please check your email to verify your account before signing in.",
-        });
-        
-        // Reset form and switch to login tab
-        setSignupData({
-          name: "",
-          email: "",
-          school: "",
-          role: "teacher",
-          password: "",
-          confirmPassword: ""
-        });
-      } else {
-        console.error('TeacherLogin: No error but no success returned');
-        toast({
-          title: t('auth.registerError'),
-          description: t('auth.registerError'),
-          variant: "destructive",
-        });
-      }
-    } catch (err) {
-      console.error('TeacherLogin: Unexpected error during signup:', err);
-      toast({
-        title: t('auth.registerError'),
-        description: t('auth.registerError'),
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
+    // For now, just show a message that signup is not available with the simple auth system
+    toast({
+      title: "Signup Not Available",
+      description: "Please contact your administrator to create a teacher account.",
+      variant: "destructive",
+    });
   };
 
   return (
@@ -246,18 +185,6 @@ const TeacherLogin = () => {
                     onChange={(e) => setLoginData(prev => ({ ...prev, password: e.target.value }))}
                     required
                   />
-                </div>
-
-                <div className="text-right">
-                  <ForgotPasswordDialog>
-                    <Button 
-                      type="button" 
-                      variant="link" 
-                      className="text-sm p-0 h-auto text-emerald-600 hover:text-emerald-700"
-                    >
-                      {language === 'lt' ? 'Pamiršau slaptažodį' : 'Forgot password?'}
-                    </Button>
-                  </ForgotPasswordDialog>
                 </div>
 
                 <Button 
@@ -344,19 +271,6 @@ const TeacherLogin = () => {
                       </SelectItem>
                     </SelectContent>
                   </Select>
-                  {signupData.role === "admin" && (
-                    <p className="text-xs text-muted-foreground mt-1">
-                      {t('login.teacher.adminHint')}
-                    </p>
-                  )}
-                  {signupData.role === "doctor" && (
-                    <p className="text-xs text-muted-foreground mt-1">
-                      {language === 'lt' 
-                        ? 'Psichinės sveikatos specialistai gali prisijungti prie gyvų pokalbių ir studentų gerovės ataskaitų'
-                        : 'Mental health professionals can access live chats and student wellbeing reports'
-                      }
-                    </p>
-                  )}
                 </div>
 
                 <div className="space-y-2">
