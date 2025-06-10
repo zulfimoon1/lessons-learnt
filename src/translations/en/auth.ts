@@ -22,8 +22,5 @@ export const enAuthTranslations = {
   'auth.schoolCode': 'School Code',
   'auth.enterSchoolCode': 'Enter your school code',
   'auth.invalidSchoolCode': 'Invalid school code',
-  'auth.schoolCodeRequired': 'School code is required',
-  'auth.studentLogin': 'Student Login',
-  'auth.teacherLogin': 'Teacher Login',
-  'auth.signUpNow': 'Sign Up Now'
+  'auth.schoolCodeRequired': 'School code is required'
 };

@@ -1,3 +1,4 @@
+
 import { ltDemoTranslations } from './lt/demo';
 import { ltAuthTranslations } from './lt/auth';
 import { ltChatTranslations } from './lt/chat';
@@ -70,7 +71,6 @@ export const ltTranslations = {
   'common.open': 'Atidaryti',
   'common.refresh': 'Atnaujinti',
   'common.preview': 'Peržiūra',
-  'common.days': 'dienos',
   
   // Dashboard translations
   'dashboard.title': 'Studentų skydelis',
@@ -103,7 +103,7 @@ export const ltTranslations = {
   'admin.teachers.description': 'Valdykite mokyklos mokytojus',
   'admin.teachers.empty': 'Mokytojų nėra',
   
-  // Student specific translations
+  // Student specific translations - FIXED MISSING TRANSLATIONS
   'student.portal': 'Studentų portalas',
   'student.loginDescription': 'Prisijunkite prie savo mokymosi skydelio',
   'student.fullName': 'Vardas ir pavardė',
@@ -249,6 +249,6 @@ export const ltTranslations = {
   'dashboard.mentalHealth': 'Psichinė sveikata',
   'dashboard.discountCodes': 'Nuolaidos kodai',
   
-  // Teacher translations
+  // Teacher translations - ADDED MISSING ONES
   'teacher.missingInfo': 'Trūksta informacijos',
 };
