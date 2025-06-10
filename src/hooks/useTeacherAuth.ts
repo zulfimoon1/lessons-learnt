@@ -1,7 +1,7 @@
 
 import { useState } from 'react';
 import { Teacher } from '@/types/auth';
-import { teacherEmailLoginService, teacherEmailSignupService } from '@/services/authService';
+import { teacherEmailLoginService, teacherSignupService } from '@/services/authService';
 
 export const useTeacherAuth = () => {
   const [teacher, setTeacher] = useState<Teacher | null>(null);
@@ -39,7 +39,7 @@ export const useTeacherAuth = () => {
     try {
       console.log('useTeacherAuth: Starting signup process for:', name);
       
-      const result = await teacherEmailSignupService(name, email, school, password, role);
+      const result = await teacherSignupService(name, email, school, password, role);
       console.log('useTeacherAuth: Signup service result', { 
         success: !!result.teacher, 
         error: result.error 
