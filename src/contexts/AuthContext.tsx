@@ -26,9 +26,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Generate CSRF token
     setCsrfToken(generateCSRFToken());
     
-    const restoreSecureSession = () => {
+    const restoreSecureSession = async () => {
       try {
-        const session = sessionService.getSession();
+        const session = await sessionService.getSession();
         
         if (session) {
           console.log('AuthContext: Restoring secure session for:', session.userType);
@@ -40,7 +40,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               const parsedTeacher = JSON.parse(teacherData);
               if (parsedTeacher && parsedTeacher.id === session.userId) {
                 setTeacher(parsedTeacher);
-                sessionService.refreshSession(session);
+                await sessionService.refreshSession(session);
                 
                 // Log session restoration
                 logUserSecurityEvent({
@@ -61,7 +61,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               const parsedStudent = JSON.parse(studentData);
               if (parsedStudent && parsedStudent.id === session.userId) {
                 setStudent(parsedStudent);
-                sessionService.refreshSession(session);
+                await sessionService.refreshSession(session);
                 
                 // Log session restoration
                 logUserSecurityEvent({
@@ -319,7 +319,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     studentLogin,
     studentSignup,
     logout,
-    csrfToken, // Expose CSRF token for forms
+    csrfToken,
   };
 
   console.log('AuthContext: Rendering with secure state:', { 

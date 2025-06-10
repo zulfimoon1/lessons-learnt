@@ -28,9 +28,9 @@ export const PlatformAdminProvider: React.FC<{ children: React.ReactNode }> = ({
   useEffect(() => {
     console.log('PlatformAdminProvider: Starting secure initialization...');
     
-    const restoreSecureAdminSession = () => {
+    const restoreSecureAdminSession = async () => {
       try {
-        const session = sessionService.getSession();
+        const session = await sessionService.getSession();
         
         if (session && session.userType === 'admin') {
           const adminData = localStorage.getItem('platformAdmin');
@@ -39,7 +39,7 @@ export const PlatformAdminProvider: React.FC<{ children: React.ReactNode }> = ({
             if (parsedAdmin && parsedAdmin.id === session.userId) {
               console.log('PlatformAdminProvider: Restoring secure admin session');
               setAdmin(parsedAdmin);
-              sessionService.refreshSession(session);
+              await sessionService.refreshSession(session);
             } else {
               console.log('PlatformAdminProvider: Invalid admin session data');
               sessionService.clearSession();

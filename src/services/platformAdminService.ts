@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { verifyPassword, hashPassword } from './securePasswordService';
 import { validateInput } from './secureInputValidation';
@@ -221,9 +220,7 @@ export const platformAdminLoginService = async (email: string, password: string,
       userId: admin.id,
       timestamp: new Date().toISOString(),
       details: `Successful platform admin login: ${sanitizedEmail}`,
-      userAgent: navigator.userAgent,
-      ipAddress: 'N/A', // Would be available in server-side implementation
-      sessionId: 'encrypted' // Don't log actual session ID for security
+      userAgent: navigator.userAgent
     });
 
     console.log('Platform admin login successful');
