@@ -108,71 +108,83 @@ const PlatformAdminLogin = () => {
             <p className="text-gray-600">Admin access to platform management dashboard</p>
           </div>
 
-          <div className="bg-white rounded-lg shadow-lg p-6">
-            <Tabs defaultValue="login" className="w-full">
-              <TabsList className="grid w-full grid-cols-2 mb-6">
-                <TabsTrigger value="login">Login</TabsTrigger>
-                <TabsTrigger value="create">Create Account</TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="login" className="space-y-4">
-                <div className="text-center mb-4">
-                  <h2 className="text-xl font-semibold">Admin Login</h2>
-                  <p className="text-gray-600">Sign in to your admin account</p>
-                </div>
-                
-                <form onSubmit={handleSubmit} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="email">Email</Label>
-                    <Input
-                      id="email"
-                      type="email"
-                      placeholder="admin@yourschool.com"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="password">Password</Label>
-                    <Input
-                      id="password"
-                      type="password"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      required
-                    />
-                  </div>
-                  <Button 
-                    type="submit" 
-                    className="w-full" 
-                    disabled={isLoading}
+          <Card className="shadow-lg">
+            <CardContent className="p-6">
+              <Tabs defaultValue="login" className="w-full">
+                <TabsList className="grid w-full grid-cols-2 mb-6 bg-gray-100 p-1 rounded-lg">
+                  <TabsTrigger 
+                    value="login" 
+                    className="data-[state=active]:bg-white data-[state=active]:shadow-sm font-medium px-4 py-2 rounded-md transition-all"
                   >
-                    {isLoading ? "Signing In..." : "Access Console"}
-                  </Button>
-                </form>
-                
-                <div className="text-center pt-4 border-t">
-                  <Button
-                    variant="outline"
-                    onClick={handleCreateTestAdmin}
-                    disabled={isCreatingAdmin}
-                    className="w-full"
+                    Login
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="create" 
+                    className="data-[state=active]:bg-white data-[state=active]:shadow-sm font-medium px-4 py-2 rounded-md transition-all"
                   >
-                    <UserPlusIcon className="w-4 h-4 mr-2" />
-                    {isCreatingAdmin ? "Creating..." : "Create Test Admin"}
-                  </Button>
-                  <p className="text-xs text-gray-500 mt-2">
-                    Development only: Creates admin@test.com with password admin123
-                  </p>
-                </div>
-              </TabsContent>
+                    Create Account
+                  </TabsTrigger>
+                </TabsList>
 
-              <TabsContent value="create" className="space-y-4">
-                <CustomAdminCreation />
-              </TabsContent>
-            </Tabs>
-          </div>
+                <TabsContent value="login" className="space-y-4 mt-0">
+                  <div className="text-center mb-4">
+                    <h2 className="text-xl font-semibold">Admin Login</h2>
+                    <p className="text-gray-600">Sign in to your admin account</p>
+                  </div>
+                  
+                  <form onSubmit={handleSubmit} className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="email">Email</Label>
+                      <Input
+                        id="email"
+                        type="email"
+                        placeholder="admin@yourschool.com"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="password">Password</Label>
+                      <Input
+                        id="password"
+                        type="password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        required
+                      />
+                    </div>
+                    <Button 
+                      type="submit" 
+                      className="w-full" 
+                      disabled={isLoading}
+                    >
+                      {isLoading ? "Signing In..." : "Access Console"}
+                    </Button>
+                  </form>
+                  
+                  <div className="text-center pt-4 border-t">
+                    <Button
+                      variant="outline"
+                      onClick={handleCreateTestAdmin}
+                      disabled={isCreatingAdmin}
+                      className="w-full"
+                    >
+                      <UserPlusIcon className="w-4 h-4 mr-2" />
+                      {isCreatingAdmin ? "Creating..." : "Create Test Admin"}
+                    </Button>
+                    <p className="text-xs text-gray-500 mt-2">
+                      Development only: Creates admin@test.com with password admin123
+                    </p>
+                  </div>
+                </TabsContent>
+
+                <TabsContent value="create" className="space-y-4 mt-0">
+                  <CustomAdminCreation />
+                </TabsContent>
+              </Tabs>
+            </CardContent>
+          </Card>
         </div>
       </div>
       <ComplianceFooter />
