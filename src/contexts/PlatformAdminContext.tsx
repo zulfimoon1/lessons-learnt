@@ -65,7 +65,7 @@ export const PlatformAdminProvider: React.FC<{ children: React.ReactNode }> = ({
       
       const result = await platformAdminLoginService(email, password);
       
-      if (result.admin && !result.error) {
+      if (result && 'admin' in result && result.admin) {
         console.log('PlatformAdminProvider: Login successful');
         setAdmin(result.admin);
         
@@ -88,7 +88,7 @@ export const PlatformAdminProvider: React.FC<{ children: React.ReactNode }> = ({
         }
         
         return { admin: result.admin };
-      } else {
+      } else if (result && 'error' in result) {
         console.log('PlatformAdminProvider: Login failed:', result.error);
         
         logUserSecurityEvent({
@@ -99,6 +99,9 @@ export const PlatformAdminProvider: React.FC<{ children: React.ReactNode }> = ({
         });
         
         return { error: result.error };
+      } else {
+        console.log('PlatformAdminProvider: Unexpected result format');
+        return { error: 'Login failed. Please try again.' };
       }
     } catch (error) {
       console.error('PlatformAdminProvider: Login error:', error);
