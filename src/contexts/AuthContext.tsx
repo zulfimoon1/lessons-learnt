@@ -20,8 +20,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const parsedTeacher = JSON.parse(savedTeacher);
         // Validate the structure of saved teacher data
         if (parsedTeacher && parsedTeacher.id && parsedTeacher.name) {
+          console.log('AuthContext: Restored teacher from localStorage:', parsedTeacher.name);
           setTeacher(parsedTeacher);
         } else {
+          console.log('AuthContext: Invalid teacher data in localStorage, clearing');
           localStorage.removeItem('teacher');
         }
       }
@@ -30,13 +32,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const parsedStudent = JSON.parse(savedStudent);
         // Validate the structure of saved student data
         if (parsedStudent && parsedStudent.id && parsedStudent.full_name) {
+          console.log('AuthContext: Restored student from localStorage:', parsedStudent.full_name);
           setStudent(parsedStudent);
         } else {
+          console.log('AuthContext: Invalid student data in localStorage, clearing');
           localStorage.removeItem('student');
         }
       }
     } catch (error) {
-      console.error('Error loading saved authentication data:', error);
+      console.error('AuthContext: Error loading saved authentication data:', error);
       // Clear potentially corrupted data
       localStorage.removeItem('teacher');
       localStorage.removeItem('student');
@@ -62,22 +66,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       // Use teacherSimpleLoginService with name and school for simple login
       const result = await teacherSimpleLoginService(name, password, school);
-      console.log('AuthContext teacherLogin: Service result', result);
+      console.log('AuthContext teacherLogin: Service result', { 
+        success: !!result.teacher, 
+        error: result.error 
+      });
       
       if (result.teacher) {
         setTeacher(result.teacher);
+        setStudent(null); // Clear student if teacher logs in
         // Securely store teacher data
         try {
           localStorage.setItem('teacher', JSON.stringify(result.teacher));
+          localStorage.removeItem('student');
           console.log('AuthContext teacherLogin: Teacher data saved successfully');
         } catch (storageError) {
-          console.warn('Failed to save teacher data to localStorage');
+          console.warn('AuthContext teacherLogin: Failed to save teacher data to localStorage:', storageError);
         }
       }
       
       return result;
     } catch (error) {
-      console.error('Teacher login error:', error);
+      console.error('AuthContext teacherLogin: Unexpected error:', error);
       return { error: 'Login failed. Please check your connection and try again.' };
     }
   };
@@ -91,22 +100,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
       
       const result = await studentSimpleLoginService(fullName, password);
-      console.log('AuthContext studentLogin: Service result', result);
+      console.log('AuthContext studentLogin: Service result', { 
+        success: !!result.student, 
+        error: result.error 
+      });
       
       if (result.student) {
         setStudent(result.student);
+        setTeacher(null); // Clear teacher if student logs in
         // Securely store student data
         try {
           localStorage.setItem('student', JSON.stringify(result.student));
+          localStorage.removeItem('teacher');
           console.log('AuthContext studentLogin: Student data saved successfully');
         } catch (storageError) {
-          console.warn('Failed to save student data to localStorage');
+          console.warn('AuthContext studentLogin: Failed to save student data to localStorage:', storageError);
         }
       }
       
       return result;
     } catch (error) {
-      console.error('Student login error:', error);
+      console.error('AuthContext studentLogin: Unexpected error:', error);
       return { error: 'Login failed. Please check your connection and try again.' };
     }
   };
@@ -120,22 +134,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
       
       const result = await studentSignupService(fullName, school, grade, password);
-      console.log('AuthContext studentSignup: Service result', result);
+      console.log('AuthContext studentSignup: Service result', { 
+        success: !!result.student, 
+        error: result.error 
+      });
       
       if (result.student) {
         setStudent(result.student);
+        setTeacher(null); // Clear teacher if student signs up
         // Securely store student data
         try {
           localStorage.setItem('student', JSON.stringify(result.student));
+          localStorage.removeItem('teacher');
           console.log('AuthContext studentSignup: Student data saved successfully');
         } catch (storageError) {
-          console.warn('Failed to save student data to localStorage');
+          console.warn('AuthContext studentSignup: Failed to save student data to localStorage:', storageError);
         }
       }
       
       return result;
     } catch (error) {
-      console.error('Student signup error:', error);
+      console.error('AuthContext studentSignup: Unexpected error:', error);
       return { error: 'Signup failed. Please check your connection and try again.' };
     }
   };
@@ -149,8 +168,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       localStorage.removeItem('teacher');
       localStorage.removeItem('student');
+      console.log('AuthContext logout: Storage cleared successfully');
     } catch (error) {
-      console.error('Error clearing authentication data:', error);
+      console.error('AuthContext logout: Error clearing authentication data:', error);
     }
   };
 

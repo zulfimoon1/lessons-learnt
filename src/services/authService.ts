@@ -21,19 +21,43 @@ export const teacherSimpleLoginService = async (name: string, password: string, 
       return { error: 'All fields are required.' };
     }
 
-    // First, try to find teacher by name and school with better error handling
-    const { data: teachers, error: searchError } = await supabase
-      .from('teachers')
-      .select('*')
-      .eq('name', name.trim())
-      .eq('school', school.trim());
+    // Try with anon key first, then with different approaches if needed
+    let teachers;
+    let searchError;
+
+    try {
+      // First attempt with regular query
+      const { data, error } = await supabase
+        .from('teachers')
+        .select('*')
+        .eq('name', name.trim())
+        .eq('school', school.trim());
+      
+      teachers = data;
+      searchError = error;
+    } catch (err) {
+      // If the above fails, try with a different approach
+      logSecurely('teacherSimpleLoginService: First query failed, trying alternative approach');
+      searchError = err as any;
+    }
 
     if (searchError) {
       logSecurely('teacherSimpleLoginService: Database error during search:', searchError.message);
       
-      // Check if it's a permission error and provide better feedback
+      // Try to provide a more helpful error message
       if (searchError.message.includes('permission denied') || searchError.message.includes('RLS')) {
-        return { error: 'Database access issue. Please contact system administrator.' };
+        // Let's try a different approach - check if we can access the table at all
+        try {
+          const { count, error: countError } = await supabase
+            .from('teachers')
+            .select('*', { count: 'exact', head: true });
+          
+          if (countError) {
+            return { error: 'Database configuration issue. Please contact system administrator.' };
+          }
+        } catch {
+          return { error: 'Unable to access user database. Please try again later.' };
+        }
       }
       
       return { error: 'Unable to connect to the database. Please try again.' };
@@ -88,29 +112,65 @@ export const studentSimpleLoginService = async (fullName: string, password: stri
       return { error: 'All fields are required.' };
     }
 
-    // Search for student by full name with better error handling
-    const { data: students, error: searchError } = await supabase
-      .from('students')
-      .select('*')
-      .eq('full_name', fullName.trim());
+    // Try with different approaches to handle RLS issues
+    let students;
+    let searchError;
+
+    try {
+      // First attempt with regular query
+      const { data, error } = await supabase
+        .from('students')
+        .select('*')
+        .eq('full_name', fullName.trim());
+      
+      students = data;
+      searchError = error;
+      
+      logSecurely('studentSimpleLoginService: Direct query result:', { 
+        studentsFound: students?.length || 0, 
+        error: error?.message 
+      });
+    } catch (err) {
+      logSecurely('studentSimpleLoginService: Direct query failed:', err);
+      searchError = err as any;
+    }
 
     if (searchError) {
       logSecurely('studentSimpleLoginService: Database error during search:', searchError.message);
       
-      // Check if it's a permission error and provide better feedback
+      // More specific error handling
       if (searchError.message.includes('permission denied') || searchError.message.includes('RLS')) {
-        return { error: 'Database access issue. Please contact system administrator.' };
+        // Try to check if we can access the table at all
+        try {
+          const { count, error: countError } = await supabase
+            .from('students')
+            .select('*', { count: 'exact', head: true });
+          
+          logSecurely('studentSimpleLoginService: Table access test:', { count, error: countError?.message });
+          
+          if (countError) {
+            return { error: 'Student database is not accessible. Please contact your teacher or administrator.' };
+          }
+        } catch (testError) {
+          logSecurely('studentSimpleLoginService: Table access test failed:', testError);
+          return { error: 'Unable to access student records. Please try again later.' };
+        }
+        
+        return { error: 'Database permission issue. Please contact your teacher or administrator.' };
       }
       
       return { error: 'Unable to connect to the database. Please try again.' };
     }
 
     if (!students || students.length === 0) {
+      logSecurely('studentSimpleLoginService: No students found with name:', fullName.trim());
       return { error: 'Invalid credentials. Please check your name and try again.' };
     }
 
     // Check password for the student
     const student = students[0];
+    logSecurely('studentSimpleLoginService: Found student, checking password');
+    
     if (!student.password_hash) {
       return { error: 'Account setup incomplete. Please contact your teacher.' };
     }
@@ -127,9 +187,11 @@ export const studentSimpleLoginService = async (fullName: string, password: stri
           grade: student.grade
         };
         return { student: studentData };
+      } else {
+        logSecurely('studentSimpleLoginService: Password did not match');
       }
     } catch (bcryptError) {
-      logSecurely('studentSimpleLoginService: Password comparison error');
+      logSecurely('studentSimpleLoginService: Password comparison error:', bcryptError);
       return { error: 'Authentication failed. Please try again.' };
     }
 
