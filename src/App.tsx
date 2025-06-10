@@ -7,8 +7,6 @@ import { SupabaseAuthProvider } from "./contexts/SupabaseAuthContext";
 import { LanguageProvider } from "./contexts/LanguageContext";
 import { PlatformAdminProvider } from "./contexts/PlatformAdminContext";
 import Index from "./pages/Index";
-import StudentLogin from "./pages/StudentLogin";
-import TeacherLogin from "./pages/TeacherLogin";
 import StudentDashboard from "./pages/StudentDashboard";
 import TeacherDashboard from "./pages/TeacherDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
@@ -19,6 +17,7 @@ import AcceptInvitation from "./pages/AcceptInvitation";
 import HowItWorks from "./pages/HowItWorks";
 import NotFound from "./pages/NotFound";
 import SecureAuth from "./pages/SecureAuth";
+import SecureAuthGuard from "./components/SecureAuthGuard";
 
 const queryClient = new QueryClient();
 
@@ -35,12 +34,26 @@ const App = () => {
               <BrowserRouter>
                 <Routes>
                   <Route path="/" element={<Index />} />
-                  <Route path="/auth" element={<SecureAuth />} />
-                  <Route path="/student-login" element={<StudentLogin />} />
-                  <Route path="/teacher-login" element={<TeacherLogin />} />
-                  <Route path="/student-dashboard" element={<StudentDashboard />} />
-                  <Route path="/teacher-dashboard" element={<TeacherDashboard />} />
-                  <Route path="/admin-dashboard" element={<AdminDashboard />} />
+                  <Route path="/auth" element={
+                    <SecureAuthGuard requireAuth={false} redirectTo="/">
+                      <SecureAuth />
+                    </SecureAuthGuard>
+                  } />
+                  <Route path="/student-dashboard" element={
+                    <SecureAuthGuard>
+                      <StudentDashboard />
+                    </SecureAuthGuard>
+                  } />
+                  <Route path="/teacher-dashboard" element={
+                    <SecureAuthGuard>
+                      <TeacherDashboard />
+                    </SecureAuthGuard>
+                  } />
+                  <Route path="/admin-dashboard" element={
+                    <SecureAuthGuard>
+                      <AdminDashboard />
+                    </SecureAuthGuard>
+                  } />
                   <Route path="/platform-admin-login" element={<PlatformAdminLogin />} />
                   <Route path="/platform-admin-dashboard" element={<PlatformAdminDashboard />} />
                   <Route path="/pricing" element={<PricingPage />} />
