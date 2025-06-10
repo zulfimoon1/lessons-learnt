@@ -163,7 +163,7 @@ export const enhancedSecureStudentSignup = async (fullName: string, school: stri
     }
 
     logUserSecurityEvent({
-      type: 'signup_success',
+      type: 'login_success',
       userId: student.id,
       timestamp: new Date().toISOString(),
       details: `Enhanced secure signup successful`,
@@ -181,6 +181,173 @@ export const enhancedSecureStudentSignup = async (fullName: string, school: stri
     };
   } catch (error) {
     console.error('Enhanced secure signup error:', error);
+    return { error: 'Signup failed. Please try again.' };
+  }
+};
+
+// Enhanced secure teacher authentication
+export const enhancedSecureTeacherLogin = async (email: string, password: string) => {
+  try {
+    console.log('Enhanced secure teacher login attempt');
+
+    // Enhanced input validation
+    const emailValidation = validateInput.validateEmail(email);
+    if (!emailValidation.isValid) {
+      return { error: emailValidation.message };
+    }
+
+    // Check for suspicious input patterns
+    const suspiciousCheck = validateInput.detectSuspiciousInput(email);
+    if (suspiciousCheck.isSuspicious) {
+      logUserSecurityEvent({
+        type: 'suspicious_activity',
+        timestamp: new Date().toISOString(),
+        details: `Suspicious input detected: ${suspiciousCheck.reason}`,
+        userAgent: navigator.userAgent
+      });
+      return { error: 'Invalid input detected' };
+    }
+
+    // Sanitize inputs
+    const sanitizedEmail = validateInput.sanitizeText(email.toLowerCase());
+
+    // Secure database query
+    const { data: teachers, error } = await supabase
+      .from('teachers')
+      .select('id, name, email, school, role, password_hash')
+      .eq('email', sanitizedEmail)
+      .limit(1);
+
+    if (error || !teachers || teachers.length === 0) {
+      logUserSecurityEvent({
+        type: 'login_failed',
+        timestamp: new Date().toISOString(),
+        details: `Enhanced teacher login failed: Teacher not found`,
+        userAgent: navigator.userAgent
+      });
+      return { error: 'Invalid credentials' };
+    }
+
+    const teacher = teachers[0];
+    
+    // Verify password with enhanced security
+    const isPasswordValid = await verifyPassword(password, teacher.password_hash);
+    if (!isPasswordValid) {
+      logUserSecurityEvent({
+        type: 'login_failed',
+        timestamp: new Date().toISOString(),
+        details: `Enhanced teacher login failed: Invalid password`,
+        userAgent: navigator.userAgent
+      });
+      return { error: 'Invalid credentials' };
+    }
+
+    logUserSecurityEvent({
+      type: 'login_success',
+      userId: teacher.id,
+      timestamp: new Date().toISOString(),
+      details: `Enhanced secure teacher login successful`,
+      userAgent: navigator.userAgent
+    });
+
+    return { 
+      teacher: {
+        id: teacher.id,
+        name: teacher.name,
+        email: teacher.email,
+        school: teacher.school,
+        role: teacher.role
+      }
+    };
+  } catch (error) {
+    console.error('Enhanced secure teacher login error:', error);
+    return { error: 'Login failed. Please try again.' };
+  }
+};
+
+export const enhancedSecureTeacherSignup = async (name: string, email: string, school: string, password: string, role: string = 'teacher') => {
+  try {
+    console.log('Enhanced secure teacher signup attempt');
+
+    // Enhanced input validation
+    const nameValidation = validateInput.validateName(name);
+    if (!nameValidation.isValid) {
+      return { error: nameValidation.message };
+    }
+
+    const emailValidation = validateInput.validateEmail(email);
+    if (!emailValidation.isValid) {
+      return { error: emailValidation.message };
+    }
+
+    const schoolValidation = validateInput.validateSchool(school);
+    if (!schoolValidation.isValid) {
+      return { error: schoolValidation.message };
+    }
+
+    // Password strength validation
+    const passwordValidation = validatePasswordStrength(password);
+    if (!passwordValidation.isValid) {
+      return { error: passwordValidation.message };
+    }
+
+    // Sanitize inputs
+    const sanitizedName = validateInput.sanitizeText(name);
+    const sanitizedEmail = validateInput.sanitizeText(email.toLowerCase());
+    const sanitizedSchool = validateInput.sanitizeText(school);
+    const sanitizedRole = validateInput.sanitizeText(role);
+
+    // Check for existing teacher
+    const { data: existingTeachers } = await supabase
+      .from('teachers')
+      .select('id')
+      .eq('email', sanitizedEmail)
+      .limit(1);
+
+    if (existingTeachers && existingTeachers.length > 0) {
+      return { error: 'Teacher already exists with this email' };
+    }
+
+    // Hash password securely
+    const hashedPassword = await hashPassword(password);
+
+    // Create new teacher
+    const { data: teacher, error } = await supabase
+      .from('teachers')
+      .insert([{
+        name: sanitizedName,
+        email: sanitizedEmail,
+        school: sanitizedSchool,
+        role: sanitizedRole,
+        password_hash: hashedPassword
+      }])
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Enhanced teacher signup error:', error);
+      return { error: 'Failed to create teacher account' };
+    }
+
+    logUserSecurityEvent({
+      type: 'login_success',
+      userId: teacher.id,
+      timestamp: new Date().toISOString(),
+      details: `Enhanced secure teacher signup successful`,
+      userAgent: navigator.userAgent
+    });
+
+    return { 
+      teacher: {
+        id: teacher.id,
+        name: teacher.name,
+        email: teacher.email,
+        school: teacher.school,
+        role: teacher.role
+      }
+    };
+  } catch (error) {
+    console.error('Enhanced secure teacher signup error:', error);
     return { error: 'Signup failed. Please try again.' };
   }
 };
