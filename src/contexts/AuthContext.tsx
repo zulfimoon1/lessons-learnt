@@ -1,6 +1,6 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { AuthContextType } from '@/types/auth';
+import { AuthContextType, Teacher, Student } from '@/types/auth';
 import { enhancedSecureTeacherLogin, enhancedSecureStudentLogin, enhancedSecureStudentSignup } from '@/services/enhancedSecureAuthService';
 import { sessionService } from '@/services/secureSessionService';
 import { logUserSecurityEvent } from '@/components/SecurityAuditLogger';
@@ -8,8 +8,8 @@ import { logUserSecurityEvent } from '@/components/SecurityAuditLogger';
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [teacher, setTeacher] = useState(null);
-  const [student, setStudent] = useState(null);
+  const [teacher, setTeacher] = useState<Teacher | null>(null);
+  const [student, setStudent] = useState<Student | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -75,18 +75,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       if (result.user && !result.error) {
         console.log('AuthContext: Teacher login successful');
-        setTeacher(result.user);
+        const teacherData: Teacher = {
+          id: result.user.id,
+          name: result.user.name,
+          email: result.user.email,
+          school: result.user.school,
+          role: result.user.role as 'teacher' | 'admin' | 'doctor'
+        };
+        
+        setTeacher(teacherData);
         setStudent(null); // Ensure only one user type is logged in
         
         // Store teacher data securely
         try {
-          localStorage.setItem('teacher', JSON.stringify(result.user));
+          localStorage.setItem('teacher', JSON.stringify(teacherData));
           localStorage.removeItem('student');
         } catch (storageError) {
           console.error('AuthContext: Storage error:', storageError);
         }
         
-        return { teacher: result.user };
+        return { teacher: teacherData };
       } else {
         console.log('AuthContext: Teacher login failed:', result.error);
         return { error: result.error };
@@ -108,7 +116,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.log('AuthContext: Secure student login attempt');
       
       // For student login, we need to extract school and grade from stored form data
-      // In a real implementation, this would be handled by the login form
       const loginData = JSON.parse(sessionStorage.getItem('studentLoginData') || '{}');
       const school = loginData.school || '';
       const grade = loginData.grade || '';
@@ -121,19 +128,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       if (result.user && !result.error) {
         console.log('AuthContext: Student login successful');
-        setStudent(result.user);
+        const studentData: Student = {
+          id: result.user.id,
+          full_name: result.user.fullName,
+          school: result.user.school,
+          grade: result.user.grade
+        };
+        
+        setStudent(studentData);
         setTeacher(null); // Ensure only one user type is logged in
         
         // Store student data securely
         try {
-          localStorage.setItem('student', JSON.stringify(result.user));
+          localStorage.setItem('student', JSON.stringify(studentData));
           localStorage.removeItem('teacher');
           sessionStorage.removeItem('studentLoginData'); // Clear temporary data
         } catch (storageError) {
           console.error('AuthContext: Storage error:', storageError);
         }
         
-        return { student: result.user };
+        return { student: studentData };
       } else {
         console.log('AuthContext: Student login failed:', result.error);
         return { error: result.error };
@@ -158,18 +172,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       if (result.user && !result.error) {
         console.log('AuthContext: Student signup successful');
-        setStudent(result.user);
+        const studentData: Student = {
+          id: result.user.id,
+          full_name: result.user.fullName,
+          school: result.user.school,
+          grade: result.user.grade
+        };
+        
+        setStudent(studentData);
         setTeacher(null); // Ensure only one user type is logged in
         
         // Store student data securely
         try {
-          localStorage.setItem('student', JSON.stringify(result.user));
+          localStorage.setItem('student', JSON.stringify(studentData));
           localStorage.removeItem('teacher');
         } catch (storageError) {
           console.error('AuthContext: Storage error:', storageError);
         }
         
-        return { student: result.user };
+        return { student: studentData };
       } else {
         console.log('AuthContext: Student signup failed:', result.error);
         return { error: result.error };
