@@ -20,6 +20,7 @@ import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { useLanguage } from "@/contexts/LanguageContext";
 import ComplianceFooter from "@/components/ComplianceFooter";
 import CookieConsent from "@/components/CookieConsent";
+import SupportChatWidget from "@/components/SupportChatWidget";
 
 interface Teacher {
   id: string;
@@ -136,6 +137,12 @@ const AdminDashboard = () => {
           </div>
           <div className="flex items-center gap-4">
             <LanguageSwitcher />
+            <SupportChatWidget
+              teacherName={teacher?.name || ''}
+              teacherEmail={teacher?.email || ''}
+              schoolName={teacher?.school || ''}
+              teacherRole={teacher?.role || 'admin'}
+            />
             <span className="text-sm text-muted-foreground">{t('admin.welcome')}, {teacher?.name}</span>
             <Button
               onClick={handleLogout}

@@ -20,6 +20,7 @@ import MentalHealthArticles from "@/components/MentalHealthArticles";
 import ComplianceFooter from "@/components/ComplianceFooter";
 import CookieConsent from "@/components/CookieConsent";
 import WeeklySummaryReview from "@/components/WeeklySummaryReview";
+import SupportChatWidget from "@/components/SupportChatWidget";
 
 interface Subscription {
   id: string;
@@ -154,6 +155,12 @@ const TeacherDashboard = () => {
           </div>
           <div className="flex items-center gap-4">
             <LanguageSwitcher />
+            <SupportChatWidget
+              teacherName={teacher?.name || ''}
+              teacherEmail={teacher?.email || ''}
+              schoolName={teacher?.school || ''}
+              teacherRole={teacher?.role || 'teacher'}
+            />
             <span className="text-sm text-muted-foreground">{t('admin.welcome')}, {teacher?.name}</span>
             <Button
               onClick={handleLogout}
