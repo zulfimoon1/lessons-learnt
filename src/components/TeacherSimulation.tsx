@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -30,14 +29,14 @@ const TeacherSimulation = () => {
   const totalSteps = 8;
 
   const simulationSteps = [
-    { id: 1, name: t('demo.teacher.steps.1') },
-    { id: 2, name: t('demo.teacher.steps.2') },
-    { id: 3, name: t('demo.teacher.steps.3') },
-    { id: 4, name: t('demo.teacher.steps.4') },
-    { id: 5, name: t('demo.teacher.steps.5') },
-    { id: 6, name: t('demo.teacher.steps.6') },
-    { id: 7, name: t('demo.teacher.steps.7') },
-    { id: 8, name: t('demo.teacher.steps.8') }
+    { id: 1, name: t('demo.teacher.steps.1'), shortName: t('demo.teacher.steps.1').split(' ')[0] },
+    { id: 2, name: t('demo.teacher.steps.2'), shortName: t('demo.teacher.steps.2').split(' ')[0] },
+    { id: 3, name: t('demo.teacher.steps.3'), shortName: t('demo.teacher.steps.3').split(' ')[0] },
+    { id: 4, name: t('demo.teacher.steps.4'), shortName: t('demo.teacher.steps.4').split(' ')[0] },
+    { id: 5, name: t('demo.teacher.steps.5'), shortName: t('demo.teacher.steps.5').split(' ')[0] },
+    { id: 6, name: t('demo.teacher.steps.6'), shortName: t('demo.teacher.steps.6').split(' ')[0] },
+    { id: 7, name: t('demo.teacher.steps.7'), shortName: t('demo.teacher.steps.7').split(' ')[0] },
+    { id: 8, name: t('demo.teacher.steps.8'), shortName: t('demo.teacher.steps.8').split(' ')[0] }
   ];
 
   useEffect(() => {
@@ -496,10 +495,11 @@ const TeacherSimulation = () => {
                 variant={currentStep === step.id ? "default" : "outline"}
                 size="sm"
                 onClick={() => handleStepClick(step.id)}
-                className="text-xs p-2 h-auto"
+                className="text-xs p-2 h-auto min-h-[60px] flex flex-col items-center justify-center"
               >
                 <div className="text-center">
-                  <div>{step.id}. {step.name}</div>
+                  <div className="font-medium">{step.id}.</div>
+                  <div className="break-words">{step.shortName}</div>
                 </div>
               </Button>
             ))}
