@@ -1,11 +1,10 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { BookOpenIcon, LogInIcon, UserIcon, School, GraduationCap } from "lucide-react";
+import { BookOpenIcon, LogInIcon, UserIcon, School, GraduationCap, ArrowLeftIcon } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -13,7 +12,7 @@ import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { useAuth } from "@/contexts/AuthContext";
 
 const StudentLogin = () => {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const navigate = useNavigate();
   const { toast } = useToast();
   const { student, studentLogin, studentSignup, isLoading: authLoading } = useAuth();
@@ -53,6 +52,10 @@ const StudentLogin = () => {
       </div>
     );
   }
+
+  const handleBackToHome = () => {
+    navigate("/");
+  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -171,6 +174,16 @@ const StudentLogin = () => {
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
+      <div className="absolute top-4 left-4">
+        <Button
+          variant="outline"
+          onClick={handleBackToHome}
+          className="flex items-center gap-2"
+        >
+          <ArrowLeftIcon className="w-4 h-4" />
+          {language === 'lt' ? 'Grįžti į pradžią' : 'Back to Home'}
+        </Button>
+      </div>
       <div className="absolute top-4 right-4">
         <LanguageSwitcher />
       </div>
