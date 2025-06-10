@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import bcrypt from 'bcryptjs';
 import { Teacher, Student } from '@/types/auth';
@@ -187,13 +186,13 @@ export const teacherEmailLoginService = async (email: string, password: string) 
   }
 };
 
-// Student login with simple name/password
+// Student login with simple name/password - FIXED VERSION
 export const studentSimpleLoginService = async (fullName: string, password: string) => {
   try {
     logSecurely('studentSimpleLoginService: Attempting login for student:', fullName);
 
     if (!fullName?.trim() || !password?.trim()) {
-      return { error: 'All fields are required.' };
+      return { error: 'Name and password are required.' };
     }
 
     // Query for students with matching name (case-insensitive)
@@ -220,7 +219,6 @@ export const studentSimpleLoginService = async (fullName: string, password: stri
     // Check password for the first matching student
     const student = students[0];
     logSecurely('studentSimpleLoginService: Found student, checking password for:', student.full_name);
-    logSecurely('studentSimpleLoginService: Student password hash exists:', !!student.password_hash);
     
     if (!student.password_hash) {
       return { error: 'Account setup incomplete. Please contact your teacher.' };
@@ -356,8 +354,8 @@ export const studentSignupService = async (
     }
 
     // Password strength validation
-    if (password.length < 8) {
-      return { error: 'Password must be at least 8 characters long.' };
+    if (password.length < 6) {
+      return { error: 'Password must be at least 6 characters long.' };
     }
 
     // Check if student already exists

@@ -54,7 +54,7 @@ const StudentLogin = () => {
     setIsLoading(true);
 
     try {
-      console.log('StudentLogin: Attempting login with all required fields:', { fullName, school, grade });
+      console.log('StudentLogin: Attempting login with credentials:', { fullName, school, grade });
       
       const result = await studentLogin(fullName.trim(), school.trim(), grade.trim(), password);
 
@@ -71,9 +71,7 @@ const StudentLogin = () => {
           title: t('student.welcomeBack') || "Welcome back!",
           description: t('student.loginSuccess') || "Login successful",
         });
-        setTimeout(() => {
-          navigate("/student-dashboard", { replace: true });
-        }, 100);
+        navigate("/student-dashboard", { replace: true });
       }
     } catch (err) {
       console.error('StudentLogin: Unexpected error during login:', err);
@@ -126,9 +124,7 @@ const StudentLogin = () => {
           title: t('student.accountCreated') || "Account created!",
           description: t('student.welcomeToApp') || "Welcome to Lesson Lens!",
         });
-        setTimeout(() => {
-          navigate("/student-dashboard", { replace: true });
-        }, 100);
+        navigate("/student-dashboard", { replace: true });
       }
     } catch (err) {
       console.error('StudentLogin: Unexpected error during signup:', err);
