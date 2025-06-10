@@ -15,7 +15,7 @@ const StudentLogin = () => {
   const { t } = useLanguage();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { student, studentLogin, studentSignup, isLoading: authLoading } = useAuth();
+  const { student, isLoading: authLoading } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
 
   // Redirect if already logged in
@@ -52,10 +52,13 @@ const StudentLogin = () => {
     setIsLoading(true);
 
     try {
-      console.log('StudentLogin: Attempting login with school and grade:', { fullName, school, grade });
+      console.log('StudentLogin: Attempting login with all required fields:', { fullName, school, grade });
       
-      // Use the enhanced secure student login that expects school and grade
-      const result = await studentLogin(fullName.trim(), password);
+      // Import and use the student auth hook directly with all parameters
+      const { useStudentAuth } = await import('@/hooks/useStudentAuth');
+      const { login } = useStudentAuth();
+      
+      const result = await login(fullName.trim(), school.trim(), grade.trim(), password);
 
       if (result.error) {
         console.log('StudentLogin: Login failed with error:', result.error);
@@ -109,7 +112,12 @@ const StudentLogin = () => {
 
     try {
       console.log('StudentLogin: Attempting signup for:', fullName);
-      const result = await studentSignup(fullName.trim(), school.trim(), grade.trim(), password);
+      
+      // Import and use the student auth hook directly with all parameters
+      const { useStudentAuth } = await import('@/hooks/useStudentAuth');
+      const { signup } = useStudentAuth();
+      
+      const result = await signup(fullName.trim(), school.trim(), grade.trim(), password);
 
       if (result.error) {
         console.log('StudentLogin: Signup failed with error:', result.error);

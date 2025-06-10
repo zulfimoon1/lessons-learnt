@@ -1,334 +1,263 @@
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { Teacher, Student, AuthContextType, SecurityEvent } from '@/types/auth';
+import { useTeacherAuth } from '@/hooks/useTeacherAuth';
+import { useStudentAuth } from '@/hooks/useStudentAuth';
+import { generateCSRFToken, validateCSRFToken } from '@/services/enhancedSecureSessionService';
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { AuthContextType, Teacher, Student } from '@/types/auth';
-import { enhancedSecureTeacherLogin, enhancedSecureStudentLogin, enhancedSecureStudentSignup } from '@/services/enhancedSecureAuthService';
-import { sessionService } from '@/services/secureSessionService';
-import { logUserSecurityEvent } from '@/components/SecurityAuditLogger';
+interface AuthProviderProps {
+  children: ReactNode;
+}
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [teacher, setTeacher] = useState<Teacher | null>(null);
-  const [student, setStudent] = useState<Student | null>(null);
+export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [isLoading, setIsLoading] = useState(true);
-  const [csrfToken, setCsrfToken] = useState<string>('');
+  const [csrfToken, setCsrfToken] = useState<string>();
+  
+  const teacherAuth = useTeacherAuth();
+  const studentAuth = useStudentAuth();
 
-  // Generate CSRF token for security
-  const generateCSRFToken = () => {
-    const array = new Uint8Array(32);
-    crypto.getRandomValues(array);
-    return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
+  // Security event logging
+  const logSecurityEvent = (event: SecurityEvent) => {
+    console.log('Security Event:', event);
+    // Store in localStorage for admin review
+    try {
+      const events = JSON.parse(localStorage.getItem('security_events') || '[]');
+      events.push(event);
+      // Keep only last 100 events
+      if (events.length > 100) {
+        events.splice(0, events.length - 100);
+      }
+      localStorage.setItem('security_events', JSON.stringify(events));
+    } catch (error) {
+      console.warn('Failed to log security event:', error);
+    }
   };
 
+  // Initialize auth state and generate CSRF token
   useEffect(() => {
-    console.log('AuthContext: Starting secure initialization...');
-    
-    // Generate CSRF token
-    setCsrfToken(generateCSRFToken());
-    
-    const restoreSecureSession = async () => {
+    const initializeAuth = async () => {
+      console.log('AuthContext: Starting secure initialization...');
+      
       try {
-        const session = await sessionService.getSession();
+        // Generate CSRF token
+        const token = generateCSRFToken();
+        setCsrfToken(token);
         
-        if (session) {
-          console.log('AuthContext: Restoring secure session for:', session.userType);
-          
-          // Restore user data based on session with enhanced validation
-          if (session.userType === 'teacher') {
-            const teacherData = localStorage.getItem('teacher');
-            if (teacherData) {
-              const parsedTeacher = JSON.parse(teacherData);
-              if (parsedTeacher && parsedTeacher.id === session.userId) {
-                setTeacher(parsedTeacher);
-                await sessionService.refreshSession(session);
-                
-                // Log session restoration
-                logUserSecurityEvent({
-                  type: 'session_restored',
-                  userId: parsedTeacher.id,
-                  timestamp: new Date().toISOString(),
-                  details: 'Teacher session restored successfully',
-                  userAgent: navigator.userAgent
-                });
-              } else {
-                console.warn('AuthContext: Teacher data mismatch, clearing session');
-                sessionService.clearSession();
-              }
-            }
-          } else if (session.userType === 'student') {
-            const studentData = localStorage.getItem('student');
-            if (studentData) {
-              const parsedStudent = JSON.parse(studentData);
-              if (parsedStudent && parsedStudent.id === session.userId) {
-                setStudent(parsedStudent);
-                await sessionService.refreshSession(session);
-                
-                // Log session restoration
-                logUserSecurityEvent({
-                  type: 'session_restored',
-                  userId: parsedStudent.id,
-                  timestamp: new Date().toISOString(),
-                  details: 'Student session restored successfully',
-                  userAgent: navigator.userAgent
-                });
-              } else {
-                console.warn('AuthContext: Student data mismatch, clearing session');
-                sessionService.clearSession();
-              }
-            }
-          }
-        } else {
-          // Clear any legacy storage if no valid session
-          sessionService.clearSession();
+        // Restore authentication states
+        const teacherRestored = teacherAuth.restoreFromStorage();
+        const studentRestored = studentAuth.restoreFromStorage();
+        
+        if (teacherRestored) {
+          logSecurityEvent({
+            type: 'session_restored',
+            userId: teacherAuth.teacher?.id,
+            timestamp: new Date().toISOString(),
+            details: 'Teacher session restored from storage',
+            userAgent: navigator.userAgent
+          });
         }
+        
+        if (studentRestored) {
+          logSecurityEvent({
+            type: 'session_restored',
+            userId: studentAuth.student?.id,
+            timestamp: new Date().toISOString(),
+            details: 'Student session restored from storage',
+            userAgent: navigator.userAgent
+          });
+        }
+        
       } catch (error) {
-        console.error('AuthContext: Session restoration error:', error);
-        logUserSecurityEvent({
+        console.error('AuthContext: Initialization error:', error);
+        logSecurityEvent({
           type: 'session_error',
           timestamp: new Date().toISOString(),
-          details: `Session restoration failed: ${error}`,
-          userAgent: navigator.userAgent
+          details: 'Failed to initialize auth context',
+          userAgent: navigator.userAgent,
+          errorStack: error instanceof Error ? error.stack : String(error)
         });
-        sessionService.clearSession();
+      } finally {
+        setIsLoading(false);
+        console.log('AuthContext: Secure initialization complete');
       }
     };
 
-    restoreSecureSession();
-    console.log('AuthContext: Secure initialization complete');
-    setIsLoading(false);
+    initializeAuth();
   }, []);
 
+  // Enhanced teacher login with security validation
   const teacherLogin = async (
     email: string, 
     password: string, 
     name?: string, 
     school?: string,
-    role?: 'teacher' | 'admin' | 'doctor'
+    role: 'teacher' | 'admin' | 'doctor' = 'teacher'
   ) => {
+    console.log('AuthContext: Secure teacher login attempt');
+    
+    // Validate CSRF token if provided
+    if (csrfToken && !validateCSRFToken(csrfToken)) {
+      logSecurityEvent({
+        type: 'csrf_violation',
+        timestamp: new Date().toISOString(),
+        details: 'Invalid CSRF token during teacher login',
+        userAgent: navigator.userAgent
+      });
+      return { error: 'Security validation failed' };
+    }
+
     try {
-      console.log('AuthContext: Secure teacher login attempt for:', email);
-      
-      // Validate CSRF token (in real implementation, this would be passed from form)
-      if (!csrfToken) {
-        return { error: 'Security token missing. Please refresh and try again.' };
+      const result = name && school 
+        ? await teacherAuth.signup(name, email, school, password, role)
+        : await teacherAuth.login(email, password);
+
+      if (result.error) {
+        logSecurityEvent({
+          type: 'login_failed',
+          timestamp: new Date().toISOString(),
+          details: `Teacher login failed: ${result.error}`,
+          userAgent: navigator.userAgent
+        });
+      } else if (result.teacher) {
+        logSecurityEvent({
+          type: 'login_success',
+          userId: result.teacher.id,
+          timestamp: new Date().toISOString(),
+          details: 'Teacher login successful',
+          userAgent: navigator.userAgent
+        });
       }
 
-      const result = await enhancedSecureTeacherLogin(email, password);
-      
-      if (result.user && !result.error) {
-        console.log('AuthContext: Teacher login successful');
-        const teacherData: Teacher = {
-          id: result.user.id,
-          name: result.user.name,
-          email: result.user.email,
-          school: result.user.school,
-          role: result.user.role as 'teacher' | 'admin' | 'doctor'
-        };
-        
-        setTeacher(teacherData);
-        setStudent(null); // Ensure only one user type is logged in
-        
-        // Store teacher data securely with enhanced validation
-        try {
-          localStorage.setItem('teacher', JSON.stringify(teacherData));
-          localStorage.removeItem('student');
-          
-          // Generate new CSRF token after successful login
-          setCsrfToken(generateCSRFToken());
-        } catch (storageError) {
-          console.error('AuthContext: Storage error:', storageError);
-          logUserSecurityEvent({
-            type: 'storage_error',
-            userId: teacherData.id,
-            timestamp: new Date().toISOString(),
-            details: `Storage error during login: ${storageError}`,
-            userAgent: navigator.userAgent
-          });
-        }
-        
-        return { teacher: teacherData };
-      } else {
-        console.log('AuthContext: Teacher login failed:', result.error);
-        return { error: result.error };
-      }
+      return result;
     } catch (error) {
       console.error('AuthContext: Teacher login error:', error);
-      logUserSecurityEvent({
-        type: 'suspicious_activity',
-        timestamp: new Date().toISOString(),
-        details: `Teacher login context error: ${error}`,
-        userAgent: navigator.userAgent
-      });
-      return { error: 'Login failed. Please check your connection and try again.' };
+      return { error: 'Login failed. Please try again.' };
     }
   };
 
-  const studentLogin = async (fullName: string, password: string) => {
+  // Enhanced student login with security validation and all required parameters
+  const studentLogin = async (fullName: string, school: string, grade: string, password: string) => {
+    console.log('AuthContext: Secure student login attempt');
+    
+    // Validate CSRF token if provided
+    if (csrfToken && !validateCSRFToken(csrfToken)) {
+      logSecurityEvent({
+        type: 'csrf_violation',
+        timestamp: new Date().toISOString(),
+        details: 'Invalid CSRF token during student login',
+        userAgent: navigator.userAgent
+      });
+      return { error: 'Security validation failed' };
+    }
+
     try {
-      console.log('AuthContext: Secure student login attempt');
-      
-      // Validate CSRF token
-      if (!csrfToken) {
-        return { error: 'Security token missing. Please refresh and try again.' };
+      const result = await studentAuth.login(fullName, school, grade, password);
+
+      if (result.error) {
+        logSecurityEvent({
+          type: 'login_failed',
+          timestamp: new Date().toISOString(),
+          details: `Student login failed: ${result.error}`,
+          userAgent: navigator.userAgent
+        });
+      } else if (result.student) {
+        logSecurityEvent({
+          type: 'login_success',
+          userId: result.student.id,
+          timestamp: new Date().toISOString(),
+          details: 'Student login successful',
+          userAgent: navigator.userAgent
+        });
       }
-      
-      // For student login, we need to extract school and grade from stored form data
-      const loginData = JSON.parse(sessionStorage.getItem('studentLoginData') || '{}');
-      const school = loginData.school || '';
-      const grade = loginData.grade || '';
-      
-      if (!school || !grade) {
-        return { error: 'School and grade information required' };
-      }
-      
-      const result = await enhancedSecureStudentLogin(fullName, school, grade, password);
-      
-      if (result.user && !result.error) {
-        console.log('AuthContext: Student login successful');
-        const studentData: Student = {
-          id: result.user.id,
-          full_name: result.user.fullName,
-          school: result.user.school,
-          grade: result.user.grade
-        };
-        
-        setStudent(studentData);
-        setTeacher(null); // Ensure only one user type is logged in
-        
-        // Store student data securely with enhanced validation
-        try {
-          localStorage.setItem('student', JSON.stringify(studentData));
-          localStorage.removeItem('teacher');
-          sessionStorage.removeItem('studentLoginData'); // Clear temporary data
-          
-          // Generate new CSRF token after successful login
-          setCsrfToken(generateCSRFToken());
-        } catch (storageError) {
-          console.error('AuthContext: Storage error:', storageError);
-          logUserSecurityEvent({
-            type: 'storage_error',
-            userId: studentData.id,
-            timestamp: new Date().toISOString(),
-            details: `Storage error during login: ${storageError}`,
-            userAgent: navigator.userAgent
-          });
-        }
-        
-        return { student: studentData };
-      } else {
-        console.log('AuthContext: Student login failed:', result.error);
-        return { error: result.error };
-      }
+
+      return result;
     } catch (error) {
       console.error('AuthContext: Student login error:', error);
-      logUserSecurityEvent({
-        type: 'suspicious_activity',
-        timestamp: new Date().toISOString(),
-        details: `Student login context error: ${error}`,
-        userAgent: navigator.userAgent
-      });
-      return { error: 'Login failed. Please check your connection and try again.' };
+      return { error: 'Login failed. Please try again.' };
     }
   };
 
+  // Enhanced student signup with security validation
   const studentSignup = async (fullName: string, school: string, grade: string, password: string) => {
+    console.log('AuthContext: Secure student signup attempt');
+    
     try {
-      console.log('AuthContext: Secure student signup attempt');
-      
-      // Validate CSRF token
-      if (!csrfToken) {
-        return { error: 'Security token missing. Please refresh and try again.' };
-      }
-      
-      const result = await enhancedSecureStudentSignup(fullName, school, grade, password);
-      
-      if (result.user && !result.error) {
-        console.log('AuthContext: Student signup successful');
-        const studentData: Student = {
-          id: result.user.id,
-          full_name: result.user.fullName,
-          school: result.user.school,
-          grade: result.user.grade
-        };
-        
-        setStudent(studentData);
-        setTeacher(null); // Ensure only one user type is logged in
-        
-        // Store student data securely
-        try {
-          localStorage.setItem('student', JSON.stringify(studentData));
-          localStorage.removeItem('teacher');
-          
-          // Generate new CSRF token after successful signup
-          setCsrfToken(generateCSRFToken());
-        } catch (storageError) {
-          console.error('AuthContext: Storage error:', storageError);
-          logUserSecurityEvent({
-            type: 'storage_error',
-            userId: studentData.id,
-            timestamp: new Date().toISOString(),
-            details: `Storage error during signup: ${storageError}`,
-            userAgent: navigator.userAgent
-          });
-        }
-        
-        return { student: studentData };
-      } else {
+      const result = await studentAuth.signup(fullName, school, grade, password);
+
+      if (result.error) {
         console.log('AuthContext: Student signup failed:', result.error);
-        return { error: result.error };
+        logSecurityEvent({
+          type: 'login_failed',
+          timestamp: new Date().toISOString(),
+          details: `Student signup failed: ${result.error}`,
+          userAgent: navigator.userAgent
+        });
+      } else if (result.student) {
+        logSecurityEvent({
+          type: 'login_success',
+          userId: result.student.id,
+          timestamp: new Date().toISOString(),
+          details: 'Student signup successful',
+          userAgent: navigator.userAgent
+        });
       }
+
+      return result;
     } catch (error) {
       console.error('AuthContext: Student signup error:', error);
       return { error: 'Signup failed. Please try again.' };
     }
   };
 
+  // Secure logout function
   const logout = () => {
     console.log('AuthContext: Secure logout initiated');
     
-    // Log the logout event
-    const currentUser = teacher || student;
+    const currentUser = teacherAuth.teacher || studentAuth.student;
     if (currentUser) {
-      logUserSecurityEvent({
+      logSecurityEvent({
         type: 'logout',
         userId: currentUser.id,
         timestamp: new Date().toISOString(),
-        details: `User logged out: ${teacher ? 'teacher' : 'student'}`,
+        details: 'User logout',
         userAgent: navigator.userAgent
       });
     }
+
+    teacherAuth.logout();
+    studentAuth.logout();
     
-    // Clear all authentication state
-    setTeacher(null);
-    setStudent(null);
-    
-    // Clear secure session and storage
-    sessionService.clearSession();
-    
-    // Generate new CSRF token after logout
-    setCsrfToken(generateCSRFToken());
-    
-    console.log('AuthContext: Secure logout complete');
+    // Regenerate CSRF token on logout
+    const newToken = generateCSRFToken();
+    setCsrfToken(newToken);
   };
 
-  const value: AuthContextType = {
-    teacher,
-    student,
+  // Debug logging for auth state
+  useEffect(() => {
+    console.log('AuthContext: Rendering with secure state:', {
+      hasTeacher: !!teacherAuth.teacher,
+      hasStudent: !!studentAuth.student,
+      isLoading
+    });
+  }, [teacherAuth.teacher, studentAuth.student, isLoading]);
+
+  const contextValue: AuthContextType = {
+    teacher: teacherAuth.teacher,
+    student: studentAuth.student,
     isLoading,
     teacherLogin,
     studentLogin,
     studentSignup,
     logout,
-    csrfToken,
+    csrfToken
   };
 
-  console.log('AuthContext: Rendering with secure state:', { 
-    hasTeacher: !!teacher, 
-    hasStudent: !!student, 
-    isLoading 
-  });
-
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider value={contextValue}>
+      {children}
+    </AuthContext.Provider>
+  );
 };
 
 export const useAuth = (): AuthContextType => {
