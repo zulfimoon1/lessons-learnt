@@ -1,7 +1,95 @@
-
 import { supabase } from '@/integrations/supabase/client';
-import bcrypt from 'bcryptjs';
-import { Teacher, Student } from '@/types/auth';
+import { 
+  secureStudentLogin, 
+  secureTeacherLogin, 
+  secureStudentSignup, 
+  secureTeacherSignup 
+} from './secureSimpleAuthService';
+
+export interface User {
+  id: string;
+  fullName?: string;
+  name?: string;
+  email?: string;
+  school: string;
+  grade?: string;
+  role: string;
+}
+
+export interface AuthResponse {
+  user?: User;
+  error?: string;
+}
+
+// Secure student authentication
+export const studentLogin = async (fullName: string, school: string, grade: string, password: string): Promise<AuthResponse> => {
+  return await secureStudentLogin(fullName, school, grade, password);
+};
+
+export const studentSignup = async (fullName: string, school: string, grade: string, password: string): Promise<AuthResponse> => {
+  return await secureStudentSignup(fullName, school, grade, password);
+};
+
+// Secure teacher authentication
+export const teacherLogin = async (email: string, password: string): Promise<AuthResponse> => {
+  return await secureTeacherLogin(email, password);
+};
+
+export const teacherSignup = async (name: string, email: string, school: string, password: string, role: string = 'teacher'): Promise<AuthResponse> => {
+  return await secureTeacherSignup(name, email, school, password, role);
+};
+
+// Session management (keep existing functionality)
+export const logout = () => {
+  localStorage.removeItem('user');
+  console.log('User logged out');
+};
+
+export const getCurrentUser = (): User | null => {
+  try {
+    const userData = localStorage.getItem('user');
+    return userData ? JSON.parse(userData) : null;
+  } catch (error) {
+    console.error('Error parsing user data:', error);
+    return null;
+  }
+};
+
+export const setCurrentUser = (user: User) => {
+  localStorage.setItem('user', JSON.stringify(user));
+};
+
+// Password utilities for existing functionality
+export const validatePassword = (password: string): { isValid: boolean; message: string } => {
+  if (password.length < 8) {
+    return { isValid: false, message: 'Password must be at least 8 characters long' };
+  }
+  
+  if (!/(?=.*[a-z])/.test(password)) {
+    return { isValid: false, message: 'Password must contain at least one lowercase letter' };
+  }
+  
+  if (!/(?=.*[A-Z])/.test(password)) {
+    return { isValid: false, message: 'Password must contain at least one uppercase letter' };
+  }
+  
+  if (!/(?=.*\d)/.test(password)) {
+    return { isValid: false, message: 'Password must contain at least one number' };
+  }
+  
+  return { isValid: true, message: 'Password is strong' };
+};
+
+// Legacy compatibility functions (deprecated but maintained for existing code)
+export const legacyStudentLogin = async (fullName: string, school: string, grade: string, password: string): Promise<AuthResponse> => {
+  console.warn('Using legacy authentication - please migrate to secure methods');
+  return await studentLogin(fullName, school, grade, password);
+};
+
+export const legacyTeacherLogin = async (email: string, password: string): Promise<AuthResponse> => {
+  console.warn('Using legacy authentication - please migrate to secure methods');
+  return await teacherLogin(email, password);
+};
 
 // Secure logging for development
 const logSecurely = (message: string, ...args: any[]) => {

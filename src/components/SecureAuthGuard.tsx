@@ -1,33 +1,55 @@
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
+import { getCurrentUser } from '@/services/authService';
 
 interface SecureAuthGuardProps {
   children: React.ReactNode;
   requireAuth?: boolean;
+  allowedRoles?: string[];
   redirectTo?: string;
 }
 
 const SecureAuthGuard: React.FC<SecureAuthGuardProps> = ({ 
   children, 
   requireAuth = true, 
+  allowedRoles = [],
   redirectTo = '/auth' 
 }) => {
-  const { user, isLoading } = useSupabaseAuth();
+  const [isLoading, setIsLoading] = useState(true);
+  const [isAuthorized, setIsAuthorized] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!isLoading) {
+    const checkAuth = () => {
+      const user = getCurrentUser();
+      
       if (requireAuth && !user) {
         console.log('SecureAuthGuard: User not authenticated, redirecting to:', redirectTo);
         navigate(redirectTo);
-      } else if (!requireAuth && user) {
+        return;
+      }
+      
+      if (!requireAuth && user) {
         console.log('SecureAuthGuard: User authenticated, redirecting to dashboard');
         navigate('/');
+        return;
       }
-    }
-  }, [user, isLoading, requireAuth, redirectTo, navigate]);
+      
+      if (allowedRoles.length > 0 && user) {
+        if (!allowedRoles.includes(user.role)) {
+          console.log('SecureAuthGuard: User role not authorized:', user.role);
+          navigate('/unauthorized');
+          return;
+        }
+      }
+      
+      setIsAuthorized(true);
+      setIsLoading(false);
+    };
+
+    checkAuth();
+  }, [requireAuth, allowedRoles, redirectTo, navigate]);
 
   if (isLoading) {
     return (
@@ -37,11 +59,7 @@ const SecureAuthGuard: React.FC<SecureAuthGuardProps> = ({
     );
   }
 
-  if (requireAuth && !user) {
-    return null;
-  }
-
-  if (!requireAuth && user) {
+  if (!isAuthorized) {
     return null;
   }
 
