@@ -1,8 +1,9 @@
 
+import { useEffect } from 'react';
 import { securityService } from '@/services/securityService';
 
 interface SecurityEvent {
-  type: 'login_success' | 'login_failed' | 'logout' | 'unauthorized_access' | 'suspicious_activity' | 'rate_limit_exceeded' | 'session_restored' | 'session_error' | 'csrf_violation';
+  type: 'login_success' | 'login_failed' | 'logout' | 'unauthorized_access' | 'suspicious_activity' | 'rate_limit_exceeded' | 'session_restored' | 'session_error' | 'csrf_violation' | 'test_admin_created' | 'forced_password_reset';
   userId?: string;
   timestamp: string;
   details: string;
@@ -62,3 +63,23 @@ export const exportSecurityAuditLog = (): string => {
     return '[]';
   }
 };
+
+// Default component that initializes security monitoring
+const SecurityAuditLogger: React.FC = () => {
+  useEffect(() => {
+    // Initialize security monitoring
+    securityService.monitorSecurityViolations();
+    
+    // Log application start
+    logUserSecurityEvent({
+      type: 'session_restored',
+      timestamp: new Date().toISOString(),
+      details: 'Application security monitoring initialized',
+      userAgent: navigator.userAgent
+    });
+  }, []);
+
+  return null; // This is a background service component
+};
+
+export default SecurityAuditLogger;
