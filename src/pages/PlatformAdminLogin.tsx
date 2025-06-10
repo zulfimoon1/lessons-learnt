@@ -109,12 +109,22 @@ const PlatformAdminLogin = () => {
           </div>
 
           <Tabs defaultValue="login" className="space-y-4">
-            <TabsList className="grid w-full grid-cols-2 bg-white border">
-              <TabsTrigger value="login" className="text-sm font-medium">Login</TabsTrigger>
-              <TabsTrigger value="create" className="text-sm font-medium">Create Account</TabsTrigger>
+            <TabsList className="grid w-full grid-cols-2 h-11 p-1 bg-slate-100 rounded-lg">
+              <TabsTrigger 
+                value="login" 
+                className="text-sm font-medium data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow-sm"
+              >
+                Login
+              </TabsTrigger>
+              <TabsTrigger 
+                value="create" 
+                className="text-sm font-medium data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow-sm"
+              >
+                Create Account
+              </TabsTrigger>
             </TabsList>
 
-            <TabsContent value="login">
+            <TabsContent value="login" className="mt-4">
               <Card>
                 <CardHeader>
                   <CardTitle>Admin Login</CardTitle>
@@ -172,7 +182,7 @@ const PlatformAdminLogin = () => {
               </Card>
             </TabsContent>
 
-            <TabsContent value="create">
+            <TabsContent value="create" className="mt-4">
               <CustomAdminCreation />
             </TabsContent>
           </Tabs>
