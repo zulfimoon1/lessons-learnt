@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import bcrypt from 'bcryptjs';
 import { Teacher, Student } from '@/types/auth';
@@ -193,15 +192,7 @@ export const teacherEmailLoginService = async (email: string, password: string) 
 
     try {
       logSecurely('teacherEmailLoginService: Comparing password for teacher:', teacher.email);
-      
-      // Handle test credentials with plain text comparison for testing
-      let isValidPassword = false;
-      if (email === 'testteacher@test.com' && password === 'testteacher') {
-        isValidPassword = true;
-      } else {
-        isValidPassword = await bcrypt.compare(password, teacher.password_hash);
-      }
-      
+      const isValidPassword = await bcrypt.compare(password, teacher.password_hash);
       logSecurely('teacherEmailLoginService: Password comparison result:', isValidPassword);
       
       if (isValidPassword) {
@@ -271,15 +262,7 @@ export const studentSimpleLoginService = async (fullName: string, password: stri
 
     try {
       logSecurely('studentSimpleLoginService: Attempting password comparison');
-      
-      // Handle test credentials with plain text comparison for testing
-      let isValidPassword = false;
-      if (fullName.toLowerCase() === 'test student' && password === 'teststudent') {
-        isValidPassword = true;
-      } else {
-        isValidPassword = await bcrypt.compare(password, student.password_hash);
-      }
-      
+      const isValidPassword = await bcrypt.compare(password, student.password_hash);
       logSecurely('studentSimpleLoginService: Password comparison result:', isValidPassword);
       
       if (isValidPassword) {
