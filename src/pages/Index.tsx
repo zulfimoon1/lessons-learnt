@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { GraduationCapIcon, UsersIcon, BookOpenIcon, HeartIcon, BarChart3Icon, ShieldCheckIcon, PlayCircleIcon } from "lucide-react";
@@ -59,30 +60,30 @@ const Index = () => {
             {t('welcome.subtitle')}
           </p>
           
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-md mx-auto">
-            <Link to="/student-login">
+          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center max-w-lg mx-auto">
+            <Link to="/student-login" className="w-full sm:w-auto">
               <Button 
                 size="lg" 
-                className="w-full min-h-16 py-3 px-4 text-base flex items-center justify-center"
+                className="w-full sm:w-auto min-h-14 px-6 py-3 text-base bg-primary hover:bg-primary/90 text-primary-foreground"
               >
-                <UsersIcon className="w-5 h-5 mr-2 flex-shrink-0" />
-                <span className="text-center leading-tight whitespace-normal">{t('auth.studentLogin')}</span>
+                <UsersIcon className="w-5 h-5 mr-2" />
+                {t('auth.studentLogin')}
               </Button>
             </Link>
             
-            <Link to="/teacher-login">
+            <Link to="/teacher-login" className="w-full sm:w-auto">
               <Button 
                 size="lg" 
                 variant="outline" 
-                className="w-full border-2 border-border hover:bg-accent min-h-16 py-3 px-4 text-base flex items-center justify-center"
+                className="w-full sm:w-auto min-h-14 px-6 py-3 text-base border-2 border-border hover:bg-accent hover:text-accent-foreground"
               >
-                <BookOpenIcon className="w-5 h-5 mr-2 flex-shrink-0" />
-                <span className="text-center leading-tight whitespace-normal">{t('auth.teacherLogin')}</span>
+                <BookOpenIcon className="w-5 h-5 mr-2" />
+                {t('auth.teacherLogin')}
               </Button>
             </Link>
           </div>
           
-          <div className="max-w-2xl mx-auto mt-6">
+          <div className="max-w-2xl mx-auto mt-8">
             <p className="text-2xl text-foreground font-bold italic leading-relaxed">
               {t('tagline.studentLead')}
             </p>
@@ -93,7 +94,7 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Demo Section - Moved up right after hero */}
+      {/* Demo Section */}
       <DemoSection />
 
       {/* Features Section */}
