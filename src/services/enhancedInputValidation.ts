@@ -190,7 +190,8 @@ export const enhancedValidateInput = {
       if (!patternData) continue; // Handle potential undefined
       
       const { pattern, reason, severity } = patternData;
-      if (pattern && pattern.test && pattern.test(input)) {
+      // Add null check for pattern
+      if (pattern && typeof pattern.test === 'function' && pattern.test(input)) {
         return { isSuspicious: true, reason, severity };
       }
     }

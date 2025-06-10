@@ -183,9 +183,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           userAgent: navigator.userAgent
         });
         return { error: result.error };
-      } 
+      }
       
-      if (result.teacher) {
+      // Type guard to ensure we have teacher data
+      if ('teacher' in result && result.teacher) {
         // Store user data securely
         secureSessionService.securelyStoreUserData('teacher', result.teacher);
         
