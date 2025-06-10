@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -9,14 +10,13 @@ import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
-import { useAuthStorage } from "@/hooks/useAuthStorage";
-import { studentSimpleLoginService, studentSignupService } from "@/services/authService";
+import { useAuth } from "@/contexts/AuthContext";
 
 const StudentLogin = () => {
   const { t } = useLanguage();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { student, saveStudent, isLoading: authLoading } = useAuthStorage();
+  const { student, studentLogin, studentSignup, isLoading: authLoading } = useAuth();
 
   // Redirect if already logged in
   useEffect(() => {
@@ -70,7 +70,7 @@ const StudentLogin = () => {
 
     try {
       console.log('StudentLogin: Attempting login for:', loginData.fullName);
-      const result = await studentSimpleLoginService(
+      const result = await studentLogin(
         loginData.fullName.trim(),
         loginData.password
       );
@@ -82,9 +82,8 @@ const StudentLogin = () => {
           description: result.error,
           variant: "destructive",
         });
-      } else if (result.student) {
-        console.log('StudentLogin: Login successful, saving student and redirecting:', result.student);
-        saveStudent(result.student);
+      } else {
+        console.log('StudentLogin: Login successful, redirecting');
         toast({
           title: t('student.welcomeBack') || "Welcome back!",
           description: t('student.loginSuccess') || "Login successful",
@@ -128,7 +127,7 @@ const StudentLogin = () => {
 
     try {
       console.log('StudentLogin: Attempting signup for:', signupData.fullName);
-      const result = await studentSignupService(
+      const result = await studentSignup(
         signupData.fullName.trim(),
         signupData.school.trim(),
         signupData.grade.trim(),
@@ -142,9 +141,8 @@ const StudentLogin = () => {
           description: result.error,
           variant: "destructive",
         });
-      } else if (result.student) {
-        console.log('StudentLogin: Signup successful, saving student and redirecting:', result.student);
-        saveStudent(result.student);
+      } else {
+        console.log('StudentLogin: Signup successful, redirecting');
         toast({
           title: t('student.accountCreated') || "Account created!",
           description: t('student.welcomeToApp') || "Welcome to Lesson Lens!",
