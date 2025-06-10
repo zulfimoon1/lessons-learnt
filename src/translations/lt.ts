@@ -143,7 +143,7 @@ export const ltTranslations = {
   'articles.mentalHealth': 'Psichinės sveikatos straipsniai',
   'articles.subscriptionRequired': 'Reikalinga prenumerata',
   
-  // Pricing translations - ADDED ALL MISSING PRICING TRANSLATIONS
+  // Pricing translations - COMPREHENSIVE LITHUANIAN TRANSLATIONS
   'pricing.processing': 'Apdorojama...',
   'pricing.title': 'Kainodara',
   'pricing.choosePlan': 'Pasirinkite planą',
@@ -164,13 +164,13 @@ export const ltTranslations = {
   'pricing.feedbackCollection': 'Atsiliepimų rinkimas',
   'pricing.analytics': 'Analizė',
   'pricing.mentalHealth': 'Psichinės sveikatos stebėjimas',
-  'pricing.multiLanguage': 'Daugiakalbė palaikymas',
+  'pricing.multiLanguage': 'Daugiakalbis palaikymas',
   'pricing.orderSummary': 'Užsakymo suvestinė',
   'pricing.reviewDetails': 'Peržiūrėkite užsakymo detales',
-  'pricing.teachers': 'Mokytojai',
+  'pricing.teachers': 'mokytojai',
   'pricing.each': 'kiekvienas',
   'pricing.subtotal': 'Tarpinė suma',
-  'pricing.discount': 'Nuolaida',
+  'pricing.discount': 'nuolaida',
   'pricing.totalMonthly': 'Iš viso per mėnesį',
   'pricing.billing': 'Atsiskaitymas',
   'pricing.billingDesc': 'Jūs būsite apmokestinti {amount} € kas mėnesį',

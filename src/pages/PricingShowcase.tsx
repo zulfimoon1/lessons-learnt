@@ -15,11 +15,11 @@ const PricingShowcase = () => {
   const navigate = useNavigate();
 
   const features = [
-    "Unlimited class scheduling",
-    "Student feedback collection", 
-    "Real-time analytics",
-    "Mental health monitoring",
-    "Multi-language support",
+    t('pricing.unlimitedClasses'),
+    t('pricing.feedbackCollection'), 
+    t('pricing.analytics'),
+    t('pricing.mentalHealth'),
+    t('pricing.multiLanguage'),
     "School-wide insights",
     "Teacher management tools",
     "Privacy compliant"
@@ -42,9 +42,9 @@ const PricingShowcase = () => {
                 className="flex items-center gap-2"
               >
                 <ArrowLeftIcon className="w-4 h-4" />
-                Back to Home
+                {t('common.back')} to Home
               </Button>
-              <h1 className="text-2xl font-bold text-foreground">Amazing Pricing</h1>
+              <h1 className="text-2xl font-bold text-foreground">{t('pricing.title')}</h1>
             </div>
             <LanguageSwitcher />
           </div>
@@ -106,7 +106,7 @@ const PricingShowcase = () => {
                 <EuroIcon className="w-6 h-6" />
                 {formatEuroPrice(999)}
               </div>
-              <div className="text-sm text-muted-foreground">1-4 Teachers</div>
+              <div className="text-sm text-muted-foreground">1-4 {t('pricing.teachers')}</div>
               <div className="text-xs text-muted-foreground">Standard Price</div>
             </div>
             <div className="text-center bg-green-100 rounded-lg p-4">
@@ -114,16 +114,16 @@ const PricingShowcase = () => {
                 <EuroIcon className="w-6 h-6" />
                 {formatEuroPrice(VOLUME_DISCOUNTS[0].pricePerTeacher)}
               </div>
-              <div className="text-sm text-green-700 font-medium">5+ Teachers</div>
-              <div className="text-xs text-green-600">{VOLUME_DISCOUNTS[0].discount}% Discount</div>
+              <div className="text-sm text-green-700 font-medium">5+ {t('pricing.teachers')}</div>
+              <div className="text-xs text-green-600">{VOLUME_DISCOUNTS[0].discount}% {t('pricing.discount')}</div>
             </div>
             <div className="text-center bg-blue-100 rounded-lg p-4">
               <div className="text-3xl font-bold text-blue-700 flex items-center justify-center gap-1">
                 <EuroIcon className="w-6 h-6" />
                 {formatEuroPrice(VOLUME_DISCOUNTS[1].pricePerTeacher)}
               </div>
-              <div className="text-sm text-blue-700 font-medium">10+ Teachers</div>
-              <div className="text-xs text-blue-600">{VOLUME_DISCOUNTS[1].discount}% Discount</div>
+              <div className="text-sm text-blue-700 font-medium">10+ {t('pricing.teachers')}</div>
+              <div className="text-xs text-blue-600">{VOLUME_DISCOUNTS[1].discount}% {t('pricing.discount')}</div>
             </div>
           </div>
         </div>
