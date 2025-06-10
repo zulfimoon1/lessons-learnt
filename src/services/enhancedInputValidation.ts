@@ -59,7 +59,7 @@ export const enhancedValidateInput = {
     }
     
     // Enhanced suspicious pattern detection with proper null checking
-    const threatCheck = this.detectAdvancedThreats(trimmed);
+    const threatCheck = enhancedValidateInput.detectAdvancedThreats(trimmed);
     if (threatCheck && threatCheck.isSuspicious) {
       return { isValid: false, message: 'School name contains suspicious content' };
     }
