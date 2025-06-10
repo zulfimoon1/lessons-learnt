@@ -27,14 +27,14 @@ const TeacherSimulation = () => {
   const totalSteps = 8;
 
   const simulationSteps = [
-    { id: 1, name: 'Dashboard Overview' },
-    { id: 2, name: 'Class Analytics' },
-    { id: 3, name: 'Student Alerts' },
-    { id: 4, name: 'Mood Tracking' },
-    { id: 5, name: 'Individual Reports' },
-    { id: 6, name: 'Action Planning' },
-    { id: 7, name: 'Weekly Trends' },
-    { id: 8, name: 'Lesson Planning' }
+    { id: 1, name: t('demo.features.teacher.1') },
+    { id: 2, name: t('demo.features.teacher.2') },
+    { id: 3, name: t('demo.features.teacher.3') },
+    { id: 4, name: t('demo.features.teacher.4') },
+    { id: 5, name: t('demo.features.teacher.5') },
+    { id: 6, name: t('demo.features.teacher.6') },
+    { id: 7, name: t('demo.features.teacher.7') },
+    { id: 8, name: t('demo.features.teacher.8') }
   ];
 
   useEffect(() => {
@@ -115,7 +115,7 @@ const TeacherSimulation = () => {
       case 2:
         return (
           <div className="bg-white p-6 rounded-lg shadow-lg border">
-            <h3 className="text-lg font-semibold mb-4">Class Analytics</h3>
+            <h3 className="text-lg font-semibold mb-4">Real-time Class Activity Monitoring</h3>
             
             <div className="grid grid-cols-2 gap-4 mb-4">
               <div className="bg-blue-50 p-4 rounded-lg">
@@ -146,7 +146,7 @@ const TeacherSimulation = () => {
             </div>
 
             <div className="space-y-2">
-              <h4 className="font-semibold text-sm">Recent Student Feedback</h4>
+              <h4 className="font-semibold text-sm">Live Student Feedback</h4>
               <div className="space-y-1">
                 <div className="flex justify-between items-center p-2 bg-gray-50 rounded text-sm">
                   <span>Emma K. - Math feedback</span>
@@ -164,7 +164,7 @@ const TeacherSimulation = () => {
       case 3:
         return (
           <div className="bg-white p-6 rounded-lg shadow-lg border">
-            <h3 className="text-lg font-semibold mb-4">Student Alerts</h3>
+            <h3 className="text-lg font-semibold mb-4">Mental Health Alert System</h3>
             
             <div className="space-y-3">
               <div className="bg-red-50 p-4 rounded-lg border-l-4 border-red-500">
@@ -206,7 +206,7 @@ const TeacherSimulation = () => {
       case 4:
         return (
           <div className="bg-white p-6 rounded-lg shadow-lg border">
-            <h3 className="text-lg font-semibold mb-4">Mood Tracking</h3>
+            <h3 className="text-lg font-semibold mb-4">Student Mood & Emotional State Tracking</h3>
             
             <div className="grid grid-cols-2 gap-4 mb-4">
               <div className="bg-green-50 p-3 rounded-lg">
@@ -254,7 +254,7 @@ const TeacherSimulation = () => {
       case 5:
         return (
           <div className="bg-white p-6 rounded-lg shadow-lg border">
-            <h3 className="text-lg font-semibold mb-4">Individual Reports</h3>
+            <h3 className="text-lg font-semibold mb-4">Individual Student Feedback Analysis</h3>
             
             <div className="space-y-3">
               <div className="border rounded-lg p-3">
@@ -296,7 +296,7 @@ const TeacherSimulation = () => {
       case 6:
         return (
           <div className="bg-white p-6 rounded-lg shadow-lg border">
-            <h3 className="text-lg font-semibold mb-4">Action Planning</h3>
+            <h3 className="text-lg font-semibold mb-4">Action Planning Based on Student Needs</h3>
             
             <div className="space-y-4">
               <div className="bg-blue-50 p-4 rounded-lg">
@@ -344,7 +344,7 @@ const TeacherSimulation = () => {
       case 7:
         return (
           <div className="bg-white p-6 rounded-lg shadow-lg border">
-            <h3 className="text-lg font-semibold mb-4">Weekly Trends</h3>
+            <h3 className="text-lg font-semibold mb-4">Weekly Activity Trends Analysis</h3>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="bg-green-50 p-4 rounded-lg">
@@ -384,7 +384,7 @@ const TeacherSimulation = () => {
       case 8:
         return (
           <div className="bg-white p-6 rounded-lg shadow-lg border">
-            <h3 className="text-lg font-semibold mb-4">Lesson Planning</h3>
+            <h3 className="text-lg font-semibold mb-4">Lesson Improvement Planning</h3>
             
             <div className="space-y-4">
               <div className="bg-blue-50 p-4 rounded-lg">
@@ -429,7 +429,7 @@ const TeacherSimulation = () => {
                 <BarChart3Icon className="w-8 h-8 text-green-600" />
               </div>
               <h3 className="text-lg font-semibold mb-2">
-                {simulationSteps[currentStep - 1]?.name}
+                Teacher Analytics Dashboard
               </h3>
               <p className="text-gray-600 text-sm">
                 Teachers analyze student performance and well-being data
@@ -480,13 +480,13 @@ const TeacherSimulation = () => {
           </div>
           <div className="flex items-center justify-between text-sm text-gray-600">
             <span>{t('demo.simulation.step')} {currentStep} {t('demo.simulation.of')} {totalSteps}</span>
-            <span>{simulationSteps[currentStep - 1]?.name}</span>
+            <span>Step {currentStep}: Teacher Dashboard</span>
           </div>
           <Progress value={(currentStep / totalSteps) * 100} className="mt-2" />
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-6">
-            {simulationSteps.map((step) => (
+            {simulationSteps.map((step, index) => (
               <Button
                 key={step.id}
                 variant={currentStep === step.id ? "default" : "outline"}
@@ -495,7 +495,7 @@ const TeacherSimulation = () => {
                 className="text-xs p-2 h-auto"
               >
                 <div className="text-center">
-                  <div>{step.id}. {step.name}</div>
+                  <div>{step.id}. Step {index + 1}</div>
                 </div>
               </Button>
             ))}
