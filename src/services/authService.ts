@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import bcrypt from 'bcryptjs';
 import { Teacher, Student } from '@/types/auth';
@@ -40,7 +41,10 @@ export const teacherSimpleLoginService = async (name: string, password: string, 
       }
       
       try {
+        logSecurely('teacherSimpleLoginService: Comparing password for teacher:', teacher.name);
         const isValidPassword = await bcrypt.compare(password, teacher.password_hash);
+        logSecurely('teacherSimpleLoginService: Password comparison result:', isValidPassword);
+        
         if (isValidPassword) {
           logSecurely('teacherSimpleLoginService: Successful login for teacher ID:', teacher.id);
           const teacherData: Teacher = {
@@ -56,7 +60,7 @@ export const teacherSimpleLoginService = async (name: string, password: string, 
           return { teacher: teacherData };
         }
       } catch (bcryptError) {
-        logSecurely('teacherSimpleLoginService: Password comparison error');
+        logSecurely('teacherSimpleLoginService: Password comparison error:', bcryptError);
         continue;
       }
     }
@@ -101,13 +105,16 @@ export const studentSimpleLoginService = async (fullName: string, password: stri
     // Check password for the first matching student
     const student = students[0];
     logSecurely('studentSimpleLoginService: Found student, checking password for:', student.full_name);
+    logSecurely('studentSimpleLoginService: Student password hash exists:', !!student.password_hash);
     
     if (!student.password_hash) {
       return { error: 'Account setup incomplete. Please contact your teacher.' };
     }
 
     try {
+      logSecurely('studentSimpleLoginService: Attempting bcrypt comparison with hash:', student.password_hash.substring(0, 10) + '...');
       const isValidPassword = await bcrypt.compare(password, student.password_hash);
+      logSecurely('studentSimpleLoginService: Password comparison result:', isValidPassword);
       
       if (isValidPassword) {
         logSecurely('studentSimpleLoginService: Successful login for student ID:', student.id);
