@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { hashPassword, verifyPassword, validatePasswordStrength } from './securePasswordService';
 import { validateInput } from './secureInputValidation';
