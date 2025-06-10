@@ -1,7 +1,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Teacher, Student, AuthContextType } from '@/types/auth';
-import { teacherLoginService, studentSimpleLoginService, studentSignupService } from '@/services/authService';
+import { teacherSimpleLoginService, studentSimpleLoginService, studentSignupService } from '@/services/authService';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -43,7 +43,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     school?: string,
     role?: 'teacher' | 'admin' | 'doctor'
   ) => {
-    const result = await teacherLoginService(email, password, name, school, role);
+    // Use teacherSimpleLoginService with name and school for simple login
+    const result = await teacherSimpleLoginService(name || email, password, school || '');
     
     if (result.teacher) {
       setTeacher(result.teacher);
