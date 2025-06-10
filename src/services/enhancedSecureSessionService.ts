@@ -296,5 +296,3 @@ class EnhancedSecureSessionService {
 }
 
 export const enhancedSecureSessionService = new EnhancedSecureSessionService();
-
-}
