@@ -30,7 +30,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 
 const Demo = () => {
   const { t } = useLanguage();
-  const [activeDemo, setActiveDemo] = useState("student-dashboard");
+  const [activeDemo, setActiveDemo] = useState("student-simulation");
   const [isPlaying, setIsPlaying] = useState(true);
 
   // Complete Student Dashboard Demo
@@ -386,6 +386,13 @@ const Demo = () => {
 
   const demos = [
     {
+      id: "student-simulation",
+      title: "Interactive Student Journey",
+      description: "Watch a complete simulation of a student filling out feedback from their dashboard",
+      icon: UsersIcon,
+      component: <StudentSimulation />
+    },
+    {
       id: "student-dashboard",
       title: "Complete Student Dashboard",
       description: "Full view of student experience with schedule, feedback, and wellness check-ins",
@@ -422,7 +429,7 @@ const Demo = () => {
               <div className="h-6 border-l border-gray-300"></div>
               <div className="flex items-center gap-2">
                 <GraduationCapIcon className="w-8 h-8 text-primary" />
-                <h1 className="text-2xl font-bold">Complete Platform Demo</h1>
+                <h1 className="text-2xl font-bold">Interactive Platform Demo</h1>
               </div>
             </div>
             <div className="flex items-center gap-2">
@@ -444,17 +451,17 @@ const Demo = () => {
         {/* Introduction */}
         <div className="text-center mb-12">
           <h2 className="text-4xl font-bold text-gray-900 mb-4">
-            Complete Platform Experience
+            Interactive Platform Experience
           </h2>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-            Explore comprehensive demos showing every aspect of our platform - from student daily experience 
-            to teacher analytics and mental health support systems.
+            Experience how students interact with our platform through an interactive simulation, 
+            plus explore comprehensive demos of all platform features.
           </p>
         </div>
 
         {/* Demo Navigation */}
         <Tabs value={activeDemo} onValueChange={setActiveDemo} className="w-full">
-          <TabsList className="grid w-full grid-cols-3 mb-8">
+          <TabsList className="grid w-full grid-cols-4 mb-8">
             {demos.map((demo) => (
               <TabsTrigger key={demo.id} value={demo.id} className="flex items-center gap-2">
                 <demo.icon className="w-4 h-4" />
@@ -485,6 +492,16 @@ const Demo = () => {
                         <div>
                           <h4 className="font-semibold mb-2">Key Features Shown:</h4>
                           <ul className="text-sm text-gray-600 space-y-1">
+                            {demo.id === "student-simulation" && (
+                              <>
+                                <li>• Step-by-step student journey simulation</li>
+                                <li>• Dashboard navigation and class selection</li>
+                                <li>• Interactive feedback form completion</li>
+                                <li>• Rating system for understanding and interest</li>
+                                <li>• Emotional state check-ins</li>
+                                <li>• Written feedback submission process</li>
+                              </>
+                            )}
                             {demo.id === "student-dashboard" && (
                               <>
                                 <li>• Complete daily schedule view</li>
@@ -520,8 +537,13 @@ const Demo = () => {
                         
                         <div className="bg-blue-50 p-4 rounded-lg">
                           <p className="text-sm text-blue-800">
-                            <strong>Full Integration:</strong> All components work seamlessly together, 
-                            sharing data securely while maintaining complete privacy for mental health services.
+                            {demo.id === "student-simulation" ? (
+                              <><strong>Interactive Simulation:</strong> Watch a realistic student journey from 
+                              dashboard login to feedback submission, showing exactly how students engage with the platform.</>
+                            ) : (
+                              <><strong>Full Integration:</strong> All components work seamlessly together, 
+                              sharing data securely while maintaining complete privacy for mental health services.</>
+                            )}
                           </p>
                         </div>
                       </div>
@@ -544,8 +566,8 @@ const Demo = () => {
             <CardContent className="p-8">
               <h3 className="text-2xl font-bold mb-4">Experience the Complete Platform</h3>
               <p className="text-gray-600 mb-6 max-w-2xl mx-auto">
-                This demo shows the full scope of our platform's capabilities. See how students, teachers, 
-                and mental health professionals work together to create a supportive learning environment.
+                From interactive student simulations to comprehensive teacher analytics, 
+                see how our platform creates a supportive and engaging learning environment.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Link to="/teacher-login">
