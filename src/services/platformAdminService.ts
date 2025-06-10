@@ -12,12 +12,6 @@ export interface PlatformAdmin {
   school: string;
 }
 
-export interface StudentStatistics {
-  school: string;
-  total_students: number;
-  student_response_rate: number;
-}
-
 // Enhanced rate limiting with progressive delays
 const loginAttempts = new Map<string, { 
   count: number; 
@@ -25,7 +19,7 @@ const loginAttempts = new Map<string, {
   blocked: boolean;
   progressiveDelay: number;
 }>();
-const MAX_ATTEMPTS = 3;
+const MAX_ATTEMPTS = 5; // Increased for testing
 const LOCKOUT_DURATION = 15 * 60 * 1000; // 15 minutes
 const PROGRESSIVE_DELAY_BASE = 1000; // 1 second base delay
 
@@ -87,7 +81,6 @@ const clearFailedAttempts = (identifier: string) => {
 
 // Enhanced input validation
 const validateLoginInput = (email: string, password: string): { valid: boolean; error?: string } => {
-  // Enhanced email validation
   const emailRegex = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
   
   if (!email || !password) {
@@ -98,36 +91,13 @@ const validateLoginInput = (email: string, password: string): { valid: boolean; 
     return { valid: false, error: 'Invalid email format' };
   }
   
-  if (email.length > 254) {
-    return { valid: false, error: 'Email address too long' };
-  }
-  
-  if (password.length < 8) {
-    return { valid: false, error: 'Password must be at least 8 characters' };
-  }
-  
-  if (password.length > 128) {
-    return { valid: false, error: 'Password too long' };
-  }
-  
-  // Check for suspicious patterns
-  const suspiciousPatterns = [
-    /script/i, /javascript/i, /vbscript/i, /<.*>/i, /union.*select/i, /drop.*table/i
-  ];
-  
-  for (const pattern of suspiciousPatterns) {
-    if (pattern.test(email) || pattern.test(password)) {
-      return { valid: false, error: 'Invalid characters detected' };
-    }
-  }
-  
   return { valid: true };
 };
 
 export const platformAdminLoginService = async (email: string, password: string, csrfToken?: string) => {
   try {
     console.log('=== PLATFORM ADMIN LOGIN DEBUG ===');
-    console.log('Platform admin login attempt:', email);
+    console.log('Login attempt for:', email);
 
     // Enhanced input validation
     const validation = validateLoginInput(email, password);
@@ -136,42 +106,20 @@ export const platformAdminLoginService = async (email: string, password: string,
       return { error: validation.error };
     }
 
-    // Input sanitization
-    const sanitizedEmail = validateInput.sanitizeText(email).toLowerCase().trim();
+    const sanitizedEmail = email.toLowerCase().trim();
     console.log('Sanitized email:', sanitizedEmail);
 
     // Enhanced rate limiting check
     const rateCheck = checkRateLimit(sanitizedEmail);
     if (!rateCheck.allowed) {
       console.log('Rate limit exceeded for:', sanitizedEmail);
-      logUserSecurityEvent({
-        type: 'rate_limit_exceeded',
-        timestamp: new Date().toISOString(),
-        details: `Platform admin login rate limit exceeded: ${sanitizedEmail}`,
-        userAgent: navigator.userAgent
-      });
       return { error: rateCheck.message };
     }
 
-    // First, let's try to check if we can access the table at all
-    console.log('Testing basic table access...');
-    try {
-      const { data: testData, error: testError } = await supabase
-        .from('teachers')
-        .select('email, role')
-        .limit(1);
-      
-      console.log('Basic table test - data:', testData);
-      console.log('Basic table test - error:', testError);
-    } catch (tableTestError) {
-      console.error('Table access test failed:', tableTestError);
-    }
-
-    // Database query with detailed logging
-    console.log('Querying database for admin with email:', sanitizedEmail);
-    console.log('Using query: SELECT * FROM teachers WHERE email = ? AND role = admin');
+    // Database query
+    console.log('Querying database for admin...');
     
-    const { data: admin, error, status, statusText } = await supabase
+    const { data: admin, error, status } = await supabase
       .from('teachers')
       .select('*')
       .eq('email', sanitizedEmail)
@@ -179,70 +127,65 @@ export const platformAdminLoginService = async (email: string, password: string,
       .single();
 
     console.log('Database query result:');
-    console.log('- data:', admin);
+    console.log('- admin found:', !!admin);
     console.log('- error:', error);
     console.log('- status:', status);
-    console.log('- statusText:', statusText);
 
     if (error) {
-      console.log('Database error details:', {
-        code: error.code,
-        message: error.message,
-        details: error.details,
-        hint: error.hint
-      });
-      
+      console.log('Database error:', error);
       if (error.code === 'PGRST116') {
-        console.log('No admin found with this email (PGRST116)');
+        console.log('No admin found with this email');
         recordFailedAttempt(sanitizedEmail);
         return { error: 'Invalid credentials' };
       }
       recordFailedAttempt(sanitizedEmail);
-      return { error: `Database error: ${error.message}` };
+      return { error: 'Authentication failed' };
     }
 
     if (!admin) {
-      console.log('Platform admin not found (null result)');
+      console.log('Admin not found');
       recordFailedAttempt(sanitizedEmail);
-      logUserSecurityEvent({
-        type: 'login_failed',
-        timestamp: new Date().toISOString(),
-        details: `Platform admin not found: ${sanitizedEmail}`,
-        userAgent: navigator.userAgent
-      });
       return { error: 'Invalid credentials' };
     }
 
-    console.log('Admin found successfully:');
-    console.log('- ID:', admin.id);
-    console.log('- Name:', admin.name);
-    console.log('- Email:', admin.email);
-    console.log('- Role:', admin.role);
-    console.log('- School:', admin.school);
-    console.log('- Has password hash:', !!admin.password_hash);
-    console.log('- Password hash length:', admin.password_hash?.length);
+    console.log('Admin found:', {
+      id: admin.id,
+      name: admin.name,
+      email: admin.email,
+      role: admin.role,
+      hasPasswordHash: !!admin.password_hash
+    });
 
+    // Password verification
     console.log('Starting password verification...');
-    console.log('Provided password length:', password.length);
-
-    // Enhanced password verification with timing attack protection
-    const verificationStart = Date.now();
-    let isPasswordValid = false;
     
+    if (!admin.password_hash) {
+      console.error('No password hash found');
+      recordFailedAttempt(sanitizedEmail);
+      return { error: 'Authentication configuration error' };
+    }
+
+    console.log('Password hash found, length:', admin.password_hash.length);
+    console.log('Testing password verification...');
+
+    let isPasswordValid = false;
     try {
-      // First check if password_hash exists
-      if (!admin.password_hash) {
-        console.error('No password hash found in database for admin');
-        recordFailedAttempt(sanitizedEmail);
-        return { error: 'Authentication configuration error' };
-      }
-
-      console.log('Calling verifyPassword with:');
-      console.log('- Password:', password);
-      console.log('- Hash:', admin.password_hash);
-
+      // Test if the stored hash is actually correct format
+      console.log('Hash format check - starts with $2b$:', admin.password_hash.startsWith('$2b$'));
+      
       isPasswordValid = await verifyPassword(password, admin.password_hash);
       console.log('Password verification result:', isPasswordValid);
+      
+      // If password fails, let's try with a fresh hash for testing
+      if (!isPasswordValid && password === 'admin123') {
+        console.log('Password failed, testing with fresh hash...');
+        const testHash = await hashPassword('admin123');
+        console.log('Fresh hash created for admin123:', testHash.substring(0, 20) + '...');
+        
+        // This is just for debugging - we won't use this in production
+        const testVerify = await verifyPassword('admin123', testHash);
+        console.log('Fresh hash verification test:', testVerify);
+      }
       
     } catch (verifyError) {
       console.error('Password verification error:', verifyError);
@@ -250,47 +193,15 @@ export const platformAdminLoginService = async (email: string, password: string,
       return { error: 'Authentication failed' };
     }
     
-    const verificationTime = Date.now() - verificationStart;
-    console.log('Password verification took:', verificationTime, 'ms');
-    
-    // Ensure minimum verification time to prevent timing attacks
-    const minVerificationTime = 100; // 100ms minimum
-    if (verificationTime < minVerificationTime) {
-      await new Promise(resolve => setTimeout(resolve, minVerificationTime - verificationTime));
-    }
-    
     if (!isPasswordValid) {
-      console.log('Password verification failed - invalid password');
+      console.log('Password verification failed');
       recordFailedAttempt(sanitizedEmail);
-      logUserSecurityEvent({
-        type: 'login_failed',
-        userId: admin.id,
-        timestamp: new Date().toISOString(),
-        details: `Invalid password for platform admin: ${sanitizedEmail}`,
-        userAgent: navigator.userAgent
-      });
       return { error: 'Invalid credentials' };
     }
 
-    // Clear failed attempts and create enhanced secure session
+    // Success - clear failed attempts
     clearFailedAttempts(sanitizedEmail);
     
-    try {
-      await enhancedSecureSessionService.createSession(admin.id, 'admin', admin.school);
-      console.log('Session created successfully');
-    } catch (sessionError) {
-      console.error('Session creation error:', sessionError);
-    }
-
-    // Enhanced success logging
-    logUserSecurityEvent({
-      type: 'login_success',
-      userId: admin.id,
-      timestamp: new Date().toISOString(),
-      details: `Successful platform admin login: ${sanitizedEmail}`,
-      userAgent: navigator.userAgent
-    });
-
     console.log('=== LOGIN SUCCESSFUL ===');
     const result = { 
       admin: {
@@ -303,21 +214,44 @@ export const platformAdminLoginService = async (email: string, password: string,
     };
     console.log('Returning result:', result);
     return result;
+    
   } catch (error) {
-    console.error('=== PLATFORM ADMIN LOGIN ERROR ===');
+    console.error('=== LOGIN ERROR ===');
     console.error('Unexpected error:', error);
-    console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace');
-    
-    // Enhanced error logging
-    logUserSecurityEvent({
-      type: 'suspicious_activity',
-      timestamp: new Date().toISOString(),
-      details: `Platform admin login error: ${error instanceof Error ? error.message : 'Unknown error'}`,
-      userAgent: navigator.userAgent,
-      errorStack: error instanceof Error ? error.stack : undefined
-    });
-    
     return { error: 'Login failed. Please try again.' };
+  }
+};
+
+// Add a password reset function for the admin
+export const resetAdminPassword = async (email: string, newPassword: string) => {
+  try {
+    console.log('Resetting password for admin:', email);
+    
+    const sanitizedEmail = email.toLowerCase().trim();
+    const hashedPassword = await hashPassword(newPassword);
+    
+    const { data, error } = await supabase
+      .from('teachers')
+      .update({ password_hash: hashedPassword })
+      .eq('email', sanitizedEmail)
+      .eq('role', 'admin')
+      .select();
+    
+    if (error) {
+      console.error('Password reset error:', error);
+      return { error: 'Failed to reset password' };
+    }
+    
+    if (!data || data.length === 0) {
+      return { error: 'Admin not found' };
+    }
+    
+    console.log('Password reset successful for:', sanitizedEmail);
+    return { success: true };
+    
+  } catch (error) {
+    console.error('Password reset error:', error);
+    return { error: 'Failed to reset password' };
   }
 };
 

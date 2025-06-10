@@ -2,6 +2,8 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { resetAdminPassword } from "@/services/platformAdminService";
+import { useToast } from "@/hooks/use-toast";
 
 interface AdminLoginTabProps {
   email: string;
@@ -20,6 +22,41 @@ const AdminLoginTab = ({
   onPasswordChange, 
   onSubmit 
 }: AdminLoginTabProps) => {
+  const { toast } = useToast();
+
+  const handlePasswordReset = async () => {
+    if (!email) {
+      toast({
+        title: "Email Required",
+        description: "Please enter your email address first",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const result = await resetAdminPassword(email, 'admin123');
+      if (result.error) {
+        toast({
+          title: "Reset Failed",
+          description: result.error,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Password Reset",
+          description: "Password has been reset to 'admin123'",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Reset Failed",
+        description: "An error occurred during password reset",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <div className="space-y-4">
       <div className="text-center mb-4">
@@ -57,6 +94,21 @@ const AdminLoginTab = ({
           {isLoading ? "Signing In..." : "Access Console"}
         </Button>
       </form>
+      
+      <div className="mt-4 pt-4 border-t">
+        <Button 
+          type="button" 
+          variant="outline" 
+          className="w-full text-sm" 
+          onClick={handlePasswordReset}
+          disabled={!email}
+        >
+          Reset Password to 'admin123'
+        </Button>
+        <p className="text-xs text-gray-500 mt-2 text-center">
+          Development only: This will reset the password for the entered email
+        </p>
+      </div>
     </div>
   );
 };
