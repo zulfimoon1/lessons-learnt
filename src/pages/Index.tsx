@@ -9,7 +9,18 @@ import ComplianceFooter from "@/components/ComplianceFooter";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 const Index = () => {
-  const { t } = useLanguage();
+  const { t, isLoading } = useLanguage();
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <GraduationCapIcon className="w-12 h-12 text-primary mx-auto mb-4" />
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">

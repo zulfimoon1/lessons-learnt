@@ -8,23 +8,39 @@ interface LanguageContextType {
   language: Language;
   setLanguage: (lang: Language) => void;
   t: (key: string, params?: Record<string, string>) => string;
+  isLoading: boolean;
 }
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
 export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [language, setLanguage] = useState<Language>('en');
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const savedLanguage = localStorage.getItem('language') as Language;
-    if (savedLanguage && (savedLanguage === 'en' || savedLanguage === 'lt')) {
-      setLanguage(savedLanguage);
-    }
+    const initializeLanguage = () => {
+      try {
+        const savedLanguage = localStorage.getItem('language') as Language;
+        if (savedLanguage && (savedLanguage === 'en' || savedLanguage === 'lt')) {
+          setLanguage(savedLanguage);
+        }
+      } catch (error) {
+        console.warn('Failed to load language from localStorage:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    initializeLanguage();
   }, []);
 
   const changeLanguage = (lang: Language) => {
     setLanguage(lang);
-    localStorage.setItem('language', lang);
+    try {
+      localStorage.setItem('language', lang);
+    } catch (error) {
+      console.warn('Failed to save language to localStorage:', error);
+    }
   };
 
   const t = (key: string, params?: Record<string, string>): string => {
@@ -39,8 +55,15 @@ export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }
     return translation;
   };
 
+  const contextValue: LanguageContextType = {
+    language,
+    setLanguage: changeLanguage,
+    t,
+    isLoading
+  };
+
   return (
-    <LanguageContext.Provider value={{ language, setLanguage: changeLanguage, t }}>
+    <LanguageContext.Provider value={contextValue}>
       {children}
     </LanguageContext.Provider>
   );
