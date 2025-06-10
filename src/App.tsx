@@ -11,6 +11,7 @@ import TeacherDashboard from '@/pages/TeacherDashboard';
 import StudentDashboard from '@/pages/StudentDashboard';
 import PricingPage from '@/pages/PricingPage';
 import EnhancedPricingPage from './pages/EnhancedPricingPage';
+import PricingShowcase from './pages/PricingShowcase';
 import Index from '@/pages/Index';
 
 const queryClient = new QueryClient();
@@ -31,6 +32,7 @@ function App() {
                   <Route path="/student-dashboard" element={<StudentDashboard />} />
                   <Route path="/pricing" element={<PricingPage />} />
                   <Route path="/enhanced-pricing" element={<EnhancedPricingPage />} />
+                  <Route path="/pricing-showcase" element={<PricingShowcase />} />
                 </Routes>
               </div>
             </PlatformAdminProvider>
