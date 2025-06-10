@@ -29,11 +29,20 @@ import { Link } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
 import StudentSimulation from "@/components/StudentSimulation";
 import TeacherSimulation from "@/components/TeacherSimulation";
+import Breadcrumbs from "@/components/navigation/Breadcrumbs";
 
 const Demo = () => {
   const { t } = useLanguage();
   const [activeDemo, setActiveDemo] = useState("student-simulation");
   const [isPlaying, setIsPlaying] = useState(true);
+
+  // Breadcrumb items
+  const breadcrumbItems = [
+    {
+      label: t('demo.page.interactivePlatformDemo'),
+      current: true
+    }
+  ];
 
   // Enhanced Mental Health Support Demo
   const MentalHealthDemo = () => (
@@ -179,6 +188,9 @@ const Demo = () => {
       </header>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Breadcrumbs */}
+        <Breadcrumbs items={breadcrumbItems} />
+
         {/* Introduction */}
         <div className="text-center mb-12">
           <h2 className="text-4xl font-bold text-gray-900 mb-4">

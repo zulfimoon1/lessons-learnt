@@ -530,6 +530,57 @@ export const enTranslations = {
   'demo.userType.teacher': 'Teacher View',
   'demo.userType.psychologist': 'Psychologist View',
   
+  // Demo page specific translations
+  'demo.page.title': 'Interactive Platform Experience',
+  'demo.page.subtitle': 'Experience how both students and teachers interact with our platform through interactive simulations, as well as explore comprehensive demos of all platform features.',
+  'demo.page.backToHome': 'Back to Home',
+  'demo.page.interactivePlatformDemo': 'Interactive Platform Demo',
+  'demo.page.pauseDemo': 'Pause Demo',
+  'demo.page.playDemo': 'Play Demo',
+  
+  // Demo types
+  'demo.simulation.student.title': 'Interactive Student Journey',
+  'demo.simulation.student.description': 'Watch a complete student experience simulation including dashboard and feedback',
+  'demo.simulation.teacher.title': 'Interactive Teacher Journey',
+  'demo.simulation.teacher.description': 'Experience how teachers use the platform to monitor students and improve lessons',
+  'demo.simulation.mentalHealth.title': 'Mental Health Support Hub',
+  'demo.simulation.mentalHealth.description': 'Complete mental health support system with counselors and crisis support',
+  
+  // Demo features
+  'demo.features.student.1': '• Complete student dashboard with all features',
+  'demo.features.student.2': '• Step-by-step feedback form completion',
+  'demo.features.student.3': '• Interactive understanding and interest rating system',
+  'demo.features.student.4': '• Emotional state check-ins',
+  'demo.features.student.5': '• Written feedback submission process',
+  'demo.features.student.6': '• Mental health support widget access',
+  
+  'demo.features.teacher.1': '• Comprehensive teacher dashboard overview',
+  'demo.features.teacher.2': '• Real-time class activity monitoring',
+  'demo.features.teacher.3': '• Mental health alert system review',
+  'demo.features.teacher.4': '• Student mood and emotional state tracking',
+  'demo.features.teacher.5': '• Individual feedback analysis',
+  'demo.features.teacher.6': '• Action planning based on student needs',
+  'demo.features.teacher.7': '• Weekly performance trend analysis',
+  'demo.features.teacher.8': '• Lesson improvement planning',
+  
+  'demo.features.mentalHealth.1': '• Multiple counselor availability',
+  'demo.features.mentalHealth.2': '• Anonymous chat system',
+  'demo.features.mentalHealth.3': '• Crisis support protocols',
+  'demo.features.mentalHealth.4': '• Self-help resource library',
+  'demo.features.mentalHealth.5': '• Mood tracking tools',
+  'demo.features.mentalHealth.6': '• Appointment scheduling',
+  
+  // Interactive simulation descriptions
+  'demo.interactive.student': 'Interactive Simulation: Watch the complete student journey from dashboard login to feedback submission, including access to mental health support.',
+  'demo.interactive.teacher': 'Teacher Workflow: Experience how teachers monitor student wellbeing, analyze performance data, and take action to improve learning outcomes.',
+  'demo.interactive.integration': 'Full Integration: All components work seamlessly together, securely sharing data while maintaining complete privacy for mental health services.',
+  
+  // Call to action
+  'demo.cta.title': 'Experience the Full Platform',
+  'demo.cta.description': 'From interactive student simulations to comprehensive teacher analytics - see how our platform creates a supportive and engaging learning environment.',
+  'demo.cta.startTrial': 'Start Free Trial',
+  'demo.cta.studentAccess': 'Student Access',
+
   // Navigation
   'navigation': {
     home: "Home"
