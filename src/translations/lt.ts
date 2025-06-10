@@ -103,7 +103,7 @@ export const ltTranslations = {
   'admin.teachers.description': 'Valdykite mokyklos mokytojus',
   'admin.teachers.empty': 'Mokytojų nėra',
   
-  // Student specific translations
+  // Student specific translations - FIXED MISSING TRANSLATIONS
   'student.portal': 'Studentų portalas',
   'student.loginDescription': 'Prisijunkite prie savo mokymosi skydelio',
   'student.fullName': 'Vardas ir pavardė',
@@ -172,4 +172,7 @@ export const ltTranslations = {
   'dashboard.performance': 'Veiklos rodikliai',
   'dashboard.mentalHealth': 'Psichinė sveikata',
   'dashboard.discountCodes': 'Nuolaidos kodai',
+  
+  // Teacher translations - ADDED MISSING ONES
+  'teacher.missingInfo': 'Trūksta informacijos',
 };
