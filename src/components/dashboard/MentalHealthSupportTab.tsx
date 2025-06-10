@@ -23,7 +23,7 @@ interface MentalHealthSupportTabProps {
   studentGrade?: string;
 }
 
-const MentalHealthSupportTab: React.FC<MentalHealthSupportTabProps> = ({
+const MentalHealthSupportTab: React.FC<MentalHealthSupportTabProps> = React.memo(({
   psychologists,
   studentId,
   studentName,
@@ -80,6 +80,8 @@ const MentalHealthSupportTab: React.FC<MentalHealthSupportTabProps> = ({
       </CardContent>
     </Card>
   );
-};
+});
+
+MentalHealthSupportTab.displayName = "MentalHealthSupportTab";
 
 export default MentalHealthSupportTab;

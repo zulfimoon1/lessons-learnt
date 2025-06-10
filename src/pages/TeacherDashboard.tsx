@@ -1,8 +1,6 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense, lazy } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { useAuthStorage } from "@/hooks/useAuthStorage";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -10,18 +8,22 @@ import {
   SchoolIcon, 
   CreditCardIcon
 } from "lucide-react";
-import ClassScheduleForm from "@/components/ClassScheduleForm";
 import { useNavigate } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
-import BulkScheduleUpload from "@/components/BulkScheduleUpload";
-import MentalHealthArticles from "@/components/MentalHealthArticles";
 import ComplianceFooter from "@/components/ComplianceFooter";
 import CookieConsent from "@/components/CookieConsent";
-import WeeklySummaryReview from "@/components/WeeklySummaryReview";
 import DashboardHeader from "@/components/dashboard/DashboardHeader";
 import StatsCard from "@/components/dashboard/StatsCard";
 import SubscriptionBanner from "@/components/dashboard/SubscriptionBanner";
 import ActiveSubscriptionCard from "@/components/dashboard/ActiveSubscriptionCard";
+import { DashboardSkeleton, TabContentSkeleton } from "@/components/ui/loading-skeleton";
+
+// Lazy load tab components
+const ScheduleTab = lazy(() => import("@/components/dashboard/teacher/ScheduleTab"));
+const BulkUploadTab = lazy(() => import("@/components/dashboard/teacher/BulkUploadTab"));
+const WeeklySummariesTab = lazy(() => import("@/components/dashboard/teacher/WeeklySummariesTab"));
+const MentalHealthTab = lazy(() => import("@/components/dashboard/teacher/MentalHealthTab"));
+const ArticlesTab = lazy(() => import("@/components/dashboard/teacher/ArticlesTab"));
 
 interface Subscription {
   id: string;
@@ -134,11 +136,17 @@ const TeacherDashboard = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p>{t('common.loading')}</p>
-        </div>
+      <div className="min-h-screen bg-background">
+        <CookieConsent />
+        <DashboardHeader 
+          title=""
+          userName=""
+          onLogout={handleLogout}
+        />
+        <main className="max-w-7xl mx-auto p-6">
+          <DashboardSkeleton />
+        </main>
+        <ComplianceFooter />
       </div>
     );
   }
@@ -212,92 +220,54 @@ const TeacherDashboard = () => {
           {teacher?.role === 'doctor' ? (
             <>
               <TabsContent value="weekly-summaries" className="space-y-6">
-                {subscription ? (
-                  <WeeklySummaryReview school={teacher?.school} />
-                ) : (
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>{t('dashboard.weeklySummaries')}</CardTitle>
-                      <CardDescription>
-                        {t('teacher.subscriptionRequiredForSummaries')}
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent className="text-center py-8">
-                      <p className="text-muted-foreground mb-4">{t('teacher.subscriptionRequiredForSummaries')}</p>
-                      <Button 
-                        onClick={handleCreateCheckout}
-                        disabled={isCreatingCheckout}
-                        className="bg-primary hover:bg-primary/90 text-primary-foreground"
-                      >
-                        {isCreatingCheckout ? t('pricing.processing') : t('teacher.subscribeToContinue')}
-                      </Button>
-                    </CardContent>
-                  </Card>
-                )}
+                <Suspense fallback={<TabContentSkeleton />}>
+                  <WeeklySummariesTab
+                    school={teacher?.school}
+                    subscription={subscription}
+                    onCreateCheckout={handleCreateCheckout}
+                    isCreatingCheckout={isCreatingCheckout}
+                  />
+                </Suspense>
               </TabsContent>
               
               <TabsContent value="mental-health" className="space-y-6">
-                {subscription ? (
-                  <MentalHealthArticles teacher={teacher} />
-                ) : (
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>{t('dashboard.mentalHealthSupport')}</CardTitle>
-                      <CardDescription>
-                        {t('articles.subscriptionRequired')}
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent className="text-center py-8">
-                      <p className="text-muted-foreground mb-4">{t('articles.subscriptionRequired')}</p>
-                      <Button 
-                        onClick={handleCreateCheckout}
-                        disabled={isCreatingCheckout}
-                        className="bg-primary hover:bg-primary/90 text-primary-foreground"
-                      >
-                        {isCreatingCheckout ? t('pricing.processing') : t('teacher.subscribeToContinue')}
-                      </Button>
-                    </CardContent>
-                  </Card>
-                )}
+                <Suspense fallback={<TabContentSkeleton />}>
+                  <MentalHealthTab
+                    teacher={teacher}
+                    subscription={subscription}
+                    onCreateCheckout={handleCreateCheckout}
+                    isCreatingCheckout={isCreatingCheckout}
+                  />
+                </Suspense>
               </TabsContent>
             </>
           ) : (
             <>
               <TabsContent value="schedule" className="space-y-6">
-                <ClassScheduleForm teacher={teacher} />
+                <Suspense fallback={<TabContentSkeleton />}>
+                  <ScheduleTab teacher={teacher} />
+                </Suspense>
               </TabsContent>
 
               <TabsContent value="bulk-upload" className="space-y-6">
-                <BulkScheduleUpload 
-                  teacher={teacher} 
-                  onUploadComplete={handleScheduleUploadComplete}
-                />
+                <Suspense fallback={<TabContentSkeleton />}>
+                  <BulkUploadTab 
+                    teacher={teacher} 
+                    onUploadComplete={handleScheduleUploadComplete}
+                  />
+                </Suspense>
               </TabsContent>
 
               {teacher?.role === 'admin' && (
                 <TabsContent value="articles" className="space-y-6">
-                  {subscription ? (
-                    <MentalHealthArticles teacher={teacher} />
-                  ) : (
-                    <Card>
-                      <CardHeader>
-                        <CardTitle>{t('articles.mentalHealth')}</CardTitle>
-                        <CardDescription>
-                          {t('articles.subscriptionRequired')}
-                        </CardDescription>
-                      </CardHeader>
-                      <CardContent className="text-center py-8">
-                        <p className="text-muted-foreground mb-4">{t('articles.subscriptionRequired')}</p>
-                        <Button 
-                          onClick={handleCreateCheckout}
-                          disabled={isCreatingCheckout}
-                          className="bg-primary hover:bg-primary/90 text-primary-foreground"
-                        >
-                          {isCreatingCheckout ? t('pricing.processing') : t('teacher.subscribeToContinue')}
-                        </Button>
-                      </CardContent>
-                    </Card>
-                  )}
+                  <Suspense fallback={<TabContentSkeleton />}>
+                    <ArticlesTab
+                      teacher={teacher}
+                      subscription={subscription}
+                      onCreateCheckout={handleCreateCheckout}
+                      isCreatingCheckout={isCreatingCheckout}
+                    />
+                  </Suspense>
                 </TabsContent>
               )}
             </>

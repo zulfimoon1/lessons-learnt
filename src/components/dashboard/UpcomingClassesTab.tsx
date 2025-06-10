@@ -22,7 +22,7 @@ interface UpcomingClassesTabProps {
   studentSchool?: string;
 }
 
-const UpcomingClassesTab: React.FC<UpcomingClassesTabProps> = ({ 
+const UpcomingClassesTab: React.FC<UpcomingClassesTabProps> = React.memo(({ 
   classes, 
   studentGrade, 
   studentSchool 
@@ -62,6 +62,8 @@ const UpcomingClassesTab: React.FC<UpcomingClassesTabProps> = ({
       </CardContent>
     </Card>
   );
-};
+});
+
+UpcomingClassesTab.displayName = "UpcomingClassesTab";
 
 export default UpcomingClassesTab;

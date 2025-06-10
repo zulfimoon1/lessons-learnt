@@ -1,21 +1,14 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense, lazy } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { useAuthStorage } from "@/hooks/useAuthStorage";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { 
   SchoolIcon, 
   CalendarIcon,
-  BookOpenIcon,
-  HeartHandshakeIcon
+  BookOpenIcon
 } from "lucide-react";
-import LessonFeedbackForm from "@/components/LessonFeedbackForm";
-import WeeklySummary from "@/components/WeeklySummary";
-import LiveChatWidget from "@/components/LiveChatWidget";
-import PsychologistInfo from "@/components/PsychologistInfo";
 import { useNavigate } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
 import ComplianceFooter from "@/components/ComplianceFooter";
@@ -24,6 +17,11 @@ import DashboardHeader from "@/components/dashboard/DashboardHeader";
 import StatsCard from "@/components/dashboard/StatsCard";
 import UpcomingClassesTab from "@/components/dashboard/UpcomingClassesTab";
 import MentalHealthSupportTab from "@/components/dashboard/MentalHealthSupportTab";
+import { DashboardSkeleton, TabContentSkeleton } from "@/components/ui/loading-skeleton";
+
+// Lazy load tab components
+const FeedbackTab = lazy(() => import("@/components/dashboard/FeedbackTab"));
+const WeeklySummaryTab = lazy(() => import("@/components/dashboard/WeeklySummaryTab"));
 
 interface ClassSchedule {
   id: string;
@@ -142,11 +140,17 @@ const StudentDashboard = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p>{t('common.loading')}</p>
-        </div>
+      <div className="min-h-screen bg-background">
+        <CookieConsent />
+        <DashboardHeader 
+          title={t('dashboard.title')}
+          userName=""
+          onLogout={handleLogout}
+        />
+        <main className="max-w-7xl mx-auto p-6">
+          <DashboardSkeleton />
+        </main>
+        <ComplianceFooter />
       </div>
     );
   }
@@ -190,7 +194,9 @@ const StudentDashboard = () => {
           </TabsList>
 
           <TabsContent value="feedback" className="space-y-6">
-            <LessonFeedbackForm />
+            <Suspense fallback={<TabContentSkeleton />}>
+              <FeedbackTab />
+            </Suspense>
           </TabsContent>
 
           <TabsContent value="classes" className="space-y-6">
@@ -202,7 +208,9 @@ const StudentDashboard = () => {
           </TabsContent>
 
           <TabsContent value="weekly" className="space-y-6">
-            <WeeklySummary student={student} />
+            <Suspense fallback={<TabContentSkeleton />}>
+              <WeeklySummaryTab student={student} />
+            </Suspense>
           </TabsContent>
 
           <TabsContent value="support" className="space-y-6">
