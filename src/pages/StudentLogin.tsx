@@ -179,16 +179,16 @@ const StudentLogin = () => {
           <div className="w-16 h-16 bg-primary rounded-full mx-auto flex items-center justify-center mb-4">
             <BookOpenIcon className="w-8 h-8 text-primary-foreground" />
           </div>
-          <CardTitle className="text-2xl text-foreground">{t('student.portal') || "Student Portal"}</CardTitle>
+          <CardTitle className="text-2xl text-foreground">{t('login.student.title')}</CardTitle>
           <CardDescription>
-            {t('student.loginDescription') || "Access your learning dashboard"}
+            {t('login.student.subtitle')}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="login" className="space-y-4">
             <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="login">{t('auth.login') || "Login"}</TabsTrigger>
-              <TabsTrigger value="signup">{t('auth.signUp') || "Sign Up"}</TabsTrigger>
+              <TabsTrigger value="login">{t('auth.login')}</TabsTrigger>
+              <TabsTrigger value="signup">{t('auth.signUp')}</TabsTrigger>
             </TabsList>
 
             <TabsContent value="login">
@@ -196,7 +196,7 @@ const StudentLogin = () => {
                 <div className="space-y-2">
                   <Label htmlFor="loginFullName" className="flex items-center gap-2">
                     <UserIcon className="w-4 h-4" />
-                    {t('student.fullName') || "Full Name"}
+                    {t('auth.fullName')}
                   </Label>
                   <Input
                     id="loginFullName"
@@ -209,7 +209,7 @@ const StudentLogin = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="loginPassword">{t('auth.password') || "Password"}</Label>
+                  <Label htmlFor="loginPassword">{t('auth.password')}</Label>
                   <Input
                     id="loginPassword"
                     type="password"
@@ -225,10 +225,10 @@ const StudentLogin = () => {
                   className="w-full"
                   disabled={isLoading}
                 >
-                  {isLoading ? (t('student.loggingIn') || "Logging in...") : (
+                  {isLoading ? t('auth.loggingIn') : (
                     <>
                       <LogInIcon className="w-4 h-4 mr-2" />
-                      {t('auth.login') || "Login"}
+                      {t('auth.login')}
                     </>
                   )}
                 </Button>
@@ -240,7 +240,7 @@ const StudentLogin = () => {
                 <div className="space-y-2">
                   <Label htmlFor="signupFullName" className="flex items-center gap-2">
                     <UserIcon className="w-4 h-4" />
-                    {t('student.fullName') || "Full Name"}
+                    {t('auth.fullName')}
                   </Label>
                   <Input
                     id="signupFullName"
@@ -255,7 +255,7 @@ const StudentLogin = () => {
                 <div className="space-y-2">
                   <Label htmlFor="signupSchool" className="flex items-center gap-2">
                     <School className="w-4 h-4" />
-                    {t('auth.school') || "School"}
+                    {t('auth.school')}
                   </Label>
                   <Input
                     id="signupSchool"
@@ -283,7 +283,7 @@ const StudentLogin = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="signupPassword">{t('auth.password') || "Password"}</Label>
+                  <Label htmlFor="signupPassword">{t('auth.password')}</Label>
                   <Input
                     id="signupPassword"
                     type="password"
@@ -295,7 +295,7 @@ const StudentLogin = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="confirmPassword">{t('auth.confirmPassword') || "Confirm Password"}</Label>
+                  <Label htmlFor="confirmPassword">{t('auth.confirmPassword')}</Label>
                   <Input
                     id="confirmPassword"
                     type="password"
@@ -311,7 +311,7 @@ const StudentLogin = () => {
                   className="w-full"
                   disabled={isLoading}
                 >
-                  {isLoading ? (t('student.creatingAccount') || "Creating account...") : (t('student.createAccount') || "Create Account")}
+                  {isLoading ? t('auth.creatingAccount') : t('auth.createAccount')}
                 </Button>
               </form>
             </TabsContent>

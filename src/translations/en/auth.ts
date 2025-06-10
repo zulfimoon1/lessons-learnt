@@ -32,4 +32,26 @@ export const enAuthTranslations = {
   'auth.invalidEmail': 'Invalid email format',
   'auth.passwordTooShort': 'Password must be at least 8 characters',
   'auth.passwordsDoNotMatch': 'Passwords do not match',
+  'auth.email': 'Email',
+  'auth.password': 'Password',
+  'auth.confirmPassword': 'Confirm Password',
+  'auth.fullName': 'Full Name',
+  'auth.school': 'School',
+  'auth.loggingIn': 'Logging in...',
+  'auth.creatingAccount': 'Creating account...',
+  'auth.loginSuccess': 'Login successful',
+  'auth.loginFailed': 'Login failed',
+  'auth.signUp': 'Sign Up',
+  
+  // Teacher login specific
+  'login.teacher.title': 'Teacher Portal',
+  'login.teacher.subtitle': 'Log in to your teaching dashboard',
+  'login.teacher.role': 'Role',
+  'login.teacher.roleTeacher': 'Teacher',
+  'login.teacher.roleAdmin': 'School Administrator',
+  'login.teacher.adminHint': 'School administrators can manage teachers and view all feedback',
+  
+  // Student login specific
+  'login.student.title': 'Student Portal',
+  'login.student.subtitle': 'Log in to your learning dashboard',
 };

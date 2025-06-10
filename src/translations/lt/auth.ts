@@ -37,12 +37,18 @@ export const ltAuthTranslations = {
   'auth.passwordMismatch': 'Slaptažodžiai nesutampa',
   'auth.passwordsDoNotMatch': 'Slaptažodžiai nesutampa',
   'auth.creatingAccount': 'Kuriama paskyra...',
+  'auth.accountCreated': 'Paskyra sukurta sėkmingai',
+  'auth.loginSuccessful': 'Prisijungimas sėkmingas',
   
-  // Add missing login form translations
+  // Teacher login specific translations
   'login.teacher.title': 'Mokytojų portalas',
   'login.teacher.subtitle': 'Prisijunkite prie mokytojų skydelio',
   'login.teacher.role': 'Vaidmuo',
   'login.teacher.roleTeacher': 'Mokytojas',
   'login.teacher.roleAdmin': 'Mokyklos administratorius',
-  'login.teacher.adminHint': 'Mokyklos administratoriai gali valdyti mokytojus ir peržiūrėti visus atsiliepimus'
+  'login.teacher.adminHint': 'Mokyklos administratoriai gali valdyti mokytojus ir peržiūrėti visus atsiliepimus',
+  
+  // Student login specific translations
+  'login.student.title': 'Studentų portalas',
+  'login.student.subtitle': 'Prisijunkite prie mokymosi skydelio',
 };
