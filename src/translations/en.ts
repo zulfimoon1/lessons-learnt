@@ -479,7 +479,7 @@ export const enTranslations = {
   
   // Demo Section translations
   'demo.title': 'Explore Platform Features',
-  'demo.subtitle': 'Experience our comprehensive education platform through this interactive demonstration showcasing features for students, teachers, and mental health professionals.',
+  'demo.subtitle': 'Discover the future of education in action - explore our platform designed to transform learning for students, empower educators, and support mental wellness.',
   'demo.studentFeedback.title': 'Student Feedback System',
   'demo.studentFeedback.description': 'Students provide real-time feedback on lessons and emotional state',
   'demo.teacherAnalytics.title': 'Teacher Analytics Dashboard', 
