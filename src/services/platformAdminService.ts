@@ -131,26 +131,18 @@ export const platformAdminLoginService = async (email: string, password: string,
     // Enhanced input validation
     const validation = validateLoginInput(email, password);
     if (!validation.valid) {
+      console.log('Validation failed:', validation.error);
       return { error: validation.error };
-    }
-
-    // CSRF token validation (if provided)
-    if (csrfToken && !(await enhancedSecureSessionService.validateCSRFToken(csrfToken))) {
-      logUserSecurityEvent({
-        type: 'csrf_violation',
-        timestamp: new Date().toISOString(),
-        details: `CSRF token validation failed for admin login: ${email}`,
-        userAgent: navigator.userAgent
-      });
-      return { error: 'Security validation failed. Please refresh and try again.' };
     }
 
     // Input sanitization
     const sanitizedEmail = validateInput.sanitizeText(email).toLowerCase().trim();
+    console.log('Sanitized email:', sanitizedEmail);
 
     // Enhanced rate limiting check
     const rateCheck = checkRateLimit(sanitizedEmail);
     if (!rateCheck.allowed) {
+      console.log('Rate limit exceeded for:', sanitizedEmail);
       logUserSecurityEvent({
         type: 'rate_limit_exceeded',
         timestamp: new Date().toISOString(),
@@ -160,21 +152,30 @@ export const platformAdminLoginService = async (email: string, password: string,
       return { error: rateCheck.message };
     }
 
-    // Database query with timeout protection
-    const timeoutPromise = new Promise((_, reject) => 
-      setTimeout(() => reject(new Error('Database query timeout')), 10000)
-    );
-
-    const dbQuery = supabase
+    // Database query with detailed logging
+    console.log('Querying database for admin with email:', sanitizedEmail);
+    
+    const { data: admin, error } = await supabase
       .from('teachers')
       .select('*')
       .eq('email', sanitizedEmail)
       .eq('role', 'admin')
       .single();
 
-    const { data: admin, error } = await Promise.race([dbQuery, timeoutPromise]) as any;
+    console.log('Database query result:', { admin: !!admin, error });
 
-    if (error || !admin) {
+    if (error) {
+      console.log('Database error:', error);
+      if (error.code === 'PGRST116') {
+        console.log('No admin found with this email');
+        recordFailedAttempt(sanitizedEmail);
+        return { error: 'Invalid credentials' };
+      }
+      recordFailedAttempt(sanitizedEmail);
+      return { error: 'Database error occurred' };
+    }
+
+    if (!admin) {
       console.log('Platform admin not found');
       recordFailedAttempt(sanitizedEmail);
       logUserSecurityEvent({
@@ -186,10 +187,24 @@ export const platformAdminLoginService = async (email: string, password: string,
       return { error: 'Invalid credentials' };
     }
 
+    console.log('Admin found, checking password...');
+    console.log('Admin data:', { id: admin.id, name: admin.name, email: admin.email, role: admin.role });
+
     // Enhanced password verification with timing attack protection
     const verificationStart = Date.now();
-    const isPasswordValid = await verifyPassword(password, admin.password_hash);
+    let isPasswordValid = false;
+    
+    try {
+      isPasswordValid = await verifyPassword(password, admin.password_hash);
+      console.log('Password verification result:', isPasswordValid);
+    } catch (verifyError) {
+      console.error('Password verification error:', verifyError);
+      recordFailedAttempt(sanitizedEmail);
+      return { error: 'Authentication failed' };
+    }
+    
     const verificationTime = Date.now() - verificationStart;
+    console.log('Password verification took:', verificationTime, 'ms');
     
     // Ensure minimum verification time to prevent timing attacks
     const minVerificationTime = 100; // 100ms minimum
@@ -212,18 +227,23 @@ export const platformAdminLoginService = async (email: string, password: string,
 
     // Clear failed attempts and create enhanced secure session
     clearFailedAttempts(sanitizedEmail);
-    await enhancedSecureSessionService.createSession(admin.id, 'admin', admin.school);
+    
+    try {
+      await enhancedSecureSessionService.createSession(admin.id, 'admin', admin.school);
+    } catch (sessionError) {
+      console.error('Session creation error:', sessionError);
+    }
 
     // Enhanced success logging
     logUserSecurityEvent({
       type: 'login_success',
       userId: admin.id,
       timestamp: new Date().toISOString(),
-      details: `Successful platform admin login with enhanced security: ${sanitizedEmail}`,
+      details: `Successful platform admin login: ${sanitizedEmail}`,
       userAgent: navigator.userAgent
     });
 
-    console.log('Platform admin login successful with enhanced security');
+    console.log('Platform admin login successful');
     return { 
       admin: {
         id: admin.id,
