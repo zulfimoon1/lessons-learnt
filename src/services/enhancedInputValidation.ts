@@ -12,7 +12,7 @@ export const enhancedValidateInput = {
       return { isValid: false, message: 'Name must be at least 2 characters long' };
     }
     
-    if (trimmed.length > 50) { // Reduced from 100 for better security
+    if (trimmed.length > 50) {
       return { isValid: false, message: 'Name must be less than 50 characters' };
     }
     
@@ -48,7 +48,7 @@ export const enhancedValidateInput = {
       return { isValid: false, message: 'School name must be at least 2 characters long' };
     }
     
-    if (trimmed.length > 100) { // Reduced from 200
+    if (trimmed.length > 100) {
       return { isValid: false, message: 'School name must be less than 100 characters' };
     }
     
@@ -77,7 +77,7 @@ export const enhancedValidateInput = {
       return { isValid: false, message: 'Grade is required' };
     }
     
-    if (trimmed.length > 10) { // Reduced from 20
+    if (trimmed.length > 10) {
       return { isValid: false, message: 'Grade must be less than 10 characters' };
     }
     
@@ -100,7 +100,7 @@ export const enhancedValidateInput = {
       return { isValid: false, message: 'Email must be at least 5 characters long' };
     }
     
-    if (trimmed.length > 100) { // Reduced from 254
+    if (trimmed.length > 100) {
       return { isValid: false, message: 'Email must be less than 100 characters' };
     }
     
@@ -187,10 +187,9 @@ export const enhancedValidateInput = {
     const allPatterns = [...criticalPatterns, ...highRiskPatterns, ...mediumRiskPatterns];
     
     for (const patternData of allPatterns) {
-      if (!patternData || !patternData.pattern) continue; // Handle potential undefined
+      if (!patternData || !patternData.pattern) continue;
       
       const { pattern, reason, severity } = patternData;
-      // Add comprehensive null check for pattern
       if (pattern && typeof pattern.test === 'function' && pattern.test(input)) {
         return { isSuspicious: true, reason, severity };
       }
