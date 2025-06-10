@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -14,6 +15,7 @@ import StudentDashboard from '@/pages/StudentDashboard';
 import TeacherLogin from '@/pages/TeacherLogin';
 import StudentLogin from '@/pages/StudentLogin';
 import PlatformAdminLogin from '@/pages/PlatformAdminLogin';
+import PlatformAdminDashboard from '@/pages/PlatformAdminDashboard';
 import HowItWorks from '@/pages/HowItWorks';
 import PricingPage from '@/pages/PricingPage';
 import EnhancedPricingPage from './pages/EnhancedPricingPage';
@@ -39,6 +41,11 @@ function App() {
                   <Route path="/" element={<Index />} />
                   <Route path="/demo" element={<Demo />} />
                   <Route path="/console" element={<PlatformAdminLogin />} />
+                  <Route path="/platform-admin" element={
+                    <SecureAuthGuard requireAuth={true} userType="admin">
+                      <PlatformAdminDashboard />
+                    </SecureAuthGuard>
+                  } />
                   <Route path="/teacher-login" element={
                     <SecureAuthGuard requireAuth={false}>
                       <TeacherLogin />

@@ -1,7 +1,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { PlatformAdmin, platformAdminLoginService } from '@/services/platformAdminService';
-import { sessionService } from '@/services/secureSessionService';
+import { enhancedSecureSessionService } from '@/services/enhancedSecureSessionService';
 import { logUserSecurityEvent } from '@/components/SecurityAuditLogger';
 
 interface PlatformAdminContextType {
@@ -30,7 +30,7 @@ export const PlatformAdminProvider: React.FC<{ children: React.ReactNode }> = ({
     
     const restoreSecureAdminSession = async () => {
       try {
-        const session = await sessionService.getSession();
+        const session = await enhancedSecureSessionService.getSession();
         
         if (session && session.userType === 'admin') {
           const adminData = localStorage.getItem('platformAdmin');
@@ -39,10 +39,10 @@ export const PlatformAdminProvider: React.FC<{ children: React.ReactNode }> = ({
             if (parsedAdmin && parsedAdmin.id === session.userId) {
               console.log('PlatformAdminProvider: Restoring secure admin session');
               setAdmin(parsedAdmin);
-              await sessionService.refreshSession(session);
+              await enhancedSecureSessionService.refreshSession(session);
             } else {
               console.log('PlatformAdminProvider: Invalid admin session data');
-              sessionService.clearSession();
+              enhancedSecureSessionService.clearSession();
             }
           }
         } else {
@@ -51,7 +51,7 @@ export const PlatformAdminProvider: React.FC<{ children: React.ReactNode }> = ({
         }
       } catch (error) {
         console.error('PlatformAdminProvider: Session restoration error:', error);
-        sessionService.clearSession();
+        enhancedSecureSessionService.clearSession();
       }
     };
 
@@ -70,7 +70,7 @@ export const PlatformAdminProvider: React.FC<{ children: React.ReactNode }> = ({
         setAdmin(result.admin);
         
         // Create secure session
-        await sessionService.createSession(result.admin.id, 'admin', result.admin.school);
+        await enhancedSecureSessionService.createSession(result.admin.id, 'admin', result.admin.school);
         
         // Store admin data securely
         try {
@@ -129,7 +129,7 @@ export const PlatformAdminProvider: React.FC<{ children: React.ReactNode }> = ({
     }
     
     setAdmin(null);
-    sessionService.clearSession();
+    enhancedSecureSessionService.clearSession();
     
     console.log('PlatformAdminProvider: Secure logout complete');
   };

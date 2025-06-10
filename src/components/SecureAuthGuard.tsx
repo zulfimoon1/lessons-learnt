@@ -2,11 +2,12 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { usePlatformAdmin } from '@/contexts/PlatformAdminContext';
 
 interface SecureAuthGuardProps {
   children: React.ReactNode;
   requireAuth?: boolean;
-  userType?: 'teacher' | 'student';
+  userType?: 'teacher' | 'student' | 'admin';
   allowedRoles?: string[];
   redirectTo?: string;
 }
@@ -22,22 +23,35 @@ const SecureAuthGuard: React.FC<SecureAuthGuardProps> = ({
   const [isAuthorized, setIsAuthorized] = useState(false);
   const navigate = useNavigate();
   const { teacher, student, isLoading: authLoading } = useAuth();
+  const { admin, isLoading: adminLoading } = usePlatformAdmin();
 
   useEffect(() => {
-    if (authLoading) return;
+    if (authLoading || adminLoading) return;
 
     const checkAuth = () => {
-      console.log('SecureAuthGuard: Checking auth', { teacher, student, userType, requireAuth });
+      console.log('SecureAuthGuard: Checking auth', { teacher, student, admin, userType, requireAuth });
+
+      // Handle platform admin authentication
+      if (userType === 'admin') {
+        if (!admin) {
+          console.log('SecureAuthGuard: Admin required but not logged in, redirecting');
+          navigate('/console');
+          return;
+        }
+        setIsAuthorized(true);
+        setIsLoading(false);
+        return;
+      }
 
       // If auth is not required and no user is logged in, allow access
-      if (!requireAuth && !teacher && !student) {
+      if (!requireAuth && !teacher && !student && !admin) {
         setIsAuthorized(true);
         setIsLoading(false);
         return;
       }
 
       // If auth is required but no user is logged in, redirect to appropriate login
-      if (requireAuth && !teacher && !student) {
+      if (requireAuth && !teacher && !student && !admin) {
         console.log('SecureAuthGuard: No user authenticated, redirecting');
         const defaultRedirect = userType === 'student' ? '/student-login' : '/teacher-login';
         navigate(redirectTo || defaultRedirect);
@@ -72,9 +86,9 @@ const SecureAuthGuard: React.FC<SecureAuthGuardProps> = ({
     };
 
     checkAuth();
-  }, [teacher, student, authLoading, requireAuth, userType, allowedRoles, redirectTo, navigate]);
+  }, [teacher, student, admin, authLoading, adminLoading, requireAuth, userType, allowedRoles, redirectTo, navigate]);
 
-  if (authLoading || isLoading) {
+  if (authLoading || adminLoading || isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
