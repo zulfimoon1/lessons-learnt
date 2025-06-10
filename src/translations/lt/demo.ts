@@ -1,7 +1,7 @@
 
 export const ltDemoTranslations = {
   'demo.title': 'Funkcionalumo demonstracija',
-  'demo.subtitle': 'Atraskite ateities švietimą veiksmų - tyrinėkite mūsų platformą, sukurtą transformuoti mokymąsi studentams, stiprinti pedagogus ir palaikyti psichinę sveikatą.',
+  'demo.subtitle': 'Atraskite ateities švietimą veiksmų - tyrinėkite mūsų novatorišką platformą, sukurtą transformuoti mokymąsi studentams, stiprinti pedagogus ir palaikyti psichinę sveikatą.',
   'demo.studentFeedback.title': 'Studentų atsiliepimų rinkimas',
   'demo.studentFeedback.description': 'Rinkite momentaninius atsiliepimus apie pamokas ir patirtį',
   'demo.teacherAnalytics.title': 'Mokytojų analizės skydelis',

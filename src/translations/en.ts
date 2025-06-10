@@ -1,4 +1,3 @@
-
 export const enTranslations = {
   // Navigation
   'nav.home': 'Home',
@@ -479,7 +478,7 @@ export const enTranslations = {
   
   // Demo Section translations
   'demo.title': 'Explore Platform Features',
-  'demo.subtitle': 'Discover the future of education in action - explore our platform designed to transform learning for students, empower educators, and support mental wellness.',
+  'demo.subtitle': 'Discover the future of education in action - explore our groundbreaking platform designed to transform learning for students, empower educators, and support mental wellness.',
   'demo.studentFeedback.title': 'Student Feedback System',
   'demo.studentFeedback.description': 'Students provide real-time feedback on lessons and emotional state',
   'demo.teacherAnalytics.title': 'Teacher Analytics Dashboard', 

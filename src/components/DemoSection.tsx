@@ -1,4 +1,3 @@
-
 import { useState, useRef, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -248,7 +247,7 @@ const DemoSection = () => {
     <section className="bg-gradient-to-br from-primary/5 via-background to-secondary/5 py-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-12">
-          <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+          <p className="text-xl text-black font-bold max-w-3xl mx-auto">
             {t('demo.subtitle')}
           </p>
         </div>
@@ -278,10 +277,6 @@ const DemoSection = () => {
           {/* Feature Selection */}
           <div className="order-1 lg:order-2">
             <div className="space-y-4">
-              <h3 className="text-2xl font-bold text-foreground mb-6">
-                {t('demo.title')}
-              </h3>
-              
               <div className="space-y-3">
                 {demoFeatures.map((feature, index) => (
                   <Card 
