@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { GraduationCapIcon, UsersIcon, BookOpenIcon, HeartIcon, BarChart3Icon, ShieldCheckIcon, PlayCircleIcon, DollarSignIcon } from "lucide-react";
@@ -33,8 +34,7 @@ const Index = () => {
             </div>
             <div className="flex items-center gap-4">
               <Link to="/pricing-showcase">
-                <Button variant="outline" size="sm" className="flex items-center gap-2 bg-purple-50 border-purple-200 hover:bg-purple-100 text-purple-700 hover:text-purple-800">
-                  <DollarSignIcon className="w-4 h-4" />
+                <Button variant="outline" size="sm" className="bg-purple-50 border-purple-200 hover:bg-purple-100 text-purple-700 hover:text-purple-800">
                   Pricing
                 </Button>
               </Link>
