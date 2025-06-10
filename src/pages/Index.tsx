@@ -213,6 +213,29 @@ const Index = () => {
 
       {/* Compliance Footer */}
       <ComplianceFooter />
+      
+      <footer className="bg-muted py-6 mt-auto">
+        <div className="container mx-auto px-4">
+          <div className="flex flex-col md:flex-row justify-between items-center">
+            <div className="mb-4 md:mb-0">
+              <p className="text-sm text-muted-foreground">
+                &copy; {new Date().getFullYear()} Educational Platform. {t('common.allRightsReserved')}
+              </p>
+            </div>
+            <div className="flex space-x-4">
+              <Link to="/platform-admin" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+                {t('common.adminAccess')}
+              </Link>
+              <Link to="/terms-of-service" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+                {t('common.termsOfService')}
+              </Link>
+              <Link to="/privacy-policy" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+                {t('common.privacyPolicy')}
+              </Link>
+            </div>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 };
