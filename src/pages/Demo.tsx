@@ -39,17 +39,17 @@ const Demo = () => {
   const MentalHealthDemo = () => (
     <div className="space-y-6">
       <div className="bg-white rounded-lg shadow-lg p-6 border">
-        <h3 className="text-lg font-semibold mb-4">Mental Health Support Center</h3>
+        <h3 className="text-lg font-semibold mb-4">{t('demo.simulation.mentalHealth.title')}</h3>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
           <div className="bg-purple-50 p-4 rounded-lg border-l-4 border-purple-500">
             <div className="flex items-center gap-2 mb-2">
               <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-              <span className="text-sm font-medium">Dr. Sarah Wilson - Online</span>
+              <span className="text-sm font-medium">{t('demo.mockup.drSarahOnline')}</span>
             </div>
             <p className="text-sm text-purple-700">School Psychologist</p>
             <div className="mt-2">
-              <Badge className="bg-green-100 text-green-700">Available Now</Badge>
+              <Badge className="bg-green-100 text-green-700">{t('demo.mockup.availableChat')}</Badge>
             </div>
           </div>
           
@@ -66,31 +66,31 @@ const Demo = () => {
         </div>
         
         <div className="bg-blue-50 p-3 rounded-lg border border-blue-200 mb-4">
-          <p className="text-sm text-blue-800 font-medium">🔒 Complete Privacy Guaranteed</p>
-          <p className="text-xs text-blue-600 mt-1">All conversations are confidential and anonymous</p>
+          <p className="text-sm text-blue-800 font-medium">🔒 {t('demo.mockup.identityProtected')}</p>
+          <p className="text-xs text-blue-600 mt-1">{t('demo.mockup.conversationsConfidential')}</p>
         </div>
         
         <div className="bg-gray-50 rounded-lg p-4 h-64 mb-4 overflow-y-auto">
           <div className="space-y-3">
             <div className="bg-purple-100 p-3 rounded-lg max-w-xs">
-              <p className="text-sm">Hello! This is a safe space for you to share anything that's on your mind. How are you feeling today?</p>
-              <span className="text-xs text-gray-500">Dr. Sarah - 2:30 PM</span>
+              <p className="text-sm">{t('demo.mockup.helloSafeSpace')}</p>
+              <span className="text-xs text-gray-500">{t('demo.mockup.drSarah')} - 2:30 PM</span>
             </div>
             <div className="bg-blue-100 p-3 rounded-lg max-w-xs ml-auto">
-              <p className="text-sm">I've been feeling really overwhelmed with schoolwork lately. I can't seem to keep up and it's affecting my sleep.</p>
-              <span className="text-xs text-gray-500">Anonymous Student - 2:32 PM</span>
+              <p className="text-sm">{t('demo.mockup.feelingOverwhelmed')}</p>
+              <span className="text-xs text-gray-500">{t('demo.mockup.anonymousStudent')} - 2:32 PM</span>
             </div>
             <div className="bg-purple-100 p-3 rounded-lg max-w-xs">
-              <p className="text-sm">I understand that feeling overwhelmed can be really challenging. It's completely normal to feel this way sometimes. Would you like to talk about what specific aspects of your schoolwork are causing the most stress?</p>
-              <span className="text-xs text-gray-500">Dr. Sarah - 2:33 PM</span>
+              <p className="text-sm">{t('demo.mockup.understandValid')}</p>
+              <span className="text-xs text-gray-500">{t('demo.mockup.drSarah')} - 2:33 PM</span>
             </div>
             <div className="bg-blue-100 p-3 rounded-lg max-w-xs ml-auto">
               <p className="text-sm">Mostly the upcoming exams. I feel like no matter how much I study, I'm not retaining the information.</p>
-              <span className="text-xs text-gray-500">Anonymous Student - 2:35 PM</span>
+              <span className="text-xs text-gray-500">{t('demo.mockup.anonymousStudent')} - 2:35 PM</span>
             </div>
             <div className="bg-purple-100 p-3 rounded-lg max-w-xs">
               <p className="text-sm">That sounds really frustrating. Let's work on some study strategies that might help you feel more confident. Have you tried breaking your study sessions into smaller chunks?</p>
-              <span className="text-xs text-gray-500">Dr. Sarah - 2:36 PM</span>
+              <span className="text-xs text-gray-500">{t('demo.mockup.drSarah')} - 2:36 PM</span>
             </div>
           </div>
         </div>
@@ -99,14 +99,14 @@ const Demo = () => {
           <div className="flex gap-2">
             <input 
               className="flex-1 p-2 border rounded-md text-sm" 
-              placeholder="Type your anonymous message..." 
+              placeholder={t('demo.mockup.typeAnonymousMessage')}
             />
-            <Button size="sm">Send</Button>
+            <Button size="sm">{t('demo.mockup.send')}</Button>
           </div>
           
           <div className="grid grid-cols-2 gap-2">
-            <Button className="bg-purple-600 hover:bg-purple-700">Start Anonymous Chat</Button>
-            <Button variant="outline">Book Private Appointment</Button>
+            <Button className="bg-purple-600 hover:bg-purple-700">{t('demo.mockup.startAnonymousChat')}</Button>
+            <Button variant="outline">{t('demo.mockup.bookAnonymousAppointment')}</Button>
           </div>
           
           <div className="grid grid-cols-2 gap-2">
@@ -125,22 +125,22 @@ const Demo = () => {
   const demos = [
     {
       id: "student-simulation",
-      title: "Interactive Student Journey",
-      description: "Watch a complete simulation of a student's full experience including dashboard and feedback",
+      title: t('demo.simulation.student.title'),
+      description: t('demo.simulation.student.description'),
       icon: UsersIcon,
       component: <StudentSimulation />
     },
     {
       id: "teacher-simulation",
-      title: "Interactive Teacher Journey",
-      description: "Experience how teachers use the platform to monitor students and improve lessons",
+      title: t('demo.simulation.teacher.title'),
+      description: t('demo.simulation.teacher.description'),
       icon: BarChart3Icon,
       component: <TeacherSimulation />
     },
     {
       id: "mental-health",
-      title: "Mental Health Support Center",
-      description: "Full mental health support system with counselors and crisis support",
+      title: t('demo.simulation.mentalHealth.title'),
+      description: t('demo.simulation.mentalHealth.description'),
       icon: HeartIcon,
       component: <MentalHealthDemo />
     }
@@ -155,12 +155,12 @@ const Demo = () => {
             <div className="flex items-center gap-4">
               <Link to="/" className="flex items-center gap-2 text-gray-600 hover:text-gray-900">
                 <ArrowLeftIcon className="w-5 h-5" />
-                <span>Back to Home</span>
+                <span>{t('demo.page.backToHome')}</span>
               </Link>
               <div className="h-6 border-l border-gray-300"></div>
               <div className="flex items-center gap-2">
                 <GraduationCapIcon className="w-8 h-8 text-primary" />
-                <h1 className="text-2xl font-bold">Interactive Platform Demo</h1>
+                <h1 className="text-2xl font-bold">{t('demo.page.interactivePlatformDemo')}</h1>
               </div>
             </div>
             <div className="flex items-center gap-2">
@@ -171,7 +171,7 @@ const Demo = () => {
                 className="flex items-center gap-2"
               >
                 {isPlaying ? <PauseCircleIcon className="w-4 h-4" /> : <PlayCircleIcon className="w-4 h-4" />}
-                {isPlaying ? "Pause Demo" : "Play Demo"}
+                {isPlaying ? t('demo.page.pauseDemo') : t('demo.page.playDemo')}
               </Button>
             </div>
           </div>
@@ -182,11 +182,10 @@ const Demo = () => {
         {/* Introduction */}
         <div className="text-center mb-12">
           <h2 className="text-4xl font-bold text-gray-900 mb-4">
-            Interactive Platform Experience
+            {t('demo.page.title')}
           </h2>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-            Experience how both students and teachers interact with our platform through interactive simulations, 
-            plus explore comprehensive demos of all platform features.
+            {t('demo.page.subtitle')}
           </p>
         </div>
 
@@ -225,34 +224,34 @@ const Demo = () => {
                           <ul className="text-sm text-gray-600 space-y-1">
                             {demo.id === "student-simulation" && (
                               <>
-                                <li>• Complete student dashboard with all features</li>
-                                <li>• Step-by-step feedback form completion</li>
-                                <li>• Interactive rating system for understanding and interest</li>
-                                <li>• Emotional state check-ins</li>
-                                <li>• Written feedback submission process</li>
-                                <li>• Mental health support widget access</li>
+                                <li>{t('demo.features.student.1')}</li>
+                                <li>{t('demo.features.student.2')}</li>
+                                <li>{t('demo.features.student.3')}</li>
+                                <li>{t('demo.features.student.4')}</li>
+                                <li>{t('demo.features.student.5')}</li>
+                                <li>{t('demo.features.student.6')}</li>
                               </>
                             )}
                             {demo.id === "teacher-simulation" && (
                               <>
-                                <li>• Comprehensive teacher dashboard overview</li>
-                                <li>• Real-time class performance monitoring</li>
-                                <li>• Mental health alert system review</li>
-                                <li>• Student mood and emotional state tracking</li>
-                                <li>• Individual feedback analysis</li>
-                                <li>• Action planning based on student needs</li>
-                                <li>• Weekly performance trend analysis</li>
-                                <li>• Lesson improvement planning</li>
+                                <li>{t('demo.features.teacher.1')}</li>
+                                <li>{t('demo.features.teacher.2')}</li>
+                                <li>{t('demo.features.teacher.3')}</li>
+                                <li>{t('demo.features.teacher.4')}</li>
+                                <li>{t('demo.features.teacher.5')}</li>
+                                <li>{t('demo.features.teacher.6')}</li>
+                                <li>{t('demo.features.teacher.7')}</li>
+                                <li>{t('demo.features.teacher.8')}</li>
                               </>
                             )}
                             {demo.id === "mental-health" && (
                               <>
-                                <li>• Multiple counselor availability</li>
-                                <li>• Anonymous chat system</li>
-                                <li>• Crisis support protocols</li>
-                                <li>• Self-help resource library</li>
-                                <li>• Mood tracking tools</li>
-                                <li>• Appointment scheduling</li>
+                                <li>{t('demo.features.mentalHealth.1')}</li>
+                                <li>{t('demo.features.mentalHealth.2')}</li>
+                                <li>{t('demo.features.mentalHealth.3')}</li>
+                                <li>{t('demo.features.mentalHealth.4')}</li>
+                                <li>{t('demo.features.mentalHealth.5')}</li>
+                                <li>{t('demo.features.mentalHealth.6')}</li>
                               </>
                             )}
                           </ul>
@@ -261,14 +260,11 @@ const Demo = () => {
                         <div className="bg-blue-50 p-4 rounded-lg">
                           <p className="text-sm text-blue-800">
                             {demo.id === "student-simulation" ? (
-                              <><strong>Interactive Simulation:</strong> Watch a complete student journey from 
-                              dashboard login to feedback submission, including access to mental health support.</>
+                              <><strong>Interactive Simulation:</strong> {t('demo.interactive.student')}</>
                             ) : demo.id === "teacher-simulation" ? (
-                              <><strong>Teacher Workflow:</strong> Experience how teachers monitor student well-being,
-                              analyze performance data, and take action to improve learning outcomes.</>
+                              <><strong>Teacher Workflow:</strong> {t('demo.interactive.teacher')}</>
                             ) : (
-                              <><strong>Full Integration:</strong> All components work seamlessly together, 
-                              sharing data securely while maintaining complete privacy for mental health services.</>
+                              <><strong>Full Integration:</strong> {t('demo.interactive.integration')}</>
                             )}
                           </p>
                         </div>
@@ -290,20 +286,19 @@ const Demo = () => {
         <div className="mt-16 text-center">
           <Card className="bg-gradient-to-r from-primary/5 to-primary/10 border-primary/20">
             <CardContent className="p-8">
-              <h3 className="text-2xl font-bold mb-4">Experience the Complete Platform</h3>
+              <h3 className="text-2xl font-bold mb-4">{t('demo.cta.title')}</h3>
               <p className="text-gray-600 mb-6 max-w-2xl mx-auto">
-                From interactive student simulations to comprehensive teacher analytics, 
-                see how our platform creates a supportive and engaging learning environment.
+                {t('demo.cta.description')}
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Link to="/teacher-login">
                   <Button size="lg" className="px-8">
-                    Start Free Trial
+                    {t('demo.cta.startTrial')}
                   </Button>
                 </Link>
                 <Link to="/student-login">
                   <Button size="lg" variant="outline" className="px-8">
-                    Student Access
+                    {t('demo.cta.studentAccess')}
                   </Button>
                 </Link>
               </div>

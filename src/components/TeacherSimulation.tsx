@@ -25,6 +25,7 @@ import {
   StethoscopeIcon,
   ShieldCheckIcon
 } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface TeacherSimulationStep {
   id: string;
@@ -35,6 +36,7 @@ interface TeacherSimulationStep {
 }
 
 const TeacherSimulation = () => {
+  const { t } = useLanguage();
   const [currentStep, setCurrentStep] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -43,64 +45,64 @@ const TeacherSimulation = () => {
   const steps: TeacherSimulationStep[] = [
     {
       id: "teacher-dashboard",
-      title: "Teacher Dashboard Login",
-      description: "Ms. Johnson logs into her comprehensive teacher dashboard",
+      title: t('teacher.dashboard.title') || "Teacher Dashboard Login",
+      description: t('teacher.dashboard.description') || "Ms. Johnson logs into her comprehensive teacher dashboard",
       duration: 4000,
       component: <TeacherDashboardStep />
     },
     {
       id: "view-alerts",
-      title: "Review Alerts",
-      description: "Ms. Johnson checks mental health alerts and class performance warnings",
+      title: t('teacher.alerts.title') || "Review Alerts",
+      description: t('teacher.alerts.description') || "Ms. Johnson checks mental health alerts and class performance warnings",
       duration: 3500,
       component: <ViewAlertsStep />
     },
     {
       id: "mental-health-support",
-      title: "Mental Health Support System",
-      description: "Ms. Johnson reviews and manages student mental health support requests",
+      title: t('teacher.mentalHealth.title') || "Mental Health Support System",
+      description: t('teacher.mentalHealth.description') || "Ms. Johnson reviews and manages student mental health support requests",
       duration: 4500,
       component: <MentalHealthSupportStep />
     },
     {
       id: "class-performance",
-      title: "Class Performance Analysis",
-      description: "Ms. Johnson reviews today's live class performance metrics",
+      title: t('teacher.performance.title') || "Class Performance Analysis",
+      description: t('teacher.performance.description') || "Ms. Johnson reviews today's live class performance metrics",
       duration: 3000,
       component: <ClassPerformanceStep />
     },
     {
       id: "student-mood",
-      title: "Student Mood Overview",
-      description: "Ms. Johnson examines the emotional state of her students",
+      title: t('teacher.mood.title') || "Student Mood Overview",
+      description: t('teacher.mood.description') || "Ms. Johnson examines the emotional state of her students",
       duration: 3000,
       component: <StudentMoodStep />
     },
     {
       id: "individual-feedback",
-      title: "Individual Student Feedback",
-      description: "Ms. Johnson reviews detailed feedback from individual students",
+      title: t('teacher.feedback.title') || "Individual Student Feedback",
+      description: t('teacher.feedback.description') || "Ms. Johnson reviews detailed feedback from individual students",
       duration: 4000,
       component: <IndividualFeedbackStep />
     },
     {
       id: "address-concerns",
-      title: "Address Student Concerns",
-      description: "Ms. Johnson takes action on students needing support",
+      title: t('teacher.concerns.title') || "Address Student Concerns",
+      description: t('teacher.concerns.description') || "Ms. Johnson takes action on students needing support",
       duration: 3500,
       component: <AddressConcernsStep />
     },
     {
       id: "weekly-trends",
-      title: "Weekly Performance Trends",
-      description: "Ms. Johnson analyzes weekly performance and engagement trends",
+      title: t('teacher.trends.title') || "Weekly Performance Trends",
+      description: t('teacher.trends.description') || "Ms. Johnson analyzes weekly performance and engagement trends",
       duration: 3000,
       component: <WeeklyTrendsStep />
     },
     {
       id: "plan-improvements",
-      title: "Plan Lesson Improvements",
-      description: "Ms. Johnson plans improvements based on student feedback",
+      title: t('teacher.improvements.title') || "Plan Lesson Improvements",
+      description: t('teacher.improvements.description') || "Ms. Johnson plans improvements based on student feedback",
       duration: 3500,
       component: <PlanImprovementsStep />
     }
@@ -144,7 +146,7 @@ const TeacherSimulation = () => {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
-            <span>Teacher Journey Simulation</span>
+            <span>{t('teacher.simulation.title') || "Teacher Journey Simulation"}</span>
             <div className="flex gap-2">
               <Button
                 onClick={handlePlay}
@@ -153,7 +155,7 @@ const TeacherSimulation = () => {
                 className="flex items-center gap-2"
               >
                 <PlayIcon className="w-4 h-4" />
-                Play
+                {t('common.play') || "Play"}
               </Button>
               <Button
                 onClick={handlePause}
@@ -163,7 +165,7 @@ const TeacherSimulation = () => {
                 className="flex items-center gap-2"
               >
                 <PauseIcon className="w-4 h-4" />
-                Pause
+                {t('common.pause') || "Pause"}
               </Button>
               <Button
                 onClick={handleReset}
@@ -172,7 +174,7 @@ const TeacherSimulation = () => {
                 className="flex items-center gap-2"
               >
                 <RotateCcwIcon className="w-4 h-4" />
-                Reset
+                {t('common.reset') || "Reset"}
               </Button>
             </div>
           </CardTitle>
@@ -219,198 +221,209 @@ const TeacherSimulation = () => {
 };
 
 // Individual step components
-const TeacherDashboardStep = () => (
-  <div className="space-y-6">
-    <div className="bg-white rounded-lg shadow-lg p-6 border">
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
-            <BookOpenIcon className="w-5 h-5 text-green-600" />
-          </div>
-          <div>
-            <h3 className="text-lg font-semibold">Teacher Dashboard</h3>
-            <p className="text-sm text-gray-600">Welcome back, Ms. Johnson</p>
-          </div>
-        </div>
-        <div className="flex gap-2">
-          <Badge className="bg-red-100 text-red-700">3 Alerts</Badge>
-          <BellIcon className="w-5 h-5 text-gray-400" />
-          <SettingsIcon className="w-5 h-5 text-gray-400" />
-        </div>
-      </div>
-
-      {/* Overview Stats */}
-      <div className="grid grid-cols-4 gap-4 mb-6">
-        <div className="bg-blue-50 p-4 rounded-lg text-center">
-          <div className="text-2xl font-bold text-blue-600">156</div>
-          <div className="text-sm text-blue-800">Total Students</div>
-        </div>
-        <div className="bg-green-50 p-4 rounded-lg text-center">
-          <div className="text-2xl font-bold text-green-600">87%</div>
-          <div className="text-sm text-green-800">Avg Understanding</div>
-        </div>
-        <div className="bg-purple-50 p-4 rounded-lg text-center">
-          <div className="text-2xl font-bold text-purple-600">4.3★</div>
-          <div className="text-sm text-purple-800">Lesson Rating</div>
-        </div>
-        <div className="bg-yellow-50 p-4 rounded-lg text-center">
-          <div className="text-2xl font-bold text-yellow-600">12</div>
-          <div className="text-sm text-yellow-800">Need Support</div>
-        </div>
-      </div>
-
-      {/* Today's Classes */}
-      <div className="mb-6">
-        <h4 className="font-semibold mb-3 flex items-center gap-2">
-          <ClockIcon className="w-4 h-4" />
-          Today's Classes
-        </h4>
-        <div className="space-y-3">
-          <div className="flex justify-between items-center p-4 bg-blue-50 rounded border-l-4 border-blue-500">
+const TeacherDashboardStep = () => {
+  const { t } = useLanguage();
+  
+  return (
+    <div className="space-y-6">
+      <div className="bg-white rounded-lg shadow-lg p-6 border">
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+              <BookOpenIcon className="w-5 h-5 text-green-600" />
+            </div>
             <div>
-              <div className="font-medium">Mathematics - Grade 10A</div>
-              <div className="text-sm text-gray-600">9:00 AM - Algebra II</div>
-              <div className="flex gap-2 mt-1">
-                <Badge variant="outline">25 students</Badge>
-                <Badge className="bg-green-100 text-green-700">Live</Badge>
-              </div>
+              <h3 className="text-lg font-semibold">{t('teacher.dashboard.welcome') || "Teacher Dashboard"}</h3>
+              <p className="text-sm text-gray-600">{t('teacher.dashboard.welcomeBack') || "Welcome back, Ms. Johnson"}</p>
             </div>
-            <div className="text-right">
-              <div className="text-sm font-medium">89% Understanding</div>
-              <div className="text-xs text-gray-500">23 responses</div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-);
-
-const ViewAlertsStep = () => (
-  <div className="space-y-4">
-    <h3 className="text-lg font-semibold flex items-center gap-2">
-      <AlertTriangleIcon className="w-5 h-5 text-red-500" />
-      Recent Alerts - Priority Review
-    </h3>
-    <div className="space-y-3">
-      <div className="flex items-center gap-3 p-4 bg-red-50 rounded border border-red-200 ring-2 ring-red-300 ring-offset-2">
-        <AlertTriangleIcon className="w-5 h-5 text-red-600" />
-        <div className="flex-1">
-          <div className="text-sm font-medium">Student showing signs of distress</div>
-          <div className="text-xs text-gray-600">Grade 10A - Anonymous student in Mathematics</div>
-          <div className="text-xs text-red-600 mt-1">Click to review and take action</div>
-        </div>
-        <ArrowRightIcon className="w-4 h-4 text-red-600" />
-      </div>
-      <div className="flex items-center gap-3 p-3 bg-yellow-50 rounded border border-yellow-200">
-        <AlertTriangleIcon className="w-4 h-4 text-yellow-600" />
-        <div className="flex-1">
-          <div className="text-sm font-medium">Low understanding in Chemistry</div>
-          <div className="text-xs text-gray-600">15 students struggling with today's topic</div>
-        </div>
-        <Button size="sm" variant="outline">Address</Button>
-      </div>
-    </div>
-  </div>
-);
-
-const MentalHealthSupportStep = () => (
-  <div className="space-y-6">
-    <h3 className="text-lg font-semibold flex items-center gap-2">
-      <HeartIcon className="w-5 h-5 text-purple-500" />
-      Mental Health Support Center - Teacher Interface
-    </h3>
-    
-    {/* Active Support Sessions */}
-    <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
-      <h4 className="font-medium mb-3 flex items-center gap-2">
-        <StethoscopeIcon className="w-4 h-4" />
-        Active Support Sessions
-      </h4>
-      <div className="space-y-3">
-        <div className="bg-white p-3 rounded border border-purple-300">
-          <div className="flex justify-between items-center mb-2">
-            <div className="flex items-center gap-2">
-              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-              <span className="text-sm font-medium">Anonymous Student - Grade 10A</span>
-              <Badge className="bg-green-100 text-green-700">Active Chat</Badge>
-            </div>
-            <span className="text-xs text-gray-500">Started 15 min ago</span>
-          </div>
-          <div className="text-xs text-gray-600 mb-2">
-            Connected with Dr. Sarah Wilson - School Psychologist
           </div>
           <div className="flex gap-2">
-            <Button size="sm" variant="outline">Monitor (Read-Only)</Button>
-            <Button size="sm" className="bg-purple-600 hover:bg-purple-700">Emergency Override</Button>
+            <Badge className="bg-red-100 text-red-700">{t('teacher.alerts.count') || "3 Alerts"}</Badge>
+            <BellIcon className="w-5 h-5 text-gray-400" />
+            <SettingsIcon className="w-5 h-5 text-gray-400" />
+          </div>
+        </div>
+
+        {/* Overview Stats */}
+        <div className="grid grid-cols-4 gap-4 mb-6">
+          <div className="bg-blue-50 p-4 rounded-lg text-center">
+            <div className="text-2xl font-bold text-blue-600">156</div>
+            <div className="text-sm text-blue-800">{t('teacher.stats.totalStudents') || "Total Students"}</div>
+          </div>
+          <div className="bg-green-50 p-4 rounded-lg text-center">
+            <div className="text-2xl font-bold text-green-600">87%</div>
+            <div className="text-sm text-green-800">{t('teacher.stats.avgUnderstanding') || "Avg Understanding"}</div>
+          </div>
+          <div className="bg-purple-50 p-4 rounded-lg text-center">
+            <div className="text-2xl font-bold text-purple-600">4.3★</div>
+            <div className="text-sm text-purple-800">{t('teacher.stats.lessonRating') || "Lesson Rating"}</div>
+          </div>
+          <div className="bg-yellow-50 p-4 rounded-lg text-center">
+            <div className="text-2xl font-bold text-yellow-600">12</div>
+            <div className="text-sm text-yellow-800">{t('teacher.stats.needSupport') || "Need Support"}</div>
+          </div>
+        </div>
+
+        {/* Today's Classes */}
+        <div className="mb-6">
+          <h4 className="font-semibold mb-3 flex items-center gap-2">
+            <ClockIcon className="w-4 h-4" />
+            {t('teacher.classes.today') || "Today's Classes"}
+          </h4>
+          <div className="space-y-3">
+            <div className="flex justify-between items-center p-4 bg-blue-50 rounded border-l-4 border-blue-500">
+              <div>
+                <div className="font-medium">{t('teacher.classes.mathematics') || "Mathematics - Grade 10A"}</div>
+                <div className="text-sm text-gray-600">{t('teacher.classes.algebra') || "9:00 AM - Algebra II"}</div>
+                <div className="flex gap-2 mt-1">
+                  <Badge variant="outline">{t('teacher.classes.students') || "25 students"}</Badge>
+                  <Badge className="bg-green-100 text-green-700">{t('teacher.classes.live') || "Live"}</Badge>
+                </div>
+              </div>
+              <div className="text-right">
+                <div className="text-sm font-medium">{t('teacher.classes.understanding') || "89% Understanding"}</div>
+                <div className="text-xs text-gray-500">{t('teacher.classes.responses') || "23 responses"}</div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
     </div>
+  );
+};
 
-    {/* Support Requests Queue */}
-    <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-      <h4 className="font-medium mb-3 flex items-center gap-2">
-        <MessageCircleIcon className="w-4 h-4" />
-        Pending Support Requests
-      </h4>
-      <div className="space-y-2">
-        <div className="bg-white p-3 rounded border">
-          <div className="flex justify-between items-center">
-            <div>
-              <div className="text-sm font-medium">Emma Thompson - Grade 9B</div>
-              <div className="text-xs text-gray-600">Requested counselor session about exam stress</div>
-              <div className="text-xs text-blue-600 mt-1">Waiting 8 minutes</div>
+const ViewAlertsStep = () => {
+  const { t } = useLanguage();
+  
+  return (
+    <div className="space-y-4">
+      <h3 className="text-lg font-semibold flex items-center gap-2">
+        <AlertTriangleIcon className="w-5 h-5 text-red-500" />
+        {t('teacher.alerts.recent') || "Recent Alerts - Priority Review"}
+      </h3>
+      <div className="space-y-3">
+        <div className="flex items-center gap-3 p-4 bg-red-50 rounded border border-red-200 ring-2 ring-red-300 ring-offset-2">
+          <AlertTriangleIcon className="w-5 h-5 text-red-600" />
+          <div className="flex-1">
+            <div className="text-sm font-medium">{t('teacher.alerts.distress') || "Student showing signs of distress"}</div>
+            <div className="text-xs text-gray-600">{t('teacher.alerts.anonymous') || "Grade 10A - Anonymous student in Mathematics"}</div>
+            <div className="text-xs text-red-600 mt-1">{t('teacher.alerts.clickReview') || "Click to review and take action"}</div>
+          </div>
+          <ArrowRightIcon className="w-4 h-4 text-red-600" />
+        </div>
+        <div className="flex items-center gap-3 p-3 bg-yellow-50 rounded border border-yellow-200">
+          <AlertTriangleIcon className="w-4 h-4 text-yellow-600" />
+          <div className="flex-1">
+            <div className="text-sm font-medium">{t('teacher.alerts.lowUnderstanding') || "Low understanding in Chemistry"}</div>
+            <div className="text-xs text-gray-600">{t('teacher.alerts.struggling') || "15 students struggling with today's topic"}</div>
+          </div>
+          <Button size="sm" variant="outline">{t('teacher.alerts.address') || "Address"}</Button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const MentalHealthSupportStep = () => {
+  const { t } = useLanguage();
+  
+  return (
+    <div className="space-y-6">
+      <h3 className="text-lg font-semibold flex items-center gap-2">
+        <HeartIcon className="w-5 h-5 text-purple-500" />
+        {t('teacher.mentalHealth.center') || "Mental Health Support Center - Teacher Interface"}
+      </h3>
+      
+      {/* Active Support Sessions */}
+      <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
+        <h4 className="font-medium mb-3 flex items-center gap-2">
+          <StethoscopeIcon className="w-4 h-4" />
+          {t('teacher.mentalHealth.activeSessions') || "Active Support Sessions"}
+        </h4>
+        <div className="space-y-3">
+          <div className="bg-white p-3 rounded border border-purple-300">
+            <div className="flex justify-between items-center mb-2">
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                <span className="text-sm font-medium">{t('teacher.mentalHealth.anonymousStudent') || "Anonymous Student - Grade 10A"}</span>
+                <Badge className="bg-green-100 text-green-700">{t('teacher.mentalHealth.activeChat') || "Active Chat"}</Badge>
+              </div>
+              <span className="text-xs text-gray-500">{t('teacher.mentalHealth.started') || "Started 15 min ago"}</span>
             </div>
-            <div className="flex gap-1">
-              <Button size="sm" variant="outline">Assign Counselor</Button>
-              <Button size="sm" className="bg-blue-600 hover:bg-blue-700">Connect Now</Button>
+            <div className="text-xs text-gray-600 mb-2">
+              {t('teacher.mentalHealth.connected') || "Connected with Dr. Sarah Wilson - School Psychologist"}
+            </div>
+            <div className="flex gap-2">
+              <Button size="sm" variant="outline">{t('teacher.mentalHealth.monitor') || "Monitor (Read-Only)"}</Button>
+              <Button size="sm" className="bg-purple-600 hover:bg-purple-700">{t('teacher.mentalHealth.emergency') || "Emergency Override"}</Button>
             </div>
           </div>
         </div>
       </div>
-    </div>
 
-    {/* Mental Health Analytics */}
-    <div className="bg-green-50 p-4 rounded-lg border border-green-200">
-      <h4 className="font-medium mb-3 flex items-center gap-2">
-        <BarChart3Icon className="w-4 h-4" />
-        Weekly Mental Health Overview
-      </h4>
-      <div className="grid grid-cols-3 gap-4">
-        <div className="text-center">
-          <div className="text-xl font-bold text-green-600">23</div>
-          <div className="text-xs text-green-800">Support Sessions</div>
-        </div>
-        <div className="text-center">
-          <div className="text-xl font-bold text-blue-600">89%</div>
-          <div className="text-xs text-blue-800">Positive Outcomes</div>
-        </div>
-        <div className="text-center">
-          <div className="text-xl font-bold text-purple-600">4.8★</div>
-          <div className="text-xs text-purple-800">Support Rating</div>
+      {/* Support Requests Queue */}
+      <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+        <h4 className="font-medium mb-3 flex items-center gap-2">
+          <MessageCircleIcon className="w-4 h-4" />
+          {t('teacher.mentalHealth.pendingRequests') || "Pending Support Requests"}
+        </h4>
+        <div className="space-y-2">
+          <div className="bg-white p-3 rounded border">
+            <div className="flex justify-between items-center">
+              <div>
+                <div className="text-sm font-medium">Emma Thompson - Grade 9B</div>
+                <div className="text-xs text-gray-600">{t('teacher.mentalHealth.examStress') || "Requested counselor session about exam stress"}</div>
+                <div className="text-xs text-blue-600 mt-1">{t('teacher.mentalHealth.waiting') || "Waiting 8 minutes"}</div>
+              </div>
+              <div className="flex gap-1">
+                <Button size="sm" variant="outline">{t('teacher.mentalHealth.assignCounselor') || "Assign Counselor"}</Button>
+                <Button size="sm" className="bg-blue-600 hover:bg-blue-700">{t('teacher.mentalHealth.connectNow') || "Connect Now"}</Button>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
-    </div>
 
-    {/* Privacy & Security Notice */}
-    <div className="bg-gray-50 p-3 rounded-lg border border-gray-200">
-      <div className="flex items-center gap-2 mb-2">
-        <ShieldCheckIcon className="w-4 h-4 text-gray-600" />
-        <span className="text-sm font-medium text-gray-800">Privacy & Confidentiality</span>
+      {/* Mental Health Analytics */}
+      <div className="bg-green-50 p-4 rounded-lg border border-green-200">
+        <h4 className="font-medium mb-3 flex items-center gap-2">
+          <BarChart3Icon className="w-4 h-4" />
+          {t('teacher.mentalHealth.weeklyOverview') || "Weekly Mental Health Overview"}
+        </h4>
+        <div className="grid grid-cols-3 gap-4">
+          <div className="text-center">
+            <div className="text-xl font-bold text-green-600">23</div>
+            <div className="text-xs text-green-800">{t('teacher.mentalHealth.supportSessions') || "Support Sessions"}</div>
+          </div>
+          <div className="text-center">
+            <div className="text-xl font-bold text-blue-600">89%</div>
+            <div className="text-xs text-blue-800">{t('teacher.mentalHealth.positiveOutcomes') || "Positive Outcomes"}</div>
+          </div>
+          <div className="text-center">
+            <div className="text-xl font-bold text-purple-600">4.8★</div>
+            <div className="text-xs text-purple-800">{t('teacher.mentalHealth.supportRating') || "Support Rating"}</div>
+          </div>
+        </div>
       </div>
-      <p className="text-xs text-gray-600">
-        All mental health communications are encrypted and confidential. Teachers can only monitor for safety concerns. 
-        Individual chat contents are accessible only to licensed mental health professionals.
-      </p>
-    </div>
 
-    {/* Crisis Support */}
-    <div className="bg-red-50 p-3 rounded-lg border border-red-200">
-      <p className="text-xs text-red-700 font-medium">🚨 Crisis Support: 116 123 Vilties Linija - Hope Line</p>
+      {/* Privacy & Security Notice */}
+      <div className="bg-gray-50 p-3 rounded-lg border border-gray-200">
+        <div className="flex items-center gap-2 mb-2">
+          <ShieldCheckIcon className="w-4 h-4 text-gray-600" />
+          <span className="text-sm font-medium text-gray-800">{t('teacher.mentalHealth.privacy') || "Privacy & Confidentiality"}</span>
+        </div>
+        <p className="text-xs text-gray-600">
+          {t('teacher.mentalHealth.privacyDescription') || "All mental health communications are encrypted and confidential. Teachers can only monitor for safety concerns. Individual chat contents are accessible only to licensed mental health professionals."}
+        </p>
+      </div>
+
+      {/* Crisis Support */}
+      <div className="bg-red-50 p-3 rounded-lg border border-red-200">
+        <p className="text-xs text-red-700 font-medium">🚨 Crisis Support: 116 123 Vilties Linija - Hope Line</p>
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 const ClassPerformanceStep = () => (
   <div className="space-y-4">

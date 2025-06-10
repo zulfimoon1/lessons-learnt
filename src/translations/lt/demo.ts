@@ -51,5 +51,56 @@ export const ltDemoTranslations = {
   'demo.mockup.anonymousStudent': 'Anonimiškas studentas',
   'demo.mockup.understandValid': 'Suprantu, jūsų jausmai yra pagrįsti',
   'demo.mockup.typeAnonymousMessage': 'Rašykite anonimiška žinutę...',
-  'demo.mockup.send': 'Siųsti'
+  'demo.mockup.send': 'Siųsti',
+  
+  // Demo page specific translations
+  'demo.page.title': 'Interaktyvi platformos patirtis',
+  'demo.page.subtitle': 'Patirkite, kaip tiek studentai, tiek mokytojai sąveikauja su mūsų platforma per interaktyvius modeliavimus, taip pat tyrinėkite išsamius visų platformos funkcijų demo.',
+  'demo.page.backToHome': 'Grįžti į pagrindinį',
+  'demo.page.interactivePlatformDemo': 'Interaktyvi platformos demonstracija',
+  'demo.page.pauseDemo': 'Pristabdyti demo',
+  'demo.page.playDemo': 'Paleisti demo',
+  
+  // Demo types
+  'demo.simulation.student.title': 'Interaktyvus studento kelias',
+  'demo.simulation.student.description': 'Stebėkite pilną studento patirties modeliavimą, įskaitant skydelį ir atsiliepimus',
+  'demo.simulation.teacher.title': 'Interaktyvus mokytojo kelias',
+  'demo.simulation.teacher.description': 'Patirkite, kaip mokytojai naudoja platformą studentų stebėjimui ir pamokų gerinimui',
+  'demo.simulation.mentalHealth.title': 'Psichinės sveikatos palaikymo centras',
+  'demo.simulation.mentalHealth.description': 'Pilna psichinės sveikatos palaikymo sistema su konsultantais ir krizių palaikymu',
+  
+  // Demo features
+  'demo.features.student.1': '• Pilnas studento skydelis su visomis funkcijomis',
+  'demo.features.student.2': '• Nuoseklus atsiliepimų formos užpildymas',
+  'demo.features.student.3': '• Interaktyvi supratimo ir susidomėjimo vertinimo sistema',
+  'demo.features.student.4': '• Emocinės būsenos patikrinimai',
+  'demo.features.student.5': '• Rašytinių atsiliepimų pateikimo procesas',
+  'demo.features.student.6': '• Psichinės sveikatos palaikymo valdiklio prieiga',
+  
+  'demo.features.teacher.1': '• Išsamus mokytojo skydelio apžvalga',
+  'demo.features.teacher.2': '• Realaus laiko klasės veiklos stebėjimas',
+  'demo.features.teacher.3': '• Psichinės sveikatos įspėjimų sistemos peržiūra',
+  'demo.features.teacher.4': '• Studentų nuotaikos ir emocinės būsenos sekimas',
+  'demo.features.teacher.5': '• Individualių atsiliepimų analizė',
+  'demo.features.teacher.6': '• Veiksmų planavimas pagal studentų poreikius',
+  'demo.features.teacher.7': '• Savaitės veiklos tendencijų analizė',
+  'demo.features.teacher.8': '• Pamokų tobulinimo planavimas',
+  
+  'demo.features.mentalHealth.1': '• Kelių konsultantų prieinamumas',
+  'demo.features.mentalHealth.2': '• Anoniminio pokalbio sistema',
+  'demo.features.mentalHealth.3': '• Krizių palaikymo protokolai',
+  'demo.features.mentalHealth.4': '• Savarankiškos pagalbos išteklių biblioteka',
+  'demo.features.mentalHealth.5': '• Nuotaikos sekimo įrankiai',
+  'demo.features.mentalHealth.6': '• Vizitų planavimas',
+  
+  // Interactive simulation descriptions
+  'demo.interactive.student': 'Interaktyvus modeliavimas: Stebėkite pilną studento kelionę nuo skydelio prisijungimo iki atsiliepimų pateikimo, įskaitant prieigą prie psichinės sveikatos palaikymo.',
+  'demo.interactive.teacher': 'Mokytojo darbo eiga: Patirkite, kaip mokytojai stebi studentų gerovę, analizuoja veiklos duomenis ir imasi veiksmų mokymosi rezultatams gerinti.',
+  'demo.interactive.integration': 'Pilna integracija: Visi komponentai veikia sklandžiai kartu, saugiai dalijantis duomenimis, tuo pačiu išlaikant visišką psichinės sveikatos paslaugų privatumą.',
+  
+  // Call to action
+  'demo.cta.title': 'Patirkite pilną platformą',
+  'demo.cta.description': 'Nuo interaktyvių studentų modeliavimų iki išsamios mokytojų analitikos - pamatykite, kaip mūsų platforma sukuria palaikančią ir įtraukiančią mokymosi aplinką.',
+  'demo.cta.startTrial': 'Pradėti nemokamą bandymą',
+  'demo.cta.studentAccess': 'Studento prieiga'
 };
