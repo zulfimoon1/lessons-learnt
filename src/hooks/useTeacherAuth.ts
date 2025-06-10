@@ -1,7 +1,7 @@
 
 import { useState } from 'react';
 import { Teacher } from '@/types/auth';
-import { teacherEmailLoginService } from '@/services/authService';
+import { teacherEmailLoginService, teacherEmailSignupService } from '@/services/authService';
 
 export const useTeacherAuth = () => {
   const [teacher, setTeacher] = useState<Teacher | null>(null);
@@ -32,6 +32,35 @@ export const useTeacherAuth = () => {
     } catch (error) {
       console.error('useTeacherAuth: Unexpected error:', error);
       return { error: 'Login failed. Please check your connection and try again.' };
+    }
+  };
+
+  const signup = async (name: string, email: string, school: string, password: string, role: 'teacher' | 'admin' | 'doctor' = 'teacher') => {
+    try {
+      console.log('useTeacherAuth: Starting signup process for:', name);
+      
+      const result = await teacherEmailSignupService(name, email, school, password, role);
+      console.log('useTeacherAuth: Signup service result', { 
+        success: !!result.teacher, 
+        error: result.error 
+      });
+      
+      if (result.teacher) {
+        setTeacher(result.teacher);
+        // Securely store teacher data
+        try {
+          localStorage.setItem('teacher', JSON.stringify(result.teacher));
+          localStorage.removeItem('student');
+          console.log('useTeacherAuth: Teacher signup data saved successfully');
+        } catch (storageError) {
+          console.warn('useTeacherAuth: Failed to save teacher signup data to localStorage:', storageError);
+        }
+      }
+      
+      return result;
+    } catch (error) {
+      console.error('useTeacherAuth: Unexpected signup error:', error);
+      return { error: 'Signup failed. Please check your connection and try again.' };
     }
   };
 
@@ -66,6 +95,7 @@ export const useTeacherAuth = () => {
   return {
     teacher,
     login,
+    signup,
     logout,
     restoreFromStorage,
     setTeacher

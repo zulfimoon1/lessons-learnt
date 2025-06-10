@@ -296,3 +296,20 @@ class EnhancedSecureSessionService {
 }
 
 export const enhancedSecureSessionService = new EnhancedSecureSessionService();
+
+// Export individual functions for compatibility
+export const generateCSRFToken = () => {
+  const array = new Uint8Array(32);
+  crypto.getRandomValues(array);
+  return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
+};
+
+export const validateCSRFToken = (token: string): boolean => {
+  try {
+    const storedToken = sessionStorage.getItem('csrf_token');
+    return storedToken === token && token.length === 64;
+  } catch (error) {
+    console.error('CSRF token validation failed:', error);
+    return false;
+  }
+};

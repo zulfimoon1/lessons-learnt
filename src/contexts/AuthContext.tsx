@@ -1,14 +1,31 @@
+
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { Teacher, Student, AuthContextType, SecurityEvent } from '@/types/auth';
 import { useTeacherAuth } from '@/hooks/useTeacherAuth';
 import { useStudentAuth } from '@/hooks/useStudentAuth';
-import { generateCSRFToken, validateCSRFToken } from '@/services/enhancedSecureSessionService';
 
 interface AuthProviderProps {
   children: ReactNode;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+// Simple CSRF token functions
+const generateCSRFToken = (): string => {
+  const array = new Uint8Array(32);
+  crypto.getRandomValues(array);
+  return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
+};
+
+const validateCSRFToken = (token: string): boolean => {
+  try {
+    const storedToken = sessionStorage.getItem('csrf_token');
+    return storedToken === token && token.length === 64;
+  } catch (error) {
+    console.error('CSRF token validation failed:', error);
+    return false;
+  }
+};
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [isLoading, setIsLoading] = useState(true);
@@ -43,6 +60,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         // Generate CSRF token
         const token = generateCSRFToken();
         setCsrfToken(token);
+        sessionStorage.setItem('csrf_token', token);
         
         // Restore authentication states
         const teacherRestored = teacherAuth.restoreFromStorage();
@@ -231,6 +249,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     // Regenerate CSRF token on logout
     const newToken = generateCSRFToken();
     setCsrfToken(newToken);
+    sessionStorage.setItem('csrf_token', newToken);
   };
 
   // Debug logging for auth state
