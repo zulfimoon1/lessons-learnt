@@ -1,0 +1,27 @@
+
+export const enWeeklyTranslations = {
+  'weekly.summary': 'Weekly Summary',
+  'weekly.overview': 'Weekly Overview',
+  'weekly.thisWeek': 'This Week',
+  'weekly.lastWeek': 'Last Week',
+  'weekly.previousWeeks': 'Previous Weeks',
+  'weekly.totalClasses': 'Total Classes',
+  'weekly.averageRating': 'Average Rating',
+  'weekly.feedbackCount': 'Feedback Count',
+  'weekly.engagementLevel': 'Engagement Level',
+  'weekly.improvementAreas': 'Areas for Improvement',
+  'weekly.positiveHighlights': 'Positive Highlights',
+  'weekly.recommendations': 'Recommendations',
+  'weekly.trendsAnalysis': 'Trends Analysis',
+  'weekly.compareWith': 'Compare with',
+  'weekly.weekOf': 'Week of',
+  'weekly.noDataAvailable': 'No data available for this week',
+  'weekly.generateReport': 'Generate Report',
+  'weekly.downloadPDF': 'Download PDF',
+  'weekly.shareReport': 'Share Report',
+  'weekly.viewFullReport': 'View Full Report',
+  'weekly.keyMetrics': 'Key Metrics',
+  'weekly.studentParticipation': 'Student Participation',
+  'weekly.classroomMood': 'Classroom Mood',
+  'weekly.learningOutcomes': 'Learning Outcomes'
+};

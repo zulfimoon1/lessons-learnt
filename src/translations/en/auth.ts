@@ -1,0 +1,26 @@
+
+export const enAuthTranslations = {
+  'auth.signIn': 'Sign In',
+  'auth.signUp': 'Sign Up',
+  'auth.email': 'Email',
+  'auth.password': 'Password',
+  'auth.confirmPassword': 'Confirm Password',
+  'auth.forgotPassword': 'Forgot Password?',
+  'auth.resetPassword': 'Reset Password',
+  'auth.createAccount': 'Create Account',
+  'auth.alreadyHaveAccount': 'Already have an account?',
+  'auth.dontHaveAccount': "Don't have an account?",
+  'auth.invalidCredentials': 'Invalid credentials',
+  'auth.passwordTooShort': 'Password must be at least 6 characters',
+  'auth.emailRequired': 'Email is required',
+  'auth.passwordRequired': 'Password is required',
+  'auth.signInSuccess': 'Successfully signed in',
+  'auth.signUpSuccess': 'Account created successfully',
+  'auth.signOutSuccess': 'Successfully signed out',
+  'auth.resetPasswordSuccess': 'Password reset email sent',
+  'auth.resetPasswordError': 'Failed to send reset email',
+  'auth.schoolCode': 'School Code',
+  'auth.enterSchoolCode': 'Enter your school code',
+  'auth.invalidSchoolCode': 'Invalid school code',
+  'auth.schoolCodeRequired': 'School code is required'
+};
