@@ -1,4 +1,3 @@
-
 import { ltDemoTranslations } from './lt/demo';
 import { ltAuthTranslations } from './lt/auth';
 import { ltChatTranslations } from './lt/chat';
@@ -267,4 +266,12 @@ export const ltTranslations = {
   'demo.mentalHealth.selfHelpResources': 'Savarankiškos pagalbos ištekliai',
   'demo.mentalHealth.moodTracking': 'Nuotaikos sekimas',
   'demo.mentalHealth.crisisSupport': 'Krizių palaikymas: 116 123 Vilties Linija',
+
+  // Platform Admin translations
+  'platformAdmin.title': 'Platformos administravimas',
+  'platformAdmin.management': 'Platformos valdymas',
+  'platformAdmin.login': 'Platformos administratoriaus prisijungimas',
+  'platformAdmin.dashboard': 'Platformos administratoriaus skydelis',
+  'platformAdmin.welcome': 'Sveiki atvykę į platformos administravimą',
+  'platformAdmin.description': 'Prisijunkite prie visos platformos analitikos ir valdymo įrankių',
 };
