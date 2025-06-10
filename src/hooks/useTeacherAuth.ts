@@ -1,40 +1,28 @@
-
 import { useState } from 'react';
 import { Teacher } from '@/types/auth';
-import { enhancedSecureTeacherLogin, enhancedSecureTeacherSignup } from '@/services/enhancedSecureAuthService';
+import { teacherEmailLoginService, teacherSignupService } from '@/services/authService';
 import { secureSessionService } from '@/services/secureSessionService';
-import { secureRateLimitService } from '@/services/secureRateLimitService';
-import { enhancedValidateInput } from '@/services/enhancedInputValidation';
 
 export const useTeacherAuth = () => {
   const [teacher, setTeacher] = useState<Teacher | null>(null);
 
   const login = async (email: string, password: string) => {
     try {
-      console.log('useTeacherAuth: Starting enhanced secure login process with email:', email);
+      console.log('useTeacherAuth: Starting login process with email:', email);
       
       // Enhanced input validation
-      const emailValidation = enhancedValidateInput.validateEmail(email);
-      if (!emailValidation.isValid) {
-        return { error: emailValidation.message };
+      if (!email?.trim() || !password?.trim()) {
+        return { error: 'Email and password are required' };
       }
 
-      // Check rate limiting
-      const rateLimitCheck = await secureRateLimitService.checkRateLimit(email, 'teacher-login');
-      
-      if (!rateLimitCheck.allowed) {
-        await secureRateLimitService.recordFailedAttempt(email, 'teacher-login', { reason: 'rate_limit' });
-        return { error: rateLimitCheck.message };
-      }
-
-      // Apply progressive delay
-      const delay = await secureRateLimitService.getProgressiveDelay(email, 'teacher-login');
-      if (delay > 1000) {
-        await new Promise(resolve => setTimeout(resolve, delay));
+      // Basic email format validation
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email.trim())) {
+        return { error: 'Please enter a valid email address' };
       }
       
-      const result = await enhancedSecureTeacherLogin(email, password);
-      console.log('useTeacherAuth: Enhanced secure service result', { 
+      const result = await teacherEmailLoginService(email.trim(), password);
+      console.log('useTeacherAuth: Login service result', { 
         success: !!result.teacher, 
         error: result.error 
       });
@@ -51,19 +39,16 @@ export const useTeacherAuth = () => {
         try {
           secureSessionService.securelyStoreUserData('teacher', teacherData);
           localStorage.removeItem('student');
+          localStorage.removeItem('platformAdmin');
           console.log('useTeacherAuth: Teacher data saved successfully');
-          
-          // Record successful login
-          await secureRateLimitService.recordSuccessfulAttempt(email, 'teacher-login');
         } catch (storageError) {
           console.warn('useTeacherAuth: Failed to save teacher data to localStorage:', storageError);
         }
-      } else {
-        // Record failed attempt
-        await secureRateLimitService.recordFailedAttempt(email, 'teacher-login', { reason: 'invalid_credentials' });
+        
+        return { teacher: teacherData };
       }
       
-      return result;
+      return { error: result.error || 'Login failed. Please check your credentials.' };
     } catch (error) {
       console.error('useTeacherAuth: Unexpected error:', error);
       return { error: 'Login failed. Please check your connection and try again.' };
@@ -72,42 +57,26 @@ export const useTeacherAuth = () => {
 
   const signup = async (name: string, email: string, school: string, password: string, role: 'teacher' | 'admin' | 'doctor' = 'teacher') => {
     try {
-      console.log('useTeacherAuth: Starting enhanced secure signup process for:', name);
+      console.log('useTeacherAuth: Starting signup process for:', name);
       
       // Enhanced input validation
-      const nameValidation = enhancedValidateInput.validateName(name);
-      if (!nameValidation.isValid) {
-        return { error: nameValidation.message };
+      if (!name?.trim() || !email?.trim() || !school?.trim() || !password?.trim()) {
+        return { error: 'All fields are required' };
       }
 
-      const emailValidation = enhancedValidateInput.validateEmail(email);
-      if (!emailValidation.isValid) {
-        return { error: emailValidation.message };
+      // Basic email format validation
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email.trim())) {
+        return { error: 'Please enter a valid email address' };
       }
 
-      const schoolValidation = enhancedValidateInput.validateSchool(school);
-      if (!schoolValidation.isValid) {
-        return { error: schoolValidation.message };
-      }
-
-      // Enhanced password validation
-      const passwordValidation = enhancedValidateInput.validatePasswordComplexity(password);
-      if (!passwordValidation.isValid) {
-        return { error: passwordValidation.message };
-      }
-
-      // Check rate limiting for signups
-      const rateLimitCheck = await secureRateLimitService.checkRateLimit(email, 'teacher-signup', {
-        maxAttempts: 3,
-        windowMinutes: 60
-      });
-      
-      if (!rateLimitCheck.allowed) {
-        return { error: rateLimitCheck.message };
+      // Basic password validation
+      if (password.length < 6) {
+        return { error: 'Password must be at least 6 characters long' };
       }
       
-      const result = await enhancedSecureTeacherSignup(name, email, school, password, role);
-      console.log('useTeacherAuth: Enhanced secure signup service result', { 
+      const result = await teacherSignupService(name.trim(), email.trim(), school.trim(), password, role);
+      console.log('useTeacherAuth: Signup service result', { 
         success: !!result.teacher, 
         error: result.error 
       });
@@ -124,16 +93,16 @@ export const useTeacherAuth = () => {
         try {
           secureSessionService.securelyStoreUserData('teacher', teacherData);
           localStorage.removeItem('student');
+          localStorage.removeItem('platformAdmin');
           console.log('useTeacherAuth: Teacher signup data saved successfully');
-          
-          // Record successful signup
-          await secureRateLimitService.recordSuccessfulAttempt(email, 'teacher-signup');
         } catch (storageError) {
           console.warn('useTeacherAuth: Failed to save teacher signup data to localStorage:', storageError);
         }
+        
+        return { teacher: teacherData };
       }
       
-      return result;
+      return { error: result.error || 'Signup failed. Please try again.' };
     } catch (error) {
       console.error('useTeacherAuth: Unexpected signup error:', error);
       return { error: 'Signup failed. Please check your connection and try again.' };

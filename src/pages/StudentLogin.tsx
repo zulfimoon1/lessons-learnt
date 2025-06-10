@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -42,9 +41,11 @@ const StudentLogin = () => {
   }
 
   const handleLogin = async (fullName: string, school: string, grade: string, password: string) => {
+    console.log('StudentLogin: Login attempt with:', { fullName, school, grade });
+    
     if (!fullName.trim() || !school.trim() || !grade.trim() || !password) {
       toast({
-        title: t('teacher.missingInfo') || "Missing information",
+        title: "Missing information",
         description: "Please enter your full name, school, grade, and password",
         variant: "destructive",
       });
@@ -61,22 +62,22 @@ const StudentLogin = () => {
       if (result.error) {
         console.log('StudentLogin: Login failed with error:', result.error);
         toast({
-          title: t('student.loginFailed') || "Login failed",
+          title: "Login failed",
           description: result.error,
           variant: "destructive",
         });
       } else if (result.student) {
         console.log('StudentLogin: Login successful, redirecting to dashboard');
         toast({
-          title: t('student.welcomeBack') || "Welcome back!",
-          description: t('student.loginSuccess') || "Login successful",
+          title: "Welcome back!",
+          description: "Login successful",
         });
         navigate("/student-dashboard", { replace: true });
       }
     } catch (err) {
       console.error('StudentLogin: Unexpected error during login:', err);
       toast({
-        title: t('student.loginFailed') || "Login failed",
+        title: "Login failed",
         description: "An unexpected error occurred. Please try again.",
         variant: "destructive",
       });

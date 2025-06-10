@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import bcrypt from 'bcryptjs';
 import { Teacher, Student } from '@/types/auth';
@@ -195,7 +196,7 @@ export const studentSimpleLoginService = async (fullName: string, password: stri
       return { error: 'Name and password are required.' };
     }
 
-    // Query for students with matching name (case-insensitive)
+    // Query for students with exact name match (case-insensitive)
     const { data: students, error: searchError } = await supabase
       .from('students')
       .select('*')
@@ -216,7 +217,7 @@ export const studentSimpleLoginService = async (fullName: string, password: stri
       return { error: 'Invalid credentials. Please check your name and try again.' };
     }
 
-    // Check password for the first matching student
+    // Check password for the matching student
     const student = students[0];
     logSecurely('studentSimpleLoginService: Found student, checking password for:', student.full_name);
     

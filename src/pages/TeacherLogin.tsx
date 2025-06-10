@@ -44,10 +44,12 @@ const TeacherLogin = () => {
   }
 
   const handleLogin = async (email: string, password: string) => {
+    console.log('TeacherLogin: Login attempt with email:', email);
+    
     if (!email.trim() || !password) {
       toast({
-        title: t('teacher.missingInfo'),
-        description: `${t('auth.emailRequired')} ${t('auth.passwordRequired')}`,
+        title: "Missing information",
+        description: "Please enter both email and password",
         variant: "destructive",
       });
       return;
@@ -63,7 +65,7 @@ const TeacherLogin = () => {
       if (result.error) {
         console.error('TeacherLogin: Login failed with error:', result.error);
         toast({
-          title: t('auth.loginFailed'),
+          title: "Login Failed",
           description: result.error,
           variant: "destructive",
         });
@@ -71,8 +73,8 @@ const TeacherLogin = () => {
         console.log('TeacherLogin: Login successful, redirecting');
         
         toast({
-          title: t('auth.loginSuccess'),
-          description: t('auth.loginSuccess'),
+          title: "Login Successful",
+          description: "Welcome back!",
         });
         
         setTimeout(() => {
@@ -85,16 +87,16 @@ const TeacherLogin = () => {
       } else {
         console.error('TeacherLogin: No error but no teacher data returned');
         toast({
-          title: t('auth.loginFailed'),
-          description: t('auth.loginFailed'),
+          title: "Login Failed",
+          description: "Login failed. Please try again.",
           variant: "destructive",
         });
       }
     } catch (err) {
       console.error('TeacherLogin: Unexpected error during login:', err);
       toast({
-        title: t('auth.loginFailed'),
-        description: t('auth.loginFailed'),
+        title: "Login Failed",
+        description: "An unexpected error occurred. Please try again.",
         variant: "destructive",
       });
     } finally {

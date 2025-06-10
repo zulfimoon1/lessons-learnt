@@ -16,6 +16,7 @@ export const useStudentAuth = () => {
         return { error: 'All fields are required' };
       }
 
+      // Call the service with just fullName and password
       const result = await studentSimpleLoginService(fullName.trim(), password.trim());
       console.log('useStudentAuth: Login service result:', { 
         success: !!result.student, 
@@ -25,6 +26,10 @@ export const useStudentAuth = () => {
       if (result.student) {
         // Verify the student data matches the provided school and grade
         if (result.student.school !== school.trim() || result.student.grade !== grade.trim()) {
+          console.log('useStudentAuth: School/grade mismatch:', {
+            expected: { school: school.trim(), grade: grade.trim() },
+            actual: { school: result.student.school, grade: result.student.grade }
+          });
           return { error: 'Invalid credentials. Please check your school and grade information.' };
         }
 
