@@ -115,13 +115,11 @@ const SecureAuth = () => {
 
     try {
       const result = await secureTeacherSignup(
-        teacherData.email,
-        teacherData.password,
         teacherData.name,
+        teacherData.email,
         teacherData.school,
-        teacherData.role,
-        teacherData.specialization || undefined,
-        teacherData.license_number || undefined
+        teacherData.password,
+        teacherData.role
       );
       
       if (result.error) {
@@ -133,7 +131,7 @@ const SecureAuth = () => {
       } else {
         toast({
           title: "Account Created",
-          description: "Please check your email to verify your account",
+          description: "Your teacher account has been created successfully!",
         });
         setActiveTab("signin");
       }
@@ -160,7 +158,7 @@ const SecureAuth = () => {
       return;
     }
 
-    if (!studentData.email || !studentData.password || !studentData.fullName || !studentData.school || !studentData.grade) {
+    if (!studentData.fullName || !studentData.password || !studentData.school || !studentData.grade) {
       toast({
         title: "Missing Information",
         description: "Please fill in all required fields",
@@ -173,11 +171,10 @@ const SecureAuth = () => {
 
     try {
       const result = await secureStudentSignup(
-        studentData.email,
-        studentData.password,
         studentData.fullName,
         studentData.school,
-        studentData.grade
+        studentData.grade,
+        studentData.password
       );
       
       if (result.error) {
@@ -189,7 +186,7 @@ const SecureAuth = () => {
       } else {
         toast({
           title: "Account Created",
-          description: "Please check your email to verify your account",
+          description: "Your student account has been created successfully!",
         });
         setActiveTab("signin");
       }
@@ -338,17 +335,6 @@ const SecureAuth = () => {
 
               <TabsContent value="student" className="space-y-4">
                 <form onSubmit={handleStudentSignup} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="student-email">Email *</Label>
-                    <Input
-                      id="student-email"
-                      type="email"
-                      placeholder="student@email.com"
-                      value={studentData.email}
-                      onChange={(e) => setStudentData(prev => ({ ...prev, email: e.target.value }))}
-                      required
-                    />
-                  </div>
                   <div className="space-y-2">
                     <Label htmlFor="student-name">Full Name *</Label>
                     <Input
