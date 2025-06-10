@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { verifyPassword, hashPassword } from './securePasswordService';
 import { validateInput } from './secureInputValidation';
@@ -189,14 +190,28 @@ export const platformAdminLoginService = async (email: string, password: string,
 
     console.log('Admin found, checking password...');
     console.log('Admin data:', { id: admin.id, name: admin.name, email: admin.email, role: admin.role });
+    console.log('Password hash from DB:', admin.password_hash ? 'exists' : 'missing');
+    console.log('Provided password:', password);
 
     // Enhanced password verification with timing attack protection
     const verificationStart = Date.now();
     let isPasswordValid = false;
     
     try {
+      // First check if password_hash exists
+      if (!admin.password_hash) {
+        console.error('No password hash found in database for admin');
+        recordFailedAttempt(sanitizedEmail);
+        return { error: 'Authentication configuration error' };
+      }
+
       isPasswordValid = await verifyPassword(password, admin.password_hash);
       console.log('Password verification result:', isPasswordValid);
+      
+      // Let's also try a direct comparison for debugging
+      console.log('Password hash length:', admin.password_hash.length);
+      console.log('Password hash starts with:', admin.password_hash.substring(0, 10));
+      
     } catch (verifyError) {
       console.error('Password verification error:', verifyError);
       recordFailedAttempt(sanitizedEmail);
