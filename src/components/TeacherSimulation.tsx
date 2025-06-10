@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -22,7 +21,9 @@ import {
   SettingsIcon,
   TrendingUpIcon,
   BarChart3Icon,
-  UsersIcon
+  UsersIcon,
+  StethoscopeIcon,
+  ShieldCheckIcon
 } from "lucide-react";
 
 interface TeacherSimulationStep {
@@ -53,6 +54,13 @@ const TeacherSimulation = () => {
       description: "Ms. Johnson checks mental health alerts and class performance warnings",
       duration: 3500,
       component: <ViewAlertsStep />
+    },
+    {
+      id: "mental-health-support",
+      title: "Mental Health Support System",
+      description: "Ms. Johnson reviews and manages student mental health support requests",
+      duration: 4500,
+      component: <MentalHealthSupportStep />
     },
     {
       id: "class-performance",
@@ -306,6 +314,99 @@ const ViewAlertsStep = () => (
   </div>
 );
 
+const MentalHealthSupportStep = () => (
+  <div className="space-y-6">
+    <h3 className="text-lg font-semibold flex items-center gap-2">
+      <HeartIcon className="w-5 h-5 text-purple-500" />
+      Mental Health Support Center - Teacher Interface
+    </h3>
+    
+    {/* Active Support Sessions */}
+    <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
+      <h4 className="font-medium mb-3 flex items-center gap-2">
+        <StethoscopeIcon className="w-4 h-4" />
+        Active Support Sessions
+      </h4>
+      <div className="space-y-3">
+        <div className="bg-white p-3 rounded border border-purple-300">
+          <div className="flex justify-between items-center mb-2">
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+              <span className="text-sm font-medium">Anonymous Student - Grade 10A</span>
+              <Badge className="bg-green-100 text-green-700">Active Chat</Badge>
+            </div>
+            <span className="text-xs text-gray-500">Started 15 min ago</span>
+          </div>
+          <div className="text-xs text-gray-600 mb-2">
+            Connected with Dr. Sarah Wilson - School Psychologist
+          </div>
+          <div className="flex gap-2">
+            <Button size="sm" variant="outline">Monitor (Read-Only)</Button>
+            <Button size="sm" className="bg-purple-600 hover:bg-purple-700">Emergency Override</Button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {/* Support Requests Queue */}
+    <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+      <h4 className="font-medium mb-3 flex items-center gap-2">
+        <MessageCircleIcon className="w-4 h-4" />
+        Pending Support Requests
+      </h4>
+      <div className="space-y-2">
+        <div className="bg-white p-3 rounded border">
+          <div className="flex justify-between items-center">
+            <div>
+              <div className="text-sm font-medium">Emma Thompson - Grade 9B</div>
+              <div className="text-xs text-gray-600">Requested counselor session about exam stress</div>
+              <div className="text-xs text-blue-600 mt-1">Waiting 8 minutes</div>
+            </div>
+            <div className="flex gap-1">
+              <Button size="sm" variant="outline">Assign Counselor</Button>
+              <Button size="sm" className="bg-blue-600 hover:bg-blue-700">Connect Now</Button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {/* Mental Health Analytics */}
+    <div className="bg-green-50 p-4 rounded-lg border border-green-200">
+      <h4 className="font-medium mb-3 flex items-center gap-2">
+        <BarChart3Icon className="w-4 h-4" />
+        Weekly Mental Health Overview
+      </h4>
+      <div className="grid grid-cols-3 gap-4">
+        <div className="text-center">
+          <div className="text-xl font-bold text-green-600">23</div>
+          <div className="text-xs text-green-800">Support Sessions</div>
+        </div>
+        <div className="text-center">
+          <div className="text-xl font-bold text-blue-600">89%</div>
+          <div className="text-xs text-blue-800">Positive Outcomes</div>
+        </div>
+        <div className="text-center">
+          <div className="text-xl font-bold text-purple-600">4.8★</div>
+          <div className="text-xs text-purple-800">Support Rating</div>
+        </div>
+      </div>
+    </div>
+
+    {/* Privacy & Security Notice */}
+    <div className="bg-gray-50 p-3 rounded-lg border border-gray-200">
+      <div className="flex items-center gap-2 mb-2">
+        <ShieldCheckIcon className="w-4 h-4 text-gray-600" />
+        <span className="text-sm font-medium text-gray-800">Privacy & Confidentiality</span>
+      </div>
+      <p className="text-xs text-gray-600">
+        All mental health communications are encrypted and confidential. Teachers can only monitor for safety concerns. 
+        Individual chat contents are accessible only to licensed mental health professionals.
+      </p>
+    </div>
+  </div>
+);
+
 const ClassPerformanceStep = () => (
   <div className="space-y-4">
     <h3 className="text-lg font-semibold">Live Class Performance - Mathematics Grade 10A</h3>
@@ -500,3 +601,5 @@ const PlanImprovementsStep = () => (
 );
 
 export default TeacherSimulation;
+
+}
