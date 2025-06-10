@@ -13,5 +13,16 @@ export const ltChatTranslations = {
   'chat.startChatWithDoctor': 'Pradėti pokalbį su gydytoju',
   'chat.connectionFailed': 'Prisijungimas nepavyko',
   'chat.chatStarted': 'Pokalbis pradėtas',
-  'chat.doctorWillJoin': 'Gydytojas netrukus prisijungs'
+  'chat.doctorWillJoin': 'Gydytojas netrukus prisijungs',
+  'chat.liveChatWithDoctor': 'Gyvas pokalbis su gydytoju',
+  'chat.anonymous': 'Anonimiškas',
+  'chat.chatWithStudent': 'Pokalbis su mokiniu',
+  'chat.connectedWithStudent': 'Prisijungta prie mokinio {{student}}',
+  'chat.connectedWithDoctor': 'Prisijungta prie gydytojo {{doctor}}',
+  'chat.doctor': 'Gydytojas',
+  'chat.connecting': 'Prisijungiama...',
+  'chat.waitingForDoctor': 'Laukiama gydytojo',
+  'chat.startConversation': 'Pradėkite pokalbį',
+  'chat.waitingConnection': 'Laukiama prisijungimo',
+  'chat.typePlaceholder': 'Rašykite žinutę...'
 };
