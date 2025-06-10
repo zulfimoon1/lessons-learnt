@@ -1,11 +1,9 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { usePlatformAdmin } from "@/contexts/PlatformAdminContext";
 import { createTestAdmin } from "@/services/platformAdminService";
@@ -111,24 +109,26 @@ const PlatformAdminLogin = () => {
 
           <Card className="shadow-lg">
             <CardContent className="p-6">
-              {/* Custom Tab Implementation */}
+              {/* Tab Navigation */}
               <div className="w-full mb-6">
-                <div className="flex bg-gray-100 p-1 rounded-lg">
+                <div className="flex bg-gray-100 p-1 rounded-lg border">
                   <button
-                    className={`flex-1 px-4 py-2 rounded-md font-medium transition-all ${
+                    type="button"
+                    className={`flex-1 px-4 py-2 rounded-md font-medium text-sm transition-all duration-200 ${
                       activeTab === 'login'
-                        ? 'bg-white text-gray-900 shadow-sm'
-                        : 'text-gray-600 hover:text-gray-900'
+                        ? 'bg-white text-gray-900 shadow-sm border border-gray-200'
+                        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
                     }`}
                     onClick={() => setActiveTab('login')}
                   >
                     Login
                   </button>
                   <button
-                    className={`flex-1 px-4 py-2 rounded-md font-medium transition-all ${
+                    type="button"
+                    className={`flex-1 px-4 py-2 rounded-md font-medium text-sm transition-all duration-200 ${
                       activeTab === 'create'
-                        ? 'bg-white text-gray-900 shadow-sm'
-                        : 'text-gray-600 hover:text-gray-900'
+                        ? 'bg-white text-gray-900 shadow-sm border border-gray-200'
+                        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
                     }`}
                     onClick={() => setActiveTab('create')}
                   >
