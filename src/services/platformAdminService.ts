@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { verifyPassword, hashPassword } from './securePasswordService';
 import { validateInput } from './secureInputValidation';
@@ -127,6 +126,7 @@ const validateLoginInput = (email: string, password: string): { valid: boolean; 
 
 export const platformAdminLoginService = async (email: string, password: string, csrfToken?: string) => {
   try {
+    console.log('=== PLATFORM ADMIN LOGIN DEBUG ===');
     console.log('Platform admin login attempt:', email);
 
     // Enhanced input validation
@@ -153,31 +153,56 @@ export const platformAdminLoginService = async (email: string, password: string,
       return { error: rateCheck.message };
     }
 
+    // First, let's try to check if we can access the table at all
+    console.log('Testing basic table access...');
+    try {
+      const { data: testData, error: testError } = await supabase
+        .from('teachers')
+        .select('email, role')
+        .limit(1);
+      
+      console.log('Basic table test - data:', testData);
+      console.log('Basic table test - error:', testError);
+    } catch (tableTestError) {
+      console.error('Table access test failed:', tableTestError);
+    }
+
     // Database query with detailed logging
     console.log('Querying database for admin with email:', sanitizedEmail);
+    console.log('Using query: SELECT * FROM teachers WHERE email = ? AND role = admin');
     
-    const { data: admin, error } = await supabase
+    const { data: admin, error, status, statusText } = await supabase
       .from('teachers')
       .select('*')
       .eq('email', sanitizedEmail)
       .eq('role', 'admin')
       .single();
 
-    console.log('Database query result:', { admin: !!admin, error });
+    console.log('Database query result:');
+    console.log('- data:', admin);
+    console.log('- error:', error);
+    console.log('- status:', status);
+    console.log('- statusText:', statusText);
 
     if (error) {
-      console.log('Database error:', error);
+      console.log('Database error details:', {
+        code: error.code,
+        message: error.message,
+        details: error.details,
+        hint: error.hint
+      });
+      
       if (error.code === 'PGRST116') {
-        console.log('No admin found with this email');
+        console.log('No admin found with this email (PGRST116)');
         recordFailedAttempt(sanitizedEmail);
         return { error: 'Invalid credentials' };
       }
       recordFailedAttempt(sanitizedEmail);
-      return { error: 'Database error occurred' };
+      return { error: `Database error: ${error.message}` };
     }
 
     if (!admin) {
-      console.log('Platform admin not found');
+      console.log('Platform admin not found (null result)');
       recordFailedAttempt(sanitizedEmail);
       logUserSecurityEvent({
         type: 'login_failed',
@@ -188,10 +213,17 @@ export const platformAdminLoginService = async (email: string, password: string,
       return { error: 'Invalid credentials' };
     }
 
-    console.log('Admin found, checking password...');
-    console.log('Admin data:', { id: admin.id, name: admin.name, email: admin.email, role: admin.role });
-    console.log('Password hash from DB:', admin.password_hash ? 'exists' : 'missing');
-    console.log('Provided password:', password);
+    console.log('Admin found successfully:');
+    console.log('- ID:', admin.id);
+    console.log('- Name:', admin.name);
+    console.log('- Email:', admin.email);
+    console.log('- Role:', admin.role);
+    console.log('- School:', admin.school);
+    console.log('- Has password hash:', !!admin.password_hash);
+    console.log('- Password hash length:', admin.password_hash?.length);
+
+    console.log('Starting password verification...');
+    console.log('Provided password length:', password.length);
 
     // Enhanced password verification with timing attack protection
     const verificationStart = Date.now();
@@ -205,12 +237,12 @@ export const platformAdminLoginService = async (email: string, password: string,
         return { error: 'Authentication configuration error' };
       }
 
+      console.log('Calling verifyPassword with:');
+      console.log('- Password:', password);
+      console.log('- Hash:', admin.password_hash);
+
       isPasswordValid = await verifyPassword(password, admin.password_hash);
       console.log('Password verification result:', isPasswordValid);
-      
-      // Let's also try a direct comparison for debugging
-      console.log('Password hash length:', admin.password_hash.length);
-      console.log('Password hash starts with:', admin.password_hash.substring(0, 10));
       
     } catch (verifyError) {
       console.error('Password verification error:', verifyError);
@@ -228,7 +260,7 @@ export const platformAdminLoginService = async (email: string, password: string,
     }
     
     if (!isPasswordValid) {
-      console.log('Invalid password for platform admin');
+      console.log('Password verification failed - invalid password');
       recordFailedAttempt(sanitizedEmail);
       logUserSecurityEvent({
         type: 'login_failed',
@@ -245,6 +277,7 @@ export const platformAdminLoginService = async (email: string, password: string,
     
     try {
       await enhancedSecureSessionService.createSession(admin.id, 'admin', admin.school);
+      console.log('Session created successfully');
     } catch (sessionError) {
       console.error('Session creation error:', sessionError);
     }
@@ -258,8 +291,8 @@ export const platformAdminLoginService = async (email: string, password: string,
       userAgent: navigator.userAgent
     });
 
-    console.log('Platform admin login successful');
-    return { 
+    console.log('=== LOGIN SUCCESSFUL ===');
+    const result = { 
       admin: {
         id: admin.id,
         name: admin.name,
@@ -268,8 +301,12 @@ export const platformAdminLoginService = async (email: string, password: string,
         school: admin.school
       }
     };
+    console.log('Returning result:', result);
+    return result;
   } catch (error) {
-    console.error('Platform admin login error:', error);
+    console.error('=== PLATFORM ADMIN LOGIN ERROR ===');
+    console.error('Unexpected error:', error);
+    console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace');
     
     // Enhanced error logging
     logUserSecurityEvent({
