@@ -115,21 +115,41 @@ export const ltDemoTranslations = {
   'demo.simulation.emmaLogsInto': 'Emma prisijungia prie savo pilno studento skydelio su visomis funkcijomis',
   
   // Student simulation steps
-  'demo.simulation.steps.1': 'Studento skydelis',
+  'demo.simulation.steps.1': 'Užpildyti studento skydelį',
   'demo.simulation.steps.2': 'Klasės tvarkaraštis',
-  'demo.simulation.steps.3': 'Pamokos pasirinkimas',
+  'demo.simulation.steps.3': 'Pasirinkti užbaigtą pamoką',
   'demo.simulation.steps.4': 'Atsiliepimų forma',
-  'demo.simulation.steps.5': 'Supratimo vertinimas',
-  'demo.simulation.steps.6': 'Susidomėjimo vertinimas',
+  'demo.simulation.steps.5': 'Įvertinti supratimą',
+  'demo.simulation.steps.6': 'Įvertinti susidomėjimą',
   'demo.simulation.steps.7': 'Emocinis patikrinimas',
   'demo.simulation.steps.8': 'Rašytinis atsiliepimas',
   'demo.simulation.steps.9': 'Psichinės sveikatos palaikymas',
-  'demo.simulation.steps.10': 'Atsiliepimo pateikimas',
+  'demo.simulation.steps.10': 'Pateikti atsiliepimą',
+
+  // Teacher simulation steps
+  'demo.teacher.steps.1': 'Skydelio apžvalga',
+  'demo.teacher.steps.2': 'Klasės analizė',
+  'demo.teacher.steps.3': 'Studentų įspėjimai',
+  'demo.teacher.steps.4': 'Nuotaikos sekimas',
+  'demo.teacher.steps.5': 'Individualūs ataskaitos',
+  'demo.teacher.steps.6': 'Veiksmų planavimas',
+  'demo.teacher.steps.7': 'Savaitės tendencijos',
+  'demo.teacher.steps.8': 'Pamokų planavimas',
+
+  // Teacher dashboard content
+  'demo.teacher.dashboardOverview': 'Mokytojo skydelio apžvalga',
+  'demo.teacher.totalStudents': 'Iš viso studentų',
+  'demo.teacher.avgUnderstanding': 'Vid. supratimas',
+  'demo.teacher.studentsNeedSupport': 'Studentai reikalauja pagalbos',
+  'demo.teacher.recentClassPerformance': 'Naujausi klasės rezultatai',
+  'demo.teacher.mathematicsAlgebra': 'Matematika - Algebra II',
+  'demo.teacher.chemistryLabWork': 'Chemija - Laboratorijos darbas',
+  'demo.teacher.analyzeDescription': 'Mokytojai analizuoja studentų veiklos ir gerovės duomenis',
 
   // Dashboard content
   'demo.dashboard.studentDashboard': 'Studento skydelis',
   'demo.dashboard.welcomeBack': 'Sveiki sugrįžę, Emma!',
-  'demo.dashboard.grade10': '10 klasė',
+  'demo.dashboard.grade10': 'Klasė 10',
   'demo.dashboard.currentGrade': 'Dabartinė klasė',
   'demo.dashboard.classesToday': 'Pamokos šiandien',
   'demo.dashboard.avgRating': 'Vid. įvertinimas',
@@ -144,22 +164,5 @@ export const ltDemoTranslations = {
   'demo.dashboard.worldWarI': 'Pirmasis pasaulinis karas',
   'demo.dashboard.upcoming': 'Artėjanti',
   'demo.dashboard.quickLessonFeedback': 'Greitas pamokos atsiliepimas',
-  'demo.dashboard.howDidYouFind': 'Kaip jums patiko šiandienos matematikos pamoka?',
-
-  // Missing translations from Demo page
-  'demo.keyFeaturesShown': 'Pagrindinės rodomos funkcijos',
-  'demo.interactiveSimulation': 'Interaktyvus modeliavimas',
-  'demo.teacherWorkflow': 'Mokytojo darbo eiga',
-  'demo.fullIntegration': 'Pilna integracija',
-
-  // Mental Health specific translations
-  'demo.mentalHealth.schoolPsychologist': 'Mokyklos psichologė',
-  'demo.mentalHealth.mrJamesChen': 'Ponas James Chen',
-  'demo.mentalHealth.counselor': 'Konsultantas',
-  'demo.mentalHealth.backAt2PM': 'Grįš 14:00',
-  'demo.mentalHealth.upcomingExams': 'Artėjantys egzaminai man kelia daug streso...',
-  'demo.mentalHealth.studyStrategies': 'Suprantu. Pabandykime aptarti kai kurias mokymosi strategijas, kurios gali padėti sumažinti stresą.',
-  'demo.mentalHealth.selfHelpResources': 'Savarankiškos pagalbos ištekliai',
-  'demo.mentalHealth.moodTracking': 'Nuotaikos sekimas',
-  'demo.mentalHealth.crisisSupport': 'Krizių palaikymas: 116 123'
+  'demo.dashboard.howDidYouFind': 'Kaip jums patiko šiandienos matematikos pamoka?'
 };
