@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -32,106 +33,6 @@ const Demo = () => {
   const { t } = useLanguage();
   const [activeDemo, setActiveDemo] = useState("student-simulation");
   const [isPlaying, setIsPlaying] = useState(true);
-
-  // Complete Student Dashboard Demo
-  const StudentDashboardDemo = () => (
-    <div className="space-y-6">
-      <div className="bg-white rounded-lg shadow-lg p-6 border">
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-              <GraduationCapIcon className="w-5 h-5 text-blue-600" />
-            </div>
-            <div>
-              <h3 className="text-lg font-semibold">Student Dashboard</h3>
-              <p className="text-sm text-gray-600">Welcome back, Emma!</p>
-            </div>
-          </div>
-          <div className="flex gap-2">
-            <BellIcon className="w-5 h-5 text-gray-400" />
-            <SettingsIcon className="w-5 h-5 text-gray-400" />
-          </div>
-        </div>
-        
-        {/* Stats Cards */}
-        <div className="grid grid-cols-3 gap-4 mb-6">
-          <div className="bg-blue-50 p-4 rounded-lg text-center">
-            <div className="text-2xl font-bold text-blue-600">Grade 10</div>
-            <div className="text-sm text-blue-800">Current Grade</div>
-          </div>
-          <div className="bg-green-50 p-4 rounded-lg text-center">
-            <div className="text-2xl font-bold text-green-600">5</div>
-            <div className="text-sm text-green-800">Classes Today</div>
-          </div>
-          <div className="bg-purple-50 p-4 rounded-lg text-center">
-            <div className="text-2xl font-bold text-purple-600">4.2★</div>
-            <div className="text-sm text-purple-800">Avg. Rating</div>
-          </div>
-        </div>
-
-        {/* Today's Schedule */}
-        <div className="mb-6">
-          <h4 className="font-semibold mb-3 flex items-center gap-2">
-            <CalendarIcon className="w-4 h-4" />
-            Today's Schedule
-          </h4>
-          <div className="space-y-2">
-            <div className="flex items-center justify-between p-3 bg-blue-50 rounded border-l-4 border-blue-500">
-              <div>
-                <span className="font-medium">Mathematics</span>
-                <div className="text-sm text-gray-600">9:00 AM - Algebra II</div>
-              </div>
-              <Badge className="bg-blue-100 text-blue-700">Current</Badge>
-            </div>
-            <div className="flex items-center justify-between p-3 bg-gray-50 rounded border-l-4 border-gray-300">
-              <div>
-                <span className="font-medium">Chemistry</span>
-                <div className="text-sm text-gray-600">10:30 AM - Lab Work</div>
-              </div>
-              <Badge variant="outline">Upcoming</Badge>
-            </div>
-          </div>
-        </div>
-
-        {/* Quick Feedback */}
-        <div className="mb-6">
-          <h4 className="font-semibold mb-3">Quick Lesson Feedback</h4>
-          <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
-            <p className="text-sm mb-3">How did you find today's Math lesson?</p>
-            <div className="flex gap-1 mb-3">
-              {[1,2,3,4,5].map(star => (
-                <StarIcon key={star} className="w-5 h-5 fill-yellow-400 text-yellow-400 cursor-pointer" />
-              ))}
-            </div>
-            <div className="flex gap-2">
-              <Button size="sm" className="bg-green-100 text-green-700 hover:bg-green-200">😊 Great</Button>
-              <Button size="sm" variant="outline">😐 Okay</Button>
-              <Button size="sm" variant="outline">😔 Confused</Button>
-            </div>
-          </div>
-        </div>
-
-        {/* Mental Health Check */}
-        <div>
-          <h4 className="font-semibold mb-3 flex items-center gap-2">
-            <HeartIcon className="w-4 h-4" />
-            How are you feeling today?
-          </h4>
-          <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
-            <div className="flex gap-2 mb-3">
-              <Button size="sm" className="bg-green-100 text-green-700">😊 Happy</Button>
-              <Button size="sm" variant="outline">😐 Neutral</Button>
-              <Button size="sm" variant="outline">😟 Stressed</Button>
-              <Button size="sm" variant="outline">😔 Sad</Button>
-            </div>
-            <Button className="w-full bg-purple-600 hover:bg-purple-700 text-white">
-              Anonymous Chat with Counselor
-            </Button>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
 
   // Complete Teacher Dashboard Demo
   const TeacherDashboardDemo = () => (
@@ -388,16 +289,9 @@ const Demo = () => {
     {
       id: "student-simulation",
       title: "Interactive Student Journey",
-      description: "Watch a complete simulation of a student filling out feedback from their dashboard",
+      description: "Watch a complete simulation of a student's full experience including dashboard and feedback",
       icon: UsersIcon,
       component: <StudentSimulation />
-    },
-    {
-      id: "student-dashboard",
-      title: "Complete Student Dashboard",
-      description: "Full view of student experience with schedule, feedback, and wellness check-ins",
-      icon: UsersIcon,
-      component: <StudentDashboardDemo />
     },
     {
       id: "teacher-dashboard",
@@ -461,7 +355,7 @@ const Demo = () => {
 
         {/* Demo Navigation */}
         <Tabs value={activeDemo} onValueChange={setActiveDemo} className="w-full">
-          <TabsList className="grid w-full grid-cols-4 mb-8">
+          <TabsList className="grid w-full grid-cols-3 mb-8">
             {demos.map((demo) => (
               <TabsTrigger key={demo.id} value={demo.id} className="flex items-center gap-2">
                 <demo.icon className="w-4 h-4" />
@@ -494,22 +388,12 @@ const Demo = () => {
                           <ul className="text-sm text-gray-600 space-y-1">
                             {demo.id === "student-simulation" && (
                               <>
-                                <li>• Step-by-step student journey simulation</li>
-                                <li>• Dashboard navigation and class selection</li>
-                                <li>• Interactive feedback form completion</li>
-                                <li>• Rating system for understanding and interest</li>
+                                <li>• Complete student dashboard with all features</li>
+                                <li>• Step-by-step feedback form completion</li>
+                                <li>• Interactive rating system for understanding and interest</li>
                                 <li>• Emotional state check-ins</li>
                                 <li>• Written feedback submission process</li>
-                              </>
-                            )}
-                            {demo.id === "student-dashboard" && (
-                              <>
-                                <li>• Complete daily schedule view</li>
-                                <li>• Real-time lesson feedback system</li>
-                                <li>• Mental wellness check-ins</li>
-                                <li>• Academic progress tracking</li>
-                                <li>• Anonymous counselor access</li>
-                                <li>• Personalized notifications</li>
+                                <li>• Mental health support widget access</li>
                               </>
                             )}
                             {demo.id === "teacher-dashboard" && (
@@ -538,8 +422,8 @@ const Demo = () => {
                         <div className="bg-blue-50 p-4 rounded-lg">
                           <p className="text-sm text-blue-800">
                             {demo.id === "student-simulation" ? (
-                              <><strong>Interactive Simulation:</strong> Watch a realistic student journey from 
-                              dashboard login to feedback submission, showing exactly how students engage with the platform.</>
+                              <><strong>Interactive Simulation:</strong> Watch a complete student journey from 
+                              dashboard login to feedback submission, including access to mental health support.</>
                             ) : (
                               <><strong>Full Integration:</strong> All components work seamlessly together, 
                               sharing data securely while maintaining complete privacy for mental health services.</>
