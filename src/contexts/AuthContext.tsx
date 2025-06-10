@@ -13,6 +13,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     // Load saved auth data from localStorage with error handling
     try {
+      console.log('AuthContext: Starting initialization...');
       const savedTeacher = localStorage.getItem('teacher');
       const savedStudent = localStorage.getItem('student');
       
@@ -45,6 +46,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       localStorage.removeItem('teacher');
       localStorage.removeItem('student');
     } finally {
+      console.log('AuthContext: Initialization complete, setting isLoading to false');
       setIsLoading(false);
     }
   }, []);
@@ -169,6 +171,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  // Always provide the context value, even during loading
   const value: AuthContextType = {
     teacher,
     student,
@@ -179,12 +182,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     logout,
   };
 
+  console.log('AuthContext: Rendering provider with value:', { 
+    hasTeacher: !!teacher, 
+    hasStudent: !!student, 
+    isLoading 
+  });
+
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
 export const useAuth = (): AuthContextType => {
+  console.log('useAuth: Hook called');
   const context = useContext(AuthContext);
+  console.log('useAuth: Context value:', { 
+    isDefined: context !== undefined,
+    hasTeacher: !!context?.teacher,
+    hasStudent: !!context?.student,
+    isLoading: context?.isLoading 
+  });
+  
   if (context === undefined) {
+    console.error('useAuth: Context is undefined - AuthProvider not found');
     throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
