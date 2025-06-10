@@ -82,7 +82,7 @@ class EnhancedSecureSessionService {
         type: 'session_restored',
         userId,
         timestamp: new Date().toISOString(),
-        details: `Enhanced secure session created with fingerprinting`,
+        details: 'Enhanced secure session created with fingerprinting',
         userAgent: navigator.userAgent,
         sessionId
       });
@@ -274,7 +274,7 @@ class EnhancedSecureSessionService {
       const now = Date.now();
       
       // Keep only activities from last 5 minutes
-      const recentActivities = lastActivities.filter((time: number) => now - time < 5 * 60 * 1000));
+      const recentActivities = lastActivities.filter((time: number) => now - time < 5 * 60 * 1000);
       recentActivities.push(now);
       
       if (recentActivities.length > 50) {
@@ -296,3 +296,5 @@ class EnhancedSecureSessionService {
 }
 
 export const enhancedSecureSessionService = new EnhancedSecureSessionService();
+
+}
