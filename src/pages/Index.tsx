@@ -1,7 +1,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { GraduationCapIcon, UsersIcon, BookOpenIcon, HeartIcon, BarChart3Icon, ShieldCheckIcon } from "lucide-react";
+import { GraduationCapIcon, UsersIcon, BookOpenIcon, HeartIcon, BarChart3Icon, ShieldCheckIcon, PlayCircleIcon } from "lucide-react";
 import { Link } from "react-router-dom";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import DemoSection from "@/components/DemoSection";
@@ -32,7 +32,15 @@ const Index = () => {
               <GraduationCapIcon className="w-8 h-8 text-primary" />
               <h1 className="text-2xl font-bold text-foreground">Lessons Learnt</h1>
             </div>
-            <LanguageSwitcher />
+            <div className="flex items-center gap-4">
+              <Link to="/demo">
+                <Button variant="outline" size="sm" className="flex items-center gap-2">
+                  <PlayCircleIcon className="w-4 h-4" />
+                  View Demo
+                </Button>
+              </Link>
+              <LanguageSwitcher />
+            </div>
           </div>
         </div>
       </header>
