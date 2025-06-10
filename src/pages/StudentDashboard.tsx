@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -58,7 +57,7 @@ const StudentDashboard = () => {
     console.log('StudentDashboard: Component mounted, checking auth state', { student });
     if (!student) {
       console.log('StudentDashboard: No student found, redirecting to login');
-      navigate('/student-login');
+      navigate('/student-login', { replace: true });
       return;
     }
     console.log('StudentDashboard: Student authenticated, loading data');
@@ -120,7 +119,6 @@ const StudentDashboard = () => {
         .order('name', { ascending: true });
 
       if (error) {
-        // Don't show error toast for missing psychologists data - it's not critical
         console.log('StudentDashboard: No psychologists found or error loading:', error);
         setPsychologists([]);
         return;
@@ -129,7 +127,6 @@ const StudentDashboard = () => {
       console.log('StudentDashboard: Loaded psychologists successfully', data);
       setPsychologists(data || []);
     } catch (error) {
-      // Log the error but don't show user notification - this is not critical functionality
       console.log('StudentDashboard: Error loading psychologists (non-critical):', error);
       setPsychologists([]);
     }
@@ -138,7 +135,7 @@ const StudentDashboard = () => {
   const handleLogout = () => {
     console.log('StudentDashboard: Logging out student');
     clearAuth();
-    navigate('/student-login');
+    navigate('/student-login', { replace: true });
   };
 
   if (isLoading) {

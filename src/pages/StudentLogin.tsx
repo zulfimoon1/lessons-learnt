@@ -18,7 +18,7 @@ const StudentLogin = () => {
   const { toast } = useToast();
   const { student, saveStudent, isLoading: authLoading } = useAuthStorage();
 
-  // Redirect if already logged in - simplified logic
+  // Redirect if already logged in
   useEffect(() => {
     console.log('StudentLogin: Checking auth state', { student, authLoading });
     if (student && !authLoading) {
@@ -48,7 +48,7 @@ const StudentLogin = () => {
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-          <p className="mt-2 text-muted-foreground">Loading...</p>
+          <p className="mt-2 text-muted-foreground">{t('common.loading')}</p>
         </div>
       </div>
     );
@@ -59,7 +59,7 @@ const StudentLogin = () => {
     
     if (!loginData.fullName.trim() || !loginData.password) {
       toast({
-        title: "Missing information",
+        title: t('teacher.missingInfo') || "Missing information",
         description: "Please enter both your full name and password",
         variant: "destructive",
       });
@@ -89,10 +89,7 @@ const StudentLogin = () => {
           title: t('student.welcomeBack') || "Welcome back!",
           description: t('student.loginSuccess') || "Login successful",
         });
-        // Force immediate redirect
-        setTimeout(() => {
-          navigate("/student-dashboard", { replace: true });
-        }, 100);
+        navigate("/student-dashboard", { replace: true });
       }
     } catch (err) {
       console.error('StudentLogin: Unexpected error during login:', err);
@@ -111,7 +108,7 @@ const StudentLogin = () => {
     
     if (!signupData.fullName.trim() || !signupData.school.trim() || !signupData.grade.trim() || !signupData.password || !signupData.confirmPassword) {
       toast({
-        title: "Missing information",
+        title: t('teacher.missingInfo') || "Missing information",
         description: "Please fill in all required fields",
         variant: "destructive",
       });
@@ -152,10 +149,7 @@ const StudentLogin = () => {
           title: t('student.accountCreated') || "Account created!",
           description: t('student.welcomeToApp') || "Welcome to Lesson Lens!",
         });
-        // Force immediate redirect
-        setTimeout(() => {
-          navigate("/student-dashboard", { replace: true });
-        }, 100);
+        navigate("/student-dashboard", { replace: true });
       }
     } catch (err) {
       console.error('StudentLogin: Unexpected error during signup:', err);
