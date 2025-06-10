@@ -2,11 +2,12 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { CheckIcon, StarIcon, PauseIcon, TrendingDownIcon, TrendingUpIcon, ArrowLeftIcon } from "lucide-react";
+import { CheckIcon, StarIcon, PauseIcon, TrendingDownIcon, TrendingUpIcon, ArrowLeftIcon, EuroIcon } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { useAuth } from "@/contexts/AuthContext";
+import { VOLUME_DISCOUNTS } from "@/services/pricingService";
 
 const PricingShowcase = () => {
   const { t } = useLanguage();
@@ -23,6 +24,10 @@ const PricingShowcase = () => {
     "Teacher management tools",
     "Privacy compliant"
   ];
+
+  const formatEuroPrice = (cents: number) => {
+    return (cents / 100).toFixed(2);
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
@@ -62,7 +67,10 @@ const PricingShowcase = () => {
           
           <h2 className="text-5xl font-bold text-foreground mb-6">
             Transform Your School for Less Than
-            <span className="text-primary block mt-2">$10 Per Teacher/Month</span>
+            <span className="text-primary block mt-2 flex items-center justify-center gap-2">
+              <EuroIcon className="w-12 h-12" />
+              10 Per Teacher/Month
+            </span>
           </h2>
           
           <p className="text-xl text-muted-foreground mb-8 max-w-3xl mx-auto">
@@ -86,6 +94,40 @@ const PricingShowcase = () => {
           </div>
         </div>
 
+        {/* Volume Discount Info */}
+        <div className="bg-gradient-to-r from-green-50 to-blue-50 border border-green-200 rounded-lg p-6 mb-12">
+          <div className="text-center mb-4">
+            <h3 className="text-2xl font-bold text-foreground mb-2">Volume Discounts Available</h3>
+            <p className="text-muted-foreground">The more teachers, the more you save!</p>
+          </div>
+          <div className="grid md:grid-cols-3 gap-6">
+            <div className="text-center">
+              <div className="text-3xl font-bold text-foreground flex items-center justify-center gap-1">
+                <EuroIcon className="w-6 h-6" />
+                {formatEuroPrice(999)}
+              </div>
+              <div className="text-sm text-muted-foreground">1-4 Teachers</div>
+              <div className="text-xs text-muted-foreground">Standard Price</div>
+            </div>
+            <div className="text-center bg-green-100 rounded-lg p-4">
+              <div className="text-3xl font-bold text-green-700 flex items-center justify-center gap-1">
+                <EuroIcon className="w-6 h-6" />
+                {formatEuroPrice(VOLUME_DISCOUNTS[0].pricePerTeacher)}
+              </div>
+              <div className="text-sm text-green-700 font-medium">5+ Teachers</div>
+              <div className="text-xs text-green-600">{VOLUME_DISCOUNTS[0].discount}% Discount</div>
+            </div>
+            <div className="text-center bg-blue-100 rounded-lg p-4">
+              <div className="text-3xl font-bold text-blue-700 flex items-center justify-center gap-1">
+                <EuroIcon className="w-6 h-6" />
+                {formatEuroPrice(VOLUME_DISCOUNTS[1].pricePerTeacher)}
+              </div>
+              <div className="text-sm text-blue-700 font-medium">10+ Teachers</div>
+              <div className="text-xs text-blue-600">{VOLUME_DISCOUNTS[1].discount}% Discount</div>
+            </div>
+          </div>
+        </div>
+
         {/* Pricing Cards */}
         <div className="grid md:grid-cols-2 gap-8 mb-16">
           {/* Teacher Plan */}
@@ -101,11 +143,14 @@ const PricingShowcase = () => {
               
               <div className="mt-4">
                 <div className="flex items-baseline gap-2">
-                  <span className="text-4xl font-bold text-foreground">$9.99</span>
+                  <div className="flex items-center gap-1">
+                    <EuroIcon className="w-8 h-8 text-foreground" />
+                    <span className="text-4xl font-bold text-foreground">9.99</span>
+                  </div>
                   <span className="text-muted-foreground">/month per teacher</span>
                 </div>
-                <div className="text-sm text-green-600 font-medium">
-                  Annual: $99/year (Save $20!)
+                <div className="text-sm text-green-600 font-medium flex items-center gap-1">
+                  Annual: <EuroIcon className="w-3 h-3" />99/year (Save €20!)
                 </div>
                 <div className="text-xs text-muted-foreground mt-1">
                   Volume discounts: 10% off for 5+ teachers, 20% off for 10+ teachers
@@ -151,11 +196,14 @@ const PricingShowcase = () => {
               
               <div className="mt-4">
                 <div className="flex items-baseline gap-2">
-                  <span className="text-4xl font-bold text-foreground">$14.99</span>
+                  <div className="flex items-center gap-1">
+                    <EuroIcon className="w-8 h-8 text-foreground" />
+                    <span className="text-4xl font-bold text-foreground">14.99</span>
+                  </div>
                   <span className="text-muted-foreground">/month per admin</span>
                 </div>
-                <div className="text-sm text-green-600 font-medium">
-                  Annual: $149/year (Save $30!)
+                <div className="text-sm text-green-600 font-medium flex items-center gap-1">
+                  Annual: <EuroIcon className="w-3 h-3" />149/year (Save €30!)
                 </div>
               </div>
             </CardHeader>
@@ -226,33 +274,6 @@ const PricingShowcase = () => {
             </CardContent>
           </Card>
         </div>
-
-        {/* Social Proof */}
-        <Card className="bg-gradient-to-r from-blue-600 to-purple-600 text-white mb-16">
-          <CardContent className="text-center py-12">
-            <h3 className="text-3xl font-bold mb-4">
-              Join 1,000+ Schools Already Transforming Education
-            </h3>
-            <p className="text-xl mb-8 opacity-90">
-              "The most cost-effective solution we've ever implemented. 
-              The holiday pause feature alone saves us thousands annually."
-            </p>
-            <div className="flex justify-center items-center gap-8">
-              <div>
-                <div className="text-3xl font-bold">98%</div>
-                <div className="text-sm opacity-80">Teacher Satisfaction</div>
-              </div>
-              <div>
-                <div className="text-3xl font-bold">45%</div>
-                <div className="text-sm opacity-80">Improvement in Outcomes</div>
-              </div>
-              <div>
-                <div className="text-3xl font-bold">$50K+</div>
-                <div className="text-sm opacity-80">Average Annual Savings</div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
 
         {/* CTA Section */}
         <div className="text-center">
