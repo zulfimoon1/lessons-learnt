@@ -1,12 +1,7 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import bcrypt from 'bcryptjs';
 import { Teacher, Student } from '@/types/auth';
-import { 
-  secureStudentLogin, 
-  secureTeacherLogin, 
-  secureStudentSignup, 
-  secureTeacherSignup 
-} from './secureSimpleAuthService';
 
 export interface User {
   id: string;
@@ -23,25 +18,7 @@ export interface AuthResponse {
   error?: string;
 }
 
-// Secure student authentication
-export const studentLogin = async (fullName: string, school: string, grade: string, password: string): Promise<AuthResponse> => {
-  return await secureStudentLogin(fullName, school, grade, password);
-};
-
-export const studentSignup = async (fullName: string, school: string, grade: string, password: string): Promise<AuthResponse> => {
-  return await secureStudentSignup(fullName, school, grade, password);
-};
-
-// Secure teacher authentication
-export const teacherLogin = async (email: string, password: string): Promise<AuthResponse> => {
-  return await secureTeacherLogin(email, password);
-};
-
-export const teacherSignup = async (name: string, email: string, school: string, password: string, role: string = 'teacher'): Promise<AuthResponse> => {
-  return await secureTeacherSignup(name, email, school, password, role);
-};
-
-// Session management (keep existing functionality)
+// Session management
 export const logout = () => {
   localStorage.removeItem('user');
   console.log('User logged out');
@@ -61,7 +38,7 @@ export const setCurrentUser = (user: User) => {
   localStorage.setItem('user', JSON.stringify(user));
 };
 
-// Password utilities for existing functionality
+// Password utilities
 export const validatePassword = (password: string): { isValid: boolean; message: string } => {
   if (password.length < 8) {
     return { isValid: false, message: 'Password must be at least 8 characters long' };
@@ -80,17 +57,6 @@ export const validatePassword = (password: string): { isValid: boolean; message:
   }
   
   return { isValid: true, message: 'Password is strong' };
-};
-
-// Legacy compatibility functions (deprecated but maintained for existing code)
-export const legacyStudentLogin = async (fullName: string, school: string, grade: string, password: string): Promise<AuthResponse> => {
-  console.warn('Using legacy authentication - please migrate to secure methods');
-  return await studentLogin(fullName, school, grade, password);
-};
-
-export const legacyTeacherLogin = async (email: string, password: string): Promise<AuthResponse> => {
-  console.warn('Using legacy authentication - please migrate to secure methods');
-  return await teacherLogin(email, password);
 };
 
 // Secure logging for development
@@ -443,4 +409,61 @@ export const studentSignupService = async (
     logSecurely('studentSignupService: Unexpected error occurred:', error);
     return { error: 'An unexpected error occurred. Please try again.' };
   }
+};
+
+// Main authentication functions
+export const studentLogin = async (fullName: string, school: string, grade: string, password: string): Promise<AuthResponse> => {
+  const result = await studentSimpleLoginService(fullName, password);
+  if (result.student) {
+    return { user: {
+      id: result.student.id,
+      fullName: result.student.full_name,
+      school: result.student.school,
+      grade: result.student.grade,
+      role: 'student'
+    }};
+  }
+  return { error: result.error };
+};
+
+export const studentSignup = async (fullName: string, school: string, grade: string, password: string): Promise<AuthResponse> => {
+  const result = await studentSignupService(fullName, school, grade, password);
+  if (result.student) {
+    return { user: {
+      id: result.student.id,
+      fullName: result.student.full_name,
+      school: result.student.school,
+      grade: result.student.grade,
+      role: 'student'
+    }};
+  }
+  return { error: result.error };
+};
+
+export const teacherLogin = async (email: string, password: string): Promise<AuthResponse> => {
+  const result = await teacherEmailLoginService(email, password);
+  if (result.teacher) {
+    return { user: {
+      id: result.teacher.id,
+      name: result.teacher.name,
+      email: result.teacher.email,
+      school: result.teacher.school,
+      role: result.teacher.role
+    }};
+  }
+  return { error: result.error };
+};
+
+export const teacherSignup = async (name: string, email: string, school: string, password: string, role: string = 'teacher'): Promise<AuthResponse> => {
+  const result = await teacherSignupService(name, email, school, password, role as 'teacher' | 'admin' | 'doctor');
+  if (result.teacher) {
+    return { user: {
+      id: result.teacher.id,
+      name: result.teacher.name,
+      email: result.teacher.email,
+      school: result.teacher.school,
+      role: result.teacher.role
+    }};
+  }
+  return { error: result.error };
 };
