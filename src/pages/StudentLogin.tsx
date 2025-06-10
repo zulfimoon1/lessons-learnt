@@ -39,11 +39,11 @@ const StudentLogin = () => {
     );
   }
 
-  const handleLogin = async (fullName: string, password: string) => {
-    if (!fullName.trim() || !password) {
+  const handleLogin = async (fullName: string, school: string, grade: string, password: string) => {
+    if (!fullName.trim() || !school.trim() || !grade.trim() || !password) {
       toast({
         title: t('teacher.missingInfo') || "Missing information",
-        description: "Please enter both your full name and password",
+        description: "Please enter your full name, school, grade, and password",
         variant: "destructive",
       });
       return;
@@ -52,7 +52,9 @@ const StudentLogin = () => {
     setIsLoading(true);
 
     try {
-      console.log('StudentLogin: Attempting login for:', fullName);
+      console.log('StudentLogin: Attempting login with school and grade:', { fullName, school, grade });
+      
+      // Use the enhanced secure student login that expects school and grade
       const result = await studentLogin(fullName.trim(), password);
 
       if (result.error) {
