@@ -5,12 +5,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { usePlatformAdmin } from "@/contexts/PlatformAdminContext";
 import { createTestAdmin } from "@/services/platformAdminService";
 import { ShieldIcon, UserPlusIcon } from "lucide-react";
 import ComplianceFooter from "@/components/ComplianceFooter";
 import CookieConsent from "@/components/CookieConsent";
+import CustomAdminCreation from "@/components/CustomAdminCreation";
 
 const PlatformAdminLogin = () => {
   const [email, setEmail] = useState("");
@@ -99,64 +101,82 @@ const PlatformAdminLogin = () => {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
       <CookieConsent />
       <div className="flex items-center justify-center p-4 min-h-screen">
-        <Card className="w-full max-w-md">
-          <CardHeader className="text-center">
-            <div className="flex justify-center mb-4">
-              <ShieldIcon className="w-12 h-12 text-blue-600" />
-            </div>
-            <CardTitle className="text-2xl font-bold">Platform Console</CardTitle>
-            <CardDescription>
-              Admin access to platform management dashboard
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="admin@platform.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                />
-              </div>
-              <Button 
-                type="submit" 
-                className="w-full" 
-                disabled={isLoading}
-              >
-                {isLoading ? "Signing In..." : "Access Console"}
-              </Button>
-            </form>
-            
-            <div className="text-center">
-              <Button
-                variant="outline"
-                onClick={handleCreateTestAdmin}
-                disabled={isCreatingAdmin}
-                className="w-full"
-              >
-                <UserPlusIcon className="w-4 h-4 mr-2" />
-                {isCreatingAdmin ? "Creating..." : "Create Test Admin"}
-              </Button>
-              <p className="text-xs text-gray-500 mt-2">
-                Development only: Creates admin@test.com with password admin123
-              </p>
-            </div>
-          </CardContent>
-        </Card>
+        <div className="w-full max-w-md">
+          <div className="text-center mb-6">
+            <ShieldIcon className="w-12 h-12 text-blue-600 mx-auto mb-4" />
+            <h1 className="text-2xl font-bold">Platform Console</h1>
+            <p className="text-gray-600">Admin access to platform management dashboard</p>
+          </div>
+
+          <Tabs defaultValue="login" className="space-y-4">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="login">Login</TabsTrigger>
+              <TabsTrigger value="create">Create Account</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="login">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Admin Login</CardTitle>
+                  <CardDescription>
+                    Sign in to your admin account
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <form onSubmit={handleSubmit} className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="email">Email</Label>
+                      <Input
+                        id="email"
+                        type="email"
+                        placeholder="admin@yourschool.com"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="password">Password</Label>
+                      <Input
+                        id="password"
+                        type="password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        required
+                      />
+                    </div>
+                    <Button 
+                      type="submit" 
+                      className="w-full" 
+                      disabled={isLoading}
+                    >
+                      {isLoading ? "Signing In..." : "Access Console"}
+                    </Button>
+                  </form>
+                  
+                  <div className="text-center">
+                    <Button
+                      variant="outline"
+                      onClick={handleCreateTestAdmin}
+                      disabled={isCreatingAdmin}
+                      className="w-full"
+                    >
+                      <UserPlusIcon className="w-4 h-4 mr-2" />
+                      {isCreatingAdmin ? "Creating..." : "Create Test Admin"}
+                    </Button>
+                    <p className="text-xs text-gray-500 mt-2">
+                      Development only: Creates admin@test.com with password admin123
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="create">
+              <CustomAdminCreation />
+            </TabsContent>
+          </Tabs>
+        </div>
       </div>
       <ComplianceFooter />
     </div>
