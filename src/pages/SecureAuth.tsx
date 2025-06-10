@@ -41,7 +41,6 @@ const SecureAuth = () => {
 
   // Student signup form state
   const [studentData, setStudentData] = useState({
-    email: "",
     password: "",
     confirmPassword: "",
     fullName: "",
