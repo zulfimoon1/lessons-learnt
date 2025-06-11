@@ -1,5 +1,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import bcrypt from 'bcryptjs';
 
 export interface PlatformAdmin {
   id: string;
@@ -26,25 +28,53 @@ export const usePlatformAdmin = () => {
   return context;
 };
 
-// Simple hardcoded login for testing
-const testLogin = async (email: string, password: string) => {
-  console.log('🔐 Login attempt:', email);
+// Real database login function
+const databaseLogin = async (email: string, password: string) => {
+  console.log('🔐 Database login attempt:', email);
   
-  // Test credentials
-  if (email === 'admin@test.com' && password === 'admin123') {
+  try {
+    // Query the teachers table for admin users
+    const { data: teachers, error } = await supabase
+      .from('teachers')
+      .select('*')
+      .eq('email', email)
+      .eq('role', 'admin');
+
+    if (error) {
+      console.error('❌ Database query error:', error);
+      return { error: 'Database error occurred' };
+    }
+
+    if (!teachers || teachers.length === 0) {
+      console.log('❌ No admin found with email:', email);
+      return { error: 'Invalid credentials' };
+    }
+
+    const teacher = teachers[0];
+    
+    // Check password
+    const passwordMatch = await bcrypt.compare(password, teacher.password_hash);
+    
+    if (!passwordMatch) {
+      console.log('❌ Password mismatch');
+      return { error: 'Invalid credentials' };
+    }
+
     const admin: PlatformAdmin = {
-      id: '1',
-      name: 'Test Admin',
-      email: 'admin@test.com',
-      role: 'admin',
-      school: 'Test School'
+      id: teacher.id,
+      name: teacher.name,
+      email: teacher.email,
+      role: teacher.role,
+      school: teacher.school
     };
-    console.log('✅ Login successful');
+    
+    console.log('✅ Login successful for:', admin.name);
     return { admin };
+    
+  } catch (error) {
+    console.error('❌ Login error:', error);
+    return { error: 'Login failed. Please try again.' };
   }
-  
-  console.log('❌ Login failed - invalid credentials');
-  return { error: 'Invalid credentials' };
 };
 
 export const PlatformAdminProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -75,7 +105,7 @@ export const PlatformAdminProvider: React.FC<{ children: React.ReactNode }> = ({
     try {
       console.log('🔐 Processing login for:', email);
       
-      const result = await testLogin(email, password);
+      const result = await databaseLogin(email, password);
       
       if (result.admin) {
         console.log('✅ Setting admin state');
