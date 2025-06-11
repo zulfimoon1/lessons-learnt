@@ -103,12 +103,12 @@ const validateLoginInput = (email: string, password: string): { valid: boolean; 
 // Enhanced test function to debug password issues
 export const testPasswordVerification = async (email: string = 'zulfimoon1@gmail.com', password: string = 'admin123') => {
   try {
-    console.log('=== PASSWORD VERIFICATION TEST START ===');
-    console.log('Testing email:', email);
-    console.log('Testing password:', password);
+    console.log('🔍 === PASSWORD VERIFICATION TEST START ===');
+    console.log('🔍 Testing email:', email);
+    console.log('🔍 Testing password:', password);
     
     // Get the admin record
-    console.log('Querying for admin record...');
+    console.log('🔍 Querying for admin record...');
     const { data: admin, error } = await supabase
       .from('teachers')
       .select('*')
@@ -117,16 +117,16 @@ export const testPasswordVerification = async (email: string = 'zulfimoon1@gmail
       .single();
     
     if (error) {
-      console.error('Database query error:', error);
-      return { error: 'Admin not found in database' };
+      console.error('❌ Database query error:', error);
+      return { error: `Database error: ${error.message}` };
     }
     
     if (!admin) {
-      console.error('No admin record found');
+      console.error('❌ No admin record found');
       return { error: 'Admin not found' };
     }
     
-    console.log('Admin found:', {
+    console.log('✅ Admin found:', {
       id: admin.id,
       email: admin.email,
       name: admin.name,
@@ -136,8 +136,9 @@ export const testPasswordVerification = async (email: string = 'zulfimoon1@gmail
     });
     
     if (!admin.password_hash) {
-      console.log('No password hash found, generating fresh hash...');
+      console.log('⚠️ No password hash found, generating fresh hash...');
       const newHash = await generateTestHash(password);
+      console.log('🔄 Generated new hash, updating database...');
       
       // Update the admin record
       const { error: updateError } = await supabase
@@ -146,25 +147,26 @@ export const testPasswordVerification = async (email: string = 'zulfimoon1@gmail
         .eq('id', admin.id);
       
       if (updateError) {
-        console.error('Failed to update hash:', updateError);
-        return { error: 'Failed to update password hash' };
+        console.error('❌ Failed to update hash:', updateError);
+        return { error: `Failed to update password hash: ${updateError.message}` };
       }
       
-      console.log('Hash updated successfully');
-      return { success: true, message: 'Password hash regenerated - please try logging in now' };
+      console.log('✅ Hash updated successfully');
+      return { success: true, message: '✅ Password hash regenerated - please try logging in now' };
     }
     
     // Test the verification
-    console.log('Testing password verification with stored hash...');
-    console.log('Hash format check - starts with $2b$:', admin.password_hash.startsWith('$2b$'));
-    console.log('Hash length:', admin.password_hash.length);
+    console.log('🔍 Testing password verification with stored hash...');
+    console.log('🔍 Hash format check - starts with $2b$:', admin.password_hash.startsWith('$2b$'));
+    console.log('🔍 Hash length:', admin.password_hash.length);
     
     const isValid = await verifyPassword(password, admin.password_hash);
-    console.log('Password verification result:', isValid);
+    console.log('🔍 Password verification result:', isValid);
     
     if (!isValid) {
-      console.log('Verification failed, regenerating hash...');
+      console.log('⚠️ Verification failed, regenerating hash...');
       const newHash = await generateTestHash(password);
+      console.log('🔄 Generated new hash, updating database...');
       
       const { error: updateError } = await supabase
         .from('teachers')
@@ -172,22 +174,22 @@ export const testPasswordVerification = async (email: string = 'zulfimoon1@gmail
         .eq('id', admin.id);
       
       if (updateError) {
-        console.error('Failed to update hash:', updateError);
-        return { error: 'Failed to update password hash' };
+        console.error('❌ Failed to update hash:', updateError);
+        return { error: `Failed to update password hash: ${updateError.message}` };
       }
       
-      console.log('Hash regenerated and updated successfully');
+      console.log('✅ Hash regenerated and updated successfully');
       return { 
         success: true, 
-        message: `Password hash regenerated due to verification failure. Hash length: ${newHash.length}` 
+        message: `✅ Password hash regenerated due to verification failure. New hash length: ${newHash.length}` 
       };
     }
     
-    console.log('=== PASSWORD VERIFICATION TEST SUCCESS ===');
-    return { success: true, message: 'Password verification successful! You should be able to login now.' };
+    console.log('🎉 === PASSWORD VERIFICATION TEST SUCCESS ===');
+    return { success: true, message: '🎉 Password verification successful! You should be able to login now.' };
     
   } catch (error) {
-    console.error('Test verification error:', error);
+    console.error('💥 Test verification error:', error);
     return { error: `Test failed: ${error.message}` };
   }
 };

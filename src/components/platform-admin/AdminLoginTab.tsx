@@ -35,9 +35,9 @@ const AdminLoginTab = ({
     }
 
     try {
-      console.log('Starting password reset for:', email);
+      console.log('🔄 Starting password reset for:', email);
       const result = await resetAdminPassword(email, 'admin123');
-      console.log('Password reset result:', result);
+      console.log('🔄 Password reset result:', result);
       
       if (result.error) {
         toast({
@@ -47,12 +47,12 @@ const AdminLoginTab = ({
         });
       } else {
         toast({
-          title: "Password Reset",
+          title: "✅ Password Reset",
           description: "Password has been reset to 'admin123'",
         });
       }
     } catch (error) {
-      console.error('Password reset error:', error);
+      console.error('❌ Password reset error:', error);
       toast({
         title: "Reset Failed",
         description: "An error occurred during password reset",
@@ -62,10 +62,10 @@ const AdminLoginTab = ({
   };
 
   const handlePasswordTest = async () => {
-    console.log('=== TEST PASSWORD BUTTON CLICKED ===');
+    console.log('🔍 === TEST PASSWORD BUTTON CLICKED ===');
     
     if (!email) {
-      console.log('No email provided');
+      console.log('❌ No email provided');
       toast({
         title: "Email Required",
         description: "Please enter your email address first",
@@ -75,38 +75,44 @@ const AdminLoginTab = ({
     }
 
     const testPassword = password || 'admin123';
-    console.log('Testing with email:', email);
-    console.log('Testing with password:', testPassword);
+    console.log('🔍 Testing with email:', email);
+    console.log('🔍 Testing with password:', testPassword);
+
+    // Show loading toast
+    toast({
+      title: "🔍 Testing Password",
+      description: "Running password verification test...",
+    });
 
     try {
-      console.log('Calling testPasswordVerification...');
+      console.log('🔍 Calling testPasswordVerification...');
       const result = await testPasswordVerification(email, testPassword);
-      console.log('Test password verification result:', result);
+      console.log('🔍 Test password verification result:', result);
       
       if (result.error) {
-        console.error('Test failed with error:', result.error);
+        console.error('❌ Test failed with error:', result.error);
         toast({
-          title: "Test Failed",
+          title: "❌ Test Failed",
           description: result.error,
           variant: "destructive",
         });
       } else if (result.success) {
-        console.log('Test successful!');
+        console.log('✅ Test successful!');
         toast({
-          title: "Test Successful",
+          title: "✅ Test Successful",
           description: result.message || "Password verification test completed successfully",
         });
       } else {
-        console.log('Unexpected result format:', result);
+        console.log('⚠️ Unexpected result format:', result);
         toast({
-          title: "Test Completed",
+          title: "⚠️ Test Completed",
           description: result.message || "Password verification test completed",
         });
       }
     } catch (error) {
-      console.error('Test password error:', error);
+      console.error('💥 Test password error:', error);
       toast({
-        title: "Test Failed",
+        title: "💥 Test Failed",
         description: `An error occurred during password test: ${error.message}`,
         variant: "destructive",
       });
@@ -160,7 +166,7 @@ const AdminLoginTab = ({
           onClick={handlePasswordReset}
           disabled={!email}
         >
-          Reset Password to 'admin123'
+          🔄 Reset Password to 'admin123'
         </Button>
         
         <Button 
@@ -170,7 +176,7 @@ const AdminLoginTab = ({
           onClick={handlePasswordTest}
           disabled={!email}
         >
-          Test Password Verification
+          🔍 Test Password Verification
         </Button>
         
         <p className="text-xs text-gray-500 text-center">
