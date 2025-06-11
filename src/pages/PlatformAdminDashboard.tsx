@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { usePlatformAdmin } from "@/contexts/PlatformAdminContext";
 import { toast } from "sonner";
@@ -15,9 +16,16 @@ const PlatformAdminDashboard = () => {
   const { admin, isLoading, logout } = usePlatformAdmin();
   const [dashboardData, setDashboardData] = useState<any>(null);
   const [dataLoading, setDataLoading] = useState(true);
+  const [refreshKey, setRefreshKey] = useState(0);
 
-  const loadDashboardData = async () => {
+  const loadDashboardData = async (forceRefresh = false) => {
     setDataLoading(true);
+    
+    if (forceRefresh) {
+      console.log('Force refreshing dashboard data...');
+      toast.info("Refreshing dashboard data...");
+    }
+    
     try {
       console.log('Loading real dashboard data from database...');
       
@@ -126,6 +134,10 @@ const PlatformAdminDashboard = () => {
       };
       
       setDashboardData(realData);
+      
+      if (forceRefresh) {
+        toast.success("Dashboard refreshed successfully!");
+      }
     } catch (error) {
       console.error('Error loading dashboard data:', error);
       toast.error("Error loading data", {
@@ -160,10 +172,12 @@ const PlatformAdminDashboard = () => {
     if (admin) {
       loadDashboardData();
     }
-  }, [admin]);
+  }, [admin, refreshKey]);
 
   const handleRefresh = () => {
-    loadDashboardData();
+    console.log('Refresh button clicked - forcing data reload');
+    setRefreshKey(prev => prev + 1);
+    loadDashboardData(true);
   };
 
   const handleLogout = () => {
