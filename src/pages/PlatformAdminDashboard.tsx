@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { usePlatformAdmin } from "@/contexts/PlatformAdminContext";
 import { toast } from "sonner";
@@ -11,21 +12,9 @@ import ResponseAnalytics from "@/components/platform-admin/ResponseAnalytics";
 import FeedbackAnalytics from "@/components/platform-admin/FeedbackAnalytics";
 import SchoolOverview from "@/components/platform-admin/SchoolOverview";
 
-// 🚨 CRITICAL DEPLOYMENT FIX - TIMESTAMP: 2025-06-11T13:20:00Z
-// GITHUB PAGES URL FIX + CACHE BUSTING + FRESH DATA LOAD
-const DEPLOYMENT_TIMESTAMP = Date.now();
-const RANDOM_ID = Math.random().toString(36).substring(2, 15);
-const DASHBOARD_VERSION = `v6.2.0-GITHUB-PAGES-FIX-${DEPLOYMENT_TIMESTAMP}-${RANDOM_ID}`;
-const BUILD_TIME = import.meta.env.VITE_BUILD_TIME || 'dev';
+const DASHBOARD_VERSION = `v7.0.0-FIXED-DATA-LOADING-${Date.now()}`;
 
-// Force immediate console output for verification
-console.log("🔥🔥🔥 GITHUB PAGES FIX DEPLOYMENT 🔥🔥🔥");
-console.log("📅 TIMESTAMP:", new Date().toISOString());
-console.log("🆔 VERSION:", DASHBOARD_VERSION);
-console.log("🏗️ BUILD TIME:", BUILD_TIME);
-console.log("🌐 LOCATION:", window.location.href);
-console.log("🔄 DEPLOYMENT ID:", RANDOM_ID);
-console.log("✅ FORCING FRESH DATA LOAD WITH CACHE BUSTING!");
+console.log("🔥 PLATFORM ADMIN DASHBOARD LOADED - VERSION:", DASHBOARD_VERSION);
 
 const PlatformAdminDashboard = () => {
   const { admin, isLoading, logout } = usePlatformAdmin();
@@ -33,82 +22,55 @@ const PlatformAdminDashboard = () => {
   const [dataLoading, setDataLoading] = useState(true);
   const [refreshCount, setRefreshCount] = useState(0);
   const [lastRefreshTime, setLastRefreshTime] = useState<string>('Never');
-  const [currentTime, setCurrentTime] = useState(new Date().toLocaleTimeString());
 
-  // Update current time every second for live verification
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentTime(new Date().toLocaleTimeString());
-    }, 1000);
-    return () => clearInterval(timer);
-  }, []);
-
-  const loadDashboardData = async (isRefresh = false, forceRefresh = false) => {
+  const loadDashboardData = async (isRefresh = false) => {
     const timestamp = new Date().toISOString();
-    const cacheBreaker = `${Date.now()}-${Math.random()}`;
     
-    console.log(`🔄 [${timestamp}] DATA LOAD TRIGGERED - Count: ${refreshCount}, isRefresh: ${isRefresh}, forceRefresh: ${forceRefresh}, cacheBreaker: ${cacheBreaker}`);
+    console.log(`🔄 [${timestamp}] LOADING DASHBOARD DATA - isRefresh: ${isRefresh}`);
     
     if (isRefresh) {
       const newCount = refreshCount + 1;
       setRefreshCount(newCount);
       setLastRefreshTime(new Date().toLocaleTimeString());
-      toast.success(`Dashboard refreshed successfully! (Refresh #${newCount})`);
-      console.log(`🔄 [${timestamp}] REFRESH COUNT UPDATED TO: ${newCount}`);
+      console.log(`🔄 REFRESH COUNT UPDATED TO: ${newCount}`);
     }
     
     setDataLoading(true);
     
     try {
-      console.log(`📊 [${timestamp}] FETCHING FRESH DATA FROM SUPABASE WITH CACHE BREAKER: ${cacheBreaker}`);
+      // Clear any potential caching by using random cache busters
+      const cacheBreaker = `${Date.now()}-${Math.random().toString(36).substring(2)}`;
+      console.log(`📊 FETCHING FRESH DATA WITH CACHE BREAKER: ${cacheBreaker}`);
       
-      // Force fresh data by adding timestamp and random to avoid any caching
-      const headers = {
-        'Cache-Control': 'no-cache, no-store, must-revalidate',
-        'Pragma': 'no-cache',
-        'Expires': '0'
-      };
-      
-      // Fetch all data with explicit fresh queries and cache busting
-      const [schoolsResult, teachersResult, studentsResult, feedbackResult, subscriptionsResult] = await Promise.all([
-        supabase.from('teachers').select('school').not('school', 'is', null),
-        supabase.from('teachers').select('*', { count: 'exact', head: true }),
-        supabase.from('students').select('*', { count: 'exact', head: true }),
-        supabase.from('feedback').select('*', { count: 'exact', head: true }),
+      // Fetch fresh data with explicit queries
+      const [
+        { data: teachersData, error: teachersError, count: teachersCount },
+        { data: studentsData, error: studentsError, count: studentsCount },
+        { data: feedbackData, error: feedbackError, count: feedbackCount },
+        { data: subscriptionsData, error: subscriptionsError }
+      ] = await Promise.all([
+        supabase.from('teachers').select('school', { count: 'exact' }),
+        supabase.from('students').select('id', { count: 'exact' }),
+        supabase.from('feedback').select('id', { count: 'exact' }),
         supabase.from('subscriptions').select('*')
       ]);
 
-      console.log(`📋 [${timestamp}] RAW QUERY RESULTS:`);
-      console.log('Schools query result:', schoolsResult);
-      console.log('Teachers count:', teachersResult);
-      console.log('Students count:', studentsResult);
-      console.log('Feedback count:', feedbackResult);
-      console.log('Subscriptions result:', subscriptionsResult);
+      console.log('🔍 RAW QUERY RESULTS:');
+      console.log('Teachers:', { data: teachersData, count: teachersCount, error: teachersError });
+      console.log('Students:', { data: studentsData, count: studentsCount, error: studentsError });
+      console.log('Feedback:', { data: feedbackData, count: feedbackCount, error: feedbackError });
+      console.log('Subscriptions:', { data: subscriptionsData, error: subscriptionsError });
 
-      if (schoolsResult.error) {
-        console.error('Schools query error:', schoolsResult.error);
-        throw schoolsResult.error;
-      }
-      if (teachersResult.error) {
-        console.error('Teachers query error:', teachersResult.error);
-        throw teachersResult.error;
-      }
-      if (studentsResult.error) {
-        console.error('Students query error:', studentsResult.error);
-        throw studentsResult.error;
-      }
-      if (feedbackResult.error) {
-        console.error('Feedback query error:', feedbackResult.error);
-        throw feedbackResult.error;
-      }
-      if (subscriptionsResult.error) {
-        console.error('Subscriptions query error:', subscriptionsResult.error);
-        throw subscriptionsResult.error;
-      }
+      // Check for errors
+      if (teachersError) throw new Error(`Teachers query failed: ${teachersError.message}`);
+      if (studentsError) throw new Error(`Students query failed: ${studentsError.message}`);
+      if (feedbackError) throw new Error(`Feedback query failed: ${feedbackError.message}`);
+      if (subscriptionsError) throw new Error(`Subscriptions query failed: ${subscriptionsError.message}`);
 
-      const uniqueSchools = [...new Set(schoolsResult.data?.map(t => t.school) || [])];
-      const activeSubscriptions = subscriptionsResult.data?.filter(s => s.status === 'active').length || 0;
-      const monthlyRevenue = subscriptionsResult.data?.reduce((sum, sub) => {
+      // Process the data
+      const uniqueSchools = [...new Set(teachersData?.map(t => t.school).filter(Boolean) || [])];
+      const activeSubscriptions = subscriptionsData?.filter(s => s.status === 'active').length || 0;
+      const monthlyRevenue = subscriptionsData?.reduce((sum, sub) => {
         if (sub.status === 'active') {
           return sum + (sub.amount / 100);
         }
@@ -117,41 +79,35 @@ const PlatformAdminDashboard = () => {
 
       const newData = {
         totalSchools: uniqueSchools.length,
-        totalTeachers: teachersResult.count || 0,
-        totalStudents: studentsResult.count || 0,
-        totalResponses: feedbackResult.count || 0,
-        subscriptions: subscriptionsResult.data || [],
+        totalTeachers: teachersCount || 0,
+        totalStudents: studentsCount || 0,
+        totalResponses: feedbackCount || 0,
+        subscriptions: subscriptionsData || [],
         activeSubscriptions,
         monthlyRevenue,
         studentStats: [],
         schoolStats: uniqueSchools.map(school => ({
           school,
-          total_teachers: schoolsResult.data?.filter(t => t.school === school).length || 0
+          total_teachers: teachersData?.filter(t => t.school === school).length || 0
         })),
         feedbackStats: [],
         lastUpdated: timestamp,
         cacheBreaker
       };
 
-      console.log(`📊 [${timestamp}] PROCESSED DATA:`);
-      console.log('Total Schools:', newData.totalSchools);
-      console.log('Total Teachers:', newData.totalTeachers);
-      console.log('Total Students:', newData.totalStudents);
-      console.log('Total Responses:', newData.totalResponses);
-      console.log('School Stats:', newData.schoolStats);
-
+      console.log(`✅ PROCESSED DASHBOARD DATA:`, newData);
+      
       setDashboardData(newData);
-      console.log(`✅ [${timestamp}] DATA LOADED SUCCESSFULLY - Schools: ${newData.totalSchools}, Teachers: ${newData.totalTeachers}, Students: ${newData.totalStudents}`);
       
       if (isRefresh) {
-        toast.success(`Dashboard refreshed successfully! Fresh data loaded at ${new Date().toLocaleTimeString()}`);
+        toast.success(`Dashboard refreshed! Fresh data loaded at ${new Date().toLocaleTimeString()}`);
       }
       
     } catch (error) {
-      console.error(`❌ [${timestamp}] ERROR LOADING DATA:`, error);
-      toast.error("Failed to load dashboard data - check console for details");
+      console.error(`❌ ERROR LOADING DASHBOARD DATA:`, error);
+      toast.error(`Failed to load dashboard data: ${error.message}`);
       
-      // Set empty data structure on error
+      // Set minimal error state
       setDashboardData({
         totalSchools: 0,
         totalTeachers: 0,
@@ -169,22 +125,19 @@ const PlatformAdminDashboard = () => {
       });
     } finally {
       setDataLoading(false);
-      console.log(`📊 [${timestamp}] LOADING COMPLETE`);
     }
   };
 
   useEffect(() => {
     if (admin) {
       console.log('📊 INITIAL LOAD FOR ADMIN:', admin.email);
-      console.log('🔄 FORCING FRESH DATA LOAD ON MOUNT WITH CACHE BUSTING');
-      loadDashboardData(false, true); // Force fresh load on mount
+      loadDashboardData(false);
     }
   }, [admin]);
 
   const handleRefresh = () => {
-    console.log('🔄 MANUAL REFRESH BUTTON CLICKED - CURRENT COUNT:', refreshCount);
-    console.log('🔄 FORCING COMPLETE DATA REFRESH WITH NEW CACHE BREAKER');
-    loadDashboardData(true, true); // Force fresh load on manual refresh
+    console.log('🔄 MANUAL REFRESH TRIGGERED');
+    loadDashboardData(true);
   };
 
   const handleLogout = () => {
@@ -243,84 +196,66 @@ const PlatformAdminDashboard = () => {
       />
       
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
-        {/* 🚨 ENHANCED DEPLOYMENT & DATA BANNER 🚨 */}
-        <div className="bg-gradient-to-r from-red-200 via-orange-200 to-yellow-200 border-4 border-red-500 rounded-2xl p-8 shadow-2xl">
-          <div className="text-center space-y-4">
-            <h1 className="text-4xl font-black text-red-800 animate-pulse">
-              🔥 GITHUB PAGES FIX DEPLOYMENT! 🔥
+        {/* DEBUG BANNER */}
+        <div className="bg-gradient-to-r from-blue-100 to-green-100 border-2 border-blue-500 rounded-xl p-6">
+          <div className="text-center space-y-3">
+            <h1 className="text-2xl font-bold text-blue-800">
+              🔧 FIXED PLATFORM ADMIN DASHBOARD 🔧
             </h1>
-            <div className="bg-white/80 rounded-xl p-4 shadow-lg">
-              <p className="text-2xl font-bold text-blue-800">
-                Version: {DASHBOARD_VERSION}
-              </p>
-              <p className="text-xl font-semibold text-green-700">
-                Live Time: {currentTime}
-              </p>
-              <p className="text-lg text-purple-700">
-                Build Time: {BUILD_TIME}
-              </p>
-              <p className="text-lg text-orange-700">
-                URL: {window.location.href}
-              </p>
-              <p className="text-lg text-pink-700">
-                Cache Breaker: {cacheBreaker}
-              </p>
+            <div className="bg-white/80 rounded-lg p-4">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                <div>
+                  <p className="font-semibold text-blue-700">Version:</p>
+                  <p className="text-xs">{DASHBOARD_VERSION}</p>
+                </div>
+                <div>
+                  <p className="font-semibold text-green-700">Refresh Count:</p>
+                  <p className="text-lg font-bold">{refreshCount}</p>
+                </div>
+                <div>
+                  <p className="font-semibold text-purple-700">Last Refresh:</p>
+                  <p>{lastRefreshTime}</p>
+                </div>
+                <div>
+                  <p className="font-semibold text-orange-700">Loading:</p>
+                  <p className={dataLoading ? "text-red-600" : "text-green-600"}>
+                    {dataLoading ? 'Yes' : 'No'}
+                  </p>
+                </div>
+              </div>
               {lastUpdated && (
-                <p className="text-lg text-blue-700">
-                  Last Data Refresh: {new Date(lastUpdated).toLocaleTimeString()}
+                <p className="text-sm text-gray-600 mt-2">
+                  Last Updated: {new Date(lastUpdated).toLocaleString()}
                 </p>
               )}
               {error && (
-                <p className="text-lg text-red-700 font-bold">
-                  ⚠️ ERROR LOADING DATA - CHECK CONSOLE
+                <p className="text-red-600 font-bold mt-2">
+                  ⚠️ DATA LOADING ERROR - CHECK CONSOLE
                 </p>
               )}
-            </div>
-            <div className="text-lg font-bold text-red-700 bg-yellow-100 rounded-lg p-3">
-              🚀 GitHub Pages URL Fixed + Cache Busting Enabled! 🚀
             </div>
           </div>
         </div>
 
-        {/* ENHANCED DEBUG PANEL WITH GITHUB PAGES INFO */}
-        <div className="bg-gradient-to-r from-red-100 to-orange-100 border-4 border-red-500 rounded-xl p-6 shadow-xl">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            <div className="bg-white/70 rounded-lg p-4">
-              <h3 className="text-xl font-bold text-red-800 mb-3">🔄 Refresh Tracking</h3>
-              <div className="space-y-2">
-                <p className="text-lg"><span className="font-semibold">Count:</span> <span className="text-2xl font-bold text-red-600">{refreshCount}</span></p>
-                <p className="text-lg"><span className="font-semibold">Last:</span> <span className="text-blue-600">{lastRefreshTime}</span></p>
-                <p className="text-lg"><span className="font-semibold">Loading:</span> <span className="text-green-600">{dataLoading ? 'Yes' : 'No'}</span></p>
-              </div>
+        {/* LIVE DATA DISPLAY */}
+        <div className="bg-white border-2 border-gray-300 rounded-xl p-6">
+          <h2 className="text-xl font-bold text-gray-800 mb-4">📊 LIVE DATA COUNTS</h2>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="text-center">
+              <p className="text-sm font-semibold text-gray-600">Schools</p>
+              <p className="text-3xl font-bold text-blue-600">{totalSchools}</p>
             </div>
-            
-            <div className="bg-white/70 rounded-lg p-4">
-              <h3 className="text-xl font-bold text-orange-800 mb-3">⏰ Time Verification</h3>
-              <div className="space-y-2">
-                <p className="text-lg"><span className="font-semibold">Live Time:</span></p>
-                <p className="text-2xl font-bold text-green-600">{currentTime}</p>
-                <p className="text-sm text-gray-600">Updates every second</p>
-              </div>
+            <div className="text-center">
+              <p className="text-sm font-semibold text-gray-600">Teachers</p>
+              <p className="text-3xl font-bold text-green-600">{totalTeachers}</p>
             </div>
-            
-            <div className="bg-white/70 rounded-lg p-4">
-              <h3 className="text-xl font-bold text-purple-800 mb-3">🌐 GitHub Pages</h3>
-              <div className="space-y-2">
-                <p className="text-sm"><span className="font-semibold">Host:</span> {window.location.hostname}</p>
-                <p className="text-sm"><span className="font-semibold">Path:</span> {window.location.pathname}</p>
-                <p className="text-sm"><span className="font-semibold">Built:</span> {new Date(DEPLOYMENT_TIMESTAMP).toLocaleString()}</p>
-                <p className="text-sm"><span className="font-semibold">Build ID:</span> {BUILD_TIME}</p>
-              </div>
+            <div className="text-center">
+              <p className="text-sm font-semibold text-gray-600">Students</p>
+              <p className="text-3xl font-bold text-purple-600">{totalStudents}</p>
             </div>
-
-            <div className="bg-white/70 rounded-lg p-4">
-              <h3 className="text-xl font-bold text-green-800 mb-3">📊 Live Data</h3>
-              <div className="space-y-2">
-                <p className="text-sm"><span className="font-semibold">Schools:</span> <span className="text-lg font-bold text-blue-600">{totalSchools}</span></p>
-                <p className="text-sm"><span className="font-semibold">Teachers:</span> <span className="text-lg font-bold text-green-600">{totalTeachers}</span></p>
-                <p className="text-sm"><span className="font-semibold">Students:</span> <span className="text-lg font-bold text-purple-600">{totalStudents}</span></p>
-                <p className="text-sm"><span className="font-semibold">Responses:</span> <span className="text-lg font-bold text-orange-600">{totalResponses}</span></p>
-              </div>
+            <div className="text-center">
+              <p className="text-sm font-semibold text-gray-600">Responses</p>
+              <p className="text-3xl font-bold text-orange-600">{totalResponses}</p>
             </div>
           </div>
         </div>
