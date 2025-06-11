@@ -41,29 +41,29 @@ const PlatformAdminDashboard = () => {
     setError(null);
     
     try {
-      console.log("📊 Fetching dashboard data with admin privileges...");
+      console.log("📊 Fetching dashboard data...");
       
-      // Use count queries to get totals without fetching all data
+      // Fetch all data in parallel
       const [
         studentsResult,
         teachersResult,
         feedbackResult,
         subscriptionsResult
-      ] = await Promise.allSettled([
-        supabase.from('students').select('*', { count: 'exact', head: true }),
-        supabase.from('teachers').select('*', { count: 'exact', head: true }),
+      ] = await Promise.all([
+        supabase.from('students').select('school', { count: 'exact' }),
+        supabase.from('teachers').select('school', { count: 'exact' }),
         supabase.from('feedback').select('*', { count: 'exact', head: true }),
         supabase.from('subscriptions').select('*')
       ]);
 
-      console.log("📊 Raw query results:", {
+      console.log("📊 Query results:", {
         students: studentsResult,
         teachers: teachersResult,
         feedback: feedbackResult,
         subscriptions: subscriptionsResult
       });
 
-      // Initialize counters
+      // Process results
       let totalStudents = 0;
       let totalTeachers = 0;
       let totalResponses = 0;
@@ -72,66 +72,46 @@ const PlatformAdminDashboard = () => {
       let activeSubscriptions = 0;
       let monthlyRevenue = 0;
 
-      // Process students count
-      if (studentsResult.status === 'fulfilled' && !studentsResult.value.error) {
-        totalStudents = studentsResult.value.count || 0;
-        console.log("✅ Students count:", totalStudents);
-        
-        // Get unique schools from students if we have access
-        if (totalStudents > 0) {
-          const schoolsQuery = await supabase
-            .from('students')
-            .select('school')
-            .not('school', 'is', null);
-          
-          if (schoolsQuery.data && !schoolsQuery.error) {
-            const uniqueSchools = new Set(schoolsQuery.data.map(s => s.school));
-            totalSchools = uniqueSchools.size;
-          }
-        }
+      // Students
+      if (studentsResult.data && !studentsResult.error) {
+        totalStudents = studentsResult.count || 0;
+        // Get unique schools from students
+        const uniqueSchools = new Set(studentsResult.data.map(s => s.school).filter(Boolean));
+        totalSchools = uniqueSchools.size;
+        console.log("✅ Students:", totalStudents, "Schools from students:", totalSchools);
       } else {
-        console.warn("⚠️ Students query failed:", studentsResult);
+        console.warn("⚠️ Students query failed:", studentsResult.error);
       }
 
-      // Process teachers count
-      if (teachersResult.status === 'fulfilled' && !teachersResult.value.error) {
-        totalTeachers = teachersResult.value.count || 0;
-        console.log("✅ Teachers count:", totalTeachers);
-        
-        // Get additional schools from teachers if we haven't found any yet
-        if (totalSchools === 0 && totalTeachers > 0) {
-          const teacherSchoolsQuery = await supabase
-            .from('teachers')
-            .select('school')
-            .not('school', 'is', null);
-          
-          if (teacherSchoolsQuery.data && !teacherSchoolsQuery.error) {
-            const uniqueSchools = new Set(teacherSchoolsQuery.data.map(t => t.school));
-            totalSchools = uniqueSchools.size;
-          }
-        }
+      // Teachers
+      if (teachersResult.data && !teachersResult.error) {
+        totalTeachers = teachersResult.count || 0;
+        // Add schools from teachers
+        const teacherSchools = new Set(teachersResult.data.map(t => t.school).filter(Boolean));
+        totalSchools = Math.max(totalSchools, teacherSchools.size);
+        console.log("✅ Teachers:", totalTeachers, "Total schools:", totalSchools);
       } else {
-        console.warn("⚠️ Teachers query failed:", teachersResult);
+        console.warn("⚠️ Teachers query failed:", teachersResult.error);
       }
 
-      // Process feedback count
-      if (feedbackResult.status === 'fulfilled' && !feedbackResult.value.error) {
-        totalResponses = feedbackResult.value.count || 0;
-        console.log("✅ Feedback count:", totalResponses);
+      // Feedback
+      if (!feedbackResult.error) {
+        totalResponses = feedbackResult.count || 0;
+        console.log("✅ Feedback responses:", totalResponses);
       } else {
-        console.warn("⚠️ Feedback query failed:", feedbackResult);
+        console.warn("⚠️ Feedback query failed:", feedbackResult.error);
       }
 
-      // Process subscriptions
-      if (subscriptionsResult.status === 'fulfilled' && !subscriptionsResult.value.error) {
-        subscriptions = subscriptionsResult.value.data || [];
+      // Subscriptions
+      if (subscriptionsResult.data && !subscriptionsResult.error) {
+        subscriptions = subscriptionsResult.data || [];
         activeSubscriptions = subscriptions.filter(s => s.status === 'active').length;
         monthlyRevenue = subscriptions
           .filter(s => s.status === 'active')
           .reduce((sum, sub) => sum + (sub.amount / 100), 0);
-        console.log("✅ Subscriptions processed:", subscriptions.length, "active:", activeSubscriptions);
+        console.log("✅ Subscriptions:", subscriptions.length, "active:", activeSubscriptions);
       } else {
-        console.warn("⚠️ Subscriptions query failed:", subscriptionsResult);
+        console.warn("⚠️ Subscriptions query failed:", subscriptionsResult.error);
       }
 
       const result = {
