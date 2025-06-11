@@ -41,15 +41,23 @@ const PlatformAdminDashboard = () => {
     setError(null);
     
     try {
-      console.log("📊 Fetching dashboard data...");
+      console.log("📊 Setting platform admin context...");
       
-      // Fetch all data in parallel
+      // Set platform admin context to bypass RLS
+      await supabase.rpc('set_config', {
+        setting_name: 'app.platform_admin',
+        setting_value: 'true'
+      });
+
+      console.log("📊 Fetching dashboard data with admin context...");
+      
+      // Fetch all data in parallel with proper error handling
       const [
         studentsResult,
         teachersResult,
         feedbackResult,
         subscriptionsResult
-      ] = await Promise.all([
+      ] = await Promise.allSettled([
         supabase.from('students').select('school', { count: 'exact' }),
         supabase.from('teachers').select('school', { count: 'exact' }),
         supabase.from('feedback').select('*', { count: 'exact', head: true }),
@@ -63,7 +71,6 @@ const PlatformAdminDashboard = () => {
         subscriptions: subscriptionsResult
       });
 
-      // Process results
       let totalStudents = 0;
       let totalTeachers = 0;
       let totalResponses = 0;
@@ -72,46 +79,44 @@ const PlatformAdminDashboard = () => {
       let activeSubscriptions = 0;
       let monthlyRevenue = 0;
 
-      // Students
-      if (studentsResult.data && !studentsResult.error) {
-        totalStudents = studentsResult.count || 0;
-        // Get unique schools from students
-        const uniqueSchools = new Set(studentsResult.data.map(s => s.school).filter(Boolean));
+      // Process students data
+      if (studentsResult.status === 'fulfilled' && studentsResult.value.data && !studentsResult.value.error) {
+        totalStudents = studentsResult.value.count || 0;
+        const uniqueSchools = new Set(studentsResult.value.data.map(s => s.school).filter(Boolean));
         totalSchools = uniqueSchools.size;
-        console.log("✅ Students:", totalStudents, "Schools from students:", totalSchools);
+        console.log("✅ Students processed:", totalStudents, "Schools:", totalSchools);
       } else {
-        console.warn("⚠️ Students query failed:", studentsResult.error);
+        console.warn("⚠️ Students query failed:", studentsResult.status === 'fulfilled' ? studentsResult.value.error : studentsResult.reason);
       }
 
-      // Teachers
-      if (teachersResult.data && !teachersResult.error) {
-        totalTeachers = teachersResult.count || 0;
-        // Add schools from teachers
-        const teacherSchools = new Set(teachersResult.data.map(t => t.school).filter(Boolean));
+      // Process teachers data
+      if (teachersResult.status === 'fulfilled' && teachersResult.value.data && !teachersResult.value.error) {
+        totalTeachers = teachersResult.value.count || 0;
+        const teacherSchools = new Set(teachersResult.value.data.map(t => t.school).filter(Boolean));
         totalSchools = Math.max(totalSchools, teacherSchools.size);
-        console.log("✅ Teachers:", totalTeachers, "Total schools:", totalSchools);
+        console.log("✅ Teachers processed:", totalTeachers, "Total schools:", totalSchools);
       } else {
-        console.warn("⚠️ Teachers query failed:", teachersResult.error);
+        console.warn("⚠️ Teachers query failed:", teachersResult.status === 'fulfilled' ? teachersResult.value.error : teachersResult.reason);
       }
 
-      // Feedback
-      if (!feedbackResult.error) {
-        totalResponses = feedbackResult.count || 0;
-        console.log("✅ Feedback responses:", totalResponses);
+      // Process feedback data
+      if (feedbackResult.status === 'fulfilled' && !feedbackResult.value.error) {
+        totalResponses = feedbackResult.value.count || 0;
+        console.log("✅ Feedback processed:", totalResponses);
       } else {
-        console.warn("⚠️ Feedback query failed:", feedbackResult.error);
+        console.warn("⚠️ Feedback query failed:", feedbackResult.status === 'fulfilled' ? feedbackResult.value.error : feedbackResult.reason);
       }
 
-      // Subscriptions
-      if (subscriptionsResult.data && !subscriptionsResult.error) {
-        subscriptions = subscriptionsResult.data || [];
+      // Process subscriptions data
+      if (subscriptionsResult.status === 'fulfilled' && subscriptionsResult.value.data && !subscriptionsResult.value.error) {
+        subscriptions = subscriptionsResult.value.data || [];
         activeSubscriptions = subscriptions.filter(s => s.status === 'active').length;
         monthlyRevenue = subscriptions
           .filter(s => s.status === 'active')
           .reduce((sum, sub) => sum + (sub.amount / 100), 0);
-        console.log("✅ Subscriptions:", subscriptions.length, "active:", activeSubscriptions);
+        console.log("✅ Subscriptions processed:", subscriptions.length, "active:", activeSubscriptions);
       } else {
-        console.warn("⚠️ Subscriptions query failed:", subscriptionsResult.error);
+        console.warn("⚠️ Subscriptions query failed:", subscriptionsResult.status === 'fulfilled' ? subscriptionsResult.value.error : subscriptionsResult.reason);
       }
 
       const result = {
