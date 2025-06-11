@@ -12,10 +12,18 @@ import ResponseAnalytics from "@/components/platform-admin/ResponseAnalytics";
 import FeedbackAnalytics from "@/components/platform-admin/FeedbackAnalytics";
 import SchoolOverview from "@/components/platform-admin/SchoolOverview";
 
-// FORCE DEPLOYMENT: 2025-06-11T11:45:00Z - GitHub Pages refresh
-// VERSION TRACKING FOR DEPLOYMENT VERIFICATION
-const DASHBOARD_VERSION = "v2.2.0-FORCE-DEPLOY-" + new Date().getTime();
-console.log("🚀 DASHBOARD VERSION LOADED:", DASHBOARD_VERSION);
+// 🚨 CRITICAL DEPLOYMENT TEST - TIMESTAMP: 2025-06-11T12:05:00Z
+// CACHE BUSTER VERSION WITH RANDOM ID
+const DEPLOYMENT_TIMESTAMP = Date.now();
+const RANDOM_ID = Math.random().toString(36).substring(2, 15);
+const DASHBOARD_VERSION = `v3.0.0-CACHE-BUST-${DEPLOYMENT_TIMESTAMP}-${RANDOM_ID}`;
+
+// Force immediate console output for verification
+console.log("🔥🔥🔥 EMERGENCY DEPLOYMENT TEST 🔥🔥🔥");
+console.log("📅 TIMESTAMP:", new Date().toISOString());
+console.log("🆔 VERSION:", DASHBOARD_VERSION);
+console.log("🌐 LOCATION:", window.location.href);
+console.log("🔄 DEPLOYMENT ID:", RANDOM_ID);
 
 const PlatformAdminDashboard = () => {
   const { admin, isLoading, logout } = usePlatformAdmin();
@@ -23,6 +31,15 @@ const PlatformAdminDashboard = () => {
   const [dataLoading, setDataLoading] = useState(true);
   const [refreshCount, setRefreshCount] = useState(0);
   const [lastRefreshTime, setLastRefreshTime] = useState<string>('Never');
+  const [currentTime, setCurrentTime] = useState(new Date().toLocaleTimeString());
+
+  // Update current time every second for live verification
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(new Date().toLocaleTimeString());
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
 
   const loadDashboardData = async (isRefresh = false) => {
     const timestamp = new Date().toISOString();
@@ -175,56 +192,60 @@ const PlatformAdminDashboard = () => {
       />
       
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
-        {/* DEPLOYMENT VERIFICATION BANNER */}
-        <div className="bg-gradient-to-r from-green-100 to-blue-100 border-2 border-green-400 rounded-xl p-6 shadow-lg">
-          <div className="text-center space-y-2">
-            <h2 className="text-2xl font-bold text-green-800">
-              🚀 DEPLOYMENT VERIFICATION TEST
-            </h2>
-            <p className="text-lg font-semibold text-blue-700">
-              Version: {DASHBOARD_VERSION}
-            </p>
-            <p className="text-green-700">
-              If you can see this banner, the NEW code is deployed! ✅
-            </p>
-            <p className="text-sm text-gray-600">
-              Deployed: {new Date().toLocaleString()}
-            </p>
+        {/* 🚨 MASSIVE DEPLOYMENT VERIFICATION BANNER 🚨 */}
+        <div className="bg-gradient-to-r from-red-200 via-orange-200 to-yellow-200 border-4 border-red-500 rounded-2xl p-8 shadow-2xl">
+          <div className="text-center space-y-4">
+            <h1 className="text-4xl font-black text-red-800 animate-pulse">
+              🚨 CRITICAL DEPLOYMENT TEST 🚨
+            </h1>
+            <div className="bg-white/80 rounded-xl p-4 shadow-lg">
+              <p className="text-2xl font-bold text-blue-800">
+                Version: {DASHBOARD_VERSION}
+              </p>
+              <p className="text-xl font-semibold text-green-700">
+                Live Time: {currentTime}
+              </p>
+              <p className="text-lg text-purple-700">
+                Deployment ID: {RANDOM_ID}
+              </p>
+              <p className="text-lg text-orange-700">
+                URL: {window.location.href}
+              </p>
+            </div>
+            <div className="text-lg font-bold text-red-700 bg-yellow-100 rounded-lg p-3">
+              ⚡ If you see this banner with the live time updating, the NEW CODE IS DEPLOYED! ⚡
+            </div>
           </div>
         </div>
 
-        {/* PROMINENT DEBUG PANEL - This MUST be visible */}
-        <div className="bg-gradient-to-r from-yellow-100 to-orange-100 border-2 border-yellow-400 rounded-xl p-6 shadow-lg">
-          <div className="flex justify-between items-start">
-            <div className="space-y-2">
-              <h3 className="text-xl font-bold text-yellow-800 flex items-center gap-2">
-                🐛 DEBUG PANEL - REFRESH MONITORING
-              </h3>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="bg-white/50 rounded-lg p-3">
-                  <p className="text-yellow-700 font-semibold">Refresh Count:</p>
-                  <p className="text-2xl font-bold text-blue-600">{refreshCount}</p>
-                </div>
-                <div className="bg-white/50 rounded-lg p-3">
-                  <p className="text-yellow-700 font-semibold">Last Refresh:</p>
-                  <p className="text-lg font-bold text-blue-600">{lastRefreshTime}</p>
-                </div>
-                <div className="bg-white/50 rounded-lg p-3">
-                  <p className="text-yellow-700 font-semibold">Data Loading:</p>
-                  <p className="text-lg font-bold text-blue-600">{dataLoading ? 'Yes' : 'No'}</p>
-                </div>
-                <div className="bg-white/50 rounded-lg p-3">
-                  <p className="text-yellow-700 font-semibold">Current Time:</p>
-                  <p className="text-lg font-bold text-blue-600">{new Date().toLocaleTimeString()}</p>
-                </div>
+        {/* ENHANCED DEBUG PANEL */}
+        <div className="bg-gradient-to-r from-blue-100 to-purple-100 border-4 border-blue-500 rounded-xl p-6 shadow-xl">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="bg-white/70 rounded-lg p-4">
+              <h3 className="text-xl font-bold text-blue-800 mb-3">🔄 Refresh Tracking</h3>
+              <div className="space-y-2">
+                <p className="text-lg"><span className="font-semibold">Count:</span> <span className="text-2xl font-bold text-red-600">{refreshCount}</span></p>
+                <p className="text-lg"><span className="font-semibold">Last:</span> <span className="text-blue-600">{lastRefreshTime}</span></p>
+                <p className="text-lg"><span className="font-semibold">Loading:</span> <span className="text-green-600">{dataLoading ? 'Yes' : 'No'}</span></p>
               </div>
             </div>
-            <div className="text-sm text-yellow-600 bg-white/30 rounded-lg p-3">
-              <p className="font-semibold">Console Log Markers:</p>
-              <p>🔄 = Refresh events</p>
-              <p>📊 = Data operations</p>
-              <p>✅ = Success</p>
-              <p>❌ = Errors</p>
+            
+            <div className="bg-white/70 rounded-lg p-4">
+              <h3 className="text-xl font-bold text-purple-800 mb-3">⏰ Time Verification</h3>
+              <div className="space-y-2">
+                <p className="text-lg"><span className="font-semibold">Live Time:</span></p>
+                <p className="text-2xl font-bold text-green-600">{currentTime}</p>
+                <p className="text-sm text-gray-600">Updates every second</p>
+              </div>
+            </div>
+            
+            <div className="bg-white/70 rounded-lg p-4">
+              <h3 className="text-xl font-bold text-orange-800 mb-3">🌐 Environment</h3>
+              <div className="space-y-2">
+                <p className="text-sm"><span className="font-semibold">Host:</span> {window.location.hostname}</p>
+                <p className="text-sm"><span className="font-semibold">Path:</span> {window.location.pathname}</p>
+                <p className="text-sm"><span className="font-semibold">Built:</span> {new Date(DEPLOYMENT_TIMESTAMP).toLocaleString()}</p>
+              </div>
             </div>
           </div>
         </div>
