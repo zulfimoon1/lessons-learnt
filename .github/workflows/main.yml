@@ -41,7 +41,13 @@ jobs:
         run: npm run build
         env:
           NODE_ENV: production
-          VITE_BUILD_TIME: ${{ github.run_id }}-${{ github.sha }}
+          VITE_BASE_PATH: /lessons-learnt/
+
+      - name: Create .nojekyll file
+        run: touch dist/.nojekyll
+
+      - name: Copy index.html to 404.html for SPA routing
+        run: cp dist/index.html dist/404.html
 
       - name: Verify build output
         run: |
@@ -50,20 +56,12 @@ jobs:
           echo "Checking if index.html exists:"
           if [ -f "dist/index.html" ]; then
             echo "✅ index.html found"
-            echo "Base href in index.html:"
-            grep -n "base href" dist/index.html || echo "No base href found"
             echo "First few lines of index.html:"
-            head -20 dist/index.html
+            head -10 dist/index.html
           else
             echo "❌ index.html NOT found - build failed!"
             exit 1
           fi
-
-      - name: Create .nojekyll file
-        run: touch dist/.nojekyll
-
-      - name: Copy index.html to 404.html for SPA routing
-        run: cp dist/index.html dist/404.html
 
       - name: Setup Pages
         uses: actions/configure-pages@v4
@@ -82,4 +80,3 @@ jobs:
           echo "🚀 Deployment completed!"
           echo "📍 URL: https://zulfimoon1.github.io/lessons-learnt/"
           echo "⏰ Wait 2-3 minutes for CDN propagation"
-          echo "🔄 Try hard refresh (Ctrl+F5) if needed"

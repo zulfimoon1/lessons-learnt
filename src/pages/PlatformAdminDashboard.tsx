@@ -7,92 +7,92 @@ import DashboardHeader from "@/components/platform-admin/DashboardHeader";
 import SystemInfoCard from "@/components/platform-admin/SystemInfoCard";
 import OverviewCards from "@/components/platform-admin/OverviewCards";
 import SubscriptionManagement from "@/components/platform-admin/SubscriptionManagement";
-import StudentStatistics from "@/components/platform-admin/StudentStatistics";
-import ResponseAnalytics from "@/components/platform-admin/ResponseAnalytics";
-import FeedbackAnalytics from "@/components/platform-admin/FeedbackAnalytics";
-import SchoolOverview from "@/components/platform-admin/SchoolOverview";
 
 console.log("🔥 PLATFORM ADMIN DASHBOARD LOADED");
 
+interface DashboardData {
+  totalSchools: number;
+  totalTeachers: number;
+  totalStudents: number;
+  totalResponses: number;
+  subscriptions: any[];
+  activeSubscriptions: number;
+  monthlyRevenue: number;
+  lastUpdated: string;
+}
+
 const PlatformAdminDashboard = () => {
   const { admin, isLoading, logout } = usePlatformAdmin();
-  const [dashboardData, setDashboardData] = useState<any>(null);
+  const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
   const [dataLoading, setDataLoading] = useState(true);
   const [refreshCount, setRefreshCount] = useState(0);
 
-  const fetchRealData = async () => {
-    console.log("📊 Fetching real data from Supabase...");
+  const fetchDashboardData = async (): Promise<DashboardData> => {
+    console.log("📊 Fetching dashboard data from Supabase...");
     
     try {
-      // Get actual counts from database
-      const [
-        { count: teachersCount },
-        { count: studentsCount },
-        { count: feedbackCount },
-        { data: subscriptionsData, count: subscriptionsCount }
-      ] = await Promise.all([
-        supabase.from('teachers').select('*', { count: 'exact', head: true }),
-        supabase.from('students').select('*', { count: 'exact', head: true }),
-        supabase.from('feedback').select('*', { count: 'exact', head: true }),
-        supabase.from('subscriptions').select('*', { count: 'exact' })
+      // Fetch all data in parallel
+      const [teachersResult, studentsResult, feedbackResult, subscriptionsResult] = await Promise.all([
+        supabase.from('teachers').select('*', { count: 'exact' }),
+        supabase.from('students').select('*', { count: 'exact' }),
+        supabase.from('feedback').select('*', { count: 'exact' }),
+        supabase.from('subscriptions').select('*')
       ]);
 
-      // Get unique schools
-      const { data: teachersData } = await supabase
-        .from('teachers')
-        .select('school')
-        .not('school', 'is', null);
+      // Extract counts
+      const totalTeachers = teachersResult.count || 0;
+      const totalStudents = studentsResult.count || 0;
+      const totalResponses = feedbackResult.count || 0;
+      
+      // Process subscriptions
+      const subscriptions = subscriptionsResult.data || [];
+      const activeSubscriptions = subscriptions.filter(s => s.status === 'active').length;
+      const monthlyRevenue = subscriptions
+        .filter(s => s.status === 'active')
+        .reduce((sum, sub) => sum + (sub.amount / 100), 0);
 
-      const uniqueSchools = [...new Set(teachersData?.map(t => t.school).filter(Boolean) || [])];
-      const activeSubscriptions = subscriptionsData?.filter(s => s.status === 'active').length || 0;
-      const monthlyRevenue = subscriptionsData?.reduce((sum, sub) => {
-        if (sub.status === 'active') {
-          return sum + (sub.amount / 100);
-        }
-        return sum;
-      }, 0) || 0;
+      // Calculate unique schools from teachers
+      const uniqueSchools = new Set(
+        teachersResult.data?.map(t => t.school).filter(Boolean) || []
+      );
+      const totalSchools = uniqueSchools.size;
 
-      console.log("📊 Real counts:", {
-        teachers: teachersCount,
-        students: studentsCount,
-        feedback: feedbackCount,
-        schools: uniqueSchools.length,
-        subscriptions: subscriptionsCount
+      console.log("📊 Dashboard data loaded:", {
+        totalSchools,
+        totalTeachers,
+        totalStudents,
+        totalResponses,
+        activeSubscriptions
       });
 
       return {
-        totalSchools: uniqueSchools.length,
-        totalTeachers: teachersCount || 0,
-        totalStudents: studentsCount || 0,
-        totalResponses: feedbackCount || 0,
-        subscriptions: subscriptionsData || [],
+        totalSchools,
+        totalTeachers,
+        totalStudents,
+        totalResponses,
+        subscriptions,
         activeSubscriptions,
         monthlyRevenue,
-        studentStats: [],
-        schoolStats: uniqueSchools.map(school => ({
-          school,
-          total_teachers: teachersData?.filter(t => t.school === school).length || 0
-        })),
-        feedbackStats: [],
         lastUpdated: new Date().toISOString()
       };
 
     } catch (error) {
-      console.error("❌ Error fetching data:", error);
+      console.error("❌ Error fetching dashboard data:", error);
       throw error;
     }
   };
 
-  const loadDashboardData = async (isRefresh = false) => {
+  const loadData = async (isRefresh = false) => {
+    console.log(`📊 Loading dashboard data (refresh: ${isRefresh})`);
+    setDataLoading(true);
+    
     if (isRefresh) {
       setRefreshCount(prev => prev + 1);
       toast.info("Refreshing dashboard data...");
     }
     
-    setDataLoading(true);
-    
     try {
-      const data = await fetchRealData();
+      const data = await fetchDashboardData();
       setDashboardData(data);
       
       if (isRefresh) {
@@ -102,7 +102,7 @@ const PlatformAdminDashboard = () => {
       console.error("Error loading dashboard data:", error);
       toast.error("Failed to load dashboard data");
       
-      // Set fallback data with zero counts
+      // Set fallback data
       setDashboardData({
         totalSchools: 0,
         totalTeachers: 0,
@@ -111,11 +111,7 @@ const PlatformAdminDashboard = () => {
         subscriptions: [],
         activeSubscriptions: 0,
         monthlyRevenue: 0,
-        studentStats: [],
-        schoolStats: [],
-        feedbackStats: [],
-        lastUpdated: new Date().toISOString(),
-        error: true
+        lastUpdated: new Date().toISOString()
       });
     } finally {
       setDataLoading(false);
@@ -124,14 +120,14 @@ const PlatformAdminDashboard = () => {
 
   useEffect(() => {
     if (admin) {
-      console.log('📊 Loading dashboard for admin:', admin.email);
-      loadDashboardData(false);
+      console.log('📊 Admin authenticated, loading dashboard data');
+      loadData(false);
     }
   }, [admin]);
 
   const handleRefresh = () => {
     console.log('🔄 Manual refresh triggered');
-    loadDashboardData(true);
+    loadData(true);
   };
 
   const handleLogout = () => {
@@ -142,8 +138,11 @@ const PlatformAdminDashboard = () => {
   if (isLoading || dataLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-lg">
-          {isLoading ? 'Loading admin session...' : 'Loading dashboard data...'}
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <div className="text-lg">
+            {isLoading ? 'Loading admin session...' : 'Loading dashboard data...'}
+          </div>
         </div>
       </div>
     );
@@ -152,7 +151,10 @@ const PlatformAdminDashboard = () => {
   if (!admin) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-lg text-red-600">Please log in to access the dashboard</div>
+        <div className="text-center">
+          <div className="text-lg text-red-600 mb-4">Access Denied</div>
+          <p className="text-gray-600">Please log in as a platform administrator</p>
+        </div>
       </div>
     );
   }
@@ -160,24 +162,13 @@ const PlatformAdminDashboard = () => {
   if (!dashboardData) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-lg">No dashboard data available</div>
+        <div className="text-center">
+          <div className="text-lg text-red-600 mb-4">Dashboard Error</div>
+          <p className="text-gray-600">Unable to load dashboard data</p>
+        </div>
       </div>
     );
   }
-
-  const {
-    totalSchools,
-    totalTeachers,
-    totalStudents,
-    totalResponses,
-    subscriptions,
-    activeSubscriptions,
-    monthlyRevenue,
-    studentStats,
-    schoolStats,
-    feedbackStats,
-    error
-  } = dashboardData;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -189,13 +180,11 @@ const PlatformAdminDashboard = () => {
       
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
         {/* Status Banner */}
-        <div className={`${error ? 'bg-red-100 border-red-500' : 'bg-green-100 border-green-500'} border-2 rounded-xl p-6`}>
+        <div className="bg-green-100 border-2 border-green-500 rounded-xl p-6">
           <div className="text-center">
-            <h1 className={`text-xl font-bold ${error ? 'text-red-800' : 'text-green-800'}`}>
-              {error ? '❌ DATA ERROR' : '✅ REAL DATA DASHBOARD'}
-            </h1>
-            <p className="text-sm mt-2">
-              Refresh Count: {refreshCount} | Last Updated: {new Date().toLocaleTimeString()}
+            <h1 className="text-xl font-bold text-green-800">✅ LIVE DATABASE DASHBOARD</h1>
+            <p className="text-sm mt-2 text-green-700">
+              Refresh Count: {refreshCount} | Last Updated: {new Date(dashboardData.lastUpdated).toLocaleString()}
             </p>
           </div>
         </div>
@@ -206,59 +195,42 @@ const PlatformAdminDashboard = () => {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div className="text-center">
               <p className="text-sm font-semibold text-gray-600">Schools</p>
-              <p className="text-3xl font-bold text-blue-600">{totalSchools}</p>
+              <p className="text-3xl font-bold text-blue-600">{dashboardData.totalSchools}</p>
             </div>
             <div className="text-center">
               <p className="text-sm font-semibold text-gray-600">Teachers</p>
-              <p className="text-3xl font-bold text-green-600">{totalTeachers}</p>
+              <p className="text-3xl font-bold text-green-600">{dashboardData.totalTeachers}</p>
             </div>
             <div className="text-center">
               <p className="text-sm font-semibold text-gray-600">Students</p>
-              <p className="text-3xl font-bold text-purple-600">{totalStudents}</p>
+              <p className="text-3xl font-bold text-purple-600">{dashboardData.totalStudents}</p>
             </div>
             <div className="text-center">
               <p className="text-sm font-semibold text-gray-600">Responses</p>
-              <p className="text-3xl font-bold text-orange-600">{totalResponses}</p>
+              <p className="text-3xl font-bold text-orange-600">{dashboardData.totalResponses}</p>
             </div>
           </div>
         </div>
         
         <SystemInfoCard
-          totalSchools={totalSchools}
-          totalTeachers={totalTeachers}
-          totalStudents={totalStudents}
-          totalResponses={totalResponses}
-          subscriptionsCount={subscriptions.length}
-          activeSubscriptions={activeSubscriptions}
-          monthlyRevenue={monthlyRevenue}
+          totalSchools={dashboardData.totalSchools}
+          totalTeachers={dashboardData.totalTeachers}
+          totalStudents={dashboardData.totalStudents}
+          totalResponses={dashboardData.totalResponses}
+          subscriptionsCount={dashboardData.subscriptions.length}
+          activeSubscriptions={dashboardData.activeSubscriptions}
+          monthlyRevenue={dashboardData.monthlyRevenue}
         />
 
         <OverviewCards
-          totalSchools={totalSchools}
-          totalTeachers={totalTeachers}
-          totalStudents={totalStudents}
-          totalResponses={totalResponses}
+          totalSchools={dashboardData.totalSchools}
+          totalTeachers={dashboardData.totalTeachers}
+          totalStudents={dashboardData.totalStudents}
+          totalResponses={dashboardData.totalResponses}
         />
 
         <SubscriptionManagement
-          subscriptions={subscriptions}
-        />
-
-        <StudentStatistics
-          studentStats={studentStats}
-          schoolStats={schoolStats}
-        />
-
-        <ResponseAnalytics
-          feedbackStats={feedbackStats}
-        />
-
-        <FeedbackAnalytics
-          feedbackStats={feedbackStats}
-        />
-
-        <SchoolOverview
-          schoolStats={schoolStats}
+          subscriptions={dashboardData.subscriptions}
         />
       </div>
     </div>
