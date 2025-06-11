@@ -19,6 +19,7 @@ const PlatformAdminDashboard = () => {
   const [refreshKey, setRefreshKey] = useState(0);
 
   const loadDashboardData = async (forceRefresh = false) => {
+    console.log('🔄🔄🔄 REFRESH BUTTON CLICKED! 🔄🔄🔄');
     console.log('🔄 loadDashboardData called with forceRefresh:', forceRefresh);
     setDataLoading(true);
     
@@ -29,6 +30,20 @@ const PlatformAdminDashboard = () => {
     
     try {
       console.log('📊 Loading real dashboard data from database...');
+      
+      // Test database connection first
+      console.log('🔍 Testing database connection...');
+      const { data: testConnection, error: connectionError } = await supabase
+        .from('teachers')
+        .select('count(*)', { count: 'exact', head: true })
+        .limit(1);
+      
+      if (connectionError) {
+        console.error('❌ Database connection failed:', connectionError);
+        throw new Error(`Database connection failed: ${connectionError.message}`);
+      }
+      
+      console.log('✅ Database connection successful');
       
       // Get total schools
       console.log('📊 Fetching schools data...');
@@ -174,7 +189,7 @@ const PlatformAdminDashboard = () => {
     } catch (error) {
       console.error('❌ Error loading dashboard data:', error);
       toast.error("Error loading data", {
-        description: "Failed to load dashboard data from database",
+        description: error instanceof Error ? error.message : "Failed to load dashboard data from database",
       });
       
       // Fallback to empty data instead of mock data
@@ -284,7 +299,6 @@ const PlatformAdminDashboard = () => {
           monthlyRevenue={monthlyRevenue}
         />
 
-        {/* Overview Cards */}
         <OverviewCards
           totalSchools={totalSchools}
           totalTeachers={totalTeachers}
@@ -292,28 +306,23 @@ const PlatformAdminDashboard = () => {
           totalResponses={totalResponses}
         />
 
-        {/* Subscription Management */}
         <SubscriptionManagement
           subscriptions={subscriptions}
         />
 
-        {/* Student Statistics */}
         <StudentStatistics
           studentStats={studentStats}
           schoolStats={schoolStats}
         />
 
-        {/* Response Analytics */}
         <ResponseAnalytics
           feedbackStats={feedbackStats}
         />
 
-        {/* Feedback Analytics */}
         <FeedbackAnalytics
           feedbackStats={feedbackStats}
         />
 
-        {/* School Overview */}
         <SchoolOverview
           schoolStats={schoolStats}
         />
