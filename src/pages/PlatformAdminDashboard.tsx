@@ -11,19 +11,19 @@ import ResponseAnalytics from "@/components/platform-admin/ResponseAnalytics";
 import FeedbackAnalytics from "@/components/platform-admin/FeedbackAnalytics";
 import SchoolOverview from "@/components/platform-admin/SchoolOverview";
 
-// 🚨 CRITICAL DEPLOYMENT TEST - TIMESTAMP: 2025-06-11T12:30:00Z
-// MANUAL DEPLOYMENT TRIGGER - GITHUB ACTIONS ENABLED
+// 🚨 CRITICAL DEPLOYMENT TEST - TIMESTAMP: 2025-06-11T12:35:00Z
+// PUSH-TRIGGERED DEPLOYMENT - GITHUB ACTIONS WORKFLOW UPDATED
 const DEPLOYMENT_TIMESTAMP = Date.now();
 const RANDOM_ID = Math.random().toString(36).substring(2, 15);
-const DASHBOARD_VERSION = `v5.0.0-MANUAL-TRIGGER-${DEPLOYMENT_TIMESTAMP}-${RANDOM_ID}`;
+const DASHBOARD_VERSION = `v6.0.0-PUSH-TRIGGERED-${DEPLOYMENT_TIMESTAMP}-${RANDOM_ID}`;
 
 // Force immediate console output for verification
-console.log("🚀🚀🚀 MANUAL DEPLOYMENT TRIGGER - GITHUB ACTIONS 🚀🚀🚀");
+console.log("🎯🎯🎯 PUSH-TRIGGERED DEPLOYMENT - UPDATED WORKFLOW 🎯🎯🎯");
 console.log("📅 TIMESTAMP:", new Date().toISOString());
 console.log("🆔 VERSION:", DASHBOARD_VERSION);
 console.log("🌐 LOCATION:", window.location.href);
 console.log("🔄 DEPLOYMENT ID:", RANDOM_ID);
-console.log("✅ TRIGGERING NEW GITHUB ACTIONS DEPLOYMENT!");
+console.log("✅ WORKFLOW NOW TRIGGERS ON PUSH!");
 
 const PlatformAdminDashboard = () => {
   const { admin, isLoading, logout } = usePlatformAdmin();
@@ -192,11 +192,11 @@ const PlatformAdminDashboard = () => {
       />
       
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
-        {/* 🚨 MANUAL DEPLOYMENT TRIGGER BANNER 🚨 */}
-        <div className="bg-gradient-to-r from-purple-200 via-pink-200 to-red-200 border-4 border-purple-500 rounded-2xl p-8 shadow-2xl">
+        {/* 🚨 PUSH-TRIGGERED DEPLOYMENT BANNER 🚨 */}
+        <div className="bg-gradient-to-r from-orange-200 via-yellow-200 to-red-200 border-4 border-orange-500 rounded-2xl p-8 shadow-2xl">
           <div className="text-center space-y-4">
-            <h1 className="text-4xl font-black text-purple-800 animate-pulse">
-              🚀 MANUAL DEPLOYMENT TRIGGERED! 🚀
+            <h1 className="text-4xl font-black text-orange-800 animate-pulse">
+              🎯 PUSH-TRIGGERED DEPLOYMENT! 🎯
             </h1>
             <div className="bg-white/80 rounded-xl p-4 shadow-lg">
               <p className="text-2xl font-bold text-blue-800">
@@ -212,8 +212,8 @@ const PlatformAdminDashboard = () => {
                 URL: {window.location.href}
               </p>
             </div>
-            <div className="text-lg font-bold text-purple-700 bg-yellow-100 rounded-lg p-3">
-              🎯 New deployment should be triggered automatically by this change! 🎯
+            <div className="text-lg font-bold text-orange-700 bg-yellow-100 rounded-lg p-3">
+              🚀 Workflow now triggers automatically on every push! 🚀
             </div>
           </div>
         </div>
