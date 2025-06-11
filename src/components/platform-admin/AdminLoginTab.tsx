@@ -35,7 +35,10 @@ const AdminLoginTab = ({
     }
 
     try {
+      console.log('Starting password reset for:', email);
       const result = await resetAdminPassword(email, 'admin123');
+      console.log('Password reset result:', result);
+      
       if (result.error) {
         toast({
           title: "Reset Failed",
@@ -49,6 +52,7 @@ const AdminLoginTab = ({
         });
       }
     } catch (error) {
+      console.error('Password reset error:', error);
       toast({
         title: "Reset Failed",
         description: "An error occurred during password reset",
@@ -58,7 +62,10 @@ const AdminLoginTab = ({
   };
 
   const handlePasswordTest = async () => {
+    console.log('=== TEST PASSWORD BUTTON CLICKED ===');
+    
     if (!email) {
+      console.log('No email provided');
       toast({
         title: "Email Required",
         description: "Please enter your email address first",
@@ -67,24 +74,40 @@ const AdminLoginTab = ({
       return;
     }
 
+    const testPassword = password || 'admin123';
+    console.log('Testing with email:', email);
+    console.log('Testing with password:', testPassword);
+
     try {
-      const result = await testPasswordVerification(email, password || 'admin123');
+      console.log('Calling testPasswordVerification...');
+      const result = await testPasswordVerification(email, testPassword);
+      console.log('Test password verification result:', result);
+      
       if (result.error) {
+        console.error('Test failed with error:', result.error);
         toast({
           title: "Test Failed",
           description: result.error,
           variant: "destructive",
         });
-      } else {
+      } else if (result.success) {
+        console.log('Test successful!');
         toast({
           title: "Test Successful",
+          description: result.message || "Password verification test completed successfully",
+        });
+      } else {
+        console.log('Unexpected result format:', result);
+        toast({
+          title: "Test Completed",
           description: result.message || "Password verification test completed",
         });
       }
     } catch (error) {
+      console.error('Test password error:', error);
       toast({
         title: "Test Failed",
-        description: "An error occurred during password test",
+        description: `An error occurred during password test: ${error.message}`,
         variant: "destructive",
       });
     }
@@ -114,6 +137,7 @@ const AdminLoginTab = ({
           <Input
             id="password"
             type="password"
+            placeholder="Enter password (default: admin123)"
             value={password}
             onChange={(e) => onPasswordChange(e.target.value)}
             required

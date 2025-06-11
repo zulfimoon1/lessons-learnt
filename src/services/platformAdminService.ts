@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { verifyPassword, hashPassword, generateTestHash } from './securePasswordService';
 import { validateInput } from './secureInputValidation';
@@ -101,12 +100,15 @@ const validateLoginInput = (email: string, password: string): { valid: boolean; 
   return { valid: true };
 };
 
-// Test function to debug password issues
+// Enhanced test function to debug password issues
 export const testPasswordVerification = async (email: string = 'zulfimoon1@gmail.com', password: string = 'admin123') => {
   try {
-    console.log('=== PASSWORD VERIFICATION TEST ===');
+    console.log('=== PASSWORD VERIFICATION TEST START ===');
+    console.log('Testing email:', email);
+    console.log('Testing password:', password);
     
     // Get the admin record
+    console.log('Querying for admin record...');
     const { data: admin, error } = await supabase
       .from('teachers')
       .select('*')
@@ -114,21 +116,27 @@ export const testPasswordVerification = async (email: string = 'zulfimoon1@gmail
       .eq('role', 'admin')
       .single();
     
-    if (error || !admin) {
-      console.error('Admin not found:', error);
+    if (error) {
+      console.error('Database query error:', error);
+      return { error: 'Admin not found in database' };
+    }
+    
+    if (!admin) {
+      console.error('No admin record found');
       return { error: 'Admin not found' };
     }
     
     console.log('Admin found:', {
       id: admin.id,
       email: admin.email,
+      name: admin.name,
+      school: admin.school,
       hasHash: !!admin.password_hash,
       hashLength: admin.password_hash?.length
     });
     
     if (!admin.password_hash) {
-      // Generate a fresh hash
-      console.log('No hash found, generating fresh hash...');
+      console.log('No password hash found, generating fresh hash...');
       const newHash = await generateTestHash(password);
       
       // Update the admin record
@@ -143,16 +151,18 @@ export const testPasswordVerification = async (email: string = 'zulfimoon1@gmail
       }
       
       console.log('Hash updated successfully');
-      return { success: true, message: 'Password hash regenerated' };
+      return { success: true, message: 'Password hash regenerated - please try logging in now' };
     }
     
     // Test the verification
-    console.log('Testing password verification...');
+    console.log('Testing password verification with stored hash...');
+    console.log('Hash format check - starts with $2b$:', admin.password_hash.startsWith('$2b$'));
+    console.log('Hash length:', admin.password_hash.length);
+    
     const isValid = await verifyPassword(password, admin.password_hash);
-    console.log('Verification result:', isValid);
+    console.log('Password verification result:', isValid);
     
     if (!isValid) {
-      // Try regenerating the hash
       console.log('Verification failed, regenerating hash...');
       const newHash = await generateTestHash(password);
       
@@ -166,15 +176,19 @@ export const testPasswordVerification = async (email: string = 'zulfimoon1@gmail
         return { error: 'Failed to update password hash' };
       }
       
-      console.log('Hash regenerated and updated');
-      return { success: true, message: 'Password hash regenerated due to verification failure' };
+      console.log('Hash regenerated and updated successfully');
+      return { 
+        success: true, 
+        message: `Password hash regenerated due to verification failure. Hash length: ${newHash.length}` 
+      };
     }
     
-    return { success: true, message: 'Password verification successful' };
+    console.log('=== PASSWORD VERIFICATION TEST SUCCESS ===');
+    return { success: true, message: 'Password verification successful! You should be able to login now.' };
     
   } catch (error) {
-    console.error('Test error:', error);
-    return { error: 'Test failed' };
+    console.error('Test verification error:', error);
+    return { error: `Test failed: ${error.message}` };
   }
 };
 
@@ -323,6 +337,9 @@ export const resetAdminPassword = async (email: string, newPassword: string) => 
     
     const sanitizedEmail = email.toLowerCase().trim();
     const hashedPassword = await hashPassword(newPassword);
+    
+    console.log('Generated new hash, length:', hashedPassword.length);
+    console.log('Hash preview:', hashedPassword.substring(0, 20) + '...');
     
     const { data, error } = await supabase
       .from('teachers')
