@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { SchoolIcon, LogOutIcon, RefreshCwIcon } from "lucide-react";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
@@ -23,11 +22,11 @@ const DashboardHeader = ({ adminName, onRefresh, onLogout }: DashboardHeaderProp
     } catch (error) {
       console.error('🔄 Refresh failed:', error);
     } finally {
-      // Keep spinner for at least 1 second for visual feedback
+      // Keep spinner for at least 500ms for visual feedback
       setTimeout(() => {
         setIsRefreshing(false);
         console.log('🔄 Refresh UI state reset');
-      }, 1000);
+      }, 500);
     }
   };
 

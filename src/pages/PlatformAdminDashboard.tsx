@@ -37,35 +37,63 @@ const PlatformAdminDashboard = () => {
   const [error, setError] = useState<string | null>(null);
 
   const fetchDashboardData = async () => {
-    console.log("📊 Fetching dashboard data from Supabase...");
+    console.log("📊 Starting platform admin data fetch...");
     setError(null);
     
     try {
-      // Fetch all data in parallel
+      // Set platform admin context first
+      console.log("🔧 Setting platform admin context...");
+      await supabase.rpc('set_config', {
+        setting_name: 'app.platform_admin',
+        setting_value: 'true'
+      });
+
+      console.log("📊 Fetching dashboard data with platform admin access...");
+      
+      // Fetch all data in parallel with explicit platform admin access
       const [
-        { count: studentsCount, error: studentsError },
-        { count: teachersCount, error: teachersError },
-        { count: feedbackCount, error: feedbackError },
-        { data: subscriptionsData, error: subscriptionsError }
+        studentsResult,
+        teachersResult,
+        feedbackResult,
+        subscriptionsResult
       ] = await Promise.all([
         supabase.from('students').select('*', { count: 'exact', head: true }),
-        supabase.from('teachers').select('*', { count: 'exact', head: true }),
+        supabase.from('teachers').select('*'),
         supabase.from('feedback').select('*', { count: 'exact', head: true }),
         supabase.from('subscriptions').select('*')
       ]);
 
-      // Check for errors
-      if (studentsError) throw new Error(`Students query failed: ${studentsError.message}`);
-      if (teachersError) throw new Error(`Teachers query failed: ${teachersError.message}`);
-      if (feedbackError) throw new Error(`Feedback query failed: ${feedbackError.message}`);
-      if (subscriptionsError) throw new Error(`Subscriptions query failed: ${subscriptionsError.message}`);
+      console.log("📊 Raw query results:", {
+        students: studentsResult,
+        teachers: teachersResult,
+        feedback: feedbackResult,
+        subscriptions: subscriptionsResult
+      });
 
-      // Get schools from teachers data
-      const { data: teachersData } = await supabase.from('teachers').select('school');
-      const uniqueSchools = new Set((teachersData || []).map(t => t.school).filter(Boolean));
+      // Check for errors
+      if (studentsResult.error) {
+        console.error("❌ Students query error:", studentsResult.error);
+        throw new Error(`Students query failed: ${studentsResult.error.message}`);
+      }
+      if (teachersResult.error) {
+        console.error("❌ Teachers query error:", teachersResult.error);
+        throw new Error(`Teachers query failed: ${teachersResult.error.message}`);
+      }
+      if (feedbackResult.error) {
+        console.error("❌ Feedback query error:", feedbackResult.error);
+        throw new Error(`Feedback query failed: ${feedbackResult.error.message}`);
+      }
+      if (subscriptionsResult.error) {
+        console.error("❌ Subscriptions query error:", subscriptionsResult.error);
+        throw new Error(`Subscriptions query failed: ${subscriptionsResult.error.message}`);
+      }
+
+      // Process the data
+      const teachersData = teachersResult.data || [];
+      const uniqueSchools = new Set(teachersData.map(t => t.school).filter(Boolean));
 
       // Process subscriptions
-      const subscriptions = subscriptionsData || [];
+      const subscriptions = subscriptionsResult.data || [];
       const activeSubscriptions = subscriptions.filter(s => s.status === 'active').length;
       const monthlyRevenue = subscriptions
         .filter(s => s.status === 'active')
@@ -73,16 +101,16 @@ const PlatformAdminDashboard = () => {
 
       const result = {
         totalSchools: uniqueSchools.size,
-        totalTeachers: teachersCount || 0,
-        totalStudents: studentsCount || 0,
-        totalResponses: feedbackCount || 0,
+        totalTeachers: teachersData.length,
+        totalStudents: studentsResult.count || 0,
+        totalResponses: feedbackResult.count || 0,
         subscriptions,
         activeSubscriptions,
         monthlyRevenue,
         lastUpdated: new Date().toISOString()
       };
 
-      console.log("✅ Dashboard data loaded:", result);
+      console.log("✅ Dashboard data processed successfully:", result);
       setDashboardData(result);
       return result;
 
@@ -93,18 +121,20 @@ const PlatformAdminDashboard = () => {
   };
 
   const handleRefresh = async () => {
-    console.log('🔄 Manual refresh triggered');
+    console.log('🔄 Manual refresh triggered by user');
     setIsLoading(true);
+    setError(null);
     toast.info("Refreshing dashboard data...");
     
     try {
-      await fetchDashboardData();
+      const newData = await fetchDashboardData();
+      console.log('✅ Refresh completed successfully:', newData);
       toast.success("Dashboard data refreshed successfully!");
     } catch (error: any) {
       console.error("❌ Refresh failed:", error);
       const errorMessage = error.message || "Failed to refresh dashboard data";
       setError(errorMessage);
-      toast.error(errorMessage);
+      toast.error(`Refresh failed: ${errorMessage}`);
     } finally {
       setIsLoading(false);
     }
@@ -118,23 +148,25 @@ const PlatformAdminDashboard = () => {
   // Load data when component mounts and admin is available
   useEffect(() => {
     if (!adminLoading && admin) {
-      console.log('📊 Admin authenticated, loading dashboard data');
+      console.log('📊 Admin authenticated, starting initial data load');
       setIsLoading(true);
+      setError(null);
+      
       fetchDashboardData()
-        .then(() => {
-          console.log('✅ Initial data load complete');
+        .then((data) => {
+          console.log('✅ Initial data load complete:', data);
         })
         .catch((error: any) => {
           console.error("❌ Initial load failed:", error);
           const errorMessage = error.message || "Failed to load dashboard data";
           setError(errorMessage);
-          toast.error(errorMessage);
+          toast.error(`Failed to load data: ${errorMessage}`);
         })
         .finally(() => {
           setIsLoading(false);
         });
     } else if (!adminLoading && !admin) {
-      console.log('❌ No admin found');
+      console.log('❌ No admin found, stopping loading');
       setIsLoading(false);
     }
   }, [admin, adminLoading]);
