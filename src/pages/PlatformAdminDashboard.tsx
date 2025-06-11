@@ -42,13 +42,7 @@ const PlatformAdminDashboard = () => {
     setError(null);
     
     try {
-      // Set platform admin context to bypass RLS
-      await supabase.rpc('set_config', {
-        setting_name: 'app.platform_admin',
-        setting_value: 'true'
-      });
-
-      console.log("✅ Platform admin context set");
+      console.log("✅ Platform admin context active");
 
       // Fetch all data in parallel with explicit error handling
       const [
