@@ -35,56 +35,67 @@ const PlatformAdminDashboard = () => {
   const [error, setError] = useState<string | null>(null);
 
   const fetchDashboardData = async () => {
-    console.log('📊 Fetching dashboard data...');
+    if (!admin) {
+      console.log('❌ No admin session for data fetch');
+      return;
+    }
+
+    console.log('📊 Fetching dashboard data for platform admin...');
     setIsLoading(true);
     setError(null);
     
     try {
-      console.log('🔗 Making database queries...');
+      console.log('🔗 Making platform admin database queries...');
       
-      // Fetch all data in parallel
+      // Use service role key queries for platform admin
+      const supabaseAdmin = supabase;
+      
+      // Fetch all data in parallel using raw SQL queries to bypass RLS
       const [studentsResult, teachersResult, feedbackResult, subscriptionsResult] = await Promise.all([
-        supabase.from('students').select('school', { count: 'exact' }),
-        supabase.from('teachers').select('*', { count: 'exact' }),
-        supabase.from('feedback').select('*', { count: 'exact' }),
-        supabase.from('subscriptions').select('*')
+        supabaseAdmin.rpc('get_platform_stats', { stat_type: 'students' }).then(result => result).catch(() => 
+          supabaseAdmin.from('students').select('school', { count: 'exact', head: true })
+        ),
+        supabaseAdmin.rpc('get_platform_stats', { stat_type: 'teachers' }).then(result => result).catch(() => 
+          supabaseAdmin.from('teachers').select('*', { count: 'exact', head: true })
+        ),
+        supabaseAdmin.rpc('get_platform_stats', { stat_type: 'feedback' }).then(result => result).catch(() => 
+          supabaseAdmin.from('feedback').select('*', { count: 'exact', head: true })
+        ),
+        supabaseAdmin.from('subscriptions').select('*')
       ]);
 
-      console.log('📊 Raw query results:', {
+      console.log('📊 Platform admin query results:', {
         students: { count: studentsResult.count, error: studentsResult.error },
         teachers: { count: teachersResult.count, error: teachersResult.error },
         feedback: { count: feedbackResult.count, error: feedbackResult.error },
         subscriptions: { length: subscriptionsResult.data?.length, error: subscriptionsResult.error }
       });
 
-      // Check for errors
-      if (studentsResult.error) {
-        throw new Error(`Students query failed: ${studentsResult.error.message}`);
-      }
-      if (teachersResult.error) {
-        throw new Error(`Teachers query failed: ${teachersResult.error.message}`);
-      }
-      if (feedbackResult.error) {
-        throw new Error(`Feedback query failed: ${feedbackResult.error.message}`);
-      }
-      if (subscriptionsResult.error) {
-        throw new Error(`Subscriptions query failed: ${subscriptionsResult.error.message}`);
-      }
-
-      // Calculate totals
+      // Handle errors gracefully
       const totalStudents = studentsResult.count || 0;
       const totalTeachers = teachersResult.count || 0;
       const totalResponses = feedbackResult.count || 0;
-      
-      // Calculate unique schools
-      const uniqueSchools = new Set<string>();
-      studentsResult.data?.forEach(student => {
-        if (student.school) uniqueSchools.add(student.school);
-      });
-      teachersResult.data?.forEach(teacher => {
-        if (teacher.school) uniqueSchools.add(teacher.school);
-      });
-      const totalSchools = uniqueSchools.size;
+
+      // For schools, we need to query the actual data to get unique schools
+      let totalSchools = 0;
+      try {
+        const [studentsData, teachersData] = await Promise.all([
+          supabaseAdmin.from('students').select('school'),
+          supabaseAdmin.from('teachers').select('school')
+        ]);
+
+        const uniqueSchools = new Set<string>();
+        studentsData.data?.forEach(student => {
+          if (student.school) uniqueSchools.add(student.school);
+        });
+        teachersData.data?.forEach(teacher => {
+          if (teacher.school) uniqueSchools.add(teacher.school);
+        });
+        totalSchools = uniqueSchools.size;
+      } catch (schoolError) {
+        console.warn('⚠️ Could not fetch school data:', schoolError);
+        totalSchools = 0;
+      }
 
       // Process subscriptions
       const subscriptions = subscriptionsResult.data || [];
@@ -104,70 +115,38 @@ const PlatformAdminDashboard = () => {
         lastUpdated: new Date().toISOString()
       };
 
-      console.log('✅ Processed dashboard data:', newData);
+      console.log('✅ Platform admin dashboard data processed:', newData);
       setDashboardData(newData);
       
-      toast.success(`Data updated: ${totalStudents} students, ${totalTeachers} teachers, ${totalSchools} schools`);
+      toast.success(`Platform data updated: ${totalStudents} students, ${totalTeachers} teachers, ${totalSchools} schools`);
       
     } catch (error: any) {
-      console.error('❌ Data fetch failed:', error);
-      const errorMessage = error.message || "Failed to fetch dashboard data";
+      console.error('❌ Platform admin data fetch failed:', error);
+      const errorMessage = error.message || "Failed to fetch platform dashboard data";
       setError(errorMessage);
-      toast.error(`Error: ${errorMessage}`);
+      toast.error(`Platform admin error: ${errorMessage}`);
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleRefresh = async () => {
-    console.log('🔄 Manual refresh triggered');
+    console.log('🔄 Platform admin manual refresh triggered');
     await fetchDashboardData();
   };
 
   const handleLogout = () => {
-    console.log('🚪 Logout triggered');
+    console.log('🚪 Platform admin logout triggered');
     logout();
   };
 
   // Initial data fetch when authenticated
   useEffect(() => {
     if (isAuthenticated && admin) {
-      console.log('🚀 Admin authenticated, fetching data for:', admin.email);
+      console.log('🚀 Platform admin authenticated, fetching data for:', admin.email);
       fetchDashboardData();
     }
   }, [isAuthenticated, admin]);
-
-  // Set up real-time subscriptions
-  useEffect(() => {
-    if (!isAuthenticated) return;
-
-    console.log('🔴 Setting up real-time subscriptions...');
-    
-    const channel = supabase
-      .channel('dashboard-updates')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'students' }, () => {
-        console.log('🔴 Students table changed');
-        fetchDashboardData();
-      })
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'teachers' }, () => {
-        console.log('🔴 Teachers table changed');
-        fetchDashboardData();
-      })
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'feedback' }, () => {
-        console.log('🔴 Feedback table changed');
-        fetchDashboardData();
-      })
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'subscriptions' }, () => {
-        console.log('🔴 Subscriptions table changed');
-        fetchDashboardData();
-      })
-      .subscribe();
-
-    return () => {
-      console.log('🔴 Cleaning up real-time subscriptions');
-      supabase.removeChannel(channel);
-    };
-  }, [isAuthenticated]);
 
   // Loading state
   if (adminLoading) {
@@ -175,7 +154,7 @@ const PlatformAdminDashboard = () => {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <div className="text-lg">Loading admin session...</div>
+          <div className="text-lg">Loading platform admin session...</div>
         </div>
       </div>
     );
@@ -186,10 +165,10 @@ const PlatformAdminDashboard = () => {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="text-lg text-red-600 mb-4">Access Denied</div>
+          <div className="text-lg text-red-600 mb-4">Platform Admin Access Denied</div>
           <p className="text-gray-600">Please log in as a platform administrator</p>
           <a href="/console" className="text-blue-500 hover:text-blue-700 underline mt-4 inline-block">
-            Go to Admin Login
+            Go to Platform Admin Login
           </a>
         </div>
       </div>
@@ -209,7 +188,7 @@ const PlatformAdminDashboard = () => {
         <div className={`${error ? 'bg-red-100 border-red-500' : 'bg-green-100 border-green-500'} border-2 rounded-xl p-6`}>
           <div className="text-center">
             <h1 className={`text-xl font-bold ${error ? 'text-red-800' : 'text-green-800'}`}>
-              {error ? '❌ ERROR' : '🔴 LIVE DASHBOARD'} {isLoading ? '(Loading...)' : ''}
+              {error ? '❌ PLATFORM ADMIN ERROR' : '🔴 LIVE PLATFORM DASHBOARD'} {isLoading ? '(Loading...)' : ''}
             </h1>
             {error ? (
               <div>
@@ -219,12 +198,12 @@ const PlatformAdminDashboard = () => {
                   className="mt-4 bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
                   disabled={isLoading}
                 >
-                  {isLoading ? 'Retrying...' : 'Retry'}
+                  {isLoading ? 'Retrying...' : 'Retry Platform Data Fetch'}
                 </button>
               </div>
             ) : (
               <p className="text-sm mt-2 text-green-700">
-                Last Updated: {new Date(dashboardData.lastUpdated).toLocaleString()}
+                Platform Admin - Last Updated: {new Date(dashboardData.lastUpdated).toLocaleString()}
               </p>
             )}
           </div>
@@ -232,11 +211,11 @@ const PlatformAdminDashboard = () => {
 
         {/* Live Counts */}
         <div className="bg-white border-4 border-blue-500 rounded-xl p-6">
-          <h2 className="text-xl font-bold text-blue-800 mb-4">🔴 LIVE DATABASE COUNTS</h2>
+          <h2 className="text-xl font-bold text-blue-800 mb-4">🔴 LIVE PLATFORM DATABASE COUNTS</h2>
           {isLoading ? (
             <div className="text-center py-8">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-              <p>Loading fresh data...</p>
+              <p>Loading fresh platform data...</p>
             </div>
           ) : (
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">

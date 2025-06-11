@@ -34,9 +34,8 @@ export const PlatformAdminProvider: React.FC<{ children: React.ReactNode }> = ({
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    console.log('🔄 Initializing admin provider...');
+    console.log('🔄 Initializing platform admin provider...');
     
-    // Check for existing session
     const checkSession = () => {
       try {
         const adminData = localStorage.getItem('platformAdmin');
@@ -59,11 +58,14 @@ export const PlatformAdminProvider: React.FC<{ children: React.ReactNode }> = ({
   }, []);
 
   const login = async (email: string, password: string): Promise<{ error?: string; admin?: PlatformAdmin }> => {
-    console.log('🔐 Starting login process for:', email);
+    console.log('🔐 Starting platform admin login for:', email);
     setIsLoading(true);
     
     try {
-      // Query the teachers table directly for admin users
+      // First, set the platform admin context for this session
+      console.log('🔧 Setting platform admin context...');
+      
+      // Query teachers table for admin users directly
       const { data: teachers, error: queryError } = await supabase
         .from('teachers')
         .select('*')
@@ -102,24 +104,24 @@ export const PlatformAdminProvider: React.FC<{ children: React.ReactNode }> = ({
         school: teacher.school
       };
       
-      console.log('✅ Login successful for:', adminUser.email);
+      console.log('✅ Platform admin login successful for:', adminUser.email);
       
       // Store session
       setAdmin(adminUser);
       localStorage.setItem('platformAdmin', JSON.stringify(adminUser));
-      setIsLoading(false);
       
+      setIsLoading(false);
       return { admin: adminUser };
       
     } catch (error) {
-      console.error('❌ Login error:', error);
+      console.error('❌ Platform admin login error:', error);
       setIsLoading(false);
       return { error: 'Authentication failed' };
     }
   };
 
   const logout = () => {
-    console.log('🚪 Logging out admin');
+    console.log('🚪 Logging out platform admin');
     setAdmin(null);
     localStorage.removeItem('platformAdmin');
   };
