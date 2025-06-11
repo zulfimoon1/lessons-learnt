@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { usePlatformAdmin } from "@/contexts/PlatformAdminContext";
 import { toast } from "sonner";
@@ -11,8 +12,9 @@ import ResponseAnalytics from "@/components/platform-admin/ResponseAnalytics";
 import FeedbackAnalytics from "@/components/platform-admin/FeedbackAnalytics";
 import SchoolOverview from "@/components/platform-admin/SchoolOverview";
 
+// FORCE DEPLOYMENT: 2025-06-11T11:45:00Z - GitHub Pages refresh
 // VERSION TRACKING FOR DEPLOYMENT VERIFICATION
-const DASHBOARD_VERSION = "v2.1.0-DEPLOY-TEST-" + new Date().getTime();
+const DASHBOARD_VERSION = "v2.2.0-FORCE-DEPLOY-" + new Date().getTime();
 console.log("🚀 DASHBOARD VERSION LOADED:", DASHBOARD_VERSION);
 
 const PlatformAdminDashboard = () => {
