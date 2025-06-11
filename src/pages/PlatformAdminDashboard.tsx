@@ -18,9 +18,10 @@ const PlatformAdminDashboard = () => {
   const [dataLoading, setDataLoading] = useState(true);
 
   const loadDashboardData = async (forceRefresh = false) => {
-    console.log('📊 LOADING DASHBOARD DATA - START');
+    console.log('📊 LOADING DASHBOARD DATA - START', { forceRefresh });
+    
     if (forceRefresh) {
-      console.log('🔄 Force refresh requested');
+      console.log('🔄 Force refresh requested - showing toast');
       toast.info("Refreshing dashboard data...");
     }
     
@@ -35,38 +36,58 @@ const PlatformAdminDashboard = () => {
         .select('school')
         .not('school', 'is', null);
       
-      if (schoolsError) throw schoolsError;
+      if (schoolsError) {
+        console.error('❌ Schools error:', schoolsError);
+        throw schoolsError;
+      }
       
       const uniqueSchools = [...new Set(schoolsData?.map(t => t.school) || [])];
       const totalSchools = uniqueSchools.length;
+      console.log('📊 Schools loaded:', totalSchools);
       
       // Get total teachers
       const { count: totalTeachers, error: teachersError } = await supabase
         .from('teachers')
         .select('*', { count: 'exact', head: true });
       
-      if (teachersError) throw teachersError;
+      if (teachersError) {
+        console.error('❌ Teachers error:', teachersError);
+        throw teachersError;
+      }
+      console.log('📊 Teachers loaded:', totalTeachers);
       
       // Get total students
       const { count: totalStudents, error: studentsError } = await supabase
         .from('students')
         .select('*', { count: 'exact', head: true });
       
-      if (studentsError) throw studentsError;
+      if (studentsError) {
+        console.error('❌ Students error:', studentsError);
+        throw studentsError;
+      }
+      console.log('📊 Students loaded:', totalStudents);
       
       // Get total responses
       const { count: totalResponses, error: responsesError } = await supabase
         .from('feedback')
         .select('*', { count: 'exact', head: true });
       
-      if (responsesError) throw responsesError;
+      if (responsesError) {
+        console.error('❌ Responses error:', responsesError);
+        throw responsesError;
+      }
+      console.log('📊 Responses loaded:', totalResponses);
       
       // Get subscriptions
       const { data: subscriptionsData, error: subscriptionsError } = await supabase
         .from('subscriptions')
         .select('*');
       
-      if (subscriptionsError) throw subscriptionsError;
+      if (subscriptionsError) {
+        console.error('❌ Subscriptions error:', subscriptionsError);
+        throw subscriptionsError;
+      }
+      console.log('📊 Subscriptions loaded:', subscriptionsData?.length || 0);
       
       const activeSubscriptions = subscriptionsData?.filter(s => s.status === 'active').length || 0;
       const monthlyRevenue = subscriptionsData?.reduce((sum, sub) => {
@@ -98,13 +119,7 @@ const PlatformAdminDashboard = () => {
         recentFeedback: []
       };
       
-      console.log('📊 Dashboard data loaded successfully:', {
-        schools: totalSchools,
-        teachers: totalTeachers,
-        students: totalStudents,
-        responses: totalResponses
-      });
-      
+      console.log('📊 Dashboard data prepared successfully');
       setDashboardData(finalData);
       
       if (forceRefresh) {
@@ -117,6 +132,7 @@ const PlatformAdminDashboard = () => {
         description: error instanceof Error ? error.message : "Failed to load dashboard data",
       });
       
+      // Set empty data structure on error
       setDashboardData({
         totalSchools: 0,
         totalTeachers: 0,
@@ -143,13 +159,14 @@ const PlatformAdminDashboard = () => {
 
   useEffect(() => {
     if (admin) {
-      console.log('📊 Initial data load triggered');
+      console.log('📊 Initial data load triggered for admin:', admin.email);
       loadDashboardData();
     }
   }, [admin]);
 
   const handleRefresh = () => {
     console.log('🔄 HANDLE REFRESH CALLED FROM DASHBOARD');
+    console.log('🔄 About to call loadDashboardData with forceRefresh=true');
     loadDashboardData(true);
   };
 
@@ -158,7 +175,7 @@ const PlatformAdminDashboard = () => {
     logout();
   };
 
-  console.log('📱 Dashboard render - admin:', !!admin, 'dataLoading:', dataLoading);
+  console.log('📱 Dashboard render - admin exists:', !!admin, 'dataLoading:', dataLoading);
 
   if (isLoading || dataLoading) {
     return (
