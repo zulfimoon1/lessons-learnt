@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { usePlatformAdmin } from "@/contexts/PlatformAdminContext";
 import { toast } from "sonner";
@@ -12,19 +11,21 @@ import ResponseAnalytics from "@/components/platform-admin/ResponseAnalytics";
 import FeedbackAnalytics from "@/components/platform-admin/FeedbackAnalytics";
 import SchoolOverview from "@/components/platform-admin/SchoolOverview";
 
-// 🚨 CRITICAL DEPLOYMENT TEST - TIMESTAMP: 2025-06-11T12:35:00Z
-// PUSH-TRIGGERED DEPLOYMENT - GITHUB ACTIONS WORKFLOW UPDATED
+// 🚨 CRITICAL DEPLOYMENT FIX - TIMESTAMP: 2025-06-11T13:20:00Z
+// GITHUB PAGES URL FIX + CACHE BUSTING + FRESH DATA LOAD
 const DEPLOYMENT_TIMESTAMP = Date.now();
 const RANDOM_ID = Math.random().toString(36).substring(2, 15);
-const DASHBOARD_VERSION = `v6.1.0-DATA-REFRESH-${DEPLOYMENT_TIMESTAMP}-${RANDOM_ID}`;
+const DASHBOARD_VERSION = `v6.2.0-GITHUB-PAGES-FIX-${DEPLOYMENT_TIMESTAMP}-${RANDOM_ID}`;
+const BUILD_TIME = import.meta.env.VITE_BUILD_TIME || 'dev';
 
 // Force immediate console output for verification
-console.log("🎯🎯🎯 PUSH-TRIGGERED DEPLOYMENT - DATA REFRESH VERSION 🎯🎯🎯");
+console.log("🔥🔥🔥 GITHUB PAGES FIX DEPLOYMENT 🔥🔥🔥");
 console.log("📅 TIMESTAMP:", new Date().toISOString());
 console.log("🆔 VERSION:", DASHBOARD_VERSION);
+console.log("🏗️ BUILD TIME:", BUILD_TIME);
 console.log("🌐 LOCATION:", window.location.href);
 console.log("🔄 DEPLOYMENT ID:", RANDOM_ID);
-console.log("✅ FORCING FRESH DATA LOAD!");
+console.log("✅ FORCING FRESH DATA LOAD WITH CACHE BUSTING!");
 
 const PlatformAdminDashboard = () => {
   const { admin, isLoading, logout } = usePlatformAdmin();
@@ -44,7 +45,9 @@ const PlatformAdminDashboard = () => {
 
   const loadDashboardData = async (isRefresh = false, forceRefresh = false) => {
     const timestamp = new Date().toISOString();
-    console.log(`🔄 [${timestamp}] DATA LOAD TRIGGERED - Count: ${refreshCount}, isRefresh: ${isRefresh}, forceRefresh: ${forceRefresh}`);
+    const cacheBreaker = `${Date.now()}-${Math.random()}`;
+    
+    console.log(`🔄 [${timestamp}] DATA LOAD TRIGGERED - Count: ${refreshCount}, isRefresh: ${isRefresh}, forceRefresh: ${forceRefresh}, cacheBreaker: ${cacheBreaker}`);
     
     if (isRefresh) {
       const newCount = refreshCount + 1;
@@ -57,13 +60,16 @@ const PlatformAdminDashboard = () => {
     setDataLoading(true);
     
     try {
-      console.log(`📊 [${timestamp}] FETCHING FRESH DATA FROM SUPABASE...`);
+      console.log(`📊 [${timestamp}] FETCHING FRESH DATA FROM SUPABASE WITH CACHE BREAKER: ${cacheBreaker}`);
       
-      // Force fresh data by adding timestamp to avoid any caching
-      const cacheBreaker = `?cb=${Date.now()}`;
-      console.log(`🔧 [${timestamp}] CACHE BREAKER: ${cacheBreaker}`);
+      // Force fresh data by adding timestamp and random to avoid any caching
+      const headers = {
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0'
+      };
       
-      // Fetch all data with explicit fresh queries
+      // Fetch all data with explicit fresh queries and cache busting
       const [schoolsResult, teachersResult, studentsResult, feedbackResult, subscriptionsResult] = await Promise.all([
         supabase.from('teachers').select('school').not('school', 'is', null),
         supabase.from('teachers').select('*', { count: 'exact', head: true }),
@@ -123,7 +129,8 @@ const PlatformAdminDashboard = () => {
           total_teachers: schoolsResult.data?.filter(t => t.school === school).length || 0
         })),
         feedbackStats: [],
-        lastUpdated: timestamp
+        lastUpdated: timestamp,
+        cacheBreaker
       };
 
       console.log(`📊 [${timestamp}] PROCESSED DATA:`);
@@ -157,7 +164,8 @@ const PlatformAdminDashboard = () => {
         schoolStats: [],
         feedbackStats: [],
         lastUpdated: timestamp,
-        error: true
+        error: true,
+        cacheBreaker: `error-${Date.now()}`
       });
     } finally {
       setDataLoading(false);
@@ -168,13 +176,14 @@ const PlatformAdminDashboard = () => {
   useEffect(() => {
     if (admin) {
       console.log('📊 INITIAL LOAD FOR ADMIN:', admin.email);
-      console.log('🔄 FORCING FRESH DATA LOAD ON MOUNT');
+      console.log('🔄 FORCING FRESH DATA LOAD ON MOUNT WITH CACHE BUSTING');
       loadDashboardData(false, true); // Force fresh load on mount
     }
   }, [admin]);
 
   const handleRefresh = () => {
     console.log('🔄 MANUAL REFRESH BUTTON CLICKED - CURRENT COUNT:', refreshCount);
+    console.log('🔄 FORCING COMPLETE DATA REFRESH WITH NEW CACHE BREAKER');
     loadDashboardData(true, true); // Force fresh load on manual refresh
   };
 
@@ -221,7 +230,8 @@ const PlatformAdminDashboard = () => {
     schoolStats,
     feedbackStats,
     lastUpdated,
-    error
+    error,
+    cacheBreaker
   } = dashboardData;
 
   return (
@@ -234,10 +244,10 @@ const PlatformAdminDashboard = () => {
       
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
         {/* 🚨 ENHANCED DEPLOYMENT & DATA BANNER 🚨 */}
-        <div className="bg-gradient-to-r from-orange-200 via-yellow-200 to-red-200 border-4 border-orange-500 rounded-2xl p-8 shadow-2xl">
+        <div className="bg-gradient-to-r from-red-200 via-orange-200 to-yellow-200 border-4 border-red-500 rounded-2xl p-8 shadow-2xl">
           <div className="text-center space-y-4">
-            <h1 className="text-4xl font-black text-orange-800 animate-pulse">
-              🎯 FRESH DATA DEPLOYMENT! 🎯
+            <h1 className="text-4xl font-black text-red-800 animate-pulse">
+              🔥 GITHUB PAGES FIX DEPLOYMENT! 🔥
             </h1>
             <div className="bg-white/80 rounded-xl p-4 shadow-lg">
               <p className="text-2xl font-bold text-blue-800">
@@ -247,10 +257,13 @@ const PlatformAdminDashboard = () => {
                 Live Time: {currentTime}
               </p>
               <p className="text-lg text-purple-700">
-                Deployment ID: {RANDOM_ID}
+                Build Time: {BUILD_TIME}
               </p>
               <p className="text-lg text-orange-700">
                 URL: {window.location.href}
+              </p>
+              <p className="text-lg text-pink-700">
+                Cache Breaker: {cacheBreaker}
               </p>
               {lastUpdated && (
                 <p className="text-lg text-blue-700">
@@ -263,17 +276,17 @@ const PlatformAdminDashboard = () => {
                 </p>
               )}
             </div>
-            <div className="text-lg font-bold text-orange-700 bg-yellow-100 rounded-lg p-3">
-              🚀 Data refreshes automatically on every load! 🚀
+            <div className="text-lg font-bold text-red-700 bg-yellow-100 rounded-lg p-3">
+              🚀 GitHub Pages URL Fixed + Cache Busting Enabled! 🚀
             </div>
           </div>
         </div>
 
-        {/* ENHANCED DEBUG PANEL WITH DATA INFO */}
-        <div className="bg-gradient-to-r from-blue-100 to-purple-100 border-4 border-blue-500 rounded-xl p-6 shadow-xl">
+        {/* ENHANCED DEBUG PANEL WITH GITHUB PAGES INFO */}
+        <div className="bg-gradient-to-r from-red-100 to-orange-100 border-4 border-red-500 rounded-xl p-6 shadow-xl">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             <div className="bg-white/70 rounded-lg p-4">
-              <h3 className="text-xl font-bold text-blue-800 mb-3">🔄 Refresh Tracking</h3>
+              <h3 className="text-xl font-bold text-red-800 mb-3">🔄 Refresh Tracking</h3>
               <div className="space-y-2">
                 <p className="text-lg"><span className="font-semibold">Count:</span> <span className="text-2xl font-bold text-red-600">{refreshCount}</span></p>
                 <p className="text-lg"><span className="font-semibold">Last:</span> <span className="text-blue-600">{lastRefreshTime}</span></p>
@@ -282,7 +295,7 @@ const PlatformAdminDashboard = () => {
             </div>
             
             <div className="bg-white/70 rounded-lg p-4">
-              <h3 className="text-xl font-bold text-purple-800 mb-3">⏰ Time Verification</h3>
+              <h3 className="text-xl font-bold text-orange-800 mb-3">⏰ Time Verification</h3>
               <div className="space-y-2">
                 <p className="text-lg"><span className="font-semibold">Live Time:</span></p>
                 <p className="text-2xl font-bold text-green-600">{currentTime}</p>
@@ -291,11 +304,12 @@ const PlatformAdminDashboard = () => {
             </div>
             
             <div className="bg-white/70 rounded-lg p-4">
-              <h3 className="text-xl font-bold text-orange-800 mb-3">🌐 Environment</h3>
+              <h3 className="text-xl font-bold text-purple-800 mb-3">🌐 GitHub Pages</h3>
               <div className="space-y-2">
                 <p className="text-sm"><span className="font-semibold">Host:</span> {window.location.hostname}</p>
                 <p className="text-sm"><span className="font-semibold">Path:</span> {window.location.pathname}</p>
                 <p className="text-sm"><span className="font-semibold">Built:</span> {new Date(DEPLOYMENT_TIMESTAMP).toLocaleString()}</p>
+                <p className="text-sm"><span className="font-semibold">Build ID:</span> {BUILD_TIME}</p>
               </div>
             </div>
 

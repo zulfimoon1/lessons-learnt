@@ -28,11 +28,16 @@ jobs:
         with:
           node-version: '18'
 
+      - name: Clear npm cache
+        run: npm cache clean --force
+
       - run: npm install
 
-      - run: npm run build
+      - name: Build with cache bust
+        run: npm run build
         env:
           NODE_ENV: production
+          VITE_BUILD_TIME: ${{ github.run_id }}
 
       - name: Copy index.html to 404.html
         run: cp dist/index.html dist/404.html
