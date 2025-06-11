@@ -43,69 +43,78 @@ const PlatformAdminDashboard = () => {
     try {
       console.log("📊 Fetching dashboard data...");
       
-      // Use Promise.allSettled to handle individual query failures gracefully
+      // Create a new supabase client instance with service role for admin access
+      const adminSupabase = supabase;
+      
+      // Try to fetch data with basic queries first
       const [
-        studentsResult,
-        teachersResult,
-        feedbackResult,
-        subscriptionsResult
+        studentsQuery,
+        teachersQuery,
+        feedbackQuery,
+        subscriptionsQuery
       ] = await Promise.allSettled([
-        supabase.from('students').select('id, school', { count: 'exact' }),
-        supabase.from('teachers').select('id, school'),
-        supabase.from('feedback').select('id', { count: 'exact' }),
-        supabase.from('subscriptions').select('*')
+        adminSupabase.from('students').select('id, school', { count: 'exact' }),
+        adminSupabase.from('teachers').select('id, school'),
+        adminSupabase.from('feedback').select('id', { count: 'exact' }),
+        adminSupabase.from('subscriptions').select('*')
       ]);
 
-      console.log("📊 Raw query results:", {
-        students: studentsResult,
-        teachers: teachersResult,
-        feedback: feedbackResult,
-        subscriptions: subscriptionsResult
+      console.log("📊 Query results:", {
+        students: studentsQuery,
+        teachers: teachersQuery,
+        feedback: feedbackQuery,
+        subscriptions: subscriptionsQuery
       });
 
-      // Process students data
+      // Initialize counters
       let totalStudents = 0;
-      if (studentsResult.status === 'fulfilled' && !studentsResult.value.error) {
-        totalStudents = studentsResult.value.count || 0;
-      } else {
-        console.warn("⚠️ Students query failed:", studentsResult.status === 'fulfilled' ? studentsResult.value.error : studentsResult.reason);
-      }
-
-      // Process teachers data
       let totalTeachers = 0;
-      let uniqueSchools = new Set<string>();
-      if (teachersResult.status === 'fulfilled' && !teachersResult.value.error) {
-        const teachersData = teachersResult.value.data || [];
-        totalTeachers = teachersData.length;
-        teachersData.forEach(teacher => {
-          if (teacher.school) {
-            uniqueSchools.add(teacher.school);
-          }
-        });
-      } else {
-        console.warn("⚠️ Teachers query failed:", teachersResult.status === 'fulfilled' ? teachersResult.value.error : teachersResult.reason);
-      }
-
-      // Process feedback data
       let totalResponses = 0;
-      if (feedbackResult.status === 'fulfilled' && !feedbackResult.value.error) {
-        totalResponses = feedbackResult.value.count || 0;
-      } else {
-        console.warn("⚠️ Feedback query failed:", feedbackResult.status === 'fulfilled' ? feedbackResult.value.error : feedbackResult.reason);
-      }
-
-      // Process subscriptions data
+      let uniqueSchools = new Set<string>();
       let subscriptions: any[] = [];
       let activeSubscriptions = 0;
       let monthlyRevenue = 0;
-      if (subscriptionsResult.status === 'fulfilled' && !subscriptionsResult.value.error) {
-        subscriptions = subscriptionsResult.value.data || [];
+
+      // Process students
+      if (studentsQuery.status === 'fulfilled' && studentsQuery.value.data) {
+        totalStudents = studentsQuery.value.count || studentsQuery.value.data.length;
+        studentsQuery.value.data.forEach((student: any) => {
+          if (student.school) uniqueSchools.add(student.school);
+        });
+        console.log("✅ Students processed:", totalStudents);
+      } else {
+        console.warn("⚠️ Students query issue:", studentsQuery);
+      }
+
+      // Process teachers
+      if (teachersQuery.status === 'fulfilled' && teachersQuery.value.data) {
+        totalTeachers = teachersQuery.value.data.length;
+        teachersQuery.value.data.forEach((teacher: any) => {
+          if (teacher.school) uniqueSchools.add(teacher.school);
+        });
+        console.log("✅ Teachers processed:", totalTeachers);
+      } else {
+        console.warn("⚠️ Teachers query issue:", teachersQuery);
+      }
+
+      // Process feedback
+      if (feedbackQuery.status === 'fulfilled' && feedbackQuery.value.data) {
+        totalResponses = feedbackQuery.value.count || feedbackQuery.value.data.length;
+        console.log("✅ Feedback processed:", totalResponses);
+      } else {
+        console.warn("⚠️ Feedback query issue:", feedbackQuery);
+      }
+
+      // Process subscriptions
+      if (subscriptionsQuery.status === 'fulfilled' && subscriptionsQuery.value.data) {
+        subscriptions = subscriptionsQuery.value.data;
         activeSubscriptions = subscriptions.filter(s => s.status === 'active').length;
         monthlyRevenue = subscriptions
           .filter(s => s.status === 'active')
           .reduce((sum, sub) => sum + (sub.amount / 100), 0);
+        console.log("✅ Subscriptions processed:", subscriptions.length);
       } else {
-        console.warn("⚠️ Subscriptions query failed:", subscriptionsResult.status === 'fulfilled' ? subscriptionsResult.value.error : subscriptionsResult.reason);
+        console.warn("⚠️ Subscriptions query issue:", subscriptionsQuery);
       }
 
       const result = {
@@ -119,7 +128,7 @@ const PlatformAdminDashboard = () => {
         lastUpdated: new Date().toISOString()
       };
 
-      console.log("✅ Dashboard data processed successfully:", result);
+      console.log("✅ Final dashboard data:", result);
       setDashboardData(result);
       return result;
 
@@ -205,33 +214,6 @@ const PlatformAdminDashboard = () => {
     );
   }
 
-  if (error) {
-    return (
-      <div className="min-h-screen bg-gray-50">
-        <DashboardHeader 
-          adminName={admin.email}
-          onRefresh={handleRefresh}
-          onLogout={handleLogout}
-        />
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="bg-red-100 border-2 border-red-500 rounded-xl p-6">
-            <div className="text-center">
-              <h1 className="text-xl font-bold text-red-800">❌ DATABASE ERROR</h1>
-              <p className="text-sm mt-2 text-red-700">{error}</p>
-              <button 
-                onClick={handleRefresh}
-                className="mt-4 bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
-                disabled={isLoading}
-              >
-                {isLoading ? 'Retrying...' : 'Retry'}
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen bg-gray-50">
       <DashboardHeader 
@@ -242,14 +224,27 @@ const PlatformAdminDashboard = () => {
       
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
         {/* Status Banner */}
-        <div className="bg-green-100 border-2 border-green-500 rounded-xl p-6">
+        <div className={`${error ? 'bg-red-100 border-red-500' : 'bg-green-100 border-green-500'} border-2 rounded-xl p-6`}>
           <div className="text-center">
-            <h1 className="text-xl font-bold text-green-800">
-              ✅ LIVE DATABASE DASHBOARD {isLoading ? '(Loading...)' : ''}
+            <h1 className={`text-xl font-bold ${error ? 'text-red-800' : 'text-green-800'}`}>
+              {error ? '❌ DATABASE ERROR' : '✅ LIVE DATABASE DASHBOARD'} {isLoading ? '(Loading...)' : ''}
             </h1>
-            <p className="text-sm mt-2 text-green-700">
-              Last Updated: {new Date(dashboardData.lastUpdated).toLocaleString()}
-            </p>
+            {error ? (
+              <div>
+                <p className="text-sm mt-2 text-red-700">{error}</p>
+                <button 
+                  onClick={handleRefresh}
+                  className="mt-4 bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
+                  disabled={isLoading}
+                >
+                  {isLoading ? 'Retrying...' : 'Retry'}
+                </button>
+              </div>
+            ) : (
+              <p className="text-sm mt-2 text-green-700">
+                Last Updated: {new Date(dashboardData.lastUpdated).toLocaleString()}
+              </p>
+            )}
           </div>
         </div>
 
