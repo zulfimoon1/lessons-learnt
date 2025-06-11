@@ -41,84 +41,101 @@ const PlatformAdminDashboard = () => {
     setError(null);
     
     try {
-      console.log("📊 Fetching dashboard data...");
+      console.log("📊 Fetching dashboard data with admin privileges...");
       
-      // Create a new supabase client instance with service role for admin access
-      const adminSupabase = supabase;
-      
-      // Try to fetch data with basic queries first
+      // Use count queries to get totals without fetching all data
       const [
-        studentsQuery,
-        teachersQuery,
-        feedbackQuery,
-        subscriptionsQuery
+        studentsResult,
+        teachersResult,
+        feedbackResult,
+        subscriptionsResult
       ] = await Promise.allSettled([
-        adminSupabase.from('students').select('id, school', { count: 'exact' }),
-        adminSupabase.from('teachers').select('id, school'),
-        adminSupabase.from('feedback').select('id', { count: 'exact' }),
-        adminSupabase.from('subscriptions').select('*')
+        supabase.from('students').select('*', { count: 'exact', head: true }),
+        supabase.from('teachers').select('*', { count: 'exact', head: true }),
+        supabase.from('feedback').select('*', { count: 'exact', head: true }),
+        supabase.from('subscriptions').select('*')
       ]);
 
-      console.log("📊 Query results:", {
-        students: studentsQuery,
-        teachers: teachersQuery,
-        feedback: feedbackQuery,
-        subscriptions: subscriptionsQuery
+      console.log("📊 Raw query results:", {
+        students: studentsResult,
+        teachers: teachersResult,
+        feedback: feedbackResult,
+        subscriptions: subscriptionsResult
       });
 
       // Initialize counters
       let totalStudents = 0;
       let totalTeachers = 0;
       let totalResponses = 0;
-      let uniqueSchools = new Set<string>();
+      let totalSchools = 0;
       let subscriptions: any[] = [];
       let activeSubscriptions = 0;
       let monthlyRevenue = 0;
 
-      // Process students
-      if (studentsQuery.status === 'fulfilled' && studentsQuery.value.data) {
-        totalStudents = studentsQuery.value.count || studentsQuery.value.data.length;
-        studentsQuery.value.data.forEach((student: any) => {
-          if (student.school) uniqueSchools.add(student.school);
-        });
-        console.log("✅ Students processed:", totalStudents);
+      // Process students count
+      if (studentsResult.status === 'fulfilled' && !studentsResult.value.error) {
+        totalStudents = studentsResult.value.count || 0;
+        console.log("✅ Students count:", totalStudents);
+        
+        // Get unique schools from students if we have access
+        if (totalStudents > 0) {
+          const schoolsQuery = await supabase
+            .from('students')
+            .select('school')
+            .not('school', 'is', null);
+          
+          if (schoolsQuery.data && !schoolsQuery.error) {
+            const uniqueSchools = new Set(schoolsQuery.data.map(s => s.school));
+            totalSchools = uniqueSchools.size;
+          }
+        }
       } else {
-        console.warn("⚠️ Students query issue:", studentsQuery);
+        console.warn("⚠️ Students query failed:", studentsResult);
       }
 
-      // Process teachers
-      if (teachersQuery.status === 'fulfilled' && teachersQuery.value.data) {
-        totalTeachers = teachersQuery.value.data.length;
-        teachersQuery.value.data.forEach((teacher: any) => {
-          if (teacher.school) uniqueSchools.add(teacher.school);
-        });
-        console.log("✅ Teachers processed:", totalTeachers);
+      // Process teachers count
+      if (teachersResult.status === 'fulfilled' && !teachersResult.value.error) {
+        totalTeachers = teachersResult.value.count || 0;
+        console.log("✅ Teachers count:", totalTeachers);
+        
+        // Get additional schools from teachers if we haven't found any yet
+        if (totalSchools === 0 && totalTeachers > 0) {
+          const teacherSchoolsQuery = await supabase
+            .from('teachers')
+            .select('school')
+            .not('school', 'is', null);
+          
+          if (teacherSchoolsQuery.data && !teacherSchoolsQuery.error) {
+            const uniqueSchools = new Set(teacherSchoolsQuery.data.map(t => t.school));
+            totalSchools = uniqueSchools.size;
+          }
+        }
       } else {
-        console.warn("⚠️ Teachers query issue:", teachersQuery);
+        console.warn("⚠️ Teachers query failed:", teachersResult);
       }
 
-      // Process feedback
-      if (feedbackQuery.status === 'fulfilled' && feedbackQuery.value.data) {
-        totalResponses = feedbackQuery.value.count || feedbackQuery.value.data.length;
-        console.log("✅ Feedback processed:", totalResponses);
+      // Process feedback count
+      if (feedbackResult.status === 'fulfilled' && !feedbackResult.value.error) {
+        totalResponses = feedbackResult.value.count || 0;
+        console.log("✅ Feedback count:", totalResponses);
       } else {
-        console.warn("⚠️ Feedback query issue:", feedbackQuery);
+        console.warn("⚠️ Feedback query failed:", feedbackResult);
       }
 
       // Process subscriptions
-      if (subscriptionsQuery.status === 'fulfilled' && subscriptionsQuery.value.data) {
-        subscriptions = subscriptionsQuery.value.data;
+      if (subscriptionsResult.status === 'fulfilled' && !subscriptionsResult.value.error) {
+        subscriptions = subscriptionsResult.value.data || [];
         activeSubscriptions = subscriptions.filter(s => s.status === 'active').length;
         monthlyRevenue = subscriptions
           .filter(s => s.status === 'active')
           .reduce((sum, sub) => sum + (sub.amount / 100), 0);
-        console.log("✅ Subscriptions processed:", subscriptions.length);
+        console.log("✅ Subscriptions processed:", subscriptions.length, "active:", activeSubscriptions);
       } else {
-        console.warn("⚠️ Subscriptions query issue:", subscriptionsQuery);
+        console.warn("⚠️ Subscriptions query failed:", subscriptionsResult);
       }
 
       const result = {
-        totalSchools: uniqueSchools.size,
+        totalSchools,
         totalTeachers,
         totalStudents,
         totalResponses,
@@ -134,6 +151,8 @@ const PlatformAdminDashboard = () => {
 
     } catch (error: any) {
       console.error("❌ Error fetching dashboard data:", error);
+      const errorMessage = error.message || "Unknown error occurred";
+      setError(`Failed to fetch data: ${errorMessage}`);
       throw error;
     }
   };
@@ -166,7 +185,7 @@ const PlatformAdminDashboard = () => {
   // Load data when component mounts and admin is available
   useEffect(() => {
     if (!adminLoading && admin) {
-      console.log('📊 Admin authenticated, starting initial data load');
+      console.log('📊 Admin authenticated, starting initial data load for:', admin.email);
       setIsLoading(true);
       setError(null);
       
