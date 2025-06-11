@@ -17,19 +17,20 @@ const PlatformAdminDashboard = () => {
   const [dashboardData, setDashboardData] = useState<any>(null);
   const [dataLoading, setDataLoading] = useState(true);
   const [refreshCount, setRefreshCount] = useState(0);
+  const [lastRefreshTime, setLastRefreshTime] = useState<string>('Never');
 
   const loadDashboardData = async (isRefresh = false) => {
-    console.log('📊 LOADING DASHBOARD DATA - START', { isRefresh, refreshCount });
+    console.log('📊 LOADING DASHBOARD DATA - START', { isRefresh, currentRefreshCount: refreshCount });
     
     if (isRefresh) {
       toast.info("Refreshing dashboard data...");
+      setLastRefreshTime(new Date().toLocaleTimeString());
     }
     
     setDataLoading(true);
     
     try {
       console.log('📊 FETCHING SCHOOLS DATA...');
-      // Get schools data
       const { data: schoolsData, error: schoolsError } = await supabase
         .from('teachers')
         .select('school')
@@ -44,7 +45,6 @@ const PlatformAdminDashboard = () => {
       const uniqueSchools = [...new Set(schoolsData?.map(t => t.school) || [])];
       
       console.log('📊 FETCHING TEACHERS COUNT...');
-      // Get teachers count
       const { count: teachersCount, error: teachersError } = await supabase
         .from('teachers')
         .select('*', { count: 'exact', head: true });
@@ -57,7 +57,6 @@ const PlatformAdminDashboard = () => {
       console.log('✅ TEACHERS COUNT:', teachersCount);
       
       console.log('📊 FETCHING STUDENTS COUNT...');
-      // Get students count
       const { count: studentsCount, error: studentsError } = await supabase
         .from('students')
         .select('*', { count: 'exact', head: true });
@@ -70,7 +69,6 @@ const PlatformAdminDashboard = () => {
       console.log('✅ STUDENTS COUNT:', studentsCount);
       
       console.log('📊 FETCHING FEEDBACK COUNT...');
-      // Get feedback count
       const { count: feedbackCount, error: feedbackError } = await supabase
         .from('feedback')
         .select('*', { count: 'exact', head: true });
@@ -83,7 +81,6 @@ const PlatformAdminDashboard = () => {
       console.log('✅ FEEDBACK COUNT:', feedbackCount);
       
       console.log('📊 FETCHING SUBSCRIPTIONS...');
-      // Get subscriptions
       const { data: subscriptionsData, error: subscriptionsError } = await supabase
         .from('subscriptions')
         .select('*');
@@ -130,8 +127,10 @@ const PlatformAdminDashboard = () => {
       setDashboardData(newData);
       
       if (isRefresh) {
-        setRefreshCount(prev => prev + 1);
-        toast.success(`Dashboard refreshed successfully! (Count: ${refreshCount + 1})`);
+        const newCount = refreshCount + 1;
+        setRefreshCount(newCount);
+        console.log('🔄 REFRESH COUNT UPDATED TO:', newCount);
+        toast.success(`Dashboard refreshed successfully! (Refresh #${newCount})`);
       }
       
       console.log('✅ DASHBOARD DATA LOADED SUCCESSFULLY');
@@ -166,7 +165,7 @@ const PlatformAdminDashboard = () => {
   }, [admin]);
 
   const handleRefresh = () => {
-    console.log('🔄 REFRESH TRIGGERED - HANDLER');
+    console.log('🔄 REFRESH TRIGGERED - CURRENT COUNT:', refreshCount);
     loadDashboardData(true);
   };
 
@@ -179,7 +178,7 @@ const PlatformAdminDashboard = () => {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-lg">
-          {isLoading ? 'Loading admin session...' : `Loading dashboard data... (${dataLoading ? 'Loading' : 'Complete'})`}
+          {isLoading ? 'Loading admin session...' : 'Loading dashboard data...'}
         </div>
       </div>
     );
@@ -223,8 +222,18 @@ const PlatformAdminDashboard = () => {
       />
       
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
-        <div className="mb-4 text-sm text-gray-600">
-          Last refresh count: {refreshCount} | Data loading: {dataLoading ? 'Yes' : 'No'}
+        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+          <div className="flex justify-between items-center">
+            <div>
+              <h3 className="text-lg font-semibold text-yellow-800">Debug Information</h3>
+              <p className="text-yellow-700">Refresh Count: <span className="font-bold">{refreshCount}</span></p>
+              <p className="text-yellow-700">Last Refresh: <span className="font-bold">{lastRefreshTime}</span></p>
+              <p className="text-yellow-700">Data Loading: <span className="font-bold">{dataLoading ? 'Yes' : 'No'}</span></p>
+            </div>
+            <div className="text-sm text-yellow-600">
+              Check console for detailed logs (🔄, 📊, ✅, ❌)
+            </div>
+          </div>
         </div>
         
         <SystemInfoCard
