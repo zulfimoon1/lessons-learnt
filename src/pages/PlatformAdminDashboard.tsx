@@ -40,13 +40,6 @@ const PlatformAdminDashboard = () => {
     setError(null);
     
     try {
-      // Set platform admin context first
-      console.log("🔧 Setting platform admin context...");
-      await supabase.rpc('set_config', {
-        setting_name: 'app.platform_admin',
-        setting_value: 'true'
-      });
-
       console.log("📊 Fetching all data in parallel...");
       
       // Fetch all data in parallel for faster loading
