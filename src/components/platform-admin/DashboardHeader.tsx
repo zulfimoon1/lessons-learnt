@@ -11,7 +11,7 @@ interface DashboardHeaderProps {
 
 const DashboardHeader = ({ adminName, onRefresh, onLogout }: DashboardHeaderProps) => {
   const handleRefreshClick = () => {
-    console.log('🔄 REFRESH BUTTON CLICKED');
+    console.log('🔄 REFRESH BUTTON CLICKED - HEADER');
     onRefresh();
   };
 
@@ -27,10 +27,10 @@ const DashboardHeader = ({ adminName, onRefresh, onLogout }: DashboardHeaderProp
             onClick={handleRefreshClick} 
             variant="outline" 
             size="sm" 
-            className="flex items-center gap-2"
+            className="flex items-center gap-2 bg-green-50 hover:bg-green-100 border-green-200"
           >
             <RefreshCwIcon className="w-4 h-4" />
-            Refresh
+            Refresh Data
           </Button>
         </div>
         <div className="flex items-center gap-4">

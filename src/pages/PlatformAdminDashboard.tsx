@@ -16,9 +16,10 @@ const PlatformAdminDashboard = () => {
   const { admin, isLoading, logout } = usePlatformAdmin();
   const [dashboardData, setDashboardData] = useState<any>(null);
   const [dataLoading, setDataLoading] = useState(true);
+  const [refreshCount, setRefreshCount] = useState(0);
 
   const loadDashboardData = async (isRefresh = false) => {
-    console.log('📊 LOADING DASHBOARD DATA', { isRefresh });
+    console.log('📊 LOADING DASHBOARD DATA - START', { isRefresh, refreshCount });
     
     if (isRefresh) {
       toast.info("Refreshing dashboard data...");
@@ -27,43 +28,72 @@ const PlatformAdminDashboard = () => {
     setDataLoading(true);
     
     try {
+      console.log('📊 FETCHING SCHOOLS DATA...');
       // Get schools data
       const { data: schoolsData, error: schoolsError } = await supabase
         .from('teachers')
         .select('school')
         .not('school', 'is', null);
       
-      if (schoolsError) throw schoolsError;
+      if (schoolsError) {
+        console.error('❌ SCHOOLS ERROR:', schoolsError);
+        throw schoolsError;
+      }
       
+      console.log('✅ SCHOOLS DATA FETCHED:', schoolsData?.length);
       const uniqueSchools = [...new Set(schoolsData?.map(t => t.school) || [])];
       
+      console.log('📊 FETCHING TEACHERS COUNT...');
       // Get teachers count
       const { count: teachersCount, error: teachersError } = await supabase
         .from('teachers')
         .select('*', { count: 'exact', head: true });
       
-      if (teachersError) throw teachersError;
+      if (teachersError) {
+        console.error('❌ TEACHERS ERROR:', teachersError);
+        throw teachersError;
+      }
       
+      console.log('✅ TEACHERS COUNT:', teachersCount);
+      
+      console.log('📊 FETCHING STUDENTS COUNT...');
       // Get students count
       const { count: studentsCount, error: studentsError } = await supabase
         .from('students')
         .select('*', { count: 'exact', head: true });
       
-      if (studentsError) throw studentsError;
+      if (studentsError) {
+        console.error('❌ STUDENTS ERROR:', studentsError);
+        throw studentsError;
+      }
       
+      console.log('✅ STUDENTS COUNT:', studentsCount);
+      
+      console.log('📊 FETCHING FEEDBACK COUNT...');
       // Get feedback count
       const { count: feedbackCount, error: feedbackError } = await supabase
         .from('feedback')
         .select('*', { count: 'exact', head: true });
       
-      if (feedbackError) throw feedbackError;
+      if (feedbackError) {
+        console.error('❌ FEEDBACK ERROR:', feedbackError);
+        throw feedbackError;
+      }
       
+      console.log('✅ FEEDBACK COUNT:', feedbackCount);
+      
+      console.log('📊 FETCHING SUBSCRIPTIONS...');
       // Get subscriptions
       const { data: subscriptionsData, error: subscriptionsError } = await supabase
         .from('subscriptions')
         .select('*');
       
-      if (subscriptionsError) throw subscriptionsError;
+      if (subscriptionsError) {
+        console.error('❌ SUBSCRIPTIONS ERROR:', subscriptionsError);
+        throw subscriptionsError;
+      }
+      
+      console.log('✅ SUBSCRIPTIONS DATA:', subscriptionsData?.length);
       
       const activeSubscriptions = subscriptionsData?.filter(s => s.status === 'active').length || 0;
       const monthlyRevenue = subscriptionsData?.reduce((sum, sub) => {
@@ -89,12 +119,22 @@ const PlatformAdminDashboard = () => {
         feedbackStats: []
       };
       
-      console.log('📊 DATA LOADED SUCCESSFULLY', newData);
+      console.log('📊 NEW DATA PREPARED:', {
+        schools: newData.totalSchools,
+        teachers: newData.totalTeachers,
+        students: newData.totalStudents,
+        responses: newData.totalResponses,
+        subscriptions: newData.subscriptions.length
+      });
+      
       setDashboardData(newData);
       
       if (isRefresh) {
-        toast.success("Dashboard refreshed successfully!");
+        setRefreshCount(prev => prev + 1);
+        toast.success(`Dashboard refreshed successfully! (Count: ${refreshCount + 1})`);
       }
+      
+      console.log('✅ DASHBOARD DATA LOADED SUCCESSFULLY');
       
     } catch (error) {
       console.error('❌ DASHBOARD DATA ERROR:', error);
@@ -114,6 +154,7 @@ const PlatformAdminDashboard = () => {
       });
     } finally {
       setDataLoading(false);
+      console.log('📊 LOADING DASHBOARD DATA - COMPLETE');
     }
   };
 
@@ -125,7 +166,7 @@ const PlatformAdminDashboard = () => {
   }, [admin]);
 
   const handleRefresh = () => {
-    console.log('🔄 REFRESH TRIGGERED');
+    console.log('🔄 REFRESH TRIGGERED - HANDLER');
     loadDashboardData(true);
   };
 
@@ -138,7 +179,7 @@ const PlatformAdminDashboard = () => {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-lg">
-          {isLoading ? 'Loading admin session...' : 'Loading dashboard data...'}
+          {isLoading ? 'Loading admin session...' : `Loading dashboard data... (${dataLoading ? 'Loading' : 'Complete'})`}
         </div>
       </div>
     );
@@ -182,6 +223,10 @@ const PlatformAdminDashboard = () => {
       />
       
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+        <div className="mb-4 text-sm text-gray-600">
+          Last refresh count: {refreshCount} | Data loading: {dataLoading ? 'Yes' : 'No'}
+        </div>
+        
         <SystemInfoCard
           totalSchools={totalSchools}
           totalTeachers={totalTeachers}
