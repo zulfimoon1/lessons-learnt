@@ -199,20 +199,6 @@ const CustomAdminCreation = () => {
           </Button>
         </CardContent>
       </Card>
-
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-        <h3 className="font-semibold text-blue-900 mb-2">Quick Setup for zulfimoon1@gmail.com</h3>
-        <p className="text-sm text-blue-700 mb-3">
-          There's already a database migration prepared to create your admin account. After running the migration, you can log in with:
-        </p>
-        <div className="bg-white border border-blue-200 rounded p-3 font-mono text-sm">
-          <p><strong>Email:</strong> zulfimoon1@gmail.com</p>
-          <p><strong>Password:</strong> admin123</p>
-        </div>
-        <p className="text-xs text-blue-600 mt-2">
-          You can change your password after first login for security.
-        </p>
-      </div>
     </div>
   );
 };
