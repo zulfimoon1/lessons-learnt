@@ -41,18 +41,12 @@ jobs:
         run: npm run build
         env:
           NODE_ENV: production
-          VITE_BASE_PATH: /lessons-learnt/
 
       - name: Create .nojekyll file
         run: touch dist/.nojekyll
 
       - name: Copy index.html to 404.html for SPA routing
         run: cp dist/index.html dist/404.html
-
-      - name: List dist contents
-        run: |
-          echo "Contents of dist directory:"
-          find dist -type f -name "*.html" -o -name "*.js" -o -name "*.css" | head -20
 
       - name: Verify build output
         run: |

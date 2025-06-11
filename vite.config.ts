@@ -11,7 +11,7 @@ export default defineConfig(({ mode }) => {
   // Use different base paths for different environments
   let base = '/';
   if (mode === 'production') {
-    // For GitHub Pages deployment
+    // For GitHub Pages deployment - correct repository name
     base = '/lessons-learnt/';
   }
   

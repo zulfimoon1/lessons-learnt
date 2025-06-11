@@ -35,108 +35,74 @@ const PlatformAdminDashboard = () => {
   });
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [refreshCount, setRefreshCount] = useState(0);
 
-  const fetchRealData = async (): Promise<DashboardData> => {
-    console.log("📊 Fetching REAL data from Supabase...");
+  const fetchDashboardData = async () => {
+    console.log("📊 Fetching dashboard data from Supabase...");
     setError(null);
     
     try {
-      console.log("✅ Platform admin context active");
-
-      // Fetch all data in parallel with explicit error handling
+      // Fetch all data in parallel
       const [
-        teachersResult,
-        studentsResult,
-        feedbackResult,
-        subscriptionsResult
-      ] = await Promise.allSettled([
-        supabase.from('teachers').select('*', { count: 'exact' }),
-        supabase.from('students').select('*', { count: 'exact' }),
-        supabase.from('feedback').select('*', { count: 'exact' }),
+        { count: studentsCount, error: studentsError },
+        { count: teachersCount, error: teachersError },
+        { count: feedbackCount, error: feedbackError },
+        { data: subscriptionsData, error: subscriptionsError }
+      ] = await Promise.all([
+        supabase.from('students').select('*', { count: 'exact', head: true }),
+        supabase.from('teachers').select('*', { count: 'exact', head: true }),
+        supabase.from('feedback').select('*', { count: 'exact', head: true }),
         supabase.from('subscriptions').select('*')
       ]);
 
-      console.log("📊 Query results:", {
-        teachers: teachersResult,
-        students: studentsResult,
-        feedback: feedbackResult,
-        subscriptions: subscriptionsResult
-      });
+      // Check for errors
+      if (studentsError) throw new Error(`Students query failed: ${studentsError.message}`);
+      if (teachersError) throw new Error(`Teachers query failed: ${teachersError.message}`);
+      if (feedbackError) throw new Error(`Feedback query failed: ${feedbackError.message}`);
+      if (subscriptionsError) throw new Error(`Subscriptions query failed: ${subscriptionsError.message}`);
 
-      // Process results safely
-      const totalTeachers = teachersResult.status === 'fulfilled' && !teachersResult.value.error 
-        ? teachersResult.value.count || 0 
-        : 0;
-      
-      const totalStudents = studentsResult.status === 'fulfilled' && !studentsResult.value.error 
-        ? studentsResult.value.count || 0 
-        : 0;
-      
-      const totalResponses = feedbackResult.status === 'fulfilled' && !feedbackResult.value.error 
-        ? feedbackResult.value.count || 0 
-        : 0;
-      
-      const subscriptions = subscriptionsResult.status === 'fulfilled' && !subscriptionsResult.value.error 
-        ? subscriptionsResult.value.data || [] 
-        : [];
+      // Get schools from teachers data
+      const { data: teachersData } = await supabase.from('teachers').select('school');
+      const uniqueSchools = new Set((teachersData || []).map(t => t.school).filter(Boolean));
 
       // Process subscriptions
+      const subscriptions = subscriptionsData || [];
       const activeSubscriptions = subscriptions.filter(s => s.status === 'active').length;
       const monthlyRevenue = subscriptions
         .filter(s => s.status === 'active')
         .reduce((sum, sub) => sum + (sub.amount / 100), 0);
 
-      // Calculate unique schools from teachers
-      const teachersData = teachersResult.status === 'fulfilled' && !teachersResult.value.error 
-        ? teachersResult.value.data || []
-        : [];
-      
-      const uniqueSchools = new Set(
-        teachersData.map(t => t.school).filter(Boolean)
-      );
-      const totalSchools = uniqueSchools.size;
-
       const result = {
-        totalSchools,
-        totalTeachers,
-        totalStudents,
-        totalResponses,
+        totalSchools: uniqueSchools.size,
+        totalTeachers: teachersCount || 0,
+        totalStudents: studentsCount || 0,
+        totalResponses: feedbackCount || 0,
         subscriptions,
         activeSubscriptions,
         monthlyRevenue,
         lastUpdated: new Date().toISOString()
       };
 
-      console.log("✅ REAL Dashboard data loaded:", result);
+      console.log("✅ Dashboard data loaded:", result);
+      setDashboardData(result);
       return result;
 
-    } catch (error) {
-      console.error("❌ Error fetching real data:", error);
+    } catch (error: any) {
+      console.error("❌ Error fetching dashboard data:", error);
       throw error;
     }
   };
 
-  const loadData = async (isRefresh = false) => {
-    console.log(`📊 Loading data (refresh: ${isRefresh})`);
+  const handleRefresh = async () => {
+    console.log('🔄 Manual refresh triggered');
     setIsLoading(true);
-    setError(null);
-    
-    if (isRefresh) {
-      setRefreshCount(prev => prev + 1);
-      toast.info("Refreshing dashboard data...");
-    }
+    toast.info("Refreshing dashboard data...");
     
     try {
-      const data = await fetchRealData();
-      setDashboardData(data);
-      
-      if (isRefresh) {
-        toast.success("Dashboard data refreshed successfully!");
-      }
+      await fetchDashboardData();
+      toast.success("Dashboard data refreshed successfully!");
     } catch (error: any) {
-      console.error("❌ Error loading dashboard data:", error);
-      const errorMessage = error.message || "Failed to load dashboard data";
+      console.error("❌ Refresh failed:", error);
+      const errorMessage = error.message || "Failed to refresh dashboard data";
       setError(errorMessage);
       toast.error(errorMessage);
     } finally {
@@ -144,25 +110,34 @@ const PlatformAdminDashboard = () => {
     }
   };
 
-  useEffect(() => {
-    if (!adminLoading && admin) {
-      console.log('📊 Admin authenticated, loading dashboard data');
-      loadData(false);
-    } else if (!adminLoading && !admin) {
-      console.log('❌ No admin found, stopping data load');
-      setIsLoading(false);
-    }
-  }, [admin, adminLoading]);
-
-  const handleRefresh = () => {
-    console.log('🔄 Manual refresh triggered');
-    loadData(true);
-  };
-
   const handleLogout = () => {
     console.log('🚪 Logout triggered');
     logout();
   };
+
+  // Load data when component mounts and admin is available
+  useEffect(() => {
+    if (!adminLoading && admin) {
+      console.log('📊 Admin authenticated, loading dashboard data');
+      setIsLoading(true);
+      fetchDashboardData()
+        .then(() => {
+          console.log('✅ Initial data load complete');
+        })
+        .catch((error: any) => {
+          console.error("❌ Initial load failed:", error);
+          const errorMessage = error.message || "Failed to load dashboard data";
+          setError(errorMessage);
+          toast.error(errorMessage);
+        })
+        .finally(() => {
+          setIsLoading(false);
+        });
+    } else if (!adminLoading && !admin) {
+      console.log('❌ No admin found');
+      setIsLoading(false);
+    }
+  }, [admin, adminLoading]);
 
   if (adminLoading) {
     return (
@@ -203,10 +178,11 @@ const PlatformAdminDashboard = () => {
               <h1 className="text-xl font-bold text-red-800">❌ DATABASE ERROR</h1>
               <p className="text-sm mt-2 text-red-700">{error}</p>
               <button 
-                onClick={() => loadData(true)}
+                onClick={handleRefresh}
                 className="mt-4 bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
+                disabled={isLoading}
               >
-                Retry
+                {isLoading ? 'Retrying...' : 'Retry'}
               </button>
             </div>
           </div>
@@ -231,7 +207,7 @@ const PlatformAdminDashboard = () => {
               ✅ LIVE DATABASE DASHBOARD {isLoading ? '(Loading...)' : ''}
             </h1>
             <p className="text-sm mt-2 text-green-700">
-              Refresh Count: {refreshCount} | Last Updated: {new Date(dashboardData.lastUpdated).toLocaleString()}
+              Last Updated: {new Date(dashboardData.lastUpdated).toLocaleString()}
             </p>
           </div>
         </div>
