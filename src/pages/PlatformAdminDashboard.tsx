@@ -1,7 +1,7 @@
-
 import { useEffect, useState } from "react";
 import { usePlatformAdmin } from "@/contexts/PlatformAdminContext";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 import DashboardHeader from "@/components/platform-admin/DashboardHeader";
 import SystemInfoCard from "@/components/platform-admin/SystemInfoCard";
 import OverviewCards from "@/components/platform-admin/OverviewCards";
@@ -19,30 +19,137 @@ const PlatformAdminDashboard = () => {
   const loadDashboardData = async () => {
     setDataLoading(true);
     try {
-      // Mock data for now - replace with actual API call
-      const mockData = {
-        totalSchools: 5,
-        totalTeachers: 25,
-        totalStudents: 500,
-        totalResponses: 1250,
+      console.log('Loading real dashboard data from database...');
+      
+      // Get total schools
+      const { data: schoolsData, error: schoolsError } = await supabase
+        .from('teachers')
+        .select('school')
+        .not('school', 'is', null);
+      
+      if (schoolsError) throw schoolsError;
+      
+      const uniqueSchools = [...new Set(schoolsData?.map(t => t.school) || [])];
+      const totalSchools = uniqueSchools.length;
+      
+      // Get total teachers
+      const { count: totalTeachers, error: teachersError } = await supabase
+        .from('teachers')
+        .select('*', { count: 'exact', head: true });
+      
+      if (teachersError) throw teachersError;
+      
+      // Get total students
+      const { count: totalStudents, error: studentsError } = await supabase
+        .from('students')
+        .select('*', { count: 'exact', head: true });
+      
+      if (studentsError) throw studentsError;
+      
+      // Get total responses
+      const { count: totalResponses, error: responsesError } = await supabase
+        .from('feedback')
+        .select('*', { count: 'exact', head: true });
+      
+      if (responsesError) throw responsesError;
+      
+      // Get subscriptions
+      const { data: subscriptionsData, error: subscriptionsError } = await supabase
+        .from('subscriptions')
+        .select('*');
+      
+      if (subscriptionsError) throw subscriptionsError;
+      
+      const activeSubscriptions = subscriptionsData?.filter(s => s.status === 'active').length || 0;
+      const monthlyRevenue = subscriptionsData?.reduce((sum, sub) => {
+        if (sub.status === 'active') {
+          return sum + (sub.amount / 100); // Convert from cents
+        }
+        return sum;
+      }, 0) || 0;
+      
+      // Get student statistics by school
+      const { data: studentStats, error: studentStatsError } = await supabase
+        .from('students')
+        .select('school')
+        .not('school', 'is', null);
+      
+      if (studentStatsError) throw studentStatsError;
+      
+      const studentStatsBySchool = studentStats?.reduce((acc, student) => {
+        acc[student.school] = (acc[student.school] || 0) + 1;
+        return acc;
+      }, {} as Record<string, number>) || {};
+      
+      const processedStudentStats = Object.entries(studentStatsBySchool).map(([school, count]) => ({
+        school,
+        total_students: count,
+        student_response_rate: 0 // Would need more complex calculation
+      }));
+      
+      // Get feedback analytics
+      const { data: feedbackData, error: feedbackError } = await supabase
+        .from('feedback_analytics')
+        .select('*');
+      
+      if (feedbackError) throw feedbackError;
+
+      console.log('Real data loaded:', {
+        totalSchools,
+        totalTeachers: totalTeachers || 0,
+        totalStudents: totalStudents || 0,
+        totalResponses: totalResponses || 0,
+        activeSubscriptions,
+        monthlyRevenue
+      });
+
+      const realData = {
+        totalSchools,
+        totalTeachers: totalTeachers || 0,
+        totalStudents: totalStudents || 0,
+        totalResponses: totalResponses || 0,
+        subscriptions: subscriptionsData || [],
+        activeSubscriptions,
+        monthlyRevenue,
+        studentStats: processedStudentStats,
+        schoolStats: uniqueSchools.map(school => ({
+          school,
+          total_teachers: schoolsData?.filter(t => t.school === school).length || 0
+        })),
+        feedbackStats: feedbackData || [],
+        recentSignups: totalTeachers || 0, // Could be refined with date filtering
+        topSchools: uniqueSchools.slice(0, 5),
+        topTeachers: [],
+        recentResponses: [],
+        mentalHealthAlerts: [],
+        recentFeedback: []
+      };
+      
+      setDashboardData(realData);
+    } catch (error) {
+      console.error('Error loading dashboard data:', error);
+      toast.error("Error loading data", {
+        description: "Failed to load dashboard data from database",
+      });
+      
+      // Fallback to empty data instead of mock data
+      setDashboardData({
+        totalSchools: 0,
+        totalTeachers: 0,
+        totalStudents: 0,
+        totalResponses: 0,
         subscriptions: [],
         activeSubscriptions: 0,
         monthlyRevenue: 0,
         studentStats: [],
         schoolStats: [],
         feedbackStats: [],
-        recentSignups: 12,
+        recentSignups: 0,
         topSchools: [],
         topTeachers: [],
         recentResponses: [],
         mentalHealthAlerts: [],
         recentFeedback: []
-      };
-      setDashboardData(mockData);
-    } catch (error) {
-      console.error('Error loading dashboard data:', error);
-      toast.error("Error loading data", {
-        description: "Failed to load dashboard data",
       });
     } finally {
       setDataLoading(false);
