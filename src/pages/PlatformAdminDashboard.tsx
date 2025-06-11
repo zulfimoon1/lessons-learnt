@@ -20,7 +20,7 @@ interface DashboardData {
 }
 
 const PlatformAdminDashboard = () => {
-  const { admin, isLoading: adminLoading, logout } = usePlatformAdmin();
+  const { admin, isLoading: adminLoading, logout, isAuthenticated } = usePlatformAdmin();
   const [dashboardData, setDashboardData] = useState<DashboardData>({
     totalSchools: 0,
     totalTeachers: 0,
@@ -35,18 +35,14 @@ const PlatformAdminDashboard = () => {
   const [error, setError] = useState<string | null>(null);
 
   const fetchDashboardData = async () => {
-    if (!admin) {
-      console.log('❌ No admin session - cannot fetch data');
-      return;
-    }
-
-    console.log('📊 Starting data fetch for admin:', admin.email);
+    console.log('📊 Fetching dashboard data...');
     setIsLoading(true);
     setError(null);
     
     try {
-      console.log('🔗 Making parallel database queries...');
+      console.log('🔗 Making database queries...');
       
+      // Fetch all data in parallel
       const [studentsResult, teachersResult, feedbackResult, subscriptionsResult] = await Promise.all([
         supabase.from('students').select('school', { count: 'exact' }),
         supabase.from('teachers').select('*', { count: 'exact' }),
@@ -54,23 +50,34 @@ const PlatformAdminDashboard = () => {
         supabase.from('subscriptions').select('*')
       ]);
 
-      console.log('📊 Query results:', {
+      console.log('📊 Raw query results:', {
         students: { count: studentsResult.count, error: studentsResult.error },
         teachers: { count: teachersResult.count, error: teachersResult.error },
         feedback: { count: feedbackResult.count, error: feedbackResult.error },
         subscriptions: { length: subscriptionsResult.data?.length, error: subscriptionsResult.error }
       });
 
-      if (studentsResult.error) throw new Error(`Students query failed: ${studentsResult.error.message}`);
-      if (teachersResult.error) throw new Error(`Teachers query failed: ${teachersResult.error.message}`);
-      if (feedbackResult.error) throw new Error(`Feedback query failed: ${feedbackResult.error.message}`);
-      if (subscriptionsResult.error) throw new Error(`Subscriptions query failed: ${subscriptionsResult.error.message}`);
+      // Check for errors
+      if (studentsResult.error) {
+        throw new Error(`Students query failed: ${studentsResult.error.message}`);
+      }
+      if (teachersResult.error) {
+        throw new Error(`Teachers query failed: ${teachersResult.error.message}`);
+      }
+      if (feedbackResult.error) {
+        throw new Error(`Feedback query failed: ${feedbackResult.error.message}`);
+      }
+      if (subscriptionsResult.error) {
+        throw new Error(`Subscriptions query failed: ${subscriptionsResult.error.message}`);
+      }
 
+      // Calculate totals
       const totalStudents = studentsResult.count || 0;
       const totalTeachers = teachersResult.count || 0;
       const totalResponses = feedbackResult.count || 0;
       
-      const uniqueSchools = new Set();
+      // Calculate unique schools
+      const uniqueSchools = new Set<string>();
       studentsResult.data?.forEach(student => {
         if (student.school) uniqueSchools.add(student.school);
       });
@@ -79,13 +86,14 @@ const PlatformAdminDashboard = () => {
       });
       const totalSchools = uniqueSchools.size;
 
+      // Process subscriptions
       const subscriptions = subscriptionsResult.data || [];
       const activeSubscriptions = subscriptions.filter(s => s.status === 'active').length;
       const monthlyRevenue = subscriptions
         .filter(s => s.status === 'active')
         .reduce((sum, sub) => sum + (sub.amount / 100), 0);
 
-      const newData = {
+      const newData: DashboardData = {
         totalSchools,
         totalTeachers,
         totalStudents,
@@ -96,57 +104,61 @@ const PlatformAdminDashboard = () => {
         lastUpdated: new Date().toISOString()
       };
 
-      console.log('✅ Data processed successfully:', newData);
+      console.log('✅ Processed dashboard data:', newData);
       setDashboardData(newData);
       
-      toast.success(`Data refreshed: ${totalStudents} students, ${totalTeachers} teachers, ${totalSchools} schools`);
+      toast.success(`Data updated: ${totalStudents} students, ${totalTeachers} teachers, ${totalSchools} schools`);
       
     } catch (error: any) {
       console.error('❌ Data fetch failed:', error);
       const errorMessage = error.message || "Failed to fetch dashboard data";
       setError(errorMessage);
-      toast.error(`Data fetch failed: ${errorMessage}`);
+      toast.error(`Error: ${errorMessage}`);
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleRefresh = async () => {
-    console.log('🔄 Manual refresh triggered by user');
+    console.log('🔄 Manual refresh triggered');
     await fetchDashboardData();
   };
 
   const handleLogout = () => {
-    console.log('🚪 Logout triggered from dashboard');
+    console.log('🚪 Logout triggered');
     logout();
   };
 
+  // Initial data fetch when authenticated
   useEffect(() => {
-    if (!adminLoading && admin) {
-      console.log('🚀 Admin authenticated, fetching initial data...');
+    if (isAuthenticated && admin) {
+      console.log('🚀 Admin authenticated, fetching data for:', admin.email);
       fetchDashboardData();
-    } else if (!adminLoading && !admin) {
-      console.log('❌ No admin session available');
     }
-  }, [admin, adminLoading]);
+  }, [isAuthenticated, admin]);
 
+  // Set up real-time subscriptions
   useEffect(() => {
-    if (!admin) return;
+    if (!isAuthenticated) return;
 
     console.log('🔴 Setting up real-time subscriptions...');
     
     const channel = supabase
       .channel('dashboard-updates')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'students' }, () => {
-        console.log('🔴 Students table changed - refreshing data');
+        console.log('🔴 Students table changed');
         fetchDashboardData();
       })
       .on('postgres_changes', { event: '*', schema: 'public', table: 'teachers' }, () => {
-        console.log('🔴 Teachers table changed - refreshing data');
+        console.log('🔴 Teachers table changed');
         fetchDashboardData();
       })
       .on('postgres_changes', { event: '*', schema: 'public', table: 'feedback' }, () => {
-        console.log('🔴 Feedback table changed - refreshing data');
+        console.log('🔴 Feedback table changed');
+        fetchDashboardData();
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'subscriptions' }, () => {
+        console.log('🔴 Subscriptions table changed');
         fetchDashboardData();
       })
       .subscribe();
@@ -155,8 +167,9 @@ const PlatformAdminDashboard = () => {
       console.log('🔴 Cleaning up real-time subscriptions');
       supabase.removeChannel(channel);
     };
-  }, [admin]);
+  }, [isAuthenticated]);
 
+  // Loading state
   if (adminLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -168,7 +181,8 @@ const PlatformAdminDashboard = () => {
     );
   }
 
-  if (!admin) {
+  // Not authenticated
+  if (!isAuthenticated || !admin) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
@@ -191,6 +205,7 @@ const PlatformAdminDashboard = () => {
       />
       
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+        {/* Status Banner */}
         <div className={`${error ? 'bg-red-100 border-red-500' : 'bg-green-100 border-green-500'} border-2 rounded-xl p-6`}>
           <div className="text-center">
             <h1 className={`text-xl font-bold ${error ? 'text-red-800' : 'text-green-800'}`}>
@@ -215,6 +230,7 @@ const PlatformAdminDashboard = () => {
           </div>
         </div>
 
+        {/* Live Counts */}
         <div className="bg-white border-4 border-blue-500 rounded-xl p-6">
           <h2 className="text-xl font-bold text-blue-800 mb-4">🔴 LIVE DATABASE COUNTS</h2>
           {isLoading ? (

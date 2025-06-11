@@ -14,20 +14,19 @@ const DashboardHeader = ({ adminName, onRefresh, onLogout }: DashboardHeaderProp
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   const handleRefreshClick = async () => {
-    console.log('🔄 Refresh button clicked in header');
+    console.log('🔄 Refresh button clicked');
     setIsRefreshing(true);
     
     try {
-      console.log('🔄 Executing refresh function...');
       await onRefresh();
-      console.log('✅ Refresh completed successfully');
+      console.log('✅ Refresh completed');
     } catch (error) {
       console.error('❌ Refresh failed:', error);
     } finally {
+      // Short delay to show the spinner
       setTimeout(() => {
         setIsRefreshing(false);
-        console.log('🔄 Refresh UI state reset');
-      }, 1000);
+      }, 500);
     }
   };
 

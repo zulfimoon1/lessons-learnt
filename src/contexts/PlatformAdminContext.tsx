@@ -16,6 +16,7 @@ interface PlatformAdminContextType {
   isLoading: boolean;
   login: (email: string, password: string) => Promise<{ error?: string; admin?: PlatformAdmin }>;
   logout: () => void;
+  isAuthenticated: boolean;
 }
 
 const PlatformAdminContext = createContext<PlatformAdminContextType | undefined>(undefined);
@@ -28,115 +29,113 @@ export const usePlatformAdmin = () => {
   return context;
 };
 
-const databaseLogin = async (email: string, password: string) => {
-  console.log('🔐 Attempting database login for:', email);
-  
-  try {
-    const { data: teachers, error } = await supabase
-      .from('teachers')
-      .select('*')
-      .eq('email', email)
-      .eq('role', 'admin');
-
-    if (error) {
-      console.error('❌ Database query error:', error);
-      return { error: 'Database connection failed' };
-    }
-
-    if (!teachers || teachers.length === 0) {
-      console.log('❌ No admin found with email:', email);
-      return { error: 'Invalid admin credentials' };
-    }
-
-    const teacher = teachers[0];
-    console.log('🔍 Found admin:', teacher.name);
-    
-    const passwordMatch = await bcrypt.compare(password, teacher.password_hash);
-    
-    if (!passwordMatch) {
-      console.log('❌ Password verification failed');
-      return { error: 'Invalid password' };
-    }
-
-    const admin: PlatformAdmin = {
-      id: teacher.id,
-      name: teacher.name,
-      email: teacher.email,
-      role: teacher.role,
-      school: teacher.school
-    };
-    
-    console.log('✅ Admin login successful:', admin.name);
-    return { admin };
-    
-  } catch (error) {
-    console.error('❌ Login exception:', error);
-    return { error: 'Authentication system error' };
-  }
-};
-
 export const PlatformAdminProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [admin, setAdmin] = useState<PlatformAdmin | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    console.log('🚀 Initializing PlatformAdminProvider...');
+    console.log('🔄 Initializing admin provider...');
     
-    const initializeAdmin = () => {
+    // Check for existing session
+    const checkSession = () => {
       try {
         const adminData = localStorage.getItem('platformAdmin');
         if (adminData) {
           const parsedAdmin = JSON.parse(adminData);
-          console.log('🔄 Restoring admin session for:', parsedAdmin.email);
+          console.log('✅ Found existing admin session:', parsedAdmin.email);
           setAdmin(parsedAdmin);
         } else {
-          console.log('📭 No stored admin session found');
+          console.log('❌ No existing admin session');
         }
       } catch (error) {
-        console.error('❌ Session restoration failed:', error);
+        console.error('❌ Session check failed:', error);
         localStorage.removeItem('platformAdmin');
       } finally {
         setIsLoading(false);
-        console.log('✅ Admin provider initialized');
       }
     };
 
-    initializeAdmin();
+    checkSession();
   }, []);
 
-  const login = async (email: string, password: string) => {
-    console.log('🔐 Login attempt for:', email);
+  const login = async (email: string, password: string): Promise<{ error?: string; admin?: PlatformAdmin }> => {
+    console.log('🔐 Starting login process for:', email);
     setIsLoading(true);
     
     try {
-      const result = await databaseLogin(email, password);
-      
-      if (result.admin) {
-        console.log('✅ Setting admin state for:', result.admin.email);
-        setAdmin(result.admin);
-        localStorage.setItem('platformAdmin', JSON.stringify(result.admin));
-        return { admin: result.admin };
-      } else {
-        console.log('❌ Login failed:', result.error);
-        return { error: result.error };
+      // Query the teachers table directly for admin users
+      const { data: teachers, error: queryError } = await supabase
+        .from('teachers')
+        .select('*')
+        .eq('email', email)
+        .eq('role', 'admin');
+
+      if (queryError) {
+        console.error('❌ Database query error:', queryError);
+        setIsLoading(false);
+        return { error: 'Database connection failed' };
       }
-    } catch (error) {
-      console.error('❌ Login process failed:', error);
-      return { error: 'System error during login' };
-    } finally {
+
+      if (!teachers || teachers.length === 0) {
+        console.log('❌ No admin found with email:', email);
+        setIsLoading(false);
+        return { error: 'Invalid admin credentials' };
+      }
+
+      const teacher = teachers[0];
+      console.log('🔍 Found admin user:', teacher.name);
+      
+      // Verify password
+      const passwordMatch = await bcrypt.compare(password, teacher.password_hash);
+      
+      if (!passwordMatch) {
+        console.log('❌ Password verification failed');
+        setIsLoading(false);
+        return { error: 'Invalid password' };
+      }
+
+      const adminUser: PlatformAdmin = {
+        id: teacher.id,
+        name: teacher.name,
+        email: teacher.email,
+        role: teacher.role,
+        school: teacher.school
+      };
+      
+      console.log('✅ Login successful for:', adminUser.email);
+      
+      // Store session
+      setAdmin(adminUser);
+      localStorage.setItem('platformAdmin', JSON.stringify(adminUser));
       setIsLoading(false);
+      
+      return { admin: adminUser };
+      
+    } catch (error) {
+      console.error('❌ Login error:', error);
+      setIsLoading(false);
+      return { error: 'Authentication failed' };
     }
   };
 
   const logout = () => {
-    console.log('🚪 Admin logout initiated');
+    console.log('🚪 Logging out admin');
     setAdmin(null);
     localStorage.removeItem('platformAdmin');
-    console.log('✅ Admin session cleared');
+  };
+
+  const isAuthenticated = admin !== null;
+
+  const value = {
+    admin,
+    isLoading,
+    login,
+    logout,
+    isAuthenticated
   };
 
   return (
-    <PlatformAdminContext.Provider value={{ admin, isLoading, login, logout }}>
+    <PlatformAdminContext.Provider value={value}>
       {children}
     </PlatformAdminContext.Provider>
   );
