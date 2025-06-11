@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { usePlatformAdmin } from "@/contexts/PlatformAdminContext";
 import { toast } from "sonner";
@@ -20,123 +19,71 @@ const PlatformAdminDashboard = () => {
   const [lastRefreshTime, setLastRefreshTime] = useState<string>('Never');
 
   const loadDashboardData = async (isRefresh = false) => {
-    console.log('📊 LOADING DASHBOARD DATA - START', { isRefresh, currentRefreshCount: refreshCount });
+    const timestamp = new Date().toISOString();
+    console.log(`🔄 [${timestamp}] REFRESH TRIGGERED - Count: ${refreshCount}, isRefresh: ${isRefresh}`);
     
     if (isRefresh) {
-      toast.info("Refreshing dashboard data...");
+      const newCount = refreshCount + 1;
+      setRefreshCount(newCount);
       setLastRefreshTime(new Date().toLocaleTimeString());
+      toast.info(`Refreshing dashboard data... (Refresh #${newCount})`);
+      console.log(`🔄 [${timestamp}] REFRESH COUNT UPDATED TO: ${newCount}`);
     }
     
     setDataLoading(true);
     
     try {
-      console.log('📊 FETCHING SCHOOLS DATA...');
-      const { data: schoolsData, error: schoolsError } = await supabase
-        .from('teachers')
-        .select('school')
-        .not('school', 'is', null);
+      console.log(`📊 [${timestamp}] FETCHING DATA...`);
       
-      if (schoolsError) {
-        console.error('❌ SCHOOLS ERROR:', schoolsError);
-        throw schoolsError;
-      }
-      
-      console.log('✅ SCHOOLS DATA FETCHED:', schoolsData?.length);
-      const uniqueSchools = [...new Set(schoolsData?.map(t => t.school) || [])];
-      
-      console.log('📊 FETCHING TEACHERS COUNT...');
-      const { count: teachersCount, error: teachersError } = await supabase
-        .from('teachers')
-        .select('*', { count: 'exact', head: true });
-      
-      if (teachersError) {
-        console.error('❌ TEACHERS ERROR:', teachersError);
-        throw teachersError;
-      }
-      
-      console.log('✅ TEACHERS COUNT:', teachersCount);
-      
-      console.log('📊 FETCHING STUDENTS COUNT...');
-      const { count: studentsCount, error: studentsError } = await supabase
-        .from('students')
-        .select('*', { count: 'exact', head: true });
-      
-      if (studentsError) {
-        console.error('❌ STUDENTS ERROR:', studentsError);
-        throw studentsError;
-      }
-      
-      console.log('✅ STUDENTS COUNT:', studentsCount);
-      
-      console.log('📊 FETCHING FEEDBACK COUNT...');
-      const { count: feedbackCount, error: feedbackError } = await supabase
-        .from('feedback')
-        .select('*', { count: 'exact', head: true });
-      
-      if (feedbackError) {
-        console.error('❌ FEEDBACK ERROR:', feedbackError);
-        throw feedbackError;
-      }
-      
-      console.log('✅ FEEDBACK COUNT:', feedbackCount);
-      
-      console.log('📊 FETCHING SUBSCRIPTIONS...');
-      const { data: subscriptionsData, error: subscriptionsError } = await supabase
-        .from('subscriptions')
-        .select('*');
-      
-      if (subscriptionsError) {
-        console.error('❌ SUBSCRIPTIONS ERROR:', subscriptionsError);
-        throw subscriptionsError;
-      }
-      
-      console.log('✅ SUBSCRIPTIONS DATA:', subscriptionsData?.length);
-      
-      const activeSubscriptions = subscriptionsData?.filter(s => s.status === 'active').length || 0;
-      const monthlyRevenue = subscriptionsData?.reduce((sum, sub) => {
+      // Fetch all data
+      const [schoolsResult, teachersResult, studentsResult, feedbackResult, subscriptionsResult] = await Promise.all([
+        supabase.from('teachers').select('school').not('school', 'is', null),
+        supabase.from('teachers').select('*', { count: 'exact', head: true }),
+        supabase.from('students').select('*', { count: 'exact', head: true }),
+        supabase.from('feedback').select('*', { count: 'exact', head: true }),
+        supabase.from('subscriptions').select('*')
+      ]);
+
+      if (schoolsResult.error) throw schoolsResult.error;
+      if (teachersResult.error) throw teachersResult.error;
+      if (studentsResult.error) throw studentsResult.error;
+      if (feedbackResult.error) throw feedbackResult.error;
+      if (subscriptionsResult.error) throw subscriptionsResult.error;
+
+      const uniqueSchools = [...new Set(schoolsResult.data?.map(t => t.school) || [])];
+      const activeSubscriptions = subscriptionsResult.data?.filter(s => s.status === 'active').length || 0;
+      const monthlyRevenue = subscriptionsResult.data?.reduce((sum, sub) => {
         if (sub.status === 'active') {
           return sum + (sub.amount / 100);
         }
         return sum;
       }, 0) || 0;
-      
+
       const newData = {
         totalSchools: uniqueSchools.length,
-        totalTeachers: teachersCount || 0,
-        totalStudents: studentsCount || 0,
-        totalResponses: feedbackCount || 0,
-        subscriptions: subscriptionsData || [],
+        totalTeachers: teachersResult.count || 0,
+        totalStudents: studentsResult.count || 0,
+        totalResponses: feedbackResult.count || 0,
+        subscriptions: subscriptionsResult.data || [],
         activeSubscriptions,
         monthlyRevenue,
         studentStats: [],
         schoolStats: uniqueSchools.map(school => ({
           school,
-          total_teachers: schoolsData?.filter(t => t.school === school).length || 0
+          total_teachers: schoolsResult.data?.filter(t => t.school === school).length || 0
         })),
         feedbackStats: []
       };
-      
-      console.log('📊 NEW DATA PREPARED:', {
-        schools: newData.totalSchools,
-        teachers: newData.totalTeachers,
-        students: newData.totalStudents,
-        responses: newData.totalResponses,
-        subscriptions: newData.subscriptions.length
-      });
-      
+
       setDashboardData(newData);
+      console.log(`✅ [${timestamp}] DATA LOADED SUCCESSFULLY - Schools: ${newData.totalSchools}, Teachers: ${newData.totalTeachers}`);
       
       if (isRefresh) {
-        const newCount = refreshCount + 1;
-        setRefreshCount(newCount);
-        console.log('🔄 REFRESH COUNT UPDATED TO:', newCount);
-        toast.success(`Dashboard refreshed successfully! (Refresh #${newCount})`);
+        toast.success(`Dashboard refreshed successfully! (Refresh #${refreshCount + 1})`);
       }
       
-      console.log('✅ DASHBOARD DATA LOADED SUCCESSFULLY');
-      
     } catch (error) {
-      console.error('❌ DASHBOARD DATA ERROR:', error);
+      console.error(`❌ [${timestamp}] ERROR:`, error);
       toast.error("Failed to load dashboard data");
       
       setDashboardData({
@@ -153,7 +100,7 @@ const PlatformAdminDashboard = () => {
       });
     } finally {
       setDataLoading(false);
-      console.log('📊 LOADING DASHBOARD DATA - COMPLETE');
+      console.log(`📊 [${timestamp}] LOADING COMPLETE`);
     }
   };
 
@@ -165,7 +112,7 @@ const PlatformAdminDashboard = () => {
   }, [admin]);
 
   const handleRefresh = () => {
-    console.log('🔄 REFRESH TRIGGERED - CURRENT COUNT:', refreshCount);
+    console.log('🔄 REFRESH BUTTON CLICKED - CURRENT COUNT:', refreshCount);
     loadDashboardData(true);
   };
 
@@ -222,16 +169,19 @@ const PlatformAdminDashboard = () => {
       />
       
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+        {/* DEBUG PANEL - This should be visible */}
         <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
           <div className="flex justify-between items-center">
             <div>
-              <h3 className="text-lg font-semibold text-yellow-800">Debug Information</h3>
-              <p className="text-yellow-700">Refresh Count: <span className="font-bold">{refreshCount}</span></p>
-              <p className="text-yellow-700">Last Refresh: <span className="font-bold">{lastRefreshTime}</span></p>
-              <p className="text-yellow-700">Data Loading: <span className="font-bold">{dataLoading ? 'Yes' : 'No'}</span></p>
+              <h3 className="text-lg font-semibold text-yellow-800">🐛 Debug Information</h3>
+              <p className="text-yellow-700">Refresh Count: <span className="font-bold text-blue-600">{refreshCount}</span></p>
+              <p className="text-yellow-700">Last Refresh: <span className="font-bold text-blue-600">{lastRefreshTime}</span></p>
+              <p className="text-yellow-700">Data Loading: <span className="font-bold text-blue-600">{dataLoading ? 'Yes' : 'No'}</span></p>
+              <p className="text-yellow-700">Current Time: <span className="font-bold text-blue-600">{new Date().toLocaleTimeString()}</span></p>
             </div>
             <div className="text-sm text-yellow-600">
-              Check console for detailed logs (🔄, 📊, ✅, ❌)
+              <p>Check console for detailed logs</p>
+              <p>Look for 🔄, 📊, ✅, ❌ emojis</p>
             </div>
           </div>
         </div>
