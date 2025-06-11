@@ -16,82 +16,54 @@ const PlatformAdminDashboard = () => {
   const { admin, isLoading, logout } = usePlatformAdmin();
   const [dashboardData, setDashboardData] = useState<any>(null);
   const [dataLoading, setDataLoading] = useState(true);
-  const [refreshKey, setRefreshKey] = useState(0);
 
   const loadDashboardData = async (isRefresh = false) => {
-    console.log('📊 LOAD DASHBOARD DATA - START', { isRefresh, refreshKey });
+    console.log('📊 LOADING DASHBOARD DATA', { isRefresh });
     
     if (isRefresh) {
-      console.log('✨ REFRESH MODE - Showing toast and clearing cache');
-      toast.info("Refreshing dashboard data...", { duration: 2000 });
+      toast.info("Refreshing dashboard data...");
     }
     
     setDataLoading(true);
     
     try {
-      console.log('📊 Fetching fresh data from Supabase...');
-      
-      // Force fresh data by using current timestamp
-      const timestamp = Date.now();
-      console.log('📊 Query timestamp:', timestamp);
-      
       // Get schools data
       const { data: schoolsData, error: schoolsError } = await supabase
         .from('teachers')
         .select('school')
         .not('school', 'is', null);
       
-      if (schoolsError) {
-        console.error('❌ Schools query error:', schoolsError);
-        throw schoolsError;
-      }
+      if (schoolsError) throw schoolsError;
       
       const uniqueSchools = [...new Set(schoolsData?.map(t => t.school) || [])];
-      console.log('📊 Schools found:', uniqueSchools.length);
       
       // Get teachers count
       const { count: teachersCount, error: teachersError } = await supabase
         .from('teachers')
         .select('*', { count: 'exact', head: true });
       
-      if (teachersError) {
-        console.error('❌ Teachers query error:', teachersError);
-        throw teachersError;
-      }
-      console.log('📊 Teachers count:', teachersCount);
+      if (teachersError) throw teachersError;
       
       // Get students count
       const { count: studentsCount, error: studentsError } = await supabase
         .from('students')
         .select('*', { count: 'exact', head: true });
       
-      if (studentsError) {
-        console.error('❌ Students query error:', studentsError);
-        throw studentsError;
-      }
-      console.log('📊 Students count:', studentsCount);
+      if (studentsError) throw studentsError;
       
       // Get feedback count
       const { count: feedbackCount, error: feedbackError } = await supabase
         .from('feedback')
         .select('*', { count: 'exact', head: true });
       
-      if (feedbackError) {
-        console.error('❌ Feedback query error:', feedbackError);
-        throw feedbackError;
-      }
-      console.log('📊 Feedback count:', feedbackCount);
+      if (feedbackError) throw feedbackError;
       
       // Get subscriptions
       const { data: subscriptionsData, error: subscriptionsError } = await supabase
         .from('subscriptions')
         .select('*');
       
-      if (subscriptionsError) {
-        console.error('❌ Subscriptions query error:', subscriptionsError);
-        throw subscriptionsError;
-      }
-      console.log('📊 Subscriptions found:', subscriptionsData?.length || 0);
+      if (subscriptionsError) throw subscriptionsError;
       
       const activeSubscriptions = subscriptionsData?.filter(s => s.status === 'active').length || 0;
       const monthlyRevenue = subscriptionsData?.reduce((sum, sub) => {
@@ -114,37 +86,20 @@ const PlatformAdminDashboard = () => {
           school,
           total_teachers: schoolsData?.filter(t => t.school === school).length || 0
         })),
-        feedbackStats: [],
-        recentSignups: teachersCount || 0,
-        topSchools: uniqueSchools.slice(0, 5),
-        topTeachers: [],
-        recentResponses: [],
-        mentalHealthAlerts: [],
-        recentFeedback: []
+        feedbackStats: []
       };
       
-      console.log('📊 Data preparation complete:', {
-        schools: newData.totalSchools,
-        teachers: newData.totalTeachers,
-        students: newData.totalStudents,
-        responses: newData.totalResponses
-      });
-      
+      console.log('📊 DATA LOADED SUCCESSFULLY', newData);
       setDashboardData(newData);
       
       if (isRefresh) {
-        console.log('✅ REFRESH COMPLETED SUCCESSFULLY!');
-        toast.success("Dashboard refreshed successfully!", { duration: 3000 });
+        toast.success("Dashboard refreshed successfully!");
       }
       
     } catch (error) {
       console.error('❌ DASHBOARD DATA ERROR:', error);
-      toast.error("Failed to load dashboard data", {
-        description: error instanceof Error ? error.message : "Unknown error occurred",
-        duration: 5000
-      });
+      toast.error("Failed to load dashboard data");
       
-      // Set fallback data
       setDashboardData({
         totalSchools: 0,
         totalTeachers: 0,
@@ -159,36 +114,25 @@ const PlatformAdminDashboard = () => {
       });
     } finally {
       setDataLoading(false);
-      console.log('📊 LOAD DASHBOARD DATA - COMPLETE');
     }
   };
 
   useEffect(() => {
     if (admin) {
-      console.log('📊 Initial load triggered for admin:', admin.email);
+      console.log('📊 INITIAL LOAD FOR ADMIN:', admin.email);
       loadDashboardData(false);
     }
   }, [admin]);
 
   const handleRefresh = () => {
-    console.log('🔄 HANDLE REFRESH - Called from dashboard header');
-    const newRefreshKey = refreshKey + 1;
-    setRefreshKey(newRefreshKey);
-    console.log('🔄 New refresh key:', newRefreshKey);
+    console.log('🔄 REFRESH TRIGGERED');
     loadDashboardData(true);
   };
 
   const handleLogout = () => {
-    console.log('🚪 Logout initiated from dashboard');
+    console.log('🚪 LOGOUT TRIGGERED');
     logout();
   };
-
-  console.log('📱 Dashboard render state:', { 
-    adminExists: !!admin, 
-    dataLoading, 
-    hasData: !!dashboardData,
-    refreshKey 
-  });
 
   if (isLoading || dataLoading) {
     return (
@@ -230,7 +174,7 @@ const PlatformAdminDashboard = () => {
   } = dashboardData;
 
   return (
-    <div className="min-h-screen bg-gray-50" key={refreshKey}>
+    <div className="min-h-screen bg-gray-50">
       <DashboardHeader 
         adminName={admin.email}
         onRefresh={handleRefresh}
