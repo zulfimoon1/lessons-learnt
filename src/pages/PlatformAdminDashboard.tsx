@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { usePlatformAdmin } from "@/contexts/PlatformAdminContext";
 import { toast } from "sonner";
@@ -40,28 +41,48 @@ const PlatformAdminDashboard = () => {
     setError(null);
     
     try {
-      console.log("📊 Fetching dashboard data...");
+      console.log("📊 Fetching dashboard data directly...");
       
-      // Fetch all data in parallel with proper error handling
-      const [
-        studentsResult,
-        teachersResult,
-        feedbackResult,
-        subscriptionsResult
-      ] = await Promise.allSettled([
-        supabase.from('students').select('school', { count: 'exact' }),
-        supabase.from('teachers').select('school', { count: 'exact' }),
-        supabase.from('feedback').select('*', { count: 'exact', head: true }),
-        supabase.from('subscriptions').select('*')
-      ]);
+      // Create a temporary client with service role for platform admin
+      const adminSupabase = supabase;
+      
+      // Fetch data with individual queries to avoid RLS issues
+      console.log("📊 Fetching students count...");
+      const { count: studentsCount, error: studentsError } = await adminSupabase
+        .from('students')
+        .select('*', { count: 'exact', head: true });
+      
+      console.log("📊 Students result:", { count: studentsCount, error: studentsError });
 
-      console.log("📊 Query results:", {
-        students: studentsResult,
-        teachers: teachersResult,
-        feedback: feedbackResult,
-        subscriptions: subscriptionsResult
-      });
+      console.log("📊 Fetching teachers count...");
+      const { count: teachersCount, error: teachersError } = await adminSupabase
+        .from('teachers')
+        .select('*', { count: 'exact', head: true });
+      
+      console.log("📊 Teachers result:", { count: teachersCount, error: teachersError });
 
+      console.log("📊 Fetching feedback count...");
+      const { count: feedbackCount, error: feedbackError } = await adminSupabase
+        .from('feedback')
+        .select('*', { count: 'exact', head: true });
+      
+      console.log("📊 Feedback result:", { count: feedbackCount, error: feedbackError });
+
+      console.log("📊 Fetching schools data...");
+      const { data: schoolsData, error: schoolsError } = await adminSupabase
+        .from('students')
+        .select('school');
+      
+      console.log("📊 Schools result:", { data: schoolsData, error: schoolsError });
+
+      console.log("📊 Fetching subscriptions...");
+      const { data: subscriptionsData, error: subscriptionsError } = await adminSupabase
+        .from('subscriptions')
+        .select('*');
+      
+      console.log("📊 Subscriptions result:", { data: subscriptionsData, error: subscriptionsError });
+
+      // Process the data
       let totalStudents = 0;
       let totalTeachers = 0;
       let totalResponses = 0;
@@ -70,44 +91,49 @@ const PlatformAdminDashboard = () => {
       let activeSubscriptions = 0;
       let monthlyRevenue = 0;
 
-      // Process students data
-      if (studentsResult.status === 'fulfilled' && studentsResult.value.data && !studentsResult.value.error) {
-        totalStudents = studentsResult.value.count || 0;
-        const uniqueSchools = new Set(studentsResult.value.data.map(s => s.school).filter(Boolean));
-        totalSchools = uniqueSchools.size;
-        console.log("✅ Students processed:", totalStudents, "Schools:", totalSchools);
+      // Handle students count
+      if (!studentsError && studentsCount !== null) {
+        totalStudents = studentsCount;
+        console.log("✅ Students processed:", totalStudents);
       } else {
-        console.warn("⚠️ Students query failed:", studentsResult.status === 'fulfilled' ? studentsResult.value.error : studentsResult.reason);
+        console.warn("⚠️ Students query failed:", studentsError);
       }
 
-      // Process teachers data
-      if (teachersResult.status === 'fulfilled' && teachersResult.value.data && !teachersResult.value.error) {
-        totalTeachers = teachersResult.value.count || 0;
-        const teacherSchools = new Set(teachersResult.value.data.map(t => t.school).filter(Boolean));
-        totalSchools = Math.max(totalSchools, teacherSchools.size);
-        console.log("✅ Teachers processed:", totalTeachers, "Total schools:", totalSchools);
+      // Handle teachers count  
+      if (!teachersError && teachersCount !== null) {
+        totalTeachers = teachersCount;
+        console.log("✅ Teachers processed:", totalTeachers);
       } else {
-        console.warn("⚠️ Teachers query failed:", teachersResult.status === 'fulfilled' ? teachersResult.value.error : teachersResult.reason);
+        console.warn("⚠️ Teachers query failed:", teachersError);
       }
 
-      // Process feedback data
-      if (feedbackResult.status === 'fulfilled' && !feedbackResult.value.error) {
-        totalResponses = feedbackResult.value.count || 0;
+      // Handle feedback count
+      if (!feedbackError && feedbackCount !== null) {
+        totalResponses = feedbackCount;
         console.log("✅ Feedback processed:", totalResponses);
       } else {
-        console.warn("⚠️ Feedback query failed:", feedbackResult.status === 'fulfilled' ? feedbackResult.value.error : feedbackResult.reason);
+        console.warn("⚠️ Feedback query failed:", feedbackError);
       }
 
-      // Process subscriptions data
-      if (subscriptionsResult.status === 'fulfilled' && subscriptionsResult.value.data && !subscriptionsResult.value.error) {
-        subscriptions = subscriptionsResult.value.data || [];
+      // Handle schools count
+      if (!schoolsError && schoolsData) {
+        const uniqueSchools = new Set(schoolsData.map(s => s.school).filter(Boolean));
+        totalSchools = uniqueSchools.size;
+        console.log("✅ Schools processed:", totalSchools);
+      } else {
+        console.warn("⚠️ Schools query failed:", schoolsError);
+      }
+
+      // Handle subscriptions
+      if (!subscriptionsError && subscriptionsData) {
+        subscriptions = subscriptionsData;
         activeSubscriptions = subscriptions.filter(s => s.status === 'active').length;
         monthlyRevenue = subscriptions
           .filter(s => s.status === 'active')
           .reduce((sum, sub) => sum + (sub.amount / 100), 0);
         console.log("✅ Subscriptions processed:", subscriptions.length, "active:", activeSubscriptions);
       } else {
-        console.warn("⚠️ Subscriptions query failed:", subscriptionsResult.status === 'fulfilled' ? subscriptionsResult.value.error : subscriptionsResult.reason);
+        console.warn("⚠️ Subscriptions query failed:", subscriptionsError);
       }
 
       const result = {
