@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { usePlatformAdmin } from "@/contexts/PlatformAdminContext";
 import { toast } from "sonner";
@@ -41,15 +40,7 @@ const PlatformAdminDashboard = () => {
     setError(null);
     
     try {
-      console.log("📊 Setting platform admin context...");
-      
-      // Set platform admin context to bypass RLS
-      await supabase.rpc('set_config', {
-        setting_name: 'app.platform_admin',
-        setting_value: 'true'
-      });
-
-      console.log("📊 Fetching dashboard data with admin context...");
+      console.log("📊 Fetching dashboard data...");
       
       // Fetch all data in parallel with proper error handling
       const [
