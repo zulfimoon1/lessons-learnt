@@ -750,6 +750,12 @@ export type Database = {
           user_school: string
         }[]
       }
+      get_platform_stats: {
+        Args: { stat_type: string }
+        Returns: {
+          count: number
+        }[]
+      }
     }
     Enums: {
       app_role: "teacher" | "admin" | "doctor"
