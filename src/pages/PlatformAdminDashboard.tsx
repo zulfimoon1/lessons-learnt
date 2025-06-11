@@ -41,16 +41,9 @@ const PlatformAdminDashboard = () => {
     setError(null);
     
     try {
-      // Set platform admin context first
-      console.log("🔧 Setting platform admin context...");
-      await supabase.rpc('set_config', {
-        setting_name: 'app.platform_admin',
-        setting_value: 'true'
-      });
-
-      console.log("📊 Fetching dashboard data with platform admin access...");
+      console.log("📊 Fetching dashboard data...");
       
-      // Fetch all data in parallel with explicit platform admin access
+      // Fetch all data in parallel
       const [
         studentsResult,
         teachersResult,
