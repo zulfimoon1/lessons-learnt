@@ -19,54 +19,82 @@ const PlatformAdminDashboard = () => {
   const [refreshKey, setRefreshKey] = useState(0);
 
   const loadDashboardData = async (forceRefresh = false) => {
+    console.log('🔄 loadDashboardData called with forceRefresh:', forceRefresh);
     setDataLoading(true);
     
     if (forceRefresh) {
-      console.log('Force refreshing dashboard data...');
+      console.log('🔄 Force refreshing dashboard data...');
       toast.info("Refreshing dashboard data...");
     }
     
     try {
-      console.log('Loading real dashboard data from database...');
+      console.log('📊 Loading real dashboard data from database...');
       
       // Get total schools
+      console.log('📊 Fetching schools data...');
       const { data: schoolsData, error: schoolsError } = await supabase
         .from('teachers')
         .select('school')
         .not('school', 'is', null);
       
-      if (schoolsError) throw schoolsError;
+      if (schoolsError) {
+        console.error('❌ Schools query error:', schoolsError);
+        throw schoolsError;
+      }
       
+      console.log('📊 Raw schools data:', schoolsData);
       const uniqueSchools = [...new Set(schoolsData?.map(t => t.school) || [])];
+      console.log('📊 Unique schools:', uniqueSchools);
       const totalSchools = uniqueSchools.length;
+      console.log('📊 Total schools count:', totalSchools);
       
       // Get total teachers
+      console.log('📊 Fetching teachers count...');
       const { count: totalTeachers, error: teachersError } = await supabase
         .from('teachers')
         .select('*', { count: 'exact', head: true });
       
-      if (teachersError) throw teachersError;
+      if (teachersError) {
+        console.error('❌ Teachers query error:', teachersError);
+        throw teachersError;
+      }
+      console.log('📊 Total teachers count:', totalTeachers);
       
       // Get total students
+      console.log('📊 Fetching students count...');
       const { count: totalStudents, error: studentsError } = await supabase
         .from('students')
         .select('*', { count: 'exact', head: true });
       
-      if (studentsError) throw studentsError;
+      if (studentsError) {
+        console.error('❌ Students query error:', studentsError);
+        throw studentsError;
+      }
+      console.log('📊 Total students count:', totalStudents);
       
       // Get total responses
+      console.log('📊 Fetching feedback count...');
       const { count: totalResponses, error: responsesError } = await supabase
         .from('feedback')
         .select('*', { count: 'exact', head: true });
       
-      if (responsesError) throw responsesError;
+      if (responsesError) {
+        console.error('❌ Feedback query error:', responsesError);
+        throw responsesError;
+      }
+      console.log('📊 Total responses count:', totalResponses);
       
       // Get subscriptions
+      console.log('📊 Fetching subscriptions...');
       const { data: subscriptionsData, error: subscriptionsError } = await supabase
         .from('subscriptions')
         .select('*');
       
-      if (subscriptionsError) throw subscriptionsError;
+      if (subscriptionsError) {
+        console.error('❌ Subscriptions query error:', subscriptionsError);
+        throw subscriptionsError;
+      }
+      console.log('📊 Subscriptions data:', subscriptionsData);
       
       const activeSubscriptions = subscriptionsData?.filter(s => s.status === 'active').length || 0;
       const monthlyRevenue = subscriptionsData?.reduce((sum, sub) => {
@@ -75,6 +103,9 @@ const PlatformAdminDashboard = () => {
         }
         return sum;
       }, 0) || 0;
+      
+      console.log('📊 Active subscriptions:', activeSubscriptions);
+      console.log('📊 Monthly revenue:', monthlyRevenue);
       
       // Get student statistics by school
       const { data: studentStats, error: studentStatsError } = await supabase
@@ -102,7 +133,7 @@ const PlatformAdminDashboard = () => {
       
       if (feedbackError) throw feedbackError;
 
-      console.log('Real data loaded:', {
+      console.log('✅ Final dashboard data computed:', {
         totalSchools,
         totalTeachers: totalTeachers || 0,
         totalStudents: totalStudents || 0,
@@ -133,13 +164,15 @@ const PlatformAdminDashboard = () => {
         recentFeedback: []
       };
       
+      console.log('🎯 Setting dashboard data to state...');
       setDashboardData(realData);
       
       if (forceRefresh) {
+        console.log('✅ Refresh completed successfully!');
         toast.success("Dashboard refreshed successfully!");
       }
     } catch (error) {
-      console.error('Error loading dashboard data:', error);
+      console.error('❌ Error loading dashboard data:', error);
       toast.error("Error loading data", {
         description: "Failed to load dashboard data from database",
       });
@@ -164,25 +197,35 @@ const PlatformAdminDashboard = () => {
         recentFeedback: []
       });
     } finally {
+      console.log('🏁 Data loading complete, setting dataLoading to false');
       setDataLoading(false);
     }
   };
 
   useEffect(() => {
+    console.log('🔄 useEffect triggered - admin:', !!admin, 'refreshKey:', refreshKey);
     if (admin) {
       loadDashboardData();
     }
   }, [admin, refreshKey]);
 
   const handleRefresh = () => {
-    console.log('Refresh button clicked - forcing data reload');
-    setRefreshKey(prev => prev + 1);
+    console.log('🔄🔄🔄 REFRESH BUTTON CLICKED! 🔄🔄🔄');
+    console.log('Current refreshKey before increment:', refreshKey);
+    setRefreshKey(prev => {
+      const newKey = prev + 1;
+      console.log('Setting new refreshKey to:', newKey);
+      return newKey;
+    });
     loadDashboardData(true);
   };
 
   const handleLogout = () => {
+    console.log('🚪 Logout initiated');
     logout();
   };
+
+  console.log('📱 Dashboard render - isLoading:', isLoading, 'dataLoading:', dataLoading, 'admin:', !!admin, 'dashboardData:', !!dashboardData);
 
   if (isLoading || dataLoading) {
     return (
