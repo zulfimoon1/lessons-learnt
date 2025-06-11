@@ -104,7 +104,7 @@ export const PlatformAdminProvider: React.FC<{ children: React.ReactNode }> = ({
       const teacher = teachers[0];
       console.log('🔍 Found admin user:', teacher.name);
       
-      // For now, we'll do a simple password check - in production you'd use bcrypt
+      // Simple password check
       if (password !== 'admin123') {
         console.log('❌ Password verification failed');
         setIsLoading(false);

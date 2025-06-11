@@ -45,30 +45,30 @@ const PlatformAdminDashboard = () => {
     setError(null);
     
     try {
-      console.log('🔗 Using direct queries with admin bypass...');
+      console.log('🔗 Using RPC function for platform admin data...');
       
-      // Use direct count queries that should work with our admin permissions
-      const [studentsResult, teachersResult, feedbackResult, subscriptionsResult] = await Promise.all([
-        supabase.from('students').select('*', { count: 'exact', head: true }),
-        supabase.from('teachers').select('*', { count: 'exact', head: true }),
-        supabase.from('feedback').select('*', { count: 'exact', head: true }),
+      // Use the RPC function to get counts
+      const [studentsRpc, teachersRpc, feedbackRpc, subscriptionsQuery] = await Promise.all([
+        supabase.rpc('get_platform_stats', { stat_type: 'students' }),
+        supabase.rpc('get_platform_stats', { stat_type: 'teachers' }),
+        supabase.rpc('get_platform_stats', { stat_type: 'feedback' }),
         supabase.from('subscriptions').select('*')
       ]);
 
-      console.log('📊 Query results:', {
-        students: { count: studentsResult.count, error: studentsResult.error },
-        teachers: { count: teachersResult.count, error: teachersResult.error },
-        feedback: { count: feedbackResult.count, error: feedbackResult.error },
-        subscriptions: { data: subscriptionsResult.data?.length, error: subscriptionsResult.error }
+      console.log('📊 RPC Query results:', {
+        students: { data: studentsRpc.data, error: studentsRpc.error },
+        teachers: { data: teachersRpc.data, error: teachersRpc.error },
+        feedback: { data: feedbackRpc.data, error: feedbackRpc.error },
+        subscriptions: { data: subscriptionsQuery.data?.length, error: subscriptionsQuery.error }
       });
 
-      // Extract counts, using 0 as fallback for any errors
-      const totalStudents = studentsResult.count || 0;
-      const totalTeachers = teachersResult.count || 0;
-      const totalResponses = feedbackResult.count || 0;
-      const subscriptions = subscriptionsResult.data || [];
+      // Extract counts from RPC responses
+      const totalStudents = studentsRpc.data?.[0]?.count || 0;
+      const totalTeachers = teachersRpc.data?.[0]?.count || 0;
+      const totalResponses = feedbackRpc.data?.[0]?.count || 0;
+      const subscriptions = subscriptionsQuery.data || [];
 
-      // Calculate unique schools from teachers data
+      // Calculate unique schools from teachers
       let totalSchools = 0;
       try {
         const { data: schoolData } = await supabase
@@ -82,7 +82,7 @@ const PlatformAdminDashboard = () => {
         }
       } catch (error) {
         console.warn('Could not fetch schools, using estimate');
-        totalSchools = Math.max(1, Math.ceil(totalTeachers / 5));
+        totalSchools = Math.max(1, Math.ceil(Number(totalTeachers) / 5));
       }
 
       const activeSubscriptions = subscriptions.filter(s => s.status === 'active').length;
@@ -92,9 +92,9 @@ const PlatformAdminDashboard = () => {
 
       const newData: DashboardData = {
         totalSchools,
-        totalTeachers,
-        totalStudents,
-        totalResponses,
+        totalTeachers: Number(totalTeachers),
+        totalStudents: Number(totalStudents),
+        totalResponses: Number(totalResponses),
         subscriptions,
         activeSubscriptions,
         monthlyRevenue,
@@ -104,13 +104,17 @@ const PlatformAdminDashboard = () => {
       console.log('✅ Dashboard data processed:', newData);
       setDashboardData(newData);
       
-      toast.success(`Data loaded: ${totalStudents} students, ${totalTeachers} teachers`);
+      toast.success(`Data refreshed: ${totalStudents} students, ${totalTeachers} teachers`, {
+        duration: 3000,
+      });
       
     } catch (error: any) {
       console.error('❌ Data fetch failed:', error);
       const errorMessage = error.message || "Failed to fetch dashboard data";
       setError(errorMessage);
-      toast.error(`Error: ${errorMessage}`);
+      toast.error(`Error: ${errorMessage}`, {
+        duration: 5000,
+      });
     } finally {
       setIsLoading(false);
     }

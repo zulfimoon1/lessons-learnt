@@ -24,16 +24,19 @@ class SecurityService {
     windowMinutes: 15
   };
 
-  // Enhanced session validation - simplified to prevent authentication issues
+  // Simplified session validation for platform admin
   async validateSession(): Promise<boolean> {
     try {
-      // For platform admin dashboard, we don't need Supabase auth session validation
-      // since we're using our custom platform admin authentication
-      console.log('SecurityService: Skipping Supabase session validation for platform admin');
-      return true;
+      // For platform admin, just check if we have a valid admin session
+      const adminData = localStorage.getItem('platformAdmin');
+      if (adminData) {
+        console.log('SecurityService: Platform admin session valid');
+        return true;
+      }
+      return false;
     } catch (error) {
       console.error('Session validation error:', error);
-      return true; // Fail open to prevent blocking legitimate users
+      return false;
     }
   }
 
@@ -170,7 +173,7 @@ class SecurityService {
   // Secure session management
   async clearSession(): Promise<void> {
     try {
-      // Only clear our custom storage, not Supabase auth for platform admin
+      // Clear platform admin session
       localStorage.removeItem('platformAdmin');
       sessionStorage.clear();
       
@@ -185,26 +188,10 @@ class SecurityService {
     }
   }
 
-  // Security event logging
+  // Security event logging (simplified)
   logSecurityEvent(event: SecurityEvent): void {
-    console.log('Security Event:', event);
-    
-    try {
-      const events = JSON.parse(localStorage.getItem('security_events') || '[]');
-      events.push({
-        ...event,
-        sessionId: sessionStorage.getItem('session_id'),
-        fingerprint: this.generateBrowserFingerprint()
-      });
-      
-      // Keep only last 100 events
-      if (events.length > 100) {
-        events.splice(0, events.length - 100);
-      }
-      localStorage.setItem('security_events', JSON.stringify(events));
-    } catch (error) {
-      console.warn('Failed to log security event:', error);
-    }
+    // Only log to console for platform admin to avoid interference
+    console.log('Security Event:', event.type, event.details);
   }
 
   // Browser fingerprinting for additional security
@@ -252,40 +239,17 @@ class SecurityService {
     return false;
   }
 
-  // Simplified security monitoring to reduce interference
+  // Minimal security monitoring to avoid interference
   monitorSecurityViolations(): void {
-    // Monitor for storage tampering
+    // Only monitor for critical platform admin storage tampering
     window.addEventListener('storage', (e) => {
-      if (e.key?.includes('platformAdmin')) {
-        this.logSecurityEvent({
-          type: 'suspicious_activity',
-          timestamp: new Date().toISOString(),
-          details: 'Platform admin storage tampering detected',
-          userAgent: navigator.userAgent
-        });
+      if (e.key === 'platformAdmin' && e.newValue !== e.oldValue) {
+        console.log('Platform admin storage change detected');
       }
     });
-
-    // Very minimal developer tools detection to reduce false positives
-    let lastDevtoolsCheck = Date.now();
-    const devtoolsCheckInterval = setInterval(() => {
-      // Only check every 10 seconds and stop checking after 1 minute
-      if (Date.now() - lastDevtoolsCheck > 60000) {
-        clearInterval(devtoolsCheckInterval);
-        return;
-      }
-      
-      // Less aggressive detection
-      const threshold = 300;
-      if (window.outerHeight - window.innerHeight > threshold || window.outerWidth - window.innerWidth > threshold) {
-        // Only log once per session
-        if (!sessionStorage.getItem('devtools_detected')) {
-          sessionStorage.setItem('devtools_detected', 'true');
-          console.log('Developer tools detected (security monitoring)');
-        }
-      }
-    }, 10000); // Check every 10 seconds instead of 5
   }
 }
 
 export const securityService = new SecurityService();
+
+}
