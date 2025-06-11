@@ -28,12 +28,10 @@ export const usePlatformAdmin = () => {
   return context;
 };
 
-// Real database login function
 const databaseLogin = async (email: string, password: string) => {
-  console.log('🔐 Database login attempt:', email);
+  console.log('🔐 Attempting database login for:', email);
   
   try {
-    // Query the teachers table for admin users
     const { data: teachers, error } = await supabase
       .from('teachers')
       .select('*')
@@ -42,22 +40,22 @@ const databaseLogin = async (email: string, password: string) => {
 
     if (error) {
       console.error('❌ Database query error:', error);
-      return { error: 'Database error occurred' };
+      return { error: 'Database connection failed' };
     }
 
     if (!teachers || teachers.length === 0) {
       console.log('❌ No admin found with email:', email);
-      return { error: 'Invalid credentials' };
+      return { error: 'Invalid admin credentials' };
     }
 
     const teacher = teachers[0];
+    console.log('🔍 Found admin:', teacher.name);
     
-    // Check password
     const passwordMatch = await bcrypt.compare(password, teacher.password_hash);
     
     if (!passwordMatch) {
-      console.log('❌ Password mismatch');
-      return { error: 'Invalid credentials' };
+      console.log('❌ Password verification failed');
+      return { error: 'Invalid password' };
     }
 
     const admin: PlatformAdmin = {
@@ -68,12 +66,12 @@ const databaseLogin = async (email: string, password: string) => {
       school: teacher.school
     };
     
-    console.log('✅ Login successful for:', admin.name);
+    console.log('✅ Admin login successful:', admin.name);
     return { admin };
     
   } catch (error) {
-    console.error('❌ Login error:', error);
-    return { error: 'Login failed. Please try again.' };
+    console.error('❌ Login exception:', error);
+    return { error: 'Authentication system error' };
   }
 };
 
@@ -82,33 +80,39 @@ export const PlatformAdminProvider: React.FC<{ children: React.ReactNode }> = ({
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    console.log('🚀 PlatformAdminProvider initializing...');
+    console.log('🚀 Initializing PlatformAdminProvider...');
     
-    // Check for stored session
-    try {
-      const adminData = localStorage.getItem('platformAdmin');
-      if (adminData) {
-        const parsedAdmin = JSON.parse(adminData);
-        console.log('🔄 Restoring admin session:', parsedAdmin);
-        setAdmin(parsedAdmin);
+    const initializeAdmin = () => {
+      try {
+        const adminData = localStorage.getItem('platformAdmin');
+        if (adminData) {
+          const parsedAdmin = JSON.parse(adminData);
+          console.log('🔄 Restoring admin session for:', parsedAdmin.email);
+          setAdmin(parsedAdmin);
+        } else {
+          console.log('📭 No stored admin session found');
+        }
+      } catch (error) {
+        console.error('❌ Session restoration failed:', error);
+        localStorage.removeItem('platformAdmin');
+      } finally {
+        setIsLoading(false);
+        console.log('✅ Admin provider initialized');
       }
-    } catch (error) {
-      console.error('❌ Session restoration error:', error);
-      localStorage.removeItem('platformAdmin');
-    }
-    
-    setIsLoading(false);
-    console.log('✅ PlatformAdminProvider ready');
+    };
+
+    initializeAdmin();
   }, []);
 
   const login = async (email: string, password: string) => {
+    console.log('🔐 Login attempt for:', email);
+    setIsLoading(true);
+    
     try {
-      console.log('🔐 Processing login for:', email);
-      
       const result = await databaseLogin(email, password);
       
       if (result.admin) {
-        console.log('✅ Setting admin state');
+        console.log('✅ Setting admin state for:', result.admin.email);
         setAdmin(result.admin);
         localStorage.setItem('platformAdmin', JSON.stringify(result.admin));
         return { admin: result.admin };
@@ -117,15 +121,18 @@ export const PlatformAdminProvider: React.FC<{ children: React.ReactNode }> = ({
         return { error: result.error };
       }
     } catch (error) {
-      console.error('❌ Login error:', error);
-      return { error: 'Login failed. Please try again.' };
+      console.error('❌ Login process failed:', error);
+      return { error: 'System error during login' };
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const logout = () => {
-    console.log('🚪 Logout initiated');
+    console.log('🚪 Admin logout initiated');
     setAdmin(null);
     localStorage.removeItem('platformAdmin');
+    console.log('✅ Admin session cleared');
   };
 
   return (

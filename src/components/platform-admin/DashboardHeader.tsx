@@ -14,17 +14,16 @@ const DashboardHeader = ({ adminName, onRefresh, onLogout }: DashboardHeaderProp
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   const handleRefreshClick = async () => {
-    console.log('🔄 REFRESH BUTTON CLICKED in header');
+    console.log('🔄 Refresh button clicked in header');
     setIsRefreshing(true);
     
     try {
-      console.log('🔄 Calling onRefresh function...');
+      console.log('🔄 Executing refresh function...');
       await onRefresh();
-      console.log('🔄 Refresh completed successfully');
+      console.log('✅ Refresh completed successfully');
     } catch (error) {
-      console.error('🔄 Refresh failed:', error);
+      console.error('❌ Refresh failed:', error);
     } finally {
-      // Keep spinner for at least 500ms for visual feedback
       setTimeout(() => {
         setIsRefreshing(false);
         console.log('🔄 Refresh UI state reset');
@@ -48,7 +47,7 @@ const DashboardHeader = ({ adminName, onRefresh, onLogout }: DashboardHeaderProp
             className="flex items-center gap-2 bg-blue-50 hover:bg-blue-100 border-blue-200 border-2"
           >
             <RefreshCwIcon className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-            {isRefreshing ? 'Refreshing Data...' : '🔄 REFRESH DATA'}
+            {isRefreshing ? 'Refreshing...' : '🔄 REFRESH DATA'}
           </Button>
         </div>
         <div className="flex items-center gap-4">

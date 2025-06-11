@@ -34,15 +34,19 @@ const PlatformAdminDashboard = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchRealData = async () => {
-    console.log("🔄 Starting fresh data fetch...");
+  const fetchDashboardData = async () => {
+    if (!admin) {
+      console.log('❌ No admin session - cannot fetch data');
+      return;
+    }
+
+    console.log('📊 Starting data fetch for admin:', admin.email);
     setIsLoading(true);
     setError(null);
     
     try {
-      console.log("📊 Fetching all data in parallel...");
+      console.log('🔗 Making parallel database queries...');
       
-      // Fetch all data in parallel for faster loading
       const [studentsResult, teachersResult, feedbackResult, subscriptionsResult] = await Promise.all([
         supabase.from('students').select('school', { count: 'exact' }),
         supabase.from('teachers').select('*', { count: 'exact' }),
@@ -50,36 +54,29 @@ const PlatformAdminDashboard = () => {
         supabase.from('subscriptions').select('*')
       ]);
 
-      console.log("📊 Raw query results:", {
-        students: studentsResult,
-        teachers: teachersResult,
-        feedback: feedbackResult,
-        subscriptions: subscriptionsResult
+      console.log('📊 Query results:', {
+        students: { count: studentsResult.count, error: studentsResult.error },
+        teachers: { count: teachersResult.count, error: teachersResult.error },
+        feedback: { count: feedbackResult.count, error: feedbackResult.error },
+        subscriptions: { length: subscriptionsResult.data?.length, error: subscriptionsResult.error }
       });
 
-      // Check for errors
-      if (studentsResult.error) throw new Error(`Students: ${studentsResult.error.message}`);
-      if (teachersResult.error) throw new Error(`Teachers: ${teachersResult.error.message}`);
-      if (feedbackResult.error) throw new Error(`Feedback: ${feedbackResult.error.message}`);
-      if (subscriptionsResult.error) throw new Error(`Subscriptions: ${subscriptionsResult.error.message}`);
+      if (studentsResult.error) throw new Error(`Students query failed: ${studentsResult.error.message}`);
+      if (teachersResult.error) throw new Error(`Teachers query failed: ${teachersResult.error.message}`);
+      if (feedbackResult.error) throw new Error(`Feedback query failed: ${feedbackResult.error.message}`);
+      if (subscriptionsResult.error) throw new Error(`Subscriptions query failed: ${subscriptionsResult.error.message}`);
 
-      // Calculate metrics
       const totalStudents = studentsResult.count || 0;
       const totalTeachers = teachersResult.count || 0;
       const totalResponses = feedbackResult.count || 0;
       
-      // Get unique schools
       const uniqueSchools = new Set();
-      if (studentsResult.data) {
-        studentsResult.data.forEach(student => {
-          if (student.school) uniqueSchools.add(student.school);
-        });
-      }
-      if (teachersResult.data) {
-        teachersResult.data.forEach(teacher => {
-          if (teacher.school) uniqueSchools.add(teacher.school);
-        });
-      }
+      studentsResult.data?.forEach(student => {
+        if (student.school) uniqueSchools.add(student.school);
+      });
+      teachersResult.data?.forEach(teacher => {
+        if (teacher.school) uniqueSchools.add(teacher.school);
+      });
       const totalSchools = uniqueSchools.size;
 
       const subscriptions = subscriptionsResult.data || [];
@@ -99,40 +96,40 @@ const PlatformAdminDashboard = () => {
         lastUpdated: new Date().toISOString()
       };
 
-      console.log("✅ Processed data:", newData);
+      console.log('✅ Data processed successfully:', newData);
       setDashboardData(newData);
       
-      toast.success(`✅ Data refreshed! ${totalStudents} students, ${totalTeachers} teachers, ${totalSchools} schools, ${totalResponses} responses`);
+      toast.success(`Data refreshed: ${totalStudents} students, ${totalTeachers} teachers, ${totalSchools} schools`);
       
     } catch (error: any) {
-      console.error("❌ Data fetch failed:", error);
+      console.error('❌ Data fetch failed:', error);
       const errorMessage = error.message || "Failed to fetch dashboard data";
       setError(errorMessage);
-      toast.error(`❌ Refresh failed: ${errorMessage}`);
+      toast.error(`Data fetch failed: ${errorMessage}`);
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleRefresh = async () => {
-    console.log('🔄 REFRESH BUTTON CLICKED - Starting manual refresh...');
-    await fetchRealData();
+    console.log('🔄 Manual refresh triggered by user');
+    await fetchDashboardData();
   };
 
   const handleLogout = () => {
-    console.log('🚪 Logout triggered');
+    console.log('🚪 Logout triggered from dashboard');
     logout();
   };
 
-  // Auto-fetch data when admin loads
   useEffect(() => {
     if (!adminLoading && admin) {
-      console.log('🚀 Admin loaded, fetching initial data...');
-      fetchRealData();
+      console.log('🚀 Admin authenticated, fetching initial data...');
+      fetchDashboardData();
+    } else if (!adminLoading && !admin) {
+      console.log('❌ No admin session available');
     }
   }, [admin, adminLoading]);
 
-  // Set up real-time subscription for live updates
   useEffect(() => {
     if (!admin) return;
 
@@ -142,15 +139,15 @@ const PlatformAdminDashboard = () => {
       .channel('dashboard-updates')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'students' }, () => {
         console.log('🔴 Students table changed - refreshing data');
-        fetchRealData();
+        fetchDashboardData();
       })
       .on('postgres_changes', { event: '*', schema: 'public', table: 'teachers' }, () => {
         console.log('🔴 Teachers table changed - refreshing data');
-        fetchRealData();
+        fetchDashboardData();
       })
       .on('postgres_changes', { event: '*', schema: 'public', table: 'feedback' }, () => {
         console.log('🔴 Feedback table changed - refreshing data');
-        fetchRealData();
+        fetchDashboardData();
       })
       .subscribe();
 
@@ -194,11 +191,10 @@ const PlatformAdminDashboard = () => {
       />
       
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
-        {/* Live Status Banner */}
         <div className={`${error ? 'bg-red-100 border-red-500' : 'bg-green-100 border-green-500'} border-2 rounded-xl p-6`}>
           <div className="text-center">
             <h1 className={`text-xl font-bold ${error ? 'text-red-800' : 'text-green-800'}`}>
-              {error ? '❌ ERROR' : '🔴 LIVE DASHBOARD'} {isLoading ? '(Refreshing...)' : ''}
+              {error ? '❌ ERROR' : '🔴 LIVE DASHBOARD'} {isLoading ? '(Loading...)' : ''}
             </h1>
             {error ? (
               <div>
@@ -219,7 +215,6 @@ const PlatformAdminDashboard = () => {
           </div>
         </div>
 
-        {/* Real-Time Data Display */}
         <div className="bg-white border-4 border-blue-500 rounded-xl p-6">
           <h2 className="text-xl font-bold text-blue-800 mb-4">🔴 LIVE DATABASE COUNTS</h2>
           {isLoading ? (
