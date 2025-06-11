@@ -26,11 +26,11 @@ export const usePlatformAdmin = () => {
   return context;
 };
 
-// Simple hardcoded login for testing - this bypasses all the authentication complexity
+// Simple hardcoded login for testing
 const testLogin = async (email: string, password: string) => {
-  console.log('Test login attempt:', email, password);
+  console.log('🔐 Login attempt:', email);
   
-  // Simple test credentials
+  // Test credentials
   if (email === 'admin@test.com' && password === 'admin123') {
     const admin: PlatformAdmin = {
       id: '1',
@@ -39,9 +39,11 @@ const testLogin = async (email: string, password: string) => {
       role: 'admin',
       school: 'Test School'
     };
+    console.log('✅ Login successful');
     return { admin };
   }
   
+  console.log('❌ Login failed - invalid credentials');
   return { error: 'Invalid credentials' };
 };
 
@@ -50,47 +52,48 @@ export const PlatformAdminProvider: React.FC<{ children: React.ReactNode }> = ({
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    console.log('PlatformAdminProvider: Initializing...');
+    console.log('🚀 PlatformAdminProvider initializing...');
     
     // Check for stored session
     try {
       const adminData = localStorage.getItem('platformAdmin');
       if (adminData) {
         const parsedAdmin = JSON.parse(adminData);
-        console.log('PlatformAdminProvider: Restoring session:', parsedAdmin);
+        console.log('🔄 Restoring admin session:', parsedAdmin);
         setAdmin(parsedAdmin);
       }
     } catch (error) {
-      console.error('PlatformAdminProvider: Session restoration error:', error);
+      console.error('❌ Session restoration error:', error);
       localStorage.removeItem('platformAdmin');
     }
     
     setIsLoading(false);
+    console.log('✅ PlatformAdminProvider ready');
   }, []);
 
   const login = async (email: string, password: string) => {
     try {
-      console.log('PlatformAdminProvider: Login attempt for:', email);
+      console.log('🔐 Processing login for:', email);
       
       const result = await testLogin(email, password);
       
       if (result.admin) {
-        console.log('PlatformAdminProvider: Login successful');
+        console.log('✅ Setting admin state');
         setAdmin(result.admin);
         localStorage.setItem('platformAdmin', JSON.stringify(result.admin));
         return { admin: result.admin };
       } else {
-        console.log('PlatformAdminProvider: Login failed:', result.error);
+        console.log('❌ Login failed:', result.error);
         return { error: result.error };
       }
     } catch (error) {
-      console.error('PlatformAdminProvider: Login error:', error);
+      console.error('❌ Login error:', error);
       return { error: 'Login failed. Please try again.' };
     }
   };
 
   const logout = () => {
-    console.log('PlatformAdminProvider: Logout initiated');
+    console.log('🚪 Logout initiated');
     setAdmin(null);
     localStorage.removeItem('platformAdmin');
   };

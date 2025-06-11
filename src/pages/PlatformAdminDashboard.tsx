@@ -35,59 +35,79 @@ const PlatformAdminDashboard = () => {
   const [error, setError] = useState<string | null>(null);
 
   const fetchRealData = async () => {
-    console.log("🔄 Fetching REAL data from database...");
+    console.log("🔄 Starting real data fetch...");
     setIsLoading(true);
     setError(null);
     
     try {
-      // Fetch real data with simplified queries
-      const [studentsResult, teachersResult, feedbackResult, subscriptionsResult] = await Promise.allSettled([
-        supabase.from('students').select('school', { count: 'exact' }),
-        supabase.from('teachers').select('*', { count: 'exact' }),
-        supabase.from('feedback').select('*', { count: 'exact' }),
-        supabase.from('subscriptions').select('*')
-      ]);
+      // Simple direct queries without complex auth
+      console.log("📊 Fetching students...");
+      const { data: studentsData, error: studentsError, count: studentsCount } = await supabase
+        .from('students')
+        .select('school', { count: 'exact' });
 
-      console.log('📊 Database query results:', {
-        students: studentsResult,
-        teachers: teachersResult,
-        feedback: feedbackResult,
-        subscriptions: subscriptionsResult
+      console.log("📊 Fetching teachers...");  
+      const { data: teachersData, error: teachersError, count: teachersCount } = await supabase
+        .from('teachers')
+        .select('*', { count: 'exact' });
+
+      console.log("📊 Fetching feedback...");
+      const { data: feedbackData, error: feedbackError, count: feedbackCount } = await supabase
+        .from('feedback')
+        .select('*', { count: 'exact' });
+
+      console.log("📊 Fetching subscriptions...");
+      const { data: subscriptionsData, error: subscriptionsError } = await supabase
+        .from('subscriptions')
+        .select('*');
+
+      // Log all results
+      console.log("📊 Query results:", {
+        students: { data: studentsData, error: studentsError, count: studentsCount },
+        teachers: { data: teachersData, error: teachersError, count: teachersCount },
+        feedback: { data: feedbackData, error: feedbackError, count: feedbackCount },
+        subscriptions: { data: subscriptionsData, error: subscriptionsError }
       });
 
-      let totalStudents = 0;
-      let totalTeachers = 0;
-      let totalResponses = 0;
-      let totalSchools = 0;
-      let subscriptions: any[] = [];
-      let activeSubscriptions = 0;
-      let monthlyRevenue = 0;
-
-      // Process results
-      if (studentsResult.status === 'fulfilled' && !studentsResult.value.error) {
-        const { data: studentsData, count } = studentsResult.value;
-        totalStudents = count || 0;
-        if (studentsData) {
-          const uniqueSchools = new Set(studentsData.map(s => s.school).filter(Boolean));
-          totalSchools = uniqueSchools.size;
-        }
+      // Handle errors
+      if (studentsError) {
+        console.error("❌ Students query error:", studentsError);
+        throw new Error(`Students query failed: ${studentsError.message}`);
+      }
+      if (teachersError) {
+        console.error("❌ Teachers query error:", teachersError);
+        throw new Error(`Teachers query failed: ${teachersError.message}`);
+      }
+      if (feedbackError) {
+        console.error("❌ Feedback query error:", feedbackError);
+        throw new Error(`Feedback query failed: ${feedbackError.message}`);
+      }
+      if (subscriptionsError) {
+        console.error("❌ Subscriptions query error:", subscriptionsError);
+        throw new Error(`Subscriptions query failed: ${subscriptionsError.message}`);
       }
 
-      if (teachersResult.status === 'fulfilled' && !teachersResult.value.error) {
-        totalTeachers = teachersResult.value.count || 0;
+      // Calculate real data
+      const totalStudents = studentsCount || 0;
+      const totalTeachers = teachersCount || 0;
+      const totalResponses = feedbackCount || 0;
+      
+      // Calculate unique schools from students data
+      const uniqueSchools = new Set();
+      if (studentsData) {
+        studentsData.forEach(student => {
+          if (student.school) {
+            uniqueSchools.add(student.school);
+          }
+        });
       }
+      const totalSchools = uniqueSchools.size;
 
-      if (feedbackResult.status === 'fulfilled' && !feedbackResult.value.error) {
-        totalResponses = feedbackResult.value.count || 0;
-      }
-
-      if (subscriptionsResult.status === 'fulfilled' && !subscriptionsResult.value.error) {
-        subscriptions = subscriptionsResult.value.data || [];
-        activeSubscriptions = subscriptions.filter(s => s.status === 'active').length;
-        monthlyRevenue = subscriptions
-          .filter(s => s.status === 'active')
-          .reduce((sum, sub) => sum + (sub.amount / 100), 0);
-      }
+      const subscriptions = subscriptionsData || [];
+      const activeSubscriptions = subscriptions.filter(s => s.status === 'active').length;
+      const monthlyRevenue = subscriptions
+        .filter(s => s.status === 'active')
+        .reduce((sum, sub) => sum + (sub.amount / 100), 0);
 
       const result = {
         totalSchools,
@@ -100,13 +120,18 @@ const PlatformAdminDashboard = () => {
         lastUpdated: new Date().toISOString()
       };
 
-      console.log("✅ Real data fetched successfully:", result);
+      console.log("✅ Real data compiled:", result);
       setDashboardData(result);
+      
+      toast.success(`Data refreshed: ${totalStudents} students, ${totalTeachers} teachers, ${totalSchools} schools`);
+      
       return result;
 
     } catch (error: any) {
-      console.error("❌ Error fetching real data:", error);
-      setError(error.message || "Failed to fetch data");
+      console.error("❌ Data fetch failed:", error);
+      const errorMessage = error.message || "Failed to fetch dashboard data";
+      setError(errorMessage);
+      toast.error(`Data fetch failed: ${errorMessage}`);
       throw error;
     } finally {
       setIsLoading(false);
@@ -115,14 +140,11 @@ const PlatformAdminDashboard = () => {
 
   const handleRefresh = async () => {
     console.log('🔄 Manual refresh triggered');
-    toast.info("Refreshing dashboard data...");
     
     try {
       await fetchRealData();
-      toast.success("Dashboard data refreshed successfully!");
     } catch (error: any) {
-      console.error("❌ Refresh failed:", error);
-      toast.error(`Refresh failed: ${error.message || "Unknown error"}`);
+      console.error("❌ Manual refresh failed:", error);
     }
   };
 
@@ -134,10 +156,9 @@ const PlatformAdminDashboard = () => {
   // Load data when admin is available
   useEffect(() => {
     if (!adminLoading && admin) {
-      console.log('📊 Admin authenticated, loading real data...');
+      console.log('📊 Admin authenticated, loading dashboard data...');
       fetchRealData().catch((error: any) => {
-        console.error("❌ Initial load failed:", error);
-        toast.error(`Failed to load data: ${error.message || "Unknown error"}`);
+        console.error("❌ Initial data load failed:", error);
       });
     }
   }, [admin, adminLoading]);
