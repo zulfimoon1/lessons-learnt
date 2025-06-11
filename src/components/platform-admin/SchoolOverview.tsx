@@ -4,9 +4,6 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 
 interface SchoolStats {
   school: string;
-  total_grades: number;
-  total_subjects: number;
-  total_classes: number;
   total_teachers: number;
 }
 
@@ -15,11 +12,30 @@ interface SchoolOverviewProps {
 }
 
 const SchoolOverview = ({ schoolStats }: SchoolOverviewProps) => {
+  if (!schoolStats || schoolStats.length === 0) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>School Overview</CardTitle>
+          <CardDescription>Statistics for all registered schools</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="text-center py-8">
+            <p className="text-muted-foreground">No schools found in the database</p>
+            <p className="text-xs text-muted-foreground mt-2">
+              Schools will appear here once teachers register and create accounts
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <Card>
       <CardHeader>
         <CardTitle>School Overview</CardTitle>
-        <CardDescription>Statistics for all registered schools</CardDescription>
+        <CardDescription>Statistics for all registered schools ({schoolStats.length} schools)</CardDescription>
       </CardHeader>
       <CardContent>
         <Table>
@@ -27,9 +43,6 @@ const SchoolOverview = ({ schoolStats }: SchoolOverviewProps) => {
             <TableRow>
               <TableHead>School Name</TableHead>
               <TableHead>Teachers</TableHead>
-              <TableHead>Grades</TableHead>
-              <TableHead>Subjects</TableHead>
-              <TableHead>Total Classes</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -37,9 +50,6 @@ const SchoolOverview = ({ schoolStats }: SchoolOverviewProps) => {
               <TableRow key={index}>
                 <TableCell className="font-medium">{school.school}</TableCell>
                 <TableCell>{school.total_teachers}</TableCell>
-                <TableCell>{school.total_grades}</TableCell>
-                <TableCell>{school.total_subjects}</TableCell>
-                <TableCell>{school.total_classes}</TableCell>
               </TableRow>
             ))}
           </TableBody>

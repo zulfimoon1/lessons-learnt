@@ -21,6 +21,24 @@ interface FeedbackAnalyticsProps {
 }
 
 const FeedbackAnalytics = ({ feedbackStats }: FeedbackAnalyticsProps) => {
+  if (!feedbackStats || feedbackStats.length === 0) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Detailed Feedback Analytics</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-center py-8">
+            <p className="text-muted-foreground">No feedback data found in the database</p>
+            <p className="text-xs text-muted-foreground mt-2">
+              Feedback analytics will appear here once students start submitting feedback
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <Card>
       <CardHeader>

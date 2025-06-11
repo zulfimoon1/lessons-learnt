@@ -35,6 +35,28 @@ const ResponseAnalytics = ({ feedbackStats }: ResponseAnalyticsProps) => {
     responses: stat.total_responses
   }));
 
+  if (!feedbackStats || feedbackStats.length === 0) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <BarChart3Icon className="w-5 h-5" />
+            Response Analytics
+          </CardTitle>
+          <CardDescription>Student feedback responses by school and subject</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="text-center py-8">
+            <p className="text-muted-foreground">No response data available for chart</p>
+            <p className="text-xs text-muted-foreground mt-2">
+              Charts will appear here once students start submitting feedback
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <Card>
       <CardHeader>
@@ -45,7 +67,7 @@ const ResponseAnalytics = ({ feedbackStats }: ResponseAnalyticsProps) => {
         <CardDescription>Student feedback responses by school and subject</CardDescription>
       </CardHeader>
       <CardContent>
-        {chartData.length > 0 && (
+        {chartData.length > 0 ? (
           <ChartContainer config={chartConfig} className="h-[400px]">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={chartData}>
@@ -63,6 +85,10 @@ const ResponseAnalytics = ({ feedbackStats }: ResponseAnalyticsProps) => {
               </BarChart>
             </ResponsiveContainer>
           </ChartContainer>
+        ) : (
+          <div className="text-center py-8">
+            <p className="text-muted-foreground">No data available for chart visualization</p>
+          </div>
         )}
       </CardContent>
     </Card>

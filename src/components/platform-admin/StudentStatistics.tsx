@@ -8,9 +8,6 @@ import { StudentStatistics as StudentStats } from "@/services/platformAdminServi
 
 interface SchoolStats {
   school: string;
-  total_grades: number;
-  total_subjects: number;
-  total_classes: number;
   total_teachers: number;
 }
 
@@ -37,6 +34,28 @@ const StudentStatistics = ({ studentStats, schoolStats }: StudentStatisticsProps
     },
   };
 
+  if (!studentStats || studentStats.length === 0) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <UserIcon className="w-5 h-5" />
+            Student Statistics by School
+          </CardTitle>
+          <CardDescription>Students enrolled and their response rates</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="text-center py-8">
+            <p className="text-muted-foreground">No student data found in the database</p>
+            <p className="text-xs text-muted-foreground mt-2">
+              Student statistics will appear here once students register and create accounts
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <Card>
       <CardHeader>
@@ -44,11 +63,11 @@ const StudentStatistics = ({ studentStats, schoolStats }: StudentStatisticsProps
           <UserIcon className="w-5 h-5" />
           Student Statistics by School
         </CardTitle>
-        <CardDescription>Students enrolled and their response rates</CardDescription>
+        <CardDescription>Students enrolled and their response rates ({studentStats.length} schools)</CardDescription>
       </CardHeader>
       <CardContent>
         <div className="space-y-8">
-          {studentChartData.length > 0 && (
+          {studentChartData.length > 0 ? (
             <ChartContainer config={studentChartConfig} className="h-[400px]">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={studentChartData} barSize={40}>
@@ -68,6 +87,10 @@ const StudentStatistics = ({ studentStats, schoolStats }: StudentStatisticsProps
                 </BarChart>
               </ResponsiveContainer>
             </ChartContainer>
+          ) : (
+            <div className="text-center py-8">
+              <p className="text-muted-foreground">No data available for chart visualization</p>
+            </div>
           )}
           
           <Table>
