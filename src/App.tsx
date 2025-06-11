@@ -1,100 +1,69 @@
 
-import React from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { Toaster } from '@/components/ui/toaster';
-import { AuthProvider } from '@/contexts/AuthContext';
-import { LanguageProvider } from '@/contexts/LanguageContext';
-import { PlatformAdminProvider } from '@/contexts/PlatformAdminContext';
-import SecureAuthGuard from '@/components/SecureAuthGuard';
-import EnhancedSecurityHeaders from '@/components/EnhancedSecurityHeaders';
-import SecurityAuditLogger from '@/components/SecurityAuditLogger';
-import AdminDashboard from '@/pages/AdminDashboard';
-import TeacherDashboard from '@/pages/TeacherDashboard';
-import StudentDashboard from '@/pages/StudentDashboard';
-import TeacherLogin from '@/pages/TeacherLogin';
-import StudentLogin from '@/pages/StudentLogin';
-import PlatformAdminLogin from '@/pages/PlatformAdminLogin';
-import PlatformAdminDashboard from '@/pages/PlatformAdminDashboard';
-import HowItWorks from '@/pages/HowItWorks';
-import PricingPage from '@/pages/PricingPage';
-import EnhancedPricingPage from './pages/EnhancedPricingPage';
-import PricingShowcase from './pages/PricingShowcase';
-import Demo from '@/pages/Demo';
-import Index from '@/pages/Index';
-import NotFound from '@/pages/NotFound';
+import { Toaster } from "@/components/ui/toaster";
+import { Toaster as Sonner } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { LanguageProvider } from "@/contexts/LanguageContext";
+import { AuthProvider } from "@/contexts/AuthContext";
+import { PlatformAdminProvider } from "@/contexts/PlatformAdminContext";
+import Index from "./pages/Index";
+import TeacherLogin from "./pages/TeacherLogin";
+import StudentLogin from "./pages/StudentLogin";
+import TeacherDashboard from "./pages/TeacherDashboard";
+import StudentDashboard from "./pages/StudentDashboard";
+import AdminDashboard from "./pages/AdminDashboard";
+import Demo from "./pages/Demo";
+import PricingPage from "./pages/PricingPage";
+import EnhancedPricingPage from "./pages/EnhancedPricingPage";
+import PricingShowcase from "./pages/PricingShowcase";
+import HowItWorks from "./pages/HowItWorks";
+import AcceptInvitation from "./pages/AcceptInvitation";
+import SecureAuth from "./pages/SecureAuth";
+import ResetPassword from "./pages/ResetPassword";
+import PlatformAdminLogin from "./pages/PlatformAdminLogin";
+import PlatformAdminDashboard from "./pages/PlatformAdminDashboard";
+import NotFound from "./pages/NotFound";
 
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      staleTime: 5 * 60 * 1000, // 5 minutes
-      retry: (failureCount, error: any) => {
-        // Don't retry on authentication errors
-        if (error?.status === 401 || error?.status === 403) {
-          return false;
-        }
-        return failureCount < 3;
-      }
-    }
-  }
-});
+const queryClient = new QueryClient();
 
 function App() {
+  // Get base path for GitHub Pages
+  const basename = import.meta.env.PROD ? '/lessons-learnt' : '';
+
   return (
     <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
+      <LanguageProvider>
         <AuthProvider>
-          <LanguageProvider>
-            <PlatformAdminProvider>
-              <EnhancedSecurityHeaders />
-              <SecurityAuditLogger />
-              <div className="min-h-screen bg-background">
-                <Toaster />
+          <PlatformAdminProvider>
+            <TooltipProvider>
+              <Toaster />
+              <Sonner />
+              <BrowserRouter basename={basename}>
                 <Routes>
                   <Route path="/" element={<Index />} />
+                  <Route path="/teacher-login" element={<TeacherLogin />} />
+                  <Route path="/student-login" element={<StudentLogin />} />
+                  <Route path="/teacher-dashboard" element={<TeacherDashboard />} />
+                  <Route path="/student-dashboard" element={<StudentDashboard />} />
+                  <Route path="/admin-dashboard" element={<AdminDashboard />} />
                   <Route path="/demo" element={<Demo />} />
-                  <Route path="/console" element={<PlatformAdminLogin />} />
-                  <Route path="/platform-admin" element={
-                    <SecureAuthGuard requireAuth={true} userType="admin">
-                      <PlatformAdminDashboard />
-                    </SecureAuthGuard>
-                  } />
-                  <Route path="/teacher-login" element={
-                    <SecureAuthGuard requireAuth={false}>
-                      <TeacherLogin />
-                    </SecureAuthGuard>
-                  } />
-                  <Route path="/student-login" element={
-                    <SecureAuthGuard requireAuth={false}>
-                      <StudentLogin />
-                    </SecureAuthGuard>
-                  } />
-                  <Route path="/admin-dashboard" element={
-                    <SecureAuthGuard userType="teacher" allowedRoles={['admin']}>
-                      <AdminDashboard />
-                    </SecureAuthGuard>
-                  } />
-                  <Route path="/teacher-dashboard" element={
-                    <SecureAuthGuard userType="teacher">
-                      <TeacherDashboard />
-                    </SecureAuthGuard>
-                  } />
-                  <Route path="/student-dashboard" element={
-                    <SecureAuthGuard userType="student">
-                      <StudentDashboard />
-                    </SecureAuthGuard>
-                  } />
-                  <Route path="/how-it-works" element={<HowItWorks />} />
                   <Route path="/pricing" element={<PricingPage />} />
                   <Route path="/enhanced-pricing" element={<EnhancedPricingPage />} />
                   <Route path="/pricing-showcase" element={<PricingShowcase />} />
+                  <Route path="/how-it-works" element={<HowItWorks />} />
+                  <Route path="/accept-invitation" element={<AcceptInvitation />} />
+                  <Route path="/secure-auth" element={<SecureAuth />} />
+                  <Route path="/reset-password" element={<ResetPassword />} />
+                  <Route path="/console" element={<PlatformAdminLogin />} />
+                  <Route path="/platform-admin" element={<PlatformAdminDashboard />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
-              </div>
-            </PlatformAdminProvider>
-          </LanguageProvider>
+              </BrowserRouter>
+            </TooltipProvider>
+          </PlatformAdminProvider>
         </AuthProvider>
-      </BrowserRouter>
+      </LanguageProvider>
     </QueryClientProvider>
   );
 }

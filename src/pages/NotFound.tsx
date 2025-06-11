@@ -12,9 +12,8 @@ const NotFound = () => {
     );
   }, [location.pathname]);
 
-  // Determine the correct base path
-  const isGitHubPages = window.location.hostname === 'zulfimoon1.github.io';
-  const basePath = isGitHubPages ? '/lessons-learnt' : '';
+  // Determine the correct base path for GitHub Pages
+  const basename = import.meta.env.PROD ? '/lessons-learnt' : '';
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
@@ -25,13 +24,13 @@ const NotFound = () => {
           Requested path: {location.pathname}
         </p>
         <a 
-          href={`${basePath}/`} 
+          href={`${basename}/`} 
           className="text-blue-500 hover:text-blue-700 underline mr-4"
         >
           Return to Home
         </a>
         <a 
-          href={`${basePath}/console`} 
+          href={`${basename}/console`} 
           className="text-green-500 hover:text-green-700 underline"
         >
           Admin Login

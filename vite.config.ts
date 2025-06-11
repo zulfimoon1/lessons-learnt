@@ -11,7 +11,7 @@ export default defineConfig(({ mode }) => {
   // Use different base paths for different environments
   let base = '/';
   if (mode === 'production') {
-    // For GitHub Pages deployment - correct repository name
+    // For GitHub Pages deployment - ensure trailing slash
     base = '/lessons-learnt/';
   }
   
@@ -42,6 +42,8 @@ export default defineConfig(({ mode }) => {
       sourcemap: false,
       minify: mode === 'production' ? 'terser' : false,
       outDir: 'dist',
+      // Ensure proper base path handling
+      emptyOutDir: true,
     },
   };
 });

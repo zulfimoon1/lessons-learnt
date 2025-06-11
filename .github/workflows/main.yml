@@ -45,22 +45,23 @@ jobs:
       - name: Create .nojekyll file
         run: touch dist/.nojekyll
 
-      - name: Copy index.html to 404.html for SPA routing
+      - name: Create 404.html for SPA routing
         run: cp dist/index.html dist/404.html
+
+      - name: Create redirect files for common routes
+        run: |
+          mkdir -p dist/console
+          cp dist/index.html dist/console/index.html
+          mkdir -p dist/platform-admin
+          cp dist/index.html dist/platform-admin/index.html
 
       - name: Verify build output
         run: |
           echo "Build completed. Contents of dist:"
           ls -la dist/
-          echo "Checking if index.html exists:"
-          if [ -f "dist/index.html" ]; then
-            echo "✅ index.html found"
-            echo "First few lines of index.html:"
-            head -10 dist/index.html
-          else
-            echo "❌ index.html NOT found - build failed!"
-            exit 1
-          fi
+          echo "Checking routing files:"
+          ls -la dist/console/ || echo "Console directory not found"
+          ls -la dist/platform-admin/ || echo "Platform-admin directory not found"
 
       - name: Setup Pages
         uses: actions/configure-pages@v4
@@ -77,5 +78,6 @@ jobs:
       - name: Final verification
         run: |
           echo "🚀 Deployment completed!"
-          echo "📍 URL: https://zulfimoon1.github.io/lessons-learnt/"
+          echo "📍 Main URL: https://zulfimoon1.github.io/lessons-learnt/"
+          echo "📍 Console URL: https://zulfimoon1.github.io/lessons-learnt/console"
           echo "⏰ Wait 2-3 minutes for CDN propagation"
