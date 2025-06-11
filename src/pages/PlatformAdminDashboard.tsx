@@ -228,12 +228,17 @@ const PlatformAdminDashboard = () => {
     console.log('🔄🔄🔄 HANDLE REFRESH CALLED! 🔄🔄🔄');
     console.log('🔄🔄🔄 REFRESH BUTTON CLICKED! 🔄🔄🔄');
     console.log('Current refreshKey before increment:', refreshKey);
+    console.log('loadDashboardData function type:', typeof loadDashboardData);
+    
+    // Force a manual refresh
+    loadDashboardData(true);
+    
+    // Also increment refresh key to trigger useEffect
     setRefreshKey(prev => {
       const newKey = prev + 1;
       console.log('Setting new refreshKey to:', newKey);
       return newKey;
     });
-    loadDashboardData(true);
   };
 
   const handleLogout = () => {
@@ -242,6 +247,7 @@ const PlatformAdminDashboard = () => {
   };
 
   console.log('📱 Dashboard render - isLoading:', isLoading, 'dataLoading:', dataLoading, 'admin:', !!admin, 'dashboardData:', !!dashboardData);
+  console.log('📱 Dashboard render - handleRefresh function:', typeof handleRefresh);
 
   if (isLoading || dataLoading) {
     return (
