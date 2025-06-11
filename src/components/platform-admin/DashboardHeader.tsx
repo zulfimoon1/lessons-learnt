@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { SchoolIcon, LogOutIcon, RefreshCwIcon } from "lucide-react";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
@@ -5,7 +6,7 @@ import { useState } from "react";
 
 interface DashboardHeaderProps {
   adminName?: string;
-  onRefresh: () => void;
+  onRefresh: () => Promise<void>;
   onLogout: () => void;
 }
 
@@ -13,10 +14,11 @@ const DashboardHeader = ({ adminName, onRefresh, onLogout }: DashboardHeaderProp
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   const handleRefreshClick = async () => {
-    console.log('🔄 Refresh button clicked - starting refresh');
+    console.log('🔄 REFRESH BUTTON CLICKED in header');
     setIsRefreshing(true);
     
     try {
+      console.log('🔄 Calling onRefresh function...');
       await onRefresh();
       console.log('🔄 Refresh completed successfully');
     } catch (error) {
@@ -26,7 +28,7 @@ const DashboardHeader = ({ adminName, onRefresh, onLogout }: DashboardHeaderProp
       setTimeout(() => {
         setIsRefreshing(false);
         console.log('🔄 Refresh UI state reset');
-      }, 500);
+      }, 1000);
     }
   };
 
@@ -43,10 +45,10 @@ const DashboardHeader = ({ adminName, onRefresh, onLogout }: DashboardHeaderProp
             variant="outline" 
             size="sm" 
             disabled={isRefreshing}
-            className="flex items-center gap-2 bg-blue-50 hover:bg-blue-100 border-blue-200"
+            className="flex items-center gap-2 bg-blue-50 hover:bg-blue-100 border-blue-200 border-2"
           >
             <RefreshCwIcon className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-            {isRefreshing ? 'Refreshing...' : 'Refresh Data'}
+            {isRefreshing ? 'Refreshing Data...' : '🔄 REFRESH DATA'}
           </Button>
         </div>
         <div className="flex items-center gap-4">

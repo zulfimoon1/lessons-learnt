@@ -35,81 +35,67 @@ const PlatformAdminDashboard = () => {
   const [error, setError] = useState<string | null>(null);
 
   const fetchRealData = async () => {
-    console.log("🔄 Starting real data fetch...");
+    console.log("🔄 Starting fresh data fetch...");
     setIsLoading(true);
     setError(null);
     
     try {
-      // Simple direct queries without complex auth
-      console.log("📊 Fetching students...");
-      const { data: studentsData, error: studentsError, count: studentsCount } = await supabase
-        .from('students')
-        .select('school', { count: 'exact' });
-
-      console.log("📊 Fetching teachers...");  
-      const { data: teachersData, error: teachersError, count: teachersCount } = await supabase
-        .from('teachers')
-        .select('*', { count: 'exact' });
-
-      console.log("📊 Fetching feedback...");
-      const { data: feedbackData, error: feedbackError, count: feedbackCount } = await supabase
-        .from('feedback')
-        .select('*', { count: 'exact' });
-
-      console.log("📊 Fetching subscriptions...");
-      const { data: subscriptionsData, error: subscriptionsError } = await supabase
-        .from('subscriptions')
-        .select('*');
-
-      // Log all results
-      console.log("📊 Query results:", {
-        students: { data: studentsData, error: studentsError, count: studentsCount },
-        teachers: { data: teachersData, error: teachersError, count: teachersCount },
-        feedback: { data: feedbackData, error: feedbackError, count: feedbackCount },
-        subscriptions: { data: subscriptionsData, error: subscriptionsError }
+      // Set platform admin context first
+      console.log("🔧 Setting platform admin context...");
+      await supabase.rpc('set_config', {
+        setting_name: 'app.platform_admin',
+        setting_value: 'true'
       });
 
-      // Handle errors
-      if (studentsError) {
-        console.error("❌ Students query error:", studentsError);
-        throw new Error(`Students query failed: ${studentsError.message}`);
-      }
-      if (teachersError) {
-        console.error("❌ Teachers query error:", teachersError);
-        throw new Error(`Teachers query failed: ${teachersError.message}`);
-      }
-      if (feedbackError) {
-        console.error("❌ Feedback query error:", feedbackError);
-        throw new Error(`Feedback query failed: ${feedbackError.message}`);
-      }
-      if (subscriptionsError) {
-        console.error("❌ Subscriptions query error:", subscriptionsError);
-        throw new Error(`Subscriptions query failed: ${subscriptionsError.message}`);
-      }
-
-      // Calculate real data
-      const totalStudents = studentsCount || 0;
-      const totalTeachers = teachersCount || 0;
-      const totalResponses = feedbackCount || 0;
+      console.log("📊 Fetching all data in parallel...");
       
-      // Calculate unique schools from students data
+      // Fetch all data in parallel for faster loading
+      const [studentsResult, teachersResult, feedbackResult, subscriptionsResult] = await Promise.all([
+        supabase.from('students').select('school', { count: 'exact' }),
+        supabase.from('teachers').select('*', { count: 'exact' }),
+        supabase.from('feedback').select('*', { count: 'exact' }),
+        supabase.from('subscriptions').select('*')
+      ]);
+
+      console.log("📊 Raw query results:", {
+        students: studentsResult,
+        teachers: teachersResult,
+        feedback: feedbackResult,
+        subscriptions: subscriptionsResult
+      });
+
+      // Check for errors
+      if (studentsResult.error) throw new Error(`Students: ${studentsResult.error.message}`);
+      if (teachersResult.error) throw new Error(`Teachers: ${teachersResult.error.message}`);
+      if (feedbackResult.error) throw new Error(`Feedback: ${feedbackResult.error.message}`);
+      if (subscriptionsResult.error) throw new Error(`Subscriptions: ${subscriptionsResult.error.message}`);
+
+      // Calculate metrics
+      const totalStudents = studentsResult.count || 0;
+      const totalTeachers = teachersResult.count || 0;
+      const totalResponses = feedbackResult.count || 0;
+      
+      // Get unique schools
       const uniqueSchools = new Set();
-      if (studentsData) {
-        studentsData.forEach(student => {
-          if (student.school) {
-            uniqueSchools.add(student.school);
-          }
+      if (studentsResult.data) {
+        studentsResult.data.forEach(student => {
+          if (student.school) uniqueSchools.add(student.school);
+        });
+      }
+      if (teachersResult.data) {
+        teachersResult.data.forEach(teacher => {
+          if (teacher.school) uniqueSchools.add(teacher.school);
         });
       }
       const totalSchools = uniqueSchools.size;
 
-      const subscriptions = subscriptionsData || [];
+      const subscriptions = subscriptionsResult.data || [];
       const activeSubscriptions = subscriptions.filter(s => s.status === 'active').length;
       const monthlyRevenue = subscriptions
         .filter(s => s.status === 'active')
         .reduce((sum, sub) => sum + (sub.amount / 100), 0);
 
-      const result = {
+      const newData = {
         totalSchools,
         totalTeachers,
         totalStudents,
@@ -120,32 +106,24 @@ const PlatformAdminDashboard = () => {
         lastUpdated: new Date().toISOString()
       };
 
-      console.log("✅ Real data compiled:", result);
-      setDashboardData(result);
+      console.log("✅ Processed data:", newData);
+      setDashboardData(newData);
       
-      toast.success(`Data refreshed: ${totalStudents} students, ${totalTeachers} teachers, ${totalSchools} schools`);
+      toast.success(`✅ Data refreshed! ${totalStudents} students, ${totalTeachers} teachers, ${totalSchools} schools, ${totalResponses} responses`);
       
-      return result;
-
     } catch (error: any) {
       console.error("❌ Data fetch failed:", error);
       const errorMessage = error.message || "Failed to fetch dashboard data";
       setError(errorMessage);
-      toast.error(`Data fetch failed: ${errorMessage}`);
-      throw error;
+      toast.error(`❌ Refresh failed: ${errorMessage}`);
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleRefresh = async () => {
-    console.log('🔄 Manual refresh triggered');
-    
-    try {
-      await fetchRealData();
-    } catch (error: any) {
-      console.error("❌ Manual refresh failed:", error);
-    }
+    console.log('🔄 REFRESH BUTTON CLICKED - Starting manual refresh...');
+    await fetchRealData();
   };
 
   const handleLogout = () => {
@@ -153,15 +131,41 @@ const PlatformAdminDashboard = () => {
     logout();
   };
 
-  // Load data when admin is available
+  // Auto-fetch data when admin loads
   useEffect(() => {
     if (!adminLoading && admin) {
-      console.log('📊 Admin authenticated, loading dashboard data...');
-      fetchRealData().catch((error: any) => {
-        console.error("❌ Initial data load failed:", error);
-      });
+      console.log('🚀 Admin loaded, fetching initial data...');
+      fetchRealData();
     }
   }, [admin, adminLoading]);
+
+  // Set up real-time subscription for live updates
+  useEffect(() => {
+    if (!admin) return;
+
+    console.log('🔴 Setting up real-time subscriptions...');
+    
+    const channel = supabase
+      .channel('dashboard-updates')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'students' }, () => {
+        console.log('🔴 Students table changed - refreshing data');
+        fetchRealData();
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'teachers' }, () => {
+        console.log('🔴 Teachers table changed - refreshing data');
+        fetchRealData();
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'feedback' }, () => {
+        console.log('🔴 Feedback table changed - refreshing data');
+        fetchRealData();
+      })
+      .subscribe();
+
+    return () => {
+      console.log('🔴 Cleaning up real-time subscriptions');
+      supabase.removeChannel(channel);
+    };
+  }, [admin]);
 
   if (adminLoading) {
     return (
@@ -197,11 +201,11 @@ const PlatformAdminDashboard = () => {
       />
       
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
-        {/* Status Banner */}
+        {/* Live Status Banner */}
         <div className={`${error ? 'bg-red-100 border-red-500' : 'bg-green-100 border-green-500'} border-2 rounded-xl p-6`}>
           <div className="text-center">
             <h1 className={`text-xl font-bold ${error ? 'text-red-800' : 'text-green-800'}`}>
-              {error ? '❌ ERROR' : '✅ LIVE DASHBOARD'} {isLoading ? '(Loading...)' : ''}
+              {error ? '❌ ERROR' : '🔴 LIVE DASHBOARD'} {isLoading ? '(Refreshing...)' : ''}
             </h1>
             {error ? (
               <div>
@@ -222,31 +226,31 @@ const PlatformAdminDashboard = () => {
           </div>
         </div>
 
-        {/* Real Data Display */}
-        <div className="bg-white border-2 border-gray-300 rounded-xl p-6">
-          <h2 className="text-xl font-bold text-gray-800 mb-4">📊 REAL DATABASE COUNTS</h2>
+        {/* Real-Time Data Display */}
+        <div className="bg-white border-4 border-blue-500 rounded-xl p-6">
+          <h2 className="text-xl font-bold text-blue-800 mb-4">🔴 LIVE DATABASE COUNTS</h2>
           {isLoading ? (
             <div className="text-center py-8">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-              <p>Loading real data...</p>
+              <p>Loading fresh data...</p>
             </div>
           ) : (
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="text-center">
+              <div className="text-center bg-blue-50 p-4 rounded">
                 <p className="text-sm font-semibold text-gray-600">Schools</p>
-                <p className="text-3xl font-bold text-blue-600">{dashboardData.totalSchools}</p>
+                <p className="text-4xl font-bold text-blue-600">{dashboardData.totalSchools}</p>
               </div>
-              <div className="text-center">
+              <div className="text-center bg-green-50 p-4 rounded">
                 <p className="text-sm font-semibold text-gray-600">Teachers</p>
-                <p className="text-3xl font-bold text-green-600">{dashboardData.totalTeachers}</p>
+                <p className="text-4xl font-bold text-green-600">{dashboardData.totalTeachers}</p>
               </div>
-              <div className="text-center">
+              <div className="text-center bg-purple-50 p-4 rounded">
                 <p className="text-sm font-semibold text-gray-600">Students</p>
-                <p className="text-3xl font-bold text-purple-600">{dashboardData.totalStudents}</p>
+                <p className="text-4xl font-bold text-purple-600">{dashboardData.totalStudents}</p>
               </div>
-              <div className="text-center">
+              <div className="text-center bg-orange-50 p-4 rounded">
                 <p className="text-sm font-semibold text-gray-600">Responses</p>
-                <p className="text-3xl font-bold text-orange-600">{dashboardData.totalResponses}</p>
+                <p className="text-4xl font-bold text-orange-600">{dashboardData.totalResponses}</p>
               </div>
             </div>
           )}
