@@ -14,7 +14,7 @@ const DashboardHeader = ({ adminName, onRefresh, onLogout }: DashboardHeaderProp
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   const handleRefreshClick = async () => {
-    console.log('🔄 REFRESH BUTTON CLICKED - HEADER');
+    console.log('🔄 Refresh button clicked');
     setIsRefreshing(true);
     
     try {
@@ -22,7 +22,6 @@ const DashboardHeader = ({ adminName, onRefresh, onLogout }: DashboardHeaderProp
     } catch (error) {
       console.error('Refresh error:', error);
     } finally {
-      // Reset the refreshing state after a short delay
       setTimeout(() => {
         setIsRefreshing(false);
       }, 1000);
@@ -42,7 +41,7 @@ const DashboardHeader = ({ adminName, onRefresh, onLogout }: DashboardHeaderProp
             variant="outline" 
             size="sm" 
             disabled={isRefreshing}
-            className="flex items-center gap-2 bg-green-50 hover:bg-green-100 border-green-200 disabled:opacity-50"
+            className="flex items-center gap-2 bg-green-50 hover:bg-green-100 border-green-200"
           >
             <RefreshCwIcon className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
             {isRefreshing ? 'Refreshing...' : 'Refresh Data'}

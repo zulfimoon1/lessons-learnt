@@ -37,39 +37,33 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Build with GitHub Pages base path
+      - name: Build for GitHub Pages
         run: npm run build
         env:
           NODE_ENV: production
           VITE_BUILD_TIME: ${{ github.run_id }}-${{ github.sha }}
 
-      - name: List build output and verify structure
+      - name: Verify build output
         run: |
           echo "Build completed. Contents of dist:"
           ls -la dist/
           echo "Checking if index.html exists:"
           if [ -f "dist/index.html" ]; then
             echo "✅ index.html found"
-            echo "Checking base href in index.html:"
+            echo "Base href in index.html:"
             grep -n "base href" dist/index.html || echo "No base href found"
-            echo "Checking asset paths:"
-            grep -n "assets/" dist/index.html | head -5
+            echo "First few lines of index.html:"
+            head -20 dist/index.html
           else
             echo "❌ index.html NOT found - build failed!"
             exit 1
           fi
 
-      - name: Copy index.html to 404.html for SPA routing
-        run: cp dist/index.html dist/404.html
-
       - name: Create .nojekyll file
         run: touch dist/.nojekyll
 
-      - name: Add deployment verification
-        run: |
-          echo "<!-- GitHub Pages deployment at $(date) -->" >> dist/index.html
-          echo "<!-- Commit: ${{ github.sha }} -->" >> dist/index.html
-          echo "<!-- Repository: ${{ github.repository }} -->" >> dist/index.html
+      - name: Copy index.html to 404.html for SPA routing
+        run: cp dist/index.html dist/404.html
 
       - name: Setup Pages
         uses: actions/configure-pages@v4

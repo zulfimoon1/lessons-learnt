@@ -36,6 +36,7 @@ export default defineConfig(({ mode }) => {
       },
       sourcemap: false,
       minify: mode === 'production' ? 'terser' : false,
+      outDir: 'dist',
     },
   };
 });
