@@ -5,30 +5,37 @@ import path from "path";
 import { componentTagger } from "lovable-tagger";
 
 // https://vitejs.dev/config/
-export default defineConfig(({ mode }) => ({
-  base: mode === 'production' ? '/lessons-learnt/' : '/',
-  server: {
-    host: "::",
-    port: 8080,
-  },
-  plugins: [
-    react(),
-    mode === 'development' &&
-    componentTagger(),
-  ].filter(Boolean),
-  resolve: {
-    alias: {
-      "@": path.resolve(__dirname, "./src"),
+export default defineConfig(({ mode }) => {
+  console.log(`🔧 Vite build mode: ${mode}`);
+  
+  const base = mode === 'production' ? '/lessons-learnt/' : '/';
+  console.log(`🔧 Base path set to: ${base}`);
+  
+  return {
+    base,
+    server: {
+      host: "::",
+      port: 8080,
     },
-  },
-  build: {
-    assetsDir: 'assets',
-    rollupOptions: {
-      output: {
-        manualChunks: undefined,
+    plugins: [
+      react(),
+      mode === 'development' &&
+      componentTagger(),
+    ].filter(Boolean),
+    resolve: {
+      alias: {
+        "@": path.resolve(__dirname, "./src"),
       },
     },
-    sourcemap: mode === 'development',
-    minify: mode === 'production' ? 'terser' : false,
-  },
-}));
+    build: {
+      assetsDir: 'assets',
+      rollupOptions: {
+        output: {
+          manualChunks: undefined,
+        },
+      },
+      sourcemap: mode === 'development',
+      minify: mode === 'production' ? 'terser' : false,
+    },
+  };
+});
