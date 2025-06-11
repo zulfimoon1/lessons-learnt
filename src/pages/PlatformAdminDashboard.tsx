@@ -8,8 +8,6 @@ import SystemInfoCard from "@/components/platform-admin/SystemInfoCard";
 import OverviewCards from "@/components/platform-admin/OverviewCards";
 import SubscriptionManagement from "@/components/platform-admin/SubscriptionManagement";
 
-console.log("🔥 PLATFORM ADMIN DASHBOARD LOADED");
-
 interface DashboardData {
   totalSchools: number;
   totalTeachers: number;
@@ -37,52 +35,31 @@ const PlatformAdminDashboard = () => {
   const [error, setError] = useState<string | null>(null);
 
   const fetchDashboardData = async () => {
-    console.log("📊 Starting platform admin data fetch...");
+    if (!admin) {
+      console.log('❌ No admin session found');
+      setError("No admin session found");
+      return;
+    }
+
+    console.log("📊 Fetching dashboard data for admin:", admin.email);
     setError(null);
     
     try {
-      console.log("📊 Fetching dashboard data directly...");
-      
-      // Create a temporary client with service role for platform admin
-      const adminSupabase = supabase;
-      
-      // Fetch data with individual queries to avoid RLS issues
-      console.log("📊 Fetching students count...");
-      const { count: studentsCount, error: studentsError } = await adminSupabase
-        .from('students')
-        .select('*', { count: 'exact', head: true });
-      
-      console.log("📊 Students result:", { count: studentsCount, error: studentsError });
+      // Use Promise.allSettled to handle partial failures gracefully
+      const [studentsResult, teachersResult, feedbackResult, subscriptionsResult] = await Promise.allSettled([
+        supabase.from('students').select('school', { count: 'exact' }),
+        supabase.from('teachers').select('*', { count: 'exact' }),
+        supabase.from('feedback').select('*', { count: 'exact' }),
+        supabase.from('subscriptions').select('*')
+      ]);
 
-      console.log("📊 Fetching teachers count...");
-      const { count: teachersCount, error: teachersError } = await adminSupabase
-        .from('teachers')
-        .select('*', { count: 'exact', head: true });
-      
-      console.log("📊 Teachers result:", { count: teachersCount, error: teachersError });
+      console.log('📊 Query results:', {
+        students: studentsResult,
+        teachers: teachersResult,
+        feedback: feedbackResult,
+        subscriptions: subscriptionsResult
+      });
 
-      console.log("📊 Fetching feedback count...");
-      const { count: feedbackCount, error: feedbackError } = await adminSupabase
-        .from('feedback')
-        .select('*', { count: 'exact', head: true });
-      
-      console.log("📊 Feedback result:", { count: feedbackCount, error: feedbackError });
-
-      console.log("📊 Fetching schools data...");
-      const { data: schoolsData, error: schoolsError } = await adminSupabase
-        .from('students')
-        .select('school');
-      
-      console.log("📊 Schools result:", { data: schoolsData, error: schoolsError });
-
-      console.log("📊 Fetching subscriptions...");
-      const { data: subscriptionsData, error: subscriptionsError } = await adminSupabase
-        .from('subscriptions')
-        .select('*');
-      
-      console.log("📊 Subscriptions result:", { data: subscriptionsData, error: subscriptionsError });
-
-      // Process the data
       let totalStudents = 0;
       let totalTeachers = 0;
       let totalResponses = 0;
@@ -91,49 +68,45 @@ const PlatformAdminDashboard = () => {
       let activeSubscriptions = 0;
       let monthlyRevenue = 0;
 
-      // Handle students count
-      if (!studentsError && studentsCount !== null) {
-        totalStudents = studentsCount;
-        console.log("✅ Students processed:", totalStudents);
+      // Handle students
+      if (studentsResult.status === 'fulfilled' && !studentsResult.value.error) {
+        const { data: studentsData, count } = studentsResult.value;
+        totalStudents = count || 0;
+        if (studentsData) {
+          const uniqueSchools = new Set(studentsData.map(s => s.school).filter(Boolean));
+          totalSchools = uniqueSchools.size;
+        }
+        console.log('✅ Students processed:', totalStudents, 'Schools:', totalSchools);
       } else {
-        console.warn("⚠️ Students query failed:", studentsError);
+        console.warn('⚠️ Students query failed:', studentsResult);
       }
 
-      // Handle teachers count  
-      if (!teachersError && teachersCount !== null) {
-        totalTeachers = teachersCount;
-        console.log("✅ Teachers processed:", totalTeachers);
+      // Handle teachers
+      if (teachersResult.status === 'fulfilled' && !teachersResult.value.error) {
+        totalTeachers = teachersResult.value.count || 0;
+        console.log('✅ Teachers processed:', totalTeachers);
       } else {
-        console.warn("⚠️ Teachers query failed:", teachersError);
+        console.warn('⚠️ Teachers query failed:', teachersResult);
       }
 
-      // Handle feedback count
-      if (!feedbackError && feedbackCount !== null) {
-        totalResponses = feedbackCount;
-        console.log("✅ Feedback processed:", totalResponses);
+      // Handle feedback
+      if (feedbackResult.status === 'fulfilled' && !feedbackResult.value.error) {
+        totalResponses = feedbackResult.value.count || 0;
+        console.log('✅ Feedback processed:', totalResponses);
       } else {
-        console.warn("⚠️ Feedback query failed:", feedbackError);
-      }
-
-      // Handle schools count
-      if (!schoolsError && schoolsData) {
-        const uniqueSchools = new Set(schoolsData.map(s => s.school).filter(Boolean));
-        totalSchools = uniqueSchools.size;
-        console.log("✅ Schools processed:", totalSchools);
-      } else {
-        console.warn("⚠️ Schools query failed:", schoolsError);
+        console.warn('⚠️ Feedback query failed:', feedbackResult);
       }
 
       // Handle subscriptions
-      if (!subscriptionsError && subscriptionsData) {
-        subscriptions = subscriptionsData;
+      if (subscriptionsResult.status === 'fulfilled' && !subscriptionsResult.value.error) {
+        subscriptions = subscriptionsResult.value.data || [];
         activeSubscriptions = subscriptions.filter(s => s.status === 'active').length;
         monthlyRevenue = subscriptions
           .filter(s => s.status === 'active')
           .reduce((sum, sub) => sum + (sub.amount / 100), 0);
-        console.log("✅ Subscriptions processed:", subscriptions.length, "active:", activeSubscriptions);
+        console.log('✅ Subscriptions processed:', subscriptions.length, 'active:', activeSubscriptions);
       } else {
-        console.warn("⚠️ Subscriptions query failed:", subscriptionsError);
+        console.warn('⚠️ Subscriptions query failed:', subscriptionsResult);
       }
 
       const result = {
@@ -153,25 +126,25 @@ const PlatformAdminDashboard = () => {
 
     } catch (error: any) {
       console.error("❌ Error fetching dashboard data:", error);
-      const errorMessage = error.message || "Unknown error occurred";
-      setError(`Failed to fetch data: ${errorMessage}`);
+      const errorMessage = error.message || "Failed to fetch data";
+      setError(errorMessage);
       throw error;
     }
   };
 
   const handleRefresh = async () => {
-    console.log('🔄 Manual refresh triggered by user');
+    console.log('🔄 Manual refresh triggered');
     setIsLoading(true);
     setError(null);
     toast.info("Refreshing dashboard data...");
     
     try {
-      const newData = await fetchDashboardData();
-      console.log('✅ Refresh completed successfully:', newData);
-      toast.success("Dashboard data refreshed successfully!");
+      await fetchDashboardData();
+      console.log('✅ Refresh completed successfully');
+      toast.success("Dashboard data refreshed!");
     } catch (error: any) {
       console.error("❌ Refresh failed:", error);
-      const errorMessage = error.message || "Failed to refresh dashboard data";
+      const errorMessage = error.message || "Failed to refresh data";
       setError(errorMessage);
       toast.error(`Refresh failed: ${errorMessage}`);
     } finally {
@@ -184,20 +157,20 @@ const PlatformAdminDashboard = () => {
     logout();
   };
 
-  // Load data when component mounts and admin is available
+  // Load data when admin is available
   useEffect(() => {
     if (!adminLoading && admin) {
-      console.log('📊 Admin authenticated, starting initial data load for:', admin.email);
+      console.log('📊 Admin authenticated, loading data for:', admin.email);
       setIsLoading(true);
       setError(null);
       
       fetchDashboardData()
-        .then((data) => {
-          console.log('✅ Initial data load complete:', data);
+        .then(() => {
+          console.log('✅ Initial data load complete');
         })
         .catch((error: any) => {
           console.error("❌ Initial load failed:", error);
-          const errorMessage = error.message || "Failed to load dashboard data";
+          const errorMessage = error.message || "Failed to load data";
           setError(errorMessage);
           toast.error(`Failed to load data: ${errorMessage}`);
         })
@@ -205,7 +178,7 @@ const PlatformAdminDashboard = () => {
           setIsLoading(false);
         });
     } else if (!adminLoading && !admin) {
-      console.log('❌ No admin found, stopping loading');
+      console.log('❌ No admin found');
       setIsLoading(false);
     }
   }, [admin, adminLoading]);
@@ -248,7 +221,7 @@ const PlatformAdminDashboard = () => {
         <div className={`${error ? 'bg-red-100 border-red-500' : 'bg-green-100 border-green-500'} border-2 rounded-xl p-6`}>
           <div className="text-center">
             <h1 className={`text-xl font-bold ${error ? 'text-red-800' : 'text-green-800'}`}>
-              {error ? '❌ DATABASE ERROR' : '✅ LIVE DATABASE DASHBOARD'} {isLoading ? '(Loading...)' : ''}
+              {error ? '❌ ERROR' : '✅ LIVE DASHBOARD'} {isLoading ? '(Loading...)' : ''}
             </h1>
             {error ? (
               <div>
@@ -271,11 +244,11 @@ const PlatformAdminDashboard = () => {
 
         {/* Real Data Display */}
         <div className="bg-white border-2 border-gray-300 rounded-xl p-6">
-          <h2 className="text-xl font-bold text-gray-800 mb-4">📊 REAL DATABASE COUNTS</h2>
+          <h2 className="text-xl font-bold text-gray-800 mb-4">📊 DATABASE COUNTS</h2>
           {isLoading ? (
             <div className="text-center py-8">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-              <p>Loading real data...</p>
+              <p>Loading data...</p>
             </div>
           ) : (
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">

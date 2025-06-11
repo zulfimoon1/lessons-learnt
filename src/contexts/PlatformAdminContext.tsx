@@ -1,8 +1,6 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { PlatformAdmin, platformAdminLoginService } from '@/services/platformAdminService';
-import { enhancedSecureSessionService } from '@/services/enhancedSecureSessionService';
-import { logUserSecurityEvent } from '@/components/SecurityAuditLogger';
 
 interface PlatformAdminContextType {
   admin: PlatformAdmin | null;
@@ -26,31 +24,26 @@ export const PlatformAdminProvider: React.FC<{ children: React.ReactNode }> = ({
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    console.log('PlatformAdminProvider: Starting initialization...');
+    console.log('PlatformAdminProvider: Initializing...');
     
-    const restoreAdminSession = async () => {
+    const restoreAdminSession = () => {
       try {
-        // Check for stored admin data
         const adminData = localStorage.getItem('platformAdmin');
         if (adminData) {
-          try {
-            const parsedAdmin = JSON.parse(adminData);
-            if (parsedAdmin && parsedAdmin.id && parsedAdmin.email) {
-              console.log('PlatformAdminProvider: Restoring admin session for:', parsedAdmin.email);
-              setAdmin(parsedAdmin);
-            } else {
-              console.log('PlatformAdminProvider: Invalid admin data found, clearing');
-              localStorage.removeItem('platformAdmin');
-            }
-          } catch (parseError) {
-            console.error('PlatformAdminProvider: Error parsing admin data:', parseError);
+          const parsedAdmin = JSON.parse(adminData);
+          if (parsedAdmin?.id && parsedAdmin?.email) {
+            console.log('PlatformAdminProvider: Restoring session for:', parsedAdmin.email);
+            setAdmin(parsedAdmin);
+          } else {
+            console.log('PlatformAdminProvider: Invalid admin data, clearing');
             localStorage.removeItem('platformAdmin');
           }
         } else {
-          console.log('PlatformAdminProvider: No admin session found');
+          console.log('PlatformAdminProvider: No stored session found');
         }
       } catch (error) {
         console.error('PlatformAdminProvider: Session restoration error:', error);
+        localStorage.removeItem('platformAdmin');
       }
       setIsLoading(false);
     };
@@ -65,36 +58,13 @@ export const PlatformAdminProvider: React.FC<{ children: React.ReactNode }> = ({
       const result = await platformAdminLoginService(email, password);
       console.log('PlatformAdminProvider: Login service result:', result);
       
-      if (result && 'admin' in result && result.admin) {
+      if (result?.admin) {
         console.log('PlatformAdminProvider: Login successful');
         setAdmin(result.admin);
-        
-        // Store admin data
-        try {
-          localStorage.setItem('platformAdmin', JSON.stringify(result.admin));
-          
-          logUserSecurityEvent({
-            type: 'login_success',
-            userId: result.admin.id,
-            timestamp: new Date().toISOString(),
-            details: `Platform admin login successful: ${email}`,
-            userAgent: navigator.userAgent
-          });
-        } catch (storageError) {
-          console.error('PlatformAdminProvider: Storage error:', storageError);
-        }
-        
+        localStorage.setItem('platformAdmin', JSON.stringify(result.admin));
         return { admin: result.admin };
-      } else if (result && 'error' in result) {
+      } else if (result?.error) {
         console.log('PlatformAdminProvider: Login failed:', result.error);
-        
-        logUserSecurityEvent({
-          type: 'login_failed',
-          timestamp: new Date().toISOString(),
-          details: `Platform admin login failed: ${email}`,
-          userAgent: navigator.userAgent
-        });
-        
         return { error: result.error };
       } else {
         console.log('PlatformAdminProvider: Unexpected result format');
@@ -102,35 +72,14 @@ export const PlatformAdminProvider: React.FC<{ children: React.ReactNode }> = ({
       }
     } catch (error) {
       console.error('PlatformAdminProvider: Login error:', error);
-      
-      logUserSecurityEvent({
-        type: 'suspicious_activity',
-        timestamp: new Date().toISOString(),
-        details: `Platform admin login error: ${error}`,
-        userAgent: navigator.userAgent
-      });
-      
       return { error: 'Login failed. Please try again.' };
     }
   };
 
   const logout = () => {
     console.log('PlatformAdminProvider: Logout initiated');
-    
-    // Log the logout event
-    if (admin) {
-      logUserSecurityEvent({
-        type: 'logout',
-        userId: admin.id,
-        timestamp: new Date().toISOString(),
-        details: `Platform admin logged out: ${admin.email}`,
-        userAgent: navigator.userAgent
-      });
-    }
-    
     setAdmin(null);
     localStorage.removeItem('platformAdmin');
-    
     console.log('PlatformAdminProvider: Logout complete');
   };
 
