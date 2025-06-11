@@ -10,14 +10,16 @@ interface DashboardHeaderProps {
 }
 
 const DashboardHeader = ({ adminName, onRefresh, onLogout }: DashboardHeaderProps) => {
-  const handleRefreshClick = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    console.log('🔄 DashboardHeader: Refresh button clicked!');
-    console.log('🔄 DashboardHeader: onRefresh function type:', typeof onRefresh);
-    console.log('🔄 DashboardHeader: About to call onRefresh...');
-    onRefresh();
-    console.log('🔄 DashboardHeader: onRefresh called successfully');
+  const handleRefreshClick = () => {
+    console.log('🔄 REFRESH BUTTON CLICKED - DashboardHeader');
+    console.log('🔄 onRefresh type:', typeof onRefresh);
+    
+    try {
+      onRefresh();
+      console.log('✅ onRefresh called successfully');
+    } catch (error) {
+      console.error('❌ Error calling onRefresh:', error);
+    }
   };
 
   return (
@@ -32,8 +34,7 @@ const DashboardHeader = ({ adminName, onRefresh, onLogout }: DashboardHeaderProp
             onClick={handleRefreshClick} 
             variant="outline" 
             size="sm" 
-            className="flex items-center gap-2 cursor-pointer"
-            type="button"
+            className="flex items-center gap-2"
           >
             <RefreshCwIcon className="w-4 h-4" />
             Refresh
