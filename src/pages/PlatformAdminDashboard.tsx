@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { usePlatformAdmin } from "@/contexts/PlatformAdminContext";
 import { toast } from "sonner";
@@ -169,19 +170,38 @@ const PlatformAdminDashboard = () => {
       />
       
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
-        {/* DEBUG PANEL - This should be visible */}
-        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-          <div className="flex justify-between items-center">
-            <div>
-              <h3 className="text-lg font-semibold text-yellow-800">🐛 Debug Information</h3>
-              <p className="text-yellow-700">Refresh Count: <span className="font-bold text-blue-600">{refreshCount}</span></p>
-              <p className="text-yellow-700">Last Refresh: <span className="font-bold text-blue-600">{lastRefreshTime}</span></p>
-              <p className="text-yellow-700">Data Loading: <span className="font-bold text-blue-600">{dataLoading ? 'Yes' : 'No'}</span></p>
-              <p className="text-yellow-700">Current Time: <span className="font-bold text-blue-600">{new Date().toLocaleTimeString()}</span></p>
+        {/* PROMINENT DEBUG PANEL - This MUST be visible */}
+        <div className="bg-gradient-to-r from-yellow-100 to-orange-100 border-2 border-yellow-400 rounded-xl p-6 shadow-lg">
+          <div className="flex justify-between items-start">
+            <div className="space-y-2">
+              <h3 className="text-xl font-bold text-yellow-800 flex items-center gap-2">
+                🐛 DEBUG PANEL - REFRESH MONITORING
+              </h3>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="bg-white/50 rounded-lg p-3">
+                  <p className="text-yellow-700 font-semibold">Refresh Count:</p>
+                  <p className="text-2xl font-bold text-blue-600">{refreshCount}</p>
+                </div>
+                <div className="bg-white/50 rounded-lg p-3">
+                  <p className="text-yellow-700 font-semibold">Last Refresh:</p>
+                  <p className="text-lg font-bold text-blue-600">{lastRefreshTime}</p>
+                </div>
+                <div className="bg-white/50 rounded-lg p-3">
+                  <p className="text-yellow-700 font-semibold">Data Loading:</p>
+                  <p className="text-lg font-bold text-blue-600">{dataLoading ? 'Yes' : 'No'}</p>
+                </div>
+                <div className="bg-white/50 rounded-lg p-3">
+                  <p className="text-yellow-700 font-semibold">Current Time:</p>
+                  <p className="text-lg font-bold text-blue-600">{new Date().toLocaleTimeString()}</p>
+                </div>
+              </div>
             </div>
-            <div className="text-sm text-yellow-600">
-              <p>Check console for detailed logs</p>
-              <p>Look for 🔄, 📊, ✅, ❌ emojis</p>
+            <div className="text-sm text-yellow-600 bg-white/30 rounded-lg p-3">
+              <p className="font-semibold">Console Log Markers:</p>
+              <p>🔄 = Refresh events</p>
+              <p>📊 = Data operations</p>
+              <p>✅ = Success</p>
+              <p>❌ = Errors</p>
             </div>
           </div>
         </div>
