@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { usePlatformAdmin } from "@/contexts/PlatformAdminContext";
 import { toast } from "sonner";
@@ -11,6 +10,10 @@ import StudentStatistics from "@/components/platform-admin/StudentStatistics";
 import ResponseAnalytics from "@/components/platform-admin/ResponseAnalytics";
 import FeedbackAnalytics from "@/components/platform-admin/FeedbackAnalytics";
 import SchoolOverview from "@/components/platform-admin/SchoolOverview";
+
+// VERSION TRACKING FOR DEPLOYMENT VERIFICATION
+const DASHBOARD_VERSION = "v2.1.0-DEPLOY-TEST-" + new Date().getTime();
+console.log("🚀 DASHBOARD VERSION LOADED:", DASHBOARD_VERSION);
 
 const PlatformAdminDashboard = () => {
   const { admin, isLoading, logout } = usePlatformAdmin();
@@ -170,6 +173,24 @@ const PlatformAdminDashboard = () => {
       />
       
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+        {/* DEPLOYMENT VERIFICATION BANNER */}
+        <div className="bg-gradient-to-r from-green-100 to-blue-100 border-2 border-green-400 rounded-xl p-6 shadow-lg">
+          <div className="text-center space-y-2">
+            <h2 className="text-2xl font-bold text-green-800">
+              🚀 DEPLOYMENT VERIFICATION TEST
+            </h2>
+            <p className="text-lg font-semibold text-blue-700">
+              Version: {DASHBOARD_VERSION}
+            </p>
+            <p className="text-green-700">
+              If you can see this banner, the NEW code is deployed! ✅
+            </p>
+            <p className="text-sm text-gray-600">
+              Deployed: {new Date().toLocaleString()}
+            </p>
+          </div>
+        </div>
+
         {/* PROMINENT DEBUG PANEL - This MUST be visible */}
         <div className="bg-gradient-to-r from-yellow-100 to-orange-100 border-2 border-yellow-400 rounded-xl p-6 shadow-lg">
           <div className="flex justify-between items-start">
