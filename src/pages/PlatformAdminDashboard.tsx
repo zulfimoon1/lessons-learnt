@@ -12,7 +12,7 @@ import ResponseAnalytics from "@/components/platform-admin/ResponseAnalytics";
 import FeedbackAnalytics from "@/components/platform-admin/FeedbackAnalytics";
 import SchoolOverview from "@/components/platform-admin/SchoolOverview";
 
-const DASHBOARD_VERSION = `v7.0.0-FIXED-DATA-LOADING-${Date.now()}`;
+const DASHBOARD_VERSION = `v8.0.0-REAL-DATA-${Date.now()}`;
 
 console.log("🔥 PLATFORM ADMIN DASHBOARD LOADED - VERSION:", DASHBOARD_VERSION);
 
@@ -23,51 +23,72 @@ const PlatformAdminDashboard = () => {
   const [refreshCount, setRefreshCount] = useState(0);
   const [lastRefreshTime, setLastRefreshTime] = useState<string>('Never');
 
-  const loadDashboardData = async (isRefresh = false) => {
+  const loadRealDashboardData = async (isRefresh = false) => {
     const timestamp = new Date().toISOString();
     
-    console.log(`🔄 [${timestamp}] LOADING DASHBOARD DATA - isRefresh: ${isRefresh}`);
+    console.log(`🔄 [${timestamp}] LOADING REAL DASHBOARD DATA - isRefresh: ${isRefresh}`);
     
     if (isRefresh) {
       const newCount = refreshCount + 1;
       setRefreshCount(newCount);
       setLastRefreshTime(new Date().toLocaleTimeString());
       console.log(`🔄 REFRESH COUNT UPDATED TO: ${newCount}`);
+      toast.info("Refreshing dashboard data...");
     }
     
     setDataLoading(true);
     
     try {
-      // Clear any potential caching by using random cache busters
-      const cacheBreaker = `${Date.now()}-${Math.random().toString(36).substring(2)}`;
-      console.log(`📊 FETCHING FRESH DATA WITH CACHE BREAKER: ${cacheBreaker}`);
+      console.log(`📊 FETCHING REAL DATA FROM SUPABASE...`);
       
-      // Fetch fresh data with explicit queries
+      // Get real counts from database with proper error handling
       const [
-        { data: teachersData, error: teachersError, count: teachersCount },
-        { data: studentsData, error: studentsError, count: studentsCount },
-        { data: feedbackData, error: feedbackError, count: feedbackCount },
-        { data: subscriptionsData, error: subscriptionsError }
+        { count: teachersCount, error: teachersError },
+        { count: studentsCount, error: studentsError },
+        { count: feedbackCount, error: feedbackError },
+        { data: subscriptionsData, error: subscriptionsError, count: subscriptionsCount }
       ] = await Promise.all([
-        supabase.from('teachers').select('school', { count: 'exact' }),
-        supabase.from('students').select('id', { count: 'exact' }),
-        supabase.from('feedback').select('id', { count: 'exact' }),
-        supabase.from('subscriptions').select('*')
+        supabase.from('teachers').select('*', { count: 'exact', head: true }),
+        supabase.from('students').select('*', { count: 'exact', head: true }),
+        supabase.from('feedback').select('*', { count: 'exact', head: true }),
+        supabase.from('subscriptions').select('*', { count: 'exact' })
       ]);
 
-      console.log('🔍 RAW QUERY RESULTS:');
-      console.log('Teachers:', { data: teachersData, count: teachersCount, error: teachersError });
-      console.log('Students:', { data: studentsData, count: studentsCount, error: studentsError });
-      console.log('Feedback:', { data: feedbackData, count: feedbackCount, error: feedbackError });
-      console.log('Subscriptions:', { data: subscriptionsData, error: subscriptionsError });
+      console.log('🔍 REAL DATABASE COUNTS:');
+      console.log('Teachers count:', teachersCount, 'Error:', teachersError);
+      console.log('Students count:', studentsCount, 'Error:', studentsError);
+      console.log('Feedback count:', feedbackCount, 'Error:', feedbackError);
+      console.log('Subscriptions:', subscriptionsData?.length, 'Error:', subscriptionsError);
 
-      // Check for errors
-      if (teachersError) throw new Error(`Teachers query failed: ${teachersError.message}`);
-      if (studentsError) throw new Error(`Students query failed: ${studentsError.message}`);
-      if (feedbackError) throw new Error(`Feedback query failed: ${feedbackError.message}`);
-      if (subscriptionsError) throw new Error(`Subscriptions query failed: ${subscriptionsError.message}`);
+      // Handle errors
+      if (teachersError) {
+        console.error('Teachers query failed:', teachersError);
+        throw new Error(`Teachers query failed: ${teachersError.message}`);
+      }
+      if (studentsError) {
+        console.error('Students query failed:', studentsError);
+        throw new Error(`Students query failed: ${studentsError.message}`);
+      }
+      if (feedbackError) {
+        console.error('Feedback query failed:', feedbackError);
+        throw new Error(`Feedback query failed: ${feedbackError.message}`);
+      }
+      if (subscriptionsError) {
+        console.error('Subscriptions query failed:', subscriptionsError);
+        throw new Error(`Subscriptions query failed: ${subscriptionsError.message}`);
+      }
 
-      // Process the data
+      // Get unique schools from teachers table
+      const { data: teachersData, error: teachersDataError } = await supabase
+        .from('teachers')
+        .select('school')
+        .not('school', 'is', null);
+
+      if (teachersDataError) {
+        console.error('Teachers data query failed:', teachersDataError);
+        throw new Error(`Teachers data query failed: ${teachersDataError.message}`);
+      }
+
       const uniqueSchools = [...new Set(teachersData?.map(t => t.school).filter(Boolean) || [])];
       const activeSubscriptions = subscriptionsData?.filter(s => s.status === 'active').length || 0;
       const monthlyRevenue = subscriptionsData?.reduce((sum, sub) => {
@@ -77,7 +98,7 @@ const PlatformAdminDashboard = () => {
         return sum;
       }, 0) || 0;
 
-      const newData = {
+      const realData = {
         totalSchools: uniqueSchools.length,
         totalTeachers: teachersCount || 0,
         totalStudents: studentsCount || 0,
@@ -92,22 +113,24 @@ const PlatformAdminDashboard = () => {
         })),
         feedbackStats: [],
         lastUpdated: timestamp,
-        cacheBreaker
+        cacheBreaker: `real-${Date.now()}-${Math.random()}`
       };
 
-      console.log(`✅ PROCESSED DASHBOARD DATA:`, newData);
+      console.log(`✅ REAL DASHBOARD DATA LOADED:`, realData);
       
-      setDashboardData(newData);
+      setDashboardData(realData);
       
       if (isRefresh) {
-        toast.success(`Dashboard refreshed! Fresh data loaded at ${new Date().toLocaleTimeString()}`);
+        toast.success(`Dashboard refreshed! Real data loaded at ${new Date().toLocaleTimeString()}`);
+      } else {
+        toast.success("Real dashboard data loaded successfully!");
       }
       
     } catch (error) {
-      console.error(`❌ ERROR LOADING DASHBOARD DATA:`, error);
+      console.error(`❌ ERROR LOADING REAL DASHBOARD DATA:`, error);
       toast.error(`Failed to load dashboard data: ${error.message}`);
       
-      // Set minimal error state
+      // Set error state with zero counts (real data)
       setDashboardData({
         totalSchools: 0,
         totalTeachers: 0,
@@ -121,6 +144,7 @@ const PlatformAdminDashboard = () => {
         feedbackStats: [],
         lastUpdated: timestamp,
         error: true,
+        errorMessage: error.message,
         cacheBreaker: `error-${Date.now()}`
       });
     } finally {
@@ -131,13 +155,13 @@ const PlatformAdminDashboard = () => {
   useEffect(() => {
     if (admin) {
       console.log('📊 INITIAL LOAD FOR ADMIN:', admin.email);
-      loadDashboardData(false);
+      loadRealDashboardData(false);
     }
   }, [admin]);
 
   const handleRefresh = () => {
-    console.log('🔄 MANUAL REFRESH TRIGGERED');
-    loadDashboardData(true);
+    console.log('🔄 MANUAL REFRESH TRIGGERED BY USER');
+    loadRealDashboardData(true);
   };
 
   const handleLogout = () => {
@@ -149,7 +173,7 @@ const PlatformAdminDashboard = () => {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-lg">
-          {isLoading ? 'Loading admin session...' : 'Loading fresh dashboard data...'}
+          {isLoading ? 'Loading admin session...' : 'Loading real dashboard data...'}
         </div>
       </div>
     );
@@ -184,6 +208,7 @@ const PlatformAdminDashboard = () => {
     feedbackStats,
     lastUpdated,
     error,
+    errorMessage,
     cacheBreaker
   } = dashboardData;
 
@@ -196,11 +221,11 @@ const PlatformAdminDashboard = () => {
       />
       
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
-        {/* DEBUG BANNER */}
-        <div className="bg-gradient-to-r from-blue-100 to-green-100 border-2 border-blue-500 rounded-xl p-6">
+        {/* REAL DATA STATUS BANNER */}
+        <div className={`${error ? 'bg-gradient-to-r from-red-100 to-orange-100 border-2 border-red-500' : 'bg-gradient-to-r from-green-100 to-blue-100 border-2 border-green-500'} rounded-xl p-6`}>
           <div className="text-center space-y-3">
-            <h1 className="text-2xl font-bold text-blue-800">
-              🔧 FIXED PLATFORM ADMIN DASHBOARD 🔧
+            <h1 className={`text-2xl font-bold ${error ? 'text-red-800' : 'text-green-800'}`}>
+              {error ? '❌ REAL DATA ERROR' : '✅ REAL DATA DASHBOARD'}
             </h1>
             <div className="bg-white/80 rounded-lg p-4">
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
@@ -217,9 +242,9 @@ const PlatformAdminDashboard = () => {
                   <p>{lastRefreshTime}</p>
                 </div>
                 <div>
-                  <p className="font-semibold text-orange-700">Loading:</p>
-                  <p className={dataLoading ? "text-red-600" : "text-green-600"}>
-                    {dataLoading ? 'Yes' : 'No'}
+                  <p className="font-semibold text-orange-700">Status:</p>
+                  <p className={error ? "text-red-600 font-bold" : "text-green-600 font-bold"}>
+                    {error ? 'ERROR' : 'OK'}
                   </p>
                 </div>
               </div>
@@ -228,18 +253,18 @@ const PlatformAdminDashboard = () => {
                   Last Updated: {new Date(lastUpdated).toLocaleString()}
                 </p>
               )}
-              {error && (
-                <p className="text-red-600 font-bold mt-2">
-                  ⚠️ DATA LOADING ERROR - CHECK CONSOLE
+              {error && errorMessage && (
+                <p className="text-red-600 font-bold mt-2 text-sm">
+                  Error: {errorMessage}
                 </p>
               )}
             </div>
           </div>
         </div>
 
-        {/* LIVE DATA DISPLAY */}
+        {/* REAL DATA DISPLAY */}
         <div className="bg-white border-2 border-gray-300 rounded-xl p-6">
-          <h2 className="text-xl font-bold text-gray-800 mb-4">📊 LIVE DATA COUNTS</h2>
+          <h2 className="text-xl font-bold text-gray-800 mb-4">📊 REAL DATABASE COUNTS</h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div className="text-center">
               <p className="text-sm font-semibold text-gray-600">Schools</p>

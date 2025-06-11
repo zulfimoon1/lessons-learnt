@@ -8,6 +8,7 @@ import { componentTagger } from "lovable-tagger";
 export default defineConfig(({ mode }) => {
   console.log(`🔧 Vite build mode: ${mode}`);
   
+  // Set correct base path for GitHub Pages
   const base = mode === 'production' ? '/lessons-learnt/' : '/';
   console.log(`🔧 Base path set to: ${base}`);
   
@@ -19,8 +20,7 @@ export default defineConfig(({ mode }) => {
     },
     plugins: [
       react(),
-      mode === 'development' &&
-      componentTagger(),
+      mode === 'development' && componentTagger(),
     ].filter(Boolean),
     resolve: {
       alias: {
@@ -34,7 +34,7 @@ export default defineConfig(({ mode }) => {
           manualChunks: undefined,
         },
       },
-      sourcemap: mode === 'development',
+      sourcemap: false,
       minify: mode === 'production' ? 'terser' : false,
     },
   };
