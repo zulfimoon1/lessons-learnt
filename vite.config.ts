@@ -28,7 +28,7 @@ export default defineConfig(({ mode }) => ({
         manualChunks: undefined,
       },
     },
-    sourcemap: false,
-    minify: 'terser',
+    sourcemap: mode === 'development',
+    minify: mode === 'production' ? 'terser' : false,
   },
 }));
