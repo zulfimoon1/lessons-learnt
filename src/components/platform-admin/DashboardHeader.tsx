@@ -11,10 +11,13 @@ interface DashboardHeaderProps {
 
 const DashboardHeader = ({ adminName, onRefresh, onLogout }: DashboardHeaderProps) => {
   const handleRefreshClick = () => {
-    console.log('🔄 REFRESH BUTTON CLICKED - DashboardHeader');
-    console.log('🔄 Calling onRefresh function...');
-    onRefresh();
-    console.log('🔄 onRefresh function called');
+    console.log('🔄 REFRESH CLICKED - Starting refresh process');
+    try {
+      onRefresh();
+      console.log('🔄 REFRESH - onRefresh called successfully');
+    } catch (error) {
+      console.error('🔄 REFRESH ERROR:', error);
+    }
   };
 
   return (
