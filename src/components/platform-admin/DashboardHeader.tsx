@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { SchoolIcon, LogOutIcon, RefreshCwIcon } from "lucide-react";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
@@ -43,7 +44,7 @@ const DashboardHeader = ({ adminName, onRefresh, onLogout }: DashboardHeaderProp
             variant="outline" 
             size="sm" 
             disabled={isRefreshing}
-            className="flex items-center gap-2 bg-green-50 hover:bg-green-100 border-green-200"
+            className="flex items-center gap-2 bg-blue-50 hover:bg-blue-100 border-blue-200"
           >
             <RefreshCwIcon className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
             {isRefreshing ? 'Refreshing...' : 'Refresh Data'}

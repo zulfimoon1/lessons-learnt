@@ -12,6 +12,10 @@ const NotFound = () => {
     );
   }, [location.pathname]);
 
+  // Determine the correct base path
+  const isGitHubPages = window.location.hostname === 'zulfimoon1.github.io';
+  const basePath = isGitHubPages ? '/lessons-learnt' : '';
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
       <div className="text-center">
@@ -21,13 +25,13 @@ const NotFound = () => {
           Requested path: {location.pathname}
         </p>
         <a 
-          href="/lessons-learnt/" 
+          href={`${basePath}/`} 
           className="text-blue-500 hover:text-blue-700 underline mr-4"
         >
           Return to Home
         </a>
         <a 
-          href="/lessons-learnt/console" 
+          href={`${basePath}/console`} 
           className="text-green-500 hover:text-green-700 underline"
         >
           Admin Login

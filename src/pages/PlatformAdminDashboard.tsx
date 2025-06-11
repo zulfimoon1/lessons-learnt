@@ -22,22 +22,75 @@ interface DashboardData {
 }
 
 const PlatformAdminDashboard = () => {
-  const { admin, isLoading, logout } = usePlatformAdmin();
-  const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
-  const [dataLoading, setDataLoading] = useState(true);
+  const { admin, isLoading: adminLoading, logout } = usePlatformAdmin();
+  const [dashboardData, setDashboardData] = useState<DashboardData>({
+    totalSchools: 0,
+    totalTeachers: 0,
+    totalStudents: 0,
+    totalResponses: 0,
+    subscriptions: [],
+    activeSubscriptions: 0,
+    monthlyRevenue: 0,
+    lastUpdated: new Date().toISOString()
+  });
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [refreshCount, setRefreshCount] = useState(0);
 
-  const fetchDashboardData = async (): Promise<DashboardData> => {
-    console.log("📊 Fetching dashboard data from Supabase...");
+  const fetchRealData = async (): Promise<DashboardData> => {
+    console.log("📊 Fetching REAL data from Supabase...");
+    setError(null);
     
     try {
+      // Test Supabase connection first
+      const { data: testData, error: testError } = await supabase
+        .from('teachers')
+        .select('count', { count: 'exact', head: true });
+      
+      if (testError) {
+        console.error("❌ Supabase connection test failed:", testError);
+        throw new Error(`Database connection failed: ${testError.message}`);
+      }
+
+      console.log("✅ Supabase connection successful");
+
       // Fetch all data in parallel
-      const [teachersResult, studentsResult, feedbackResult, subscriptionsResult] = await Promise.all([
+      const [
+        teachersResult,
+        studentsResult,
+        feedbackResult,
+        subscriptionsResult
+      ] = await Promise.all([
         supabase.from('teachers').select('*', { count: 'exact' }),
         supabase.from('students').select('*', { count: 'exact' }),
         supabase.from('feedback').select('*', { count: 'exact' }),
         supabase.from('subscriptions').select('*')
       ]);
+
+      // Log results for debugging
+      console.log("📊 Teachers query result:", {
+        count: teachersResult.count,
+        error: teachersResult.error,
+        dataLength: teachersResult.data?.length
+      });
+      
+      console.log("📊 Students query result:", {
+        count: studentsResult.count,
+        error: studentsResult.error,
+        dataLength: studentsResult.data?.length
+      });
+
+      console.log("📊 Feedback query result:", {
+        count: feedbackResult.count,
+        error: feedbackResult.error,
+        dataLength: feedbackResult.data?.length
+      });
+
+      // Check for errors
+      if (teachersResult.error) throw teachersResult.error;
+      if (studentsResult.error) throw studentsResult.error;
+      if (feedbackResult.error) throw feedbackResult.error;
+      if (subscriptionsResult.error) throw subscriptionsResult.error;
 
       // Extract counts
       const totalTeachers = teachersResult.count || 0;
@@ -57,15 +110,7 @@ const PlatformAdminDashboard = () => {
       );
       const totalSchools = uniqueSchools.size;
 
-      console.log("📊 Dashboard data loaded:", {
-        totalSchools,
-        totalTeachers,
-        totalStudents,
-        totalResponses,
-        activeSubscriptions
-      });
-
-      return {
+      const result = {
         totalSchools,
         totalTeachers,
         totalStudents,
@@ -76,15 +121,19 @@ const PlatformAdminDashboard = () => {
         lastUpdated: new Date().toISOString()
       };
 
+      console.log("✅ REAL Dashboard data loaded:", result);
+      return result;
+
     } catch (error) {
-      console.error("❌ Error fetching dashboard data:", error);
+      console.error("❌ Error fetching real data:", error);
       throw error;
     }
   };
 
   const loadData = async (isRefresh = false) => {
-    console.log(`📊 Loading dashboard data (refresh: ${isRefresh})`);
-    setDataLoading(true);
+    console.log(`📊 Loading data (refresh: ${isRefresh})`);
+    setIsLoading(true);
+    setError(null);
     
     if (isRefresh) {
       setRefreshCount(prev => prev + 1);
@@ -92,38 +141,31 @@ const PlatformAdminDashboard = () => {
     }
     
     try {
-      const data = await fetchDashboardData();
+      const data = await fetchRealData();
       setDashboardData(data);
       
       if (isRefresh) {
         toast.success("Dashboard data refreshed successfully!");
       }
-    } catch (error) {
-      console.error("Error loading dashboard data:", error);
-      toast.error("Failed to load dashboard data");
-      
-      // Set fallback data
-      setDashboardData({
-        totalSchools: 0,
-        totalTeachers: 0,
-        totalStudents: 0,
-        totalResponses: 0,
-        subscriptions: [],
-        activeSubscriptions: 0,
-        monthlyRevenue: 0,
-        lastUpdated: new Date().toISOString()
-      });
+    } catch (error: any) {
+      console.error("❌ Error loading dashboard data:", error);
+      const errorMessage = error.message || "Failed to load dashboard data";
+      setError(errorMessage);
+      toast.error(errorMessage);
     } finally {
-      setDataLoading(false);
+      setIsLoading(false);
     }
   };
 
   useEffect(() => {
-    if (admin) {
+    if (!adminLoading && admin) {
       console.log('📊 Admin authenticated, loading dashboard data');
       loadData(false);
+    } else if (!adminLoading && !admin) {
+      console.log('❌ No admin found, stopping data load');
+      setIsLoading(false);
     }
-  }, [admin]);
+  }, [admin, adminLoading]);
 
   const handleRefresh = () => {
     console.log('🔄 Manual refresh triggered');
@@ -135,14 +177,12 @@ const PlatformAdminDashboard = () => {
     logout();
   };
 
-  if (isLoading || dataLoading) {
+  if (adminLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <div className="text-lg">
-            {isLoading ? 'Loading admin session...' : 'Loading dashboard data...'}
-          </div>
+          <div className="text-lg">Loading admin session...</div>
         </div>
       </div>
     );
@@ -154,17 +194,35 @@ const PlatformAdminDashboard = () => {
         <div className="text-center">
           <div className="text-lg text-red-600 mb-4">Access Denied</div>
           <p className="text-gray-600">Please log in as a platform administrator</p>
+          <a href="/console" className="text-blue-500 hover:text-blue-700 underline mt-4 inline-block">
+            Go to Admin Login
+          </a>
         </div>
       </div>
     );
   }
 
-  if (!dashboardData) {
+  if (error) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="text-lg text-red-600 mb-4">Dashboard Error</div>
-          <p className="text-gray-600">Unable to load dashboard data</p>
+      <div className="min-h-screen bg-gray-50">
+        <DashboardHeader 
+          adminName={admin.email}
+          onRefresh={handleRefresh}
+          onLogout={handleLogout}
+        />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="bg-red-100 border-2 border-red-500 rounded-xl p-6">
+            <div className="text-center">
+              <h1 className="text-xl font-bold text-red-800">❌ DATABASE ERROR</h1>
+              <p className="text-sm mt-2 text-red-700">{error}</p>
+              <button 
+                onClick={() => loadData(true)}
+                className="mt-4 bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
+              >
+                Retry
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -182,7 +240,9 @@ const PlatformAdminDashboard = () => {
         {/* Status Banner */}
         <div className="bg-green-100 border-2 border-green-500 rounded-xl p-6">
           <div className="text-center">
-            <h1 className="text-xl font-bold text-green-800">✅ LIVE DATABASE DASHBOARD</h1>
+            <h1 className="text-xl font-bold text-green-800">
+              ✅ LIVE DATABASE DASHBOARD {isLoading ? '(Loading...)' : ''}
+            </h1>
             <p className="text-sm mt-2 text-green-700">
               Refresh Count: {refreshCount} | Last Updated: {new Date(dashboardData.lastUpdated).toLocaleString()}
             </p>
@@ -192,24 +252,31 @@ const PlatformAdminDashboard = () => {
         {/* Real Data Display */}
         <div className="bg-white border-2 border-gray-300 rounded-xl p-6">
           <h2 className="text-xl font-bold text-gray-800 mb-4">📊 REAL DATABASE COUNTS</h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="text-center">
-              <p className="text-sm font-semibold text-gray-600">Schools</p>
-              <p className="text-3xl font-bold text-blue-600">{dashboardData.totalSchools}</p>
+          {isLoading ? (
+            <div className="text-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+              <p>Loading real data...</p>
             </div>
-            <div className="text-center">
-              <p className="text-sm font-semibold text-gray-600">Teachers</p>
-              <p className="text-3xl font-bold text-green-600">{dashboardData.totalTeachers}</p>
+          ) : (
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="text-center">
+                <p className="text-sm font-semibold text-gray-600">Schools</p>
+                <p className="text-3xl font-bold text-blue-600">{dashboardData.totalSchools}</p>
+              </div>
+              <div className="text-center">
+                <p className="text-sm font-semibold text-gray-600">Teachers</p>
+                <p className="text-3xl font-bold text-green-600">{dashboardData.totalTeachers}</p>
+              </div>
+              <div className="text-center">
+                <p className="text-sm font-semibold text-gray-600">Students</p>
+                <p className="text-3xl font-bold text-purple-600">{dashboardData.totalStudents}</p>
+              </div>
+              <div className="text-center">
+                <p className="text-sm font-semibold text-gray-600">Responses</p>
+                <p className="text-3xl font-bold text-orange-600">{dashboardData.totalResponses}</p>
+              </div>
             </div>
-            <div className="text-center">
-              <p className="text-sm font-semibold text-gray-600">Students</p>
-              <p className="text-3xl font-bold text-purple-600">{dashboardData.totalStudents}</p>
-            </div>
-            <div className="text-center">
-              <p className="text-sm font-semibold text-gray-600">Responses</p>
-              <p className="text-3xl font-bold text-orange-600">{dashboardData.totalResponses}</p>
-            </div>
-          </div>
+          )}
         </div>
         
         <SystemInfoCard
