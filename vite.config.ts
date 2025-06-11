@@ -11,13 +11,8 @@ export default defineConfig(({ mode }) => {
   // Use different base paths for different environments
   let base = '/';
   if (mode === 'production') {
-    // Check if we're building for GitHub Pages
-    if (process.env.VITE_BASE_PATH) {
-      base = process.env.VITE_BASE_PATH;
-    } else {
-      // Default for GitHub Pages
-      base = '/lessons-learnt/';
-    }
+    // For GitHub Pages deployment
+    base = '/lessons-learnt/';
   }
   
   console.log(`🔧 Base path set to: ${base}`);
