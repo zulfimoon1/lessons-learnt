@@ -10,6 +10,11 @@ interface DashboardHeaderProps {
 }
 
 const DashboardHeader = ({ adminName, onRefresh, onLogout }: DashboardHeaderProps) => {
+  const handleRefreshClick = () => {
+    console.log('🔄 DashboardHeader: Refresh button clicked!');
+    onRefresh();
+  };
+
   return (
     <header className="bg-card/80 backdrop-blur-sm border-b border-border p-4">
       <div className="max-w-7xl mx-auto flex justify-between items-center">
@@ -18,7 +23,12 @@ const DashboardHeader = ({ adminName, onRefresh, onLogout }: DashboardHeaderProp
             <SchoolIcon className="w-8 h-8 text-primary" />
             <h1 className="text-2xl font-bold text-foreground">Platform Admin</h1>
           </div>
-          <Button onClick={onRefresh} variant="outline" size="sm" className="flex items-center gap-2">
+          <Button 
+            onClick={handleRefreshClick} 
+            variant="outline" 
+            size="sm" 
+            className="flex items-center gap-2"
+          >
             <RefreshCwIcon className="w-4 h-4" />
             Refresh
           </Button>

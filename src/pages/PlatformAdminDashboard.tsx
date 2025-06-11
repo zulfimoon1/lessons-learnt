@@ -19,7 +19,7 @@ const PlatformAdminDashboard = () => {
   const [refreshKey, setRefreshKey] = useState(0);
 
   const loadDashboardData = async (forceRefresh = false) => {
-    console.log('🔄🔄🔄 REFRESH BUTTON CLICKED! 🔄🔄🔄');
+    console.log('🔄🔄🔄 LOAD DASHBOARD DATA CALLED! 🔄🔄🔄');
     console.log('🔄 loadDashboardData called with forceRefresh:', forceRefresh);
     setDataLoading(true);
     
@@ -225,6 +225,7 @@ const PlatformAdminDashboard = () => {
   }, [admin, refreshKey]);
 
   const handleRefresh = () => {
+    console.log('🔄🔄🔄 HANDLE REFRESH CALLED! 🔄🔄🔄');
     console.log('🔄🔄🔄 REFRESH BUTTON CLICKED! 🔄🔄🔄');
     console.log('Current refreshKey before increment:', refreshKey);
     setRefreshKey(prev => {
