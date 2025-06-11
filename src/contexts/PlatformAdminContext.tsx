@@ -58,12 +58,12 @@ export const PlatformAdminProvider: React.FC<{ children: React.ReactNode }> = ({
       const result = await platformAdminLoginService(email, password);
       console.log('PlatformAdminProvider: Login service result:', result);
       
-      if (result?.admin) {
+      if (result && 'admin' in result && result.admin) {
         console.log('PlatformAdminProvider: Login successful');
         setAdmin(result.admin);
         localStorage.setItem('platformAdmin', JSON.stringify(result.admin));
         return { admin: result.admin };
-      } else if (result?.error) {
+      } else if (result && 'error' in result && result.error) {
         console.log('PlatformAdminProvider: Login failed:', result.error);
         return { error: result.error };
       } else {
