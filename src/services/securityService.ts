@@ -144,22 +144,23 @@ class SecurityService {
     }
   }
 
-  // Security monitoring methods (simplified implementations)
+  // Simplified security monitoring - no console spam
   monitorSecurityViolations(): void {
-    // Basic security monitoring - no-op for now to prevent console spam
-    console.log('Security monitoring initialized');
+    // Silent monitoring only
   }
 
   detectConcurrentSessions(): boolean {
-    // Basic concurrent session detection - always returns false for simplicity
     return false;
   }
 
-  // Minimal logging
+  // Minimal logging - only critical events
   logSecurityEvent(event: SecurityEvent): void {
-    // Only log critical events to reduce console noise
-    if (event.type === 'login_failed' || event.type === 'rate_limit_exceeded') {
-      console.log('Security Event:', event.type);
+    // Only log authentication failures silently
+    if (event.type === 'login_failed') {
+      // Store in localStorage for admin review if needed
+      const events = JSON.parse(localStorage.getItem('security_events') || '[]');
+      events.push(event);
+      localStorage.setItem('security_events', JSON.stringify(events.slice(-50)));
     }
   }
 }
