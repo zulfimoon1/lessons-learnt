@@ -45,24 +45,24 @@ const PlatformAdminDashboard = () => {
     setError(null);
     
     try {
-      console.log('📊 Fetching platform statistics...');
+      console.log('📊 Fetching real platform statistics...');
       
-      // Fetch data using the RPC functions that bypass RLS
+      // Direct queries to get real data from database
       const [studentsResult, teachersResult, feedbackResult, subscriptionsResult] = await Promise.all([
-        supabase.rpc('get_platform_stats', { stat_type: 'students' }),
-        supabase.rpc('get_platform_stats', { stat_type: 'teachers' }),
-        supabase.rpc('get_platform_stats', { stat_type: 'feedback' }),
+        supabase.from('students').select('*', { count: 'exact', head: true }),
+        supabase.from('teachers').select('*', { count: 'exact', head: true }),
+        supabase.from('feedback').select('*', { count: 'exact', head: true }),
         supabase.from('subscriptions').select('*')
       ]);
 
-      console.log('Platform stats results:', {
+      console.log('Direct query results:', {
         students: studentsResult,
         teachers: teachersResult,
         feedback: feedbackResult,
         subscriptions: subscriptionsResult
       });
 
-      // Check for errors in RPC calls
+      // Check for errors in direct queries
       if (studentsResult.error) {
         console.error('Students query error:', studentsResult.error);
         throw new Error(`Failed to fetch students data: ${studentsResult.error.message}`);
@@ -80,13 +80,13 @@ const PlatformAdminDashboard = () => {
         throw new Error(`Failed to fetch subscriptions data: ${subscriptionsResult.error.message}`);
       }
 
-      // Extract counts from RPC results
-      const totalStudents = studentsResult.data?.[0]?.count || 0;
-      const totalTeachers = teachersResult.data?.[0]?.count || 0;
-      const totalResponses = feedbackResult.data?.[0]?.count || 0;
+      // Extract real counts from direct queries
+      const totalStudents = studentsResult.count || 0;
+      const totalTeachers = teachersResult.count || 0;
+      const totalResponses = feedbackResult.count || 0;
       const subscriptions = subscriptionsResult.data || [];
 
-      // Calculate schools from unique teacher schools
+      // Get unique schools from teachers table
       const { data: teachersForSchools, error: schoolsError } = await supabase
         .from('teachers')
         .select('school');
@@ -105,16 +105,16 @@ const PlatformAdminDashboard = () => {
 
       const newData: DashboardData = {
         totalSchools,
-        totalTeachers: Number(totalTeachers),
-        totalStudents: Number(totalStudents),
-        totalResponses: Number(totalResponses),
+        totalTeachers,
+        totalStudents,
+        totalResponses,
         subscriptions,
         activeSubscriptions,
         monthlyRevenue,
         lastUpdated: new Date().toISOString()
       };
 
-      console.log('✅ Platform data fetched successfully:', {
+      console.log('✅ Real platform data fetched successfully:', {
         students: totalStudents,
         teachers: totalTeachers,
         schools: totalSchools,
@@ -125,7 +125,7 @@ const PlatformAdminDashboard = () => {
       });
 
       setDashboardData(newData);
-      toast.success(`✅ Data refreshed: ${totalStudents} students, ${totalTeachers} teachers from ${totalSchools} schools`);
+      toast.success(`✅ Real data loaded: ${totalStudents} students, ${totalTeachers} teachers from ${totalSchools} schools`);
       
     } catch (error: any) {
       console.error('❌ Platform admin data fetch failed:', error);
@@ -139,7 +139,16 @@ const PlatformAdminDashboard = () => {
 
   const handleRefresh = async () => {
     console.log('🔄 Manual refresh triggered');
-    await fetchDashboardData();
+    setIsLoading(true);
+    toast.info('🔄 Refreshing data...');
+    
+    try {
+      await fetchDashboardData();
+      console.log('✅ Manual refresh completed');
+    } catch (error) {
+      console.error('❌ Manual refresh failed:', error);
+      toast.error('❌ Refresh failed');
+    }
   };
 
   const handleLogout = () => {
@@ -150,7 +159,7 @@ const PlatformAdminDashboard = () => {
   // Initial data fetch
   useEffect(() => {
     if (isAuthenticated && admin) {
-      console.log('🚀 Admin authenticated, fetching data for:', admin.email);
+      console.log('🚀 Admin authenticated, fetching real data for:', admin.email);
       fetchDashboardData();
     }
   }, [isAuthenticated, admin]);
@@ -218,11 +227,11 @@ const PlatformAdminDashboard = () => {
 
         {/* Live Stats */}
         <div className="bg-white border-4 border-blue-500 rounded-xl p-6">
-          <h2 className="text-xl font-bold text-blue-800 mb-4">📊 LIVE PLATFORM STATISTICS</h2>
+          <h2 className="text-xl font-bold text-blue-800 mb-4">📊 REAL PLATFORM STATISTICS</h2>
           {isLoading ? (
             <div className="text-center py-8">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-              <p>Loading real data...</p>
+              <p>Loading real data from database...</p>
             </div>
           ) : (
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">

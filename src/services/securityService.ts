@@ -111,18 +111,18 @@ class SecurityService {
     }
   }
 
-  // Disabled monitoring
+  // Disabled monitoring - no console noise
   monitorSecurityViolations(): void {
-    // No monitoring
+    // No monitoring, no console logs
   }
 
   detectConcurrentSessions(): boolean {
     return false;
   }
 
-  // Silent logging
+  // Silent logging - no console noise
   logSecurityEvent(event: SecurityEvent): void {
-    // Silent operation - no logging
+    // Silent operation - no logging, no console output
   }
 }
 
