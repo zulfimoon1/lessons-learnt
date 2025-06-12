@@ -10,6 +10,12 @@ export interface PlatformAdmin {
   school: string;
 }
 
+export interface StudentStatistics {
+  school: string;
+  total_students: number;
+  student_response_rate: number;
+}
+
 // Enhanced input validation
 const validateLoginInput = (email: string, password: string): { valid: boolean; error?: string } => {
   const emailRegex = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
@@ -266,5 +272,23 @@ export const resetAdminPassword = async (email: string, newPassword: string) => 
   } catch (error) {
     console.error('Password reset error:', error);
     return { error: 'Failed to reset password' };
+  }
+};
+
+// Add admin security utilities
+export const adminSecurityUtils = {
+  getSecurityMetrics: async () => {
+    try {
+      // Mock security metrics for now - in production, fetch from security service
+      return {
+        loginAttempts: 12,
+        suspiciousActivities: 3,
+        blockedIPs: 7,
+        lastSecurityScan: new Date().toISOString()
+      };
+    } catch (error) {
+      console.error('Error fetching security metrics:', error);
+      throw error;
+    }
   }
 };

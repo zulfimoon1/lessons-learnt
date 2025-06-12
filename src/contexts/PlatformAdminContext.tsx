@@ -58,12 +58,14 @@ export const PlatformAdminProvider: React.FC<{ children: React.ReactNode }> = ({
       
       const result = await platformAdminLoginService(email, password);
       
-      if (result.error) {
+      // Type guard to check if result has error property
+      if ('error' in result && result.error) {
         console.error('Login failed:', result.error);
         return { success: false, error: result.error };
       }
 
-      if (result.admin) {
+      // Type guard to check if result has admin property
+      if ('admin' in result && result.admin) {
         console.log('Login successful, storing admin session');
         
         // Store admin data in localStorage for session persistence
