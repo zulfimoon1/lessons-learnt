@@ -41,13 +41,7 @@ export const discountCodeService = {
     console.log('=== FETCHING DISCOUNT CODES ===');
     
     try {
-      // Check if platform admin is logged in
-      const adminData = localStorage.getItem('platformAdmin');
-      if (!adminData) {
-        throw new Error('Platform admin not authenticated');
-      }
-
-      console.log('Platform admin authenticated, fetching discount codes...');
+      console.log('Fetching discount codes...');
 
       const { data, error } = await supabase
         .from('discount_codes')

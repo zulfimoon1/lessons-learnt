@@ -4,7 +4,7 @@ import { usePlatformAdmin } from "@/contexts/PlatformAdminContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { SchoolIcon, LogOutIcon, RefreshCwIcon, UsersIcon, MessageSquareIcon, TrendingUpIcon } from "lucide-react";
+import { SchoolIcon, LogOutIcon, RefreshCwIcon, UsersIcon, MessageSquareIcon } from "lucide-react";
 import { toast } from "sonner";
 import StatsCard from "@/components/dashboard/StatsCard";
 import SchoolOverview from "@/components/platform-admin/SchoolOverview";
@@ -12,6 +12,7 @@ import FeedbackAnalytics from "@/components/platform-admin/FeedbackAnalytics";
 import DiscountCodeManagement from "@/components/DiscountCodeManagement";
 import SubscriptionManagement from "@/components/platform-admin/SubscriptionManagement";
 import ResponsesManagement from "@/components/platform-admin/ResponsesManagement";
+import TransactionManagement from "@/components/platform-admin/TransactionManagement";
 
 interface DashboardStats {
   totalStudents: number;
@@ -281,6 +282,11 @@ const PlatformAdminDashboard = () => {
         {/* Enhanced Subscription Management */}
         <div className="mb-8">
           <SubscriptionManagement />
+        </div>
+
+        {/* Transaction Management */}
+        <div className="mb-8">
+          <TransactionManagement />
         </div>
 
         {/* Discount Code Management */}
