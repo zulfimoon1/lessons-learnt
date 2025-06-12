@@ -37,6 +37,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Clean previous builds
+        run: rm -rf dist
+
       - name: Build for custom domain
         run: npm run build
         env:
@@ -62,8 +65,10 @@ jobs:
           echo "Checking routing files:"
           ls -la dist/console/ || echo "Console directory not found"
           ls -la dist/platform-admin/ || echo "Platform-admin directory not found"
-          echo "Checking index.html content:"
-          head -20 dist/index.html
+          echo "Checking index.html content (first 10 lines):"
+          head -10 dist/index.html
+          echo "Checking for asset references:"
+          grep -n "assets/" dist/index.html || echo "No asset references found"
 
       - name: Setup Pages
         uses: actions/configure-pages@v4

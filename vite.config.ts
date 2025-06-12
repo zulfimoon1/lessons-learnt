@@ -8,7 +8,7 @@ import { componentTagger } from "lovable-tagger";
 export default defineConfig(({ mode }) => {
   console.log(`🔧 Vite build mode: ${mode}`);
   
-  // For custom domain, always use root path
+  // Always use root path for custom domain
   const base = '/';
   
   console.log(`🔧 Base path set to: ${base}`);
@@ -33,6 +33,10 @@ export default defineConfig(({ mode }) => {
       rollupOptions: {
         output: {
           manualChunks: undefined,
+          // Ensure assets are referenced from root
+          assetFileNames: 'assets/[name]-[hash][extname]',
+          chunkFileNames: 'assets/[name]-[hash].js',
+          entryFileNames: 'assets/[name]-[hash].js',
         },
       },
       sourcemap: false,
