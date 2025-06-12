@@ -15,9 +15,12 @@ import {
   CreditCardIcon,
   DollarSignIcon,
   CalendarIcon,
-  FilterIcon
+  FilterIcon,
+  InfoIcon,
+  UsersIcon
 } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
+import { calculatePricing } from "@/services/pricingService";
 
 type Transaction = Database['public']['Tables']['transactions']['Row'];
 
@@ -35,7 +38,10 @@ const TransactionManagement = () => {
     currency: 'usd',
     transaction_type: 'payment',
     status: 'completed',
-    description: ''
+    description: '',
+    teacher_count: '',
+    subscription_type: 'monthly',
+    tier_type: 'teacher'
   });
 
   useEffect(() => {
@@ -70,6 +76,30 @@ const TransactionManagement = () => {
     }
   };
 
+  const calculateTransactionAmount = () => {
+    if (!formData.teacher_count || !formData.tier_type) return 0;
+    
+    const teacherCount = parseInt(formData.teacher_count);
+    const isAnnual = formData.subscription_type === 'annual';
+    
+    try {
+      const pricing = calculatePricing(formData.tier_type as 'teacher' | 'admin', teacherCount, isAnnual);
+      return pricing.finalPrice;
+    } catch (error) {
+      return 0;
+    }
+  };
+
+  const handleCalculateAmount = () => {
+    const calculatedAmount = calculateTransactionAmount();
+    if (calculatedAmount > 0) {
+      setFormData({
+        ...formData,
+        amount: (calculatedAmount / 100).toFixed(2) // Convert from cents to dollars
+      });
+    }
+  };
+
   const handleCreate = async () => {
     if (!admin) {
       toast({
@@ -92,6 +122,13 @@ const TransactionManagement = () => {
     setIsCreating(true);
 
     try {
+      // Build description with subscription details
+      let description = formData.description.trim();
+      if (formData.teacher_count && formData.subscription_type) {
+        const subscriptionDetails = `${formData.teacher_count} ${formData.tier_type}(s) - ${formData.subscription_type} subscription`;
+        description = description ? `${description} (${subscriptionDetails})` : subscriptionDetails;
+      }
+
       const { data, error } = await supabase
         .from('transactions')
         .insert([{
@@ -100,7 +137,7 @@ const TransactionManagement = () => {
           currency: formData.currency,
           transaction_type: formData.transaction_type,
           status: formData.status,
-          description: formData.description.trim(),
+          description: description,
           created_by: admin.id
         }])
         .select()
@@ -118,7 +155,7 @@ const TransactionManagement = () => {
 
       toast({
         title: "Success",
-        description: "Transaction created successfully",
+        description: "Manual transaction created successfully. School admins can view this in their subscription management section.",
       });
 
       resetForm();
@@ -143,7 +180,10 @@ const TransactionManagement = () => {
       currency: 'usd',
       transaction_type: 'payment',
       status: 'completed',
-      description: ''
+      description: '',
+      teacher_count: '',
+      subscription_type: 'monthly',
+      tier_type: 'teacher'
     });
   };
 
@@ -206,77 +246,149 @@ const TransactionManagement = () => {
                 Add Transaction
               </Button>
             </DialogTrigger>
-            <DialogContent>
+            <DialogContent className="max-w-2xl">
               <DialogHeader>
                 <DialogTitle>Add New Transaction</DialogTitle>
-                <DialogDescription>Manually add a transaction record</DialogDescription>
+                <DialogDescription>
+                  Manually add a transaction record. School admins will be able to view this transaction in their subscription management dashboard.
+                </DialogDescription>
               </DialogHeader>
               
-              <div className="space-y-4">
-                <div>
-                  <Label htmlFor="school_name">School Name *</Label>
-                  <Input
-                    id="school_name"
-                    value={formData.school_name}
-                    onChange={(e) => setFormData({...formData, school_name: e.target.value})}
-                    placeholder="Enter school name"
-                    required
-                  />
+              <div className="space-y-4 max-h-96 overflow-y-auto">
+                <div className="bg-blue-50 p-3 rounded-lg flex items-start gap-2">
+                  <InfoIcon className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" />
+                  <div className="text-sm text-blue-800">
+                    <p className="font-medium mb-1">How school admins receive manual transactions:</p>
+                    <ul className="list-disc list-inside space-y-1 text-xs">
+                      <li>Transactions appear in their subscription management section</li>
+                      <li>They can view transaction history and details</li>
+                      <li>Email notifications can be set up separately if needed</li>
+                    </ul>
+                  </div>
                 </div>
 
-                <div>
-                  <Label htmlFor="amount">Amount *</Label>
-                  <Input
-                    id="amount"
-                    type="number"
-                    step="0.01"
-                    value={formData.amount}
-                    onChange={(e) => setFormData({...formData, amount: e.target.value})}
-                    placeholder="0.00"
-                    required
-                  />
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="school_name">School Name *</Label>
+                    <Input
+                      id="school_name"
+                      value={formData.school_name}
+                      onChange={(e) => setFormData({...formData, school_name: e.target.value})}
+                      placeholder="Enter school name"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="tier_type">Account Type</Label>
+                    <Select value={formData.tier_type} onValueChange={(value) => setFormData({...formData, tier_type: value})}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="teacher">Teacher Account</SelectItem>
+                        <SelectItem value="admin">Admin Account</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
 
-                <div>
-                  <Label htmlFor="currency">Currency</Label>
-                  <Select value={formData.currency} onValueChange={(value) => setFormData({...formData, currency: value})}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="usd">USD</SelectItem>
-                      <SelectItem value="eur">EUR</SelectItem>
-                      <SelectItem value="gbp">GBP</SelectItem>
-                    </SelectContent>
-                  </Select>
+                <div className="grid grid-cols-3 gap-4">
+                  <div>
+                    <Label htmlFor="teacher_count">Number of Teachers</Label>
+                    <Input
+                      id="teacher_count"
+                      type="number"
+                      min="1"
+                      value={formData.teacher_count}
+                      onChange={(e) => setFormData({...formData, teacher_count: e.target.value})}
+                      placeholder="1"
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="subscription_type">Subscription Type</Label>
+                    <Select value={formData.subscription_type} onValueChange={(value) => setFormData({...formData, subscription_type: value})}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="monthly">Monthly</SelectItem>
+                        <SelectItem value="annual">Annual</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="flex items-end">
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      onClick={handleCalculateAmount}
+                      disabled={!formData.teacher_count}
+                      className="w-full"
+                    >
+                      Calculate Amount
+                    </Button>
+                  </div>
                 </div>
 
-                <div>
-                  <Label htmlFor="transaction_type">Transaction Type</Label>
-                  <Select value={formData.transaction_type} onValueChange={(value) => setFormData({...formData, transaction_type: value})}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="payment">Payment</SelectItem>
-                      <SelectItem value="refund">Refund</SelectItem>
-                      <SelectItem value="adjustment">Adjustment</SelectItem>
-                    </SelectContent>
-                  </Select>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="amount">Amount * (USD)</Label>
+                    <Input
+                      id="amount"
+                      type="number"
+                      step="0.01"
+                      value={formData.amount}
+                      onChange={(e) => setFormData({...formData, amount: e.target.value})}
+                      placeholder="0.00"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="currency">Currency</Label>
+                    <Select value={formData.currency} onValueChange={(value) => setFormData({...formData, currency: value})}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="usd">USD</SelectItem>
+                        <SelectItem value="eur">EUR</SelectItem>
+                        <SelectItem value="gbp">GBP</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
 
-                <div>
-                  <Label htmlFor="status">Status</Label>
-                  <Select value={formData.status} onValueChange={(value) => setFormData({...formData, status: value})}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="completed">Completed</SelectItem>
-                      <SelectItem value="pending">Pending</SelectItem>
-                      <SelectItem value="failed">Failed</SelectItem>
-                    </SelectContent>
-                  </Select>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="transaction_type">Transaction Type</Label>
+                    <Select value={formData.transaction_type} onValueChange={(value) => setFormData({...formData, transaction_type: value})}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="payment">Payment</SelectItem>
+                        <SelectItem value="refund">Refund</SelectItem>
+                        <SelectItem value="adjustment">Adjustment</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="status">Status</Label>
+                    <Select value={formData.status} onValueChange={(value) => setFormData({...formData, status: value})}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="completed">Completed</SelectItem>
+                        <SelectItem value="pending">Pending</SelectItem>
+                        <SelectItem value="failed">Failed</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
 
                 <div>
@@ -285,7 +397,7 @@ const TransactionManagement = () => {
                     id="description"
                     value={formData.description}
                     onChange={(e) => setFormData({...formData, description: e.target.value})}
-                    placeholder="Transaction description"
+                    placeholder="Additional transaction notes (optional)"
                   />
                 </div>
               </div>
@@ -339,7 +451,12 @@ const TransactionManagement = () => {
           <TableBody>
             {filteredTransactions.map((transaction) => (
               <TableRow key={transaction.id}>
-                <TableCell>{transaction.school_name}</TableCell>
+                <TableCell>
+                  <div className="flex items-center gap-2">
+                    <UsersIcon className="w-4 h-4 text-gray-500" />
+                    {transaction.school_name}
+                  </div>
+                </TableCell>
                 <TableCell>
                   <div className="flex items-center gap-1">
                     <DollarSignIcon className="w-3 h-3" />
@@ -359,7 +476,7 @@ const TransactionManagement = () => {
                     {transaction.status}
                   </Badge>
                 </TableCell>
-                <TableCell>{transaction.description}</TableCell>
+                <TableCell className="max-w-xs truncate">{transaction.description}</TableCell>
                 <TableCell>
                   <div className="flex items-center gap-1">
                     <CalendarIcon className="w-3 h-3" />
