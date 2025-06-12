@@ -782,6 +782,13 @@ export type Database = {
         Args: { text_content: string }
         Returns: number
       }
+      get_current_teacher_info: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          teacher_role: string
+          teacher_school: string
+        }[]
+      }
       get_current_user_info: {
         Args: Record<PropertyKey, never>
         Returns: {
