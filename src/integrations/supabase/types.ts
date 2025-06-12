@@ -795,7 +795,7 @@ export type Database = {
           count: number
         }[]
       }
-      get_teacher_role_and_school: {
+      safe_get_teacher_info: {
         Args: { user_uuid: string }
         Returns: {
           user_role: string
