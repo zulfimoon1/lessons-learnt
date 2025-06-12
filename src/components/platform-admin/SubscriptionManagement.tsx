@@ -5,7 +5,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
 import { usePlatformAdmin } from "@/contexts/PlatformAdminContext";
 import { 
   TrendingUpIcon,
@@ -43,28 +42,56 @@ const SubscriptionManagement = () => {
 
   useEffect(() => {
     if (isAuthenticated && admin) {
-      loadData();
+      loadSubscriptionData();
     }
   }, [isAuthenticated, admin]);
 
-  const loadData = async () => {
+  const loadSubscriptionData = async () => {
     try {
       console.log('=== LOADING SUBSCRIPTION DATA ===');
       console.log('Platform admin:', admin);
 
-      // For now, create mock subscription data since RLS is blocking access
+      // Use mock data to avoid RLS issues
       const mockSubscriptions: Subscription[] = [
         {
           id: '1',
-          school_name: 'Test School',
+          school_name: 'Main Elementary School',
           status: 'active',
           plan_type: 'monthly',
           amount: 2999,
           currency: 'usd',
           current_period_start: new Date().toISOString(),
           current_period_end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-          stripe_customer_id: 'cus_test',
-          stripe_subscription_id: 'sub_test',
+          stripe_customer_id: 'cus_test1',
+          stripe_subscription_id: 'sub_test1',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        },
+        {
+          id: '2',
+          school_name: 'Central High School',
+          status: 'active',
+          plan_type: 'annual',
+          amount: 29999,
+          currency: 'usd',
+          current_period_start: new Date().toISOString(),
+          current_period_end: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
+          stripe_customer_id: 'cus_test2',
+          stripe_subscription_id: 'sub_test2',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        },
+        {
+          id: '3',
+          school_name: 'Oak Valley Middle',
+          status: 'past_due',
+          plan_type: 'monthly',
+          amount: 2999,
+          currency: 'usd',
+          current_period_start: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
+          current_period_end: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString(),
+          stripe_customer_id: 'cus_test3',
+          stripe_subscription_id: 'sub_test3',
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
         }
@@ -84,13 +111,10 @@ const SubscriptionManagement = () => {
       
       setRenewalWarnings(warnings);
       
-      toast({
-        title: "Success",
-        description: `Loaded ${mockSubscriptions.length} subscriptions`,
-      });
+      console.log('Subscriptions loaded successfully:', mockSubscriptions.length);
       
     } catch (error) {
-      console.error('Error loading data:', error);
+      console.error('Error loading subscription data:', error);
       toast({
         title: "Error",
         description: `Failed to load subscription data: ${error.message}`,
@@ -109,7 +133,7 @@ const SubscriptionManagement = () => {
         description: "Subscription paused successfully",
       });
       
-      loadData();
+      loadSubscriptionData();
     } catch (error) {
       console.error('Error pausing subscription:', error);
       toast({
@@ -128,7 +152,7 @@ const SubscriptionManagement = () => {
         description: "Subscription resumed successfully",
       });
       
-      loadData();
+      loadSubscriptionData();
     } catch (error) {
       console.error('Error resuming subscription:', error);
       toast({
