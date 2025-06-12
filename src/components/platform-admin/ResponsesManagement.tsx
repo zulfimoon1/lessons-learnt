@@ -72,41 +72,48 @@ const ResponsesManagement = () => {
 
   const loadData = async () => {
     try {
-      const [responsesResult, schedulesResult] = await Promise.all([
-        supabase
-          .from('feedback')
-          .select(`
-            *,
-            class_schedule:class_schedules(
-              *,
-              teacher:teachers(name)
-            )
-          `)
-          .order('submitted_at', { ascending: false }),
-        supabase
-          .from('class_schedules')
-          .select(`
-            *,
-            teacher:teachers(name)
-          `)
-          .order('created_at', { ascending: false })
-      ]);
+      // Get feedback responses with class schedules
+      const { data: responsesData, error: responsesError } = await supabase
+        .from('feedback')
+        .select(`
+          *,
+          class_schedule:class_schedules(*)
+        `)
+        .order('submitted_at', { ascending: false });
 
-      if (responsesResult.error) throw responsesResult.error;
-      if (schedulesResult.error) throw schedulesResult.error;
+      if (responsesError) throw responsesError;
 
-      // Process the data with proper type handling
-      const processedResponses = (responsesResult.data || []).map(response => ({
+      // Get class schedules
+      const { data: schedulesData, error: schedulesError } = await supabase
+        .from('class_schedules')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (schedulesError) throw schedulesError;
+
+      // Get teachers separately
+      const { data: teachersData, error: teachersError } = await supabase
+        .from('teachers')
+        .select('id, name');
+
+      if (teachersError) throw teachersError;
+
+      // Create teacher lookup map
+      const teacherMap = new Map(teachersData?.map(t => [t.id, { name: t.name }]) || []);
+
+      // Process responses with teacher data
+      const processedResponses = (responsesData || []).map(response => ({
         ...response,
         class_schedule: response.class_schedule ? {
           ...response.class_schedule,
-          teacher: response.class_schedule.teacher || null
+          teacher: teacherMap.get(response.class_schedule.teacher_id) || null
         } : null
       }));
 
-      const processedSchedules = (schedulesResult.data || []).map(schedule => ({
+      // Process schedules with teacher data
+      const processedSchedules = (schedulesData || []).map(schedule => ({
         ...schedule,
-        teacher: schedule.teacher || null
+        teacher: teacherMap.get(schedule.teacher_id) || null
       }));
 
       setResponses(processedResponses);
