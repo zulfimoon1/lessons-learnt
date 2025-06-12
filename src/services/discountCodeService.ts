@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 
 export interface DiscountCode {
@@ -39,7 +38,24 @@ export interface UpdateDiscountCodeData {
 export const discountCodeService = {
   async getAllDiscountCodes() {
     console.log('=== FETCHING DISCOUNT CODES ===');
+    
     try {
+      // First check current user authentication
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      console.log('Current user:', { user: user?.id, email: user?.email, userError });
+
+      // Check if user is admin
+      if (user) {
+        const { data: adminCheck, error: adminError } = await supabase
+          .from('teachers')
+          .select('id, role')
+          .eq('id', user.id)
+          .eq('role', 'admin')
+          .maybeSingle();
+        
+        console.log('Admin check:', { adminCheck, adminError });
+      }
+
       const { data, error } = await supabase
         .from('discount_codes')
         .select('*')
@@ -55,7 +71,7 @@ export const discountCodeService = {
       return (data || []) as DiscountCode[];
     } catch (error) {
       console.error('Error in getAllDiscountCodes:', error);
-      return [];
+      throw error; // Re-throw to let the UI handle the error
     }
   },
 

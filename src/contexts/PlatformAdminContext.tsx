@@ -1,154 +1,172 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { User } from '@supabase/supabase-js';
 
-export interface PlatformAdmin {
+interface PlatformAdmin {
   id: string;
-  name: string;
   email: string;
+  name: string;
   role: string;
-  school: string;
 }
 
 interface PlatformAdminContextType {
   admin: PlatformAdmin | null;
   isLoading: boolean;
-  login: (email: string, password: string) => Promise<{ error?: string; admin?: PlatformAdmin }>;
-  logout: () => void;
   isAuthenticated: boolean;
+  login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
+  logout: () => void;
 }
 
 const PlatformAdminContext = createContext<PlatformAdminContextType | undefined>(undefined);
 
-export const usePlatformAdmin = () => {
-  const context = useContext(PlatformAdminContext);
-  if (context === undefined) {
-    throw new Error('usePlatformAdmin must be used within a PlatformAdminProvider');
-  }
-  return context;
-};
-
 export const PlatformAdminProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [admin, setAdmin] = useState<PlatformAdmin | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
-    console.log('🔄 Platform Admin Provider: Initializing...');
+    checkAdminSession();
     
-    const checkSession = async () => {
-      try {
-        // Check if we have a stored admin session
-        const adminData = localStorage.getItem('platformAdmin');
-        
-        if (adminData) {
-          const parsedAdmin = JSON.parse(adminData);
-          console.log('✅ Found stored admin session:', parsedAdmin.email);
-          
-          // Verify the admin still exists in database
-          const { data: teachers, error } = await supabase
-            .from('teachers')
-            .select('*')
-            .eq('email', parsedAdmin.email)
-            .eq('role', 'admin')
-            .limit(1);
-
-          if (error) {
-            console.error('❌ Session verification failed:', error);
-            localStorage.removeItem('platformAdmin');
-          } else if (teachers && teachers.length > 0) {
-            console.log('✅ Session verified successfully');
-            setAdmin(parsedAdmin);
-          } else {
-            console.log('❌ Admin not found in database, clearing session');
-            localStorage.removeItem('platformAdmin');
-          }
-        } else {
-          console.log('❌ No admin session found');
-        }
-      } catch (error) {
-        console.error('❌ Session check error:', error);
-        localStorage.removeItem('platformAdmin');
-      } finally {
-        setIsLoading(false);
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === 'SIGNED_IN' && session?.user) {
+        await checkIfUserIsAdmin(session.user);
+      } else if (event === 'SIGNED_OUT') {
+        setAdmin(null);
+        setIsAuthenticated(false);
       }
-    };
+      setIsLoading(false);
+    });
 
-    checkSession();
+    return () => subscription.unsubscribe();
   }, []);
 
-  const login = async (email: string, password: string): Promise<{ error?: string; admin?: PlatformAdmin }> => {
-    console.log('🔐 Platform Admin: Starting login for:', email);
-    setIsLoading(true);
-    
+  const checkAdminSession = async () => {
     try {
-      // Query teachers table for admin users
-      const { data: teachers, error: queryError } = await supabase
-        .from('teachers')
-        .select('*')
-        .eq('email', email)
-        .eq('role', 'admin')
-        .limit(1);
-
-      if (queryError) {
-        console.error('❌ Database query error:', queryError);
-        setIsLoading(false);
-        return { error: 'Database connection failed' };
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
+        await checkIfUserIsAdmin(session.user);
       }
-
-      if (!teachers || teachers.length === 0) {
-        console.log('❌ No admin found with email:', email);
-        setIsLoading(false);
-        return { error: 'Invalid admin credentials' };
-      }
-
-      const teacher = teachers[0];
-      console.log('🔍 Found admin user:', teacher.name);
-      
-      // Simple password check
-      if (password !== 'admin123') {
-        console.log('❌ Password verification failed');
-        setIsLoading(false);
-        return { error: 'Invalid password' };
-      }
-
-      const adminUser: PlatformAdmin = {
-        id: teacher.id,
-        name: teacher.name,
-        email: teacher.email,
-        role: teacher.role,
-        school: teacher.school
-      };
-      
-      console.log('✅ Platform admin login successful');
-      
-      // Store session
-      setAdmin(adminUser);
-      localStorage.setItem('platformAdmin', JSON.stringify(adminUser));
-      
-      setIsLoading(false);
-      return { admin: adminUser };
-      
     } catch (error) {
-      console.error('❌ Platform admin login error:', error);
+      console.error('Error checking admin session:', error);
+    } finally {
       setIsLoading(false);
-      return { error: 'Authentication failed' };
     }
   };
 
-  const logout = () => {
-    console.log('🚪 Platform admin logout');
-    setAdmin(null);
-    localStorage.removeItem('platformAdmin');
+  const checkIfUserIsAdmin = async (user: User) => {
+    try {
+      console.log('=== CHECKING ADMIN STATUS ===');
+      console.log('User ID:', user.id);
+      console.log('User email:', user.email);
+
+      // Check if user exists in teachers table with admin role
+      const { data: teacherData, error: teacherError } = await supabase
+        .from('teachers')
+        .select('id, name, email, role')
+        .eq('id', user.id)
+        .eq('role', 'admin')
+        .maybeSingle();
+
+      console.log('Teacher query result:', { teacherData, teacherError });
+
+      if (teacherError) {
+        console.error('Error checking admin status:', teacherError);
+        setAdmin(null);
+        setIsAuthenticated(false);
+        return;
+      }
+
+      if (teacherData) {
+        console.log('Admin found:', teacherData);
+        setAdmin({
+          id: teacherData.id,
+          email: teacherData.email,
+          name: teacherData.name,
+          role: teacherData.role
+        });
+        setIsAuthenticated(true);
+      } else {
+        console.log('User is not an admin');
+        setAdmin(null);
+        setIsAuthenticated(false);
+      }
+    } catch (error) {
+      console.error('Error in checkIfUserIsAdmin:', error);
+      setAdmin(null);
+      setIsAuthenticated(false);
+    }
   };
 
-  const isAuthenticated = admin !== null;
+  const login = async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
+    try {
+      setIsLoading(true);
+      console.log('=== ADMIN LOGIN ATTEMPT ===');
+      console.log('Email:', email);
+
+      // First check if user exists in teachers table with admin role
+      const { data: adminData, error: adminCheckError } = await supabase
+        .from('teachers')
+        .select('id, name, email, role, password_hash')
+        .eq('email', email)
+        .eq('role', 'admin')
+        .maybeSingle();
+
+      console.log('Admin check result:', { adminData, adminCheckError });
+
+      if (adminCheckError) {
+        console.error('Error checking admin credentials:', adminCheckError);
+        return { success: false, error: 'Database error occurred' };
+      }
+
+      if (!adminData) {
+        console.log('Admin not found with email:', email);
+        return { success: false, error: 'Invalid admin credentials' };
+      }
+
+      // Sign in with Supabase Auth
+      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
+
+      console.log('Auth result:', { authData, authError });
+
+      if (authError) {
+        console.error('Auth error:', authError);
+        return { success: false, error: authError.message };
+      }
+
+      if (authData.user) {
+        await checkIfUserIsAdmin(authData.user);
+        return { success: true };
+      }
+
+      return { success: false, error: 'Authentication failed' };
+    } catch (error) {
+      console.error('Login error:', error);
+      return { success: false, error: 'An unexpected error occurred' };
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const logout = async () => {
+    try {
+      await supabase.auth.signOut();
+      setAdmin(null);
+      setIsAuthenticated(false);
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
+  };
 
   const value = {
     admin,
     isLoading,
+    isAuthenticated,
     login,
-    logout,
-    isAuthenticated
+    logout
   };
 
   return (
@@ -156,4 +174,12 @@ export const PlatformAdminProvider: React.FC<{ children: React.ReactNode }> = ({
       {children}
     </PlatformAdminContext.Provider>
   );
+};
+
+export const usePlatformAdmin = () => {
+  const context = useContext(PlatformAdminContext);
+  if (context === undefined) {
+    throw new Error('usePlatformAdmin must be used within a PlatformAdminProvider');
+  }
+  return context;
 };
