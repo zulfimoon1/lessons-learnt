@@ -17,7 +17,8 @@ import {
   CalendarIcon,
   FilterIcon,
   InfoIcon,
-  UsersIcon
+  UsersIcon,
+  CalculatorIcon
 } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
 import { calculatePricing } from "@/services/pricingService";
@@ -246,7 +247,7 @@ const TransactionManagement = () => {
                 Add Transaction
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-2xl">
+            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>Add New Transaction</DialogTitle>
                 <DialogDescription>
@@ -254,12 +255,12 @@ const TransactionManagement = () => {
                 </DialogDescription>
               </DialogHeader>
               
-              <div className="space-y-4 max-h-96 overflow-y-auto">
-                <div className="bg-blue-50 p-3 rounded-lg flex items-start gap-2">
-                  <InfoIcon className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" />
+              <div className="space-y-4">
+                <div className="bg-blue-50 p-4 rounded-lg flex items-start gap-3">
+                  <InfoIcon className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
                   <div className="text-sm text-blue-800">
-                    <p className="font-medium mb-1">How school admins receive manual transactions:</p>
-                    <ul className="list-disc list-inside space-y-1 text-xs">
+                    <p className="font-medium mb-2">How school admins receive manual transactions:</p>
+                    <ul className="list-disc list-inside space-y-1">
                       <li>Transactions appear in their subscription management section</li>
                       <li>They can view transaction history and details</li>
                       <li>Email notifications can be set up separately if needed</li>
@@ -325,9 +326,10 @@ const TransactionManagement = () => {
                       variant="outline" 
                       onClick={handleCalculateAmount}
                       disabled={!formData.teacher_count}
-                      className="w-full"
+                      className="w-full flex items-center gap-2"
                     >
-                      Calculate Amount
+                      <CalculatorIcon className="w-4 h-4" />
+                      Calculate
                     </Button>
                   </div>
                 </div>
@@ -392,12 +394,12 @@ const TransactionManagement = () => {
                 </div>
 
                 <div>
-                  <Label htmlFor="description">Description</Label>
+                  <Label htmlFor="description">Description (Optional)</Label>
                   <Input
                     id="description"
                     value={formData.description}
                     onChange={(e) => setFormData({...formData, description: e.target.value})}
-                    placeholder="Additional transaction notes (optional)"
+                    placeholder="Additional transaction notes"
                   />
                 </div>
               </div>
