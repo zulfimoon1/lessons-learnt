@@ -27,118 +27,51 @@ export const PlatformAdminProvider: React.FC<{ children: React.ReactNode }> = ({
 
   useEffect(() => {
     checkAdminSession();
-    
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event === 'SIGNED_IN' && session?.user) {
-        await checkIfUserIsAdmin(session.user);
-      } else if (event === 'SIGNED_OUT') {
-        setAdmin(null);
-        setIsAuthenticated(false);
-      }
-      setIsLoading(false);
-    });
-
-    return () => subscription.unsubscribe();
   }, []);
 
   const checkAdminSession = async () => {
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session?.user) {
-        await checkIfUserIsAdmin(session.user);
+      // Check localStorage for platform admin session
+      const adminData = localStorage.getItem('platformAdmin');
+      if (adminData) {
+        const parsedAdmin = JSON.parse(adminData);
+        console.log('Found stored admin session:', parsedAdmin);
+        setAdmin(parsedAdmin);
+        setIsAuthenticated(true);
       }
     } catch (error) {
       console.error('Error checking admin session:', error);
+      localStorage.removeItem('platformAdmin');
     } finally {
       setIsLoading(false);
-    }
-  };
-
-  const checkIfUserIsAdmin = async (user: User) => {
-    try {
-      console.log('=== CHECKING ADMIN STATUS ===');
-      console.log('User ID:', user.id);
-      console.log('User email:', user.email);
-
-      // Check if user exists in teachers table with admin role
-      const { data: teacherData, error: teacherError } = await supabase
-        .from('teachers')
-        .select('id, name, email, role')
-        .eq('id', user.id)
-        .eq('role', 'admin')
-        .maybeSingle();
-
-      console.log('Teacher query result:', { teacherData, teacherError });
-
-      if (teacherError) {
-        console.error('Error checking admin status:', teacherError);
-        setAdmin(null);
-        setIsAuthenticated(false);
-        return;
-      }
-
-      if (teacherData) {
-        console.log('Admin found:', teacherData);
-        setAdmin({
-          id: teacherData.id,
-          email: teacherData.email,
-          name: teacherData.name,
-          role: teacherData.role
-        });
-        setIsAuthenticated(true);
-      } else {
-        console.log('User is not an admin');
-        setAdmin(null);
-        setIsAuthenticated(false);
-      }
-    } catch (error) {
-      console.error('Error in checkIfUserIsAdmin:', error);
-      setAdmin(null);
-      setIsAuthenticated(false);
     }
   };
 
   const login = async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
     try {
       setIsLoading(true);
-      console.log('=== ADMIN LOGIN ATTEMPT ===');
+      console.log('=== PLATFORM ADMIN LOGIN ATTEMPT ===');
       console.log('Email:', email);
 
-      // First check if user exists in teachers table with admin role
-      const { data: adminData, error: adminCheckError } = await supabase
-        .from('teachers')
-        .select('id, name, email, role, password_hash')
-        .eq('email', email)
-        .eq('role', 'admin')
-        .maybeSingle();
-
-      console.log('Admin check result:', { adminData, adminCheckError });
-
-      if (adminCheckError) {
-        console.error('Error checking admin credentials:', adminCheckError);
-        return { success: false, error: 'Database error occurred' };
+      // Import the platformAdminLoginService
+      const { platformAdminLoginService } = await import('@/services/platformAdminService');
+      
+      const result = await platformAdminLoginService(email, password);
+      
+      if (result.error) {
+        console.error('Login failed:', result.error);
+        return { success: false, error: result.error };
       }
 
-      if (!adminData) {
-        console.log('Admin not found with email:', email);
-        return { success: false, error: 'Invalid admin credentials' };
-      }
-
-      // Sign in with Supabase Auth
-      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
-        email,
-        password
-      });
-
-      console.log('Auth result:', { authData, authError });
-
-      if (authError) {
-        console.error('Auth error:', authError);
-        return { success: false, error: authError.message };
-      }
-
-      if (authData.user) {
-        await checkIfUserIsAdmin(authData.user);
+      if (result.admin) {
+        console.log('Login successful, storing admin session');
+        
+        // Store admin data in localStorage for session persistence
+        localStorage.setItem('platformAdmin', JSON.stringify(result.admin));
+        
+        setAdmin(result.admin);
+        setIsAuthenticated(true);
+        
         return { success: true };
       }
 
@@ -153,7 +86,8 @@ export const PlatformAdminProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const logout = async () => {
     try {
-      await supabase.auth.signOut();
+      console.log('Logging out platform admin');
+      localStorage.removeItem('platformAdmin');
       setAdmin(null);
       setIsAuthenticated(false);
     } catch (error) {
