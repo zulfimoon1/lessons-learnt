@@ -47,61 +47,59 @@ const PlatformAdminDashboard = () => {
     try {
       console.log('📊 Fetching platform statistics...');
       
-      // Use the platform admin statistics function
-      const [studentsResult, teachersResult, feedbackResult] = await Promise.all([
+      // Fetch data using the RPC functions that bypass RLS
+      const [studentsResult, teachersResult, feedbackResult, subscriptionsResult] = await Promise.all([
         supabase.rpc('get_platform_stats', { stat_type: 'students' }),
         supabase.rpc('get_platform_stats', { stat_type: 'teachers' }),
-        supabase.rpc('get_platform_stats', { stat_type: 'feedback' })
+        supabase.rpc('get_platform_stats', { stat_type: 'feedback' }),
+        supabase.from('subscriptions').select('*')
       ]);
 
-      console.log('Students result:', studentsResult);
-      console.log('Teachers result:', teachersResult);
-      console.log('Feedback result:', feedbackResult);
+      console.log('Platform stats results:', {
+        students: studentsResult,
+        teachers: teachersResult,
+        feedback: feedbackResult,
+        subscriptions: subscriptionsResult
+      });
 
-      // Check for errors
+      // Check for errors in RPC calls
       if (studentsResult.error) {
         console.error('Students query error:', studentsResult.error);
-        throw new Error(`Students: ${studentsResult.error.message}`);
+        throw new Error(`Failed to fetch students data: ${studentsResult.error.message}`);
       }
       if (teachersResult.error) {
         console.error('Teachers query error:', teachersResult.error);
-        throw new Error(`Teachers: ${teachersResult.error.message}`);
+        throw new Error(`Failed to fetch teachers data: ${teachersResult.error.message}`);
       }
       if (feedbackResult.error) {
         console.error('Feedback query error:', feedbackResult.error);
-        throw new Error(`Feedback: ${feedbackResult.error.message}`);
+        throw new Error(`Failed to fetch feedback data: ${feedbackResult.error.message}`);
+      }
+      if (subscriptionsResult.error) {
+        console.error('Subscriptions query error:', subscriptionsResult.error);
+        throw new Error(`Failed to fetch subscriptions data: ${subscriptionsResult.error.message}`);
       }
 
-      // Fetch subscriptions separately
-      console.log('📊 Fetching subscriptions...');
-      const { data: subscriptions, error: subscriptionsError } = await supabase
-        .from('subscriptions')
-        .select('*');
-
-      if (subscriptionsError) {
-        console.error('Subscriptions query error:', subscriptionsError);
-        throw new Error(`Subscriptions: ${subscriptionsError.message}`);
-      }
-
-      // Extract the actual counts
+      // Extract counts from RPC results
       const totalStudents = studentsResult.data?.[0]?.count || 0;
       const totalTeachers = teachersResult.data?.[0]?.count || 0;
       const totalResponses = feedbackResult.data?.[0]?.count || 0;
-      const subscriptionsData = subscriptions || [];
+      const subscriptions = subscriptionsResult.data || [];
 
-      // Calculate schools from teachers data
+      // Calculate schools from unique teacher schools
       const { data: teachersForSchools, error: schoolsError } = await supabase
         .from('teachers')
         .select('school');
 
-      let totalSchools = 1; // Default to 1
+      let totalSchools = 1;
       if (!schoolsError && teachersForSchools) {
         const uniqueSchools = new Set(teachersForSchools.map(t => t.school).filter(Boolean));
         totalSchools = uniqueSchools.size || 1;
       }
 
-      const activeSubscriptions = subscriptionsData.filter(s => s.status === 'active').length;
-      const monthlyRevenue = subscriptionsData
+      // Calculate subscription metrics
+      const activeSubscriptions = subscriptions.filter(s => s.status === 'active').length;
+      const monthlyRevenue = subscriptions
         .filter(s => s.status === 'active')
         .reduce((sum, sub) => sum + (sub.amount / 100), 0);
 
@@ -110,22 +108,24 @@ const PlatformAdminDashboard = () => {
         totalTeachers: Number(totalTeachers),
         totalStudents: Number(totalStudents),
         totalResponses: Number(totalResponses),
-        subscriptions: subscriptionsData,
+        subscriptions,
         activeSubscriptions,
         monthlyRevenue,
         lastUpdated: new Date().toISOString()
       };
 
-      console.log('✅ Platform admin data fetched successfully:', {
+      console.log('✅ Platform data fetched successfully:', {
         students: totalStudents,
         teachers: totalTeachers,
         schools: totalSchools,
         feedback: totalResponses,
-        subscriptions: subscriptionsData.length
+        subscriptions: subscriptions.length,
+        activeSubscriptions,
+        monthlyRevenue
       });
 
       setDashboardData(newData);
-      toast.success(`✅ Live data loaded: ${totalStudents} students, ${totalTeachers} teachers from ${totalSchools} schools`);
+      toast.success(`✅ Data refreshed: ${totalStudents} students, ${totalTeachers} teachers from ${totalSchools} schools`);
       
     } catch (error: any) {
       console.error('❌ Platform admin data fetch failed:', error);

@@ -23,7 +23,7 @@ class SecurityService {
     windowMinutes: 15
   };
 
-  // Minimal session validation for platform admin
+  // Minimal session validation
   async validateSession(): Promise<boolean> {
     try {
       const adminData = localStorage.getItem('platformAdmin');
@@ -63,7 +63,7 @@ class SecurityService {
     }
   }
 
-  // Basic rate limiting
+  // Basic rate limiting (allows everything)
   async checkRateLimit(identifier: string, action: string, config?: RateLimitConfig): Promise<{ allowed: boolean; message?: string }> {
     return { allowed: true };
   }
@@ -111,18 +111,18 @@ class SecurityService {
     }
   }
 
-  // Completely disabled monitoring
+  // Disabled monitoring
   monitorSecurityViolations(): void {
-    // No monitoring - completely disabled
+    // No monitoring
   }
 
   detectConcurrentSessions(): boolean {
     return false;
   }
 
-  // Completely silent logging
+  // Silent logging
   logSecurityEvent(event: SecurityEvent): void {
-    // No logging - completely silent
+    // Silent operation - no logging
   }
 }
 
