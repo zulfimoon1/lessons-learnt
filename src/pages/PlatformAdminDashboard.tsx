@@ -59,7 +59,7 @@ const PlatformAdminDashboard = () => {
     setIsRefreshing(true);
     
     try {
-      // Use the platform stats function to bypass RLS issues
+      // Use the platform stats function to get core metrics
       const { data: studentsData, error: studentsError } = await supabase
         .rpc('get_platform_stats', { stat_type: 'students' });
 
@@ -69,7 +69,7 @@ const PlatformAdminDashboard = () => {
       const { data: responsesData, error: responsesError } = await supabase
         .rpc('get_platform_stats', { stat_type: 'feedback' });
 
-      // Fetch unique schools from class_schedules to avoid teacher_profiles issues
+      // Fetch unique schools from class_schedules
       const { data: schoolsData, error: schoolsError } = await supabase
         .from('class_schedules')
         .select('school')
@@ -80,27 +80,23 @@ const PlatformAdminDashboard = () => {
         .from('subscriptions')
         .select('*', { count: 'exact', head: true });
 
-      // Try to fetch school stats from teachers table directly
-      let schoolStatsProcessed: SchoolStats[] = [];
-      try {
-        const { data: schoolStatsData, error: schoolStatsError } = await supabase
-          .from('teachers')
-          .select('school')
-          .not('school', 'is', null);
+      // Fetch school stats from teachers table
+      const { data: schoolStatsData, error: schoolStatsError } = await supabase
+        .from('teachers')
+        .select('school')
+        .not('school', 'is', null);
 
-        if (!schoolStatsError && schoolStatsData) {
-          schoolStatsProcessed = Object.entries(
-            schoolStatsData.reduce((acc, teacher) => {
-              acc[teacher.school] = (acc[teacher.school] || 0) + 1;
-              return acc;
-            }, {} as Record<string, number>)
-          ).map(([school, total_teachers]) => ({ school, total_teachers }));
-        }
-      } catch (error) {
-        console.warn('Could not fetch school stats from teachers table:', error);
+      let schoolStatsProcessed: SchoolStats[] = [];
+      if (!schoolStatsError && schoolStatsData) {
+        schoolStatsProcessed = Object.entries(
+          schoolStatsData.reduce((acc, teacher) => {
+            acc[teacher.school] = (acc[teacher.school] || 0) + 1;
+            return acc;
+          }, {} as Record<string, number>)
+        ).map(([school, total_teachers]) => ({ school, total_teachers }));
       }
 
-      // Try to fetch feedback analytics, with fallback
+      // Try to fetch feedback analytics
       let feedbackAnalyticsData: FeedbackStats[] = [];
       try {
         const { data, error: feedbackAnalyticsError } = await supabase
@@ -119,6 +115,7 @@ const PlatformAdminDashboard = () => {
       if (schoolsError) console.error('Schools error:', schoolsError);
       if (responsesError) console.error('Responses error:', responsesError);
       if (subscriptionsError) console.error('Subscriptions error:', subscriptionsError);
+      if (schoolStatsError) console.error('School stats error:', schoolStatsError);
 
       const uniqueSchools = schoolsData ? [...new Set(schoolsData.map(item => item.school))] : [];
       
@@ -139,7 +136,7 @@ const PlatformAdminDashboard = () => {
       
     } catch (error) {
       console.error('❌ Failed to fetch stats:', error);
-      toast.error('Failed to refresh data. Some features may be limited due to database policy issues.');
+      toast.error('Failed to refresh data');
     } finally {
       setIsRefreshing(false);
     }
