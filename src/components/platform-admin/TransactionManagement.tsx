@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -18,18 +17,9 @@ import {
   CalendarIcon,
   FilterIcon
 } from "lucide-react";
+import type { Database } from "@/integrations/supabase/types";
 
-interface Transaction {
-  id: string;
-  school_name: string;
-  amount: number;
-  currency: string;
-  transaction_type: 'payment' | 'refund' | 'adjustment';
-  status: 'completed' | 'pending' | 'failed';
-  description: string;
-  created_at: string;
-  created_by: string;
-}
+type Transaction = Database['public']['Tables']['transactions']['Row'];
 
 const TransactionManagement = () => {
   const { toast } = useToast();
