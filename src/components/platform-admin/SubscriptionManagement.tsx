@@ -41,6 +41,7 @@ const SubscriptionManagement = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [selectedSchool, setSelectedSchool] = useState<string>("all");
   const [renewalWarnings, setRenewalWarnings] = useState<Subscription[]>([]);
+  const [hasError, setHasError] = useState(false);
 
   useEffect(() => {
     if (isAuthenticated && admin) {
@@ -52,6 +53,7 @@ const SubscriptionManagement = () => {
     try {
       console.log('=== LOADING SUBSCRIPTION DATA ===');
       console.log('Platform admin:', admin);
+      setHasError(false);
 
       const { data: subscriptionsData, error: subscriptionsError } = await supabase
         .from('subscriptions')
@@ -60,9 +62,10 @@ const SubscriptionManagement = () => {
 
       if (subscriptionsError) {
         console.error('Error fetching subscriptions:', subscriptionsError);
+        setHasError(true);
         toast({
-          title: "Error",
-          description: `Failed to load subscriptions: ${subscriptionsError.message}`,
+          title: "Warning",
+          description: `Limited subscription data available: ${subscriptionsError.message}`,
           variant: "destructive",
         });
         return;
@@ -86,9 +89,10 @@ const SubscriptionManagement = () => {
       
     } catch (error) {
       console.error('Error loading subscription data:', error);
+      setHasError(true);
       toast({
-        title: "Error",
-        description: `Failed to load subscription data: ${error.message}`,
+        title: "Warning",
+        description: `Subscription management temporarily limited due to database policies`,
         variant: "destructive",
       });
     } finally {
@@ -196,7 +200,10 @@ const SubscriptionManagement = () => {
               <TrendingUpIcon className="w-5 h-5" />
               Subscription Management
             </CardTitle>
-            <CardDescription>Manage school subscriptions and renewals</CardDescription>
+            <CardDescription>
+              Manage school subscriptions and renewals
+              {hasError && <span className="text-yellow-600 ml-2">(Limited data due to database policies)</span>}
+            </CardDescription>
           </div>
           <div className="flex items-center gap-2">
             <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">
