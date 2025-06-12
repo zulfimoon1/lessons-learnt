@@ -40,17 +40,11 @@ const PlatformAdminDashboard = () => {
       return;
     }
 
-    console.log('🔄 Starting data fetch with platform admin bypass...');
+    console.log('🔄 Starting platform admin data fetch...');
     setIsLoading(true);
     setError(null);
     
     try {
-      // Set platform admin context to bypass RLS
-      await supabase.rpc('set_config', { 
-        setting_name: 'app.platform_admin', 
-        setting_value: 'true' 
-      });
-
       console.log('📊 Fetching platform statistics...');
       
       // Use the platform admin statistics function
