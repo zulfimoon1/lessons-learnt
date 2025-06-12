@@ -4,8 +4,11 @@ import { usePlatformAdmin } from "@/contexts/PlatformAdminContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { SchoolIcon, LogOutIcon, RefreshCwIcon, UsersIcon, MessageSquareIcon } from "lucide-react";
+import { SchoolIcon, LogOutIcon, RefreshCwIcon, UsersIcon, MessageSquareIcon, TrendingUpIcon } from "lucide-react";
 import { toast } from "sonner";
+import StatsCard from "@/components/dashboard/StatsCard";
+import SchoolOverview from "@/components/platform-admin/SchoolOverview";
+import FeedbackAnalytics from "@/components/platform-admin/FeedbackAnalytics";
 
 interface DashboardStats {
   totalStudents: number;
@@ -13,6 +16,25 @@ interface DashboardStats {
   totalSchools: number;
   totalResponses: number;
   totalSubscriptions: number;
+}
+
+interface SchoolStats {
+  school: string;
+  total_teachers: number;
+}
+
+interface FeedbackStats {
+  school: string;
+  grade: string;
+  subject: string;
+  lesson_topic: string;
+  class_date: string;
+  total_responses: number;
+  avg_understanding: number;
+  avg_interest: number;
+  avg_growth: number;
+  anonymous_responses: number;
+  named_responses: number;
 }
 
 const PlatformAdminDashboard = () => {
@@ -24,6 +46,8 @@ const PlatformAdminDashboard = () => {
     totalResponses: 0,
     totalSubscriptions: 0,
   });
+  const [schoolStats, setSchoolStats] = useState<SchoolStats[]>([]);
+  const [feedbackStats, setFeedbackStats] = useState<FeedbackStats[]>([]);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<string>("");
 
@@ -40,12 +64,34 @@ const PlatformAdminDashboard = () => {
         supabase.from('subscriptions').select('*', { count: 'exact', head: true })
       ]);
 
-      // Get unique schools
+      // Get unique schools and school stats
       const { data: teachersData } = await supabase
         .from('teachers')
         .select('school');
 
       const uniqueSchools = new Set(teachersData?.map(t => t.school).filter(Boolean)).size;
+
+      // Get school statistics
+      const { data: schoolStatsData } = await supabase
+        .from('teachers')
+        .select('school')
+        .not('school', 'is', null);
+
+      const schoolCounts = schoolStatsData?.reduce((acc: Record<string, number>, teacher) => {
+        acc[teacher.school] = (acc[teacher.school] || 0) + 1;
+        return acc;
+      }, {}) || {};
+
+      const schoolStatsArray = Object.entries(schoolCounts).map(([school, count]) => ({
+        school,
+        total_teachers: count
+      }));
+
+      // Get feedback analytics
+      const { data: feedbackAnalyticsData } = await supabase
+        .from('feedback_analytics')
+        .select('*')
+        .limit(20);
 
       const newStats = {
         totalStudents: studentsResult.count || 0,
@@ -56,6 +102,8 @@ const PlatformAdminDashboard = () => {
       };
 
       setStats(newStats);
+      setSchoolStats(schoolStatsArray);
+      setFeedbackStats(feedbackAnalyticsData || []);
       setLastUpdated(new Date().toLocaleString());
       
       console.log('✅ Stats updated:', newStats);
@@ -126,7 +174,7 @@ const PlatformAdminDashboard = () => {
               className="flex items-center gap-2"
             >
               <RefreshCwIcon className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-              {isRefreshing ? 'Refreshing...' : 'Refresh'}
+              Refresh
             </Button>
           </div>
           <div className="flex items-center gap-4">
@@ -140,82 +188,102 @@ const PlatformAdminDashboard = () => {
       </header>
 
       <div className="max-w-7xl mx-auto px-6 py-8">
-        {/* Status */}
-        <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
-          <div className="text-center">
-            <h2 className="text-lg font-semibold text-green-800">🟢 LIVE PLATFORM DATA</h2>
-            {lastUpdated && (
-              <p className="text-sm text-green-700 mt-1">Last updated: {lastUpdated}</p>
-            )}
-          </div>
-        </div>
-
-        {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Schools</CardTitle>
-              <SchoolIcon className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.totalSchools}</div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Teachers</CardTitle>
-              <UsersIcon className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.totalTeachers}</div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Students</CardTitle>
-              <UsersIcon className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.totalStudents}</div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Responses</CardTitle>
-              <MessageSquareIcon className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.totalResponses}</div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Subscriptions</CardTitle>
-              <SchoolIcon className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.totalSubscriptions}</div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Raw Data Debug */}
-        <Card className="mt-6">
+        {/* System Information Header */}
+        <Card className="mb-8 bg-blue-50 border-blue-200">
           <CardHeader>
-            <CardTitle>Debug Information</CardTitle>
+            <CardTitle className="text-blue-800">System Information</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-xs font-mono bg-gray-100 p-4 rounded">
-              <div>Admin: {admin.email}</div>
-              <div>Last Refresh: {lastUpdated || 'Never'}</div>
-              <div>Stats: {JSON.stringify(stats, null, 2)}</div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+              <div>
+                <span className="font-medium text-blue-700">Schools:</span>
+                <span className="ml-2 text-blue-600">{stats.totalSchools}</span>
+              </div>
+              <div>
+                <span className="font-medium text-blue-700">Students:</span>
+                <span className="ml-2 text-blue-600">{stats.totalStudents}</span>
+              </div>
+              <div>
+                <span className="font-medium text-blue-700">Teachers:</span>
+                <span className="ml-2 text-blue-600">{stats.totalTeachers}</span>
+              </div>
+              <div>
+                <span className="font-medium text-blue-700">Responses:</span>
+                <span className="ml-2 text-blue-600">{stats.totalResponses}</span>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm mt-4">
+              <div>
+                <span className="font-medium text-blue-700">Subscriptions:</span>
+                <span className="ml-2 text-blue-600">{stats.totalSubscriptions}</span>
+              </div>
+              <div>
+                <span className="font-medium text-blue-700">Active:</span>
+                <span className="ml-2 text-blue-600">{stats.totalSubscriptions}</span>
+              </div>
+              <div>
+                <span className="font-medium text-blue-700">Revenue:</span>
+                <span className="ml-2 text-blue-600">$0.00/month</span>
+              </div>
+            </div>
+            {lastUpdated && (
+              <p className="text-xs text-blue-600 mt-4">Last updated: {lastUpdated}</p>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Stats Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+          <StatsCard 
+            title="Total Students" 
+            value={stats.totalStudents} 
+            icon={UsersIcon} 
+          />
+          <StatsCard 
+            title="Total Schools" 
+            value={stats.totalSchools} 
+            icon={SchoolIcon} 
+          />
+          <StatsCard 
+            title="Total Teachers" 
+            value={stats.totalTeachers} 
+            icon={UsersIcon} 
+          />
+          <StatsCard 
+            title="Total Responses" 
+            value={stats.totalResponses} 
+            icon={MessageSquareIcon} 
+          />
+        </div>
+
+        {/* Subscription Management */}
+        <Card className="mb-8">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <TrendingUpIcon className="w-5 h-5" />
+              Subscription Management
+            </CardTitle>
+            <p className="text-sm text-muted-foreground">Monitor and manage school subscriptions</p>
+          </CardHeader>
+          <CardContent>
+            <div className="text-center py-12">
+              <p className="text-muted-foreground mb-2">No subscriptions found in the database</p>
+              <p className="text-xs text-muted-foreground">
+                This could mean subscriptions haven't been created yet or there's an issue with data storage
+              </p>
             </div>
           </CardContent>
         </Card>
+
+        {/* School Overview */}
+        <div className="mb-8">
+          <SchoolOverview schoolStats={schoolStats} />
+        </div>
+
+        {/* Response Analytics */}
+        <div className="mb-8">
+          <FeedbackAnalytics feedbackStats={feedbackStats} />
+        </div>
       </div>
     </div>
   );
