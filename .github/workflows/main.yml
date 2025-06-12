@@ -41,10 +41,11 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Build for custom domain
+      - name: Build for production
         run: npm run build
         env:
           NODE_ENV: production
+          VITE_BASE_URL: /
 
       - name: Create .nojekyll file
         run: touch dist/.nojekyll
@@ -59,25 +60,44 @@ jobs:
           mkdir -p dist/platform-admin
           cp dist/index.html dist/platform-admin/index.html
 
-      - name: Fix asset paths in HTML files
+      - name: Fix all asset paths to use absolute root paths
         run: |
-          echo "Fixing asset paths to use absolute paths..."
-          find dist -name "*.html" -exec sed -i 's|/lessons-learnt/assets/|/assets/|g' {} \;
-          find dist -name "*.html" -exec sed -i 's|lessons-learnt/assets/|/assets/|g' {} \;
+          echo "🔧 Fixing asset paths to use absolute root paths..."
+          # Fix any remaining GitHub Pages paths
+          find dist -type f -name "*.html" -exec sed -i 's|href="/lessons-learnt/|href="/|g' {} \;
+          find dist -type f -name "*.html" -exec sed -i 's|src="/lessons-learnt/|src="/|g' {} \;
+          find dist -type f -name "*.html" -exec sed -i 's|lessons-learnt/assets/|/assets/|g' {} \;
+          find dist -type f -name "*.html" -exec sed -i 's|/lessons-learnt/assets/|/assets/|g' {} \;
+          
+          # Fix any relative asset paths to be absolute
+          find dist -type f -name "*.html" -exec sed -i 's|href="assets/|href="/assets/|g' {} \;
+          find dist -type f -name "*.html" -exec sed -i 's|src="assets/|src="/assets/|g' {} \;
+          
+          # Fix any JavaScript/CSS imports
+          find dist -type f -name "*.js" -exec sed -i 's|"/lessons-learnt/|"/|g' {} \;
+          find dist -type f -name "*.css" -exec sed -i 's|"/lessons-learnt/|"/|g' {} \;
 
-      - name: Verify build output
+      - name: Verify build output and paths
         run: |
-          echo "Build completed. Contents of dist:"
+          echo "✅ Build completed. Contents of dist:"
           ls -la dist/
-          echo "Checking routing files:"
+          echo ""
+          echo "📁 Checking routing files:"
           ls -la dist/console/ || echo "Console directory not found"
           ls -la dist/platform-admin/ || echo "Platform-admin directory not found"
-          echo "Checking index.html content (first 10 lines):"
-          head -10 dist/index.html
-          echo "Checking for asset references:"
+          echo ""
+          echo "📄 Checking index.html content (first 15 lines):"
+          head -15 dist/index.html
+          echo ""
+          echo "🔍 Checking for asset references:"
           grep -n "assets/" dist/index.html || echo "No asset references found"
-          echo "Checking for old path references:"
-          grep -n "lessons-learnt" dist/index.html || echo "No old path references found"
+          echo ""
+          echo "❌ Checking for old path references:"
+          grep -n "lessons-learnt" dist/index.html || echo "✅ No old path references found"
+          echo ""
+          echo "🔗 Checking for relative paths:"
+          grep -n 'href="[^/]' dist/index.html || echo "✅ No relative hrefs found"
+          grep -n 'src="[^/]' dist/index.html || echo "✅ No relative srcs found"
 
       - name: Setup Pages
         uses: actions/configure-pages@v4
@@ -96,4 +116,4 @@ jobs:
           echo "🚀 Deployment completed!"
           echo "📍 Custom Domain: https://lessonslearnt.eu/"
           echo "📍 Console URL: https://lessonslearnt.eu/console"
-          echo "⏰ Wait 2-3 minutes for CDN propagation"
+          echo "⏰ Wait 2-3 minutes for CDN propagation and SSL certificate renewal"

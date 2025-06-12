@@ -8,7 +8,7 @@ import { componentTagger } from "lovable-tagger";
 export default defineConfig(({ mode }) => {
   console.log(`🔧 Vite build mode: ${mode}`);
   
-  // Always use root path - no basename for custom domain
+  // For custom domain, always use root path
   const base = '/';
   
   console.log(`🔧 Base path set to: ${base}`);
@@ -42,6 +42,9 @@ export default defineConfig(({ mode }) => {
       minify: mode === 'production' ? 'terser' : false,
       outDir: 'dist',
       emptyOutDir: true,
+    },
+    define: {
+      __BASE_URL__: JSON.stringify(base),
     },
   };
 });
