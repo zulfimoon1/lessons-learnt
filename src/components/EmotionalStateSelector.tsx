@@ -7,16 +7,34 @@ interface EmotionalStateSelectorProps {
 }
 
 const emotionalStates = [
-  { value: "excited", label: "Excited", emoji: "😄", color: "bg-yellow-100 border-yellow-300 text-yellow-800" },
-  { value: "happy", label: "Happy", emoji: "😊", color: "bg-green-100 border-green-300 text-green-800" },
-  { value: "confident", label: "Confident", emoji: "😌", color: "bg-blue-100 border-blue-300 text-blue-800" },
-  { value: "calm", label: "Calm", emoji: "😇", color: "bg-indigo-100 border-indigo-300 text-indigo-800" },
-  { value: "neutral", label: "Neutral", emoji: "😐", color: "bg-gray-100 border-gray-300 text-gray-800" },
-  { value: "confused", label: "Confused", emoji: "😕", color: "bg-orange-100 border-orange-300 text-orange-800" },
-  { value: "frustrated", label: "Frustrated", emoji: "😤", color: "bg-red-100 border-red-300 text-red-800" },
-  { value: "anxious", label: "Anxious", emoji: "😰", color: "bg-purple-100 border-purple-300 text-purple-800" },
-  { value: "overwhelmed", label: "Overwhelmed", emoji: "😵", color: "bg-pink-100 border-pink-300 text-pink-800" },
+  { value: "excited", label: "Excited", emoji: "😄", color: "bg-green-100 border-green-300 text-green-800", trafficLight: "green" },
+  { value: "happy", label: "Happy", emoji: "😊", color: "bg-green-100 border-green-300 text-green-800", trafficLight: "green" },
+  { value: "confident", label: "Confident", emoji: "😌", color: "bg-green-100 border-green-300 text-green-800", trafficLight: "green" },
+  { value: "calm", label: "Calm", emoji: "😇", color: "bg-yellow-100 border-yellow-300 text-yellow-800", trafficLight: "yellow" },
+  { value: "neutral", label: "Neutral", emoji: "😐", color: "bg-yellow-100 border-yellow-300 text-yellow-800", trafficLight: "yellow" },
+  { value: "confused", label: "Confused", emoji: "😕", color: "bg-orange-100 border-orange-300 text-orange-800", trafficLight: "orange" },
+  { value: "frustrated", label: "Frustrated", emoji: "😤", color: "bg-red-100 border-red-300 text-red-800", trafficLight: "red" },
+  { value: "anxious", label: "Anxious", emoji: "😰", color: "bg-red-100 border-red-300 text-red-800", trafficLight: "red" },
+  { value: "overwhelmed", label: "Overwhelmed", emoji: "😵", color: "bg-red-100 border-red-300 text-red-800", trafficLight: "red" },
 ];
+
+const getTrafficLightColor = (state: string) => {
+  const emotionalState = emotionalStates.find(s => s.value === state);
+  if (!emotionalState) return "text-gray-600";
+  
+  switch (emotionalState.trafficLight) {
+    case "green":
+      return "text-green-600 bg-green-50 border-green-200";
+    case "yellow":
+      return "text-yellow-600 bg-yellow-50 border-yellow-200";
+    case "orange":
+      return "text-orange-600 bg-orange-50 border-orange-200";
+    case "red":
+      return "text-red-600 bg-red-50 border-red-200";
+    default:
+      return "text-gray-600 bg-gray-50 border-gray-200";
+  }
+};
 
 const EmotionalStateSelector = ({ selectedState, onStateChange }: EmotionalStateSelectorProps) => {
   return (
@@ -46,8 +64,11 @@ const EmotionalStateSelector = ({ selectedState, onStateChange }: EmotionalState
       </div>
       
       {selectedState && (
-        <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-          <p className="text-sm text-blue-800">
+        <div className={cn(
+          "mt-4 p-3 border rounded-lg",
+          getTrafficLightColor(selectedState)
+        )}>
+          <p className="text-sm">
             <span className="font-medium">Selected:</span> {emotionalStates.find(s => s.value === selectedState)?.label}
             <span className="ml-2">
               {emotionalStates.find(s => s.value === selectedState)?.emoji}
@@ -59,4 +80,5 @@ const EmotionalStateSelector = ({ selectedState, onStateChange }: EmotionalState
   );
 };
 
+export { getTrafficLightColor };
 export default EmotionalStateSelector;

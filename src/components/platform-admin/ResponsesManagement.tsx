@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { FileTextIcon, EyeIcon, AlertTriangleIcon, DownloadIcon } from "lucide-react";
 import { toast } from "sonner";
+import { getTrafficLightColor } from "@/components/EmotionalStateSelector";
 
 interface FeedbackResponse {
   id: string;
@@ -212,18 +212,11 @@ const ResponsesManagement = () => {
     }
   };
 
-  const getEmotionalStateIcon = (state: string) => {
-    const stateColors = {
-      happy: "text-green-600",
-      excited: "text-blue-600", 
-      neutral: "text-gray-600",
-      anxious: "text-yellow-600",
-      sad: "text-red-600",
-      frustrated: "text-orange-600"
-    };
+  const getEmotionalStateDisplay = (state: string) => {
+    const colorClasses = getTrafficLightColor(state);
     
     return (
-      <span className={`font-medium ${stateColors[state as keyof typeof stateColors] || 'text-gray-600'}`}>
+      <span className={`px-2 py-1 rounded-md text-xs font-medium border ${colorClasses}`}>
         {state}
       </span>
     );
@@ -343,7 +336,7 @@ const ResponsesManagement = () => {
                       </TableCell>
                       <TableCell>{response.subject}</TableCell>
                       <TableCell>{new Date(response.class_date).toLocaleDateString()}</TableCell>
-                      <TableCell>{getEmotionalStateIcon(response.emotional_state)}</TableCell>
+                      <TableCell>{getEmotionalStateDisplay(response.emotional_state)}</TableCell>
                       <TableCell>
                         <Badge variant="outline">{response.understanding}/5</Badge>
                       </TableCell>
