@@ -41,6 +41,7 @@ jobs:
         run: npm run build
         env:
           NODE_ENV: production
+          GITHUB_PAGES: true
 
       - name: Create .nojekyll file
         run: touch dist/.nojekyll
@@ -55,6 +56,17 @@ jobs:
           mkdir -p dist/platform-admin
           cp dist/index.html dist/platform-admin/index.html
 
+      - name: Fix asset paths for GitHub Pages
+        run: |
+          echo "Fixing asset paths in index.html..."
+          sed -i 's|href="/assets/|href="./assets/|g' dist/index.html
+          sed -i 's|src="/assets/|src="./assets/|g' dist/index.html
+          # Also fix in subdirectory index files
+          sed -i 's|href="/assets/|href="../assets/|g' dist/console/index.html
+          sed -i 's|src="/assets/|src="../assets/|g' dist/console/index.html
+          sed -i 's|href="/assets/|href="../assets/|g' dist/platform-admin/index.html
+          sed -i 's|src="/assets/|src="../assets/|g' dist/platform-admin/index.html
+
       - name: Verify build output
         run: |
           echo "Build completed. Contents of dist:"
@@ -62,6 +74,8 @@ jobs:
           echo "Checking routing files:"
           ls -la dist/console/ || echo "Console directory not found"
           ls -la dist/platform-admin/ || echo "Platform-admin directory not found"
+          echo "Checking index.html content:"
+          head -20 dist/index.html
 
       - name: Setup Pages
         uses: actions/configure-pages@v4

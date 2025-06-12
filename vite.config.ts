@@ -11,8 +11,14 @@ export default defineConfig(({ mode }) => {
   // Use different base paths for different environments
   let base = '/';
   if (mode === 'production') {
-    // For GitHub Pages deployment - ensure trailing slash
-    base = '/lessons-learnt/';
+    // Check if we're building for GitHub Pages or custom domain
+    // If GITHUB_PAGES is set in environment, use the repository path
+    if (process.env.GITHUB_PAGES === 'true') {
+      base = '/lessons-learnt/';
+    } else {
+      // For custom domain, use root path
+      base = '/';
+    }
   }
   
   console.log(`🔧 Base path set to: ${base}`);
