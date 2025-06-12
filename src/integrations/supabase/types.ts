@@ -683,6 +683,45 @@ export type Database = {
         }
         Relationships: []
       }
+      transactions: {
+        Row: {
+          amount: number
+          created_at: string
+          created_by: string | null
+          currency: string
+          description: string | null
+          id: string
+          school_name: string
+          status: string
+          transaction_type: string
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          description?: string | null
+          id?: string
+          school_name: string
+          status: string
+          transaction_type: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          description?: string | null
+          id?: string
+          school_name?: string
+          status?: string
+          transaction_type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       weekly_summaries: {
         Row: {
           academic_concerns: string | null

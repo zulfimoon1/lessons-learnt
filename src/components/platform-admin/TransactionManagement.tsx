@@ -65,7 +65,6 @@ const TransactionManagement = () => {
 
       if (error) {
         console.error('Error fetching transactions:', error);
-        // If table doesn't exist, just show empty state
         setTransactions([]);
         return;
       }
