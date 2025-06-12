@@ -39,19 +39,24 @@ export interface UpdateDiscountCodeData {
 export const discountCodeService = {
   async getAllDiscountCodes() {
     console.log('=== FETCHING DISCOUNT CODES ===');
-    const { data, error } = await supabase
-      .from('discount_codes')
-      .select('*')
-      .order('created_at', { ascending: false });
+    try {
+      const { data, error } = await supabase
+        .from('discount_codes')
+        .select('*')
+        .order('created_at', { ascending: false });
 
-    console.log('Discount codes query result:', { data, error });
+      console.log('Discount codes query result:', { data, error });
 
-    if (error) {
-      console.error('Error fetching discount codes:', error);
-      throw error;
+      if (error) {
+        console.error('Error fetching discount codes:', error);
+        throw error;
+      }
+
+      return (data || []) as DiscountCode[];
+    } catch (error) {
+      console.error('Error in getAllDiscountCodes:', error);
+      return [];
     }
-
-    return data as DiscountCode[];
   },
 
   async createDiscountCode(codeData: CreateDiscountCodeData, createdBy: string) {
@@ -143,15 +148,17 @@ export const discountCodeService = {
       .select('*')
       .eq('code', code.toUpperCase())
       .eq('is_active', true)
-      .single();
+      .maybeSingle();
 
     console.log('Validation result:', { data, error });
 
     if (error) {
-      if (error.code === 'PGRST116') {
-        return { valid: false, error: 'Invalid discount code' };
-      }
-      throw error;
+      console.error('Validation error:', error);
+      return { valid: false, error: 'Error validating discount code' };
+    }
+
+    if (!data) {
+      return { valid: false, error: 'Invalid discount code' };
     }
 
     const discountCode = data as DiscountCode;

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -18,7 +17,9 @@ import {
   CalendarIcon,
   SchoolIcon,
   UserIcon,
-  ClockIcon
+  ClockIcon,
+  AlertTriangleIcon,
+  HeartIcon
 } from "lucide-react";
 
 interface Teacher {
@@ -57,10 +58,23 @@ interface FeedbackResponseWithSchedule {
   class_schedule: ClassScheduleWithTeacher | null;
 }
 
+interface MentalHealthAlert {
+  id: string;
+  student_name: string;
+  school: string;
+  grade: string;
+  alert_type: string;
+  content: string;
+  severity_level: number;
+  is_reviewed: boolean;
+  created_at: string;
+}
+
 const ResponsesManagement = () => {
   const { toast } = useToast();
   const [responses, setResponses] = useState<FeedbackResponseWithSchedule[]>([]);
   const [schedules, setSchedules] = useState<ClassScheduleWithTeacher[]>([]);
+  const [alerts, setAlerts] = useState<MentalHealthAlert[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedSchool, setSelectedSchool] = useState<string>("all");
   const [selectedStudent, setSelectedStudent] = useState<string>("all");
@@ -91,6 +105,14 @@ const ResponsesManagement = () => {
 
       if (schedulesError) throw schedulesError;
 
+      // Get mental health alerts
+      const { data: alertsData, error: alertsError } = await supabase
+        .from('mental_health_alerts')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (alertsError) throw alertsError;
+
       // Get teachers separately
       const { data: teachersData, error: teachersError } = await supabase
         .from('teachers')
@@ -118,6 +140,7 @@ const ResponsesManagement = () => {
 
       setResponses(processedResponses);
       setSchedules(processedSchedules);
+      setAlerts(alertsData || []);
     } catch (error) {
       console.error('Error loading data:', error);
       toast({
@@ -187,14 +210,22 @@ const ResponsesManagement = () => {
     return true;
   });
 
+  const filteredAlerts = alerts.filter(alert => {
+    if (selectedSchool !== "all" && alert.school !== selectedSchool) return false;
+    if (selectedStudent !== "all" && alert.student_name !== selectedStudent) return false;
+    return true;
+  });
+
   const uniqueSchools = Array.from(new Set([
     ...responses.map(r => r.class_schedule?.school).filter(Boolean),
-    ...schedules.map(s => s.school)
+    ...schedules.map(s => s.school),
+    ...alerts.map(a => a.school)
   ]));
 
-  const uniqueStudents = Array.from(new Set(
-    responses.map(r => r.student_name).filter(Boolean)
-  ));
+  const uniqueStudents = Array.from(new Set([
+    ...responses.map(r => r.student_name).filter(Boolean),
+    ...alerts.map(a => a.student_name)
+  ]));
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString();
@@ -205,6 +236,32 @@ const ResponsesManagement = () => {
       hour: '2-digit', 
       minute: '2-digit' 
     });
+  };
+
+  const getEmotionalStateBadgeColor = (state: string) => {
+    switch (state.toLowerCase()) {
+      case 'happy':
+      case 'excited':
+        return 'bg-green-100 text-green-800';
+      case 'sad':
+      case 'worried':
+      case 'stressed':
+        return 'bg-red-100 text-red-800';
+      case 'confused':
+      case 'frustrated':
+        return 'bg-yellow-100 text-yellow-800';
+      case 'neutral':
+      case 'calm':
+        return 'bg-blue-100 text-blue-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const getSeverityBadgeColor = (severity: number) => {
+    if (severity >= 5) return 'bg-red-500 text-white';
+    if (severity >= 3) return 'bg-orange-500 text-white';
+    return 'bg-yellow-500 text-white';
   };
 
   if (isLoading) {
@@ -226,7 +283,7 @@ const ResponsesManagement = () => {
               <FileTextIcon className="w-5 h-5" />
               Responses & Schedule Management
             </CardTitle>
-            <CardDescription>View and manage student feedback responses and class schedules</CardDescription>
+            <CardDescription>View and manage student feedback responses, class schedules, and mental health alerts</CardDescription>
           </div>
           <div className="flex items-center gap-2">
             <Button
@@ -253,6 +310,7 @@ const ResponsesManagement = () => {
               <SelectContent>
                 <SelectItem value="responses">Responses</SelectItem>
                 <SelectItem value="schedules">Schedules</SelectItem>
+                <SelectItem value="alerts">Mental Health Alerts</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -275,7 +333,7 @@ const ResponsesManagement = () => {
             </Select>
           </div>
 
-          {selectedView === 'responses' && (
+          {(selectedView === 'responses' || selectedView === 'alerts') && (
             <div className="flex items-center gap-2">
               <Label htmlFor="student-filter">Student:</Label>
               <Select value={selectedStudent} onValueChange={setSelectedStudent}>
@@ -304,6 +362,7 @@ const ResponsesManagement = () => {
                 <TableHead>School</TableHead>
                 <TableHead>Subject</TableHead>
                 <TableHead>Date</TableHead>
+                <TableHead>Emotional State</TableHead>
                 <TableHead>Understanding</TableHead>
                 <TableHead>Interest</TableHead>
                 <TableHead>Growth</TableHead>
@@ -327,6 +386,14 @@ const ResponsesManagement = () => {
                   </TableCell>
                   <TableCell>{response.class_schedule?.subject}</TableCell>
                   <TableCell>{formatDate(response.submitted_at)}</TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      <HeartIcon className="w-4 h-4" />
+                      <Badge className={getEmotionalStateBadgeColor(response.emotional_state)}>
+                        {response.emotional_state}
+                      </Badge>
+                    </div>
+                  </TableCell>
                   <TableCell>
                     <Badge variant="outline">
                       {response.understanding}/5
@@ -372,7 +439,113 @@ const ResponsesManagement = () => {
                           </div>
                           <div>
                             <strong>Emotional state:</strong>
-                            <Badge className="ml-2">{response.emotional_state}</Badge>
+                            <Badge className={`ml-2 ${getEmotionalStateBadgeColor(response.emotional_state)}`}>
+                              {response.emotional_state}
+                            </Badge>
+                          </div>
+                        </div>
+                      </DialogContent>
+                    </Dialog>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        )}
+
+        {/* Mental Health Alerts Table */}
+        {selectedView === 'alerts' && (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Student</TableHead>
+                <TableHead>School</TableHead>
+                <TableHead>Grade</TableHead>
+                <TableHead>Severity</TableHead>
+                <TableHead>Alert Type</TableHead>
+                <TableHead>Date</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredAlerts.map((alert) => (
+                <TableRow key={alert.id}>
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      <UserIcon className="w-4 h-4" />
+                      {alert.student_name}
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      <SchoolIcon className="w-4 h-4" />
+                      {alert.school}
+                    </div>
+                  </TableCell>
+                  <TableCell>{alert.grade}</TableCell>
+                  <TableCell>
+                    <Badge className={getSeverityBadgeColor(alert.severity_level)}>
+                      Level {alert.severity_level}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      <AlertTriangleIcon className="w-4 h-4 text-red-500" />
+                      {alert.alert_type.replace('_', ' ')}
+                    </div>
+                  </TableCell>
+                  <TableCell>{formatDate(alert.created_at)}</TableCell>
+                  <TableCell>
+                    <Badge variant={alert.is_reviewed ? "secondary" : "destructive"}>
+                      {alert.is_reviewed ? 'Reviewed' : 'Pending'}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <Dialog>
+                      <DialogTrigger asChild>
+                        <Button variant="outline" size="sm">
+                          <EyeIcon className="w-3 h-3 mr-1" />
+                          View
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent className="max-w-2xl">
+                        <DialogHeader>
+                          <DialogTitle>Mental Health Alert Details</DialogTitle>
+                          <DialogDescription>
+                            Alert for {alert.student_name} - {alert.alert_type}
+                          </DialogDescription>
+                        </DialogHeader>
+                        <div className="space-y-4">
+                          <div className="grid grid-cols-2 gap-4">
+                            <div>
+                              <strong>Student:</strong>
+                              <p className="text-sm text-gray-600">{alert.student_name}</p>
+                            </div>
+                            <div>
+                              <strong>School:</strong>
+                              <p className="text-sm text-gray-600">{alert.school}</p>
+                            </div>
+                            <div>
+                              <strong>Grade:</strong>
+                              <p className="text-sm text-gray-600">{alert.grade}</p>
+                            </div>
+                            <div>
+                              <strong>Severity:</strong>
+                              <Badge className={getSeverityBadgeColor(alert.severity_level)}>
+                                Level {alert.severity_level}
+                              </Badge>
+                            </div>
+                          </div>
+                          <div>
+                            <strong>Content:</strong>
+                            <p className="text-sm text-gray-600 mt-1 p-3 bg-gray-50 rounded">{alert.content}</p>
+                          </div>
+                          <div>
+                            <strong>Status:</strong>
+                            <Badge className="ml-2" variant={alert.is_reviewed ? "secondary" : "destructive"}>
+                              {alert.is_reviewed ? 'Reviewed' : 'Pending Review'}
+                            </Badge>
                           </div>
                         </div>
                       </DialogContent>
@@ -480,7 +653,8 @@ const ResponsesManagement = () => {
         )}
         
         {((selectedView === 'responses' && filteredResponses.length === 0) || 
-          (selectedView === 'schedules' && filteredSchedules.length === 0)) && (
+          (selectedView === 'schedules' && filteredSchedules.length === 0) ||
+          (selectedView === 'alerts' && filteredAlerts.length === 0)) && (
           <div className="text-center py-8 text-muted-foreground">
             No {selectedView} found matching the current filters.
           </div>
