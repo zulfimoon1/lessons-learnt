@@ -49,26 +49,18 @@ export const discountCodeService = {
 
       console.log('Platform admin authenticated, fetching discount codes...');
 
-      // For now, return mock data due to RLS issues
-      const mockDiscountCodes: DiscountCode[] = [
-        {
-          id: '1',
-          code: 'WELCOME10',
-          discount_percent: 10,
-          description: 'Welcome discount for new schools',
-          max_uses: 100,
-          current_uses: 5,
-          expires_at: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString(),
-          is_active: true,
-          created_by: 'admin',
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-          school_name: null
-        }
-      ];
+      const { data, error } = await supabase
+        .from('discount_codes')
+        .select('*')
+        .order('created_at', { ascending: false });
 
-      console.log('Discount codes loaded:', mockDiscountCodes.length);
-      return mockDiscountCodes;
+      if (error) {
+        console.error('Error fetching discount codes:', error);
+        throw error;
+      }
+
+      console.log('Discount codes loaded:', data?.length || 0);
+      return data || [];
     } catch (error) {
       console.error('Error in getAllDiscountCodes:', error);
       throw error;
@@ -80,24 +72,23 @@ export const discountCodeService = {
     console.log('Code data:', codeData);
     console.log('Created by:', createdBy);
 
-    // Mock implementation for now
-    const newCode: DiscountCode = {
-      id: Date.now().toString(),
-      code: codeData.code,
-      discount_percent: codeData.discount_percent,
-      description: codeData.description || null,
-      max_uses: codeData.max_uses || null,
-      expires_at: codeData.expires_at || null,
-      is_active: codeData.is_active !== undefined ? codeData.is_active : true,
-      school_name: codeData.school_name || null,
-      created_by: createdBy,
-      current_uses: 0,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    };
+    const { data, error } = await supabase
+      .from('discount_codes')
+      .insert([{
+        ...codeData,
+        created_by: createdBy,
+        current_uses: 0
+      }])
+      .select()
+      .single();
 
-    console.log('Mock discount code created:', newCode);
-    return newCode;
+    if (error) {
+      console.error('Error creating discount code:', error);
+      throw error;
+    }
+
+    console.log('Discount code created:', data);
+    return data;
   },
 
   async updateDiscountCode(id: string, updates: UpdateDiscountCodeData) {
@@ -105,66 +96,92 @@ export const discountCodeService = {
     console.log('ID:', id);
     console.log('Updates:', updates);
 
-    // Mock implementation for now
-    const updatedCode: DiscountCode = {
-      id,
-      code: updates.code || 'UPDATED',
-      discount_percent: updates.discount_percent || 10,
-      description: updates.description || null,
-      max_uses: updates.max_uses || null,
-      expires_at: updates.expires_at || null,
-      is_active: updates.is_active !== undefined ? updates.is_active : true,
-      school_name: updates.school_name || null,
-      created_by: 'admin',
-      current_uses: 0,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    };
+    const { data, error } = await supabase
+      .from('discount_codes')
+      .update({
+        ...updates,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', id)
+      .select()
+      .single();
 
-    console.log('Mock discount code updated:', updatedCode);
-    return updatedCode;
+    if (error) {
+      console.error('Error updating discount code:', error);
+      throw error;
+    }
+
+    console.log('Discount code updated:', data);
+    return data;
   },
 
   async deleteDiscountCode(id: string) {
     console.log('=== DELETING DISCOUNT CODE ===');
     console.log('ID:', id);
-    // Mock implementation - just log success
-    console.log('Mock discount code deleted');
+
+    const { error } = await supabase
+      .from('discount_codes')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      console.error('Error deleting discount code:', error);
+      throw error;
+    }
+
+    console.log('Discount code deleted successfully');
   },
 
   async validateDiscountCode(code: string) {
     console.log('=== VALIDATING DISCOUNT CODE ===');
     console.log('Code:', code);
 
-    // Mock validation
-    if (code.toUpperCase() === 'WELCOME10') {
-      return {
-        valid: true,
-        discountCode: {
-          id: '1',
-          code: 'WELCOME10',
-          discount_percent: 10,
-          description: 'Welcome discount',
-          max_uses: 100,
-          current_uses: 5,
-          expires_at: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString(),
-          is_active: true,
-          created_by: 'admin',
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-          school_name: null
-        } as DiscountCode,
-        discountPercent: 10
-      };
+    const { data, error } = await supabase
+      .from('discount_codes')
+      .select('*')
+      .eq('code', code.toUpperCase())
+      .eq('is_active', true)
+      .single();
+
+    if (error) {
+      console.error('Error validating discount code:', error);
+      return { valid: false, error: 'Invalid discount code' };
     }
 
-    return { valid: false, error: 'Invalid discount code' };
+    // Check if code has expired
+    if (data.expires_at && new Date(data.expires_at) < new Date()) {
+      return { valid: false, error: 'Discount code has expired' };
+    }
+
+    // Check if code has reached max uses
+    if (data.max_uses && data.current_uses >= data.max_uses) {
+      return { valid: false, error: 'Discount code has reached maximum usage limit' };
+    }
+
+    return {
+      valid: true,
+      discountCode: data,
+      discountPercent: data.discount_percent
+    };
   },
 
   async incrementCodeUsage(id: string) {
     console.log('=== INCREMENTING CODE USAGE ===');
     console.log('ID:', id);
-    // Mock implementation
-    console.log('Mock usage incremented');
+
+    const { error } = await supabase
+      .from('discount_codes')
+      .update({ 
+        current_uses: supabase.raw('current_uses + 1'),
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', id);
+
+    if (error) {
+      console.error('Error incrementing code usage:', error);
+      throw error;
+    }
+
+    console.log('Code usage incremented successfully');
   }
 };

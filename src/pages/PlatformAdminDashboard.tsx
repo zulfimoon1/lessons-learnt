@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { usePlatformAdmin } from "@/contexts/PlatformAdminContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -58,46 +59,76 @@ const PlatformAdminDashboard = () => {
     setIsRefreshing(true);
     
     try {
-      // Since RLS is blocking access and we're using custom auth, use mock data
-      console.log('Using mock data due to RLS restrictions');
+      // Fetch students count
+      const { count: studentsCount, error: studentsError } = await supabase
+        .from('students')
+        .select('*', { count: 'exact', head: true });
+
+      // Fetch teachers count
+      const { count: teachersCount, error: teachersError } = await supabase
+        .from('teachers')
+        .select('*', { count: 'exact', head: true });
+
+      // Fetch unique schools
+      const { data: schoolsData, error: schoolsError } = await supabase
+        .from('class_schedules')
+        .select('school')
+        .not('school', 'is', null);
+
+      // Fetch responses count
+      const { count: responsesCount, error: responsesError } = await supabase
+        .from('feedback')
+        .select('*', { count: 'exact', head: true });
+
+      // Fetch subscriptions count
+      const { count: subscriptionsCount, error: subscriptionsError } = await supabase
+        .from('subscriptions')
+        .select('*', { count: 'exact', head: true });
+
+      // Fetch school stats
+      const { data: schoolStatsData, error: schoolStatsError } = await supabase
+        .from('teachers')
+        .select('school')
+        .not('school', 'is', null);
+
+      // Fetch feedback analytics
+      const { data: feedbackAnalyticsData, error: feedbackAnalyticsError } = await supabase
+        .from('feedback_analytics')
+        .select('*');
+
+      if (studentsError) console.error('Students error:', studentsError);
+      if (teachersError) console.error('Teachers error:', teachersError);
+      if (schoolsError) console.error('Schools error:', schoolsError);
+      if (responsesError) console.error('Responses error:', responsesError);
+      if (subscriptionsError) console.error('Subscriptions error:', subscriptionsError);
+      if (schoolStatsError) console.error('School stats error:', schoolStatsError);
+      if (feedbackAnalyticsError) console.error('Feedback analytics error:', feedbackAnalyticsError);
+
+      const uniqueSchools = schoolsData ? [...new Set(schoolsData.map(item => item.school))] : [];
       
-      const mockStats = {
-        totalStudents: 150,
-        totalTeachers: 25,
-        totalSchools: 5,
-        totalResponses: 1200,
-        totalSubscriptions: 3,
-      };
+      // Process school stats
+      const schoolStatsProcessed = schoolStatsData ? 
+        Object.entries(
+          schoolStatsData.reduce((acc, teacher) => {
+            acc[teacher.school] = (acc[teacher.school] || 0) + 1;
+            return acc;
+          }, {} as Record<string, number>)
+        ).map(([school, total_teachers]) => ({ school, total_teachers })) : [];
 
-      const mockSchoolStats = [
-        { school: 'Main Elementary', total_teachers: 8 },
-        { school: 'Central High School', total_teachers: 12 },
-        { school: 'Oak Valley Middle', total_teachers: 5 },
-      ];
+      setStats({
+        totalStudents: studentsCount || 0,
+        totalTeachers: teachersCount || 0,
+        totalSchools: uniqueSchools.length,
+        totalResponses: responsesCount || 0,
+        totalSubscriptions: subscriptionsCount || 0,
+      });
 
-      const mockFeedbackStats = [
-        {
-          school: 'Main Elementary',
-          grade: '5th Grade',
-          subject: 'Mathematics',
-          lesson_topic: 'Fractions',
-          class_date: new Date().toISOString().split('T')[0],
-          total_responses: 25,
-          avg_understanding: 4.2,
-          avg_interest: 3.8,
-          avg_growth: 4.0,
-          anonymous_responses: 5,
-          named_responses: 20
-        }
-      ];
-
-      setStats(mockStats);
-      setSchoolStats(mockSchoolStats);
-      setFeedbackStats(mockFeedbackStats);
+      setSchoolStats(schoolStatsProcessed);
+      setFeedbackStats(feedbackAnalyticsData || []);
       setLastUpdated(new Date().toLocaleString());
       
-      console.log('✅ Mock stats loaded:', mockStats);
-      toast.success(`Data refreshed: ${mockStats.totalStudents} students, ${mockStats.totalTeachers} teachers`);
+      console.log('✅ Stats loaded successfully');
+      toast.success('Data refreshed successfully');
       
     } catch (error) {
       console.error('❌ Failed to fetch stats:', error);

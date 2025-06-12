@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -6,6 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { usePlatformAdmin } from "@/contexts/PlatformAdminContext";
+import { supabase } from "@/integrations/supabase/client";
 import { 
   TrendingUpIcon,
   FilterIcon,
@@ -51,59 +53,28 @@ const SubscriptionManagement = () => {
       console.log('=== LOADING SUBSCRIPTION DATA ===');
       console.log('Platform admin:', admin);
 
-      // Use mock data to avoid RLS issues
-      const mockSubscriptions: Subscription[] = [
-        {
-          id: '1',
-          school_name: 'Main Elementary School',
-          status: 'active',
-          plan_type: 'monthly',
-          amount: 2999,
-          currency: 'usd',
-          current_period_start: new Date().toISOString(),
-          current_period_end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-          stripe_customer_id: 'cus_test1',
-          stripe_subscription_id: 'sub_test1',
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        },
-        {
-          id: '2',
-          school_name: 'Central High School',
-          status: 'active',
-          plan_type: 'annual',
-          amount: 29999,
-          currency: 'usd',
-          current_period_start: new Date().toISOString(),
-          current_period_end: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
-          stripe_customer_id: 'cus_test2',
-          stripe_subscription_id: 'sub_test2',
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        },
-        {
-          id: '3',
-          school_name: 'Oak Valley Middle',
-          status: 'past_due',
-          plan_type: 'monthly',
-          amount: 2999,
-          currency: 'usd',
-          current_period_start: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
-          current_period_end: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString(),
-          stripe_customer_id: 'cus_test3',
-          stripe_subscription_id: 'sub_test3',
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        }
-      ];
+      const { data: subscriptionsData, error: subscriptionsError } = await supabase
+        .from('subscriptions')
+        .select('*')
+        .order('created_at', { ascending: false });
 
-      setSubscriptions(mockSubscriptions);
+      if (subscriptionsError) {
+        console.error('Error fetching subscriptions:', subscriptionsError);
+        toast({
+          title: "Error",
+          description: `Failed to load subscriptions: ${subscriptionsError.message}`,
+          variant: "destructive",
+        });
+        return;
+      }
+
+      setSubscriptions(subscriptionsData || []);
 
       // Check for renewal warnings (subscriptions ending in next 30 days)
       const thirtyDaysFromNow = new Date();
       thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
       
-      const warnings = mockSubscriptions.filter(sub => {
+      const warnings = (subscriptionsData || []).filter(sub => {
         if (!sub.current_period_end) return false;
         const endDate = new Date(sub.current_period_end);
         return endDate <= thirtyDaysFromNow && sub.status === 'active';
@@ -111,7 +82,7 @@ const SubscriptionManagement = () => {
       
       setRenewalWarnings(warnings);
       
-      console.log('Subscriptions loaded successfully:', mockSubscriptions.length);
+      console.log('Subscriptions loaded successfully:', subscriptionsData?.length || 0);
       
     } catch (error) {
       console.error('Error loading subscription data:', error);
@@ -127,7 +98,13 @@ const SubscriptionManagement = () => {
 
   const handlePauseSubscription = async (subscriptionId: string) => {
     try {
-      // Mock implementation for now
+      const { error } = await supabase
+        .from('subscriptions')
+        .update({ status: 'paused' })
+        .eq('id', subscriptionId);
+
+      if (error) throw error;
+
       toast({
         title: "Success",
         description: "Subscription paused successfully",
@@ -146,7 +123,13 @@ const SubscriptionManagement = () => {
 
   const handleResumeSubscription = async (subscriptionId: string) => {
     try {
-      // Mock implementation for now
+      const { error } = await supabase
+        .from('subscriptions')
+        .update({ status: 'active' })
+        .eq('id', subscriptionId);
+
+      if (error) throw error;
+
       toast({
         title: "Success",
         description: "Subscription resumed successfully",
