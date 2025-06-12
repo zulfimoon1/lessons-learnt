@@ -1,61 +1,30 @@
+
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { 
-  FileTextIcon,
-  FilterIcon,
-  DownloadIcon,
-  EyeIcon,
-  CalendarIcon,
-  SchoolIcon,
-  UserIcon,
-  ClockIcon,
-  AlertTriangleIcon,
-  HeartIcon
-} from "lucide-react";
+import { FileTextIcon, EyeIcon, AlertTriangleIcon, DownloadIcon } from "lucide-react";
+import { toast } from "sonner";
 
-interface Teacher {
-  name: string;
-}
-
-interface ClassScheduleWithTeacher {
+interface FeedbackResponse {
   id: string;
-  teacher_id: string;
+  student_name: string;
   school: string;
   grade: string;
   subject: string;
-  lesson_topic: string;
   class_date: string;
-  class_time: string;
-  duration_minutes: number;
-  description: string | null;
-  created_at: string;
-  teacher: Teacher | null;
-}
-
-interface FeedbackResponseWithSchedule {
-  id: string;
-  class_schedule_id: string;
-  student_id: string | null;
-  student_name: string | null;
-  is_anonymous: boolean;
   understanding: number;
   interest: number;
   educational_growth: number;
   emotional_state: string;
-  what_went_well: string | null;
-  suggestions: string | null;
-  additional_comments: string | null;
+  what_went_well: string;
+  suggestions: string;
+  additional_comments: string;
+  is_anonymous: boolean;
   submitted_at: string;
-  class_schedule: ClassScheduleWithTeacher | null;
 }
 
 interface MentalHealthAlert {
@@ -63,602 +32,428 @@ interface MentalHealthAlert {
   student_name: string;
   school: string;
   grade: string;
-  alert_type: string;
   content: string;
   severity_level: number;
-  is_reviewed: boolean;
+  source_table: string;
   created_at: string;
+  is_reviewed: boolean;
 }
 
 const ResponsesManagement = () => {
-  const { toast } = useToast();
-  const [responses, setResponses] = useState<FeedbackResponseWithSchedule[]>([]);
-  const [schedules, setSchedules] = useState<ClassScheduleWithTeacher[]>([]);
+  const [view, setView] = useState<'responses' | 'alerts'>('responses');
+  const [responses, setResponses] = useState<FeedbackResponse[]>([]);
   const [alerts, setAlerts] = useState<MentalHealthAlert[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [selectedSchool, setSelectedSchool] = useState<string>("all");
-  const [selectedStudent, setSelectedStudent] = useState<string>("all");
-  const [selectedView, setSelectedView] = useState<string>("responses");
+  const [schools, setSchools] = useState<string[]>([]);
+  const [students, setStudents] = useState<string[]>([]);
+  const [selectedSchool, setSelectedSchool] = useState<string>('all');
+  const [selectedStudent, setSelectedStudent] = useState<string>('all');
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    loadData();
+    fetchResponses();
+    fetchAlerts();
+    fetchSchools();
+    fetchStudents();
   }, []);
 
-  const loadData = async () => {
+  const fetchResponses = async () => {
     try {
-      // Get feedback responses with class schedules
-      const { data: responsesData, error: responsesError } = await supabase
+      setIsLoading(true);
+      console.log('🔄 Fetching feedback responses...');
+      
+      const { data, error } = await supabase
         .from('feedback')
         .select(`
-          *,
-          class_schedule:class_schedules(*)
+          id,
+          student_name,
+          understanding,
+          interest,
+          educational_growth,
+          emotional_state,
+          what_went_well,
+          suggestions,
+          additional_comments,
+          is_anonymous,
+          submitted_at,
+          class_schedules!inner(
+            subject,
+            class_date,
+            school,
+            grade
+          )
         `)
         .order('submitted_at', { ascending: false });
 
-      if (responsesError) throw responsesError;
+      if (error) {
+        console.error('❌ Error fetching responses:', error);
+        toast.error('Failed to fetch responses');
+        return;
+      }
 
-      // Get class schedules
-      const { data: schedulesData, error: schedulesError } = await supabase
-        .from('class_schedules')
-        .select('*')
-        .order('created_at', { ascending: false });
+      const formattedResponses = data?.map(response => ({
+        id: response.id,
+        student_name: response.student_name || 'Anonymous',
+        school: response.class_schedules.school,
+        grade: response.class_schedules.grade,
+        subject: response.class_schedules.subject,
+        class_date: response.class_schedules.class_date,
+        understanding: response.understanding,
+        interest: response.interest,
+        educational_growth: response.educational_growth,
+        emotional_state: response.emotional_state,
+        what_went_well: response.what_went_well || '',
+        suggestions: response.suggestions || '',
+        additional_comments: response.additional_comments || '',
+        is_anonymous: response.is_anonymous,
+        submitted_at: response.submitted_at
+      })) || [];
 
-      if (schedulesError) throw schedulesError;
-
-      // Get mental health alerts
-      const { data: alertsData, error: alertsError } = await supabase
-        .from('mental_health_alerts')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (alertsError) throw alertsError;
-
-      // Get teachers separately
-      const { data: teachersData, error: teachersError } = await supabase
-        .from('teachers')
-        .select('id, name');
-
-      if (teachersError) throw teachersError;
-
-      // Create teacher lookup map
-      const teacherMap = new Map(teachersData?.map(t => [t.id, { name: t.name }]) || []);
-
-      // Process responses with teacher data
-      const processedResponses = (responsesData || []).map(response => ({
-        ...response,
-        class_schedule: response.class_schedule ? {
-          ...response.class_schedule,
-          teacher: teacherMap.get(response.class_schedule.teacher_id) || null
-        } : null
-      }));
-
-      // Process schedules with teacher data
-      const processedSchedules = (schedulesData || []).map(schedule => ({
-        ...schedule,
-        teacher: teacherMap.get(schedule.teacher_id) || null
-      }));
-
-      setResponses(processedResponses);
-      setSchedules(processedSchedules);
-      setAlerts(alertsData || []);
+      setResponses(formattedResponses);
+      console.log('✅ Responses loaded:', formattedResponses.length);
+      
     } catch (error) {
-      console.error('Error loading data:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load responses and schedules",
-        variant: "destructive",
-      });
+      console.error('❌ Error in fetchResponses:', error);
+      toast.error('Failed to load responses');
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleExportData = async () => {
+  const fetchAlerts = async () => {
     try {
-      const dataToExport = selectedView === 'responses' ? responses : schedules;
-      const csvContent = convertToCSV(dataToExport);
-      downloadCSV(csvContent, `${selectedView}_export_${new Date().toISOString().split('T')[0]}.csv`);
+      console.log('🔄 Fetching mental health alerts...');
       
-      toast({
-        title: "Export Successful",
-        description: `${selectedView} data exported successfully`,
-      });
+      const { data, error } = await supabase
+        .from('mental_health_alerts')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('❌ Error fetching alerts:', error);
+        toast.error('Failed to fetch mental health alerts');
+        return;
+      }
+
+      setAlerts(data || []);
+      console.log('✅ Mental health alerts loaded:', data?.length || 0);
+      
     } catch (error) {
-      console.error('Export error:', error);
-      toast({
-        title: "Export Failed",
-        description: "Failed to export data",
-        variant: "destructive",
-      });
+      console.error('❌ Error in fetchAlerts:', error);
+      toast.error('Failed to load mental health alerts');
     }
   };
 
-  const convertToCSV = (data: any[]) => {
-    if (!data.length) return '';
-    
-    const headers = Object.keys(data[0]).filter(key => typeof data[0][key] !== 'object');
-    const csvRows = [
-      headers.join(','),
-      ...data.map(row => 
-        headers.map(header => 
-          JSON.stringify(row[header] || '')
-        ).join(',')
-      )
-    ];
-    
-    return csvRows.join('\n');
+  const fetchSchools = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('class_schedules')
+        .select('school')
+        .not('school', 'is', null);
+
+      if (error) {
+        console.error('Error fetching schools:', error);
+        return;
+      }
+
+      const uniqueSchools = [...new Set(data?.map(item => item.school))];
+      setSchools(uniqueSchools);
+    } catch (error) {
+      console.error('Error fetching schools:', error);
+    }
   };
 
-  const downloadCSV = (content: string, filename: string) => {
-    const blob = new Blob([content], { type: 'text/csv' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = filename;
-    a.click();
-    window.URL.revokeObjectURL(url);
+  const fetchStudents = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('feedback')
+        .select('student_name')
+        .not('student_name', 'is', null);
+
+      if (error) {
+        console.error('Error fetching students:', error);
+        return;
+      }
+
+      const uniqueStudents = [...new Set(data?.map(item => item.student_name))];
+      setStudents(uniqueStudents);
+    } catch (error) {
+      console.error('Error fetching students:', error);
+    }
+  };
+
+  const markAlertAsReviewed = async (alertId: string) => {
+    try {
+      const { error } = await supabase
+        .from('mental_health_alerts')
+        .update({ is_reviewed: true, reviewed_at: new Date().toISOString() })
+        .eq('id', alertId);
+
+      if (error) {
+        console.error('Error marking alert as reviewed:', error);
+        toast.error('Failed to mark alert as reviewed');
+        return;
+      }
+
+      toast.success('Alert marked as reviewed');
+      fetchAlerts(); // Refresh the alerts
+    } catch (error) {
+      console.error('Error marking alert as reviewed:', error);
+      toast.error('Failed to mark alert as reviewed');
+    }
+  };
+
+  const getSeverityBadge = (severity: number) => {
+    if (severity >= 5) {
+      return <Badge variant="destructive">Critical</Badge>;
+    } else if (severity >= 3) {
+      return <Badge className="bg-orange-500 text-white">High</Badge>;
+    } else {
+      return <Badge className="bg-yellow-500 text-white">Medium</Badge>;
+    }
+  };
+
+  const getEmotionalStateIcon = (state: string) => {
+    const stateColors = {
+      happy: "text-green-600",
+      excited: "text-blue-600", 
+      neutral: "text-gray-600",
+      anxious: "text-yellow-600",
+      sad: "text-red-600",
+      frustrated: "text-orange-600"
+    };
+    
+    return (
+      <span className={`font-medium ${stateColors[state as keyof typeof stateColors] || 'text-gray-600'}`}>
+        {state}
+      </span>
+    );
   };
 
   const filteredResponses = responses.filter(response => {
-    if (selectedSchool !== "all" && response.class_schedule?.school !== selectedSchool) return false;
-    if (selectedStudent !== "all" && response.student_name !== selectedStudent) return false;
-    return true;
-  });
-
-  const filteredSchedules = schedules.filter(schedule => {
-    if (selectedSchool !== "all" && schedule.school !== selectedSchool) return false;
+    if (selectedSchool !== 'all' && response.school !== selectedSchool) return false;
+    if (selectedStudent !== 'all' && response.student_name !== selectedStudent) return false;
     return true;
   });
 
   const filteredAlerts = alerts.filter(alert => {
-    if (selectedSchool !== "all" && alert.school !== selectedSchool) return false;
-    if (selectedStudent !== "all" && alert.student_name !== selectedStudent) return false;
+    if (selectedSchool !== 'all' && alert.school !== selectedSchool) return false;
+    if (selectedStudent !== 'all' && alert.student_name !== selectedStudent) return false;
     return true;
   });
-
-  const uniqueSchools = Array.from(new Set([
-    ...responses.map(r => r.class_schedule?.school).filter(Boolean),
-    ...schedules.map(s => s.school),
-    ...alerts.map(a => a.school)
-  ]));
-
-  const uniqueStudents = Array.from(new Set([
-    ...responses.map(r => r.student_name).filter(Boolean),
-    ...alerts.map(a => a.student_name)
-  ]));
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString();
-  };
-
-  const formatTime = (timeString: string) => {
-    return new Date(`2000-01-01T${timeString}`).toLocaleTimeString([], { 
-      hour: '2-digit', 
-      minute: '2-digit' 
-    });
-  };
-
-  const getEmotionalStateBadgeColor = (state: string) => {
-    switch (state.toLowerCase()) {
-      case 'happy':
-      case 'excited':
-        return 'bg-green-100 text-green-800';
-      case 'sad':
-      case 'worried':
-      case 'stressed':
-        return 'bg-red-100 text-red-800';
-      case 'confused':
-      case 'frustrated':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'neutral':
-      case 'calm':
-        return 'bg-blue-100 text-blue-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
-  };
-
-  const getSeverityBadgeColor = (severity: number) => {
-    if (severity >= 5) return 'bg-red-500 text-white';
-    if (severity >= 3) return 'bg-orange-500 text-white';
-    return 'bg-yellow-500 text-white';
-  };
-
-  if (isLoading) {
-    return (
-      <Card>
-        <CardContent className="flex items-center justify-center p-8">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-        </CardContent>
-      </Card>
-    );
-  }
 
   return (
     <Card>
       <CardHeader>
-        <div className="flex items-center justify-between">
+        <div className="flex justify-between items-center">
           <div>
             <CardTitle className="flex items-center gap-2">
               <FileTextIcon className="w-5 h-5" />
               Responses & Schedule Management
             </CardTitle>
-            <CardDescription>View and manage student feedback responses, class schedules, and mental health alerts</CardDescription>
+            <CardDescription>
+              View and manage student feedback responses, class schedules, and mental health alerts
+            </CardDescription>
           </div>
-          <div className="flex items-center gap-2">
-            <Button
-              onClick={handleExportData}
-              variant="outline"
-              size="sm"
-            >
-              <DownloadIcon className="w-3 h-3 mr-1" />
-              Export {selectedView}
-            </Button>
-          </div>
+          <Button variant="outline" size="sm">
+            <DownloadIcon className="w-4 h-4 mr-2" />
+            Export responses
+          </Button>
         </div>
       </CardHeader>
-      
       <CardContent>
-        {/* View Toggle and Filters */}
-        <div className="flex flex-wrap gap-4 mb-6 p-4 bg-gray-50 rounded-lg">
-          <div className="flex items-center gap-2">
-            <Label htmlFor="view-select">View:</Label>
-            <Select value={selectedView} onValueChange={setSelectedView}>
-              <SelectTrigger className="w-40">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="responses">Responses</SelectItem>
-                <SelectItem value="schedules">Schedules</SelectItem>
-                <SelectItem value="alerts">Mental Health Alerts</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <FilterIcon className="w-4 h-4" />
-            <Label htmlFor="school-filter">School:</Label>
-            <Select value={selectedSchool} onValueChange={setSelectedSchool}>
-              <SelectTrigger className="w-48">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Schools</SelectItem>
-                {uniqueSchools.map((school) => (
-                  <SelectItem key={school} value={school!}>
-                    {school}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          {(selectedView === 'responses' || selectedView === 'alerts') && (
+        <div className="space-y-6">
+          {/* Filter Controls */}
+          <div className="flex gap-4 items-center">
             <div className="flex items-center gap-2">
-              <Label htmlFor="student-filter">Student:</Label>
-              <Select value={selectedStudent} onValueChange={setSelectedStudent}>
-                <SelectTrigger className="w-48">
+              <span className="text-sm font-medium">View:</span>
+              <Select value={view} onValueChange={(value) => setView(value as 'responses' | 'alerts')}>
+                <SelectTrigger className="w-40">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Students</SelectItem>
-                  {uniqueStudents.map((student) => (
-                    <SelectItem key={student} value={student!}>
-                      {student}
-                    </SelectItem>
+                  <SelectItem value="responses">Responses</SelectItem>
+                  <SelectItem value="alerts">Mental Health Alerts</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium">School:</span>
+              <Select value={selectedSchool} onValueChange={setSelectedSchool}>
+                <SelectTrigger className="w-48">
+                  <SelectValue placeholder="All Schools" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Schools</SelectItem>
+                  {schools.map(school => (
+                    <SelectItem key={school} value={school}>{school}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
-          )}
-        </div>
 
-        {/* Responses Table */}
-        {selectedView === 'responses' && (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Student</TableHead>
-                <TableHead>School</TableHead>
-                <TableHead>Subject</TableHead>
-                <TableHead>Date</TableHead>
-                <TableHead>Emotional State</TableHead>
-                <TableHead>Understanding</TableHead>
-                <TableHead>Interest</TableHead>
-                <TableHead>Growth</TableHead>
-                <TableHead>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredResponses.map((response) => (
-                <TableRow key={response.id}>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      <UserIcon className="w-4 h-4" />
-                      {response.is_anonymous ? 'Anonymous' : response.student_name}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      <SchoolIcon className="w-4 h-4" />
-                      {response.class_schedule?.school}
-                    </div>
-                  </TableCell>
-                  <TableCell>{response.class_schedule?.subject}</TableCell>
-                  <TableCell>{formatDate(response.submitted_at)}</TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      <HeartIcon className="w-4 h-4" />
-                      <Badge className={getEmotionalStateBadgeColor(response.emotional_state)}>
-                        {response.emotional_state}
-                      </Badge>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant="outline">
-                      {response.understanding}/5
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant="outline">
-                      {response.interest}/5
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant="outline">
-                      {response.educational_growth}/5
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <Dialog>
-                      <DialogTrigger asChild>
-                        <Button variant="outline" size="sm">
-                          <EyeIcon className="w-3 h-3 mr-1" />
-                          View
-                        </Button>
-                      </DialogTrigger>
-                      <DialogContent className="max-w-2xl">
-                        <DialogHeader>
-                          <DialogTitle>Response Details</DialogTitle>
-                          <DialogDescription>
-                            Detailed feedback from {response.is_anonymous ? 'Anonymous Student' : response.student_name}
-                          </DialogDescription>
-                        </DialogHeader>
-                        <div className="space-y-4">
-                          <div>
-                            <strong>What went well:</strong>
-                            <p className="text-sm text-gray-600 mt-1">{response.what_went_well || 'No response'}</p>
-                          </div>
-                          <div>
-                            <strong>Suggestions:</strong>
-                            <p className="text-sm text-gray-600 mt-1">{response.suggestions || 'No response'}</p>
-                          </div>
-                          <div>
-                            <strong>Additional comments:</strong>
-                            <p className="text-sm text-gray-600 mt-1">{response.additional_comments || 'No response'}</p>
-                          </div>
-                          <div>
-                            <strong>Emotional state:</strong>
-                            <Badge className={`ml-2 ${getEmotionalStateBadgeColor(response.emotional_state)}`}>
-                              {response.emotional_state}
-                            </Badge>
-                          </div>
-                        </div>
-                      </DialogContent>
-                    </Dialog>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        )}
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium">Student:</span>
+              <Select value={selectedStudent} onValueChange={setSelectedStudent}>
+                <SelectTrigger className="w-48">
+                  <SelectValue placeholder="All Students" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Students</SelectItem>
+                  {students.map(student => (
+                    <SelectItem key={student} value={student}>{student}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
 
-        {/* Mental Health Alerts Table */}
-        {selectedView === 'alerts' && (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Student</TableHead>
-                <TableHead>School</TableHead>
-                <TableHead>Grade</TableHead>
-                <TableHead>Severity</TableHead>
-                <TableHead>Alert Type</TableHead>
-                <TableHead>Date</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredAlerts.map((alert) => (
-                <TableRow key={alert.id}>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      <UserIcon className="w-4 h-4" />
-                      {alert.student_name}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      <SchoolIcon className="w-4 h-4" />
-                      {alert.school}
-                    </div>
-                  </TableCell>
-                  <TableCell>{alert.grade}</TableCell>
-                  <TableCell>
-                    <Badge className={getSeverityBadgeColor(alert.severity_level)}>
-                      Level {alert.severity_level}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      <AlertTriangleIcon className="w-4 h-4 text-red-500" />
-                      {alert.alert_type.replace('_', ' ')}
-                    </div>
-                  </TableCell>
-                  <TableCell>{formatDate(alert.created_at)}</TableCell>
-                  <TableCell>
-                    <Badge variant={alert.is_reviewed ? "secondary" : "destructive"}>
-                      {alert.is_reviewed ? 'Reviewed' : 'Pending'}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <Dialog>
-                      <DialogTrigger asChild>
-                        <Button variant="outline" size="sm">
-                          <EyeIcon className="w-3 h-3 mr-1" />
-                          View
-                        </Button>
-                      </DialogTrigger>
-                      <DialogContent className="max-w-2xl">
-                        <DialogHeader>
-                          <DialogTitle>Mental Health Alert Details</DialogTitle>
-                          <DialogDescription>
-                            Alert for {alert.student_name} - {alert.alert_type}
-                          </DialogDescription>
-                        </DialogHeader>
-                        <div className="space-y-4">
-                          <div className="grid grid-cols-2 gap-4">
-                            <div>
-                              <strong>Student:</strong>
-                              <p className="text-sm text-gray-600">{alert.student_name}</p>
-                            </div>
-                            <div>
-                              <strong>School:</strong>
-                              <p className="text-sm text-gray-600">{alert.school}</p>
-                            </div>
-                            <div>
-                              <strong>Grade:</strong>
-                              <p className="text-sm text-gray-600">{alert.grade}</p>
-                            </div>
-                            <div>
-                              <strong>Severity:</strong>
-                              <Badge className={getSeverityBadgeColor(alert.severity_level)}>
-                                Level {alert.severity_level}
-                              </Badge>
-                            </div>
-                          </div>
-                          <div>
-                            <strong>Content:</strong>
-                            <p className="text-sm text-gray-600 mt-1 p-3 bg-gray-50 rounded">{alert.content}</p>
-                          </div>
-                          <div>
-                            <strong>Status:</strong>
-                            <Badge className="ml-2" variant={alert.is_reviewed ? "secondary" : "destructive"}>
-                              {alert.is_reviewed ? 'Reviewed' : 'Pending Review'}
-                            </Badge>
-                          </div>
-                        </div>
-                      </DialogContent>
-                    </Dialog>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        )}
-
-        {/* Schedules Table */}
-        {selectedView === 'schedules' && (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>School</TableHead>
-                <TableHead>Teacher</TableHead>
-                <TableHead>Subject</TableHead>
-                <TableHead>Grade</TableHead>
-                <TableHead>Date</TableHead>
-                <TableHead>Time</TableHead>
-                <TableHead>Topic</TableHead>
-                <TableHead>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredSchedules.map((schedule) => (
-                <TableRow key={schedule.id}>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      <SchoolIcon className="w-4 h-4" />
-                      {schedule.school}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      <UserIcon className="w-4 h-4" />
-                      {schedule.teacher?.name || 'Unknown Teacher'}
-                    </div>
-                  </TableCell>
-                  <TableCell>{schedule.subject}</TableCell>
-                  <TableCell>{schedule.grade}</TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      <CalendarIcon className="w-4 h-4" />
-                      {formatDate(schedule.class_date)}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      <ClockIcon className="w-4 h-4" />
-                      {formatTime(schedule.class_time)}
-                    </div>
-                  </TableCell>
-                  <TableCell>{schedule.lesson_topic}</TableCell>
-                  <TableCell>
-                    <Dialog>
-                      <DialogTrigger asChild>
-                        <Button variant="outline" size="sm">
-                          <EyeIcon className="w-3 h-3 mr-1" />
-                          View
-                        </Button>
-                      </DialogTrigger>
-                      <DialogContent>
-                        <DialogHeader>
-                          <DialogTitle>Class Schedule Details</DialogTitle>
-                          <DialogDescription>
-                            {schedule.subject} - {schedule.lesson_topic}
-                          </DialogDescription>
-                        </DialogHeader>
-                        <div className="space-y-4">
-                          <div className="grid grid-cols-2 gap-4">
-                            <div>
-                              <strong>School:</strong>
-                              <p className="text-sm text-gray-600">{schedule.school}</p>
-                            </div>
-                            <div>
-                              <strong>Teacher:</strong>
-                              <p className="text-sm text-gray-600">{schedule.teacher?.name || 'Unknown'}</p>
-                            </div>
-                            <div>
-                              <strong>Grade:</strong>
-                              <p className="text-sm text-gray-600">{schedule.grade}</p>
-                            </div>
-                            <div>
-                              <strong>Duration:</strong>
-                              <p className="text-sm text-gray-600">{schedule.duration_minutes} minutes</p>
-                            </div>
-                          </div>
-                          {schedule.description && (
-                            <div>
-                              <strong>Description:</strong>
-                              <p className="text-sm text-gray-600 mt-1">{schedule.description}</p>
-                            </div>
+          {/* Responses Table */}
+          {view === 'responses' && (
+            <div className="border rounded-lg">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Student</TableHead>
+                    <TableHead>School</TableHead>
+                    <TableHead>Class</TableHead>
+                    <TableHead>Subject</TableHead>
+                    <TableHead>Date</TableHead>
+                    <TableHead>Emotional State</TableHead>
+                    <TableHead>Understanding</TableHead>
+                    <TableHead>Interest</TableHead>
+                    <TableHead>Growth</TableHead>
+                    <TableHead>Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredResponses.map((response) => (
+                    <TableRow key={response.id}>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium">{response.student_name}</span>
+                          {response.is_anonymous && (
+                            <Badge variant="secondary" className="text-xs">Anonymous</Badge>
                           )}
                         </div>
-                      </DialogContent>
-                    </Dialog>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        )}
-        
-        {((selectedView === 'responses' && filteredResponses.length === 0) || 
-          (selectedView === 'schedules' && filteredSchedules.length === 0) ||
-          (selectedView === 'alerts' && filteredAlerts.length === 0)) && (
-          <div className="text-center py-8 text-muted-foreground">
-            No {selectedView} found matching the current filters.
-          </div>
-        )}
+                      </TableCell>
+                      <TableCell>{response.school}</TableCell>
+                      <TableCell>
+                        <Badge variant="outline">{response.grade}</Badge>
+                      </TableCell>
+                      <TableCell>{response.subject}</TableCell>
+                      <TableCell>{new Date(response.class_date).toLocaleDateString()}</TableCell>
+                      <TableCell>{getEmotionalStateIcon(response.emotional_state)}</TableCell>
+                      <TableCell>
+                        <Badge variant="outline">{response.understanding}/5</Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="outline">{response.interest}/5</Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="outline">{response.educational_growth}/5</Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Button variant="ghost" size="sm">
+                          <EyeIcon className="w-4 h-4 mr-1" />
+                          View
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                  {filteredResponses.length === 0 && (
+                    <TableRow>
+                      <TableCell colSpan={10} className="text-center py-8">
+                        <div className="text-muted-foreground">
+                          {isLoading ? 'Loading responses...' : 'No responses found'}
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+
+          {/* Mental Health Alerts Table */}
+          {view === 'alerts' && (
+            <div className="border rounded-lg">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Student</TableHead>
+                    <TableHead>School</TableHead>
+                    <TableHead>Class</TableHead>
+                    <TableHead>Severity</TableHead>
+                    <TableHead>Source</TableHead>
+                    <TableHead>Content Preview</TableHead>
+                    <TableHead>Date</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredAlerts.map((alert) => (
+                    <TableRow key={alert.id} className={!alert.is_reviewed ? "bg-red-50" : ""}>
+                      <TableCell>
+                        <div className="font-medium">{alert.student_name}</div>
+                      </TableCell>
+                      <TableCell>{alert.school}</TableCell>
+                      <TableCell>
+                        <Badge variant="outline">{alert.grade}</Badge>
+                      </TableCell>
+                      <TableCell>{getSeverityBadge(alert.severity_level)}</TableCell>
+                      <TableCell>
+                        <Badge variant="outline">
+                          {alert.source_table === 'feedback' ? 'Lesson Feedback' : 'Weekly Summary'}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="max-w-xs">
+                        <div className="truncate text-sm">
+                          {alert.content.substring(0, 100)}...
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-sm">
+                        {new Date(alert.created_at).toLocaleDateString()}
+                      </TableCell>
+                      <TableCell>
+                        {alert.is_reviewed ? (
+                          <Badge className="bg-green-100 text-green-800">Reviewed</Badge>
+                        ) : (
+                          <Badge variant="destructive">
+                            <AlertTriangleIcon className="w-3 h-3 mr-1" />
+                            Pending
+                          </Badge>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        {!alert.is_reviewed && (
+                          <Button
+                            size="sm"
+                            onClick={() => markAlertAsReviewed(alert.id)}
+                            className="bg-green-600 hover:bg-green-700"
+                          >
+                            <EyeIcon className="w-3 h-3 mr-1" />
+                            Mark Reviewed
+                          </Button>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                  {filteredAlerts.length === 0 && (
+                    <TableRow>
+                      <TableCell colSpan={9} className="text-center py-8">
+                        <div className="text-muted-foreground">
+                          No mental health alerts found
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+        </div>
       </CardContent>
     </Card>
   );
