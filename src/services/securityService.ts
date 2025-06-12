@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { enhancedValidateInput } from './enhancedInputValidation';
 import { hashPassword, verifyPassword } from './securePasswordService';
@@ -30,7 +31,6 @@ class SecurityService {
       // For platform admin, just check if we have a valid admin session
       const adminData = localStorage.getItem('platformAdmin');
       if (adminData) {
-        console.log('SecurityService: Platform admin session valid');
         return true;
       }
       return false;
@@ -188,10 +188,12 @@ class SecurityService {
     }
   }
 
-  // Security event logging (simplified)
+  // Security event logging (minimal for platform admin)
   logSecurityEvent(event: SecurityEvent): void {
-    // Only log to console for platform admin to avoid interference
-    console.log('Security Event:', event.type, event.details);
+    // Only log critical security events, avoid noise
+    if (event.type === 'login_failed' || event.type === 'rate_limit_exceeded') {
+      console.log('Security Event:', event.type, event.details);
+    }
   }
 
   // Browser fingerprinting for additional security

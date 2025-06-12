@@ -40,14 +40,14 @@ const PlatformAdminDashboard = () => {
       return;
     }
 
-    console.log('📊 Fetching platform admin dashboard data...');
+    console.log('📊 Starting fresh data fetch...');
     setIsLoading(true);
     setError(null);
     
     try {
-      console.log('🔗 Using RPC function for platform admin data...');
+      console.log('🔗 Fetching real-time platform data...');
       
-      // Use the RPC function to get counts
+      // Fetch real data from database
       const [studentsRpc, teachersRpc, feedbackRpc, subscriptionsQuery] = await Promise.all([
         supabase.rpc('get_platform_stats', { stat_type: 'students' }),
         supabase.rpc('get_platform_stats', { stat_type: 'teachers' }),
@@ -55,12 +55,30 @@ const PlatformAdminDashboard = () => {
         supabase.from('subscriptions').select('*')
       ]);
 
-      console.log('📊 RPC Query results:', {
-        students: { data: studentsRpc.data, error: studentsRpc.error },
-        teachers: { data: teachersRpc.data, error: teachersRpc.error },
-        feedback: { data: feedbackRpc.data, error: feedbackRpc.error },
-        subscriptions: { data: subscriptionsQuery.data?.length, error: subscriptionsQuery.error }
+      console.log('📊 Fresh data received:', {
+        students: studentsRpc.data,
+        teachers: teachersRpc.data,
+        feedback: feedbackRpc.data,
+        subscriptions: subscriptionsQuery.data?.length
       });
+
+      // Handle any errors
+      if (studentsRpc.error) {
+        console.error('Students query error:', studentsRpc.error);
+        throw new Error(`Students data error: ${studentsRpc.error.message}`);
+      }
+      if (teachersRpc.error) {
+        console.error('Teachers query error:', teachersRpc.error);
+        throw new Error(`Teachers data error: ${teachersRpc.error.message}`);
+      }
+      if (feedbackRpc.error) {
+        console.error('Feedback query error:', feedbackRpc.error);
+        throw new Error(`Feedback data error: ${feedbackRpc.error.message}`);
+      }
+      if (subscriptionsQuery.error) {
+        console.error('Subscriptions query error:', subscriptionsQuery.error);
+        throw new Error(`Subscriptions data error: ${subscriptionsQuery.error.message}`);
+      }
 
       // Extract counts from RPC responses
       const totalStudents = studentsRpc.data?.[0]?.count || 0;
@@ -71,17 +89,20 @@ const PlatformAdminDashboard = () => {
       // Calculate unique schools from teachers
       let totalSchools = 0;
       try {
-        const { data: schoolData } = await supabase
+        const { data: schoolData, error: schoolError } = await supabase
           .from('teachers')
           .select('school')
           .not('school', 'is', null);
         
-        if (schoolData) {
+        if (schoolError) {
+          console.warn('Could not fetch schools:', schoolError);
+          totalSchools = Math.max(1, Math.ceil(Number(totalTeachers) / 5));
+        } else if (schoolData) {
           const uniqueSchools = new Set(schoolData.map(t => t.school));
           totalSchools = uniqueSchools.size;
         }
       } catch (error) {
-        console.warn('Could not fetch schools, using estimate');
+        console.warn('School fetch error:', error);
         totalSchools = Math.max(1, Math.ceil(Number(totalTeachers) / 5));
       }
 
@@ -101,10 +122,10 @@ const PlatformAdminDashboard = () => {
         lastUpdated: new Date().toISOString()
       };
 
-      console.log('✅ Dashboard data processed:', newData);
+      console.log('✅ Dashboard data updated:', newData);
       setDashboardData(newData);
       
-      toast.success(`Data refreshed: ${totalStudents} students, ${totalTeachers} teachers`, {
+      toast.success(`Data refreshed! Found ${totalStudents} students, ${totalTeachers} teachers across ${totalSchools} schools`, {
         duration: 3000,
       });
       
@@ -112,7 +133,7 @@ const PlatformAdminDashboard = () => {
       console.error('❌ Data fetch failed:', error);
       const errorMessage = error.message || "Failed to fetch dashboard data";
       setError(errorMessage);
-      toast.error(`Error: ${errorMessage}`, {
+      toast.error(`Refresh failed: ${errorMessage}`, {
         duration: 5000,
       });
     } finally {
@@ -121,7 +142,7 @@ const PlatformAdminDashboard = () => {
   };
 
   const handleRefresh = async () => {
-    console.log('🔄 Manual refresh triggered');
+    console.log('🔄 Manual refresh button clicked');
     await fetchDashboardData();
   };
 
@@ -133,7 +154,7 @@ const PlatformAdminDashboard = () => {
   // Initial data fetch when authenticated
   useEffect(() => {
     if (isAuthenticated && admin) {
-      console.log('🚀 Admin authenticated, fetching data for:', admin.email);
+      console.log('🚀 Admin authenticated, fetching initial data for:', admin.email);
       fetchDashboardData();
     }
   }, [isAuthenticated, admin]);
@@ -178,7 +199,7 @@ const PlatformAdminDashboard = () => {
         <div className={`${error ? 'bg-red-100 border-red-500' : 'bg-green-100 border-green-500'} border-2 rounded-xl p-6`}>
           <div className="text-center">
             <h1 className={`text-xl font-bold ${error ? 'text-red-800' : 'text-green-800'}`}>
-              {error ? '❌ DASHBOARD ERROR' : '🟢 DASHBOARD ONLINE'} {isLoading ? '(Loading...)' : ''}
+              {error ? '❌ DASHBOARD ERROR' : '🟢 PLATFORM ADMIN CONSOLE'} {isLoading ? '(Refreshing...)' : ''}
             </h1>
             {error ? (
               <div>
@@ -201,11 +222,11 @@ const PlatformAdminDashboard = () => {
 
         {/* Live Stats */}
         <div className="bg-white border-4 border-blue-500 rounded-xl p-6">
-          <h2 className="text-xl font-bold text-blue-800 mb-4">📊 PLATFORM STATISTICS</h2>
+          <h2 className="text-xl font-bold text-blue-800 mb-4">📊 LIVE PLATFORM STATISTICS</h2>
           {isLoading ? (
             <div className="text-center py-8">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-              <p>Loading data...</p>
+              <p>Refreshing data...</p>
             </div>
           ) : (
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
