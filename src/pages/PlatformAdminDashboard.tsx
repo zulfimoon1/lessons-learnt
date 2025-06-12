@@ -1,71 +1,87 @@
 
 import { useEffect, useState } from "react";
 import { usePlatformAdmin } from "@/contexts/PlatformAdminContext";
+import { supabase } from "@/integrations/supabase/client";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { SchoolIcon, LogOutIcon, RefreshCwIcon, UsersIcon, MessageSquareIcon } from "lucide-react";
 import { toast } from "sonner";
-import { platformDataService, PlatformStats } from "@/services/platformDataService";
-import DashboardHeader from "@/components/platform-admin/DashboardHeader";
-import SystemInfoCard from "@/components/platform-admin/SystemInfoCard";
-import OverviewCards from "@/components/platform-admin/OverviewCards";
-import SubscriptionManagement from "@/components/platform-admin/SubscriptionManagement";
+
+interface DashboardStats {
+  totalStudents: number;
+  totalTeachers: number;
+  totalSchools: number;
+  totalResponses: number;
+  totalSubscriptions: number;
+}
 
 const PlatformAdminDashboard = () => {
   const { admin, isLoading: adminLoading, logout, isAuthenticated } = usePlatformAdmin();
-  const [dashboardData, setDashboardData] = useState<PlatformStats>({
-    totalSchools: 0,
-    totalTeachers: 0,
+  const [stats, setStats] = useState<DashboardStats>({
     totalStudents: 0,
+    totalTeachers: 0,
+    totalSchools: 0,
     totalResponses: 0,
-    subscriptions: [],
-    activeSubscriptions: 0,
-    monthlyRevenue: 0,
+    totalSubscriptions: 0,
   });
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [lastUpdated, setLastUpdated] = useState<string>(new Date().toISOString());
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [lastUpdated, setLastUpdated] = useState<string>("");
 
-  const fetchDashboardData = async () => {
-    if (!admin) {
-      console.error('No admin session available');
-      return;
-    }
-
-    console.log('🔄 Fetching real platform data...');
-    setIsLoading(true);
-    setError(null);
+  const fetchStats = async () => {
+    console.log('🔄 Fetching platform statistics...');
+    setIsRefreshing(true);
     
     try {
-      const realData = await platformDataService.fetchRealPlatformData();
-      setDashboardData(realData);
-      setLastUpdated(new Date().toISOString());
+      // Fetch all counts in parallel
+      const [studentsResult, teachersResult, feedbackResult, subscriptionsResult] = await Promise.all([
+        supabase.from('students').select('*', { count: 'exact', head: true }),
+        supabase.from('teachers').select('*', { count: 'exact', head: true }),
+        supabase.from('feedback').select('*', { count: 'exact', head: true }),
+        supabase.from('subscriptions').select('*', { count: 'exact', head: true })
+      ]);
+
+      // Get unique schools
+      const { data: teachersData } = await supabase
+        .from('teachers')
+        .select('school');
+
+      const uniqueSchools = new Set(teachersData?.map(t => t.school).filter(Boolean)).size;
+
+      const newStats = {
+        totalStudents: studentsResult.count || 0,
+        totalTeachers: teachersResult.count || 0,
+        totalSchools: uniqueSchools,
+        totalResponses: feedbackResult.count || 0,
+        totalSubscriptions: subscriptionsResult.count || 0,
+      };
+
+      setStats(newStats);
+      setLastUpdated(new Date().toLocaleString());
       
-      toast.success(`✅ Real data loaded: ${realData.totalStudents} students, ${realData.totalTeachers} teachers from ${realData.totalSchools} schools`);
+      console.log('✅ Stats updated:', newStats);
+      toast.success(`Data refreshed: ${newStats.totalStudents} students, ${newStats.totalTeachers} teachers`);
       
-    } catch (error: any) {
-      console.error('❌ Failed to fetch dashboard data:', error);
-      const errorMessage = error.message || "Failed to fetch dashboard data";
-      setError(errorMessage);
-      toast.error(`❌ Data fetch failed: ${errorMessage}`);
+    } catch (error) {
+      console.error('❌ Failed to fetch stats:', error);
+      toast.error('Failed to refresh data');
     } finally {
-      setIsLoading(false);
+      setIsRefreshing(false);
     }
   };
 
-  const handleRefresh = async () => {
+  const handleRefresh = () => {
     console.log('🔄 Manual refresh triggered');
-    toast.info('🔄 Refreshing data...');
-    await fetchDashboardData();
+    fetchStats();
   };
 
   const handleLogout = () => {
-    console.log('🚪 Admin logout');
     logout();
+    toast.info('Logged out successfully');
   };
 
-  // Initial data fetch
   useEffect(() => {
     if (isAuthenticated && admin) {
-      console.log('🚀 Admin authenticated, fetching real data');
-      fetchDashboardData();
+      fetchStats();
     }
   }, [isAuthenticated, admin]);
 
@@ -96,88 +112,110 @@ const PlatformAdminDashboard = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <DashboardHeader 
-        adminName={admin.email}
-        onRefresh={handleRefresh}
-        onLogout={handleLogout}
-      />
-      
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
-        {/* Status Banner */}
-        <div className={`${error ? 'bg-red-100 border-red-500' : 'bg-green-100 border-green-500'} border-2 rounded-xl p-6`}>
+      {/* Header */}
+      <header className="bg-white border-b border-gray-200 px-6 py-4">
+        <div className="max-w-7xl mx-auto flex justify-between items-center">
+          <div className="flex items-center gap-4">
+            <SchoolIcon className="w-8 h-8 text-blue-600" />
+            <h1 className="text-2xl font-bold text-gray-900">Platform Admin Dashboard</h1>
+            <Button
+              onClick={handleRefresh}
+              disabled={isRefreshing}
+              variant="outline"
+              size="sm"
+              className="flex items-center gap-2"
+            >
+              <RefreshCwIcon className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+              {isRefreshing ? 'Refreshing...' : 'Refresh'}
+            </Button>
+          </div>
+          <div className="flex items-center gap-4">
+            <span className="text-sm text-gray-600">Welcome, {admin.email}</span>
+            <Button onClick={handleLogout} variant="outline" size="sm">
+              <LogOutIcon className="w-4 h-4 mr-2" />
+              Logout
+            </Button>
+          </div>
+        </div>
+      </header>
+
+      <div className="max-w-7xl mx-auto px-6 py-8">
+        {/* Status */}
+        <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
           <div className="text-center">
-            <h1 className={`text-xl font-bold ${error ? 'text-red-800' : 'text-green-800'}`}>
-              {error ? '❌ DASHBOARD ERROR' : '🟢 LIVE PLATFORM DATA'} {isLoading ? '(Loading...)' : ''}
-            </h1>
-            {error ? (
-              <div>
-                <p className="text-sm mt-2 text-red-700">{error}</p>
-                <button 
-                  onClick={handleRefresh}
-                  className="mt-4 bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
-                  disabled={isLoading}
-                >
-                  {isLoading ? 'Retrying...' : 'Retry'}
-                </button>
-              </div>
-            ) : (
-              <p className="text-sm mt-2 text-green-700">
-                Last Updated: {new Date(lastUpdated).toLocaleString()}
-              </p>
+            <h2 className="text-lg font-semibold text-green-800">🟢 LIVE PLATFORM DATA</h2>
+            {lastUpdated && (
+              <p className="text-sm text-green-700 mt-1">Last updated: {lastUpdated}</p>
             )}
           </div>
         </div>
 
-        {/* Live Stats */}
-        <div className="bg-white border-4 border-blue-500 rounded-xl p-6">
-          <h2 className="text-xl font-bold text-blue-800 mb-4">📊 REAL PLATFORM STATISTICS</h2>
-          {isLoading ? (
-            <div className="text-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-              <p>Loading real data from database...</p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="text-center bg-blue-50 p-4 rounded">
-                <p className="text-sm font-semibold text-gray-600">Schools</p>
-                <p className="text-4xl font-bold text-blue-600">{dashboardData.totalSchools}</p>
-              </div>
-              <div className="text-center bg-green-50 p-4 rounded">
-                <p className="text-sm font-semibold text-gray-600">Teachers</p>
-                <p className="text-4xl font-bold text-green-600">{dashboardData.totalTeachers}</p>
-              </div>
-              <div className="text-center bg-purple-50 p-4 rounded">
-                <p className="text-sm font-semibold text-gray-600">Students</p>
-                <p className="text-4xl font-bold text-purple-600">{dashboardData.totalStudents}</p>
-              </div>
-              <div className="text-center bg-orange-50 p-4 rounded">
-                <p className="text-sm font-semibold text-gray-600">Responses</p>
-                <p className="text-4xl font-bold text-orange-600">{dashboardData.totalResponses}</p>
-              </div>
-            </div>
-          )}
+        {/* Stats Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Schools</CardTitle>
+              <SchoolIcon className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stats.totalSchools}</div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Teachers</CardTitle>
+              <UsersIcon className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stats.totalTeachers}</div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Students</CardTitle>
+              <UsersIcon className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stats.totalStudents}</div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Responses</CardTitle>
+              <MessageSquareIcon className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stats.totalResponses}</div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Subscriptions</CardTitle>
+              <SchoolIcon className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stats.totalSubscriptions}</div>
+            </CardContent>
+          </Card>
         </div>
-        
-        <SystemInfoCard
-          totalSchools={dashboardData.totalSchools}
-          totalTeachers={dashboardData.totalTeachers}
-          totalStudents={dashboardData.totalStudents}
-          totalResponses={dashboardData.totalResponses}
-          subscriptionsCount={dashboardData.subscriptions.length}
-          activeSubscriptions={dashboardData.activeSubscriptions}
-          monthlyRevenue={dashboardData.monthlyRevenue}
-        />
 
-        <OverviewCards
-          totalSchools={dashboardData.totalSchools}
-          totalTeachers={dashboardData.totalTeachers}
-          totalStudents={dashboardData.totalStudents}
-          totalResponses={dashboardData.totalResponses}
-        />
-
-        <SubscriptionManagement
-          subscriptions={dashboardData.subscriptions}
-        />
+        {/* Raw Data Debug */}
+        <Card className="mt-6">
+          <CardHeader>
+            <CardTitle>Debug Information</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-xs font-mono bg-gray-100 p-4 rounded">
+              <div>Admin: {admin.email}</div>
+              <div>Last Refresh: {lastUpdated || 'Never'}</div>
+              <div>Stats: {JSON.stringify(stats, null, 2)}</div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
