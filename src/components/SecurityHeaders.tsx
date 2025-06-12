@@ -3,7 +3,7 @@ import { useEffect } from 'react';
 
 const SecurityHeaders: React.FC = () => {
   useEffect(() => {
-    // Set Content Security Policy via meta tag (fallback for environments without server control)
+    // Set Content Security Policy via meta tag (simplified for platform admin)
     const setSecurityHeaders = () => {
       // Remove any existing CSP meta tag
       const existingCSP = document.querySelector('meta[http-equiv="Content-Security-Policy"]');
@@ -11,7 +11,7 @@ const SecurityHeaders: React.FC = () => {
         existingCSP.remove();
       }
 
-      // Create new CSP meta tag
+      // Create new CSP meta tag with relaxed policies for platform admin
       const meta = document.createElement('meta');
       meta.httpEquiv = 'Content-Security-Policy';
       meta.content = [
@@ -21,7 +21,7 @@ const SecurityHeaders: React.FC = () => {
         "font-src 'self' https://fonts.gstatic.com",
         "img-src 'self' data: https: blob:",
         "connect-src 'self' https://bjpgloftnlnzndgliqty.supabase.co wss://bjpgloftnlnzndgliqty.supabase.co",
-        "frame-ancestors 'none'",
+        "frame-ancestors 'self'",
         "base-uri 'self'",
         "form-action 'self'"
       ].join('; ');
@@ -31,8 +31,7 @@ const SecurityHeaders: React.FC = () => {
       // Set additional security headers via meta tags where possible
       const securityMetas = [
         { httpEquiv: 'X-Content-Type-Options', content: 'nosniff' },
-        { httpEquiv: 'X-Frame-Options', content: 'DENY' },
-        { httpEquiv: 'X-XSS-Protection', content: '1; mode=block' },
+        { httpEquiv: 'X-Frame-Options', content: 'SAMEORIGIN' }, // Changed from DENY to SAMEORIGIN
         { httpEquiv: 'Referrer-Policy', content: 'strict-origin-when-cross-origin' }
       ];
 
@@ -51,61 +50,7 @@ const SecurityHeaders: React.FC = () => {
 
     setSecurityHeaders();
 
-    // Monitor for potential XSS attempts
-    const monitorForXSS = () => {
-      // Override dangerous functions to log attempts
-      const originalEval = window.eval;
-      window.eval = function(code: string) {
-        console.warn('Security Alert: eval() called with:', code);
-        // Log security event
-        const event = new CustomEvent('securityViolation', {
-          detail: {
-            type: 'eval_attempt',
-            code: code,
-            timestamp: new Date().toISOString(),
-            userAgent: navigator.userAgent
-          }
-        });
-        window.dispatchEvent(event);
-        return originalEval.call(this, code);
-      };
-
-      // Monitor for inline script injection attempts
-      const observer = new MutationObserver((mutations) => {
-        mutations.forEach((mutation) => {
-          mutation.addedNodes.forEach((node) => {
-            if (node.nodeType === Node.ELEMENT_NODE) {
-              const element = node as Element;
-              if (element.tagName === 'SCRIPT' && !element.getAttribute('src')) {
-                console.warn('Security Alert: Inline script detected');
-                const event = new CustomEvent('securityViolation', {
-                  detail: {
-                    type: 'inline_script',
-                    content: element.textContent,
-                    timestamp: new Date().toISOString(),
-                    userAgent: navigator.userAgent
-                  }
-                });
-                window.dispatchEvent(event);
-              }
-            }
-          });
-        });
-      });
-
-      observer.observe(document.body, {
-        childList: true,
-        subtree: true
-      });
-
-      return () => observer.disconnect();
-    };
-
-    const cleanup = monitorForXSS();
-
-    return () => {
-      cleanup();
-    };
+    // Removed aggressive XSS monitoring that was causing false positives
   }, []);
 
   return null; // This component doesn't render anything visible
