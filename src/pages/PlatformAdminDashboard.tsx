@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { usePlatformAdmin } from "@/contexts/PlatformAdminContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -9,6 +8,9 @@ import { toast } from "sonner";
 import StatsCard from "@/components/dashboard/StatsCard";
 import SchoolOverview from "@/components/platform-admin/SchoolOverview";
 import FeedbackAnalytics from "@/components/platform-admin/FeedbackAnalytics";
+import DiscountCodeManagement from "@/components/DiscountCodeManagement";
+import SubscriptionManagement from "@/components/platform-admin/SubscriptionManagement";
+import ResponsesManagement from "@/components/platform-admin/ResponsesManagement";
 
 interface DashboardStats {
   totalStudents: number;
@@ -256,24 +258,20 @@ const PlatformAdminDashboard = () => {
           />
         </div>
 
-        {/* Subscription Management */}
-        <Card className="mb-8">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <TrendingUpIcon className="w-5 h-5" />
-              Subscription Management
-            </CardTitle>
-            <p className="text-sm text-muted-foreground">Monitor and manage school subscriptions</p>
-          </CardHeader>
-          <CardContent>
-            <div className="text-center py-12">
-              <p className="text-muted-foreground mb-2">No subscriptions found in the database</p>
-              <p className="text-xs text-muted-foreground">
-                This could mean subscriptions haven't been created yet or there's an issue with data storage
-              </p>
-            </div>
-          </CardContent>
-        </Card>
+        {/* Enhanced Subscription Management */}
+        <div className="mb-8">
+          <SubscriptionManagement />
+        </div>
+
+        {/* Discount Code Management */}
+        <div className="mb-8">
+          <DiscountCodeManagement />
+        </div>
+
+        {/* Responses & Schedule Management */}
+        <div className="mb-8">
+          <ResponsesManagement />
+        </div>
 
         {/* School Overview */}
         <div className="mb-8">
