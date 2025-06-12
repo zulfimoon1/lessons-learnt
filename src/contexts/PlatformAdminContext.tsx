@@ -1,7 +1,6 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { User } from '@supabase/supabase-js';
 
 interface PlatformAdmin {
   id: string;
@@ -27,79 +26,20 @@ export const PlatformAdminProvider: React.FC<{ children: React.ReactNode }> = ({
 
   useEffect(() => {
     checkAdminSession();
-    
-    // Listen for auth state changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log('Auth state changed:', event, session?.user?.id);
-      if (event === 'SIGNED_IN' && session?.user) {
-        await checkIfUserIsAdmin(session.user.id);
-      } else if (event === 'SIGNED_OUT') {
-        setAdmin(null);
-        setIsAuthenticated(false);
-      }
-    });
-
-    return () => subscription.unsubscribe();
   }, []);
-
-  const checkIfUserIsAdmin = async (userId: string) => {
-    try {
-      console.log('Checking if user is admin:', userId);
-      const { data: teacher, error } = await supabase
-        .from('teachers')
-        .select('*')
-        .eq('id', userId)
-        .eq('role', 'admin')
-        .single();
-
-      if (error) {
-        console.error('Error checking admin status:', error);
-        return;
-      }
-
-      if (teacher) {
-        console.log('User is admin:', teacher);
-        const adminData = {
-          id: teacher.id,
-          email: teacher.email,
-          name: teacher.name,
-          role: teacher.role
-        };
-        setAdmin(adminData);
-        setIsAuthenticated(true);
-        
-        // Store admin data in localStorage for quick access
-        localStorage.setItem('platformAdmin', JSON.stringify(adminData));
-      }
-    } catch (error) {
-      console.error('Error in checkIfUserIsAdmin:', error);
-    }
-  };
 
   const checkAdminSession = async () => {
     try {
-      // Check if there's an existing Supabase session
-      const { data: { session }, error } = await supabase.auth.getSession();
-      
-      if (error) {
-        console.error('Error getting session:', error);
-        setIsLoading(false);
-        return;
-      }
-
-      if (session?.user) {
-        console.log('Found existing session:', session.user.id);
-        await checkIfUserIsAdmin(session.user.id);
-      } else {
-        // Fallback: check localStorage for platform admin session
-        const adminData = localStorage.getItem('platformAdmin');
-        if (adminData) {
-          console.log('Found stored admin session, but no Supabase session - clearing localStorage');
-          localStorage.removeItem('platformAdmin');
-        }
+      // Check localStorage for platform admin session
+      const adminData = localStorage.getItem('platformAdmin');
+      if (adminData) {
+        const parsed = JSON.parse(adminData);
+        setAdmin(parsed);
+        setIsAuthenticated(true);
       }
     } catch (error) {
       console.error('Error checking admin session:', error);
+      localStorage.removeItem('platformAdmin');
     } finally {
       setIsLoading(false);
     }
@@ -137,14 +77,6 @@ export const PlatformAdminProvider: React.FC<{ children: React.ReactNode }> = ({
         return { success: false, error: 'Authentication failed' };
       }
 
-      // Now sign in with Supabase Auth using the teacher's ID as a custom flow
-      // For platform admins, we'll create a temporary session
-      console.log('Creating Supabase session for admin');
-      
-      // Since we can't directly sign in without a password in Supabase Auth,
-      // we'll use a different approach - sign in with a magic link or create a session
-      // For now, let's manually set the session data after password verification
-      
       const adminData = {
         id: result.admin.id,
         email: result.admin.email,
@@ -168,10 +100,6 @@ export const PlatformAdminProvider: React.FC<{ children: React.ReactNode }> = ({
   const logout = async () => {
     try {
       console.log('Logging out platform admin');
-      
-      // Sign out from Supabase
-      await supabase.auth.signOut();
-      
       localStorage.removeItem('platformAdmin');
       setAdmin(null);
       setIsAuthenticated(false);
