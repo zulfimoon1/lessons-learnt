@@ -31,14 +31,15 @@ jobs:
           node-version: '20'
           cache: 'npm'
 
-      - name: Clear npm cache
-        run: npm cache clean --force
+      - name: Clear npm cache and clean workspace
+        run: |
+          npm cache clean --force
+          rm -rf node_modules
+          rm -rf dist
+          rm -rf .vite
 
       - name: Install dependencies
         run: npm ci
-
-      - name: Clean previous builds
-        run: rm -rf dist
 
       - name: Build for custom domain
         run: npm run build
@@ -58,6 +59,12 @@ jobs:
           mkdir -p dist/platform-admin
           cp dist/index.html dist/platform-admin/index.html
 
+      - name: Fix asset paths in HTML files
+        run: |
+          echo "Fixing asset paths to use absolute paths..."
+          find dist -name "*.html" -exec sed -i 's|/lessons-learnt/assets/|/assets/|g' {} \;
+          find dist -name "*.html" -exec sed -i 's|lessons-learnt/assets/|/assets/|g' {} \;
+
       - name: Verify build output
         run: |
           echo "Build completed. Contents of dist:"
@@ -69,6 +76,8 @@ jobs:
           head -10 dist/index.html
           echo "Checking for asset references:"
           grep -n "assets/" dist/index.html || echo "No asset references found"
+          echo "Checking for old path references:"
+          grep -n "lessons-learnt" dist/index.html || echo "No old path references found"
 
       - name: Setup Pages
         uses: actions/configure-pages@v4
