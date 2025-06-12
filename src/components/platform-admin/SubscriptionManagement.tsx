@@ -1,13 +1,9 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { 
@@ -17,7 +13,6 @@ import {
   PlayIcon,
   AlertTriangleIcon,
   SchoolIcon,
-  UserIcon,
   CalendarIcon,
   DollarSignIcon
 } from "lucide-react";
@@ -48,10 +43,8 @@ interface Teacher {
 const SubscriptionManagement = () => {
   const { toast } = useToast();
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
-  const [teachers, setTeachers] = useState<Teacher[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedSchool, setSelectedSchool] = useState<string>("all");
-  const [selectedTeacher, setSelectedTeacher] = useState<string>("all");
   const [renewalWarnings, setRenewalWarnings] = useState<Subscription[]>([]);
 
   useEffect(() => {
@@ -60,16 +53,33 @@ const SubscriptionManagement = () => {
 
   const loadData = async () => {
     try {
-      const [subscriptionsResult, teachersResult] = await Promise.all([
-        supabase.from('subscriptions').select('*').order('created_at', { ascending: false }),
-        supabase.from('teachers').select('id, name, email, school, role')
-      ]);
+      console.log('=== LOADING SUBSCRIPTION DATA ===');
+      
+      // Check authentication status
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      console.log('Current user:', user?.id, userError);
+      
+      // Also check platform admin context
+      const adminData = localStorage.getItem('platformAdmin');
+      console.log('Platform admin data:', adminData);
 
-      if (subscriptionsResult.error) throw subscriptionsResult.error;
-      if (teachersResult.error) throw teachersResult.error;
+      const subscriptionsResult = await supabase
+        .from('subscriptions')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      console.log('Subscriptions query result:', { 
+        data: subscriptionsResult.data, 
+        error: subscriptionsResult.error,
+        count: subscriptionsResult.data?.length 
+      });
+
+      if (subscriptionsResult.error) {
+        console.error('Subscriptions error:', subscriptionsResult.error);
+        throw subscriptionsResult.error;
+      }
 
       setSubscriptions(subscriptionsResult.data || []);
-      setTeachers(teachersResult.data || []);
 
       // Check for renewal warnings (subscriptions ending in next 30 days)
       const thirtyDaysFromNow = new Date();
@@ -82,11 +92,17 @@ const SubscriptionManagement = () => {
       });
       
       setRenewalWarnings(warnings);
+      
+      toast({
+        title: "Success",
+        description: `Loaded ${subscriptionsResult.data?.length || 0} subscriptions`,
+      });
+      
     } catch (error) {
       console.error('Error loading data:', error);
       toast({
         title: "Error",
-        description: "Failed to load subscription data",
+        description: `Failed to load subscription data: ${error.message}`,
         variant: "destructive",
       });
     } finally {
@@ -144,7 +160,6 @@ const SubscriptionManagement = () => {
 
   const filteredSubscriptions = subscriptions.filter(sub => {
     if (selectedSchool !== "all" && sub.school_name !== selectedSchool) return false;
-    // Additional teacher filtering could be added here if needed
     return true;
   });
 
@@ -180,7 +195,7 @@ const SubscriptionManagement = () => {
               <TrendingUpIcon className="w-5 h-5" />
               Subscription Management
             </CardTitle>
-            <CardDescription>Manage school subscriptions, discounts, and renewals</CardDescription>
+            <CardDescription>Manage school subscriptions and renewals</CardDescription>
           </div>
           <div className="flex items-center gap-2">
             <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">
@@ -196,10 +211,9 @@ const SubscriptionManagement = () => {
         <div className="flex flex-wrap gap-4 mb-6 p-4 bg-gray-50 rounded-lg">
           <div className="flex items-center gap-2">
             <FilterIcon className="w-4 h-4" />
-            <Label htmlFor="school-filter">Filter by School:</Label>
             <Select value={selectedSchool} onValueChange={setSelectedSchool}>
               <SelectTrigger className="w-48">
-                <SelectValue />
+                <SelectValue placeholder="All Schools" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Schools</SelectItem>

@@ -44,24 +44,16 @@ export const discountCodeService = {
       const { data: { user }, error: userError } = await supabase.auth.getUser();
       console.log('Current user:', { user: user?.id, email: user?.email, userError });
 
-      // Check if user is admin
-      if (user) {
-        const { data: adminCheck, error: adminError } = await supabase
-          .from('teachers')
-          .select('id, role')
-          .eq('id', user.id)
-          .eq('role', 'admin')
-          .maybeSingle();
-        
-        console.log('Admin check:', { adminCheck, adminError });
-      }
+      // For platform admin context, also check localStorage
+      const adminData = localStorage.getItem('platformAdmin');
+      console.log('Platform admin data:', adminData);
 
       const { data, error } = await supabase
         .from('discount_codes')
         .select('*')
         .order('created_at', { ascending: false });
 
-      console.log('Discount codes query result:', { data, error });
+      console.log('Discount codes query result:', { data, error, dataLength: data?.length });
 
       if (error) {
         console.error('Error fetching discount codes:', error);
@@ -71,7 +63,7 @@ export const discountCodeService = {
       return (data || []) as DiscountCode[];
     } catch (error) {
       console.error('Error in getAllDiscountCodes:', error);
-      throw error; // Re-throw to let the UI handle the error
+      throw error;
     }
   },
 
