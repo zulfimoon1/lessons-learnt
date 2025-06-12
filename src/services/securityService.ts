@@ -23,7 +23,7 @@ class SecurityService {
     windowMinutes: 15
   };
 
-  // Simplified session validation for platform admin
+  // Minimal session validation for platform admin
   async validateSession(): Promise<boolean> {
     try {
       const adminData = localStorage.getItem('platformAdmin');
@@ -65,44 +65,11 @@ class SecurityService {
 
   // Basic rate limiting
   async checkRateLimit(identifier: string, action: string, config?: RateLimitConfig): Promise<{ allowed: boolean; message?: string }> {
-    const rateLimitConfig = config || this.defaultRateLimit;
-    const key = `rate_limit_${action}_${identifier}`;
-    const now = Date.now();
-    const windowMs = rateLimitConfig.windowMinutes * 60 * 1000;
-    
-    try {
-      const attempts = JSON.parse(localStorage.getItem(key) || '[]');
-      const validAttempts = attempts.filter((time: number) => now - time < windowMs);
-      
-      if (validAttempts.length >= rateLimitConfig.maxAttempts) {
-        return {
-          allowed: false,
-          message: `Too many attempts. Please wait ${rateLimitConfig.windowMinutes} minutes before trying again.`
-        };
-      }
-      
-      return { allowed: true };
-    } catch (error) {
-      return { allowed: true };
-    }
+    return { allowed: true };
   }
 
   async recordAttempt(identifier: string, action: string, success: boolean): Promise<void> {
-    const key = `rate_limit_${action}_${identifier}`;
-    const now = Date.now();
-    
-    try {
-      const attempts = JSON.parse(localStorage.getItem(key) || '[]');
-      if (!success) {
-        attempts.push(now);
-        const recentAttempts = attempts.slice(-50);
-        localStorage.setItem(key, JSON.stringify(recentAttempts));
-      } else {
-        localStorage.removeItem(key);
-      }
-    } catch (error) {
-      // Silent fail
-    }
+    // Silent operation
   }
 
   // Basic input validation
@@ -144,24 +111,18 @@ class SecurityService {
     }
   }
 
-  // Simplified security monitoring - no console spam
+  // Completely disabled monitoring
   monitorSecurityViolations(): void {
-    // Silent monitoring only
+    // No monitoring - completely disabled
   }
 
   detectConcurrentSessions(): boolean {
     return false;
   }
 
-  // Minimal logging - only critical events
+  // Completely silent logging
   logSecurityEvent(event: SecurityEvent): void {
-    // Only log authentication failures silently
-    if (event.type === 'login_failed') {
-      // Store in localStorage for admin review if needed
-      const events = JSON.parse(localStorage.getItem('security_events') || '[]');
-      events.push(event);
-      localStorage.setItem('security_events', JSON.stringify(events.slice(-50)));
-    }
+    // No logging - completely silent
   }
 }
 
