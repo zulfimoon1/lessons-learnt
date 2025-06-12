@@ -8,18 +8,8 @@ import { componentTagger } from "lovable-tagger";
 export default defineConfig(({ mode }) => {
   console.log(`🔧 Vite build mode: ${mode}`);
   
-  // Use different base paths for different environments
-  let base = '/';
-  if (mode === 'production') {
-    // Check if we're building for GitHub Pages or custom domain
-    // If GITHUB_PAGES is set in environment, use the repository path
-    if (process.env.GITHUB_PAGES === 'true') {
-      base = '/lessons-learnt/';
-    } else {
-      // For custom domain, use root path
-      base = '/';
-    }
-  }
+  // For custom domain, always use root path
+  const base = '/';
   
   console.log(`🔧 Base path set to: ${base}`);
   
@@ -48,7 +38,6 @@ export default defineConfig(({ mode }) => {
       sourcemap: false,
       minify: mode === 'production' ? 'terser' : false,
       outDir: 'dist',
-      // Ensure proper base path handling
       emptyOutDir: true,
     },
   };
