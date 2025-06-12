@@ -28,8 +28,8 @@ import NotFound from "./pages/NotFound";
 const queryClient = new QueryClient();
 
 function App() {
-  // Get base path for GitHub Pages
-  const basename = import.meta.env.PROD ? '/lessons-learnt' : '';
+  // No basename needed for custom domain - use root path
+  console.log('🔧 App: Using root path for custom domain');
 
   return (
     <QueryClientProvider client={queryClient}>
@@ -39,7 +39,7 @@ function App() {
             <TooltipProvider>
               <Toaster />
               <Sonner />
-              <BrowserRouter basename={basename}>
+              <BrowserRouter>
                 <Routes>
                   <Route path="/" element={<Index />} />
                   <Route path="/teacher-login" element={<TeacherLogin />} />
