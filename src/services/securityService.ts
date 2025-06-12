@@ -1,7 +1,5 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { enhancedValidateInput } from './enhancedInputValidation';
-import { hashPassword, verifyPassword } from './securePasswordService';
 
 interface SecurityEvent {
   type: 'login_success' | 'login_failed' | 'logout' | 'unauthorized_access' | 'suspicious_activity' | 'rate_limit_exceeded' | 'session_restored' | 'session_error' | 'csrf_violation' | 'test_admin_created' | 'forced_password_reset';
@@ -28,19 +26,14 @@ class SecurityService {
   // Simplified session validation for platform admin
   async validateSession(): Promise<boolean> {
     try {
-      // For platform admin, just check if we have a valid admin session
       const adminData = localStorage.getItem('platformAdmin');
-      if (adminData) {
-        return true;
-      }
-      return false;
+      return !!adminData;
     } catch (error) {
-      console.error('Session validation error:', error);
       return false;
     }
   }
 
-  // Enhanced CSRF token management
+  // Basic CSRF token management
   generateCSRFToken(): string {
     const array = new Uint8Array(32);
     crypto.getRandomValues(array);
@@ -57,7 +50,6 @@ class SecurityService {
       
       if (!storedToken || !timestamp) return false;
       
-      // Check if token expired (1 hour)
       const age = Date.now() - parseInt(timestamp);
       if (age > 60 * 60 * 1000) {
         sessionStorage.removeItem('csrf_token');
@@ -67,12 +59,11 @@ class SecurityService {
       
       return storedToken === token && token.length === 64;
     } catch (error) {
-      console.error('CSRF validation error:', error);
       return false;
     }
   }
 
-  // Enhanced rate limiting
+  // Basic rate limiting
   async checkRateLimit(identifier: string, action: string, config?: RateLimitConfig): Promise<{ allowed: boolean; message?: string }> {
     const rateLimitConfig = config || this.defaultRateLimit;
     const key = `rate_limit_${action}_${identifier}`;
@@ -84,13 +75,6 @@ class SecurityService {
       const validAttempts = attempts.filter((time: number) => now - time < windowMs);
       
       if (validAttempts.length >= rateLimitConfig.maxAttempts) {
-        this.logSecurityEvent({
-          type: 'rate_limit_exceeded',
-          timestamp: new Date().toISOString(),
-          details: `Rate limit exceeded for ${action}`,
-          userAgent: navigator.userAgent
-        });
-        
         return {
           allowed: false,
           message: `Too many attempts. Please wait ${rateLimitConfig.windowMinutes} minutes before trying again.`
@@ -99,8 +83,7 @@ class SecurityService {
       
       return { allowed: true };
     } catch (error) {
-      console.error('Rate limit check error:', error);
-      return { allowed: true }; // Fail open for availability
+      return { allowed: true };
     }
   }
 
@@ -112,143 +95,61 @@ class SecurityService {
       const attempts = JSON.parse(localStorage.getItem(key) || '[]');
       if (!success) {
         attempts.push(now);
-        // Keep only last 50 attempts to prevent storage bloat
         const recentAttempts = attempts.slice(-50);
         localStorage.setItem(key, JSON.stringify(recentAttempts));
       } else {
-        // Clear attempts on successful login
         localStorage.removeItem(key);
       }
     } catch (error) {
-      console.error('Failed to record attempt:', error);
+      // Silent fail
     }
   }
 
-  // Enhanced input validation with threat detection
+  // Basic input validation
   validateAndSanitizeInput(input: string, type: 'name' | 'email' | 'school' | 'grade'): { isValid: boolean; sanitized: string; message?: string } {
-    let validation;
+    if (!input || input.trim().length === 0) {
+      return { isValid: false, sanitized: '', message: 'Input cannot be empty' };
+    }
+
+    const sanitized = input.trim().replace(/[<>]/g, '');
     
     switch (type) {
-      case 'name':
-        validation = enhancedValidateInput.validateName(input);
-        break;
       case 'email':
-        validation = enhancedValidateInput.validateEmail(input);
-        break;
-      case 'school':
-        validation = enhancedValidateInput.validateSchool(input);
-        break;
-      case 'grade':
-        validation = enhancedValidateInput.validateGrade(input);
-        break;
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return {
+          isValid: emailRegex.test(sanitized),
+          sanitized,
+          message: emailRegex.test(sanitized) ? undefined : 'Invalid email format'
+        };
       default:
-        return { isValid: false, sanitized: '', message: 'Invalid input type' };
+        return { isValid: true, sanitized };
     }
-    
-    if (!validation.isValid) {
-      return { isValid: false, sanitized: '', message: validation.message };
-    }
-    
-    // Check for advanced threats
-    const threatCheck = enhancedValidateInput.detectAdvancedThreats(input);
-    if (threatCheck.isSuspicious) {
-      this.logSecurityEvent({
-        type: 'suspicious_activity',
-        timestamp: new Date().toISOString(),
-        details: `Suspicious input detected: ${threatCheck.reason}`,
-        userAgent: navigator.userAgent
-      });
-      return { isValid: false, sanitized: '', message: 'Input contains suspicious patterns' };
-    }
-    
-    const sanitized = enhancedValidateInput.sanitizeText(input);
-    return { isValid: true, sanitized };
   }
 
-  // Enhanced password validation
+  // Basic password validation
   validatePassword(password: string): { isValid: boolean; message?: string; score?: number } {
-    return enhancedValidateInput.validatePasswordComplexity(password);
+    if (password.length < 6) {
+      return { isValid: false, message: 'Password must be at least 6 characters long', score: 0 };
+    }
+    return { isValid: true, score: 3 };
   }
 
-  // Secure session management
+  // Session management
   async clearSession(): Promise<void> {
     try {
-      // Clear platform admin session
       localStorage.removeItem('platformAdmin');
       sessionStorage.clear();
-      
-      this.logSecurityEvent({
-        type: 'logout',
-        timestamp: new Date().toISOString(),
-        details: 'Platform admin session cleared securely',
-        userAgent: navigator.userAgent
-      });
     } catch (error) {
-      console.error('Session clear error:', error);
+      // Silent fail
     }
   }
 
-  // Security event logging (minimal for platform admin)
+  // Minimal logging
   logSecurityEvent(event: SecurityEvent): void {
-    // Only log critical security events, avoid noise
+    // Only log critical events
     if (event.type === 'login_failed' || event.type === 'rate_limit_exceeded') {
-      console.log('Security Event:', event.type, event.details);
+      console.log('Security Event:', event.type);
     }
-  }
-
-  // Browser fingerprinting for additional security
-  private generateBrowserFingerprint(): string {
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
-    if (ctx) {
-      ctx.textBaseline = 'top';
-      ctx.font = '14px Arial';
-      ctx.fillText('Security fingerprint', 2, 2);
-    }
-    
-    const fingerprint = {
-      userAgent: navigator.userAgent,
-      language: navigator.language,
-      platform: navigator.platform,
-      screenResolution: `${screen.width}x${screen.height}`,
-      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-      colorDepth: screen.colorDepth,
-      canvas: canvas.toDataURL()
-    };
-    
-    return btoa(JSON.stringify(fingerprint)).substring(0, 32);
-  }
-
-  // Detect concurrent sessions
-  detectConcurrentSessions(): boolean {
-    const sessionId = sessionStorage.getItem('session_id');
-    const storedSessionId = localStorage.getItem('last_session_id');
-    
-    if (storedSessionId && sessionId && storedSessionId !== sessionId) {
-      this.logSecurityEvent({
-        type: 'suspicious_activity',
-        timestamp: new Date().toISOString(),
-        details: 'Concurrent session detected',
-        userAgent: navigator.userAgent
-      });
-      return true;
-    }
-    
-    if (sessionId) {
-      localStorage.setItem('last_session_id', sessionId);
-    }
-    
-    return false;
-  }
-
-  // Minimal security monitoring to avoid interference
-  monitorSecurityViolations(): void {
-    // Only monitor for critical platform admin storage tampering
-    window.addEventListener('storage', (e) => {
-      if (e.key === 'platformAdmin' && e.newValue !== e.oldValue) {
-        console.log('Platform admin storage change detected');
-      }
-    });
   }
 }
 

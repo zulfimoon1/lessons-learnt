@@ -40,14 +40,12 @@ const PlatformAdminDashboard = () => {
       return;
     }
 
-    console.log('📊 Starting fresh data fetch...');
+    console.log('📊 Fetching platform data...');
     setIsLoading(true);
     setError(null);
     
     try {
-      console.log('🔗 Fetching real-time platform data...');
-      
-      // Fetch real data from database
+      // Fetch real data from database using RPC functions
       const [studentsRpc, teachersRpc, feedbackRpc, subscriptionsQuery] = await Promise.all([
         supabase.rpc('get_platform_stats', { stat_type: 'students' }),
         supabase.rpc('get_platform_stats', { stat_type: 'teachers' }),
@@ -55,7 +53,7 @@ const PlatformAdminDashboard = () => {
         supabase.from('subscriptions').select('*')
       ]);
 
-      console.log('📊 Fresh data received:', {
+      console.log('📊 Data received:', {
         students: studentsRpc.data,
         teachers: teachersRpc.data,
         feedback: feedbackRpc.data,
@@ -80,7 +78,7 @@ const PlatformAdminDashboard = () => {
         throw new Error(`Subscriptions data error: ${subscriptionsQuery.error.message}`);
       }
 
-      // Extract counts from RPC responses
+      // Extract actual counts from RPC responses
       const totalStudents = studentsRpc.data?.[0]?.count || 0;
       const totalTeachers = teachersRpc.data?.[0]?.count || 0;
       const totalResponses = feedbackRpc.data?.[0]?.count || 0;
@@ -125,17 +123,13 @@ const PlatformAdminDashboard = () => {
       console.log('✅ Dashboard data updated:', newData);
       setDashboardData(newData);
       
-      toast.success(`Data refreshed! Found ${totalStudents} students, ${totalTeachers} teachers across ${totalSchools} schools`, {
-        duration: 3000,
-      });
+      toast.success(`Data refreshed! Found ${totalStudents} students, ${totalTeachers} teachers across ${totalSchools} schools`);
       
     } catch (error: any) {
       console.error('❌ Data fetch failed:', error);
       const errorMessage = error.message || "Failed to fetch dashboard data";
       setError(errorMessage);
-      toast.error(`Refresh failed: ${errorMessage}`, {
-        duration: 5000,
-      });
+      toast.error(`Refresh failed: ${errorMessage}`);
     } finally {
       setIsLoading(false);
     }
