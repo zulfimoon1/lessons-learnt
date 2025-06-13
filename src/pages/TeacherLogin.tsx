@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -10,6 +9,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import AuthHeader from "@/components/auth/AuthHeader";
 import TeacherLoginForm from "@/components/auth/TeacherLoginForm";
 import TeacherSignupForm from "@/components/auth/TeacherSignupForm";
+import DemoLoginTester from "@/components/DemoLoginTester";
 
 const TeacherLogin = () => {
   const { t } = useLanguage();
@@ -17,6 +17,7 @@ const TeacherLogin = () => {
   const { toast } = useToast();
   const { teacher, teacherLogin, isLoading: authLoading } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
+  const [showDemoTester, setShowDemoTester] = useState(false);
 
   // Redirect if already logged in
   useEffect(() => {
@@ -116,36 +117,72 @@ const TeacherLogin = () => {
     });
   };
 
+  // Show demo tester if Ctrl+Shift+D is pressed
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.ctrlKey && e.shiftKey && e.key === 'D') {
+        setShowDemoTester(!showDemoTester);
+      }
+    };
+    
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [showDemoTester]);
+
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <AuthHeader />
-      <Card className="w-full max-w-md bg-card/80 backdrop-blur-sm border-border">
-        <CardHeader className="text-center">
-          <div className="w-16 h-16 bg-emerald-600 rounded-full mx-auto flex items-center justify-center mb-4">
-            <BookOpenIcon className="w-8 h-8 text-white" />
+      
+      {showDemoTester ? (
+        <div className="w-full max-w-6xl">
+          <DemoLoginTester />
+          <div className="mt-4 text-center">
+            <button 
+              onClick={() => setShowDemoTester(false)}
+              className="text-sm text-muted-foreground hover:text-foreground"
+            >
+              Hide Demo Tester (Ctrl+Shift+D)
+            </button>
           </div>
-          <CardTitle className="text-2xl text-foreground">{t('login.teacher.title')}</CardTitle>
-          <CardDescription>
-            {t('login.teacher.subtitle')}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Tabs defaultValue="login" className="space-y-4">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="login">{t('auth.login')}</TabsTrigger>
-              <TabsTrigger value="signup">{t('auth.signUp')}</TabsTrigger>
-            </TabsList>
+        </div>
+      ) : (
+        <Card className="w-full max-w-md bg-card/80 backdrop-blur-sm border-border">
+          <CardHeader className="text-center">
+            <div className="w-16 h-16 bg-emerald-600 rounded-full mx-auto flex items-center justify-center mb-4">
+              <BookOpenIcon className="w-8 h-8 text-white" />
+            </div>
+            <CardTitle className="text-2xl text-foreground">{t('login.teacher.title')}</CardTitle>
+            <CardDescription>
+              {t('login.teacher.subtitle')}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Tabs defaultValue="login" className="space-y-4">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="login">{t('auth.login')}</TabsTrigger>
+                <TabsTrigger value="signup">{t('auth.signUp')}</TabsTrigger>
+              </TabsList>
 
-            <TabsContent value="login">
-              <TeacherLoginForm onLogin={handleLogin} isLoading={isLoading} />
-            </TabsContent>
+              <TabsContent value="login">
+                <TeacherLoginForm onLogin={handleLogin} isLoading={isLoading} />
+              </TabsContent>
 
-            <TabsContent value="signup">
-              <TeacherSignupForm onSignup={handleSignup} isLoading={isLoading} />
-            </TabsContent>
-          </Tabs>
-        </CardContent>
-      </Card>
+              <TabsContent value="signup">
+                <TeacherSignupForm onSignup={handleSignup} isLoading={isLoading} />
+              </TabsContent>
+            </Tabs>
+            
+            <div className="mt-4 text-center">
+              <button 
+                onClick={() => setShowDemoTester(true)}
+                className="text-xs text-muted-foreground hover:text-foreground"
+              >
+                Press Ctrl+Shift+D for demo login tester
+              </button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 };

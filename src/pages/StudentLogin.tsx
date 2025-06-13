@@ -10,6 +10,7 @@ import AuthHeader from "@/components/auth/AuthHeader";
 import StudentLoginForm from "@/components/auth/StudentLoginForm";
 import StudentSignupForm from "@/components/auth/StudentSignupForm";
 import LoginVerificationTester from "@/components/LoginVerificationTester";
+import DemoLoginTester from "@/components/DemoLoginTester";
 
 const StudentLogin = () => {
   const { t } = useLanguage();
@@ -18,6 +19,7 @@ const StudentLogin = () => {
   const { student, isLoading: authLoading, studentLogin, studentSignup } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [showTester, setShowTester] = useState(false);
+  const [showDemoTester, setShowDemoTester] = useState(false);
 
   // Redirect if already logged in
   useEffect(() => {
@@ -140,22 +142,38 @@ const StudentLogin = () => {
   };
 
   // Show verification tester if Ctrl+Shift+T is pressed
+  // Show demo tester if Ctrl+Shift+D is pressed
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.ctrlKey && e.shiftKey && e.key === 'T') {
         setShowTester(!showTester);
       }
+      if (e.ctrlKey && e.shiftKey && e.key === 'D') {
+        setShowDemoTester(!showDemoTester);
+      }
     };
     
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [showTester]);
+  }, [showTester, showDemoTester]);
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <AuthHeader />
       
-      {showTester ? (
+      {showDemoTester ? (
+        <div className="w-full max-w-6xl">
+          <DemoLoginTester />
+          <div className="mt-4 text-center">
+            <button 
+              onClick={() => setShowDemoTester(false)}
+              className="text-sm text-muted-foreground hover:text-foreground"
+            >
+              Hide Demo Tester (Ctrl+Shift+D)
+            </button>
+          </div>
+        </div>
+      ) : showTester ? (
         <div className="w-full max-w-6xl">
           <LoginVerificationTester />
           <div className="mt-4 text-center">
@@ -194,12 +212,18 @@ const StudentLogin = () => {
               </TabsContent>
             </Tabs>
             
-            <div className="mt-4 text-center">
+            <div className="mt-4 text-center space-y-1">
               <button 
                 onClick={() => setShowTester(true)}
-                className="text-xs text-muted-foreground hover:text-foreground"
+                className="block text-xs text-muted-foreground hover:text-foreground"
               >
                 Press Ctrl+Shift+T for login verification
+              </button>
+              <button 
+                onClick={() => setShowDemoTester(true)}
+                className="block text-xs text-muted-foreground hover:text-foreground"
+              >
+                Press Ctrl+Shift+D for demo login tester
               </button>
             </div>
           </CardContent>
