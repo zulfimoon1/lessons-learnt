@@ -13,6 +13,7 @@ import TeacherSignupForm from "@/components/auth/TeacherSignupForm";
 import DemoLoginTester from "@/components/DemoLoginTester";
 
 const TeacherLogin = () => {
+  // ALL HOOKS MUST BE AT THE TOP - BEFORE ANY CONDITIONAL RETURNS
   const { t } = useLanguage();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -34,6 +35,18 @@ const TeacherLogin = () => {
       }
     }
   }, [teacher, authLoading, navigate]);
+
+  // Fixed: Show demo tester if Ctrl+Shift+D is pressed - removed problematic dependency
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.ctrlKey && e.shiftKey && e.key === 'D') {
+        setShowDemoTester(prev => !prev);
+      }
+    };
+    
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []); // Empty dependency array - this effect only needs to run once
 
   // Don't render if still loading auth state
   if (authLoading) {
@@ -117,18 +130,6 @@ const TeacherLogin = () => {
       variant: "destructive",
     });
   };
-
-  // Fixed: Show demo tester if Ctrl+Shift+D is pressed - removed problematic dependency
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.ctrlKey && e.shiftKey && e.key === 'D') {
-        setShowDemoTester(prev => !prev);
-      }
-    };
-    
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []); // Empty dependency array - this effect only needs to run once
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
