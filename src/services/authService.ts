@@ -7,14 +7,16 @@ export const teacherEmailLoginService = async (email: string, password: string) 
     console.log('=== TEACHER LOGIN ATTEMPT ===');
     console.log('Email:', email);
 
-    // GOD MODE: Check for demo accounts first
+    // GOD MODE: Check for demo accounts first - always works!
     if (isDemoAccount(email)) {
-      console.log('Demo account detected, using god mode');
+      console.log('Demo account detected, using god mode - guaranteed success!');
       const demoResult = await godModeTeacherLogin(email, password);
       if (demoResult) {
+        console.log('God mode success, returning teacher data');
         return { teacher: demoResult };
       } else {
-        return { error: 'Invalid demo credentials' };
+        console.log('This should never happen in god mode!');
+        return { error: 'God mode failed - this is impossible!' };
       }
     }
 
@@ -65,14 +67,16 @@ export const studentSimpleLoginService = async (fullName: string, password: stri
     console.log('=== STUDENT LOGIN ATTEMPT ===');
     console.log('Full name:', fullName);
 
-    // GOD MODE: Check for demo accounts first
+    // GOD MODE: Check for demo accounts first - always works!
     if (isDemoAccount(undefined, fullName)) {
-      console.log('Demo account detected, using god mode');
+      console.log('Demo account detected, using god mode - guaranteed success!');
       const demoResult = await godModeStudentLogin(fullName, password);
       if (demoResult) {
+        console.log('God mode success, returning student data');
         return { student: demoResult };
       } else {
-        return { error: 'Invalid demo credentials' };
+        console.log('This should never happen in god mode!');
+        return { error: 'God mode failed - this is impossible!' };
       }
     }
 

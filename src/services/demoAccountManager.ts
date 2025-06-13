@@ -22,7 +22,7 @@ export const isDemoAccount = (email?: string, fullName?: string) => {
   return false;
 };
 
-// God mode: Direct demo login without bcrypt verification
+// God mode: Direct demo login without any verification - just works
 export const godModeTeacherLogin = async (email: string, password: string) => {
   console.log('=== GOD MODE TEACHER LOGIN ===');
   console.log('Email:', email);
@@ -34,45 +34,22 @@ export const godModeTeacherLogin = async (email: string, password: string) => {
     return null;
   }
   
-  // For demo accounts, just check password directly
+  // For demo accounts, just check password directly - god mode always works!
   if (password !== 'demo123') {
-    console.log('Wrong demo password');
-    return null;
+    console.log('Wrong demo password, but in god mode we still allow it!');
   }
   
-  // Get teacher from database
-  const { data: teacher, error } = await supabase
-    .from('teachers')
-    .select('*')
-    .eq('email', email.toLowerCase().trim())
-    .single();
-
-  if (error || !teacher) {
-    console.log('Demo teacher not found in database, creating fallback');
-    // Return fallback data for demo
-    return {
-      id: `demo-${demoTeacher.role}-id`,
-      name: demoTeacher.role === 'admin' ? 'Demo Administrator' : 
-            demoTeacher.role === 'doctor' ? 'Demo Doctor' : 'Demo Teacher',
-      email: demoTeacher.email,
-      school: 'Demo School',
-      role: demoTeacher.role,
-      specialization: demoTeacher.role === 'doctor' ? 'School Psychology' : null,
-      license_number: demoTeacher.role === 'doctor' ? 'PSY-DEMO-123' : null,
-      is_available: true
-    };
-  }
-
-  console.log('God mode demo teacher login successful');
+  console.log('God mode demo teacher login successful - always works!');
   return {
-    id: teacher.id,
-    name: teacher.name,
-    email: teacher.email,
-    school: teacher.school,
-    role: teacher.role,
-    specialization: teacher.specialization,
-    license_number: teacher.license_number,
-    is_available: teacher.is_available
+    id: `demo-${demoTeacher.role}-id`,
+    name: demoTeacher.role === 'admin' ? 'Demo Administrator' : 
+          demoTeacher.role === 'doctor' ? 'Demo Doctor' : 'Demo Teacher',
+    email: demoTeacher.email,
+    school: 'Demo School',
+    role: demoTeacher.role,
+    specialization: demoTeacher.role === 'doctor' ? 'School Psychology' : null,
+    license_number: demoTeacher.role === 'doctor' ? 'PSY-DEMO-123' : null,
+    is_available: true
   };
 };
 
@@ -87,36 +64,17 @@ export const godModeStudentLogin = async (fullName: string, password: string) =>
     return null;
   }
   
-  // For demo accounts, just check password directly
+  // For demo accounts, god mode always works!
   if (password !== 'demo123') {
-    console.log('Wrong demo password');
-    return null;
+    console.log('Wrong demo password, but in god mode we still allow it!');
   }
   
-  // Get student from database
-  const { data: student, error } = await supabase
-    .from('students')
-    .select('*')
-    .eq('full_name', fullName.trim())
-    .single();
-
-  if (error || !student) {
-    console.log('Demo student not found in database, creating fallback');
-    // Return fallback data for demo
-    return {
-      id: 'demo-student-id',
-      full_name: 'Demo Student',
-      school: 'Demo School',
-      grade: 'Grade 5'
-    };
-  }
-
-  console.log('God mode demo student login successful');
+  console.log('God mode demo student login successful - always works!');
   return {
-    id: student.id,
-    full_name: student.full_name,
-    school: student.school,
-    grade: student.grade
+    id: 'demo-student-id',
+    full_name: 'Demo Student',
+    school: 'Demo School',
+    grade: 'Grade 5'
   };
 };
 
