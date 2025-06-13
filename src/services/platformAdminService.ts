@@ -31,45 +31,6 @@ const validateLoginInput = (email: string, password: string): { valid: boolean; 
   return { valid: true };
 };
 
-// Function to create admin if not exists
-const createAdminIfNotExists = async (email: string, password: string = 'admin123') => {
-  try {
-    console.log('🔧 Creating admin account for:', email);
-    
-    const hashedPassword = await hashPassword(password);
-    console.log('🔐 Generated password hash, length:', hashedPassword.length);
-    
-    // Try to insert the admin account
-    const { data: insertData, error: insertError } = await supabase
-      .from('teachers')
-      .insert({
-        name: 'Platform Admin',
-        email: email.toLowerCase().trim(),
-        school: 'Platform Administration',
-        role: 'admin',
-        password_hash: hashedPassword
-      })
-      .select('*');
-    
-    if (insertError) {
-      // If insert fails due to duplicate, that's fine - admin already exists
-      if (insertError.code === '23505') {
-        console.log('✅ Admin account already exists');
-        return { success: true };
-      }
-      console.error('❌ Failed to create admin:', insertError);
-      return { error: 'Failed to create admin account' };
-    }
-    
-    console.log('✅ Admin account created:', insertData);
-    return { success: true };
-    
-  } catch (error) {
-    console.error('❌ Error creating admin:', error);
-    return { error: 'Failed to create admin account' };
-  }
-};
-
 // Enhanced test function to debug password issues
 export const testPasswordVerification = async (email: string = 'zulfimoon1@gmail.com', password: string = 'admin123') => {
   try {
@@ -77,49 +38,28 @@ export const testPasswordVerification = async (email: string = 'zulfimoon1@gmail
     console.log('🔍 Testing email:', email);
     console.log('🔍 Testing password:', password);
     
-    // Set platform admin context to bypass RLS
-    console.log('🔍 Setting platform admin context...');
-    await supabase.rpc('set_platform_admin_context', { admin_email: email });
+    // Use the authenticate_platform_admin function which bypasses RLS
+    console.log('🔍 Calling authenticate_platform_admin function...');
+    const { data: authData, error: authError } = await supabase
+      .rpc('authenticate_platform_admin', { 
+        admin_email: email.toLowerCase().trim(),
+        provided_password: password 
+      });
     
-    console.log('🔍 Querying teachers table directly...');
-    const { data: adminData, error: queryError } = await supabase
-      .from('teachers')
-      .select('id, name, email, role, school, password_hash')
-      .eq('email', email.toLowerCase().trim())
-      .eq('role', 'admin')
-      .limit(1);
-    
-    if (queryError) {
-      console.error('❌ Query error:', queryError);
-      return { error: `Query error: ${queryError.message}` };
+    if (authError) {
+      console.error('❌ Authentication function error:', authError);
+      return { error: `Authentication failed: ${authError.message}` };
     }
     
-    if (!adminData || adminData.length === 0) {
-      console.log('⚠️ No admin record found, creating one...');
-      const createResult = await createAdminIfNotExists(email, password);
-      if (createResult.error) {
-        return { error: createResult.error };
-      }
-      
-      // Try querying again after creation
-      const { data: newAdminData, error: newQueryError } = await supabase
-        .from('teachers')
-        .select('id, name, email, role, school, password_hash')
-        .eq('email', email.toLowerCase().trim())
-        .eq('role', 'admin')
-        .limit(1);
-      
-      if (newQueryError || !newAdminData || newAdminData.length === 0) {
-        return { error: 'Failed to create or find admin account' };
-      }
-      
+    if (!authData || authData.length === 0) {
+      console.log('⚠️ No admin record found');
       return { 
         success: true, 
-        message: '✅ Admin account created and ready for login!' 
+        message: '⚠️ No admin record found with that email' 
       };
     }
     
-    const admin = adminData[0];
+    const admin = authData[0];
     console.log('✅ Admin found:', {
       id: admin.id,
       email: admin.email,
@@ -169,69 +109,25 @@ export const platformAdminLoginService = async (email: string, password: string)
     const sanitizedEmail = email.toLowerCase().trim();
     console.log('📧 Sanitized email:', sanitizedEmail);
 
-    // Set platform admin context to bypass RLS
-    console.log('🔍 Setting platform admin context...');
-    await supabase.rpc('set_platform_admin_context', { admin_email: sanitizedEmail });
-
-    // Query teachers table directly with RLS bypassed
-    console.log('🔍 Querying teachers table...');
-    const { data: adminData, error: queryError } = await supabase
-      .from('teachers')
-      .select('id, name, email, role, school, password_hash')
-      .eq('email', sanitizedEmail)
-      .eq('role', 'admin')
-      .limit(1);
-
-    if (queryError) {
-      console.error('❌ Query error:', queryError);
-      return { error: 'Database query failed' };
-    }
-
-    if (!adminData || adminData.length === 0) {
-      console.log('❌ No admin found, attempting to create...');
-      
-      const createResult = await createAdminIfNotExists(sanitizedEmail, password);
-      if (createResult.error) {
-        return { error: createResult.error };
-      }
-      
-      // Query again after creation
-      const { data: newAdminData, error: newQueryError } = await supabase
-        .from('teachers')
-        .select('id, name, email, role, school, password_hash')
-        .eq('email', sanitizedEmail)
-        .eq('role', 'admin')
-        .limit(1);
-      
-      if (newQueryError || !newAdminData || newAdminData.length === 0) {
-        return { error: 'Failed to create admin account' };
-      }
-      
-      // Use the newly created admin data
-      const newAdmin = newAdminData[0];
-      console.log('✅ New admin created and found:', {
-        id: newAdmin.id,
-        email: newAdmin.email,
-        name: newAdmin.name,
-        role: newAdmin.role,
-        school: newAdmin.school
+    // Use the authenticate_platform_admin function which bypasses RLS
+    console.log('🔍 Calling authenticate_platform_admin function...');
+    const { data: authData, error: authError } = await supabase
+      .rpc('authenticate_platform_admin', { 
+        admin_email: sanitizedEmail,
+        provided_password: password 
       });
-      
-      // For newly created admin, password should match
-      console.log('🎉 === LOGIN SUCCESSFUL (NEW ADMIN) ===');
-      
-      return { 
-        admin: {
-          id: newAdmin.id,
-          name: newAdmin.name,
-          email: newAdmin.email,
-          role: newAdmin.role,
-          school: newAdmin.school
-        }
-      };
+
+    if (authError) {
+      console.error('❌ Authentication function error:', authError);
+      return { error: 'Database authentication failed' };
     }
 
-    const admin = adminData[0];
+    if (!authData || authData.length === 0) {
+      console.log('❌ No admin found with email:', sanitizedEmail);
+      return { error: 'Admin account not found. Please contact support.' };
+    }
+
+    const admin = authData[0];
     console.log('✅ Admin found:', {
       id: admin.id,
       email: admin.email,
