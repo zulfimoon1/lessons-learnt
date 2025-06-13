@@ -13,86 +13,17 @@ const DEMO_ACCOUNTS = {
   ]
 };
 
-export const ensureDemoAccountHash = async (email?: string, fullName?: string, password?: string) => {
-  console.log('=== ENSURING DEMO ACCOUNT HASH ===');
-  
-  if (!password || password !== 'demo123') {
-    return { isDemo: false };
-  }
-
-  try {
-    // First test if bcrypt environment is working
-    console.log('Testing bcrypt environment...');
-    const bcryptWorking = await testBcryptEnvironment();
-    if (!bcryptWorking) {
-      console.error('Bcrypt environment test failed!');
-      return { isDemo: true, success: false, error: 'Bcrypt environment not working' };
-    }
-    console.log('Bcrypt environment test passed!');
-
-    console.log('Creating fresh demo hash...');
-    const freshHash = await createDemoHash();
-    console.log('Fresh demo hash created:', freshHash);
-    console.log('Fresh demo hash length:', freshHash.length);
-
-    // Handle teacher demo accounts
-    if (email && email.includes('demo')) {
-      console.log(`Updating hash for demo teacher: ${email}`);
-      
-      const { error } = await supabase
-        .from('teachers')
-        .update({ password_hash: freshHash })
-        .eq('email', email);
-      
-      if (error) {
-        console.error(`Error updating demo teacher ${email}:`, error);
-        return { isDemo: true, success: false, error };
-      }
-      
-      console.log(`Successfully updated hash for demo teacher: ${email}`);
-      return { isDemo: true, success: true };
-    }
-
-    // Handle student demo accounts
-    if (fullName && fullName.includes('Demo')) {
-      console.log(`Updating hash for demo student: ${fullName}`);
-      
-      const { error } = await supabase
-        .from('students')
-        .update({ password_hash: freshHash })
-        .eq('full_name', fullName);
-      
-      if (error) {
-        console.error(`Error updating demo student ${fullName}:`, error);
-        return { isDemo: true, success: false, error };
-      }
-      
-      console.log(`Successfully updated hash for demo student: ${fullName}`);
-      return { isDemo: true, success: true };
-    }
-
-    return { isDemo: false };
-    
-  } catch (error) {
-    console.error('Error ensuring demo account hash:', error);
-    return { isDemo: true, success: false, error };
-  }
-};
-
-export const isDemoAccount = (email?: string, fullName?: string) => {
-  if (email && DEMO_ACCOUNTS.teachers.some(teacher => teacher.email === email)) {
-    return true;
-  }
-  if (fullName && DEMO_ACCOUNTS.students.some(student => student.full_name === fullName)) {
-    return true;
-  }
-  return false;
-};
-
 // Function to force update all demo account passwords immediately
 export const forceUpdateDemoPasswords = async () => {
   try {
     console.log('=== FORCE UPDATING ALL DEMO PASSWORDS ===');
+    
+    // Test bcrypt environment first
+    const bcryptWorking = await testBcryptEnvironment();
+    if (!bcryptWorking) {
+      console.error('Bcrypt environment test failed!');
+      return { success: false, error: 'Bcrypt environment not working' };
+    }
     
     const freshHash = await createDemoHash();
     console.log('Created fresh hash for all demo accounts:', freshHash);
@@ -129,12 +60,68 @@ export const forceUpdateDemoPasswords = async () => {
   }
 };
 
-// Function to initialize all demo account passwords immediately
-export const initializeDemoPasswords = async () => {
-  return await forceUpdateDemoPasswords();
+export const isDemoAccount = (email?: string, fullName?: string) => {
+  if (email && DEMO_ACCOUNTS.teachers.some(teacher => teacher.email === email)) {
+    return true;
+  }
+  if (fullName && DEMO_ACCOUNTS.students.some(student => student.full_name === fullName)) {
+    return true;
+  }
+  return false;
 };
 
-// Function to reset all demo account passwords
-export const resetAllDemoPasswords = async () => {
-  return await forceUpdateDemoPasswords();
+// Function to initialize all demo account passwords immediately on app start
+export const initializeDemoPasswordsOnStartup = async () => {
+  try {
+    console.log('=== INITIALIZING DEMO PASSWORDS ON STARTUP ===');
+    
+    // Check if any demo accounts have placeholder hashes
+    const { data: teachers } = await supabase
+      .from('teachers')
+      .select('email, password_hash')
+      .in('email', ['demoadmin@demo.com', 'demoteacher@demo.com', 'demodoc@demo.com']);
+    
+    const { data: students } = await supabase
+      .from('students')
+      .select('full_name, password_hash')
+      .eq('full_name', 'Demo Student');
+    
+    const needsUpdate = [
+      ...(teachers || []),
+      ...(students || [])
+    ].some(account => 
+      !account.password_hash || 
+      account.password_hash.includes('TEMP_HASH_TO_BE_REPLACED') ||
+      account.password_hash.length !== 60
+    );
+    
+    if (needsUpdate) {
+      console.log('Demo accounts need password update, updating now...');
+      return await forceUpdateDemoPasswords();
+    } else {
+      console.log('Demo accounts already have proper hashes');
+      return { success: true };
+    }
+    
+  } catch (error) {
+    console.error('Error initializing demo passwords:', error);
+    return { success: false, error };
+  }
+};
+
+export const ensureDemoAccountHash = async (email?: string, fullName?: string, password?: string) => {
+  console.log('=== ENSURING DEMO ACCOUNT HASH ===');
+  
+  if (!password || password !== 'demo123') {
+    return { isDemo: false };
+  }
+
+  // Always force update for demo accounts to ensure fresh hashes
+  if (isDemoAccount(email, fullName)) {
+    console.log('Demo account detected, force updating all demo passwords...');
+    const result = await forceUpdateDemoPasswords();
+    return { isDemo: true, ...result };
+  }
+
+  return { isDemo: false };
 };

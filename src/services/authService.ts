@@ -1,7 +1,13 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { verifyPassword, hashPassword } from './securePasswordService';
-import { forceUpdateDemoPasswords, isDemoAccount, ensureDemoAccountHash } from './demoAccountManager';
+import { forceUpdateDemoPasswords, isDemoAccount, initializeDemoPasswordsOnStartup } from './demoAccountManager';
+
+// Initialize demo passwords on module load
+initializeDemoPasswordsOnStartup().then(result => {
+  if (!result.success) {
+    console.error('Failed to initialize demo passwords:', result.error);
+  }
+});
 
 export const teacherEmailLoginService = async (email: string, password: string) => {
   try {
@@ -13,6 +19,7 @@ export const teacherEmailLoginService = async (email: string, password: string) 
       const forceResult = await forceUpdateDemoPasswords();
       if (!forceResult.success) {
         console.error('Failed to force update demo passwords:', forceResult.error);
+        return { error: 'Demo account setup failed. Please try again.' };
       } else {
         console.log('Demo passwords force updated successfully');
       }
@@ -70,6 +77,7 @@ export const studentSimpleLoginService = async (fullName: string, password: stri
       const forceResult = await forceUpdateDemoPasswords();
       if (!forceResult.success) {
         console.error('Failed to force update demo passwords:', forceResult.error);
+        return { error: 'Demo account setup failed. Please try again.' };
       } else {
         console.log('Demo passwords force updated successfully');
       }
