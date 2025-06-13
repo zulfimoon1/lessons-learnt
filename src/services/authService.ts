@@ -1,124 +1,118 @@
-import { supabase } from '@/integrations/supabase/client';
-import { verifyPassword, hashPassword } from './securePasswordService';
-import { godModeTeacherLogin, godModeStudentLogin, isDemoAccount } from './demoAccountManager';
 
+import { supabase } from '@/integrations/supabase/client';
+import bcrypt from 'bcryptjs';
+import { godModeTeacherLogin, godModeStudentLogin, isDemoTeacher, isDemoStudent } from './demoAccountManager';
+
+// Teacher login with email and password
 export const teacherEmailLoginService = async (email: string, password: string) => {
   try {
     console.log('=== TEACHER LOGIN ATTEMPT ===');
     console.log('Email:', email);
 
-    // GOD MODE: Check for demo accounts first - always works!
-    if (isDemoAccount(email)) {
-      console.log('Demo account detected, using god mode - guaranteed success!');
-      const demoResult = await godModeTeacherLogin(email, password);
-      if (demoResult) {
-        console.log('God mode success, returning teacher data');
-        return { teacher: demoResult };
-      } else {
-        console.log('This should never happen in god mode!');
-        return { error: 'God mode failed - this is impossible!' };
+    // 🎯 DEMO ACCOUNTS GET INSTANT GOD MODE ACCESS
+    if (isDemoTeacher(email)) {
+      console.log('🎯 DEMO TEACHER LOGIN - USING GOD MODE');
+      const result = await godModeTeacherLogin(email, password);
+      if (result) {
+        console.log('✅ DEMO LOGIN SUCCESSFUL, TEACHER DATA:', result);
+        return { teacher: result };
       }
+      console.log('❌ DEMO LOGIN FAILED');
+      return { error: 'Invalid demo credentials' };
     }
 
-    // Regular authentication for non-demo accounts
-    const { data: teacher, error } = await supabase
+    // Regular teacher login flow
+    const { data: teachers, error: searchError } = await supabase
       .from('teachers')
       .select('*')
-      .eq('email', email.toLowerCase().trim())
-      .single();
+      .eq('email', email.toLowerCase().trim());
 
-    if (error || !teacher) {
-      console.log('Teacher not found:', error);
+    if (searchError) {
+      console.error('Teacher search error:', searchError);
+      return { error: 'Database error during login' };
+    }
+
+    if (!teachers || teachers.length === 0) {
+      console.log('No teacher found with email:', email);
       return { error: 'Invalid email or password' };
     }
 
-    console.log('Teacher found:', teacher.name);
-
-    // Verify password
-    const isPasswordValid = await verifyPassword(password, teacher.password_hash);
-    console.log('Password verification result:', isPasswordValid);
+    const teacher = teachers[0];
     
-    if (!isPasswordValid) {
-      console.log('Password verification failed');
+    // Verify password
+    const isValidPassword = await bcrypt.compare(password, teacher.password_hash);
+    if (!isValidPassword) {
+      console.log('Invalid password for teacher:', email);
       return { error: 'Invalid email or password' };
     }
 
-    console.log('Teacher login successful');
-    return {
-      teacher: {
-        id: teacher.id,
-        name: teacher.name,
-        email: teacher.email,
-        school: teacher.school,
-        role: teacher.role,
-        specialization: teacher.specialization,
-        license_number: teacher.license_number,
-        is_available: teacher.is_available
-      }
-    };
+    console.log('Teacher login successful:', teacher.name);
+    return { teacher };
   } catch (error) {
     console.error('Teacher login error:', error);
     return { error: 'Login failed. Please try again.' };
   }
 };
 
+// Student login with full name and password
 export const studentSimpleLoginService = async (fullName: string, password: string) => {
   try {
     console.log('=== STUDENT LOGIN ATTEMPT ===');
     console.log('Full name:', fullName);
 
-    // GOD MODE: Check for demo accounts first - always works!
-    if (isDemoAccount(undefined, fullName)) {
-      console.log('Demo account detected, using god mode - guaranteed success!');
-      const demoResult = await godModeStudentLogin(fullName, password);
-      if (demoResult) {
-        console.log('God mode success, returning student data');
-        return { student: demoResult };
-      } else {
-        console.log('This should never happen in god mode!');
-        return { error: 'God mode failed - this is impossible!' };
+    // 🎯 DEMO STUDENTS GET INSTANT GOD MODE ACCESS
+    if (isDemoStudent(fullName)) {
+      console.log('🎯 DEMO STUDENT LOGIN - USING GOD MODE');
+      const result = await godModeStudentLogin(fullName, password);
+      if (result) {
+        console.log('✅ DEMO STUDENT LOGIN SUCCESSFUL:', result);
+        return { student: result };
       }
+      console.log('❌ DEMO STUDENT LOGIN FAILED');
+      return { error: 'Invalid demo credentials' };
     }
 
-    // Regular authentication for non-demo accounts
-    const { data: student, error } = await supabase
+    // Regular student login flow
+    const { data: students, error: searchError } = await supabase
       .from('students')
       .select('*')
-      .eq('full_name', fullName.trim())
-      .single();
+      .eq('full_name', fullName.trim());
 
-    if (error || !student) {
-      console.log('Student not found:', error);
-      return { error: 'Invalid credentials' };
+    if (searchError) {
+      console.error('Student search error:', searchError);
+      return { error: 'Database error during login' };
     }
 
-    console.log('Student found:', student.full_name);
+    if (!students || students.length === 0) {
+      console.log('No student found with name:', fullName);
+      return { error: 'Invalid name or password' };
+    }
 
-    // Verify password
-    const isPasswordValid = await verifyPassword(password, student.password_hash);
-    console.log('Password verification result:', isPasswordValid);
+    const student = students[0];
     
-    if (!isPasswordValid) {
-      console.log('Password verification failed');
-      return { error: 'Invalid credentials' };
+    // Verify password
+    const isValidPassword = await bcrypt.compare(password, student.password_hash);
+    if (!isValidPassword) {
+      console.log('Invalid password for student:', fullName);
+      return { error: 'Invalid name or password' };
     }
 
-    console.log('Student login successful');
-    return {
-      student: {
-        id: student.id,
-        full_name: student.full_name,
-        school: student.school,
-        grade: student.grade
-      }
-    };
+    console.log('Student login successful:', student.full_name);
+    return { student };
   } catch (error) {
     console.error('Student login error:', error);
     return { error: 'Login failed. Please try again.' };
   }
 };
 
-export const teacherSignupService = async (name: string, email: string, school: string, password: string, role: string = 'teacher') => {
+// Teacher signup
+export const teacherSignupService = async (
+  name: string, 
+  email: string, 
+  school: string, 
+  password: string, 
+  role: 'teacher' | 'admin' | 'doctor' = 'teacher'
+) => {
   try {
     console.log('Teacher signup attempt:', { name, email, school, role });
 
@@ -134,7 +128,7 @@ export const teacherSignupService = async (name: string, email: string, school: 
     }
 
     // Hash password
-    const hashedPassword = await hashPassword(password);
+    const hashedPassword = await bcrypt.hash(password, 12);
 
     // Create teacher
     const { data: teacher, error } = await supabase
@@ -143,37 +137,32 @@ export const teacherSignupService = async (name: string, email: string, school: 
         name: name.trim(),
         email: email.toLowerCase().trim(),
         school: school.trim(),
-        password_hash: hashedPassword,
-        role: role
+        role,
+        password_hash: hashedPassword
       }])
       .select()
       .single();
 
     if (error) {
-      console.error('Teacher signup error:', error);
+      console.error('Teacher creation error:', error);
       return { error: 'Failed to create teacher account' };
     }
 
-    console.log('Teacher signup successful');
-    return {
-      teacher: {
-        id: teacher.id,
-        name: teacher.name,
-        email: teacher.email,
-        school: teacher.school,
-        role: teacher.role,
-        specialization: teacher.specialization,
-        license_number: teacher.license_number,
-        is_available: teacher.is_available
-      }
-    };
+    console.log('Teacher signup successful:', teacher.name);
+    return { teacher };
   } catch (error) {
     console.error('Teacher signup error:', error);
     return { error: 'Signup failed. Please try again.' };
   }
 };
 
-export const studentSignupService = async (fullName: string, school: string, grade: string, password: string) => {
+// Student signup
+export const studentSignupService = async (
+  fullName: string,
+  school: string,
+  grade: string,
+  password: string
+) => {
   try {
     console.log('Student signup attempt:', { fullName, school, grade });
 
@@ -183,15 +172,14 @@ export const studentSignupService = async (fullName: string, school: string, gra
       .select('id')
       .eq('full_name', fullName.trim())
       .eq('school', school.trim())
-      .eq('grade', grade.trim())
       .single();
 
     if (existingStudent) {
-      return { error: 'A student with these details already exists' };
+      return { error: 'A student with this name already exists in this school' };
     }
 
     // Hash password
-    const hashedPassword = await hashPassword(password);
+    const hashedPassword = await bcrypt.hash(password, 12);
 
     // Create student
     const { data: student, error } = await supabase
@@ -206,19 +194,12 @@ export const studentSignupService = async (fullName: string, school: string, gra
       .single();
 
     if (error) {
-      console.error('Student signup error:', error);
+      console.error('Student creation error:', error);
       return { error: 'Failed to create student account' };
     }
 
-    console.log('Student signup successful');
-    return {
-      student: {
-        id: student.id,
-        full_name: student.full_name,
-        school: student.school,
-        grade: student.grade
-      }
-    };
+    console.log('Student signup successful:', student.full_name);
+    return { student };
   } catch (error) {
     console.error('Student signup error:', error);
     return { error: 'Signup failed. Please try again.' };
