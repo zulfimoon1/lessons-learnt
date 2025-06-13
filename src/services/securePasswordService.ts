@@ -45,41 +45,10 @@ export const verifyPassword = async (password: string, hashedPassword: string): 
     console.log('Cleaned password:', cleanPassword);
     console.log('Cleaned hash:', cleanHash);
     
-    // Test the bcrypt library directly with a known working example
-    console.log('Testing bcrypt with known values...');
-    const testPassword = 'demo123';
-    const testHash = await bcrypt.hash(testPassword, 12);
-    const testResult = await bcrypt.compare(testPassword, testHash);
-    console.log('Bcrypt test with known values:', testResult);
-    
-    if (!testResult) {
-      console.error('CRITICAL: bcrypt library is not working correctly');
-      return false;
-    }
-    
-    // Now test the actual password
+    // Perform the verification
     console.log('Testing actual password against stored hash...');
     const result = await bcrypt.compare(cleanPassword, cleanHash);
-    console.log('Actual bcrypt.compare result:', result);
-    
-    // If it still fails and this is a demo account, try regenerating the hash and comparing
-    if (!result && cleanPassword === 'demo123') {
-      console.log('Demo password failed, trying to regenerate hash for comparison...');
-      const freshHash = await bcrypt.hash('demo123', 12);
-      console.log('Fresh demo123 hash:', freshHash);
-      const freshTest = await bcrypt.compare('demo123', freshHash);
-      console.log('Fresh hash test result:', freshTest);
-      
-      // Try comparing with a few variations of the password
-      const variations = ['demo123', 'Demo123', 'DEMO123'];
-      for (const variation of variations) {
-        const variationResult = await bcrypt.compare(variation, cleanHash);
-        console.log(`Testing variation "${variation}":`, variationResult);
-        if (variationResult) {
-          return true;
-        }
-      }
-    }
+    console.log('Bcrypt.compare result:', result);
     
     return result;
     
