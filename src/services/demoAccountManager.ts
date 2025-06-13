@@ -1,6 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { hashPassword, verifyPassword } from './securePasswordService';
+import { hashPassword, verifyPassword, testBcryptEnvironment } from './securePasswordService';
 
 const DEMO_ACCOUNTS = {
   teachers: [
@@ -21,6 +21,15 @@ export const ensureDemoAccountHash = async (email?: string, fullName?: string, p
   }
 
   try {
+    // First test if bcrypt environment is working
+    console.log('Testing bcrypt environment...');
+    const bcryptWorking = await testBcryptEnvironment();
+    if (!bcryptWorking) {
+      console.error('Bcrypt environment test failed!');
+      return { isDemo: true, success: false, error: 'Bcrypt environment not working' };
+    }
+    console.log('Bcrypt environment test passed!');
+
     console.log('Generating fresh hash for demo123...');
     const freshHash = await hashPassword('demo123');
     console.log('Generated fresh hash:', freshHash);
