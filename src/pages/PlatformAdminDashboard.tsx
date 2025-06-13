@@ -79,45 +79,80 @@ const PlatformAdminDashboard = () => {
     try {
       await setAdminContext();
 
-      // Force fresh queries by adding a timestamp parameter to avoid caching
+      // Force fresh queries by bypassing any potential caching
       const timestamp = Date.now();
       console.log('📊 DASHBOARD: Using timestamp for fresh queries:', timestamp);
 
-      // Use the platform stats function to get core metrics with fresh queries
-      const { data: studentsData, error: studentsError } = await supabase
-        .rpc('get_platform_stats', { stat_type: 'students' });
-
-      const { data: teachersData, error: teachersError } = await supabase
-        .rpc('get_platform_stats', { stat_type: 'teachers' });
-
-      const { data: responsesData, error: responsesError } = await supabase
-        .rpc('get_platform_stats', { stat_type: 'feedback' });
-
-      // FORCE FRESH QUERIES for schools - use raw SQL with cache busting
-      console.log('📊 DASHBOARD: Fetching FRESH school data...');
-      
-      // Query teachers for unique schools with explicit fresh query
-      const { data: teacherSchools, error: teacherSchoolsError } = await supabase
-        .from('teachers')
-        .select('school')
-        .not('school', 'is', null)
-        .order('school');
-
-      // Query students for unique schools with explicit fresh query  
-      const { data: studentSchools, error: studentSchoolsError } = await supabase
+      // Use direct count queries instead of the RPC function for more reliable results
+      const { count: studentsCount, error: studentsError } = await supabase
         .from('students')
-        .select('school')
-        .not('school', 'is', null)
-        .order('school');
+        .select('*', { count: 'exact', head: true });
 
-      console.log('📊 DASHBOARD: Raw teacher schools data:', teacherSchools);
-      console.log('📊 DASHBOARD: Raw student schools data:', studentSchools);
+      const { count: teachersCount, error: teachersError } = await supabase
+        .from('teachers')
+        .select('*', { count: 'exact', head: true });
 
-      // Fetch subscriptions count
+      const { count: responsesCount, error: responsesError } = await supabase
+        .from('feedback')
+        .select('*', { count: 'exact', head: true });
+
       const { count: subscriptionsCount, error: subscriptionsError } = await supabase
         .from('subscriptions')
         .select('*', { count: 'exact', head: true });
 
+      // CRITICAL: Get fresh school data by forcing new queries
+      console.log('📊 DASHBOARD: Fetching FRESH school data with explicit ordering...');
+      
+      // Force fresh queries with explicit ordering and cache busting
+      const { data: teacherSchools, error: teacherSchoolsError } = await supabase
+        .from('teachers')
+        .select('school')
+        .not('school', 'is', null)
+        .order('school')
+        .limit(1000); // Add explicit limit to force fresh query
+
+      const { data: studentSchools, error: studentSchoolsError } = await supabase
+        .from('students')
+        .select('school')
+        .not('school', 'is', null)
+        .order('school')
+        .limit(1000); // Add explicit limit to force fresh query
+
+      console.log('📊 DASHBOARD: Fresh teacher schools data:', teacherSchools);
+      console.log('📊 DASHBOARD: Fresh student schools data:', studentSchools);
+
+      if (studentsError) console.error('Students error:', studentsError);
+      if (teachersError) console.error('Teachers error:', teachersError);
+      if (responsesError) console.error('Responses error:', responsesError);
+      if (subscriptionsError) console.error('Subscriptions error:', subscriptionsError);
+      if (teacherSchoolsError) console.error('Teacher schools error:', teacherSchoolsError);
+      if (studentSchoolsError) console.error('Student schools error:', studentSchoolsError);
+
+      // Calculate unique schools from FRESH data
+      const allSchoolNames = new Set<string>();
+      
+      if (teacherSchools && Array.isArray(teacherSchools)) {
+        teacherSchools.forEach(item => {
+          if (item?.school && typeof item.school === 'string') {
+            console.log('📊 DASHBOARD: Adding teacher school:', item.school);
+            allSchoolNames.add(item.school);
+          }
+        });
+      }
+      
+      if (studentSchools && Array.isArray(studentSchools)) {
+        studentSchools.forEach(item => {
+          if (item?.school && typeof item.school === 'string') {
+            console.log('📊 DASHBOARD: Adding student school:', item.school);
+            allSchoolNames.add(item.school);
+          }
+        });
+      }
+
+      const uniqueSchools = Array.from(allSchoolNames);
+      console.log('🏫 DASHBOARD: FINAL unique schools list:', uniqueSchools);
+      console.log('🏫 DASHBOARD: FINAL school count:', uniqueSchools.length);
+      
       // Fetch school stats from teachers table
       const { data: schoolStatsData, error: schoolStatsError } = await supabase
         .from('teachers')
@@ -147,45 +182,12 @@ const PlatformAdminDashboard = () => {
       } catch (error) {
         console.warn('Could not fetch feedback analytics:', error);
       }
-
-      if (studentsError) console.error('Students error:', studentsError);
-      if (teachersError) console.error('Teachers error:', teachersError);
-      if (responsesError) console.error('Responses error:', responsesError);
-      if (subscriptionsError) console.error('Subscriptions error:', subscriptionsError);
-      if (schoolStatsError) console.error('School stats error:', schoolStatsError);
-      if (teacherSchoolsError) console.error('Teacher schools error:', teacherSchoolsError);
-      if (studentSchoolsError) console.error('Student schools error:', studentSchoolsError);
-
-      // Combine schools from both teachers and students to get ACTUAL unique schools
-      const allSchoolNames = new Set<string>();
-      
-      if (teacherSchools) {
-        teacherSchools.forEach(item => {
-          if (item.school) {
-            console.log('📊 DASHBOARD: Adding teacher school:', item.school);
-            allSchoolNames.add(item.school);
-          }
-        });
-      }
-      
-      if (studentSchools) {
-        studentSchools.forEach(item => {
-          if (item.school) {
-            console.log('📊 DASHBOARD: Adding student school:', item.school);
-            allSchoolNames.add(item.school);
-          }
-        });
-      }
-
-      const uniqueSchools = Array.from(allSchoolNames);
-      console.log('🏫 DASHBOARD: FINAL unique schools list:', uniqueSchools);
-      console.log('🏫 DASHBOARD: FINAL school count:', uniqueSchools.length);
       
       const newStats = {
-        totalStudents: studentsData?.[0]?.count || 0,
-        totalTeachers: teachersData?.[0]?.count || 0,
+        totalStudents: studentsCount || 0,
+        totalTeachers: teachersCount || 0,
         totalSchools: uniqueSchools.length,
-        totalResponses: responsesData?.[0]?.count || 0,
+        totalResponses: responsesCount || 0,
         totalSubscriptions: subscriptionsCount || 0,
       };
 
@@ -221,11 +223,11 @@ const PlatformAdminDashboard = () => {
   const handleDataChange = () => {
     console.log('📊 DASHBOARD: handleDataChange called - Data changed, refreshing dashboard...');
     console.log('📊 DASHBOARD: Current stats before refresh:', stats);
-    // Force a complete refresh immediately to ensure fresh data
+    // Force a complete refresh with a delay to ensure database operations are complete
     setTimeout(() => {
       console.log('📊 DASHBOARD: Delayed refresh starting now...');
       fetchStats();
-    }, 100); // Small delay to ensure database operations are complete
+    }, 1000); // Increased delay to 1 second to ensure all database operations complete
   };
 
   const handleLogout = () => {
