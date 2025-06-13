@@ -142,8 +142,72 @@ const SchoolManagement: React.FC<SchoolManagementProps> = ({ onDataChange }) => 
       await setAdminContext();
       console.log(`🗑️ Starting deletion of school: ${schoolName}`);
       
-      // Step 1: Delete all class schedules from the school first
-      console.log('🗑️ Step 1: Deleting class schedules...');
+      // Step 1: Get all related IDs BEFORE deleting anything
+      console.log('🗑️ Step 1: Getting related data IDs...');
+      
+      // Get class schedule IDs for this school
+      const { data: scheduleIds, error: scheduleIdsError } = await supabase
+        .from('class_schedules')
+        .select('id')
+        .eq('school', schoolName);
+
+      if (scheduleIdsError) {
+        console.error('Error getting schedule IDs:', scheduleIdsError);
+        throw scheduleIdsError;
+      }
+
+      // Get student IDs for this school
+      const { data: studentIds, error: studentIdsError } = await supabase
+        .from('students')
+        .select('id')
+        .eq('school', schoolName);
+
+      if (studentIdsError) {
+        console.error('Error getting student IDs:', studentIdsError);
+        throw studentIdsError;
+      }
+
+      console.log('📊 Found data to delete:', {
+        schedules: scheduleIds?.length || 0,
+        students: studentIds?.length || 0
+      });
+
+      // Step 2: Delete feedback related to class schedules
+      if (scheduleIds && scheduleIds.length > 0) {
+        console.log('🗑️ Step 2a: Deleting feedback for class schedules...');
+        const scheduleIdsList = scheduleIds.map(s => s.id);
+        const { error: feedbackScheduleError } = await supabase
+          .from('feedback')
+          .delete()
+          .in('class_schedule_id', scheduleIdsList);
+
+        if (feedbackScheduleError) {
+          console.error('Error deleting schedule feedback:', feedbackScheduleError);
+          // Don't throw - feedback might not exist, which is ok
+        } else {
+          console.log('✅ Schedule feedback deleted');
+        }
+      }
+
+      // Step 3: Delete feedback related to students
+      if (studentIds && studentIds.length > 0) {
+        console.log('🗑️ Step 2b: Deleting feedback for students...');
+        const studentIdsList = studentIds.map(s => s.id);
+        const { error: feedbackStudentError } = await supabase
+          .from('feedback')
+          .delete()
+          .in('student_id', studentIdsList);
+
+        if (feedbackStudentError) {
+          console.error('Error deleting student feedback:', feedbackStudentError);
+          // Don't throw - feedback might not exist, which is ok
+        } else {
+          console.log('✅ Student feedback deleted');
+        }
+      }
+
+      // Step 4: Delete class schedules
+      console.log('🗑️ Step 3: Deleting class schedules...');
       const { error: scheduleError } = await supabase
         .from('class_schedules')
         .delete()
@@ -155,35 +219,8 @@ const SchoolManagement: React.FC<SchoolManagementProps> = ({ onDataChange }) => 
       }
       console.log('✅ Class schedules deleted');
 
-      // Step 2: Delete all feedback related to this school
-      console.log('🗑️ Step 2: Deleting feedback...');
-      const { error: feedbackError } = await supabase
-        .from('feedback')
-        .delete()
-        .in('class_schedule_id', 
-          await supabase
-            .from('class_schedules')
-            .select('id')
-            .eq('school', schoolName)
-            .then(result => result.data?.map(item => item.id) || [])
-        );
-
-      // Also delete feedback from students of this school
-      const { error: studentFeedbackError } = await supabase
-        .from('feedback')
-        .delete()
-        .in('student_id',
-          await supabase
-            .from('students')
-            .select('id')
-            .eq('school', schoolName)
-            .then(result => result.data?.map(item => item.id) || [])
-        );
-
-      console.log('✅ Feedback deleted');
-
-      // Step 3: Delete all students from the school
-      console.log('🗑️ Step 3: Deleting students...');
+      // Step 5: Delete students
+      console.log('🗑️ Step 4: Deleting students...');
       const { error: studentError } = await supabase
         .from('students')
         .delete()
@@ -195,8 +232,8 @@ const SchoolManagement: React.FC<SchoolManagementProps> = ({ onDataChange }) => 
       }
       console.log('✅ Students deleted');
 
-      // Step 4: Delete all teachers from the school (this should be last)
-      console.log('🗑️ Step 4: Deleting teachers...');
+      // Step 6: Delete teachers (this should be last)
+      console.log('🗑️ Step 5: Deleting teachers...');
       const { error: teacherError } = await supabase
         .from('teachers')
         .delete()
