@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { SchoolIcon, LogOutIcon, RefreshCwIcon, UsersIcon, MessageSquareIcon, Settings, Users, School } from "lucide-react";
+import { SchoolIcon, LogOutIcon, RefreshCwIcon, UsersIcon, MessageSquareIcon, Settings, Users, School, Shield } from "lucide-react";
 import { toast } from "sonner";
 import StatsCard from "@/components/dashboard/StatsCard";
 import SchoolOverview from "@/components/platform-admin/SchoolOverview";
@@ -17,6 +17,7 @@ import SchoolManagement from "@/components/platform-admin/SchoolManagement";
 import TeacherManagement from "@/components/platform-admin/TeacherManagement";
 import StudentManagement from "@/components/platform-admin/StudentManagement";
 import DoctorManagement from "@/components/platform-admin/DoctorManagement";
+import SecurityDashboard from "@/components/SecurityDashboard";
 
 interface DashboardStats {
   totalStudents: number;
@@ -289,7 +290,7 @@ const PlatformAdminDashboard = () => {
 
         {/* Main Content Tabs */}
         <Tabs defaultValue="management" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-2">
+          <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="management" className="flex items-center gap-2">
               <Settings className="w-4 h-4" />
               User Management
@@ -297,6 +298,10 @@ const PlatformAdminDashboard = () => {
             <TabsTrigger value="analytics" className="flex items-center gap-2">
               <MessageSquareIcon className="w-4 h-4" />
               Analytics & Reports
+            </TabsTrigger>
+            <TabsTrigger value="security" className="flex items-center gap-2">
+              <Shield className="w-4 h-4" />
+              Security
             </TabsTrigger>
           </TabsList>
 
@@ -346,6 +351,10 @@ const PlatformAdminDashboard = () => {
 
             {/* Response Analytics */}
             <FeedbackAnalytics feedbackStats={feedbackStats} />
+          </TabsContent>
+
+          <TabsContent value="security" className="space-y-6">
+            <SecurityDashboard />
           </TabsContent>
         </Tabs>
       </div>
