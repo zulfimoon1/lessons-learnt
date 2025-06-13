@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { usePlatformAdmin } from "@/contexts/PlatformAdminContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -59,6 +60,7 @@ const PlatformAdminDashboard = () => {
   const [feedbackStats, setFeedbackStats] = useState<FeedbackStats[]>([]);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<string>("");
+  const [refreshKey, setRefreshKey] = useState(0); // Add refresh key to force re-renders
 
   const setAdminContext = async () => {
     if (admin?.email) {
@@ -172,6 +174,7 @@ const PlatformAdminDashboard = () => {
       setSchoolStats(schoolStatsProcessed);
       setFeedbackStats(feedbackAnalyticsData);
       setLastUpdated(new Date().toLocaleString());
+      setRefreshKey(prev => prev + 1); // Increment refresh key to force re-renders
       
       console.log('✅ Stats loaded successfully');
       toast.success('Data refreshed successfully');
@@ -233,7 +236,7 @@ const PlatformAdminDashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50" key={refreshKey}>
       {/* Header */}
       <header className="bg-white border-b border-gray-200 px-6 py-4">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
@@ -263,7 +266,7 @@ const PlatformAdminDashboard = () => {
 
       <div className="max-w-7xl mx-auto px-6 py-8">
         {/* System Information Header */}
-        <Card className="mb-8 bg-blue-50 border-blue-200">
+        <Card className="mb-8 bg-blue-50 border-blue-200" key={`system-info-${refreshKey}`}>
           <CardHeader>
             <CardTitle className="text-blue-800">System Information</CardTitle>
           </CardHeader>
@@ -307,7 +310,7 @@ const PlatformAdminDashboard = () => {
         </Card>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8" key={`stats-grid-${refreshKey}`}>
           <StatsCard 
             title="Total Students" 
             value={stats.totalStudents} 
@@ -358,7 +361,7 @@ const PlatformAdminDashboard = () => {
               </TabsList>
 
               <TabsContent value="schools">
-                <SchoolManagement onDataChange={handleDataChange} />
+                <SchoolManagement onDataChange={handleDataChange} key={`school-mgmt-${refreshKey}`} />
               </TabsContent>
 
               <TabsContent value="teachers">

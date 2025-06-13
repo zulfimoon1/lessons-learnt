@@ -175,13 +175,11 @@ const SchoolManagement: React.FC<SchoolManagementProps> = ({ onDataChange }) => 
       // Refresh local schools list first
       await fetchSchools();
       
-      // IMPORTANT: Trigger main dashboard refresh with a small delay to ensure deletion is complete
+      // IMPORTANT: Trigger main dashboard refresh immediately after deletion
       console.log('🔄 Triggering main dashboard refresh after school deletion...');
-      setTimeout(() => {
-        if (onDataChange) {
-          onDataChange();
-        }
-      }, 500);
+      if (onDataChange) {
+        onDataChange();
+      }
       
     } catch (error) {
       console.error('Error deleting school:', error);
