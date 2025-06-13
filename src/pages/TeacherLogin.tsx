@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -117,17 +118,17 @@ const TeacherLogin = () => {
     });
   };
 
-  // Show demo tester if Ctrl+Shift+D is pressed
+  // Fixed: Show demo tester if Ctrl+Shift+D is pressed - removed problematic dependency
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.ctrlKey && e.shiftKey && e.key === 'D') {
-        setShowDemoTester(!showDemoTester);
+        setShowDemoTester(prev => !prev);
       }
     };
     
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [showDemoTester]);
+  }, []); // Empty dependency array - this effect only needs to run once
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
