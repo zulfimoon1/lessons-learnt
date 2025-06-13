@@ -85,7 +85,7 @@ const PlatformAdminDashboard = () => {
       const timestamp = Date.now();
       console.log('📊 DASHBOARD: Using timestamp for fresh queries:', timestamp);
 
-      // Use direct count queries instead of the RPC function for more reliable results
+      // Use direct count queries with fresh data
       const { count: studentsCount, error: studentsError } = await supabase
         .from('students')
         .select('*', { count: 'exact', head: true });
@@ -102,11 +102,13 @@ const PlatformAdminDashboard = () => {
         .from('subscriptions')
         .select('*', { count: 'exact', head: true });
 
-      // Calculate actual monthly revenue from subscriptions
+      // Calculate actual monthly revenue from active subscriptions only
       const { data: subscriptionData, error: subscriptionDataError } = await supabase
         .from('subscriptions')
         .select('amount, plan_type, status')
         .eq('status', 'active');
+
+      console.log('📊 DASHBOARD: Subscription data for revenue:', subscriptionData);
 
       let monthlyRevenue = 0;
       if (!subscriptionDataError && subscriptionData) {
@@ -117,23 +119,22 @@ const PlatformAdminDashboard = () => {
         }, 0);
       }
 
-      // CRITICAL: Get fresh school data by forcing new queries
-      console.log('📊 DASHBOARD: Fetching FRESH school data with explicit ordering...');
+      // Force fresh school data with explicit cache busting
+      console.log('📊 DASHBOARD: Fetching FRESH school data with cache busting...');
       
-      // Force fresh queries with explicit ordering and cache busting
       const { data: teacherSchools, error: teacherSchoolsError } = await supabase
         .from('teachers')
         .select('school')
         .not('school', 'is', null)
         .order('school')
-        .limit(1000); // Add explicit limit to force fresh query
+        .limit(2000); // Increased limit to ensure we get all data
 
       const { data: studentSchools, error: studentSchoolsError } = await supabase
         .from('students')
         .select('school')
         .not('school', 'is', null)
         .order('school')
-        .limit(1000); // Add explicit limit to force fresh query
+        .limit(2000); // Increased limit to ensure we get all data
 
       console.log('📊 DASHBOARD: Fresh teacher schools data:', teacherSchools);
       console.log('📊 DASHBOARD: Fresh student schools data:', studentSchools);
@@ -210,7 +211,10 @@ const PlatformAdminDashboard = () => {
       };
 
       console.log('📊 DASHBOARD: Updated stats:', newStats);
-      console.log('📊 DASHBOARD: Previous stats for comparison:', stats);
+      console.log('📊 DASHBOARD: Monthly revenue calculation:', {
+        subscriptionData,
+        monthlyRevenue
+      });
       
       setStats(newStats);
       setSchoolStats(schoolStatsProcessed);
@@ -241,11 +245,11 @@ const PlatformAdminDashboard = () => {
   const handleDataChange = () => {
     console.log('📊 DASHBOARD: handleDataChange called - Data changed, refreshing dashboard...');
     console.log('📊 DASHBOARD: Current stats before refresh:', stats);
-    // Force a complete refresh with a delay to ensure database operations are complete
+    // Force a complete refresh with a longer delay to ensure database operations are complete
     setTimeout(() => {
       console.log('📊 DASHBOARD: Delayed refresh starting now...');
       fetchStats();
-    }, 1000); // Increased delay to 1 second to ensure all database operations complete
+    }, 2000); // Increased delay to 2 seconds to ensure all database operations complete
   };
 
   const handleLogout = () => {

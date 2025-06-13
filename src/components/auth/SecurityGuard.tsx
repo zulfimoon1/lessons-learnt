@@ -31,15 +31,33 @@ const SecurityGuard: React.FC<SecurityGuardProps> = ({
   const { admin, isLoading: adminLoading, isAuthenticated: adminAuthenticated } = usePlatformAdmin();
 
   useEffect(() => {
+    console.log('SecurityGuard: Auth state check', { 
+      authLoading, 
+      adminLoading, 
+      teacher: !!teacher, 
+      student: !!student, 
+      admin: !!admin, 
+      adminAuthenticated,
+      userType,
+      requireAuth 
+    });
+
     if (authLoading || adminLoading) return;
 
     const checkSecurity = async () => {
       try {
-        // If platform admin is authenticated, grant access to everything
-        if (adminAuthenticated && admin) {
+        // Platform admin has access to everything - check both conditions
+        if (admin && adminAuthenticated) {
           console.log('Platform admin authenticated, granting full access');
           setIsAuthorized(true);
           setIsLoading(false);
+          return;
+        }
+
+        // If specifically requiring admin access and not platform admin, deny
+        if (userType === 'admin' && (!admin || !adminAuthenticated)) {
+          console.log('Admin required but not platform admin');
+          navigate('/console');
           return;
         }
 
@@ -91,17 +109,6 @@ const SecurityGuard: React.FC<SecurityGuardProps> = ({
             userAgent: navigator.userAgent
           });
           navigate('/student-login');
-          return;
-        }
-
-        if (userType === 'admin' && !admin) {
-          securityService.logSecurityEvent({
-            type: 'unauthorized_access',
-            timestamp: new Date().toISOString(),
-            details: `Admin required but not logged in for ${location.pathname}`,
-            userAgent: navigator.userAgent
-          });
-          navigate('/console');
           return;
         }
 
