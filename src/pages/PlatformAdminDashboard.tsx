@@ -87,7 +87,7 @@ const PlatformAdminDashboard = () => {
       const { data: responsesData, error: responsesError } = await supabase
         .rpc('get_platform_stats', { stat_type: 'feedback' });
 
-      // Fetch unique schools directly from both teachers and students tables
+      // Fetch unique schools directly from both teachers and students tables with fresh queries
       const { data: teacherSchools, error: teacherSchoolsError } = await supabase
         .from('teachers')
         .select('school')
@@ -141,7 +141,7 @@ const PlatformAdminDashboard = () => {
       if (teacherSchoolsError) console.error('Teacher schools error:', teacherSchoolsError);
       if (studentSchoolsError) console.error('Student schools error:', studentSchoolsError);
 
-      // Combine schools from both teachers and students
+      // Combine schools from both teachers and students to get ACTUAL unique schools
       const allSchoolNames = new Set<string>();
       
       if (teacherSchools) {
@@ -157,6 +157,7 @@ const PlatformAdminDashboard = () => {
       }
 
       const uniqueSchools = Array.from(allSchoolNames);
+      console.log('🏫 Current schools in database:', uniqueSchools);
       
       const newStats = {
         totalStudents: studentsData?.[0]?.count || 0,
@@ -167,7 +168,6 @@ const PlatformAdminDashboard = () => {
       };
 
       console.log('📊 Updated stats:', newStats);
-      console.log('🏫 Unique schools found:', uniqueSchools);
       setStats(newStats);
       setSchoolStats(schoolStatsProcessed);
       setFeedbackStats(feedbackAnalyticsData);
@@ -191,10 +191,8 @@ const PlatformAdminDashboard = () => {
 
   const handleDataChange = () => {
     console.log('📊 Data changed, refreshing dashboard...');
-    // Force a complete refresh after a short delay
-    setTimeout(() => {
-      fetchStats();
-    }, 300);
+    // Force a complete refresh immediately to ensure fresh data
+    fetchStats();
   };
 
   const handleLogout = () => {
