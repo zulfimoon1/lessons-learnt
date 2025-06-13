@@ -31,71 +31,12 @@ const validateLoginInput = (email: string, password: string): { valid: boolean; 
   return { valid: true };
 };
 
-// Function to create admin if it doesn't exist
-const ensureAdminExists = async (email: string, password: string = 'admin123') => {
-  try {
-    console.log('🔧 Ensuring admin exists for:', email);
-    
-    // First, check if admin exists without any context restrictions
-    const { data: existingAdmin, error: checkError } = await supabase
-      .from('teachers')
-      .select('id, email, role')
-      .eq('email', email.toLowerCase().trim())
-      .eq('role', 'admin')
-      .limit(1);
-    
-    if (checkError) {
-      console.error('❌ Error checking admin existence:', checkError);
-      return { error: 'Failed to check admin existence' };
-    }
-    
-    if (existingAdmin && existingAdmin.length > 0) {
-      console.log('✅ Admin already exists');
-      return { success: true, admin: existingAdmin[0] };
-    }
-    
-    // Admin doesn't exist, create it
-    console.log('🔨 Creating admin account...');
-    const hashedPassword = await hashPassword(password);
-    
-    const { data: newAdmin, error: createError } = await supabase
-      .from('teachers')
-      .insert({
-        name: 'Platform Admin',
-        email: email.toLowerCase().trim(),
-        school: 'Platform Administration',
-        role: 'admin',
-        password_hash: hashedPassword
-      })
-      .select()
-      .single();
-    
-    if (createError) {
-      console.error('❌ Error creating admin:', createError);
-      return { error: 'Failed to create admin account' };
-    }
-    
-    console.log('✅ Admin account created successfully');
-    return { success: true, admin: newAdmin };
-    
-  } catch (error) {
-    console.error('💥 Error in ensureAdminExists:', error);
-    return { error: 'Failed to ensure admin exists' };
-  }
-};
-
 // Enhanced test function to debug password issues
 export const testPasswordVerification = async (email: string = 'zulfimoon1@gmail.com', password: string = 'admin123') => {
   try {
     console.log('🔍 === PASSWORD VERIFICATION TEST START ===');
     console.log('🔍 Testing email:', email);
     console.log('🔍 Testing password:', password);
-    
-    // First ensure admin exists
-    const adminResult = await ensureAdminExists(email, password);
-    if (adminResult.error) {
-      return { error: adminResult.error };
-    }
     
     // Set admin context first
     console.log('🔍 Setting admin context...');
@@ -119,7 +60,7 @@ export const testPasswordVerification = async (email: string = 'zulfimoon1@gmail
       console.log('⚠️ No admin record found');
       return { 
         success: true, 
-        message: '⚠️ No admin record found with that email' 
+        message: '⚠️ No admin record found with that email. The admin should exist in the database from migrations.' 
       };
     }
     
@@ -173,15 +114,7 @@ export const platformAdminLoginService = async (email: string, password: string)
     const sanitizedEmail = email.toLowerCase().trim();
     console.log('📧 Sanitized email:', sanitizedEmail);
 
-    // First ensure admin exists
-    console.log('🔧 Ensuring admin exists...');
-    const adminResult = await ensureAdminExists(sanitizedEmail, password);
-    if (adminResult.error) {
-      console.error('❌ Failed to ensure admin exists:', adminResult.error);
-      return { error: adminResult.error };
-    }
-
-    // Set admin context first
+    // Set admin context first - this allows us to bypass RLS for admin operations
     console.log('🔧 Setting admin context...');
     await supabase.rpc('set_platform_admin_context', { admin_email: sanitizedEmail });
 
@@ -201,7 +134,7 @@ export const platformAdminLoginService = async (email: string, password: string)
 
     if (!adminData || adminData.length === 0) {
       console.log('❌ No admin found with email:', sanitizedEmail);
-      return { error: 'Admin account not found. Please contact support.' };
+      return { error: 'Admin account not found. The admin account should exist from database migrations. Please contact support.' };
     }
 
     const admin = adminData[0];
