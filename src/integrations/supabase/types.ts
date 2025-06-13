@@ -799,6 +799,27 @@ export type Database = {
           count: number
         }[]
       }
+      get_user_school: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
+      is_platform_admin: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
+      is_teacher_in_school: {
+        Args: { target_school: string }
+        Returns: boolean
+      }
+      log_critical_security_event: {
+        Args: {
+          event_type: string
+          user_id: string
+          details: string
+          severity?: string
+        }
+        Returns: undefined
+      }
       safe_get_teacher_info: {
         Args: { user_uuid: string }
         Returns: {
