@@ -18,11 +18,11 @@ export const useStudentAuth = () => {
       // Call the service with just fullName and password
       const result = await studentSimpleLoginService(fullName.trim(), password.trim());
       console.log('useStudentAuth: Login service result:', { 
-        success: !!result.student, 
-        error: result.error 
+        success: 'student' in result && !!result.student, 
+        error: 'error' in result ? result.error : undefined 
       });
       
-      if (result.student) {
+      if ('student' in result && result.student) {
         // Verify the student data matches the provided school and grade
         if (result.student.school !== school.trim() || result.student.grade !== grade.trim()) {
           console.log('useStudentAuth: School/grade mismatch:', {
@@ -54,7 +54,7 @@ export const useStudentAuth = () => {
         return { student: studentData };
       }
       
-      return { error: result.error || 'Login failed. Please check your credentials.' };
+      return { error: 'error' in result ? result.error : 'Login failed. Please check your credentials.' };
     } catch (error) {
       console.error('useStudentAuth: Unexpected error:', error);
       return { error: 'Login failed. Please check your connection and try again.' };
@@ -77,11 +77,11 @@ export const useStudentAuth = () => {
       
       const result = await studentSignupService(fullName.trim(), school.trim(), grade.trim(), password);
       console.log('useStudentAuth: Signup service result:', { 
-        success: !!result.student, 
-        error: result.error 
+        success: 'student' in result && !!result.student, 
+        error: 'error' in result ? result.error : undefined 
       });
       
-      if (result.student) {
+      if ('student' in result && result.student) {
         const studentData: Student = {
           id: result.student.id,
           full_name: result.student.full_name,
@@ -104,7 +104,7 @@ export const useStudentAuth = () => {
         return { student: studentData };
       }
       
-      return { error: result.error || 'Signup failed. Please try again.' };
+      return { error: 'error' in result ? result.error : 'Signup failed. Please try again.' };
     } catch (error) {
       console.error('useStudentAuth: Unexpected signup error:', error);
       return { error: 'Signup failed. Please check your connection and try again.' };
