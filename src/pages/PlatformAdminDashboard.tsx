@@ -59,13 +59,24 @@ const PlatformAdminDashboard = () => {
   const [feedbackStats, setFeedbackStats] = useState<FeedbackStats[]>([]);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<string>("");
-  const [refreshKey, setRefreshKey] = useState(0);
+
+  const setAdminContext = async () => {
+    if (admin?.email) {
+      try {
+        await supabase.rpc('set_platform_admin_context', { admin_email: admin.email });
+      } catch (error) {
+        console.error('Error setting admin context:', error);
+      }
+    }
+  };
 
   const fetchStats = async () => {
     console.log('🔄 Fetching platform statistics...');
     setIsRefreshing(true);
     
     try {
+      await setAdminContext();
+
       // Use the platform stats function to get core metrics
       const { data: studentsData, error: studentsError } = await supabase
         .rpc('get_platform_stats', { stat_type: 'students' });
@@ -76,9 +87,14 @@ const PlatformAdminDashboard = () => {
       const { data: responsesData, error: responsesError } = await supabase
         .rpc('get_platform_stats', { stat_type: 'feedback' });
 
-      // Fetch unique schools from class_schedules
-      const { data: schoolsData, error: schoolsError } = await supabase
-        .from('class_schedules')
+      // Fetch unique schools directly from both teachers and students tables
+      const { data: teacherSchools, error: teacherSchoolsError } = await supabase
+        .from('teachers')
+        .select('school')
+        .not('school', 'is', null);
+
+      const { data: studentSchools, error: studentSchoolsError } = await supabase
+        .from('students')
         .select('school')
         .not('school', 'is', null);
 
@@ -119,12 +135,28 @@ const PlatformAdminDashboard = () => {
 
       if (studentsError) console.error('Students error:', studentsError);
       if (teachersError) console.error('Teachers error:', teachersError);
-      if (schoolsError) console.error('Schools error:', schoolsError);
       if (responsesError) console.error('Responses error:', responsesError);
       if (subscriptionsError) console.error('Subscriptions error:', subscriptionsError);
       if (schoolStatsError) console.error('School stats error:', schoolStatsError);
+      if (teacherSchoolsError) console.error('Teacher schools error:', teacherSchoolsError);
+      if (studentSchoolsError) console.error('Student schools error:', studentSchoolsError);
 
-      const uniqueSchools = schoolsData ? [...new Set(schoolsData.map(item => item.school))] : [];
+      // Combine schools from both teachers and students
+      const allSchoolNames = new Set<string>();
+      
+      if (teacherSchools) {
+        teacherSchools.forEach(item => {
+          if (item.school) allSchoolNames.add(item.school);
+        });
+      }
+      
+      if (studentSchools) {
+        studentSchools.forEach(item => {
+          if (item.school) allSchoolNames.add(item.school);
+        });
+      }
+
+      const uniqueSchools = Array.from(allSchoolNames);
       
       const newStats = {
         totalStudents: studentsData?.[0]?.count || 0,
@@ -135,6 +167,7 @@ const PlatformAdminDashboard = () => {
       };
 
       console.log('📊 Updated stats:', newStats);
+      console.log('🏫 Unique schools found:', uniqueSchools);
       setStats(newStats);
       setSchoolStats(schoolStatsProcessed);
       setFeedbackStats(feedbackAnalyticsData);
@@ -153,13 +186,11 @@ const PlatformAdminDashboard = () => {
 
   const handleRefresh = () => {
     console.log('🔄 Manual refresh triggered');
-    setRefreshKey(prev => prev + 1);
     fetchStats();
   };
 
   const handleDataChange = () => {
     console.log('📊 Data changed, refreshing dashboard...');
-    setRefreshKey(prev => prev + 1);
     fetchStats();
   };
 
@@ -173,7 +204,7 @@ const PlatformAdminDashboard = () => {
       console.log('Admin authenticated, loading dashboard data...');
       fetchStats();
     }
-  }, [isAuthenticated, admin, refreshKey]);
+  }, [isAuthenticated, admin]);
 
   if (adminLoading) {
     return (
