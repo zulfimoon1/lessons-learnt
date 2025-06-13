@@ -1,17 +1,9 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { verifyPassword, hashPassword } from './securePasswordService';
-import { isDemoAccount, ensureDemoAccountHashes } from './demoAccountManager';
 
 export const teacherEmailLoginService = async (email: string, password: string) => {
   try {
     console.log('Teacher login attempt:', email);
-
-    // If this is a demo account, ensure it has proper hashes
-    if (isDemoAccount(email)) {
-      console.log('Demo account detected, ensuring proper hash...');
-      await ensureDemoAccountHashes();
-    }
 
     // Get teacher from database
     const { data: teacher, error } = await supabase
@@ -26,8 +18,6 @@ export const teacherEmailLoginService = async (email: string, password: string) 
     }
 
     console.log('Teacher found, verifying password...');
-    console.log('Stored hash from DB:', teacher.password_hash);
-    console.log('Stored hash length:', teacher.password_hash?.length);
 
     // Verify password
     const isPasswordValid = await verifyPassword(password, teacher.password_hash);
@@ -59,12 +49,6 @@ export const studentSimpleLoginService = async (fullName: string, password: stri
   try {
     console.log('Student login attempt:', fullName);
 
-    // If this is a demo account, ensure it has proper hashes
-    if (isDemoAccount(undefined, fullName)) {
-      console.log('Demo student account detected, ensuring proper hash...');
-      await ensureDemoAccountHashes();
-    }
-
     // Get student from database
     const { data: student, error } = await supabase
       .from('students')
@@ -78,8 +62,6 @@ export const studentSimpleLoginService = async (fullName: string, password: stri
     }
 
     console.log('Student found, verifying password...');
-    console.log('Stored hash from DB:', student.password_hash);
-    console.log('Stored hash length:', student.password_hash?.length);
 
     // Verify password
     const isPasswordValid = await verifyPassword(password, student.password_hash);
