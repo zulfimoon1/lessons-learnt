@@ -3,7 +3,7 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import { Teacher, Student, AuthContextType, SecurityEvent } from '@/types/auth';
 import { supabase } from '@/integrations/supabase/client';
 import { securityService } from '@/services/securityService';
-import { enhancedSecureTeacherLogin, enhancedSecureTeacherSignup, enhancedSecureStudentLogin, enhancedSecureStudentSignup } from '@/services/enhancedSecureAuthService';
+import { teacherEmailLoginService, studentSimpleLoginService, teacherSignupService, studentSignupService } from '@/services/authService';
 
 interface AuthProviderProps {
   children: ReactNode;
@@ -29,27 +29,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   // Initialize auth state
   useEffect(() => {
     const initializeAuth = async () => {
-      console.log('AuthContext: Starting secure initialization...');
+      console.log('AuthContext: Starting initialization...');
       
       try {
-        // Check session validity
-        const isValidSession = await securityService.validateSession();
-        if (!isValidSession) {
-          console.log('Invalid session, clearing auth state');
-          setIsLoading(false);
-          return;
-        }
-
-        // Check for concurrent sessions
-        if (securityService.detectConcurrentSessions()) {
-          securityService.logSecurityEvent({
-            type: 'unauthorized_access',
-            timestamp: new Date().toISOString(),
-            details: 'Concurrent session detected during initialization',
-            userAgent: navigator.userAgent
-          });
-        }
-
         // Get current session
         const { data: { session } } = await supabase.auth.getSession();
         if (!session) {
@@ -122,14 +104,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         });
       } finally {
         setIsLoading(false);
-        console.log('AuthContext: Secure initialization complete');
+        console.log('AuthContext: Initialization complete');
       }
     };
 
     initializeAuth();
   }, []);
 
-  // Enhanced teacher login
+  // Simplified teacher login without session validation
   const teacherLogin = async (
     email: string, 
     password: string, 
@@ -137,25 +119,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     school?: string,
     role: 'teacher' | 'admin' | 'doctor' = 'teacher'
   ): Promise<{ teacher?: Teacher; error?: string }> => {
-    console.log('AuthContext: Secure teacher login attempt');
+    console.log('AuthContext: Teacher login attempt');
     
-    // Validate session
-    const isValidSession = await securityService.validateSession();
-    if (!isValidSession) {
-      return { error: 'Session invalid. Please refresh and try again.' };
-    }
-    
-    // Validate CSRF token
-    if (csrfToken && !securityService.validateCSRFToken(csrfToken)) {
-      securityService.logSecurityEvent({
-        type: 'csrf_violation',
-        timestamp: new Date().toISOString(),
-        details: 'Invalid CSRF token during teacher login',
-        userAgent: navigator.userAgent
-      });
-      return { error: 'Security validation failed' };
-    }
-
     // Check rate limiting
     const rateLimitCheck = await securityService.checkRateLimit(email, 'teacher-login');
     if (!rateLimitCheck.allowed) {
@@ -164,8 +129,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
     try {
       const result = name && school 
-        ? await enhancedSecureTeacherSignup(name, email, school, password, role)
-        : await enhancedSecureTeacherLogin(email, password);
+        ? await teacherSignupService(name, email, school, password, role)
+        : await teacherEmailLoginService(email, password);
 
       const success = !!result.teacher;
       await securityService.recordAttempt(email, 'teacher-login', success);
@@ -208,27 +173,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  // Enhanced student login
+  // Simplified student login
   const studentLogin = async (fullName: string, school: string, grade: string, password: string) => {
-    console.log('AuthContext: Secure student login attempt');
+    console.log('AuthContext: Student login attempt');
     
-    // Validate session
-    const isValidSession = await securityService.validateSession();
-    if (!isValidSession) {
-      return { error: 'Session invalid. Please refresh and try again.' };
-    }
-    
-    // Validate CSRF token
-    if (csrfToken && !securityService.validateCSRFToken(csrfToken)) {
-      securityService.logSecurityEvent({
-        type: 'csrf_violation',
-        timestamp: new Date().toISOString(),
-        details: 'Invalid CSRF token during student login',
-        userAgent: navigator.userAgent
-      });
-      return { error: 'Security validation failed' };
-    }
-
     // Check rate limiting
     const identifier = `${fullName}-${school}-${grade}`;
     const rateLimitCheck = await securityService.checkRateLimit(identifier, 'student-login');
@@ -237,9 +185,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
 
     try {
-      const result = await enhancedSecureStudentLogin(fullName, school, grade, password);
+      const result = await studentSimpleLoginService(fullName, password);
       
-      const success = !!result.user;
+      const success = !!result.student;
       await securityService.recordAttempt(identifier, 'student-login', success);
 
       if (result.error) {
@@ -252,12 +200,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         return { error: result.error };
       }
       
-      if (result.user) {
+      if (result.student) {
         const student: Student = {
-          id: result.user.id,
-          full_name: result.user.fullName,
-          school: result.user.school,
-          grade: result.user.grade
+          id: result.student.id,
+          full_name: result.student.full_name,
+          school: result.student.school,
+          grade: result.student.grade
         };
         
         setStudent(student);
@@ -284,7 +232,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   // Enhanced student signup
   const studentSignup = async (fullName: string, school: string, grade: string, password: string) => {
-    console.log('AuthContext: Secure student signup attempt');
+    console.log('AuthContext: Student signup attempt');
     
     // Check rate limiting for signups
     const identifier = `${fullName}-${school}`;
@@ -297,9 +245,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
     
     try {
-      const result = await enhancedSecureStudentSignup(fullName, school, grade, password);
+      const result = await studentSignupService(fullName, school, grade, password);
 
-      const success = !!result.user;
+      const success = !!result.student;
       await securityService.recordAttempt(identifier, 'student-signup', success);
 
       if (result.error) {
@@ -313,12 +261,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         return { error: result.error };
       }
       
-      if (result.user) {
+      if (result.student) {
         const student: Student = {
-          id: result.user.id,
-          full_name: result.user.fullName,
-          school: result.user.school,
-          grade: result.user.grade
+          id: result.student.id,
+          full_name: result.student.full_name,
+          school: result.student.school,
+          grade: result.student.grade
         };
         
         setStudent(student);
@@ -345,7 +293,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   // Enhanced secure logout
   const logout = async () => {
-    console.log('AuthContext: Secure logout initiated');
+    console.log('AuthContext: Logout initiated');
     
     const currentUser = teacher || student;
     if (currentUser) {
