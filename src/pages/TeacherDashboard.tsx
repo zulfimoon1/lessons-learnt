@@ -1,4 +1,3 @@
-
 import { useState, useEffect, Suspense, lazy } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuthStorage } from "@/hooks/useAuthStorage";
@@ -58,7 +57,7 @@ const TeacherDashboard = () => {
     try {
       // Check if this is a demo teacher - if so, provide demo subscription
       if (isDemoTeacher(teacher.email)) {
-        console.log('Demo teacher detected, providing demo subscription');
+        console.log('Demo teacher detected, providing full demo subscription');
         const demoSub = getDemoSubscription(teacher.school);
         setSubscription(demoSub);
         setIsLoading(false);
@@ -181,8 +180,8 @@ const TeacherDashboard = () => {
       />
 
       <main className="max-w-7xl mx-auto p-6 space-y-6">
-        {/* Subscription Status */}
-        {!subscription ? (
+        {/* Subscription Status - Always show active for demo accounts */}
+        {!subscription && !isDemoTeacher(teacher?.email) ? (
           <SubscriptionBanner 
             isDoctor={teacher?.role === 'doctor'} 
             onSubscribe={handleCreateCheckout}
@@ -190,8 +189,8 @@ const TeacherDashboard = () => {
           />
         ) : (
           <ActiveSubscriptionCard 
-            plan={subscription.plan_type} 
-            expiryDate={subscription.current_period_end} 
+            plan={subscription?.plan_type || 'premium'} 
+            expiryDate={subscription?.current_period_end || new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString()} 
           />
         )}
         
@@ -213,7 +212,7 @@ const TeacherDashboard = () => {
             title={teacher?.role === 'doctor' ? t('teacher.availability') : t('admin.subscription')}
             value={teacher?.role === 'doctor' 
               ? (teacher?.is_available ? t('teacher.available') : t('teacher.busy'))
-              : (subscription ? t('teacher.active') : t('teacher.inactive'))}
+              : (subscription || isDemoTeacher(teacher?.email) ? t('teacher.active') : t('teacher.inactive'))}
             icon={CreditCardIcon}
           />
         </div>
@@ -243,7 +242,7 @@ const TeacherDashboard = () => {
                 <Suspense fallback={<TabContentSkeleton />}>
                   <WeeklySummariesTab
                     school={teacher?.school}
-                    subscription={subscription}
+                    subscription={subscription || (isDemoTeacher(teacher?.email) ? getDemoSubscription(teacher?.school) : null)}
                     onCreateCheckout={handleCreateCheckout}
                     isCreatingCheckout={isCreatingCheckout}
                   />
@@ -254,7 +253,7 @@ const TeacherDashboard = () => {
                 <Suspense fallback={<TabContentSkeleton />}>
                   <MentalHealthTab
                     teacher={teacher}
-                    subscription={subscription}
+                    subscription={subscription || (isDemoTeacher(teacher?.email) ? getDemoSubscription(teacher?.school) : null)}
                     onCreateCheckout={handleCreateCheckout}
                     isCreatingCheckout={isCreatingCheckout}
                   />
@@ -283,7 +282,7 @@ const TeacherDashboard = () => {
                   <Suspense fallback={<TabContentSkeleton />}>
                     <ArticlesTab
                       teacher={teacher}
-                      subscription={subscription}
+                      subscription={subscription || (isDemoTeacher(teacher?.email) ? getDemoSubscription(teacher?.school) : null)}
                       onCreateCheckout={handleCreateCheckout}
                       isCreatingCheckout={isCreatingCheckout}
                     />

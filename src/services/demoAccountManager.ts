@@ -8,7 +8,7 @@ const DEMO_ACCOUNTS = {
     { email: 'demodoc@demo.com', password: 'demo123', role: 'doctor' }
   ],
   students: [
-    { full_name: 'Demo Student', password: 'demo123', school: 'Demo School', grade: 'Grade 5' }
+    { full_name: 'demo student', password: 'demo123', school: 'demo school', grade: 'j5' }
   ]
 };
 
@@ -34,11 +34,12 @@ export const isDemoStudent = (fullName?: string) => {
 
 // Create a fake subscription for demo accounts
 export const getDemoSubscription = (school?: string) => {
-  if (!school || school !== 'Demo School') return null;
+  // For demo accounts, always return active subscription regardless of school name
+  if (!school) return null;
   
   return {
     id: 'demo-subscription-id',
-    school_name: 'Demo School',
+    school_name: school,
     status: 'active',
     plan_type: 'premium',
     amount: 999,
@@ -69,7 +70,7 @@ export const godModeTeacherLogin = async (email: string, password: string) => {
     name: demoTeacher.role === 'admin' ? 'Demo Administrator' : 
           demoTeacher.role === 'doctor' ? 'Demo Doctor' : 'Demo Teacher',
     email: demoTeacher.email,
-    school: 'Demo School',
+    school: demoTeacher.role === 'admin' ? 'Demo School' : 'Demo School',
     role: demoTeacher.role,
     specialization: demoTeacher.role === 'doctor' ? 'School Psychology' : null,
     license_number: demoTeacher.role === 'doctor' ? 'PSY-DEMO-123' : null,
@@ -96,10 +97,15 @@ export const godModeStudentLogin = async (fullName: string, password: string) =>
   console.log('God mode demo student login successful - always works!');
   return {
     id: 'demo-student-id',
-    full_name: 'Demo Student',
-    school: 'Demo School',
-    grade: 'Grade 5'
+    full_name: 'demo student',
+    school: 'demo school',
+    grade: 'j5'
   };
+};
+
+// Universal demo subscription check - bypasses all subscription requirements
+export const hasDemoAccess = (userEmail?: string, userFullName?: string) => {
+  return isDemoAccount(userEmail, userFullName);
 };
 
 // Test function to verify all demo accounts
