@@ -88,10 +88,10 @@ export const isDemoAccount = (email?: string, fullName?: string) => {
   return false;
 };
 
-// Function to reset all demo account passwords
-export const resetAllDemoPasswords = async () => {
+// Function to initialize all demo account passwords immediately
+export const initializeDemoPasswords = async () => {
   try {
-    console.log('=== RESETTING ALL DEMO PASSWORDS ===');
+    console.log('=== INITIALIZING ALL DEMO PASSWORDS ===');
     
     const freshHash = await createDemoHash();
     console.log('Created fresh hash for all demo accounts:', freshHash);
@@ -118,11 +118,16 @@ export const resetAllDemoPasswords = async () => {
       return { success: false, error: studentError };
     }
     
-    console.log('All demo account passwords reset successfully');
+    console.log('All demo account passwords initialized successfully');
     return { success: true };
     
   } catch (error) {
-    console.error('Error resetting demo passwords:', error);
+    console.error('Error initializing demo passwords:', error);
     return { success: false, error };
   }
+};
+
+// Function to reset all demo account passwords
+export const resetAllDemoPasswords = async () => {
+  return await initializeDemoPasswords();
 };
