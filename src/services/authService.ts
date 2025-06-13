@@ -2,16 +2,27 @@ import { supabase } from '@/integrations/supabase/client';
 import { verifyPassword, hashPassword } from './securePasswordService';
 import { forceUpdateDemoPasswords, isDemoAccount, initializeDemoPasswordsOnStartup } from './demoAccountManager';
 
-// Initialize demo passwords on module load
-initializeDemoPasswordsOnStartup().then(result => {
-  if (!result.success) {
-    console.error('Failed to initialize demo passwords:', result.error);
+// Track if initialization has been attempted
+let initializationAttempted = false;
+
+// Ensure demo passwords are initialized before any operations
+const ensureDemoPasswordsInitialized = async () => {
+  if (!initializationAttempted) {
+    initializationAttempted = true;
+    console.log('Initializing demo passwords for the first time...');
+    const result = await initializeDemoPasswordsOnStartup();
+    if (!result.success) {
+      console.error('Demo password initialization failed:', result.error);
+    }
   }
-});
+};
 
 export const teacherEmailLoginService = async (email: string, password: string) => {
   try {
     console.log('Teacher login attempt:', email);
+
+    // Ensure demo passwords are initialized first
+    await ensureDemoPasswordsInitialized();
 
     // Force update demo passwords if this is a demo account
     if (isDemoAccount(email)) {
@@ -70,6 +81,9 @@ export const teacherEmailLoginService = async (email: string, password: string) 
 export const studentSimpleLoginService = async (fullName: string, password: string) => {
   try {
     console.log('Student login attempt:', fullName);
+
+    // Ensure demo passwords are initialized first
+    await ensureDemoPasswordsInitialized();
 
     // Force update demo passwords if this is a demo account
     if (isDemoAccount(undefined, fullName)) {

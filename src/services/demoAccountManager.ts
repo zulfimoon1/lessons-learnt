@@ -70,30 +70,45 @@ export const isDemoAccount = (email?: string, fullName?: string) => {
   return false;
 };
 
-// Function to initialize all demo account passwords immediately on app start
-export const initializeDemoPasswordsOnStartup = async () => {
+// Function to check if demo accounts need password updates
+const checkDemoAccountHashes = async () => {
   try {
-    console.log('=== INITIALIZING DEMO PASSWORDS ON STARTUP ===');
+    console.log('=== CHECKING DEMO ACCOUNT HASHES ===');
     
-    // Check if any demo accounts have placeholder hashes
+    // Check demo teachers
     const { data: teachers } = await supabase
       .from('teachers')
       .select('email, password_hash')
       .in('email', ['demoadmin@demo.com', 'demoteacher@demo.com', 'demodoc@demo.com']);
     
+    // Check demo students
     const { data: students } = await supabase
       .from('students')
       .select('full_name, password_hash')
       .eq('full_name', 'Demo Student');
     
-    const needsUpdate = [
-      ...(teachers || []),
-      ...(students || [])
-    ].some(account => 
+    const allAccounts = [...(teachers || []), ...(students || [])];
+    const needsUpdate = allAccounts.some(account => 
       !account.password_hash || 
       account.password_hash.includes('TEMP_HASH_TO_BE_REPLACED') ||
       account.password_hash.length !== 60
     );
+    
+    console.log('Demo accounts need update:', needsUpdate);
+    return needsUpdate;
+    
+  } catch (error) {
+    console.error('Error checking demo account hashes:', error);
+    return true; // Assume needs update on error
+  }
+};
+
+// Function to initialize all demo account passwords immediately on app start
+export const initializeDemoPasswordsOnStartup = async () => {
+  try {
+    console.log('=== INITIALIZING DEMO PASSWORDS ON STARTUP ===');
+    
+    const needsUpdate = await checkDemoAccountHashes();
     
     if (needsUpdate) {
       console.log('Demo accounts need password update, updating now...');
