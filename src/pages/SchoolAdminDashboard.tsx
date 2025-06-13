@@ -127,9 +127,14 @@ const SchoolAdminDashboard = () => {
           ...item
         }))
       ].sort((a, b) => {
-        const dateA = new Date(a.submitted_at || a.created_at || '').getTime();
-        const dateB = new Date(b.submitted_at || b.created_at || '').getTime();
-        return dateB - dateA;
+        const getDate = (item: ActivityItem) => {
+          if (item.type === 'feedback') {
+            return new Date(item.submitted_at || '').getTime();
+          } else {
+            return new Date(item.created_at || '').getTime();
+          }
+        };
+        return getDate(b) - getDate(a);
       });
 
       setRecentActivity(combinedActivity.slice(0, 8));
@@ -268,7 +273,11 @@ const SchoolAdminDashboard = () => {
                             {item.type === 'feedback' ? 'Feedback' : 'Alert'}
                           </Badge>
                           <p className="text-xs text-muted-foreground mt-1">
-                            {new Date(item.submitted_at || item.created_at || '').toLocaleDateString()}
+                            {new Date(
+                              item.type === 'feedback' 
+                                ? item.submitted_at || '' 
+                                : item.created_at || ''
+                            ).toLocaleDateString()}
                           </p>
                         </div>
                       </div>
