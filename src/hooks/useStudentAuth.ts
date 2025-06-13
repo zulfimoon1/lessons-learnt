@@ -83,10 +83,10 @@ export const useStudentAuth = () => {
       
       if ('student' in result && result.student) {
         const studentData: Student = {
-          id: result.student.id,
-          full_name: result.student.full_name,
-          school: result.student.school,
-          grade: result.student.grade
+          id: (result.student as any).id,
+          full_name: (result.student as any).full_name,
+          school: (result.student as any).school,
+          grade: (result.student as any).grade
         };
         
         setStudent(studentData);
