@@ -31,12 +31,71 @@ const validateLoginInput = (email: string, password: string): { valid: boolean; 
   return { valid: true };
 };
 
+// Function to create admin if it doesn't exist
+const ensureAdminExists = async (email: string, password: string = 'admin123') => {
+  try {
+    console.log('🔧 Ensuring admin exists for:', email);
+    
+    // First, check if admin exists without any context restrictions
+    const { data: existingAdmin, error: checkError } = await supabase
+      .from('teachers')
+      .select('id, email, role')
+      .eq('email', email.toLowerCase().trim())
+      .eq('role', 'admin')
+      .limit(1);
+    
+    if (checkError) {
+      console.error('❌ Error checking admin existence:', checkError);
+      return { error: 'Failed to check admin existence' };
+    }
+    
+    if (existingAdmin && existingAdmin.length > 0) {
+      console.log('✅ Admin already exists');
+      return { success: true, admin: existingAdmin[0] };
+    }
+    
+    // Admin doesn't exist, create it
+    console.log('🔨 Creating admin account...');
+    const hashedPassword = await hashPassword(password);
+    
+    const { data: newAdmin, error: createError } = await supabase
+      .from('teachers')
+      .insert({
+        name: 'Platform Admin',
+        email: email.toLowerCase().trim(),
+        school: 'Platform Administration',
+        role: 'admin',
+        password_hash: hashedPassword
+      })
+      .select()
+      .single();
+    
+    if (createError) {
+      console.error('❌ Error creating admin:', createError);
+      return { error: 'Failed to create admin account' };
+    }
+    
+    console.log('✅ Admin account created successfully');
+    return { success: true, admin: newAdmin };
+    
+  } catch (error) {
+    console.error('💥 Error in ensureAdminExists:', error);
+    return { error: 'Failed to ensure admin exists' };
+  }
+};
+
 // Enhanced test function to debug password issues
 export const testPasswordVerification = async (email: string = 'zulfimoon1@gmail.com', password: string = 'admin123') => {
   try {
     console.log('🔍 === PASSWORD VERIFICATION TEST START ===');
     console.log('🔍 Testing email:', email);
     console.log('🔍 Testing password:', password);
+    
+    // First ensure admin exists
+    const adminResult = await ensureAdminExists(email, password);
+    if (adminResult.error) {
+      return { error: adminResult.error };
+    }
     
     // Set admin context first
     console.log('🔍 Setting admin context...');
@@ -113,6 +172,14 @@ export const platformAdminLoginService = async (email: string, password: string)
 
     const sanitizedEmail = email.toLowerCase().trim();
     console.log('📧 Sanitized email:', sanitizedEmail);
+
+    // First ensure admin exists
+    console.log('🔧 Ensuring admin exists...');
+    const adminResult = await ensureAdminExists(sanitizedEmail, password);
+    if (adminResult.error) {
+      console.error('❌ Failed to ensure admin exists:', adminResult.error);
+      return { error: adminResult.error };
+    }
 
     // Set admin context first
     console.log('🔧 Setting admin context...');
