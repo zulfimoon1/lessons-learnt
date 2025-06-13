@@ -15,13 +15,17 @@ const PlatformAdminLogin = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState("create"); // Default to create tab
+  const [activeTab, setActiveTab] = useState("login"); // Changed default to login tab
   const { login } = usePlatformAdmin();
   const { toast } = useToast();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    console.log('🚀 Form submission started');
+    console.log('📧 Email:', email);
+    console.log('🔐 Password provided:', !!password);
     
     if (!email || !password) {
       toast({
@@ -35,16 +39,19 @@ const PlatformAdminLogin = () => {
     setIsLoading(true);
 
     try {
-      console.log('Submitting login form');
+      console.log('🔄 Calling login function...');
       const result = await login(email, password);
+      console.log('📊 Login result:', result);
       
       if (result.error) {
+        console.error('❌ Login failed:', result.error);
         toast({
           title: "Login Failed",
           description: result.error,
           variant: "destructive",
         });
       } else {
+        console.log('✅ Login successful');
         toast({
           title: "Login Successful",
           description: "Welcome to the platform console",
@@ -52,7 +59,7 @@ const PlatformAdminLogin = () => {
         navigate("/platform-admin");
       }
     } catch (error) {
-      console.error('Login form error:', error);
+      console.error('💥 Login form error:', error);
       toast({
         title: "Login Failed",
         description: "An unexpected error occurred",

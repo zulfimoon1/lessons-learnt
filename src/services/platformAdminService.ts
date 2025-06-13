@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { verifyPassword, hashPassword, generateTestHash } from './securePasswordService';
 
@@ -127,98 +126,76 @@ export const testPasswordVerification = async (email: string = 'zulfimoon1@gmail
 
 export const platformAdminLoginService = async (email: string, password: string) => {
   try {
-    console.log('=== PLATFORM ADMIN LOGIN DEBUG ===');
+    console.log('=== PLATFORM ADMIN LOGIN SERVICE START ===');
     console.log('Login attempt for:', email);
-    console.log('Password provided:', password ? 'Yes' : 'No');
-    console.log('Password length:', password?.length || 0);
 
     // Enhanced input validation
     const validation = validateLoginInput(email, password);
     if (!validation.valid) {
-      console.log('Validation failed:', validation.error);
+      console.log('❌ Validation failed:', validation.error);
       return { error: validation.error };
     }
 
     const sanitizedEmail = email.toLowerCase().trim();
-    console.log('Sanitized email:', sanitizedEmail);
+    console.log('📧 Sanitized email:', sanitizedEmail);
 
     // Database query with more detailed logging
-    console.log('Querying database for admin...');
+    console.log('🔍 Querying database for admin...');
     
-    const { data: admin, error, status } = await supabase
+    const { data: admin, error } = await supabase
       .from('teachers')
       .select('*')
       .eq('email', sanitizedEmail)
       .eq('role', 'admin')
-      .single();
+      .maybeSingle();
 
-    console.log('Database query result:');
+    console.log('📊 Database query result:');
     console.log('- admin found:', !!admin);
     console.log('- error:', error);
-    console.log('- status:', status);
 
     if (error) {
-      console.log('Database error details:', error);
-      if (error.code === 'PGRST116') {
-        console.log('No admin found with this email');
-        return { error: 'Invalid credentials' };
-      }
-      return { error: 'Authentication failed' };
+      console.error('❌ Database error details:', error);
+      return { error: 'Database error occurred' };
     }
 
     if (!admin) {
-      console.log('Admin not found');
-      return { error: 'Invalid credentials' };
+      console.log('❌ No admin found with email:', sanitizedEmail);
+      return { error: 'Invalid admin credentials' };
     }
 
-    console.log('Admin found:', {
+    console.log('✅ Admin found:', {
       id: admin.id,
       name: admin.name,
       email: admin.email,
       role: admin.role,
       school: admin.school,
-      hasPasswordHash: !!admin.password_hash,
-      passwordHashLength: admin.password_hash?.length || 0
+      hasPasswordHash: !!admin.password_hash
     });
 
-    // Enhanced password verification with detailed logging
-    console.log('=== PASSWORD VERIFICATION ===');
-    
+    // Password verification
     if (!admin.password_hash) {
-      console.error('CRITICAL: No password hash found for admin');
-      return { error: 'Authentication configuration error' };
+      console.error('❌ CRITICAL: No password hash found for admin');
+      return { error: 'Authentication configuration error - please reset password' };
     }
 
-    console.log('Password hash details:');
-    console.log('- Hash length:', admin.password_hash.length);
-    console.log('- Hash format (first 7 chars):', admin.password_hash.substring(0, 7));
-    console.log('- Is bcrypt format:', admin.password_hash.startsWith('$2b$'));
+    console.log('🔐 Starting password verification...');
     
-    console.log('Testing password:', password);
-
     let isPasswordValid = false;
     try {
-      console.log('Calling verifyPassword function...');
       isPasswordValid = await verifyPassword(password, admin.password_hash);
-      console.log('Password verification result:', isPasswordValid);
+      console.log('🔐 Password verification result:', isPasswordValid);
       
     } catch (verifyError) {
-      console.error('Password verification error:', verifyError);
-      console.error('Error details:', {
-        message: verifyError.message,
-        stack: verifyError.stack
-      });
-      return { error: 'Authentication failed - verification error' };
+      console.error('❌ Password verification error:', verifyError);
+      return { error: 'Authentication verification failed' };
     }
     
     if (!isPasswordValid) {
-      console.log('=== PASSWORD VERIFICATION FAILED ===');
-      console.log('Provided password:', password);
-      console.log('Expected: admin123');
-      return { error: 'Invalid credentials' };
+      console.log('❌ Password verification failed');
+      return { error: 'Invalid admin credentials' };
     }
     
-    console.log('=== LOGIN SUCCESSFUL ===');
+    console.log('🎉 === LOGIN SUCCESSFUL ===');
     const result = { 
       admin: {
         id: admin.id,
@@ -228,13 +205,12 @@ export const platformAdminLoginService = async (email: string, password: string)
         school: admin.school
       }
     };
-    console.log('Returning result:', result);
+    console.log('✅ Returning successful result');
     return result;
     
   } catch (error) {
-    console.error('=== LOGIN ERROR ===');
-    console.error('Unexpected error:', error);
-    console.error('Error stack:', error.stack);
+    console.error('💥 === UNEXPECTED LOGIN ERROR ===');
+    console.error('Error details:', error);
     return { error: 'Login failed. Please try again.' };
   }
 };

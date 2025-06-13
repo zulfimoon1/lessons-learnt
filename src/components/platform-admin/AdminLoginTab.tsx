@@ -78,7 +78,6 @@ const AdminLoginTab = ({
     console.log('🔍 Testing with email:', email);
     console.log('🔍 Testing with password:', testPassword);
 
-    // Show loading toast
     toast({
       title: "🔍 Testing Password",
       description: "Running password verification test...",
