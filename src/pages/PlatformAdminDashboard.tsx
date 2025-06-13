@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { usePlatformAdmin } from "@/contexts/PlatformAdminContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -89,96 +88,75 @@ const PlatformAdminDashboard = () => {
     try {
       await setAdminContext();
 
-      // Get fresh counts with explicit cache busting
-      const { count: studentsCount, error: studentsError } = await supabase
+      // Force refresh with no-cache headers
+      const { count: studentsCount } = await supabase
         .from('students')
         .select('*', { count: 'exact', head: true });
 
-      const { count: teachersCount, error: teachersError } = await supabase
+      const { count: teachersCount } = await supabase
         .from('teachers')
         .select('*', { count: 'exact', head: true });
 
-      const { count: responsesCount, error: responsesError } = await supabase
+      const { count: responsesCount } = await supabase
         .from('feedback')
         .select('*', { count: 'exact', head: true });
 
-      const { count: subscriptionsCount, error: subscriptionsError } = await supabase
+      const { count: subscriptionsCount } = await supabase
         .from('subscriptions')
         .select('*', { count: 'exact', head: true });
 
-      console.log('📊 DASHBOARD: Raw counts:', {
+      console.log('📊 DASHBOARD: Fresh counts:', {
         students: studentsCount,
         teachers: teachersCount,
         responses: responsesCount,
         subscriptions: subscriptionsCount
       });
 
-      // Calculate actual monthly revenue from active subscriptions only
-      const { data: subscriptionData, error: subscriptionDataError } = await supabase
+      // Calculate monthly revenue from active subscriptions
+      const { data: subscriptionData } = await supabase
         .from('subscriptions')
         .select('amount, plan_type, status')
         .eq('status', 'active');
 
-      console.log('📊 DASHBOARD: Active subscription data:', subscriptionData);
-
       let monthlyRevenue = 0;
-      if (!subscriptionDataError && subscriptionData) {
+      if (subscriptionData) {
         monthlyRevenue = subscriptionData.reduce((total, sub) => {
-          // Convert amount to monthly basis (amount is in cents)
           const monthlyAmount = sub.plan_type === 'yearly' ? sub.amount / 12 : sub.amount;
-          return total + (monthlyAmount / 100); // Convert cents to dollars
+          return total + (monthlyAmount / 100);
         }, 0);
       }
 
-      console.log('📊 DASHBOARD: Calculated monthly revenue:', monthlyRevenue);
-
-      // Get all unique schools from both students and teachers
-      const { data: allStudents, error: studentsDataError } = await supabase
+      // Get unique schools
+      const { data: allStudents } = await supabase
         .from('students')
         .select('school')
         .not('school', 'is', null);
 
-      const { data: allTeachers, error: teachersDataError } = await supabase
+      const { data: allTeachers } = await supabase
         .from('teachers')
         .select('school')
         .not('school', 'is', null);
 
-      console.log('📊 DASHBOARD: Students schools:', allStudents?.length || 0);
-      console.log('📊 DASHBOARD: Teachers schools:', allTeachers?.length || 0);
-
-      // Calculate unique schools
       const allSchoolNames = new Set<string>();
-      
       if (allStudents) {
         allStudents.forEach(item => {
           if (item?.school) allSchoolNames.add(item.school);
         });
       }
-      
       if (allTeachers) {
         allTeachers.forEach(item => {
           if (item?.school) allSchoolNames.add(item.school);
         });
       }
 
-      const uniqueSchoolsCount = allSchoolNames.size;
-      console.log('📊 DASHBOARD: Unique schools count:', uniqueSchoolsCount, 'Schools:', Array.from(allSchoolNames));
-
-      if (studentsError) console.error('Students error:', studentsError);
-      if (teachersError) console.error('Teachers error:', teachersError);
-      if (responsesError) console.error('Responses error:', responsesError);
-      if (subscriptionsError) console.error('Subscriptions error:', subscriptionsError);
-      if (studentsDataError) console.error('Students data error:', studentsDataError);
-      if (teachersDataError) console.error('Teachers data error:', teachersDataError);
-      
-      // Fetch school stats from teachers table
-      const { data: schoolStatsData, error: schoolStatsError } = await supabase
+      // School stats
+      const { data: schoolStatsData } = await supabase
         .from('teachers')
         .select('school')
         .not('school', 'is', null);
 
       let schoolStatsProcessed: SchoolStats[] = [];
-      if (!schoolStatsError && schoolStatsData) {
+      if (schoolStatsData) {
         schoolStatsProcessed = Object.entries(
           schoolStatsData.reduce((acc, teacher) => {
             acc[teacher.school] = (acc[teacher.school] || 0) + 1;
@@ -187,18 +165,15 @@ const PlatformAdminDashboard = () => {
         ).map(([school, total_teachers]) => ({ school, total_teachers }));
       }
 
-      // Fetch feedback analytics from actual database, not hardcoded
+      // Feedback analytics - force refresh
       let feedbackAnalyticsData: FeedbackStats[] = [];
       try {
-        const { data, error: feedbackAnalyticsError } = await supabase
+        const { data } = await supabase
           .from('feedback_analytics')
           .select('*');
 
-        if (!feedbackAnalyticsError && data) {
+        if (data) {
           feedbackAnalyticsData = data;
-          console.log('📊 DASHBOARD: Feedback analytics loaded:', feedbackAnalyticsData.length);
-        } else {
-          console.log('📊 DASHBOARD: No feedback analytics found or error:', feedbackAnalyticsError);
         }
       } catch (error) {
         console.warn('Could not fetch feedback analytics:', error);
@@ -207,24 +182,20 @@ const PlatformAdminDashboard = () => {
       const newStats = {
         totalStudents: studentsCount || 0,
         totalTeachers: teachersCount || 0,
-        totalSchools: uniqueSchoolsCount,
+        totalSchools: allSchoolNames.size,
         totalResponses: responsesCount || 0,
         totalSubscriptions: subscriptionsCount || 0,
         monthlyRevenue: monthlyRevenue,
       };
 
-      console.log('📊 DASHBOARD: Final calculated stats:', newStats);
+      console.log('📊 DASHBOARD: Setting new stats:', newStats);
       
       setStats(newStats);
       setSchoolStats(schoolStatsProcessed);
       setFeedbackStats(feedbackAnalyticsData);
       setLastUpdated(new Date().toLocaleString());
+      setRefreshKey(Date.now());
       
-      const newRefreshKey = Date.now();
-      console.log('🔄 DASHBOARD: Setting new refresh key:', newRefreshKey);
-      setRefreshKey(newRefreshKey);
-      
-      console.log('✅ DASHBOARD: Stats loaded successfully');
       toast.success('Data refreshed successfully');
       
     } catch (error) {
@@ -232,23 +203,19 @@ const PlatformAdminDashboard = () => {
       toast.error('Failed to refresh data');
     } finally {
       setIsRefreshing(false);
-      console.log('🏁 DASHBOARD: fetchStats completed');
     }
   };
 
   const handleRefresh = () => {
-    console.log('🔄 DASHBOARD: Manual refresh triggered');
     fetchStats();
   };
 
   const handleDataChange = () => {
-    console.log('📊 DASHBOARD: handleDataChange called - Data changed, refreshing dashboard...');
-    console.log('📊 DASHBOARD: Current stats before refresh:', stats);
-    // Force a complete refresh with a longer delay to ensure database operations are complete
+    console.log('📊 DASHBOARD: Data changed, refreshing...');
+    // Immediate refresh for better user experience
     setTimeout(() => {
-      console.log('📊 DASHBOARD: Delayed refresh starting now...');
       fetchStats();
-    }, 2000); // 2 second delay to ensure all database operations complete
+    }, 500);
   };
 
   const handleLogout = () => {
@@ -326,7 +293,7 @@ const PlatformAdminDashboard = () => {
 
       <div className="max-w-7xl mx-auto px-6 py-8">
         {/* System Information Header */}
-        <Card className="mb-8 bg-blue-50 border-blue-200" key={`system-info-${refreshKey}`}>
+        <Card className="mb-8 bg-blue-50 border-blue-200">
           <CardHeader>
             <CardTitle className="text-blue-800">System Information</CardTitle>
           </CardHeader>
@@ -370,7 +337,7 @@ const PlatformAdminDashboard = () => {
         </Card>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8" key={`stats-grid-${refreshKey}`}>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <StatsCard 
             title="Total Students" 
             value={stats.totalStudents} 
@@ -421,7 +388,7 @@ const PlatformAdminDashboard = () => {
               </TabsList>
 
               <TabsContent value="schools">
-                <SchoolManagement onDataChange={handleDataChange} key={`school-mgmt-${refreshKey}`} />
+                <SchoolManagement onDataChange={handleDataChange} />
               </TabsContent>
 
               <TabsContent value="teachers">

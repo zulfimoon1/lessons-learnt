@@ -253,24 +253,37 @@ const EnhancedPricingPage = () => {
               </div>
             </div>
 
-            <Button
-              onClick={handleCreateSubscription}
-              disabled={isCreatingCheckout || !teacher}
-              className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-lg py-6"
-            >
-              {isCreatingCheckout ? 'Processing...' : `Start ${trialInfo.duration}-Day Free Trial`}
-            </Button>
+            {/* Action Buttons - Same Height */}
+            <div className="space-y-3">
+              <Button
+                onClick={handleCreateSubscription}
+                disabled={isCreatingCheckout || !teacher}
+                className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-lg py-6"
+              >
+                {isCreatingCheckout ? 'Processing...' : `Start ${trialInfo.duration}-Day Free Trial`}
+              </Button>
+
+              {!teacher && (
+                <Button
+                  onClick={() => navigate('/teacher-login')}
+                  variant="outline"
+                  className="w-full text-lg py-6 border-2 border-blue-600 text-blue-600 hover:bg-blue-50"
+                >
+                  Sign Up as an Educator
+                </Button>
+              )}
+            </div>
 
             {!teacher && (
               <p className="text-xs text-gray-500 text-center">
-                Please log in to continue with subscription
+                Create your educator account to start your free trial
               </p>
             )}
           </CardContent>
         </Card>
 
         {/* Additional Information */}
-        <div className="grid md:grid-cols-2 gap-6">
+        <div className="grid md:grid-cols-2 gap-6 mb-12">
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -299,6 +312,27 @@ const EnhancedPricingPage = () => {
               </p>
             </CardContent>
           </Card>
+        </div>
+
+        {/* Custom Pricing Section */}
+        <div className="text-center">
+          <h3 className="text-2xl font-bold text-gray-900 mb-4">Custom Pricing Available</h3>
+          <p className="text-gray-600 mb-6">
+            Need a custom solution for your school district or large organization? 
+            We offer tailored pricing and features for enterprise customers.
+          </p>
+          <Button
+            variant="outline"
+            className="text-lg px-8 py-3 border-2 border-gray-300 hover:border-gray-400"
+            onClick={() => {
+              toast({
+                title: "Coming Soon",
+                description: "Custom pricing form will be available soon. Please contact support for now.",
+              });
+            }}
+          >
+            Request Custom Pricing
+          </Button>
         </div>
       </main>
     </div>

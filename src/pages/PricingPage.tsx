@@ -32,13 +32,6 @@ const PricingPage = () => {
   const discountAmount = subtotal * (discount / 100);
   const total = subtotal - discountAmount;
 
-  // Remove the teacher role check - allow anyone to access pricing
-  // useEffect(() => {
-  //   if (!teacher || teacher.role !== 'admin') {
-  //     navigate('/teacher-login');
-  //   }
-  // }, [teacher, navigate]);
-
   const validateDiscountCode = async (code: string) => {
     if (!code.trim()) {
       setDiscountError("Please enter a discount code");
@@ -76,8 +69,8 @@ const PricingPage = () => {
   const handleCreateSubscription = async () => {
     if (!teacher?.email || !teacher?.school) {
       toast({
-        title: t('pricing.paymentError'),
-        description: "Please log in to continue with subscription",
+        title: "Authentication Required",
+        description: "Please sign up as an educator first to start your free trial",
         variant: "destructive",
       });
       navigate('/teacher-login');
@@ -101,7 +94,6 @@ const PricingPage = () => {
       if (error) throw error;
       
       if (data?.url) {
-        // Open Stripe checkout in a new tab
         window.open(data.url, '_blank');
       }
     } catch (error) {
@@ -114,6 +106,10 @@ const PricingPage = () => {
     } finally {
       setIsCreatingCheckout(false);
     }
+  };
+
+  const handleSignUpEducator = () => {
+    navigate('/teacher-login');
   };
 
   return (
@@ -286,25 +282,57 @@ const PricingPage = () => {
                 </p>
               </div>
 
-              <Button
-                onClick={handleCreateSubscription}
-                disabled={isCreatingCheckout || !teacher}
-                className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-lg py-6"
-              >
-                {isCreatingCheckout ? t('pricing.processing') : `${t('pricing.subscribeFor')} $${total.toFixed(2)}/month`}
-              </Button>
+              {/* Action Buttons - Same Height */}
+              <div className="space-y-3">
+                <Button
+                  onClick={handleCreateSubscription}
+                  disabled={isCreatingCheckout || !teacher}
+                  className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-lg py-6"
+                >
+                  {isCreatingCheckout ? t('pricing.processing') : 'Start 30-Day Free Trial'}
+                </Button>
 
-              {!teacher && (
-                <p className="text-xs text-gray-500 text-center">
-                  Please log in to continue with subscription
-                </p>
-              )}
+                {!teacher && (
+                  <Button
+                    onClick={handleSignUpEducator}
+                    variant="outline"
+                    className="w-full text-lg py-6 border-2 border-blue-600 text-blue-600 hover:bg-blue-50"
+                  >
+                    Sign Up as an Educator
+                  </Button>
+                )}
+              </div>
 
               <p className="text-xs text-gray-500 text-center">
-                {t('pricing.securePayment')}
+                {teacher ? 
+                  "30-day free trial with full access to all features" :
+                  "Create your educator account to start your free trial"
+                }
               </p>
             </CardContent>
           </Card>
+        </div>
+
+        {/* Custom Pricing Section */}
+        <div className="mt-12 text-center">
+          <h3 className="text-2xl font-bold text-gray-900 mb-4">Custom Pricing Available</h3>
+          <p className="text-gray-600 mb-6">
+            Need a custom solution for your school district or large organization? 
+            We offer tailored pricing and features for enterprise customers.
+          </p>
+          <Button
+            variant="outline"
+            className="text-lg px-8 py-3 border-2 border-gray-300 hover:border-gray-400"
+            onClick={() => {
+              // This will later link to a custom pricing form
+              toast({
+                title: "Coming Soon",
+                description: "Custom pricing form will be available soon. Please contact support for now.",
+              });
+            }}
+          >
+            Request Custom Pricing
+          </Button>
         </div>
       </main>
     </div>
