@@ -17,6 +17,7 @@ import StatsCard from "@/components/dashboard/StatsCard";
 import SubscriptionBanner from "@/components/dashboard/SubscriptionBanner";
 import ActiveSubscriptionCard from "@/components/dashboard/ActiveSubscriptionCard";
 import { DashboardSkeleton, TabContentSkeleton } from "@/components/ui/loading-skeleton";
+import { isDemoTeacher, getDemoSubscription } from "@/services/demoAccountManager";
 
 // Lazy load tab components
 const ScheduleTab = lazy(() => import("@/components/dashboard/teacher/ScheduleTab"));
@@ -55,6 +56,16 @@ const TeacherDashboard = () => {
     if (!teacher?.school) return;
     
     try {
+      // Check if this is a demo teacher - if so, provide demo subscription
+      if (isDemoTeacher(teacher.email)) {
+        console.log('Demo teacher detected, providing demo subscription');
+        const demoSub = getDemoSubscription(teacher.school);
+        setSubscription(demoSub);
+        setIsLoading(false);
+        return;
+      }
+
+      // Regular subscription loading for non-demo accounts
       const { data, error } = await supabase
         .from('subscriptions')
         .select('*')
@@ -80,6 +91,15 @@ const TeacherDashboard = () => {
   };
 
   const handleCreateCheckout = async () => {
+    // Demo accounts don't need to create checkouts
+    if (isDemoTeacher(teacher?.email)) {
+      toast({
+        title: "Demo Account",
+        description: "Demo accounts have full access to all features!",
+      });
+      return;
+    }
+
     if (!teacher?.email || !teacher?.school) {
       toast({
         title: t('common.error'),

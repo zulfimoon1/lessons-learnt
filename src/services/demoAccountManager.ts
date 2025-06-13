@@ -22,6 +22,30 @@ export const isDemoAccount = (email?: string, fullName?: string) => {
   return false;
 };
 
+// Check if a teacher is a demo teacher by email
+export const isDemoTeacher = (email?: string) => {
+  return email && DEMO_ACCOUNTS.teachers.some(teacher => teacher.email === email);
+};
+
+// Check if a student is a demo student by name
+export const isDemoStudent = (fullName?: string) => {
+  return fullName && DEMO_ACCOUNTS.students.some(student => student.full_name === fullName);
+};
+
+// Create a fake subscription for demo accounts
+export const getDemoSubscription = (school?: string) => {
+  if (!school || school !== 'Demo School') return null;
+  
+  return {
+    id: 'demo-subscription-id',
+    school_name: 'Demo School',
+    status: 'active',
+    plan_type: 'premium',
+    amount: 999,
+    current_period_end: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString() // 1 year from now
+  };
+};
+
 // God mode: Direct demo login without any verification - just works
 export const godModeTeacherLogin = async (email: string, password: string) => {
   console.log('=== GOD MODE TEACHER LOGIN ===');
