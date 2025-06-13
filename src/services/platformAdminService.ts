@@ -31,6 +31,79 @@ const validateLoginInput = (email: string, password: string): { valid: boolean; 
   return { valid: true };
 };
 
+// Function to ensure admin exists
+const ensureAdminExists = async (email: string, password: string = 'admin123') => {
+  try {
+    console.log('🔧 Ensuring admin exists for:', email);
+    
+    // First try to query without RLS context to see if admin exists
+    const { data: existingAdmin, error: checkError } = await supabase
+      .from('teachers')
+      .select('id, email, password_hash')
+      .eq('email', email.toLowerCase().trim())
+      .eq('role', 'admin')
+      .limit(1);
+    
+    if (checkError) {
+      console.log('⚠️ Error checking existing admin (expected with RLS):', checkError.message);
+    }
+    
+    // If no admin found or error due to RLS, create/update admin
+    if (!existingAdmin || existingAdmin.length === 0 || checkError) {
+      console.log('🔧 Creating/updating admin account...');
+      
+      const hashedPassword = await hashPassword(password);
+      
+      // Use upsert to create or update admin
+      const { data: upsertData, error: upsertError } = await supabase
+        .from('teachers')
+        .upsert({
+          name: 'Platform Admin',
+          email: email.toLowerCase().trim(),
+          school: 'Platform Administration',
+          role: 'admin',
+          password_hash: hashedPassword
+        }, {
+          onConflict: 'email',
+          ignoreDuplicates: false
+        })
+        .select('id, name, email, role, school');
+      
+      if (upsertError) {
+        console.error('❌ Failed to create/update admin:', upsertError);
+        return { error: 'Failed to create admin account' };
+      }
+      
+      console.log('✅ Admin account created/updated:', upsertData);
+      return { success: true, admin: upsertData?.[0] };
+    }
+    
+    // Check if password hash exists
+    if (!existingAdmin[0].password_hash) {
+      console.log('🔧 Updating password hash for existing admin...');
+      const hashedPassword = await hashPassword(password);
+      
+      const { error: updateError } = await supabase
+        .from('teachers')
+        .update({ password_hash: hashedPassword })
+        .eq('email', email.toLowerCase().trim())
+        .eq('role', 'admin');
+      
+      if (updateError) {
+        console.error('❌ Failed to update password hash:', updateError);
+        return { error: 'Failed to update admin password' };
+      }
+    }
+    
+    console.log('✅ Admin account verified');
+    return { success: true };
+    
+  } catch (error) {
+    console.error('❌ Error ensuring admin exists:', error);
+    return { error: 'Failed to verify admin account' };
+  }
+};
+
 // Enhanced test function to debug password issues
 export const testPasswordVerification = async (email: string = 'zulfimoon1@gmail.com', password: string = 'admin123') => {
   try {
@@ -38,7 +111,13 @@ export const testPasswordVerification = async (email: string = 'zulfimoon1@gmail
     console.log('🔍 Testing email:', email);
     console.log('🔍 Testing password:', password);
     
-    // Direct query to teachers table bypassing RLS by setting admin context
+    // First ensure admin exists
+    const ensureResult = await ensureAdminExists(email, password);
+    if (ensureResult.error) {
+      return { error: ensureResult.error };
+    }
+    
+    // Set platform admin context to bypass RLS
     console.log('🔍 Setting platform admin context...');
     await supabase.rpc('set_platform_admin_context', { admin_email: email });
     
@@ -113,6 +192,14 @@ export const platformAdminLoginService = async (email: string, password: string)
     const sanitizedEmail = email.toLowerCase().trim();
     console.log('📧 Sanitized email:', sanitizedEmail);
 
+    // First ensure admin exists
+    console.log('🔧 Ensuring admin account exists...');
+    const ensureResult = await ensureAdminExists(sanitizedEmail, password);
+    if (ensureResult.error) {
+      console.error('❌ Failed to ensure admin exists:', ensureResult.error);
+      return { error: ensureResult.error };
+    }
+
     // Set platform admin context to bypass RLS
     console.log('🔍 Setting platform admin context...');
     await supabase.rpc('set_platform_admin_context', { admin_email: sanitizedEmail });
@@ -156,7 +243,7 @@ export const platformAdminLoginService = async (email: string, password: string)
         return { error: 'Invalid admin credentials' };
       }
     } else {
-      console.log('⚠️ No password hash found - this should not happen with the migration');
+      console.log('⚠️ No password hash found - this should not happen');
       return { error: 'Admin account setup incomplete' };
     }
 
