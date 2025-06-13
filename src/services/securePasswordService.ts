@@ -1,4 +1,3 @@
-
 import bcrypt from 'bcryptjs';
 
 const SALT_ROUNDS = 12;
@@ -20,9 +19,7 @@ export const verifyPassword = async (password: string, hashedPassword: string): 
   try {
     console.log('=== BCRYPT VERIFICATION DEBUG ===');
     console.log('Input password:', password);
-    console.log('Input password length:', password.length);
     console.log('Stored hash:', hashedPassword);
-    console.log('Stored hash length:', hashedPassword.length);
     console.log('Hash format check - starts with $2a$ or $2b$:', 
       hashedPassword.startsWith('$2a$') || hashedPassword.startsWith('$2b$'));
     
@@ -42,11 +39,7 @@ export const verifyPassword = async (password: string, hashedPassword: string): 
     const cleanPassword = String(password).trim();
     const cleanHash = String(hashedPassword).trim();
     
-    console.log('Cleaned password:', cleanPassword);
-    console.log('Cleaned hash:', cleanHash);
-    
-    // Perform the verification
-    console.log('Testing actual password against stored hash...');
+    console.log('Performing bcrypt verification...');
     const result = await bcrypt.compare(cleanPassword, cleanHash);
     console.log('Bcrypt.compare result:', result);
     
@@ -54,9 +47,6 @@ export const verifyPassword = async (password: string, hashedPassword: string): 
     
   } catch (error) {
     console.error('Password verification error:', error);
-    console.error('Error type:', typeof error);
-    console.error('Error message:', error.message);
-    console.error('Error stack:', error.stack);
     return false;
   }
 };

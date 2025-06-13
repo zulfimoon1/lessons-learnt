@@ -1,14 +1,22 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { verifyPassword } from './securePasswordService';
-import { validateDemoAccountHash } from './demoAccountManager';
+import { ensureDemoAccountHash, isDemoAccount } from './demoAccountManager';
 
 export const teacherEmailLoginService = async (email: string, password: string) => {
   try {
     console.log('=== TEACHER LOGIN SERVICE DEBUG ===');
     console.log('Login attempt for email:', email);
-    console.log('Password provided:', password ? 'Yes' : 'No');
-    console.log('Password length:', password?.length);
+
+    // For demo accounts, ensure the hash is correct before attempting login
+    if (isDemoAccount(email)) {
+      console.log('Demo account detected, ensuring hash...');
+      const hashResult = await ensureDemoAccountHash(email, undefined, password);
+      
+      if (!hashResult.success && hashResult.isDemo) {
+        console.error('Failed to ensure demo account hash');
+        return { error: 'Demo account setup failed. Please try again.' };
+      }
+    }
 
     // Query the database for the teacher
     const { data: teacher, error: queryError } = await supabase
@@ -17,13 +25,8 @@ export const teacherEmailLoginService = async (email: string, password: string) 
       .eq('email', email.toLowerCase().trim())
       .single();
 
-    if (queryError) {
+    if (queryError || !teacher) {
       console.error('Database query error:', queryError);
-      return { error: 'Login failed. Please check your credentials.' };
-    }
-
-    if (!teacher) {
-      console.log('No teacher found with email:', email);
       return { error: 'Invalid credentials' };
     }
 
@@ -31,45 +34,18 @@ export const teacherEmailLoginService = async (email: string, password: string) 
       id: teacher.id,
       name: teacher.name,
       email: teacher.email,
-      role: teacher.role,
-      hasPasswordHash: !!teacher.password_hash,
-      passwordHashLength: teacher.password_hash?.length
+      role: teacher.role
     });
 
-    // Verify password - ensure we have both password and hash
+    // Verify password
     if (!password || !teacher.password_hash) {
       console.error('Missing password or password hash');
       return { error: 'Invalid credentials' };
     }
 
     console.log('Starting password verification...');
-    console.log('Password to verify:', password);
-    console.log('Hash to verify against:', teacher.password_hash);
-    
-    // First try normal verification
-    let isPasswordValid = await verifyPassword(password, teacher.password_hash);
-    console.log('Initial password verification result:', isPasswordValid);
-
-    // If verification fails and this is a demo account, try regenerating the hash
-    if (!isPasswordValid && email.includes('demo') && password === 'demo123') {
-      console.log('Demo account verification failed, attempting hash regeneration...');
-      const demoResult = await validateDemoAccountHash(email, password);
-      
-      if (demoResult.regenerated) {
-        console.log('Hash regenerated, trying verification again...');
-        // Get the updated teacher record
-        const { data: updatedTeacher } = await supabase
-          .from('teachers')
-          .select('password_hash')
-          .eq('email', email)
-          .single();
-        
-        if (updatedTeacher?.password_hash) {
-          isPasswordValid = await verifyPassword(password, updatedTeacher.password_hash);
-          console.log('Verification result after hash regeneration:', isPasswordValid);
-        }
-      }
-    }
+    const isPasswordValid = await verifyPassword(password, teacher.password_hash);
+    console.log('Password verification result:', isPasswordValid);
 
     if (!isPasswordValid) {
       console.log('Password verification failed for email:', email);
@@ -114,7 +90,17 @@ export const studentSimpleLoginService = async (fullName: string, password: stri
   try {
     console.log('=== STUDENT LOGIN SERVICE DEBUG ===');
     console.log('Login attempt for student:', fullName);
-    console.log('Password provided:', password ? 'Yes' : 'No');
+
+    // For demo accounts, ensure the hash is correct before attempting login
+    if (isDemoAccount(undefined, fullName)) {
+      console.log('Demo student detected, ensuring hash...');
+      const hashResult = await ensureDemoAccountHash(undefined, fullName, password);
+      
+      if (!hashResult.success && hashResult.isDemo) {
+        console.error('Failed to ensure demo student hash');
+        return { error: 'Demo account setup failed. Please try again.' };
+      }
+    }
 
     // Query the database for the student
     const { data: student, error: queryError } = await supabase
@@ -123,13 +109,8 @@ export const studentSimpleLoginService = async (fullName: string, password: stri
       .eq('full_name', fullName.trim())
       .single();
 
-    if (queryError) {
+    if (queryError || !student) {
       console.error('Database query error:', queryError);
-      return { error: 'Login failed. Please check your credentials.' };
-    }
-
-    if (!student) {
-      console.log('No student found with name:', fullName);
       return { error: 'Invalid credentials' };
     }
 
@@ -137,37 +118,18 @@ export const studentSimpleLoginService = async (fullName: string, password: stri
       id: student.id,
       full_name: student.full_name,
       school: student.school,
-      grade: student.grade,
-      hasPasswordHash: !!student.password_hash
+      grade: student.grade
     });
 
-    // Verify password - ensure we have both password and hash
+    // Verify password
     if (!password || !student.password_hash) {
       console.error('Missing password or password hash');
       return { error: 'Invalid credentials' };
     }
 
     console.log('Starting password verification for student...');
-    let isPasswordValid = await verifyPassword(password, student.password_hash);
-    console.log('Initial password verification result:', isPasswordValid);
-
-    // If verification fails and this is a demo student, try regenerating the hash
-    if (!isPasswordValid && fullName.includes('Demo') && password === 'demo123') {
-      console.log('Demo student verification failed, attempting hash regeneration...');
-      const { hashPassword } = await import('./securePasswordService');
-      const newHash = await hashPassword(password);
-      
-      const { error: updateError } = await supabase
-        .from('students')
-        .update({ password_hash: newHash })
-        .eq('full_name', fullName);
-      
-      if (!updateError) {
-        console.log('Hash regenerated for demo student, trying verification again...');
-        isPasswordValid = await verifyPassword(password, newHash);
-        console.log('Verification result after hash regeneration:', isPasswordValid);
-      }
-    }
+    const isPasswordValid = await verifyPassword(password, student.password_hash);
+    console.log('Password verification result:', isPasswordValid);
 
     if (!isPasswordValid) {
       console.log('Password verification failed for student:', fullName);
