@@ -238,6 +238,7 @@ const ResponsesManagement = () => {
   });
 
   const handleViewResponse = (response: FeedbackResponse) => {
+    console.log('🔍 Viewing response:', response);
     setSelectedResponse(response);
     setIsDialogOpen(true);
   };
@@ -360,8 +361,9 @@ const ResponsesManagement = () => {
                             variant="ghost" 
                             size="sm"
                             onClick={() => handleViewResponse(response)}
+                            className="flex items-center gap-1"
                           >
-                            <EyeIcon className="w-4 h-4 mr-1" />
+                            <EyeIcon className="w-4 h-4" />
                             View
                           </Button>
                         </TableCell>
