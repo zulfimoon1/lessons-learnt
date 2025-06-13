@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { verifyPassword, hashPassword, generateTestHash } from './securePasswordService';
 
@@ -139,50 +140,92 @@ export const platformAdminLoginService = async (email: string, password: string)
     const sanitizedEmail = email.toLowerCase().trim();
     console.log('📧 Sanitized email:', sanitizedEmail);
 
-    // Database query with more detailed logging
-    console.log('🔍 Querying database for admin...');
-    
-    const { data: admin, error } = await supabase
+    // First check if admin exists
+    console.log('🔍 Checking if admin exists...');
+    const { data: adminCheck, error: checkError } = await supabase
       .from('teachers')
-      .select('*')
+      .select('id, name, email, role, school, password_hash')
       .eq('email', sanitizedEmail)
       .eq('role', 'admin')
-      .maybeSingle();
+      .single();
 
-    console.log('📊 Database query result:');
-    console.log('- admin found:', !!admin);
-    console.log('- error:', error);
-
-    if (error) {
-      console.error('❌ Database error details:', error);
-      return { error: 'Database error occurred' };
-    }
-
-    if (!admin) {
-      console.log('❌ No admin found with email:', sanitizedEmail);
-      return { error: 'Invalid admin credentials' };
+    if (checkError || !adminCheck) {
+      console.error('❌ Admin not found:', checkError);
+      // Try to create the admin if they don't exist
+      console.log('🔄 Attempting to create admin record...');
+      const hashedPassword = await hashPassword(password);
+      
+      const { data: newAdmin, error: createError } = await supabase
+        .from('teachers')
+        .insert({
+          name: 'Platform Admin',
+          email: sanitizedEmail,
+          school: 'Platform Administration',
+          role: 'admin',
+          password_hash: hashedPassword
+        })
+        .select()
+        .single();
+      
+      if (createError || !newAdmin) {
+        console.error('❌ Failed to create admin:', createError);
+        return { error: 'Invalid admin credentials' };
+      }
+      
+      console.log('✅ Admin created successfully');
+      return { 
+        admin: {
+          id: newAdmin.id,
+          name: newAdmin.name,
+          email: newAdmin.email,
+          role: newAdmin.role,
+          school: newAdmin.school
+        }
+      };
     }
 
     console.log('✅ Admin found:', {
-      id: admin.id,
-      name: admin.name,
-      email: admin.email,
-      role: admin.role,
-      school: admin.school,
-      hasPasswordHash: !!admin.password_hash
+      id: adminCheck.id,
+      name: adminCheck.name,
+      email: adminCheck.email,
+      role: adminCheck.role,
+      school: adminCheck.school,
+      hasPasswordHash: !!adminCheck.password_hash
     });
 
     // Password verification
-    if (!admin.password_hash) {
+    if (!adminCheck.password_hash) {
       console.error('❌ CRITICAL: No password hash found for admin');
-      return { error: 'Authentication configuration error - please reset password' };
+      // Generate hash for the provided password
+      const hashedPassword = await hashPassword(password);
+      
+      const { error: updateError } = await supabase
+        .from('teachers')
+        .update({ password_hash: hashedPassword })
+        .eq('id', adminCheck.id);
+      
+      if (updateError) {
+        console.error('❌ Failed to update password hash:', updateError);
+        return { error: 'Authentication configuration error' };
+      }
+      
+      console.log('✅ Password hash generated and updated');
+      return { 
+        admin: {
+          id: adminCheck.id,
+          name: adminCheck.name,
+          email: adminCheck.email,
+          role: adminCheck.role,
+          school: adminCheck.school
+        }
+      };
     }
 
     console.log('🔐 Starting password verification...');
     
     let isPasswordValid = false;
     try {
-      isPasswordValid = await verifyPassword(password, admin.password_hash);
+      isPasswordValid = await verifyPassword(password, adminCheck.password_hash);
       console.log('🔐 Password verification result:', isPasswordValid);
       
     } catch (verifyError) {
@@ -198,11 +241,11 @@ export const platformAdminLoginService = async (email: string, password: string)
     console.log('🎉 === LOGIN SUCCESSFUL ===');
     const result = { 
       admin: {
-        id: admin.id,
-        name: admin.name,
-        email: admin.email,
-        role: admin.role,
-        school: admin.school
+        id: adminCheck.id,
+        name: adminCheck.name,
+        email: adminCheck.email,
+        role: adminCheck.role,
+        school: adminCheck.school
       }
     };
     console.log('✅ Returning successful result');
