@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { FileTextIcon, EyeIcon, AlertTriangleIcon, DownloadIcon } from "lucide-react";
 import { toast } from "sonner";
 import { getTrafficLightColor } from "@/components/EmotionalStateSelector";
+import ResponseDetailsDialog from "./ResponseDetailsDialog";
 
 interface FeedbackResponse {
   id: string;
@@ -47,6 +48,8 @@ const ResponsesManagement = () => {
   const [students, setStudents] = useState<string[]>([]);
   const [selectedSchool, setSelectedSchool] = useState<string>('all');
   const [selectedStudent, setSelectedStudent] = useState<string>('all');
+  const [selectedResponse, setSelectedResponse] = useState<FeedbackResponse | null>(null);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
@@ -234,221 +237,238 @@ const ResponsesManagement = () => {
     return true;
   });
 
+  const handleViewResponse = (response: FeedbackResponse) => {
+    setSelectedResponse(response);
+    setIsDialogOpen(true);
+  };
+
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex justify-between items-center">
-          <div>
-            <CardTitle className="flex items-center gap-2">
-              <FileTextIcon className="w-5 h-5" />
-              Responses & Schedule Management
-            </CardTitle>
-            <CardDescription>
-              View and manage student feedback responses, class schedules, and mental health alerts
-            </CardDescription>
+    <>
+      <Card>
+        <CardHeader>
+          <div className="flex justify-between items-center">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <FileTextIcon className="w-5 h-5" />
+                Responses & Schedule Management
+              </CardTitle>
+              <CardDescription>
+                View and manage student feedback responses, class schedules, and mental health alerts
+              </CardDescription>
+            </div>
+            <Button variant="outline" size="sm">
+              <DownloadIcon className="w-4 h-4 mr-2" />
+              Export responses
+            </Button>
           </div>
-          <Button variant="outline" size="sm">
-            <DownloadIcon className="w-4 h-4 mr-2" />
-            Export responses
-          </Button>
-        </div>
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-6">
-          {/* Filter Controls */}
-          <div className="flex gap-4 items-center">
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-medium">View:</span>
-              <Select value={view} onValueChange={(value) => setView(value as 'responses' | 'alerts')}>
-                <SelectTrigger className="w-40">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="responses">Responses</SelectItem>
-                  <SelectItem value="alerts">Mental Health Alerts</SelectItem>
-                </SelectContent>
-              </Select>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-6">
+            {/* Filter Controls */}
+            <div className="flex gap-4 items-center">
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium">View:</span>
+                <Select value={view} onValueChange={(value) => setView(value as 'responses' | 'alerts')}>
+                  <SelectTrigger className="w-40">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="responses">Responses</SelectItem>
+                    <SelectItem value="alerts">Mental Health Alerts</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium">School:</span>
+                <Select value={selectedSchool} onValueChange={setSelectedSchool}>
+                  <SelectTrigger className="w-48">
+                    <SelectValue placeholder="All Schools" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Schools</SelectItem>
+                    {schools.map(school => (
+                      <SelectItem key={school} value={school}>{school}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium">Student:</span>
+                <Select value={selectedStudent} onValueChange={setSelectedStudent}>
+                  <SelectTrigger className="w-48">
+                    <SelectValue placeholder="All Students" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Students</SelectItem>
+                    {students.map(student => (
+                      <SelectItem key={student} value={student}>{student}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
 
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-medium">School:</span>
-              <Select value={selectedSchool} onValueChange={setSelectedSchool}>
-                <SelectTrigger className="w-48">
-                  <SelectValue placeholder="All Schools" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Schools</SelectItem>
-                  {schools.map(school => (
-                    <SelectItem key={school} value={school}>{school}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-medium">Student:</span>
-              <Select value={selectedStudent} onValueChange={setSelectedStudent}>
-                <SelectTrigger className="w-48">
-                  <SelectValue placeholder="All Students" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Students</SelectItem>
-                  {students.map(student => (
-                    <SelectItem key={student} value={student}>{student}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          {/* Responses Table */}
-          {view === 'responses' && (
-            <div className="border rounded-lg">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Student</TableHead>
-                    <TableHead>School</TableHead>
-                    <TableHead>Class</TableHead>
-                    <TableHead>Subject</TableHead>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Emotional State</TableHead>
-                    <TableHead>Understanding</TableHead>
-                    <TableHead>Interest</TableHead>
-                    <TableHead>Growth</TableHead>
-                    <TableHead>Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredResponses.map((response) => (
-                    <TableRow key={response.id}>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <span className="font-medium">{response.student_name}</span>
-                          {response.is_anonymous && (
-                            <Badge variant="secondary" className="text-xs">Anonymous</Badge>
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell>{response.school}</TableCell>
-                      <TableCell>
-                        <Badge variant="outline">{response.grade}</Badge>
-                      </TableCell>
-                      <TableCell>{response.subject}</TableCell>
-                      <TableCell>{new Date(response.class_date).toLocaleDateString()}</TableCell>
-                      <TableCell>{getEmotionalStateDisplay(response.emotional_state)}</TableCell>
-                      <TableCell>
-                        <Badge variant="outline">{response.understanding}/5</Badge>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="outline">{response.interest}/5</Badge>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="outline">{response.educational_growth}/5</Badge>
-                      </TableCell>
-                      <TableCell>
-                        <Button variant="ghost" size="sm">
-                          <EyeIcon className="w-4 h-4 mr-1" />
-                          View
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                  {filteredResponses.length === 0 && (
+            {/* Responses Table */}
+            {view === 'responses' && (
+              <div className="border rounded-lg">
+                <Table>
+                  <TableHeader>
                     <TableRow>
-                      <TableCell colSpan={10} className="text-center py-8">
-                        <div className="text-muted-foreground">
-                          {isLoading ? 'Loading responses...' : 'No responses found'}
-                        </div>
-                      </TableCell>
+                      <TableHead>Student</TableHead>
+                      <TableHead>School</TableHead>
+                      <TableHead>Class</TableHead>
+                      <TableHead>Subject</TableHead>
+                      <TableHead>Date</TableHead>
+                      <TableHead>Emotional State</TableHead>
+                      <TableHead>Understanding</TableHead>
+                      <TableHead>Interest</TableHead>
+                      <TableHead>Growth</TableHead>
+                      <TableHead>Actions</TableHead>
                     </TableRow>
-                  )}
-                </TableBody>
-              </Table>
-            </div>
-          )}
-
-          {/* Mental Health Alerts Table */}
-          {view === 'alerts' && (
-            <div className="border rounded-lg">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Student</TableHead>
-                    <TableHead>School</TableHead>
-                    <TableHead>Class</TableHead>
-                    <TableHead>Severity</TableHead>
-                    <TableHead>Source</TableHead>
-                    <TableHead>Content Preview</TableHead>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredAlerts.map((alert) => (
-                    <TableRow key={alert.id} className={!alert.is_reviewed ? "bg-red-50" : ""}>
-                      <TableCell>
-                        <div className="font-medium">{alert.student_name}</div>
-                      </TableCell>
-                      <TableCell>{alert.school}</TableCell>
-                      <TableCell>
-                        <Badge variant="outline">{alert.grade}</Badge>
-                      </TableCell>
-                      <TableCell>{getSeverityBadge(alert.severity_level)}</TableCell>
-                      <TableCell>
-                        <Badge variant="outline">
-                          {alert.source_table === 'feedback' ? 'Lesson Feedback' : 'Weekly Summary'}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="max-w-xs">
-                        <div className="truncate text-sm">
-                          {alert.content.substring(0, 100)}...
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-sm">
-                        {new Date(alert.created_at).toLocaleDateString()}
-                      </TableCell>
-                      <TableCell>
-                        {alert.is_reviewed ? (
-                          <Badge className="bg-green-100 text-green-800">Reviewed</Badge>
-                        ) : (
-                          <Badge variant="destructive">
-                            <AlertTriangleIcon className="w-3 h-3 mr-1" />
-                            Pending
-                          </Badge>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        {!alert.is_reviewed && (
-                          <Button
+                  </TableHeader>
+                  <TableBody>
+                    {filteredResponses.map((response) => (
+                      <TableRow key={response.id}>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium">{response.student_name}</span>
+                            {response.is_anonymous && (
+                              <Badge variant="secondary" className="text-xs">Anonymous</Badge>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell>{response.school}</TableCell>
+                        <TableCell>
+                          <Badge variant="outline">{response.grade}</Badge>
+                        </TableCell>
+                        <TableCell>{response.subject}</TableCell>
+                        <TableCell>{new Date(response.class_date).toLocaleDateString()}</TableCell>
+                        <TableCell>{getEmotionalStateDisplay(response.emotional_state)}</TableCell>
+                        <TableCell>
+                          <Badge variant="outline">{response.understanding}/5</Badge>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="outline">{response.interest}/5</Badge>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="outline">{response.educational_growth}/5</Badge>
+                        </TableCell>
+                        <TableCell>
+                          <Button 
+                            variant="ghost" 
                             size="sm"
-                            onClick={() => markAlertAsReviewed(alert.id)}
-                            className="bg-green-600 hover:bg-green-700"
+                            onClick={() => handleViewResponse(response)}
                           >
-                            <EyeIcon className="w-3 h-3 mr-1" />
-                            Mark Reviewed
+                            <EyeIcon className="w-4 h-4 mr-1" />
+                            View
                           </Button>
-                        )}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                  {filteredAlerts.length === 0 && (
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                    {filteredResponses.length === 0 && (
+                      <TableRow>
+                        <TableCell colSpan={10} className="text-center py-8">
+                          <div className="text-muted-foreground">
+                            {isLoading ? 'Loading responses...' : 'No responses found'}
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+
+            {/* Mental Health Alerts Table */}
+            {view === 'alerts' && (
+              <div className="border rounded-lg">
+                <Table>
+                  <TableHeader>
                     <TableRow>
-                      <TableCell colSpan={9} className="text-center py-8">
-                        <div className="text-muted-foreground">
-                          No mental health alerts found
-                        </div>
-                      </TableCell>
+                      <TableHead>Student</TableHead>
+                      <TableHead>School</TableHead>
+                      <TableHead>Class</TableHead>
+                      <TableHead>Severity</TableHead>
+                      <TableHead>Source</TableHead>
+                      <TableHead>Content Preview</TableHead>
+                      <TableHead>Date</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Actions</TableHead>
                     </TableRow>
-                  )}
-                </TableBody>
-              </Table>
-            </div>
-          )}
-        </div>
-      </CardContent>
-    </Card>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredAlerts.map((alert) => (
+                      <TableRow key={alert.id} className={!alert.is_reviewed ? "bg-red-50" : ""}>
+                        <TableCell>
+                          <div className="font-medium">{alert.student_name}</div>
+                        </TableCell>
+                        <TableCell>{alert.school}</TableCell>
+                        <TableCell>
+                          <Badge variant="outline">{alert.grade}</Badge>
+                        </TableCell>
+                        <TableCell>{getSeverityBadge(alert.severity_level)}</TableCell>
+                        <TableCell>
+                          <Badge variant="outline">
+                            {alert.source_table === 'feedback' ? 'Lesson Feedback' : 'Weekly Summary'}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="max-w-xs">
+                          <div className="truncate text-sm">
+                            {alert.content.substring(0, 100)}...
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-sm">
+                          {new Date(alert.created_at).toLocaleDateString()}
+                        </TableCell>
+                        <TableCell>
+                          {alert.is_reviewed ? (
+                            <Badge className="bg-green-100 text-green-800">Reviewed</Badge>
+                          ) : (
+                            <Badge variant="destructive">
+                              <AlertTriangleIcon className="w-3 h-3 mr-1" />
+                              Pending
+                            </Badge>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          {!alert.is_reviewed && (
+                            <Button
+                              size="sm"
+                              onClick={() => markAlertAsReviewed(alert.id)}
+                              className="bg-green-600 hover:bg-green-700"
+                            >
+                              <EyeIcon className="w-3 h-3 mr-1" />
+                              Mark Reviewed
+                            </Button>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                    {filteredAlerts.length === 0 && (
+                      <TableRow>
+                        <TableCell colSpan={9} className="text-center py-8">
+                          <div className="text-muted-foreground">
+                            No mental health alerts found
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
+      <ResponseDetailsDialog
+        response={selectedResponse}
+        open={isDialogOpen}
+        onOpenChange={setIsDialogOpen}
+      />
+    </>
   );
 };
 
