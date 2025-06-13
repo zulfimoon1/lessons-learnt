@@ -1,40 +1,10 @@
 import { supabase } from '@/integrations/supabase/client';
 import { verifyPassword, hashPassword } from './securePasswordService';
-import { forceUpdateDemoPasswords, isDemoAccount, initializeDemoPasswordsOnStartup } from './demoAccountManager';
-
-// Track if initialization has been attempted
-let initializationAttempted = false;
-
-// Ensure demo passwords are initialized before any operations
-const ensureDemoPasswordsInitialized = async () => {
-  if (!initializationAttempted) {
-    initializationAttempted = true;
-    console.log('Initializing demo passwords for the first time...');
-    const result = await initializeDemoPasswordsOnStartup();
-    if (!result.success) {
-      console.error('Demo password initialization failed:', result.error);
-    }
-  }
-};
+import { isDemoAccount } from './demoAccountManager';
 
 export const teacherEmailLoginService = async (email: string, password: string) => {
   try {
     console.log('Teacher login attempt:', email);
-
-    // Ensure demo passwords are initialized first
-    await ensureDemoPasswordsInitialized();
-
-    // Force update demo passwords if this is a demo account
-    if (isDemoAccount(email)) {
-      console.log('Demo account detected, force updating all demo passwords...');
-      const forceResult = await forceUpdateDemoPasswords();
-      if (!forceResult.success) {
-        console.error('Failed to force update demo passwords:', forceResult.error);
-        return { error: 'Demo account setup failed. Please try again.' };
-      } else {
-        console.log('Demo passwords force updated successfully');
-      }
-    }
 
     // Get teacher from database
     const { data: teacher, error } = await supabase
@@ -81,21 +51,6 @@ export const teacherEmailLoginService = async (email: string, password: string) 
 export const studentSimpleLoginService = async (fullName: string, password: string) => {
   try {
     console.log('Student login attempt:', fullName);
-
-    // Ensure demo passwords are initialized first
-    await ensureDemoPasswordsInitialized();
-
-    // Force update demo passwords if this is a demo account
-    if (isDemoAccount(undefined, fullName)) {
-      console.log('Demo student account detected, force updating all demo passwords...');
-      const forceResult = await forceUpdateDemoPasswords();
-      if (!forceResult.success) {
-        console.error('Failed to force update demo passwords:', forceResult.error);
-        return { error: 'Demo account setup failed. Please try again.' };
-      } else {
-        console.log('Demo passwords force updated successfully');
-      }
-    }
 
     // Get student from database
     const { data: student, error } = await supabase
