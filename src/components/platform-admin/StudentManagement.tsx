@@ -255,7 +255,7 @@ const StudentManagement: React.FC = () => {
         <CardTitle className="flex items-center gap-2">
           <Users className="w-5 h-5" />
           Student Management
-          <Shield className="w-4 h-4 text-green-600" title="Enhanced Security Enabled" />
+          <Shield className="w-4 h-4 text-green-600" />
         </CardTitle>
       </CardHeader>
       <CardContent>

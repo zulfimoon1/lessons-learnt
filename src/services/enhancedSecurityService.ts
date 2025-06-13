@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 
 interface SecurityEvent {
@@ -57,19 +58,21 @@ class EnhancedSecurityService {
         return { isValid: false };
       }
 
-      // Check session age (max 24 hours)
-      const sessionAge = Date.now() - new Date(session.created_at).getTime();
-      if (sessionAge > 24 * 60 * 60 * 1000) {
-        this.logSecurityEvent({
-          type: 'session_expired',
-          userId: user.user.id,
-          timestamp: new Date().toISOString(),
-          details: 'Session expired due to age limit',
-          userAgent: navigator.userAgent,
-          severity: 'medium'
-        });
-        await this.clearSession();
-        return { isValid: false };
+      // Check session age (max 24 hours) - use expires_at instead of created_at
+      if (session.expires_at) {
+        const expiresAt = new Date(session.expires_at).getTime();
+        if (Date.now() > expiresAt) {
+          this.logSecurityEvent({
+            type: 'session_expired',
+            userId: user.user.id,
+            timestamp: new Date().toISOString(),
+            details: 'Session expired',
+            userAgent: navigator.userAgent,
+            severity: 'medium'
+          });
+          await this.clearSession();
+          return { isValid: false };
+        }
       }
 
       return { isValid: true, user: user.user, session };
@@ -326,16 +329,26 @@ class EnhancedSecurityService {
       
       localStorage.setItem('security_logs', JSON.stringify(existingLogs));
       
-      // Log to Supabase for server-side tracking
+      // Log to Supabase for server-side tracking - use direct insert instead of RPC
       if (event.severity === 'high' || event.severity === 'critical') {
-        supabase.rpc('log_security_event', {
-          event_type: event.type,
-          user_id: event.userId || null,
-          details: event.details,
-          severity: event.severity
-        }).catch(error => {
-          console.error('Failed to log security event to server:', error);
-        });
+        supabase
+          .from('audit_log')
+          .insert({
+            table_name: 'security_events',
+            operation: event.type,
+            user_id: event.userId || null,
+            new_data: {
+              details: event.details,
+              severity: event.severity,
+              timestamp: event.timestamp,
+              user_agent: event.userAgent
+            }
+          })
+          .then(({ error }) => {
+            if (error) {
+              console.error('Failed to log security event to server:', error);
+            }
+          });
       }
     } catch (error) {
       console.error('Failed to log security event:', error);
