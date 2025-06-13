@@ -32,19 +32,25 @@ export const isDemoStudent = (fullName?: string) => {
   return fullName && DEMO_ACCOUNTS.students.some(student => student.full_name === fullName);
 };
 
-// Create a fake subscription for demo accounts
+// Create a fake subscription for demo accounts - ALWAYS ACTIVE
 export const getDemoSubscription = (school?: string) => {
-  // For demo accounts, always return active subscription regardless of school name
-  if (!school) return null;
-  
+  console.log('Creating demo subscription for school:', school);
   return {
     id: 'demo-subscription-id',
-    school_name: school,
+    school_name: school || 'demo school',
     status: 'active',
     plan_type: 'premium',
     amount: 999,
     current_period_end: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString() // 1 year from now
   };
+};
+
+// Enhanced demo access checker - ALWAYS returns true for demo accounts
+export const hasDemoAccess = (userEmail?: string, userFullName?: string, userSchool?: string) => {
+  console.log('Checking demo access for:', { userEmail, userFullName, userSchool });
+  const hasAccess = isDemoAccount(userEmail, userFullName);
+  console.log('Demo access result:', hasAccess);
+  return hasAccess;
 };
 
 // God mode: Direct demo login without any verification - just works
@@ -59,18 +65,13 @@ export const godModeTeacherLogin = async (email: string, password: string) => {
     return null;
   }
   
-  // For demo accounts, just check password directly - god mode always works!
-  if (password !== 'demo123') {
-    console.log('Wrong demo password, but in god mode we still allow it!');
-  }
-  
   console.log('God mode demo teacher login successful - always works!');
   return {
     id: `demo-${demoTeacher.role}-id`,
     name: demoTeacher.role === 'admin' ? 'Demo Administrator' : 
           demoTeacher.role === 'doctor' ? 'Demo Doctor' : 'Demo Teacher',
     email: demoTeacher.email,
-    school: demoTeacher.role === 'admin' ? 'Demo School' : 'Demo School',
+    school: 'demo school',
     role: demoTeacher.role,
     specialization: demoTeacher.role === 'doctor' ? 'School Psychology' : null,
     license_number: demoTeacher.role === 'doctor' ? 'PSY-DEMO-123' : null,
@@ -89,11 +90,6 @@ export const godModeStudentLogin = async (fullName: string, password: string) =>
     return null;
   }
   
-  // For demo accounts, god mode always works!
-  if (password !== 'demo123') {
-    console.log('Wrong demo password, but in god mode we still allow it!');
-  }
-  
   console.log('God mode demo student login successful - always works!');
   return {
     id: 'demo-student-id',
@@ -101,11 +97,6 @@ export const godModeStudentLogin = async (fullName: string, password: string) =>
     school: 'demo school',
     grade: 'j5'
   };
-};
-
-// Universal demo subscription check - bypasses all subscription requirements
-export const hasDemoAccess = (userEmail?: string, userFullName?: string) => {
-  return isDemoAccount(userEmail, userFullName);
 };
 
 // Test function to verify all demo accounts
