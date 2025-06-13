@@ -1,6 +1,5 @@
 
 import { useEffect } from 'react';
-import { getCurrentUser } from '@/services/authService';
 
 interface SecurityEvent {
   type: 'login' | 'logout' | 'unauthorized_access' | 'suspicious_activity';
@@ -13,14 +12,11 @@ const SecurityMonitor: React.FC = () => {
   useEffect(() => {
     // Monitor for suspicious activities
     const monitorSecurity = () => {
-      const user = getCurrentUser();
-      
       // Check for session tampering
       const handleStorageChange = (e: StorageEvent) => {
         if (e.key === 'user' && e.newValue !== e.oldValue) {
           logSecurityEvent({
             type: 'suspicious_activity',
-            userId: user?.id,
             timestamp: new Date().toISOString(),
             details: 'Local storage tampering detected'
           });
@@ -30,11 +26,10 @@ const SecurityMonitor: React.FC = () => {
       // Monitor for multiple failed login attempts (would be enhanced with backend)
       const handleVisibilityChange = () => {
         if (document.visibilityState === 'visible') {
-          const currentUser = getCurrentUser();
-          if (user && !currentUser) {
+          const userFromStorage = localStorage.getItem('user');
+          if (!userFromStorage) {
             logSecurityEvent({
               type: 'suspicious_activity',
-              userId: user.id,
               timestamp: new Date().toISOString(),
               details: 'Session lost while tab was hidden'
             });
