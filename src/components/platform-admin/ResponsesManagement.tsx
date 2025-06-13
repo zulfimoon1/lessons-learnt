@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -91,10 +90,19 @@ const ResponsesManagement = () => {
       if (error) {
         console.error('❌ Error fetching responses:', error);
         toast.error('Failed to fetch responses');
+        setResponses([]); // Set empty array on error
         return;
       }
 
-      const formattedResponses = data?.map(response => ({
+      console.log('📊 Raw feedback data:', data);
+
+      if (!data || data.length === 0) {
+        console.log('ℹ️ No feedback responses found in database');
+        setResponses([]);
+        return;
+      }
+
+      const formattedResponses = data.map(response => ({
         id: response.id,
         student_name: response.student_name || 'Anonymous',
         school: response.class_schedules.school,
@@ -110,14 +118,15 @@ const ResponsesManagement = () => {
         additional_comments: response.additional_comments || '',
         is_anonymous: response.is_anonymous,
         submitted_at: response.submitted_at
-      })) || [];
+      }));
 
+      console.log('✅ Formatted responses:', formattedResponses);
       setResponses(formattedResponses);
-      console.log('✅ Responses loaded:', formattedResponses.length);
       
     } catch (error) {
       console.error('❌ Error in fetchResponses:', error);
       toast.error('Failed to load responses');
+      setResponses([]); // Set empty array on error
     } finally {
       setIsLoading(false);
     }
@@ -135,15 +144,17 @@ const ResponsesManagement = () => {
       if (error) {
         console.error('❌ Error fetching alerts:', error);
         toast.error('Failed to fetch mental health alerts');
+        setAlerts([]); // Set empty array on error
         return;
       }
 
+      console.log('📊 Mental health alerts data:', data);
       setAlerts(data || []);
-      console.log('✅ Mental health alerts loaded:', data?.length || 0);
       
     } catch (error) {
       console.error('❌ Error in fetchAlerts:', error);
       toast.error('Failed to load mental health alerts');
+      setAlerts([]); // Set empty array on error
     }
   };
 
@@ -159,7 +170,7 @@ const ResponsesManagement = () => {
         return;
       }
 
-      const uniqueSchools = [...new Set(data?.map(item => item.school))];
+      const uniqueSchools = [...new Set(data?.map(item => item.school) || [])];
       setSchools(uniqueSchools);
     } catch (error) {
       console.error('Error fetching schools:', error);
@@ -178,7 +189,7 @@ const ResponsesManagement = () => {
         return;
       }
 
-      const uniqueStudents = [...new Set(data?.map(item => item.student_name))];
+      const uniqueStudents = [...new Set(data?.map(item => item.student_name) || [])];
       setStudents(uniqueStudents);
     } catch (error) {
       console.error('Error fetching students:', error);
@@ -331,50 +342,51 @@ const ResponsesManagement = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {filteredResponses.map((response) => (
-                      <TableRow key={response.id}>
-                        <TableCell>
-                          <div className="flex items-center gap-2">
-                            <span className="font-medium">{response.student_name}</span>
-                            {response.is_anonymous && (
-                              <Badge variant="secondary" className="text-xs">Anonymous</Badge>
-                            )}
-                          </div>
-                        </TableCell>
-                        <TableCell>{response.school}</TableCell>
-                        <TableCell>
-                          <Badge variant="outline">{response.grade}</Badge>
-                        </TableCell>
-                        <TableCell>{response.subject}</TableCell>
-                        <TableCell>{new Date(response.class_date).toLocaleDateString()}</TableCell>
-                        <TableCell>{getEmotionalStateDisplay(response.emotional_state)}</TableCell>
-                        <TableCell>
-                          <Badge variant="outline">{response.understanding}/5</Badge>
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant="outline">{response.interest}/5</Badge>
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant="outline">{response.educational_growth}/5</Badge>
-                        </TableCell>
-                        <TableCell>
-                          <Button 
-                            variant="ghost" 
-                            size="sm"
-                            onClick={() => handleViewResponse(response)}
-                            className="flex items-center gap-1"
-                          >
-                            <EyeIcon className="w-4 h-4" />
-                            View
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                    {filteredResponses.length === 0 && (
+                    {filteredResponses.length > 0 ? (
+                      filteredResponses.map((response) => (
+                        <TableRow key={response.id}>
+                          <TableCell>
+                            <div className="flex items-center gap-2">
+                              <span className="font-medium">{response.student_name}</span>
+                              {response.is_anonymous && (
+                                <Badge variant="secondary" className="text-xs">Anonymous</Badge>
+                              )}
+                            </div>
+                          </TableCell>
+                          <TableCell>{response.school}</TableCell>
+                          <TableCell>
+                            <Badge variant="outline">{response.grade}</Badge>
+                          </TableCell>
+                          <TableCell>{response.subject}</TableCell>
+                          <TableCell>{new Date(response.class_date).toLocaleDateString()}</TableCell>
+                          <TableCell>{getEmotionalStateDisplay(response.emotional_state)}</TableCell>
+                          <TableCell>
+                            <Badge variant="outline">{response.understanding}/5</Badge>
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant="outline">{response.interest}/5</Badge>
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant="outline">{response.educational_growth}/5</Badge>
+                          </TableCell>
+                          <TableCell>
+                            <Button 
+                              variant="ghost" 
+                              size="sm"
+                              onClick={() => handleViewResponse(response)}
+                              className="flex items-center gap-1"
+                            >
+                              <EyeIcon className="w-4 h-4" />
+                              View
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    ) : (
                       <TableRow>
                         <TableCell colSpan={10} className="text-center py-8">
                           <div className="text-muted-foreground">
-                            {isLoading ? 'Loading responses...' : 'No responses found'}
+                            {isLoading ? 'Loading responses...' : 'No feedback responses found in the database'}
                           </div>
                         </TableCell>
                       </TableRow>
@@ -402,58 +414,59 @@ const ResponsesManagement = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {filteredAlerts.map((alert) => (
-                      <TableRow key={alert.id} className={!alert.is_reviewed ? "bg-red-50" : ""}>
-                        <TableCell>
-                          <div className="font-medium">{alert.student_name}</div>
-                        </TableCell>
-                        <TableCell>{alert.school}</TableCell>
-                        <TableCell>
-                          <Badge variant="outline">{alert.grade}</Badge>
-                        </TableCell>
-                        <TableCell>{getSeverityBadge(alert.severity_level)}</TableCell>
-                        <TableCell>
-                          <Badge variant="outline">
-                            {alert.source_table === 'feedback' ? 'Lesson Feedback' : 'Weekly Summary'}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="max-w-xs">
-                          <div className="truncate text-sm">
-                            {alert.content.substring(0, 100)}...
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-sm">
-                          {new Date(alert.created_at).toLocaleDateString()}
-                        </TableCell>
-                        <TableCell>
-                          {alert.is_reviewed ? (
-                            <Badge className="bg-green-100 text-green-800">Reviewed</Badge>
-                          ) : (
-                            <Badge variant="destructive">
-                              <AlertTriangleIcon className="w-3 h-3 mr-1" />
-                              Pending
+                    {filteredAlerts.length > 0 ? (
+                      filteredAlerts.map((alert) => (
+                        <TableRow key={alert.id} className={!alert.is_reviewed ? "bg-red-50" : ""}>
+                          <TableCell>
+                            <div className="font-medium">{alert.student_name}</div>
+                          </TableCell>
+                          <TableCell>{alert.school}</TableCell>
+                          <TableCell>
+                            <Badge variant="outline">{alert.grade}</Badge>
+                          </TableCell>
+                          <TableCell>{getSeverityBadge(alert.severity_level)}</TableCell>
+                          <TableCell>
+                            <Badge variant="outline">
+                              {alert.source_table === 'feedback' ? 'Lesson Feedback' : 'Weekly Summary'}
                             </Badge>
-                          )}
-                        </TableCell>
-                        <TableCell>
-                          {!alert.is_reviewed && (
-                            <Button
-                              size="sm"
-                              onClick={() => markAlertAsReviewed(alert.id)}
-                              className="bg-green-600 hover:bg-green-700"
-                            >
-                              <EyeIcon className="w-3 h-3 mr-1" />
-                              Mark Reviewed
-                            </Button>
-                          )}
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                    {filteredAlerts.length === 0 && (
+                          </TableCell>
+                          <TableCell className="max-w-xs">
+                            <div className="truncate text-sm">
+                              {alert.content.substring(0, 100)}...
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-sm">
+                            {new Date(alert.created_at).toLocaleDateString()}
+                          </TableCell>
+                          <TableCell>
+                            {alert.is_reviewed ? (
+                              <Badge className="bg-green-100 text-green-800">Reviewed</Badge>
+                            ) : (
+                              <Badge variant="destructive">
+                                <AlertTriangleIcon className="w-3 h-3 mr-1" />
+                                Pending
+                              </Badge>
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            {!alert.is_reviewed && (
+                              <Button
+                                size="sm"
+                                onClick={() => markAlertAsReviewed(alert.id)}
+                                className="bg-green-600 hover:bg-green-700"
+                              >
+                                <EyeIcon className="w-3 h-3 mr-1" />
+                                Mark Reviewed
+                              </Button>
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    ) : (
                       <TableRow>
                         <TableCell colSpan={9} className="text-center py-8">
                           <div className="text-muted-foreground">
-                            No mental health alerts found
+                            No mental health alerts found in the database
                           </div>
                         </TableCell>
                       </TableRow>
