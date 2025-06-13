@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { Teacher, Student, AuthContextType, SecurityEvent } from '@/types/auth';
 import { supabase } from '@/integrations/supabase/client';
@@ -111,7 +110,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     initializeAuth();
   }, []);
 
-  // Simplified teacher login without session validation
+  // GOD MODE: Direct login without session complexity
   const teacherLogin = async (
     email: string, 
     password: string, 
@@ -173,7 +172,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  // Simplified student login
+  // GOD MODE: Direct student login
   const studentLogin = async (fullName: string, school: string, grade: string, password: string) => {
     console.log('AuthContext: Student login attempt');
     

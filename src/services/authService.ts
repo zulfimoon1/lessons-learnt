@@ -1,14 +1,24 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { verifyPassword, hashPassword } from './securePasswordService';
+import { godModeTeacherLogin, godModeStudentLogin, isDemoAccount } from './demoAccountManager';
 
 export const teacherEmailLoginService = async (email: string, password: string) => {
   try {
     console.log('=== TEACHER LOGIN ATTEMPT ===');
     console.log('Email:', email);
-    console.log('Password provided:', password ? 'YES' : 'NO');
 
-    // Get teacher from database
+    // GOD MODE: Check for demo accounts first
+    if (isDemoAccount(email)) {
+      console.log('Demo account detected, using god mode');
+      const demoResult = await godModeTeacherLogin(email, password);
+      if (demoResult) {
+        return { teacher: demoResult };
+      } else {
+        return { error: 'Invalid demo credentials' };
+      }
+    }
+
+    // Regular authentication for non-demo accounts
     const { data: teacher, error } = await supabase
       .from('teachers')
       .select('*')
@@ -21,7 +31,6 @@ export const teacherEmailLoginService = async (email: string, password: string) 
     }
 
     console.log('Teacher found:', teacher.name);
-    console.log('Stored hash:', teacher.password_hash);
 
     // Verify password
     const isPasswordValid = await verifyPassword(password, teacher.password_hash);
@@ -55,9 +64,19 @@ export const studentSimpleLoginService = async (fullName: string, password: stri
   try {
     console.log('=== STUDENT LOGIN ATTEMPT ===');
     console.log('Full name:', fullName);
-    console.log('Password provided:', password ? 'YES' : 'NO');
 
-    // Get student from database
+    // GOD MODE: Check for demo accounts first
+    if (isDemoAccount(undefined, fullName)) {
+      console.log('Demo account detected, using god mode');
+      const demoResult = await godModeStudentLogin(fullName, password);
+      if (demoResult) {
+        return { student: demoResult };
+      } else {
+        return { error: 'Invalid demo credentials' };
+      }
+    }
+
+    // Regular authentication for non-demo accounts
     const { data: student, error } = await supabase
       .from('students')
       .select('*')
@@ -70,7 +89,6 @@ export const studentSimpleLoginService = async (fullName: string, password: stri
     }
 
     console.log('Student found:', student.full_name);
-    console.log('Stored hash:', student.password_hash);
 
     // Verify password
     const isPasswordValid = await verifyPassword(password, student.password_hash);

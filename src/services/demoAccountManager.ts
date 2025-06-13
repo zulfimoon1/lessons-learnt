@@ -1,6 +1,5 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { generateDemoHash, testDemoHash, WORKING_DEMO_HASH } from './demoHashGenerator';
 
 const DEMO_ACCOUNTS = {
   teachers: [
@@ -23,64 +22,77 @@ export const isDemoAccount = (email?: string, fullName?: string) => {
   return false;
 };
 
-// Function to fix demo account hashes
-export const fixDemoAccountHashes = async () => {
-  try {
-    console.log('=== FIXING DEMO ACCOUNT HASHES ===');
-    
-    // Generate a fresh hash for demo123
-    let workingHash: string;
-    try {
-      workingHash = await generateDemoHash();
-    } catch (error) {
-      console.log('Using backup hash');
-      workingHash = WORKING_DEMO_HASH;
-    }
-    
-    // Test the hash before using it
-    const hashWorks = await testDemoHash(workingHash);
-    if (!hashWorks) {
-      throw new Error('Hash verification failed');
-    }
-    
-    console.log('Using verified hash:', workingHash);
-    
-    // Update all demo teacher accounts
-    const { error: teacherError } = await supabase
-      .from('teachers')
-      .update({ password_hash: workingHash })
-      .in('email', ['demoadmin@demo.com', 'demoteacher@demo.com', 'demodoc@demo.com']);
-    
-    if (teacherError) {
-      console.error('Error updating teacher hashes:', teacherError);
-      throw teacherError;
-    }
-    
-    // Update demo student account
-    const { error: studentError } = await supabase
-      .from('students')
-      .update({ password_hash: workingHash })
-      .eq('full_name', 'Demo Student');
-    
-    if (studentError) {
-      console.error('Error updating student hash:', studentError);
-      throw studentError;
-    }
-    
-    console.log('Demo account hashes updated successfully');
-    return { success: true, hash: workingHash };
-    
-  } catch (error) {
-    console.error('Failed to fix demo account hashes:', error);
-    return { success: false, error };
+// God mode: Direct demo login without bcrypt verification
+export const godModeTeacherLogin = async (email: string, password: string) => {
+  console.log('=== GOD MODE TEACHER LOGIN ===');
+  
+  // Check if it's a demo account
+  const demoTeacher = DEMO_ACCOUNTS.teachers.find(t => t.email === email);
+  if (!demoTeacher) {
+    return null;
   }
+  
+  // For demo accounts, just check password directly
+  if (password !== 'demo123') {
+    return null;
+  }
+  
+  // Get teacher from database
+  const { data: teacher, error } = await supabase
+    .from('teachers')
+    .select('*')
+    .eq('email', email.toLowerCase().trim())
+    .single();
+
+  if (error || !teacher) {
+    console.log('Demo teacher not found in database');
+    return null;
+  }
+
+  console.log('God mode demo teacher login successful');
+  return {
+    id: teacher.id,
+    name: teacher.name,
+    email: teacher.email,
+    school: teacher.school,
+    role: teacher.role,
+    specialization: teacher.specialization,
+    license_number: teacher.license_number,
+    is_available: teacher.is_available
+  };
 };
 
-// Auto-fix demo accounts on import
-fixDemoAccountHashes().then(result => {
-  if (result.success) {
-    console.log('Demo accounts are ready for login with password: demo123');
-  } else {
-    console.error('Demo account setup failed:', result.error);
+export const godModeStudentLogin = async (fullName: string, password: string) => {
+  console.log('=== GOD MODE STUDENT LOGIN ===');
+  
+  // Check if it's a demo account
+  const demoStudent = DEMO_ACCOUNTS.students.find(s => s.full_name === fullName);
+  if (!demoStudent) {
+    return null;
   }
-});
+  
+  // For demo accounts, just check password directly
+  if (password !== 'demo123') {
+    return null;
+  }
+  
+  // Get student from database
+  const { data: student, error } = await supabase
+    .from('students')
+    .select('*')
+    .eq('full_name', fullName.trim())
+    .single();
+
+  if (error || !student) {
+    console.log('Demo student not found in database');
+    return null;
+  }
+
+  console.log('God mode demo student login successful');
+  return {
+    id: student.id,
+    full_name: student.full_name,
+    school: student.school,
+    grade: student.grade
+  };
+};
