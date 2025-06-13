@@ -35,13 +35,21 @@ export const teacherEmailLoginService = async (email: string, password: string) 
       passwordHashLength: teacher.password_hash?.length
     });
 
-    // Verify password
+    // Verify password - ensure we have both password and hash
+    if (!password || !teacher.password_hash) {
+      console.error('Missing password or password hash');
+      return { error: 'Invalid credentials' };
+    }
+
     console.log('Starting password verification...');
+    console.log('Password to verify:', password);
+    console.log('Hash to verify against:', teacher.password_hash);
+    
     const isPasswordValid = await verifyPassword(password, teacher.password_hash);
     console.log('Password verification result:', isPasswordValid);
 
     if (!isPasswordValid) {
-      console.log('Password verification failed');
+      console.log('Password verification failed for email:', email);
       return { error: 'Invalid credentials' };
     }
 
@@ -110,12 +118,18 @@ export const studentSimpleLoginService = async (fullName: string, password: stri
       hasPasswordHash: !!student.password_hash
     });
 
-    // Verify password
+    // Verify password - ensure we have both password and hash
+    if (!password || !student.password_hash) {
+      console.error('Missing password or password hash');
+      return { error: 'Invalid credentials' };
+    }
+
+    console.log('Starting password verification for student...');
     const isPasswordValid = await verifyPassword(password, student.password_hash);
     console.log('Password verification result:', isPasswordValid);
 
     if (!isPasswordValid) {
-      console.log('Password verification failed');
+      console.log('Password verification failed for student:', fullName);
       return { error: 'Invalid credentials' };
     }
 
