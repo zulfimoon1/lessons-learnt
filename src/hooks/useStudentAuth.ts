@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Student } from '@/types/auth';
 import { studentSimpleLoginService, studentSignupService } from '@/services/authService';
