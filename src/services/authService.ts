@@ -1,9 +1,12 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { verifyPassword, hashPassword } from './securePasswordService';
 
 export const teacherEmailLoginService = async (email: string, password: string) => {
   try {
-    console.log('Teacher login attempt:', email);
+    console.log('=== TEACHER LOGIN ATTEMPT ===');
+    console.log('Email:', email);
+    console.log('Password provided:', password ? 'YES' : 'NO');
 
     // Get teacher from database
     const { data: teacher, error } = await supabase
@@ -17,10 +20,13 @@ export const teacherEmailLoginService = async (email: string, password: string) 
       return { error: 'Invalid email or password' };
     }
 
-    console.log('Teacher found, verifying password...');
+    console.log('Teacher found:', teacher.name);
+    console.log('Stored hash:', teacher.password_hash);
 
     // Verify password
     const isPasswordValid = await verifyPassword(password, teacher.password_hash);
+    console.log('Password verification result:', isPasswordValid);
+    
     if (!isPasswordValid) {
       console.log('Password verification failed');
       return { error: 'Invalid email or password' };
@@ -47,7 +53,9 @@ export const teacherEmailLoginService = async (email: string, password: string) 
 
 export const studentSimpleLoginService = async (fullName: string, password: string) => {
   try {
-    console.log('Student login attempt:', fullName);
+    console.log('=== STUDENT LOGIN ATTEMPT ===');
+    console.log('Full name:', fullName);
+    console.log('Password provided:', password ? 'YES' : 'NO');
 
     // Get student from database
     const { data: student, error } = await supabase
@@ -61,10 +69,13 @@ export const studentSimpleLoginService = async (fullName: string, password: stri
       return { error: 'Invalid credentials' };
     }
 
-    console.log('Student found, verifying password...');
+    console.log('Student found:', student.full_name);
+    console.log('Stored hash:', student.password_hash);
 
     // Verify password
     const isPasswordValid = await verifyPassword(password, student.password_hash);
+    console.log('Password verification result:', isPasswordValid);
+    
     if (!isPasswordValid) {
       console.log('Password verification failed');
       return { error: 'Invalid credentials' };
