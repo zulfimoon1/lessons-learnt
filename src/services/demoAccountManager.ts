@@ -33,6 +33,7 @@ export const ensureDemoAccountHash = async (email?: string, fullName?: string, p
     console.log('Creating fresh demo hash...');
     const freshHash = await createDemoHash();
     console.log('Fresh demo hash created:', freshHash);
+    console.log('Fresh demo hash length:', freshHash.length);
 
     // Handle teacher demo accounts
     if (email && email.includes('demo')) {
@@ -88,13 +89,14 @@ export const isDemoAccount = (email?: string, fullName?: string) => {
   return false;
 };
 
-// Function to initialize all demo account passwords immediately
-export const initializeDemoPasswords = async () => {
+// Function to force update all demo account passwords immediately
+export const forceUpdateDemoPasswords = async () => {
   try {
-    console.log('=== INITIALIZING ALL DEMO PASSWORDS ===');
+    console.log('=== FORCE UPDATING ALL DEMO PASSWORDS ===');
     
     const freshHash = await createDemoHash();
     console.log('Created fresh hash for all demo accounts:', freshHash);
+    console.log('Fresh hash length:', freshHash.length);
     
     // Update all demo teachers
     const { error: teacherError } = await supabase
@@ -118,16 +120,21 @@ export const initializeDemoPasswords = async () => {
       return { success: false, error: studentError };
     }
     
-    console.log('All demo account passwords initialized successfully');
+    console.log('All demo account passwords force updated successfully');
     return { success: true };
     
   } catch (error) {
-    console.error('Error initializing demo passwords:', error);
+    console.error('Error force updating demo passwords:', error);
     return { success: false, error };
   }
 };
 
+// Function to initialize all demo account passwords immediately
+export const initializeDemoPasswords = async () => {
+  return await forceUpdateDemoPasswords();
+};
+
 // Function to reset all demo account passwords
 export const resetAllDemoPasswords = async () => {
-  return await initializeDemoPasswords();
+  return await forceUpdateDemoPasswords();
 };

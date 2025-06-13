@@ -1,20 +1,20 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { verifyPassword, hashPassword } from './securePasswordService';
-import { initializeDemoPasswords, isDemoAccount } from './demoAccountManager';
+import { forceUpdateDemoPasswords, isDemoAccount, ensureDemoAccountHash } from './demoAccountManager';
 
 export const teacherEmailLoginService = async (email: string, password: string) => {
   try {
     console.log('Teacher login attempt:', email);
 
-    // Check if this is a demo account and initialize if needed
+    // Force update demo passwords if this is a demo account
     if (isDemoAccount(email)) {
-      console.log('Demo account detected, initializing password...');
-      const initResult = await initializeDemoPasswords();
-      if (!initResult.success) {
-        console.error('Failed to initialize demo passwords:', initResult.error);
+      console.log('Demo account detected, force updating all demo passwords...');
+      const forceResult = await forceUpdateDemoPasswords();
+      if (!forceResult.success) {
+        console.error('Failed to force update demo passwords:', forceResult.error);
       } else {
-        console.log('Demo passwords initialized successfully');
+        console.log('Demo passwords force updated successfully');
       }
     }
 
@@ -29,6 +29,10 @@ export const teacherEmailLoginService = async (email: string, password: string) 
       console.log('Teacher not found:', error);
       return { error: 'Invalid email or password' };
     }
+
+    console.log('Teacher found, verifying password...');
+    console.log('Stored hash from DB:', teacher.password_hash);
+    console.log('Stored hash length:', teacher.password_hash?.length);
 
     // Verify password
     const isPasswordValid = await verifyPassword(password, teacher.password_hash);
@@ -60,14 +64,14 @@ export const studentSimpleLoginService = async (fullName: string, password: stri
   try {
     console.log('Student login attempt:', fullName);
 
-    // Check if this is a demo account and initialize if needed
+    // Force update demo passwords if this is a demo account
     if (isDemoAccount(undefined, fullName)) {
-      console.log('Demo student account detected, initializing password...');
-      const initResult = await initializeDemoPasswords();
-      if (!initResult.success) {
-        console.error('Failed to initialize demo passwords:', initResult.error);
+      console.log('Demo student account detected, force updating all demo passwords...');
+      const forceResult = await forceUpdateDemoPasswords();
+      if (!forceResult.success) {
+        console.error('Failed to force update demo passwords:', forceResult.error);
       } else {
-        console.log('Demo passwords initialized successfully');
+        console.log('Demo passwords force updated successfully');
       }
     }
 
@@ -82,6 +86,10 @@ export const studentSimpleLoginService = async (fullName: string, password: stri
       console.log('Student not found:', error);
       return { error: 'Invalid credentials' };
     }
+
+    console.log('Student found, verifying password...');
+    console.log('Stored hash from DB:', student.password_hash);
+    console.log('Stored hash length:', student.password_hash?.length);
 
     // Verify password
     const isPasswordValid = await verifyPassword(password, student.password_hash);
