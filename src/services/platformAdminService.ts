@@ -38,20 +38,25 @@ export const testPasswordVerification = async (email: string = 'zulfimoon1@gmail
     console.log('🔍 Testing email:', email);
     console.log('🔍 Testing password:', password);
     
-    // Use the authenticate_platform_admin function which bypasses RLS
-    console.log('🔍 Calling authenticate_platform_admin function...');
-    const { data: authData, error: authError } = await supabase
-      .rpc('authenticate_platform_admin', { 
-        admin_email: email.toLowerCase().trim(),
-        provided_password: password 
-      });
+    // Set admin context first
+    console.log('🔍 Setting admin context...');
+    await supabase.rpc('set_platform_admin_context', { admin_email: email.toLowerCase().trim() });
     
-    if (authError) {
-      console.error('❌ Authentication function error:', authError);
-      return { error: `Authentication failed: ${authError.message}` };
+    // Query the admin directly using the admin context
+    console.log('🔍 Querying admin record...');
+    const { data: adminData, error: adminError } = await supabase
+      .from('teachers')
+      .select('*')
+      .eq('email', email.toLowerCase().trim())
+      .eq('role', 'admin')
+      .limit(1);
+    
+    if (adminError) {
+      console.error('❌ Admin query error:', adminError);
+      return { error: `Admin query failed: ${adminError.message}` };
     }
     
-    if (!authData || authData.length === 0) {
+    if (!adminData || adminData.length === 0) {
       console.log('⚠️ No admin record found');
       return { 
         success: true, 
@@ -59,7 +64,7 @@ export const testPasswordVerification = async (email: string = 'zulfimoon1@gmail
       };
     }
     
-    const admin = authData[0];
+    const admin = adminData[0];
     console.log('✅ Admin found:', {
       id: admin.id,
       email: admin.email,
@@ -109,25 +114,30 @@ export const platformAdminLoginService = async (email: string, password: string)
     const sanitizedEmail = email.toLowerCase().trim();
     console.log('📧 Sanitized email:', sanitizedEmail);
 
-    // Use the authenticate_platform_admin function which bypasses RLS
-    console.log('🔍 Calling authenticate_platform_admin function...');
-    const { data: authData, error: authError } = await supabase
-      .rpc('authenticate_platform_admin', { 
-        admin_email: sanitizedEmail,
-        provided_password: password 
-      });
+    // Set admin context first
+    console.log('🔧 Setting admin context...');
+    await supabase.rpc('set_platform_admin_context', { admin_email: sanitizedEmail });
 
-    if (authError) {
-      console.error('❌ Authentication function error:', authError);
+    // Query the admin directly using the admin context
+    console.log('🔍 Querying admin record...');
+    const { data: adminData, error: adminError } = await supabase
+      .from('teachers')
+      .select('*')
+      .eq('email', sanitizedEmail)
+      .eq('role', 'admin')
+      .limit(1);
+
+    if (adminError) {
+      console.error('❌ Admin query error:', adminError);
       return { error: 'Database authentication failed' };
     }
 
-    if (!authData || authData.length === 0) {
+    if (!adminData || adminData.length === 0) {
       console.log('❌ No admin found with email:', sanitizedEmail);
       return { error: 'Admin account not found. Please contact support.' };
     }
 
-    const admin = authData[0];
+    const admin = adminData[0];
     console.log('✅ Admin found:', {
       id: admin.id,
       email: admin.email,
