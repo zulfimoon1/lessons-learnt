@@ -1,3 +1,4 @@
+
 import { useState, useEffect, Suspense, lazy } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuthStorage } from "@/hooks/useAuthStorage";
@@ -16,7 +17,6 @@ import StatsCard from "@/components/dashboard/StatsCard";
 import SubscriptionBanner from "@/components/dashboard/SubscriptionBanner";
 import ActiveSubscriptionCard from "@/components/dashboard/ActiveSubscriptionCard";
 import { DashboardSkeleton, TabContentSkeleton } from "@/components/ui/loading-skeleton";
-import { isUniversalDemoAccount, getDemoSubscription } from "@/services/demoAccountManager";
 
 // Lazy load tab components
 const ScheduleTab = lazy(() => import("@/components/dashboard/teacher/ScheduleTab"));
@@ -43,9 +43,6 @@ const TeacherDashboard = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isCreatingCheckout, setIsCreatingCheckout] = useState(false);
 
-  // 🎯 DEMO ACCOUNT CHECK - This is the master check
-  const isDemoAccount = isUniversalDemoAccount(teacher);
-
   useEffect(() => {
     if (!teacher) {
       navigate('/teacher-login');
@@ -58,16 +55,6 @@ const TeacherDashboard = () => {
     if (!teacher?.school) return;
     
     try {
-      // 🎯 DEMO ACCOUNTS GET INSTANT ACCESS - NO SUBSCRIPTION CHECK NEEDED
-      if (isDemoAccount) {
-        console.log('🎯 DEMO ACCOUNT DETECTED - PROVIDING UNLIMITED ACCESS');
-        const demoSub = getDemoSubscription(teacher.school);
-        setSubscription(demoSub);
-        setIsLoading(false);
-        return;
-      }
-
-      // Regular subscription loading for non-demo accounts
       const { data, error } = await supabase
         .from('subscriptions')
         .select('*')
@@ -93,15 +80,6 @@ const TeacherDashboard = () => {
   };
 
   const handleCreateCheckout = async () => {
-    // 🎯 DEMO ACCOUNTS DON'T NEED SUBSCRIPTIONS - THEY HAVE EVERYTHING
-    if (isDemoAccount) {
-      toast({
-        title: "Demo Account",
-        description: "Demo accounts have unlimited access to all features!",
-      });
-      return;
-    }
-
     if (!teacher?.email || !teacher?.school) {
       toast({
         title: t('common.error'),
@@ -156,9 +134,6 @@ const TeacherDashboard = () => {
     });
   };
 
-  // 🎯 FOR DEMO ACCOUNTS: ALWAYS SHOW AS HAVING ACTIVE SUBSCRIPTION
-  const hasActiveSubscription = subscription || isDemoAccount;
-
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background">
@@ -186,8 +161,8 @@ const TeacherDashboard = () => {
       />
 
       <main className="max-w-7xl mx-auto p-6 space-y-6">
-        {/* 🎯 DEMO ACCOUNTS ALWAYS SHOW ACTIVE SUBSCRIPTION - NO PAYWALL */}
-        {!hasActiveSubscription ? (
+        {/* Subscription Status */}
+        {!subscription ? (
           <SubscriptionBanner 
             isDoctor={teacher?.role === 'doctor'} 
             onSubscribe={handleCreateCheckout}
@@ -195,8 +170,8 @@ const TeacherDashboard = () => {
           />
         ) : (
           <ActiveSubscriptionCard 
-            plan={subscription?.plan_type || 'premium'} 
-            expiryDate={subscription?.current_period_end || new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString()} 
+            plan={subscription.plan_type} 
+            expiryDate={subscription.current_period_end} 
           />
         )}
         
@@ -218,7 +193,7 @@ const TeacherDashboard = () => {
             title={teacher?.role === 'doctor' ? t('teacher.availability') : t('admin.subscription')}
             value={teacher?.role === 'doctor' 
               ? (teacher?.is_available ? t('teacher.available') : t('teacher.busy'))
-              : (hasActiveSubscription ? t('teacher.active') : t('teacher.inactive'))}
+              : (subscription ? t('teacher.active') : t('teacher.inactive'))}
             icon={CreditCardIcon}
           />
         </div>
@@ -248,7 +223,7 @@ const TeacherDashboard = () => {
                 <Suspense fallback={<TabContentSkeleton />}>
                   <WeeklySummariesTab
                     school={teacher?.school}
-                    subscription={hasActiveSubscription ? (subscription || getDemoSubscription(teacher?.school)) : null}
+                    subscription={subscription}
                     onCreateCheckout={handleCreateCheckout}
                     isCreatingCheckout={isCreatingCheckout}
                   />
@@ -259,7 +234,7 @@ const TeacherDashboard = () => {
                 <Suspense fallback={<TabContentSkeleton />}>
                   <MentalHealthTab
                     teacher={teacher}
-                    subscription={hasActiveSubscription ? (subscription || getDemoSubscription(teacher?.school)) : null}
+                    subscription={subscription}
                     onCreateCheckout={handleCreateCheckout}
                     isCreatingCheckout={isCreatingCheckout}
                   />
@@ -288,7 +263,7 @@ const TeacherDashboard = () => {
                   <Suspense fallback={<TabContentSkeleton />}>
                     <ArticlesTab
                       teacher={teacher}
-                      subscription={hasActiveSubscription ? (subscription || getDemoSubscription(teacher?.school)) : null}
+                      subscription={subscription}
                       onCreateCheckout={handleCreateCheckout}
                       isCreatingCheckout={isCreatingCheckout}
                     />

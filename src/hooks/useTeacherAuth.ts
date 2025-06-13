@@ -23,15 +23,15 @@ export const useTeacherAuth = () => {
       
       const result = await teacherEmailLoginService(email.trim(), password);
       console.log('useTeacherAuth: Login service result', { 
-        success: 'teacher' in result && !!result.teacher, 
-        error: 'error' in result ? result.error : undefined 
+        success: !!result.teacher, 
+        error: result.error 
       });
       
-      if ('teacher' in result && result.teacher) {
+      if (result.teacher) {
         // Ensure role is properly typed
         const teacherData: Teacher = {
-          ...(result.teacher as any),
-          role: (result.teacher as any).role as 'teacher' | 'admin' | 'doctor'
+          ...result.teacher,
+          role: result.teacher.role as 'teacher' | 'admin' | 'doctor'
         };
         
         setTeacher(teacherData);
@@ -48,7 +48,7 @@ export const useTeacherAuth = () => {
         return { teacher: teacherData };
       }
       
-      return { error: 'error' in result ? result.error : 'Login failed. Please check your credentials.' };
+      return { error: result.error || 'Login failed. Please check your credentials.' };
     } catch (error) {
       console.error('useTeacherAuth: Unexpected error:', error);
       return { error: 'Login failed. Please check your connection and try again.' };
@@ -77,15 +77,15 @@ export const useTeacherAuth = () => {
       
       const result = await teacherSignupService(name.trim(), email.trim(), school.trim(), password, role);
       console.log('useTeacherAuth: Signup service result', { 
-        success: 'teacher' in result && !!result.teacher, 
-        error: 'error' in result ? result.error : undefined 
+        success: !!result.teacher, 
+        error: result.error 
       });
       
-      if ('teacher' in result && result.teacher) {
+      if (result.teacher) {
         // Ensure role is properly typed
         const teacherData: Teacher = {
-          ...(result.teacher as any),
-          role: (result.teacher as any).role as 'teacher' | 'admin' | 'doctor'
+          ...result.teacher,
+          role: result.teacher.role as 'teacher' | 'admin' | 'doctor'
         };
         
         setTeacher(teacherData);
@@ -102,7 +102,7 @@ export const useTeacherAuth = () => {
         return { teacher: teacherData };
       }
       
-      return { error: 'error' in result ? result.error : 'Signup failed. Please try again.' };
+      return { error: result.error || 'Signup failed. Please try again.' };
     } catch (error) {
       console.error('useTeacherAuth: Unexpected signup error:', error);
       return { error: 'Signup failed. Please check your connection and try again.' };

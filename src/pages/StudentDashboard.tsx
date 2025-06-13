@@ -1,3 +1,4 @@
+
 import { useState, useEffect, Suspense, lazy } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuthStorage } from "@/hooks/useAuthStorage";
@@ -17,7 +18,6 @@ import StatsCard from "@/components/dashboard/StatsCard";
 import UpcomingClassesTab from "@/components/dashboard/UpcomingClassesTab";
 import MentalHealthSupportTab from "@/components/dashboard/MentalHealthSupportTab";
 import { DashboardSkeleton, TabContentSkeleton } from "@/components/ui/loading-skeleton";
-import { isUniversalDemoAccount } from "@/services/demoAccountManager";
 
 // Lazy load tab components
 const FeedbackTab = lazy(() => import("@/components/dashboard/FeedbackTab"));
@@ -53,9 +53,6 @@ const StudentDashboard = () => {
   const [psychologists, setPsychologists] = useState<SchoolPsychologist[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // 🎯 DEMO ACCOUNT CHECK - This is the master check
-  const isDemoAccount = isUniversalDemoAccount(undefined, student);
-
   useEffect(() => {
     console.log('StudentDashboard: Component mounted, checking auth state', { student });
     if (!student) {
@@ -69,50 +66,6 @@ const StudentDashboard = () => {
 
   const loadData = async () => {
     console.log('StudentDashboard: Starting to load data');
-    
-    // 🎯 DEMO STUDENTS GET MOCK DATA - FULL ACCESS TO EVERYTHING
-    if (isDemoAccount) {
-      console.log('🎯 DEMO STUDENT DETECTED - PROVIDING MOCK DATA WITH FULL ACCESS');
-      setUpcomingClasses([
-        {
-          id: 'demo-class-1',
-          subject: 'Mathematics',
-          grade: student?.grade || 'j5',
-          lesson_topic: 'Algebra Basics',
-          class_date: new Date().toISOString().split('T')[0],
-          class_time: '10:00',
-          duration_minutes: 60,
-          teacher_id: 'demo-teacher-id',
-          school: student?.school || 'demo school'
-        },
-        {
-          id: 'demo-class-2',
-          subject: 'Science',
-          grade: student?.grade || 'j5',
-          lesson_topic: 'Solar System',
-          class_date: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-          class_time: '11:00',
-          duration_minutes: 60,
-          teacher_id: 'demo-teacher-id',
-          school: student?.school || 'demo school'
-        }
-      ]);
-      
-      setPsychologists([
-        {
-          id: 'demo-psych-1',
-          name: 'Dr. Demo Psychologist',
-          email: 'psych@demo.com',
-          phone: '123-456-7890',
-          office_location: 'Room 101',
-          availability_hours: '9 AM - 5 PM'
-        }
-      ]);
-      
-      setIsLoading(false);
-      return;
-    }
-    
     await Promise.all([loadUpcomingClasses(), loadPsychologists()]);
     setIsLoading(false);
     console.log('StudentDashboard: Data loading complete');
