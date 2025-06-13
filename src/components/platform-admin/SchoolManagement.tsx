@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -7,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Trash2, Plus, School } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { usePlatformAdmin } from '@/contexts/PlatformAdminContext';
 
 interface School {
   name: string;
@@ -15,12 +15,25 @@ interface School {
 }
 
 const SchoolManagement: React.FC = () => {
+  const { admin } = usePlatformAdmin();
   const [schools, setSchools] = useState<School[]>([]);
   const [newSchoolName, setNewSchoolName] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
+  const setAdminContext = async () => {
+    if (admin?.email) {
+      try {
+        await supabase.rpc('set_platform_admin_context', { admin_email: admin.email });
+      } catch (error) {
+        console.error('Error setting admin context:', error);
+      }
+    }
+  };
+
   const fetchSchools = async () => {
     try {
+      await setAdminContext();
+      
       // Get unique schools from teachers table with counts
       const { data: teacherSchools, error: teacherError } = await supabase
         .from('teachers')
@@ -75,6 +88,8 @@ const SchoolManagement: React.FC = () => {
 
     setIsLoading(true);
     try {
+      await setAdminContext();
+      
       // Create a placeholder teacher for the new school
       const { error } = await supabase
         .from('teachers')
@@ -106,6 +121,8 @@ const SchoolManagement: React.FC = () => {
 
     setIsLoading(true);
     try {
+      await setAdminContext();
+      
       // Delete all teachers from the school
       const { error: teacherError } = await supabase
         .from('teachers')

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -9,6 +8,7 @@ import { Trash2, Plus, Users } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { hashPassword } from '@/services/securePasswordService';
+import { usePlatformAdmin } from '@/contexts/PlatformAdminContext';
 
 interface Doctor {
   id: string;
@@ -21,6 +21,7 @@ interface Doctor {
 }
 
 const DoctorManagement: React.FC = () => {
+  const { admin } = usePlatformAdmin();
   const [doctors, setDoctors] = useState<Doctor[]>([]);
   const [schools, setSchools] = useState<string[]>([]);
   const [newDoctor, setNewDoctor] = useState({
@@ -33,8 +34,19 @@ const DoctorManagement: React.FC = () => {
   });
   const [isLoading, setIsLoading] = useState(false);
 
+  const setAdminContext = async () => {
+    if (admin?.email) {
+      try {
+        await supabase.rpc('set_platform_admin_context', { admin_email: admin.email });
+      } catch (error) {
+        console.error('Error setting admin context:', error);
+      }
+    }
+  };
+
   const fetchDoctors = async () => {
     try {
+      await setAdminContext();
       const { data, error } = await supabase
         .from('teachers')
         .select('*')
@@ -51,6 +63,7 @@ const DoctorManagement: React.FC = () => {
 
   const fetchSchools = async () => {
     try {
+      await setAdminContext();
       const { data, error } = await supabase
         .from('teachers')
         .select('school')
@@ -73,6 +86,7 @@ const DoctorManagement: React.FC = () => {
 
     setIsLoading(true);
     try {
+      await setAdminContext();
       const passwordHash = await hashPassword(newDoctor.password);
 
       const { error } = await supabase
@@ -115,6 +129,7 @@ const DoctorManagement: React.FC = () => {
 
     setIsLoading(true);
     try {
+      await setAdminContext();
       const { error } = await supabase
         .from('teachers')
         .delete()

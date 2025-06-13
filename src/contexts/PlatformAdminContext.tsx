@@ -36,12 +36,22 @@ export const PlatformAdminProvider: React.FC<{ children: React.ReactNode }> = ({
         const parsed = JSON.parse(adminData);
         setAdmin(parsed);
         setIsAuthenticated(true);
+        // Set admin context for database operations
+        await setAdminContext(parsed.email);
       }
     } catch (error) {
       console.error('Error checking admin session:', error);
       localStorage.removeItem('platformAdmin');
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const setAdminContext = async (email: string) => {
+    try {
+      await supabase.rpc('set_platform_admin_context', { admin_email: email });
+    } catch (error) {
+      console.error('Error setting admin context:', error);
     }
   };
 
@@ -87,6 +97,9 @@ export const PlatformAdminProvider: React.FC<{ children: React.ReactNode }> = ({
       setAdmin(adminData);
       setIsAuthenticated(true);
       localStorage.setItem('platformAdmin', JSON.stringify(adminData));
+      
+      // Set admin context for database operations
+      await setAdminContext(adminData.email);
       
       return { success: true };
     } catch (error) {

@@ -802,6 +802,10 @@ export type Database = {
           user_school: string
         }[]
       }
+      set_platform_admin_context: {
+        Args: { admin_email: string }
+        Returns: undefined
+      }
     }
     Enums: {
       app_role: "teacher" | "admin" | "doctor"

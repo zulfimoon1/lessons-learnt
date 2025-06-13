@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -9,6 +8,7 @@ import { Trash2, Plus, Users } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { hashPassword } from '@/services/securePasswordService';
+import { usePlatformAdmin } from '@/contexts/PlatformAdminContext';
 
 interface Student {
   id: string;
@@ -19,6 +19,7 @@ interface Student {
 }
 
 const StudentManagement: React.FC = () => {
+  const { admin } = usePlatformAdmin();
   const [students, setStudents] = useState<Student[]>([]);
   const [schools, setSchools] = useState<string[]>([]);
   const [newStudent, setNewStudent] = useState({
@@ -31,8 +32,19 @@ const StudentManagement: React.FC = () => {
 
   const grades = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12'];
 
+  const setAdminContext = async () => {
+    if (admin?.email) {
+      try {
+        await supabase.rpc('set_platform_admin_context', { admin_email: admin.email });
+      } catch (error) {
+        console.error('Error setting admin context:', error);
+      }
+    }
+  };
+
   const fetchStudents = async () => {
     try {
+      await setAdminContext();
       const { data, error } = await supabase
         .from('students')
         .select('*')
@@ -48,6 +60,7 @@ const StudentManagement: React.FC = () => {
 
   const fetchSchools = async () => {
     try {
+      await setAdminContext();
       const { data, error } = await supabase
         .from('teachers')
         .select('school')
@@ -70,6 +83,7 @@ const StudentManagement: React.FC = () => {
 
     setIsLoading(true);
     try {
+      await setAdminContext();
       const passwordHash = await hashPassword(newStudent.password);
 
       const { error } = await supabase
@@ -106,6 +120,7 @@ const StudentManagement: React.FC = () => {
 
     setIsLoading(true);
     try {
+      await setAdminContext();
       const { error } = await supabase
         .from('students')
         .delete()
