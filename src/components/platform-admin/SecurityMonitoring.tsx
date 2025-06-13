@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { AlertTriangle, Shield, Eye, Activity, Lock, Users } from 'lucide-react';
 import { enhancedSecurityService } from '@/services/enhancedSecurityService';
-import { supabase } from '@/integrations/supabase/client';
+import { usePlatformAdmin } from '@/contexts/PlatformAdminContext';
 
 interface SecurityEvent {
   type: string;
@@ -16,9 +16,27 @@ interface SecurityEvent {
 }
 
 const SecurityMonitoring: React.FC = () => {
+  const { admin, isAuthenticated } = usePlatformAdmin();
   const [securityEvents, setSecurityEvents] = useState<SecurityEvent[]>([]);
   const [metrics, setMetrics] = useState({ failedLogins: 0, blockedIPs: 0, suspiciousActivity: 0 });
   const [isLoading, setIsLoading] = useState(true);
+
+  // Check if user is platform admin
+  if (!isAuthenticated || !admin) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Shield className="w-5 h-5 text-red-500" />
+            Security Dashboard - Access Denied
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-gray-600">Only platform administrators can access the security monitoring dashboard.</p>
+        </CardContent>
+      </Card>
+    );
+  }
 
   const fetchSecurityEvents = () => {
     try {

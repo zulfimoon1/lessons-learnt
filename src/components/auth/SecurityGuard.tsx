@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { usePlatformAdmin } from '@/contexts/PlatformAdminContext';
 import { securityService } from '@/services/securityService';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Shield, AlertTriangle } from "lucide-react";
@@ -9,7 +10,7 @@ import { Shield, AlertTriangle } from "lucide-react";
 interface SecurityGuardProps {
   children: React.ReactNode;
   requireAuth?: boolean;
-  userType?: 'teacher' | 'student';
+  userType?: 'teacher' | 'student' | 'admin';
   allowedRoles?: string[];
   redirectTo?: string;
 }
@@ -27,15 +28,23 @@ const SecurityGuard: React.FC<SecurityGuardProps> = ({
   const navigate = useNavigate();
   const location = useLocation();
   const { teacher, student, isLoading: authLoading } = useAuth();
+  const { admin, isLoading: adminLoading, isAuthenticated: adminAuthenticated } = usePlatformAdmin();
 
   useEffect(() => {
-    if (authLoading) return;
+    if (authLoading || adminLoading) return;
 
     const checkSecurity = async () => {
       try {
-        // Validate session
+        // If platform admin is authenticated, grant access
+        if (adminAuthenticated && admin) {
+          setIsAuthorized(true);
+          setIsLoading(false);
+          return;
+        }
+
+        // Validate session for regular users
         const isValidSession = await securityService.validateSession();
-        if (requireAuth && !isValidSession) {
+        if (requireAuth && !isValidSession && !admin) {
           securityService.logSecurityEvent({
             type: 'unauthorized_access',
             timestamp: new Date().toISOString(),
@@ -48,7 +57,7 @@ const SecurityGuard: React.FC<SecurityGuardProps> = ({
         }
 
         // Check authentication requirements
-        if (requireAuth && !teacher && !student) {
+        if (requireAuth && !teacher && !student && !admin) {
           securityService.logSecurityEvent({
             type: 'unauthorized_access',
             timestamp: new Date().toISOString(),
@@ -62,7 +71,7 @@ const SecurityGuard: React.FC<SecurityGuardProps> = ({
         }
 
         // Check user type requirements
-        if (userType === 'teacher' && !teacher) {
+        if (userType === 'teacher' && !teacher && !admin) {
           securityService.logSecurityEvent({
             type: 'unauthorized_access',
             timestamp: new Date().toISOString(),
@@ -73,7 +82,7 @@ const SecurityGuard: React.FC<SecurityGuardProps> = ({
           return;
         }
 
-        if (userType === 'student' && !student) {
+        if (userType === 'student' && !student && !admin) {
           securityService.logSecurityEvent({
             type: 'unauthorized_access',
             timestamp: new Date().toISOString(),
@@ -84,8 +93,19 @@ const SecurityGuard: React.FC<SecurityGuardProps> = ({
           return;
         }
 
-        // Check role-based access for teachers
-        if (allowedRoles.length > 0 && teacher) {
+        if (userType === 'admin' && !admin) {
+          securityService.logSecurityEvent({
+            type: 'unauthorized_access',
+            timestamp: new Date().toISOString(),
+            details: `Admin required but not logged in for ${location.pathname}`,
+            userAgent: navigator.userAgent
+          });
+          navigate('/console');
+          return;
+        }
+
+        // Check role-based access for teachers (skip if platform admin)
+        if (allowedRoles.length > 0 && teacher && !admin) {
           if (!allowedRoles.includes(teacher.role)) {
             securityService.logSecurityEvent({
               type: 'unauthorized_access',
@@ -100,11 +120,13 @@ const SecurityGuard: React.FC<SecurityGuardProps> = ({
           }
         }
 
-        // Check for suspicious access patterns
-        const suspiciousActivity = securityService.detectConcurrentSessions();
-        if (suspiciousActivity) {
-          setSecurityError('Suspicious activity detected. Please verify your session.');
-          // Don't redirect, just show warning
+        // Check for suspicious access patterns (skip for platform admin)
+        if (!admin) {
+          const suspiciousActivity = securityService.detectConcurrentSessions();
+          if (suspiciousActivity) {
+            setSecurityError('Suspicious activity detected. Please verify your session.');
+            // Don't redirect, just show warning
+          }
         }
 
         setIsAuthorized(true);
@@ -123,9 +145,9 @@ const SecurityGuard: React.FC<SecurityGuardProps> = ({
     };
 
     checkSecurity();
-  }, [teacher, student, authLoading, requireAuth, userType, allowedRoles, redirectTo, navigate, location.pathname]);
+  }, [teacher, student, admin, adminAuthenticated, authLoading, adminLoading, requireAuth, userType, allowedRoles, redirectTo, navigate, location.pathname]);
 
-  if (authLoading || isLoading) {
+  if (authLoading || adminLoading || isLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <Card className="w-96">
