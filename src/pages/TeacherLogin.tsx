@@ -60,69 +60,6 @@ const TeacherLogin = () => {
     );
   }
 
-  const handleLogin = async (email: string, password: string) => {
-    console.log('TeacherLogin: Login attempt with email:', email);
-    
-    if (!email.trim() || !password) {
-      toast({
-        title: "Missing information",
-        description: "Please enter both email and password",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setIsLoading(true);
-    console.log('TeacherLogin: Starting login process with email:', email);
-
-    try {
-      const result = await teacherLogin(email.trim(), password);
-      console.log('TeacherLogin: Login result received:', result);
-
-      if (result.error) {
-        console.error('TeacherLogin: Login failed with error:', result.error);
-        toast({
-          title: "Login Failed",
-          description: result.error,
-          variant: "destructive",
-        });
-      } else if (result.teacher) {
-        console.log('TeacherLogin: Login successful, redirecting');
-        
-        toast({
-          title: "Login Successful",
-          description: "Welcome back!",
-        });
-        
-        setTimeout(() => {
-          if (result.teacher.role === "admin") {
-            navigate("/school-admin-dashboard", { replace: true });
-          } else if (result.teacher.role === "doctor") {
-            navigate("/teacher-dashboard", { replace: true }); // Doctors use teacher dashboard for now
-          } else {
-            navigate("/teacher-dashboard", { replace: true });
-          }
-        }, 100);
-      } else {
-        console.error('TeacherLogin: No error but no teacher data returned');
-        toast({
-          title: "Login Failed",
-          description: "Login failed. Please try again.",
-          variant: "destructive",
-        });
-      }
-    } catch (err) {
-      console.error('TeacherLogin: Unexpected error during login:', err);
-      toast({
-        title: "Login Failed",
-        description: "An unexpected error occurred. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   const handleSignup = async () => {
     toast({
       title: "Signup Not Available",
@@ -166,7 +103,7 @@ const TeacherLogin = () => {
               </TabsList>
 
               <TabsContent value="login">
-                <TeacherLoginForm onLogin={handleLogin} isLoading={isLoading} />
+                <TeacherLoginForm />
               </TabsContent>
 
               <TabsContent value="signup">
