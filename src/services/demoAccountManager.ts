@@ -13,28 +13,39 @@ const DEMO_ACCOUNTS = {
 };
 
 export const isDemoAccount = (email?: string, fullName?: string) => {
-  if (email && DEMO_ACCOUNTS.teachers.some(teacher => teacher.email === email)) {
+  console.log('=== CHECKING DEMO ACCOUNT ===');
+  console.log('Email:', email, 'Full name:', fullName);
+  
+  if (email && DEMO_ACCOUNTS.teachers.some(teacher => teacher.email.toLowerCase() === email.toLowerCase())) {
+    console.log('✅ DEMO TEACHER DETECTED:', email);
     return true;
   }
-  if (fullName && DEMO_ACCOUNTS.students.some(student => student.full_name === fullName)) {
+  if (fullName && DEMO_ACCOUNTS.students.some(student => student.full_name.toLowerCase() === fullName.toLowerCase())) {
+    console.log('✅ DEMO STUDENT DETECTED:', fullName);
     return true;
   }
+  
+  console.log('❌ NOT A DEMO ACCOUNT');
   return false;
 };
 
 // Check if a teacher is a demo teacher by email
 export const isDemoTeacher = (email?: string) => {
-  return email && DEMO_ACCOUNTS.teachers.some(teacher => teacher.email === email);
+  const result = email && DEMO_ACCOUNTS.teachers.some(teacher => teacher.email.toLowerCase() === (email || '').toLowerCase());
+  console.log('isDemoTeacher check:', email, '→', result);
+  return result;
 };
 
 // Check if a student is a demo student by name
 export const isDemoStudent = (fullName?: string) => {
-  return fullName && DEMO_ACCOUNTS.students.some(student => student.full_name === fullName);
+  const result = fullName && DEMO_ACCOUNTS.students.some(student => student.full_name.toLowerCase() === (fullName || '').toLowerCase());
+  console.log('isDemoStudent check:', fullName, '→', result);
+  return result;
 };
 
 // Create a fake subscription for demo accounts - ALWAYS ACTIVE
 export const getDemoSubscription = (school?: string) => {
-  console.log('Creating demo subscription for school:', school);
+  console.log('🎯 CREATING DEMO SUBSCRIPTION - ALWAYS ACTIVE');
   return {
     id: 'demo-subscription-id',
     school_name: school || 'demo school',
@@ -47,10 +58,31 @@ export const getDemoSubscription = (school?: string) => {
 
 // Enhanced demo access checker - ALWAYS returns true for demo accounts
 export const hasDemoAccess = (userEmail?: string, userFullName?: string, userSchool?: string) => {
-  console.log('Checking demo access for:', { userEmail, userFullName, userSchool });
+  console.log('🔍 CHECKING DEMO ACCESS');
+  console.log('Email:', userEmail, 'Name:', userFullName, 'School:', userSchool);
+  
   const hasAccess = isDemoAccount(userEmail, userFullName);
-  console.log('Demo access result:', hasAccess);
+  console.log('🎯 DEMO ACCESS RESULT:', hasAccess ? '✅ FULL ACCESS' : '❌ NO ACCESS');
   return hasAccess;
+};
+
+// UNIVERSAL DEMO CHECK - Use this everywhere to check if account should have full access
+export const isUniversalDemoAccount = (teacher?: any, student?: any) => {
+  console.log('🌍 UNIVERSAL DEMO CHECK');
+  console.log('Teacher:', teacher?.email, 'Student:', student?.full_name);
+  
+  if (teacher?.email && isDemoTeacher(teacher.email)) {
+    console.log('✅ DEMO TEACHER - FULL ACCESS GRANTED');
+    return true;
+  }
+  
+  if (student?.full_name && isDemoStudent(student.full_name)) {
+    console.log('✅ DEMO STUDENT - FULL ACCESS GRANTED');
+    return true;
+  }
+  
+  console.log('❌ NOT A DEMO ACCOUNT - NORMAL RESTRICTIONS APPLY');
+  return false;
 };
 
 // God mode: Direct demo login without any verification - just works
@@ -59,13 +91,13 @@ export const godModeTeacherLogin = async (email: string, password: string) => {
   console.log('Email:', email);
   
   // Check if it's a demo account
-  const demoTeacher = DEMO_ACCOUNTS.teachers.find(t => t.email === email);
+  const demoTeacher = DEMO_ACCOUNTS.teachers.find(t => t.email.toLowerCase() === email.toLowerCase());
   if (!demoTeacher) {
     console.log('Not a demo account');
     return null;
   }
   
-  console.log('God mode demo teacher login successful - always works!');
+  console.log('🎯 GOD MODE DEMO TEACHER LOGIN SUCCESSFUL - ALWAYS WORKS!');
   return {
     id: `demo-${demoTeacher.role}-id`,
     name: demoTeacher.role === 'admin' ? 'Demo Administrator' : 
@@ -84,13 +116,13 @@ export const godModeStudentLogin = async (fullName: string, password: string) =>
   console.log('Full name:', fullName);
   
   // Check if it's a demo account
-  const demoStudent = DEMO_ACCOUNTS.students.find(s => s.full_name === fullName);
+  const demoStudent = DEMO_ACCOUNTS.students.find(s => s.full_name.toLowerCase() === fullName.toLowerCase());
   if (!demoStudent) {
     console.log('Not a demo account');
     return null;
   }
   
-  console.log('God mode demo student login successful - always works!');
+  console.log('🎯 GOD MODE DEMO STUDENT LOGIN SUCCESSFUL - ALWAYS WORKS!');
   return {
     id: 'demo-student-id',
     full_name: 'demo student',

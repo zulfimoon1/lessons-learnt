@@ -17,7 +17,7 @@ import StatsCard from "@/components/dashboard/StatsCard";
 import UpcomingClassesTab from "@/components/dashboard/UpcomingClassesTab";
 import MentalHealthSupportTab from "@/components/dashboard/MentalHealthSupportTab";
 import { DashboardSkeleton, TabContentSkeleton } from "@/components/ui/loading-skeleton";
-import { isDemoStudent } from "@/services/demoAccountManager";
+import { isUniversalDemoAccount } from "@/services/demoAccountManager";
 
 // Lazy load tab components
 const FeedbackTab = lazy(() => import("@/components/dashboard/FeedbackTab"));
@@ -53,6 +53,9 @@ const StudentDashboard = () => {
   const [psychologists, setPsychologists] = useState<SchoolPsychologist[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
+  // 🎯 DEMO ACCOUNT CHECK - This is the master check
+  const isDemoAccount = isUniversalDemoAccount(undefined, student);
+
   useEffect(() => {
     console.log('StudentDashboard: Component mounted, checking auth state', { student });
     if (!student) {
@@ -67,9 +70,9 @@ const StudentDashboard = () => {
   const loadData = async () => {
     console.log('StudentDashboard: Starting to load data');
     
-    // For demo students, provide mock data
-    if (isDemoStudent(student?.full_name)) {
-      console.log('Demo student detected, providing mock data');
+    // 🎯 DEMO STUDENTS GET MOCK DATA - FULL ACCESS TO EVERYTHING
+    if (isDemoAccount) {
+      console.log('🎯 DEMO STUDENT DETECTED - PROVIDING MOCK DATA WITH FULL ACCESS');
       setUpcomingClasses([
         {
           id: 'demo-class-1',

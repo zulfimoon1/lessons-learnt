@@ -16,7 +16,7 @@ import StatsCard from "@/components/dashboard/StatsCard";
 import SubscriptionBanner from "@/components/dashboard/SubscriptionBanner";
 import ActiveSubscriptionCard from "@/components/dashboard/ActiveSubscriptionCard";
 import { DashboardSkeleton, TabContentSkeleton } from "@/components/ui/loading-skeleton";
-import { isDemoTeacher, getDemoSubscription, hasDemoAccess } from "@/services/demoAccountManager";
+import { isUniversalDemoAccount, getDemoSubscription } from "@/services/demoAccountManager";
 
 // Lazy load tab components
 const ScheduleTab = lazy(() => import("@/components/dashboard/teacher/ScheduleTab"));
@@ -43,8 +43,8 @@ const TeacherDashboard = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isCreatingCheckout, setIsCreatingCheckout] = useState(false);
 
-  // Check if this is a demo teacher - they get full access
-  const isDemo = isDemoTeacher(teacher?.email);
+  // 🎯 DEMO ACCOUNT CHECK - This is the master check
+  const isDemoAccount = isUniversalDemoAccount(teacher);
 
   useEffect(() => {
     if (!teacher) {
@@ -58,9 +58,9 @@ const TeacherDashboard = () => {
     if (!teacher?.school) return;
     
     try {
-      // Demo teachers ALWAYS get a subscription - no paywall
-      if (isDemo) {
-        console.log('Demo teacher detected - providing unlimited access');
+      // 🎯 DEMO ACCOUNTS GET INSTANT ACCESS - NO SUBSCRIPTION CHECK NEEDED
+      if (isDemoAccount) {
+        console.log('🎯 DEMO ACCOUNT DETECTED - PROVIDING UNLIMITED ACCESS');
         const demoSub = getDemoSubscription(teacher.school);
         setSubscription(demoSub);
         setIsLoading(false);
@@ -93,8 +93,8 @@ const TeacherDashboard = () => {
   };
 
   const handleCreateCheckout = async () => {
-    // Demo accounts don't need to create checkouts - they have full access
-    if (isDemo) {
+    // 🎯 DEMO ACCOUNTS DON'T NEED SUBSCRIPTIONS - THEY HAVE EVERYTHING
+    if (isDemoAccount) {
       toast({
         title: "Demo Account",
         description: "Demo accounts have unlimited access to all features!",
@@ -156,8 +156,8 @@ const TeacherDashboard = () => {
     });
   };
 
-  // For demo accounts, always show as having active subscription
-  const hasActiveSubscription = subscription || isDemo;
+  // 🎯 FOR DEMO ACCOUNTS: ALWAYS SHOW AS HAVING ACTIVE SUBSCRIPTION
+  const hasActiveSubscription = subscription || isDemoAccount;
 
   if (isLoading) {
     return (
@@ -186,7 +186,7 @@ const TeacherDashboard = () => {
       />
 
       <main className="max-w-7xl mx-auto p-6 space-y-6">
-        {/* Subscription Status - Always show active for demo accounts */}
+        {/* 🎯 DEMO ACCOUNTS ALWAYS SHOW ACTIVE SUBSCRIPTION - NO PAYWALL */}
         {!hasActiveSubscription ? (
           <SubscriptionBanner 
             isDoctor={teacher?.role === 'doctor'} 
