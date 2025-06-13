@@ -23,7 +23,8 @@ export const verifyPassword = async (password: string, hashedPassword: string): 
     console.log('Input password length:', password.length);
     console.log('Stored hash:', hashedPassword);
     console.log('Stored hash length:', hashedPassword.length);
-    console.log('Hash format check - starts with $2b$:', hashedPassword.startsWith('$2b$'));
+    console.log('Hash format check - starts with $2a$ or $2b$:', 
+      hashedPassword.startsWith('$2a$') || hashedPassword.startsWith('$2b$'));
     
     // Ensure we have valid inputs
     if (!password || !hashedPassword) {
@@ -39,8 +40,9 @@ export const verifyPassword = async (password: string, hashedPassword: string): 
     
     // Test the bcrypt library directly with a known working example
     console.log('Testing bcrypt with known values...');
-    const testHash = await bcrypt.hash('test123', 12);
-    const testResult = await bcrypt.compare('test123', testHash);
+    const testPassword = 'demo123';
+    const testHash = await bcrypt.hash(testPassword, 12);
+    const testResult = await bcrypt.compare(testPassword, testHash);
     console.log('Bcrypt test with known values:', testResult);
     
     if (!testResult) {
@@ -52,6 +54,13 @@ export const verifyPassword = async (password: string, hashedPassword: string): 
     console.log('Testing actual password against stored hash...');
     const result = await bcrypt.compare(password, hashedPassword);
     console.log('Actual bcrypt.compare result:', result);
+    
+    // Additional debug: test with the exact demo password
+    if (!result && password === 'demo123') {
+      console.log('Testing demo123 specifically...');
+      const demoResult = await bcrypt.compare('demo123', hashedPassword);
+      console.log('Demo123 test result:', demoResult);
+    }
     
     // Additional debug: try with string conversion
     const stringPassword = String(password);
@@ -92,7 +101,7 @@ export const validatePasswordStrength = (password: string): { isValid: boolean; 
 };
 
 // Helper function to generate a fresh hash for testing
-export const generateTestHash = async (password: string = 'admin123'): Promise<string> => {
+export const generateTestHash = async (password: string = 'demo123'): Promise<string> => {
   console.log('Generating fresh hash for:', password);
   const hash = await hashPassword(password);
   console.log('Generated hash:', hash);
