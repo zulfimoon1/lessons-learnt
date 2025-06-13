@@ -133,182 +133,56 @@ const SchoolManagement: React.FC<SchoolManagementProps> = ({ onDataChange }) => 
       return;
     }
 
-    console.log('🗑️ STARTING COMPLETE SCHOOL DELETION PROCESS');
+    if (!admin?.email) {
+      toast.error('Admin email not found');
+      return;
+    }
+
+    console.log('🗑️ STARTING SECURE SCHOOL DELETION PROCESS');
     console.log('🔍 School to delete:', schoolName);
+    console.log('🔍 Admin email:', admin.email);
 
     setIsLoading(true);
     try {
-      await setAdminContext();
-      console.log(`🗑️ Starting deletion of school: ${schoolName}`);
+      // Use the new secure database function
+      const { data, error } = await supabase.rpc('platform_admin_delete_school', {
+        school_name_param: schoolName,
+        admin_email_param: admin.email
+      });
+
+      if (error) {
+        console.error('❌ Database function error:', error);
+        throw error;
+      }
+
+      console.log('✅ School deletion results:', data);
       
-      // Step 1: Delete ALL feedback first (no foreign key constraints to worry about)
-      console.log('🗑️ Step 1: Deleting ALL feedback for this school...');
+      toast.success(`School "${schoolName}" and all associated data deleted successfully`);
       
-      // Get all class schedules for this school first
-      const { data: schoolSchedules, error: schedulesQueryError } = await supabase
-        .from('class_schedules')
-        .select('id')
-        .eq('school', schoolName);
-
-      if (schedulesQueryError) {
-        console.error('Error getting schedules:', schedulesQueryError);
-      }
-
-      // Get all students for this school
-      const { data: schoolStudents, error: studentsQueryError } = await supabase
-        .from('students')
-        .select('id')
-        .eq('school', schoolName);
-
-      if (studentsQueryError) {
-        console.error('Error getting students:', studentsQueryError);
-      }
-
-      // Delete feedback by class schedule IDs
-      if (schoolSchedules && schoolSchedules.length > 0) {
-        const scheduleIds = schoolSchedules.map(s => s.id);
-        const { error: feedbackScheduleError } = await supabase
-          .from('feedback')
-          .delete()
-          .in('class_schedule_id', scheduleIds);
-
-        if (feedbackScheduleError) {
-          console.error('Error deleting schedule feedback:', feedbackScheduleError);
-        } else {
-          console.log('✅ Schedule-based feedback deleted');
-        }
-      }
-
-      // Delete feedback by student IDs
-      if (schoolStudents && schoolStudents.length > 0) {
-        const studentIds = schoolStudents.map(s => s.id);
-        const { error: feedbackStudentError } = await supabase
-          .from('feedback')
-          .delete()
-          .in('student_id', studentIds);
-
-        if (feedbackStudentError) {
-          console.error('Error deleting student feedback:', feedbackStudentError);
-        } else {
-          console.log('✅ Student-based feedback deleted');
-        }
-      }
-
-      // Step 2: Delete mental health alerts for this school
-      console.log('🗑️ Step 2: Deleting mental health alerts...');
-      const { error: alertsError } = await supabase
-        .from('mental_health_alerts')
-        .delete()
-        .eq('school', schoolName);
-
-      if (alertsError) {
-        console.error('Error deleting mental health alerts:', alertsError);
-      } else {
-        console.log('✅ Mental health alerts deleted');
-      }
-
-      // Step 3: Delete weekly summaries for students from this school
-      console.log('🗑️ Step 3: Deleting weekly summaries...');
-      const { error: summariesError } = await supabase
-        .from('weekly_summaries')
-        .delete()
-        .eq('school', schoolName);
-
-      if (summariesError) {
-        console.error('Error deleting weekly summaries:', summariesError);
-      } else {
-        console.log('✅ Weekly summaries deleted');
-      }
-
-      // Step 4: Delete class schedules
-      console.log('🗑️ Step 4: Deleting class schedules...');
-      const { error: scheduleError } = await supabase
-        .from('class_schedules')
-        .delete()
-        .eq('school', schoolName);
-
-      if (scheduleError) {
-        console.error('Error deleting class schedules:', scheduleError);
-        throw scheduleError;
-      }
-      console.log('✅ Class schedules deleted');
-
-      // Step 5: Delete students
-      console.log('🗑️ Step 5: Deleting students...');
-      const { error: studentError } = await supabase
-        .from('students')
-        .delete()
-        .eq('school', schoolName);
-
-      if (studentError) {
-        console.error('Error deleting students:', studentError);
-        throw studentError;
-      }
-      console.log('✅ Students deleted');
-
-      // Step 6: Delete other school-related data
-      console.log('🗑️ Step 6: Deleting other school data...');
-      
-      // Delete school psychologists
-      const { error: psychologistsError } = await supabase
-        .from('school_psychologists')
-        .delete()
-        .eq('school', schoolName);
-
-      if (psychologistsError) {
-        console.error('Error deleting school psychologists:', psychologistsError);
-      } else {
-        console.log('✅ School psychologists deleted');
-      }
-
-      // Delete mental health articles
-      const { error: articlesError } = await supabase
-        .from('mental_health_articles')
-        .delete()
-        .eq('school', schoolName);
-
-      if (articlesError) {
-        console.error('Error deleting mental health articles:', articlesError);
-      } else {
-        console.log('✅ Mental health articles deleted');
-      }
-
-      // Step 7: Delete teachers (LAST - they might be referenced by other tables)
-      console.log('🗑️ Step 7: Deleting teachers...');
-      const { error: teacherError } = await supabase
-        .from('teachers')
-        .delete()
-        .eq('school', schoolName);
-
-      if (teacherError) {
-        console.error('Error deleting teachers:', teacherError);
-        throw teacherError;
-      }
-      console.log('✅ Teachers deleted');
-
-      console.log(`✅ Successfully deleted school: ${schoolName}`);
-      toast.success(`School "${schoolName}" deleted successfully`);
-      
-      // Refresh local schools list first
+      // Refresh local schools list
       console.log('🔄 Refreshing local schools list...');
       await fetchSchools();
       
-      // CRITICAL: Force dashboard refresh with a longer delay
+      // CRITICAL: Trigger dashboard refresh
       console.log('🔄 Triggering main dashboard refresh after school deletion...');
       if (onDataChange) {
         console.log('✅ Calling onDataChange callback NOW!');
-        // Use a longer delay to ensure all database operations are truly complete
+        // Use a small delay to ensure UI updates properly
         setTimeout(() => {
-          console.log('🚀 Delayed onDataChange callback executing...');
+          console.log('🚀 Executing delayed onDataChange callback...');
           onDataChange();
-        }, 500);
+        }, 100);
       } else {
         console.log('❌ No onDataChange callback provided!');
       }
       
     } catch (error) {
-      console.error('Error deleting school:', error);
-      toast.error('Failed to delete school. Please try again.');
+      console.error('❌ Error deleting school:', error);
+      if (error.message?.includes('Unauthorized')) {
+        toast.error('Unauthorized: You do not have permission to delete schools');
+      } else {
+        toast.error(`Failed to delete school: ${error.message}`);
+      }
     } finally {
       setIsLoading(false);
       console.log('🏁 School deletion process completed');

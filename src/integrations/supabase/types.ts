@@ -820,6 +820,10 @@ export type Database = {
         }
         Returns: undefined
       }
+      platform_admin_delete_school: {
+        Args: { school_name_param: string; admin_email_param: string }
+        Returns: Json
+      }
       safe_get_teacher_info: {
         Args: { user_uuid: string }
         Returns: {
