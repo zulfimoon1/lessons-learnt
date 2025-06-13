@@ -778,6 +778,10 @@ export type Database = {
       }
     }
     Functions: {
+      check_platform_admin_access: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
       detect_self_harm_language: {
         Args: { text_content: string }
         Returns: number
