@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -14,7 +15,11 @@ interface School {
   student_count: number;
 }
 
-const SchoolManagement: React.FC = () => {
+interface SchoolManagementProps {
+  onDataChange?: () => void;
+}
+
+const SchoolManagement: React.FC<SchoolManagementProps> = ({ onDataChange }) => {
   const { admin } = usePlatformAdmin();
   const [schools, setSchools] = useState<School[]>([]);
   const [newSchoolName, setNewSchoolName] = useState('');
@@ -74,6 +79,7 @@ const SchoolManagement: React.FC = () => {
       }));
 
       setSchools(schoolList);
+      console.log('🏫 Schools updated:', schoolList.length, 'schools found');
     } catch (error) {
       console.error('Error fetching schools:', error);
       toast.error('Failed to fetch schools');
@@ -105,7 +111,12 @@ const SchoolManagement: React.FC = () => {
 
       toast.success('School added successfully');
       setNewSchoolName('');
-      fetchSchools();
+      await fetchSchools();
+      
+      // Trigger main dashboard refresh
+      if (onDataChange) {
+        onDataChange();
+      }
     } catch (error) {
       console.error('Error adding school:', error);
       toast.error('Failed to add school');
@@ -122,14 +133,18 @@ const SchoolManagement: React.FC = () => {
     setIsLoading(true);
     try {
       await setAdminContext();
+      console.log(`🗑️ Starting deletion of school: ${schoolName}`);
       
-      // Delete all teachers from the school
-      const { error: teacherError } = await supabase
-        .from('teachers')
+      // Delete all class schedules from the school first
+      const { error: scheduleError } = await supabase
+        .from('class_schedules')
         .delete()
         .eq('school', schoolName);
 
-      if (teacherError) throw teacherError;
+      if (scheduleError) {
+        console.error('Error deleting class schedules:', scheduleError);
+        throw scheduleError;
+      }
 
       // Delete all students from the school
       const { error: studentError } = await supabase
@@ -137,10 +152,33 @@ const SchoolManagement: React.FC = () => {
         .delete()
         .eq('school', schoolName);
 
-      if (studentError) throw studentError;
+      if (studentError) {
+        console.error('Error deleting students:', studentError);
+        throw studentError;
+      }
 
-      toast.success('School deleted successfully');
-      fetchSchools();
+      // Delete all teachers from the school
+      const { error: teacherError } = await supabase
+        .from('teachers')
+        .delete()
+        .eq('school', schoolName);
+
+      if (teacherError) {
+        console.error('Error deleting teachers:', teacherError);
+        throw teacherError;
+      }
+
+      console.log(`✅ Successfully deleted school: ${schoolName}`);
+      toast.success(`School "${schoolName}" deleted successfully`);
+      
+      // Refresh local schools list
+      await fetchSchools();
+      
+      // Trigger main dashboard refresh
+      if (onDataChange) {
+        console.log('🔄 Triggering main dashboard refresh...');
+        onDataChange();
+      }
     } catch (error) {
       console.error('Error deleting school:', error);
       toast.error('Failed to delete school');
@@ -186,7 +224,7 @@ const SchoolManagement: React.FC = () => {
 
           {/* Schools list */}
           <div className="space-y-2">
-            <h3 className="font-medium">Existing Schools</h3>
+            <h3 className="font-medium">Existing Schools ({schools.length})</h3>
             {schools.length === 0 ? (
               <p className="text-muted-foreground">No schools found</p>
             ) : (

@@ -59,6 +59,7 @@ const PlatformAdminDashboard = () => {
   const [feedbackStats, setFeedbackStats] = useState<FeedbackStats[]>([]);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<string>("");
+  const [refreshKey, setRefreshKey] = useState(0);
 
   const fetchStats = async () => {
     console.log('🔄 Fetching platform statistics...');
@@ -125,14 +126,16 @@ const PlatformAdminDashboard = () => {
 
       const uniqueSchools = schoolsData ? [...new Set(schoolsData.map(item => item.school))] : [];
       
-      setStats({
+      const newStats = {
         totalStudents: studentsData?.[0]?.count || 0,
         totalTeachers: teachersData?.[0]?.count || 0,
         totalSchools: uniqueSchools.length,
         totalResponses: responsesData?.[0]?.count || 0,
         totalSubscriptions: subscriptionsCount || 0,
-      });
+      };
 
+      console.log('📊 Updated stats:', newStats);
+      setStats(newStats);
       setSchoolStats(schoolStatsProcessed);
       setFeedbackStats(feedbackAnalyticsData);
       setLastUpdated(new Date().toLocaleString());
@@ -150,6 +153,13 @@ const PlatformAdminDashboard = () => {
 
   const handleRefresh = () => {
     console.log('🔄 Manual refresh triggered');
+    setRefreshKey(prev => prev + 1);
+    fetchStats();
+  };
+
+  const handleDataChange = () => {
+    console.log('📊 Data changed, refreshing dashboard...');
+    setRefreshKey(prev => prev + 1);
     fetchStats();
   };
 
@@ -163,7 +173,7 @@ const PlatformAdminDashboard = () => {
       console.log('Admin authenticated, loading dashboard data...');
       fetchStats();
     }
-  }, [isAuthenticated, admin]);
+  }, [isAuthenticated, admin, refreshKey]);
 
   if (adminLoading) {
     return (
@@ -199,7 +209,7 @@ const PlatformAdminDashboard = () => {
             <SchoolIcon className="w-8 h-8 text-blue-600" />
             <h1 className="text-2xl font-bold text-gray-900">Platform Admin Dashboard</h1>
             <Button
-              onClick={() => fetchStats()}
+              onClick={handleRefresh}
               disabled={isRefreshing}
               variant="outline"
               size="sm"
@@ -316,7 +326,7 @@ const PlatformAdminDashboard = () => {
               </TabsList>
 
               <TabsContent value="schools">
-                <SchoolManagement />
+                <SchoolManagement onDataChange={handleDataChange} />
               </TabsContent>
 
               <TabsContent value="teachers">
