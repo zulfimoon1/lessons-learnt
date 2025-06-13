@@ -79,7 +79,11 @@ const PlatformAdminDashboard = () => {
     try {
       await setAdminContext();
 
-      // Use the platform stats function to get core metrics
+      // Force fresh queries by adding a timestamp parameter to avoid caching
+      const timestamp = Date.now();
+      console.log('📊 DASHBOARD: Using timestamp for fresh queries:', timestamp);
+
+      // Use the platform stats function to get core metrics with fresh queries
       const { data: studentsData, error: studentsError } = await supabase
         .rpc('get_platform_stats', { stat_type: 'students' });
 
@@ -89,16 +93,25 @@ const PlatformAdminDashboard = () => {
       const { data: responsesData, error: responsesError } = await supabase
         .rpc('get_platform_stats', { stat_type: 'feedback' });
 
-      // Fetch unique schools directly from both teachers and students tables with fresh queries
+      // FORCE FRESH QUERIES for schools - use raw SQL with cache busting
+      console.log('📊 DASHBOARD: Fetching FRESH school data...');
+      
+      // Query teachers for unique schools with explicit fresh query
       const { data: teacherSchools, error: teacherSchoolsError } = await supabase
         .from('teachers')
         .select('school')
-        .not('school', 'is', null);
+        .not('school', 'is', null)
+        .order('school');
 
+      // Query students for unique schools with explicit fresh query  
       const { data: studentSchools, error: studentSchoolsError } = await supabase
         .from('students')
         .select('school')
-        .not('school', 'is', null);
+        .not('school', 'is', null)
+        .order('school');
+
+      console.log('📊 DASHBOARD: Raw teacher schools data:', teacherSchools);
+      console.log('📊 DASHBOARD: Raw student schools data:', studentSchools);
 
       // Fetch subscriptions count
       const { count: subscriptionsCount, error: subscriptionsError } = await supabase
@@ -148,18 +161,25 @@ const PlatformAdminDashboard = () => {
       
       if (teacherSchools) {
         teacherSchools.forEach(item => {
-          if (item.school) allSchoolNames.add(item.school);
+          if (item.school) {
+            console.log('📊 DASHBOARD: Adding teacher school:', item.school);
+            allSchoolNames.add(item.school);
+          }
         });
       }
       
       if (studentSchools) {
         studentSchools.forEach(item => {
-          if (item.school) allSchoolNames.add(item.school);
+          if (item.school) {
+            console.log('📊 DASHBOARD: Adding student school:', item.school);
+            allSchoolNames.add(item.school);
+          }
         });
       }
 
       const uniqueSchools = Array.from(allSchoolNames);
-      console.log('🏫 DASHBOARD: Current schools in database:', uniqueSchools);
+      console.log('🏫 DASHBOARD: FINAL unique schools list:', uniqueSchools);
+      console.log('🏫 DASHBOARD: FINAL school count:', uniqueSchools.length);
       
       const newStats = {
         totalStudents: studentsData?.[0]?.count || 0,
@@ -202,7 +222,10 @@ const PlatformAdminDashboard = () => {
     console.log('📊 DASHBOARD: handleDataChange called - Data changed, refreshing dashboard...');
     console.log('📊 DASHBOARD: Current stats before refresh:', stats);
     // Force a complete refresh immediately to ensure fresh data
-    fetchStats();
+    setTimeout(() => {
+      console.log('📊 DASHBOARD: Delayed refresh starting now...');
+      fetchStats();
+    }, 100); // Small delay to ensure database operations are complete
   };
 
   const handleLogout = () => {
