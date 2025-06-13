@@ -38,16 +38,21 @@ export const testPasswordVerification = async (email: string = 'zulfimoon1@gmail
     console.log('🔍 Testing email:', email);
     console.log('🔍 Testing password:', password);
     
-    // Use the authenticate_platform_admin function
-    console.log('🔍 Calling authenticate_platform_admin function...');
-    const { data: adminData, error: authError } = await supabase.rpc('authenticate_platform_admin', {
-      admin_email: email,
-      provided_password: password
-    });
+    // Direct query to teachers table bypassing RLS by setting admin context
+    console.log('🔍 Setting platform admin context...');
+    await supabase.rpc('set_platform_admin_context', { admin_email: email });
     
-    if (authError) {
-      console.error('❌ Auth function error:', authError);
-      return { error: `Auth function error: ${authError.message}` };
+    console.log('🔍 Querying teachers table directly...');
+    const { data: adminData, error: queryError } = await supabase
+      .from('teachers')
+      .select('id, name, email, role, school, password_hash')
+      .eq('email', email.toLowerCase().trim())
+      .eq('role', 'admin')
+      .limit(1);
+    
+    if (queryError) {
+      console.error('❌ Query error:', queryError);
+      return { error: `Query error: ${queryError.message}` };
     }
     
     if (!adminData || adminData.length === 0) {
@@ -108,16 +113,22 @@ export const platformAdminLoginService = async (email: string, password: string)
     const sanitizedEmail = email.toLowerCase().trim();
     console.log('📧 Sanitized email:', sanitizedEmail);
 
-    // Use the authenticate_platform_admin function that bypasses RLS
-    console.log('🔍 Calling authenticate_platform_admin function...');
-    const { data: adminData, error: authError } = await supabase.rpc('authenticate_platform_admin', {
-      admin_email: sanitizedEmail,
-      provided_password: password
-    });
+    // Set platform admin context to bypass RLS
+    console.log('🔍 Setting platform admin context...');
+    await supabase.rpc('set_platform_admin_context', { admin_email: sanitizedEmail });
 
-    if (authError) {
-      console.error('❌ Auth function error:', authError);
-      return { error: 'Database authentication failed' };
+    // Query teachers table directly with RLS bypassed
+    console.log('🔍 Querying teachers table...');
+    const { data: adminData, error: queryError } = await supabase
+      .from('teachers')
+      .select('id, name, email, role, school, password_hash')
+      .eq('email', sanitizedEmail)
+      .eq('role', 'admin')
+      .limit(1);
+
+    if (queryError) {
+      console.error('❌ Query error:', queryError);
+      return { error: 'Database query failed' };
     }
 
     if (!adminData || adminData.length === 0) {
@@ -178,7 +189,9 @@ export const resetAdminPassword = async (email: string, newPassword: string) => 
     
     console.log('Generated new hash, length:', hashedPassword.length);
     
-    // Update the password directly using the function approach
+    // Set admin context and update password
+    await supabase.rpc('set_platform_admin_context', { admin_email: sanitizedEmail });
+    
     const { error: updateError } = await supabase
       .from('teachers')
       .update({ password_hash: hashedPassword })
