@@ -3,7 +3,8 @@ import { usePlatformAdmin } from "@/contexts/PlatformAdminContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { SchoolIcon, LogOutIcon, RefreshCwIcon, UsersIcon, MessageSquareIcon } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { SchoolIcon, LogOutIcon, RefreshCwIcon, UsersIcon, MessageSquareIcon, Settings, Users, School } from "lucide-react";
 import { toast } from "sonner";
 import StatsCard from "@/components/dashboard/StatsCard";
 import SchoolOverview from "@/components/platform-admin/SchoolOverview";
@@ -12,6 +13,10 @@ import DiscountCodeManagement from "@/components/DiscountCodeManagement";
 import SubscriptionManagement from "@/components/platform-admin/SubscriptionManagement";
 import ResponsesManagement from "@/components/platform-admin/ResponsesManagement";
 import TransactionManagement from "@/components/platform-admin/TransactionManagement";
+import SchoolManagement from "@/components/platform-admin/SchoolManagement";
+import TeacherManagement from "@/components/platform-admin/TeacherManagement";
+import StudentManagement from "@/components/platform-admin/StudentManagement";
+import DoctorManagement from "@/components/platform-admin/DoctorManagement";
 
 interface DashboardStats {
   totalStudents: number;
@@ -282,35 +287,67 @@ const PlatformAdminDashboard = () => {
           />
         </div>
 
-        {/* Enhanced Subscription Management */}
-        <div className="mb-8">
-          <SubscriptionManagement />
-        </div>
+        {/* Main Content Tabs */}
+        <Tabs defaultValue="management" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="management" className="flex items-center gap-2">
+              <Settings className="w-4 h-4" />
+              User Management
+            </TabsTrigger>
+            <TabsTrigger value="analytics" className="flex items-center gap-2">
+              <MessageSquareIcon className="w-4 h-4" />
+              Analytics & Reports
+            </TabsTrigger>
+          </TabsList>
 
-        {/* Transaction Management */}
-        <div className="mb-8">
-          <TransactionManagement />
-        </div>
+          <TabsContent value="management" className="space-y-6">
+            {/* User Management Section */}
+            <Tabs defaultValue="schools" className="space-y-4">
+              <TabsList>
+                <TabsTrigger value="schools">Schools</TabsTrigger>
+                <TabsTrigger value="teachers">Teachers</TabsTrigger>
+                <TabsTrigger value="students">Students</TabsTrigger>
+                <TabsTrigger value="doctors">Doctors</TabsTrigger>
+              </TabsList>
 
-        {/* Discount Code Management */}
-        <div className="mb-8">
-          <DiscountCodeManagement />
-        </div>
+              <TabsContent value="schools">
+                <SchoolManagement />
+              </TabsContent>
 
-        {/* Responses & Schedule Management */}
-        <div className="mb-8">
-          <ResponsesManagement />
-        </div>
+              <TabsContent value="teachers">
+                <TeacherManagement />
+              </TabsContent>
 
-        {/* School Overview */}
-        <div className="mb-8">
-          <SchoolOverview schoolStats={schoolStats} />
-        </div>
+              <TabsContent value="students">
+                <StudentManagement />
+              </TabsContent>
 
-        {/* Response Analytics */}
-        <div className="mb-8">
-          <FeedbackAnalytics feedbackStats={feedbackStats} />
-        </div>
+              <TabsContent value="doctors">
+                <DoctorManagement />
+              </TabsContent>
+            </Tabs>
+          </TabsContent>
+
+          <TabsContent value="analytics" className="space-y-6">
+            {/* Enhanced Subscription Management */}
+            <SubscriptionManagement />
+
+            {/* Transaction Management */}
+            <TransactionManagement />
+
+            {/* Discount Code Management */}
+            <DiscountCodeManagement />
+
+            {/* Responses & Schedule Management */}
+            <ResponsesManagement />
+
+            {/* School Overview */}
+            <SchoolOverview schoolStats={schoolStats} />
+
+            {/* Response Analytics */}
+            <FeedbackAnalytics feedbackStats={feedbackStats} />
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );
