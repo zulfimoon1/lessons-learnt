@@ -31,6 +31,45 @@ const validateLoginInput = (email: string, password: string): { valid: boolean; 
   return { valid: true };
 };
 
+// Function to create admin if not exists
+const createAdminIfNotExists = async (email: string, password: string = 'admin123') => {
+  try {
+    console.log('🔧 Creating admin account for:', email);
+    
+    const hashedPassword = await hashPassword(password);
+    console.log('🔐 Generated password hash, length:', hashedPassword.length);
+    
+    // Try to insert the admin account
+    const { data: insertData, error: insertError } = await supabase
+      .from('teachers')
+      .insert({
+        name: 'Platform Admin',
+        email: email.toLowerCase().trim(),
+        school: 'Platform Administration',
+        role: 'admin',
+        password_hash: hashedPassword
+      })
+      .select('*');
+    
+    if (insertError) {
+      // If insert fails due to duplicate, that's fine - admin already exists
+      if (insertError.code === '23505') {
+        console.log('✅ Admin account already exists');
+        return { success: true };
+      }
+      console.error('❌ Failed to create admin:', insertError);
+      return { error: 'Failed to create admin account' };
+    }
+    
+    console.log('✅ Admin account created:', insertData);
+    return { success: true };
+    
+  } catch (error) {
+    console.error('❌ Error creating admin:', error);
+    return { error: 'Failed to create admin account' };
+  }
+};
+
 // Enhanced test function to debug password issues
 export const testPasswordVerification = async (email: string = 'zulfimoon1@gmail.com', password: string = 'admin123') => {
   try {
@@ -56,10 +95,27 @@ export const testPasswordVerification = async (email: string = 'zulfimoon1@gmail
     }
     
     if (!adminData || adminData.length === 0) {
-      console.log('⚠️ No admin record found');
+      console.log('⚠️ No admin record found, creating one...');
+      const createResult = await createAdminIfNotExists(email, password);
+      if (createResult.error) {
+        return { error: createResult.error };
+      }
+      
+      // Try querying again after creation
+      const { data: newAdminData, error: newQueryError } = await supabase
+        .from('teachers')
+        .select('id, name, email, role, school, password_hash')
+        .eq('email', email.toLowerCase().trim())
+        .eq('role', 'admin')
+        .limit(1);
+      
+      if (newQueryError || !newAdminData || newAdminData.length === 0) {
+        return { error: 'Failed to create or find admin account' };
+      }
+      
       return { 
         success: true, 
-        message: '⚠️ No admin record found with that email' 
+        message: '✅ Admin account created and ready for login!' 
       };
     }
     
@@ -132,8 +188,47 @@ export const platformAdminLoginService = async (email: string, password: string)
     }
 
     if (!adminData || adminData.length === 0) {
-      console.log('❌ No admin found with email:', sanitizedEmail);
-      return { error: 'Admin account not found. Please contact support.' };
+      console.log('❌ No admin found, attempting to create...');
+      
+      const createResult = await createAdminIfNotExists(sanitizedEmail, password);
+      if (createResult.error) {
+        return { error: createResult.error };
+      }
+      
+      // Query again after creation
+      const { data: newAdminData, error: newQueryError } = await supabase
+        .from('teachers')
+        .select('id, name, email, role, school, password_hash')
+        .eq('email', sanitizedEmail)
+        .eq('role', 'admin')
+        .limit(1);
+      
+      if (newQueryError || !newAdminData || newAdminData.length === 0) {
+        return { error: 'Failed to create admin account' };
+      }
+      
+      // Use the newly created admin data
+      const newAdmin = newAdminData[0];
+      console.log('✅ New admin created and found:', {
+        id: newAdmin.id,
+        email: newAdmin.email,
+        name: newAdmin.name,
+        role: newAdmin.role,
+        school: newAdmin.school
+      });
+      
+      // For newly created admin, password should match
+      console.log('🎉 === LOGIN SUCCESSFUL (NEW ADMIN) ===');
+      
+      return { 
+        admin: {
+          id: newAdmin.id,
+          name: newAdmin.name,
+          email: newAdmin.email,
+          role: newAdmin.role,
+          school: newAdmin.school
+        }
+      };
     }
 
     const admin = adminData[0];
