@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -121,18 +122,30 @@ const StudentManagement: React.FC = () => {
     setIsLoading(true);
     try {
       await setAdminContext();
+      
+      // First, remove the student from the local state immediately for better UX
+      setStudents(prevStudents => prevStudents.filter(student => student.id !== studentId));
+      
       const { error } = await supabase
         .from('students')
         .delete()
         .eq('id', studentId);
 
-      if (error) throw error;
-
-      toast.success('Student deleted successfully');
-      fetchStudents();
+      if (error) {
+        // If there's an error, restore the student to the list
+        console.error('Error deleting student:', error);
+        fetchStudents(); // Refetch to restore the correct state
+        toast.error('Failed to delete student');
+      } else {
+        toast.success('Student deleted successfully');
+        // Double-check by refetching the list
+        await fetchStudents();
+      }
     } catch (error) {
       console.error('Error deleting student:', error);
       toast.error('Failed to delete student');
+      // Restore the correct state by refetching
+      fetchStudents();
     } finally {
       setIsLoading(false);
     }
