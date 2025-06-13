@@ -13,12 +13,8 @@ export const hashPassword = async (password: string): Promise<string> => {
     console.log('=== HASHING PASSWORD ===');
     console.log('Input password:', password);
     console.log('Salt rounds:', SALT_ROUNDS);
-    console.log('bcryptjs version check:', typeof bcrypt.hash);
     
-    const salt = await bcrypt.genSalt(SALT_ROUNDS);
-    console.log('Generated salt:', salt);
-    
-    const hash = await bcrypt.hash(password, salt);
+    const hash = await bcrypt.hash(password, SALT_ROUNDS);
     console.log('Generated hash:', hash);
     console.log('Hash length:', hash.length);
     
@@ -54,15 +50,28 @@ export const verifyPassword = async (password: string, hashedPassword: string): 
       return false;
     }
     
-    // Validate hash format
+    // Clean inputs
+    const cleanPassword = password.toString().trim();
+    const cleanHash = hashedPassword.toString().trim();
+    
+    console.log('Clean password:', cleanPassword);
+    console.log('Clean hash:', cleanHash);
+    
+    // Validate hash format - bcrypt hashes should be exactly 60 characters
+    if (cleanHash.length !== 60) {
+      console.error('Invalid hash length. Expected 60, got:', cleanHash.length);
+      return false;
+    }
+    
+    // Validate bcrypt hash format
     const hashRegex = /^\$2[ab]\$\d{2}\$.{53}$/;
-    if (!hashRegex.test(hashedPassword)) {
-      console.error('Invalid bcrypt hash format:', hashedPassword);
+    if (!hashRegex.test(cleanHash)) {
+      console.error('Invalid bcrypt hash format:', cleanHash);
       return false;
     }
     
     console.log('Performing bcrypt verification...');
-    const result = await bcrypt.compare(password.trim(), hashedPassword.trim());
+    const result = await bcrypt.compare(cleanPassword, cleanHash);
     console.log('Bcrypt.compare result:', result);
     
     return result;
@@ -136,6 +145,29 @@ export const generateTestHash = async (password: string): Promise<string> => {
     return hash;
   } catch (error) {
     console.error('Generate test hash error:', error);
+    throw error;
+  }
+};
+
+// Create a known working hash for demo123
+export const createDemoHash = async (): Promise<string> => {
+  try {
+    console.log('=== CREATING DEMO HASH ===');
+    const demoPassword = 'demo123';
+    const hash = await bcrypt.hash(demoPassword, 12);
+    console.log('Demo hash created:', hash);
+    
+    // Verify it works
+    const verification = await bcrypt.compare(demoPassword, hash);
+    console.log('Demo hash verification:', verification);
+    
+    if (!verification) {
+      throw new Error('Demo hash verification failed');
+    }
+    
+    return hash;
+  } catch (error) {
+    console.error('Demo hash creation failed:', error);
     throw error;
   }
 };

@@ -1,6 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { hashPassword, verifyPassword, testBcryptEnvironment } from './securePasswordService';
+import { createDemoHash, verifyPassword, testBcryptEnvironment } from './securePasswordService';
 
 const DEMO_ACCOUNTS = {
   teachers: [
@@ -30,18 +30,9 @@ export const ensureDemoAccountHash = async (email?: string, fullName?: string, p
     }
     console.log('Bcrypt environment test passed!');
 
-    console.log('Generating fresh hash for demo123...');
-    const freshHash = await hashPassword('demo123');
-    console.log('Generated fresh hash:', freshHash);
-    
-    // Verify the hash works before storing it
-    const testVerification = await verifyPassword('demo123', freshHash);
-    console.log('Test verification of fresh hash:', testVerification);
-    
-    if (!testVerification) {
-      console.error('Fresh hash verification failed!');
-      return { isDemo: true, success: false, error: 'Hash generation failed' };
-    }
+    console.log('Creating fresh demo hash...');
+    const freshHash = await createDemoHash();
+    console.log('Fresh demo hash created:', freshHash);
 
     // Handle teacher demo accounts
     if (email && email.includes('demo')) {
@@ -95,4 +86,43 @@ export const isDemoAccount = (email?: string, fullName?: string) => {
     return true;
   }
   return false;
+};
+
+// Function to reset all demo account passwords
+export const resetAllDemoPasswords = async () => {
+  try {
+    console.log('=== RESETTING ALL DEMO PASSWORDS ===');
+    
+    const freshHash = await createDemoHash();
+    console.log('Created fresh hash for all demo accounts:', freshHash);
+    
+    // Update all demo teachers
+    const { error: teacherError } = await supabase
+      .from('teachers')
+      .update({ password_hash: freshHash })
+      .in('email', ['demoadmin@demo.com', 'demoteacher@demo.com', 'demodoc@demo.com']);
+    
+    if (teacherError) {
+      console.error('Error updating demo teachers:', teacherError);
+      return { success: false, error: teacherError };
+    }
+    
+    // Update all demo students
+    const { error: studentError } = await supabase
+      .from('students')
+      .update({ password_hash: freshHash })
+      .eq('full_name', 'Demo Student');
+    
+    if (studentError) {
+      console.error('Error updating demo students:', studentError);
+      return { success: false, error: studentError };
+    }
+    
+    console.log('All demo account passwords reset successfully');
+    return { success: true };
+    
+  } catch (error) {
+    console.error('Error resetting demo passwords:', error);
+    return { success: false, error };
+  }
 };
