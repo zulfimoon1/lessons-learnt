@@ -114,6 +114,7 @@ const SchoolManagement: React.FC<SchoolManagementProps> = ({ onDataChange }) => 
       await fetchSchools();
       
       // Trigger main dashboard refresh
+      console.log('🔄 Triggering dashboard refresh after school creation...');
       if (onDataChange) {
         onDataChange();
       }
@@ -171,14 +172,17 @@ const SchoolManagement: React.FC<SchoolManagementProps> = ({ onDataChange }) => 
       console.log(`✅ Successfully deleted school: ${schoolName}`);
       toast.success(`School "${schoolName}" deleted successfully`);
       
-      // Refresh local schools list
+      // Refresh local schools list first
       await fetchSchools();
       
-      // Trigger main dashboard refresh
-      if (onDataChange) {
-        console.log('🔄 Triggering main dashboard refresh...');
-        onDataChange();
-      }
+      // IMPORTANT: Trigger main dashboard refresh with a small delay to ensure deletion is complete
+      console.log('🔄 Triggering main dashboard refresh after school deletion...');
+      setTimeout(() => {
+        if (onDataChange) {
+          onDataChange();
+        }
+      }, 500);
+      
     } catch (error) {
       console.error('Error deleting school:', error);
       toast.error('Failed to delete school');

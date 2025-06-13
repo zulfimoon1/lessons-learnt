@@ -191,7 +191,10 @@ const PlatformAdminDashboard = () => {
 
   const handleDataChange = () => {
     console.log('📊 Data changed, refreshing dashboard...');
-    fetchStats();
+    // Force a complete refresh after a short delay
+    setTimeout(() => {
+      fetchStats();
+    }, 300);
   };
 
   const handleLogout = () => {
