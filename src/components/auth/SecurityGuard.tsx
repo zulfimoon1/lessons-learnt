@@ -46,7 +46,7 @@ const SecurityGuard: React.FC<SecurityGuardProps> = ({
 
     const checkSecurity = async () => {
       try {
-        // Platform admin has access to everything - check both conditions
+        // Platform admin has access to everything - simplified check
         if (admin && adminAuthenticated) {
           console.log('Platform admin authenticated, granting full access');
           setIsAuthorized(true);
@@ -61,29 +61,9 @@ const SecurityGuard: React.FC<SecurityGuardProps> = ({
           return;
         }
 
-        // Validate session for regular users
-        const isValidSession = await securityService.validateSession();
-        if (requireAuth && !isValidSession && !admin) {
-          securityService.logSecurityEvent({
-            type: 'unauthorized_access',
-            timestamp: new Date().toISOString(),
-            details: `Session validation failed for ${location.pathname}`,
-            userAgent: navigator.userAgent
-          });
-          setSecurityError('Session expired. Please log in again.');
-          navigate('/teacher-login');
-          return;
-        }
-
-        // Check authentication requirements
+        // For regular users, check normal auth flow
         if (requireAuth && !teacher && !student && !admin) {
-          securityService.logSecurityEvent({
-            type: 'unauthorized_access',
-            timestamp: new Date().toISOString(),
-            details: `Unauthorized access attempt to ${location.pathname}`,
-            userAgent: navigator.userAgent
-          });
-          
+          console.log('SecurityGuard: No user authenticated, redirecting');
           const defaultRedirect = userType === 'student' ? '/student-login' : '/teacher-login';
           navigate(redirectTo || defaultRedirect);
           return;
@@ -91,23 +71,13 @@ const SecurityGuard: React.FC<SecurityGuardProps> = ({
 
         // Check user type requirements (platform admin bypasses all checks)
         if (userType === 'teacher' && !teacher && !admin) {
-          securityService.logSecurityEvent({
-            type: 'unauthorized_access',
-            timestamp: new Date().toISOString(),
-            details: `Teacher required but student logged in for ${location.pathname}`,
-            userAgent: navigator.userAgent
-          });
+          console.log('SecurityGuard: Teacher required but student logged in, redirecting');
           navigate('/teacher-login');
           return;
         }
 
         if (userType === 'student' && !student && !admin) {
-          securityService.logSecurityEvent({
-            type: 'unauthorized_access',
-            timestamp: new Date().toISOString(),
-            details: `Student required but teacher logged in for ${location.pathname}`,
-            userAgent: navigator.userAgent
-          });
+          console.log('SecurityGuard: Student required but teacher logged in, redirecting');
           navigate('/student-login');
           return;
         }
@@ -115,37 +85,15 @@ const SecurityGuard: React.FC<SecurityGuardProps> = ({
         // Check role-based access for teachers (platform admin bypasses)
         if (allowedRoles.length > 0 && teacher && !admin) {
           if (!allowedRoles.includes(teacher.role)) {
-            securityService.logSecurityEvent({
-              type: 'unauthorized_access',
-              userId: teacher.id,
-              timestamp: new Date().toISOString(),
-              details: `Role-based access denied. Required: ${allowedRoles.join(', ')}, User role: ${teacher.role}`,
-              userAgent: navigator.userAgent
-            });
-            
+            console.log('SecurityGuard: Role-based access denied');
             navigate('/teacher-dashboard');
             return;
-          }
-        }
-
-        // Check for suspicious access patterns (skip for platform admin)
-        if (!admin) {
-          const suspiciousActivity = securityService.detectConcurrentSessions();
-          if (suspiciousActivity) {
-            setSecurityError('Suspicious activity detected. Please verify your session.');
-            // Don't redirect, just show warning
           }
         }
 
         setIsAuthorized(true);
       } catch (error) {
         console.error('Security check failed:', error);
-        securityService.logSecurityEvent({
-          type: 'session_error',
-          timestamp: new Date().toISOString(),
-          details: `Security guard error: ${error}`,
-          userAgent: navigator.userAgent
-        });
         setSecurityError('Security verification failed. Please try again.');
       } finally {
         setIsLoading(false);

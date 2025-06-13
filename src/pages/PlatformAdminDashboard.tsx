@@ -18,7 +18,7 @@ import SchoolManagement from "@/components/platform-admin/SchoolManagement";
 import TeacherManagement from "@/components/platform-admin/TeacherManagement";
 import StudentManagement from "@/components/platform-admin/StudentManagement";
 import DoctorManagement from "@/components/platform-admin/DoctorManagement";
-import SecurityDashboard from "@/components/SecurityDashboard";
+import SecurityMonitoring from "@/components/platform-admin/SecurityMonitoring";
 
 interface DashboardStats {
   totalStudents: number;
@@ -88,10 +88,6 @@ const PlatformAdminDashboard = () => {
     
     try {
       await setAdminContext();
-
-      // Force fresh queries with cache busting
-      const cacheBreaker = `?cb=${Date.now()}`;
-      console.log('📊 DASHBOARD: Using cache breaker:', cacheBreaker);
 
       // Get fresh counts with explicit cache busting
       const { count: studentsCount, error: studentsError } = await supabase
@@ -191,7 +187,7 @@ const PlatformAdminDashboard = () => {
         ).map(([school, total_teachers]) => ({ school, total_teachers }));
       }
 
-      // Try to fetch feedback analytics
+      // Fetch feedback analytics from actual database, not hardcoded
       let feedbackAnalyticsData: FeedbackStats[] = [];
       try {
         const { data, error: feedbackAnalyticsError } = await supabase
@@ -200,6 +196,9 @@ const PlatformAdminDashboard = () => {
 
         if (!feedbackAnalyticsError && data) {
           feedbackAnalyticsData = data;
+          console.log('📊 DASHBOARD: Feedback analytics loaded:', feedbackAnalyticsData.length);
+        } else {
+          console.log('📊 DASHBOARD: No feedback analytics found or error:', feedbackAnalyticsError);
         }
       } catch (error) {
         console.warn('Could not fetch feedback analytics:', error);
@@ -249,7 +248,7 @@ const PlatformAdminDashboard = () => {
     setTimeout(() => {
       console.log('📊 DASHBOARD: Delayed refresh starting now...');
       fetchStats();
-    }, 3000); // Increased delay to 3 seconds to ensure all database operations complete
+    }, 2000); // 2 second delay to ensure all database operations complete
   };
 
   const handleLogout = () => {
@@ -460,7 +459,7 @@ const PlatformAdminDashboard = () => {
           </TabsContent>
 
           <TabsContent value="security" className="space-y-6">
-            <SecurityDashboard />
+            <SecurityMonitoring />
           </TabsContent>
         </Tabs>
       </div>

@@ -21,44 +21,16 @@ const SecurityMonitoring: React.FC = () => {
   const [metrics, setMetrics] = useState({ failedLogins: 0, blockedIPs: 0, suspiciousActivity: 0 });
   const [isLoading, setIsLoading] = useState(true);
 
-  console.log('🔒 SecurityMonitoring: Auth state check', { 
+  console.log('🔒 SecurityMonitoring: Auth check', { 
     admin: !!admin, 
     isAuthenticated, 
-    adminObject: admin
+    adminEmail: admin?.email 
   });
 
-  // Platform admin access should work - let's check both conditions more carefully
-  const hasAccess = isAuthenticated && admin;
+  // Platform admin access - simplified check
+  const hasAccess = admin && isAuthenticated;
   
-  console.log('🔒 SecurityMonitoring: Access check', { hasAccess, isAuthenticated, admin: !!admin });
-
-  if (!hasAccess) {
-    console.log('🔒 SecurityMonitoring: Access denied - showing error');
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Shield className="w-5 h-5 text-red-500" />
-            Security Dashboard - Access Denied
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-gray-600">Only platform administrators can access the security monitoring dashboard.</p>
-          <div className="mt-4 p-4 bg-gray-50 rounded-lg">
-            <p className="text-sm text-gray-500 font-mono">Debug Info:</p>
-            <p className="text-sm text-gray-500">Admin authenticated: {isAuthenticated ? 'Yes' : 'No'}</p>
-            <p className="text-sm text-gray-500">Admin object present: {admin ? 'Yes' : 'No'}</p>
-            {admin && (
-              <>
-                <p className="text-sm text-gray-500">Admin email: {admin.email}</p>
-                <p className="text-sm text-gray-500">Admin role: {admin.role}</p>
-              </>
-            )}
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
+  console.log('🔒 SecurityMonitoring: Final access decision', { hasAccess });
 
   const fetchSecurityEvents = () => {
     try {
@@ -115,6 +87,34 @@ const SecurityMonitoring: React.FC = () => {
     }
   }, [hasAccess]);
 
+  if (!hasAccess) {
+    console.log('🔒 SecurityMonitoring: Access denied - showing error');
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Shield className="w-5 h-5 text-red-500" />
+            Security Dashboard - Access Denied
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-gray-600">Only platform administrators can access the security monitoring dashboard.</p>
+          <div className="mt-4 p-4 bg-gray-50 rounded-lg">
+            <p className="text-sm text-gray-500 font-mono">Debug Info:</p>
+            <p className="text-sm text-gray-500">Admin authenticated: {isAuthenticated ? 'Yes' : 'No'}</p>
+            <p className="text-sm text-gray-500">Admin object present: {admin ? 'Yes' : 'No'}</p>
+            {admin && (
+              <>
+                <p className="text-sm text-gray-500">Admin email: {admin.email}</p>
+                <p className="text-sm text-gray-500">Admin role: {admin.role}</p>
+              </>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   if (isLoading) {
     return (
       <Card>
@@ -135,16 +135,6 @@ const SecurityMonitoring: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {/* Debug Panel - Remove this after testing */}
-      <Card className="bg-green-50 border-green-200">
-        <CardHeader>
-          <CardTitle className="text-green-800">✅ Security Access Granted</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-green-700">Platform admin access confirmed for {admin?.email}</p>
-        </CardContent>
-      </Card>
-
       {/* Security Metrics Overview */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card>
