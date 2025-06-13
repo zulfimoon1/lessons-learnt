@@ -24,7 +24,9 @@ const TeacherLogin = () => {
     if (teacher && !authLoading) {
       console.log('TeacherLogin: Teacher already logged in, redirecting...');
       if (teacher.role === "admin") {
-        navigate("/admin-dashboard", { replace: true });
+        navigate("/school-admin-dashboard", { replace: true });
+      } else if (teacher.role === "doctor") {
+        navigate("/teacher-dashboard", { replace: true }); // Doctors use teacher dashboard for now
       } else {
         navigate("/teacher-dashboard", { replace: true });
       }
@@ -79,7 +81,9 @@ const TeacherLogin = () => {
         
         setTimeout(() => {
           if (result.teacher.role === "admin") {
-            navigate("/admin-dashboard", { replace: true });
+            navigate("/school-admin-dashboard", { replace: true });
+          } else if (result.teacher.role === "doctor") {
+            navigate("/teacher-dashboard", { replace: true }); // Doctors use teacher dashboard for now
           } else {
             navigate("/teacher-dashboard", { replace: true });
           }
