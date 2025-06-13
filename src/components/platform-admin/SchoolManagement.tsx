@@ -115,7 +115,9 @@ const SchoolManagement: React.FC<SchoolManagementProps> = ({ onDataChange }) => 
       
       // Trigger main dashboard refresh
       console.log('🔄 Triggering dashboard refresh after school creation...');
+      console.log('🔍 onDataChange callback exists:', !!onDataChange);
       if (onDataChange) {
+        console.log('🚀 Calling onDataChange callback now...');
         onDataChange();
       }
     } catch (error) {
@@ -130,6 +132,10 @@ const SchoolManagement: React.FC<SchoolManagementProps> = ({ onDataChange }) => 
     if (!confirm(`Are you sure you want to delete ${schoolName} and all associated data?`)) {
       return;
     }
+
+    console.log('🗑️ STARTING SCHOOL DELETION PROCESS');
+    console.log('🔍 School to delete:', schoolName);
+    console.log('🔍 onDataChange callback exists:', !!onDataChange);
 
     setIsLoading(true);
     try {
@@ -173,12 +179,17 @@ const SchoolManagement: React.FC<SchoolManagementProps> = ({ onDataChange }) => 
       toast.success(`School "${schoolName}" deleted successfully`);
       
       // Refresh local schools list first
+      console.log('🔄 Refreshing local schools list...');
       await fetchSchools();
       
       // IMPORTANT: Trigger main dashboard refresh immediately after deletion
       console.log('🔄 Triggering main dashboard refresh after school deletion...');
+      console.log('🚀 About to call onDataChange callback...');
       if (onDataChange) {
+        console.log('✅ Calling onDataChange callback NOW!');
         onDataChange();
+      } else {
+        console.log('❌ No onDataChange callback provided!');
       }
       
     } catch (error) {
@@ -186,6 +197,7 @@ const SchoolManagement: React.FC<SchoolManagementProps> = ({ onDataChange }) => 
       toast.error('Failed to delete school');
     } finally {
       setIsLoading(false);
+      console.log('🏁 School deletion process completed');
     }
   };
 

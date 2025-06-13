@@ -60,7 +60,7 @@ const PlatformAdminDashboard = () => {
   const [feedbackStats, setFeedbackStats] = useState<FeedbackStats[]>([]);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<string>("");
-  const [refreshKey, setRefreshKey] = useState(0); // Add refresh key to force re-renders
+  const [refreshKey, setRefreshKey] = useState(0);
 
   const setAdminContext = async () => {
     if (admin?.email) {
@@ -73,7 +73,7 @@ const PlatformAdminDashboard = () => {
   };
 
   const fetchStats = async () => {
-    console.log('🔄 Fetching platform statistics...');
+    console.log('📊 DASHBOARD: Starting fetchStats...');
     setIsRefreshing(true);
     
     try {
@@ -159,7 +159,7 @@ const PlatformAdminDashboard = () => {
       }
 
       const uniqueSchools = Array.from(allSchoolNames);
-      console.log('🏫 Current schools in database:', uniqueSchools);
+      console.log('🏫 DASHBOARD: Current schools in database:', uniqueSchools);
       
       const newStats = {
         totalStudents: studentsData?.[0]?.count || 0,
@@ -169,31 +169,38 @@ const PlatformAdminDashboard = () => {
         totalSubscriptions: subscriptionsCount || 0,
       };
 
-      console.log('📊 Updated stats:', newStats);
+      console.log('📊 DASHBOARD: Updated stats:', newStats);
+      console.log('📊 DASHBOARD: Previous stats for comparison:', stats);
+      
       setStats(newStats);
       setSchoolStats(schoolStatsProcessed);
       setFeedbackStats(feedbackAnalyticsData);
       setLastUpdated(new Date().toLocaleString());
-      setRefreshKey(prev => prev + 1); // Increment refresh key to force re-renders
       
-      console.log('✅ Stats loaded successfully');
+      const newRefreshKey = Date.now();
+      console.log('🔄 DASHBOARD: Setting new refresh key:', newRefreshKey);
+      setRefreshKey(newRefreshKey);
+      
+      console.log('✅ DASHBOARD: Stats loaded successfully');
       toast.success('Data refreshed successfully');
       
     } catch (error) {
-      console.error('❌ Failed to fetch stats:', error);
+      console.error('❌ DASHBOARD: Failed to fetch stats:', error);
       toast.error('Failed to refresh data');
     } finally {
       setIsRefreshing(false);
+      console.log('🏁 DASHBOARD: fetchStats completed');
     }
   };
 
   const handleRefresh = () => {
-    console.log('🔄 Manual refresh triggered');
+    console.log('🔄 DASHBOARD: Manual refresh triggered');
     fetchStats();
   };
 
   const handleDataChange = () => {
-    console.log('📊 Data changed, refreshing dashboard...');
+    console.log('📊 DASHBOARD: handleDataChange called - Data changed, refreshing dashboard...');
+    console.log('📊 DASHBOARD: Current stats before refresh:', stats);
     // Force a complete refresh immediately to ensure fresh data
     fetchStats();
   };
@@ -236,7 +243,7 @@ const PlatformAdminDashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50" key={refreshKey}>
+    <div className="min-h-screen bg-gray-50" key={`dashboard-${refreshKey}`}>
       {/* Header */}
       <header className="bg-white border-b border-gray-200 px-6 py-4">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
