@@ -9,9 +9,10 @@ interface DashboardHeaderProps {
   title: string;
   userName: string;
   onLogout: () => void;
+  subtitle?: string;
 }
 
-const DashboardHeader: React.FC<DashboardHeaderProps> = ({ title, userName, onLogout }) => {
+const DashboardHeader: React.FC<DashboardHeaderProps> = ({ title, userName, onLogout, subtitle }) => {
   const { t } = useLanguage();
 
   return (
@@ -19,7 +20,10 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({ title, userName, onLo
       <div className="max-w-7xl mx-auto flex justify-between items-center">
         <div className="flex items-center gap-4">
           <SchoolIcon className="w-8 h-8 text-primary" />
-          <h1 className="text-2xl font-bold text-foreground">{title}</h1>
+          <div>
+            <h1 className="text-2xl font-bold text-foreground">{title}</h1>
+            {subtitle && <p className="text-sm text-muted-foreground">{subtitle}</p>}
+          </div>
         </div>
         <div className="flex items-center gap-4">
           <LanguageSwitcher />

@@ -25,6 +25,21 @@ import DashboardHeader from "@/components/dashboard/DashboardHeader";
 import StatsCard from "@/components/dashboard/StatsCard";
 import ActiveSubscriptionCard from "@/components/dashboard/ActiveSubscriptionCard";
 
+interface ActivityItem {
+  type: 'feedback' | 'alert';
+  id: string;
+  student_name: string;
+  submitted_at?: string;
+  created_at?: string;
+  emotional_state?: string;
+  alert_type?: string;
+  severity_level?: number;
+  class_schedules?: {
+    lesson_topic: string;
+    subject: string;
+  };
+}
+
 const SchoolAdminDashboard = () => {
   const { teacher, logout } = useAuth();
   const { toast } = useToast();
@@ -37,7 +52,7 @@ const SchoolAdminDashboard = () => {
     thisWeekFeedback: 0,
     upcomingClasses: 0
   });
-  const [recentActivity, setRecentActivity] = useState([]);
+  const [recentActivity, setRecentActivity] = useState<ActivityItem[]>([]);
   const [subscription, setSubscription] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -102,16 +117,20 @@ const SchoolAdminDashboard = () => {
         .order('created_at', { ascending: false })
         .limit(5);
 
-      const combinedActivity = [
+      const combinedActivity: ActivityItem[] = [
         ...(recentFeedback || []).map(item => ({
-          type: 'feedback',
+          type: 'feedback' as const,
           ...item
         })),
         ...(recentAlerts || []).map(item => ({
-          type: 'alert',
+          type: 'alert' as const,
           ...item
         }))
-      ].sort((a, b) => new Date(b.submitted_at || b.created_at) - new Date(a.submitted_at || a.created_at));
+      ].sort((a, b) => {
+        const dateA = new Date(a.submitted_at || a.created_at || '').getTime();
+        const dateB = new Date(b.submitted_at || b.created_at || '').getTime();
+        return dateB - dateA;
+      });
 
       setRecentActivity(combinedActivity.slice(0, 8));
 
@@ -154,10 +173,9 @@ const SchoolAdminDashboard = () => {
   return (
     <div className="min-h-screen bg-background">
       <DashboardHeader 
-        user={teacher} 
-        onLogout={logout}
         title="School Admin Dashboard"
-        subtitle={`Managing ${teacher.school}`}
+        userName={teacher.name}
+        onLogout={logout}
       />
       
       <div className="container mx-auto px-4 py-6 space-y-6">
@@ -166,47 +184,40 @@ const SchoolAdminDashboard = () => {
           <StatsCard
             title="Teachers"
             value={stats.totalTeachers}
-            description="Active in your school"
-            icon={<UserCheck className="w-4 h-4" />}
+            icon={UserCheck}
           />
           <StatsCard
             title="Students"
             value={stats.totalStudents}
-            description="Enrolled students"
-            icon={<GraduationCap className="w-4 h-4" />}
+            icon={GraduationCap}
           />
           <StatsCard
             title="Mental Health Staff"
             value={stats.totalDoctors}
-            description="Available doctors"
-            icon={<Stethoscope className="w-4 h-4" />}
+            icon={Stethoscope}
           />
           <StatsCard
             title="Pending Alerts"
             value={stats.pendingAlerts}
-            description="Requiring attention"
-            icon={<AlertTriangle className="w-4 h-4" />}
-            variant={stats.pendingAlerts > 0 ? "destructive" : "default"}
+            icon={AlertTriangle}
           />
           <StatsCard
             title="This Week's Feedback"
             value={stats.thisWeekFeedback}
-            description="Student responses"
-            icon={<MessageSquare className="w-4 h-4" />}
+            icon={MessageSquare}
           />
           <StatsCard
             title="Upcoming Classes"
             value={stats.upcomingClasses}
-            description="Scheduled ahead"
-            icon={<Calendar className="w-4 h-4" />}
+            icon={Calendar}
           />
         </div>
 
         {/* Subscription Status */}
         {subscription && (
           <ActiveSubscriptionCard 
-            subscription={subscription}
-            onManage={handleManageSubscription}
+            plan={subscription.plan_type}
+            expiryDate={subscription.current_period_end}
           />
         )}
 
@@ -257,7 +268,7 @@ const SchoolAdminDashboard = () => {
                             {item.type === 'feedback' ? 'Feedback' : 'Alert'}
                           </Badge>
                           <p className="text-xs text-muted-foreground mt-1">
-                            {new Date(item.submitted_at || item.created_at).toLocaleDateString()}
+                            {new Date(item.submitted_at || item.created_at || '').toLocaleDateString()}
                           </p>
                         </div>
                       </div>
