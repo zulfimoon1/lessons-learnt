@@ -13,6 +13,9 @@ const DEMO_ACCOUNTS = {
   ]
 };
 
+// Use the correct bcrypt hash for demo123
+const DEMO_HASH = '$2a$12$LQv3c1yqBwEHxv03ibjHVOVhqkqvlWBBHG6EsG8BPqTBaJt9z8ZFu';
+
 export const ensureDemoAccountHash = async (email?: string, fullName?: string, password?: string) => {
   console.log('=== ENSURING DEMO ACCOUNT HASH ===');
   
@@ -24,11 +27,10 @@ export const ensureDemoAccountHash = async (email?: string, fullName?: string, p
     // Handle teacher demo accounts
     if (email && email.includes('demo')) {
       console.log(`Ensuring hash for demo teacher: ${email}`);
-      const newHash = await hashPassword(password);
       
       const { error } = await supabase
         .from('teachers')
-        .update({ password_hash: newHash })
+        .update({ password_hash: DEMO_HASH })
         .eq('email', email);
       
       if (error) {
@@ -43,11 +45,10 @@ export const ensureDemoAccountHash = async (email?: string, fullName?: string, p
     // Handle student demo accounts
     if (fullName && fullName.includes('Demo')) {
       console.log(`Ensuring hash for demo student: ${fullName}`);
-      const newHash = await hashPassword(password);
       
       const { error } = await supabase
         .from('students')
-        .update({ password_hash: newHash })
+        .update({ password_hash: DEMO_HASH })
         .eq('full_name', fullName);
       
       if (error) {
