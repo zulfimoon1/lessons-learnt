@@ -36,7 +36,9 @@ const StudentManagement: React.FC = () => {
   const setAdminContext = async () => {
     if (admin?.email) {
       try {
+        console.log('Setting admin context for:', admin.email);
         await supabase.rpc('set_platform_admin_context', { admin_email: admin.email });
+        console.log('Admin context set successfully');
       } catch (error) {
         console.error('Error setting admin context:', error);
       }
@@ -45,13 +47,23 @@ const StudentManagement: React.FC = () => {
 
   const fetchStudents = async () => {
     try {
+      console.log('Fetching students...');
       await setAdminContext();
+      
       const { data, error } = await supabase
         .from('students')
         .select('*')
         .order('full_name');
 
-      if (error) throw error;
+      console.log('Students fetch result:', { data, error });
+      
+      if (error) {
+        console.error('Error fetching students:', error);
+        toast.error('Failed to fetch students: ' + error.message);
+        return;
+      }
+      
+      console.log('Setting students:', data?.length || 0, 'students found');
       setStudents(data || []);
     } catch (error) {
       console.error('Error fetching students:', error);
@@ -121,10 +133,8 @@ const StudentManagement: React.FC = () => {
 
     setIsLoading(true);
     try {
+      console.log('Deleting student:', studentId, studentName);
       await setAdminContext();
-      
-      // First, remove the student from the local state immediately for better UX
-      setStudents(prevStudents => prevStudents.filter(student => student.id !== studentId));
       
       const { error } = await supabase
         .from('students')
@@ -132,20 +142,17 @@ const StudentManagement: React.FC = () => {
         .eq('id', studentId);
 
       if (error) {
-        // If there's an error, restore the student to the list
         console.error('Error deleting student:', error);
-        fetchStudents(); // Refetch to restore the correct state
-        toast.error('Failed to delete student');
+        toast.error('Failed to delete student: ' + error.message);
       } else {
+        console.log('Student deleted successfully, refetching list...');
         toast.success('Student deleted successfully');
-        // Double-check by refetching the list
+        // Force a fresh fetch of the students list
         await fetchStudents();
       }
     } catch (error) {
       console.error('Error deleting student:', error);
       toast.error('Failed to delete student');
-      // Restore the correct state by refetching
-      fetchStudents();
     } finally {
       setIsLoading(false);
     }
@@ -233,7 +240,17 @@ const StudentManagement: React.FC = () => {
 
           {/* Students list */}
           <div className="space-y-2">
-            <h3 className="font-medium">Existing Students ({students.length})</h3>
+            <div className="flex items-center justify-between">
+              <h3 className="font-medium">Existing Students ({students.length})</h3>
+              <Button 
+                onClick={fetchStudents} 
+                variant="outline" 
+                size="sm"
+                disabled={isLoading}
+              >
+                Refresh List
+              </Button>
+            </div>
             <div className="max-h-96 overflow-y-auto space-y-2">
               {students.length === 0 ? (
                 <p className="text-muted-foreground">No students found</p>
