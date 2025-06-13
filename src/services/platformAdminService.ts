@@ -38,20 +38,19 @@ export const testPasswordVerification = async (email: string = 'zulfimoon1@gmail
     console.log('🔍 Testing email:', email);
     console.log('🔍 Testing password:', password);
     
-    // Direct query to bypass RLS temporarily for testing
-    console.log('🔍 Querying teachers table directly...');
-    const { data: teachers, error: queryError } = await supabase
-      .from('teachers')
-      .select('id, email, name, role, school, password_hash')
-      .eq('email', email)
-      .eq('role', 'admin');
+    // Use the authenticate_platform_admin function
+    console.log('🔍 Calling authenticate_platform_admin function...');
+    const { data: adminData, error: authError } = await supabase.rpc('authenticate_platform_admin', {
+      admin_email: email,
+      provided_password: password
+    });
     
-    if (queryError) {
-      console.error('❌ Query error:', queryError);
-      return { error: `Query error: ${queryError.message}` };
+    if (authError) {
+      console.error('❌ Auth function error:', authError);
+      return { error: `Auth function error: ${authError.message}` };
     }
     
-    if (!teachers || teachers.length === 0) {
+    if (!adminData || adminData.length === 0) {
       console.log('⚠️ No admin record found');
       return { 
         success: true, 
@@ -59,7 +58,7 @@ export const testPasswordVerification = async (email: string = 'zulfimoon1@gmail
       };
     }
     
-    const admin = teachers[0];
+    const admin = adminData[0];
     console.log('✅ Admin found:', {
       id: admin.id,
       email: admin.email,
@@ -109,56 +108,24 @@ export const platformAdminLoginService = async (email: string, password: string)
     const sanitizedEmail = email.toLowerCase().trim();
     console.log('📧 Sanitized email:', sanitizedEmail);
 
-    // Try direct query first (bypass RLS issues)
-    console.log('🔍 Querying teachers table directly...');
-    const { data: teachers, error: queryError } = await supabase
-      .from('teachers')
-      .select('id, email, name, role, school, password_hash')
-      .eq('email', sanitizedEmail)
-      .eq('role', 'admin');
+    // Use the authenticate_platform_admin function that bypasses RLS
+    console.log('🔍 Calling authenticate_platform_admin function...');
+    const { data: adminData, error: authError } = await supabase.rpc('authenticate_platform_admin', {
+      admin_email: sanitizedEmail,
+      provided_password: password
+    });
 
-    if (queryError) {
-      console.error('❌ Direct query error:', queryError);
-      return { error: 'Database query failed' };
+    if (authError) {
+      console.error('❌ Auth function error:', authError);
+      return { error: 'Database authentication failed' };
     }
 
-    if (!teachers || teachers.length === 0) {
+    if (!adminData || adminData.length === 0) {
       console.log('❌ No admin found with email:', sanitizedEmail);
-      
-      // Try to create the admin if it doesn't exist
-      console.log('🔄 Attempting to create admin user...');
-      const hashedPassword = await hashPassword(password);
-      
-      const { data: newAdmin, error: createError } = await supabase
-        .from('teachers')
-        .insert({
-          name: 'Platform Admin',
-          email: sanitizedEmail,
-          school: 'Platform Administration',
-          role: 'admin',
-          password_hash: hashedPassword
-        })
-        .select()
-        .single();
-
-      if (createError) {
-        console.error('❌ Failed to create admin:', createError);
-        return { error: 'Admin account not found and could not be created' };
-      }
-
-      console.log('✅ Admin created successfully');
-      return { 
-        admin: {
-          id: newAdmin.id,
-          name: newAdmin.name,
-          email: newAdmin.email,
-          role: newAdmin.role,
-          school: newAdmin.school
-        }
-      };
+      return { error: 'Admin account not found' };
     }
 
-    const admin = teachers[0];
+    const admin = adminData[0];
     console.log('✅ Admin found:', {
       id: admin.id,
       email: admin.email,
@@ -168,39 +135,18 @@ export const platformAdminLoginService = async (email: string, password: string)
       hasPasswordHash: !!admin.password_hash
     });
 
-    // Verify password
-    if (!admin.password_hash) {
-      console.log('❌ No password hash found - updating with new hash');
-      const hashedPassword = await hashPassword(password);
+    // Verify password if hash exists
+    if (admin.password_hash) {
+      console.log('🔐 Verifying password...');
+      const isPasswordValid = await verifyPassword(password, admin.password_hash);
       
-      const { error: updateError } = await supabase
-        .from('teachers')
-        .update({ password_hash: hashedPassword })
-        .eq('id', admin.id);
-        
-      if (updateError) {
-        console.error('❌ Failed to update password hash:', updateError);
-        return { error: 'Admin account setup incomplete' };
+      if (!isPasswordValid) {
+        console.log('❌ Password verification failed');
+        return { error: 'Invalid admin credentials' };
       }
-      
-      console.log('✅ Password hash updated');
-      return { 
-        admin: {
-          id: admin.id,
-          name: admin.name,
-          email: admin.email,
-          role: admin.role,
-          school: admin.school
-        }
-      };
-    }
-
-    console.log('🔐 Verifying password...');
-    const isPasswordValid = await verifyPassword(password, admin.password_hash);
-    
-    if (!isPasswordValid) {
-      console.log('❌ Password verification failed');
-      return { error: 'Invalid admin credentials' };
+    } else {
+      console.log('⚠️ No password hash found - this should not happen with the migration');
+      return { error: 'Admin account setup incomplete' };
     }
 
     console.log('🎉 === LOGIN SUCCESSFUL ===');
@@ -232,7 +178,7 @@ export const resetAdminPassword = async (email: string, newPassword: string) => 
     
     console.log('Generated new hash, length:', hashedPassword.length);
     
-    // Update the password directly
+    // Update the password directly using the function approach
     const { error: updateError } = await supabase
       .from('teachers')
       .update({ password_hash: hashedPassword })
