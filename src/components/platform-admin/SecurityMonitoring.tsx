@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -33,6 +32,8 @@ const SecurityMonitoring: React.FC = () => {
         </CardHeader>
         <CardContent>
           <p className="text-gray-600">Only platform administrators can access the security monitoring dashboard.</p>
+          <p className="text-sm text-gray-500 mt-2">Admin status: {isAuthenticated ? 'Authenticated' : 'Not authenticated'}</p>
+          <p className="text-sm text-gray-500">Admin object: {admin ? 'Present' : 'Missing'}</p>
         </CardContent>
       </Card>
     );

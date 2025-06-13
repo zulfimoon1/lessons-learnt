@@ -26,6 +26,7 @@ interface DashboardStats {
   totalSchools: number;
   totalResponses: number;
   totalSubscriptions: number;
+  monthlyRevenue: number;
 }
 
 interface SchoolStats {
@@ -55,6 +56,7 @@ const PlatformAdminDashboard = () => {
     totalSchools: 0,
     totalResponses: 0,
     totalSubscriptions: 0,
+    monthlyRevenue: 0,
   });
   const [schoolStats, setSchoolStats] = useState<SchoolStats[]>([]);
   const [feedbackStats, setFeedbackStats] = useState<FeedbackStats[]>([]);
@@ -99,6 +101,21 @@ const PlatformAdminDashboard = () => {
       const { count: subscriptionsCount, error: subscriptionsError } = await supabase
         .from('subscriptions')
         .select('*', { count: 'exact', head: true });
+
+      // Calculate actual monthly revenue from subscriptions
+      const { data: subscriptionData, error: subscriptionDataError } = await supabase
+        .from('subscriptions')
+        .select('amount, plan_type, status')
+        .eq('status', 'active');
+
+      let monthlyRevenue = 0;
+      if (!subscriptionDataError && subscriptionData) {
+        monthlyRevenue = subscriptionData.reduce((total, sub) => {
+          // Convert amount to monthly basis (amount is in cents)
+          const monthlyAmount = sub.plan_type === 'yearly' ? sub.amount / 12 : sub.amount;
+          return total + (monthlyAmount / 100); // Convert cents to dollars
+        }, 0);
+      }
 
       // CRITICAL: Get fresh school data by forcing new queries
       console.log('📊 DASHBOARD: Fetching FRESH school data with explicit ordering...');
@@ -189,6 +206,7 @@ const PlatformAdminDashboard = () => {
         totalSchools: uniqueSchools.length,
         totalResponses: responsesCount || 0,
         totalSubscriptions: subscriptionsCount || 0,
+        monthlyRevenue: monthlyRevenue,
       };
 
       console.log('📊 DASHBOARD: Updated stats:', newStats);
@@ -332,7 +350,7 @@ const PlatformAdminDashboard = () => {
               </div>
               <div>
                 <span className="font-medium text-blue-700">Revenue:</span>
-                <span className="ml-2 text-blue-600">$89.97/month</span>
+                <span className="ml-2 text-blue-600">${stats.monthlyRevenue.toFixed(2)}/month</span>
               </div>
             </div>
             {lastUpdated && (

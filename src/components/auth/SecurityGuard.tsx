@@ -35,8 +35,9 @@ const SecurityGuard: React.FC<SecurityGuardProps> = ({
 
     const checkSecurity = async () => {
       try {
-        // If platform admin is authenticated, grant access
+        // If platform admin is authenticated, grant access to everything
         if (adminAuthenticated && admin) {
+          console.log('Platform admin authenticated, granting full access');
           setIsAuthorized(true);
           setIsLoading(false);
           return;
@@ -70,7 +71,7 @@ const SecurityGuard: React.FC<SecurityGuardProps> = ({
           return;
         }
 
-        // Check user type requirements
+        // Check user type requirements (platform admin bypasses all checks)
         if (userType === 'teacher' && !teacher && !admin) {
           securityService.logSecurityEvent({
             type: 'unauthorized_access',
@@ -104,7 +105,7 @@ const SecurityGuard: React.FC<SecurityGuardProps> = ({
           return;
         }
 
-        // Check role-based access for teachers (skip if platform admin)
+        // Check role-based access for teachers (platform admin bypasses)
         if (allowedRoles.length > 0 && teacher && !admin) {
           if (!allowedRoles.includes(teacher.role)) {
             securityService.logSecurityEvent({
