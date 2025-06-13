@@ -115,3 +115,27 @@ export const testBcryptEnvironment = async (): Promise<boolean> => {
     return false;
   }
 };
+
+// Generate and test a hash for a given password
+export const generateTestHash = async (password: string): Promise<string> => {
+  try {
+    console.log('=== GENERATING TEST HASH ===');
+    console.log('Password:', password);
+    
+    const hash = await hashPassword(password);
+    console.log('Generated hash:', hash);
+    
+    // Test the hash immediately
+    const testResult = await verifyPassword(password, hash);
+    console.log('Hash verification test:', testResult);
+    
+    if (!testResult) {
+      throw new Error('Generated hash failed verification test');
+    }
+    
+    return hash;
+  } catch (error) {
+    console.error('Generate test hash error:', error);
+    throw error;
+  }
+};
