@@ -5,11 +5,12 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Trash2, Plus, Users } from 'lucide-react';
+import { Trash2, Plus, Users, Shield } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { hashPassword } from '@/services/securePasswordService';
 import { usePlatformAdmin } from '@/contexts/PlatformAdminContext';
+import { enhancedSecurityService } from '@/services/enhancedSecurityService';
 
 interface Student {
   id: string;
@@ -41,6 +42,14 @@ const StudentManagement: React.FC = () => {
         console.log('Admin context set successfully');
       } catch (error) {
         console.error('Error setting admin context:', error);
+        enhancedSecurityService.logSecurityEvent({
+          type: 'suspicious_activity',
+          userId: admin.id,
+          timestamp: new Date().toISOString(),
+          details: `Failed to set admin context: ${error}`,
+          userAgent: navigator.userAgent,
+          severity: 'medium'
+        });
       }
     }
   };
@@ -68,6 +77,14 @@ const StudentManagement: React.FC = () => {
     } catch (error) {
       console.error('Error fetching students:', error);
       toast.error('Failed to fetch students');
+      enhancedSecurityService.logSecurityEvent({
+        type: 'suspicious_activity',
+        userId: admin?.id,
+        timestamp: new Date().toISOString(),
+        details: `Error fetching students: ${error}`,
+        userAgent: navigator.userAgent,
+        severity: 'medium'
+      });
     }
   };
 
@@ -89,26 +106,70 @@ const StudentManagement: React.FC = () => {
   };
 
   const addStudent = async () => {
-    if (!newStudent.full_name || !newStudent.school || !newStudent.grade || !newStudent.password) {
-      toast.error('Please fill in all required fields');
+    // Enhanced input validation using security service
+    const nameValidation = enhancedSecurityService.validateAndSanitizeInput(newStudent.full_name, 'name');
+    if (!nameValidation.isValid) {
+      toast.error(nameValidation.message);
+      return;
+    }
+
+    const schoolValidation = enhancedSecurityService.validateAndSanitizeInput(newStudent.school, 'school');
+    if (!schoolValidation.isValid) {
+      toast.error(schoolValidation.message);
+      return;
+    }
+
+    const gradeValidation = enhancedSecurityService.validateAndSanitizeInput(newStudent.grade, 'grade');
+    if (!gradeValidation.isValid) {
+      toast.error(gradeValidation.message);
+      return;
+    }
+
+    const passwordValidation = enhancedSecurityService.validateAndSanitizeInput(newStudent.password, 'password');
+    if (!passwordValidation.isValid) {
+      toast.error(passwordValidation.message);
       return;
     }
 
     setIsLoading(true);
     try {
       await setAdminContext();
-      const passwordHash = await hashPassword(newStudent.password);
+      
+      // Check if student already exists
+      const { data: existingStudent } = await supabase
+        .from('students')
+        .select('id')
+        .eq('full_name', nameValidation.sanitized)
+        .eq('school', schoolValidation.sanitized)
+        .eq('grade', gradeValidation.sanitized)
+        .single();
+
+      if (existingStudent) {
+        toast.error('Student already exists with these details');
+        return;
+      }
+
+      const passwordHash = await hashPassword(passwordValidation.sanitized);
 
       const { error } = await supabase
         .from('students')
         .insert({
-          full_name: newStudent.full_name,
-          school: newStudent.school,
-          grade: newStudent.grade,
+          full_name: nameValidation.sanitized,
+          school: schoolValidation.sanitized,
+          grade: gradeValidation.sanitized,
           password_hash: passwordHash
         });
 
       if (error) throw error;
+
+      enhancedSecurityService.logSecurityEvent({
+        type: 'login_success',
+        userId: admin?.id,
+        timestamp: new Date().toISOString(),
+        details: `Admin created new student: ${nameValidation.sanitized}`,
+        userAgent: navigator.userAgent,
+        severity: 'low'
+      });
 
       toast.success('Student added successfully');
       setNewStudent({
@@ -121,13 +182,21 @@ const StudentManagement: React.FC = () => {
     } catch (error) {
       console.error('Error adding student:', error);
       toast.error('Failed to add student');
+      enhancedSecurityService.logSecurityEvent({
+        type: 'suspicious_activity',
+        userId: admin?.id,
+        timestamp: new Date().toISOString(),
+        details: `Error adding student: ${error}`,
+        userAgent: navigator.userAgent,
+        severity: 'medium'
+      });
     } finally {
       setIsLoading(false);
     }
   };
 
   const deleteStudent = async (studentId: string, studentName: string) => {
-    if (!confirm(`Are you sure you want to delete ${studentName}?`)) {
+    if (!confirm(`Are you sure you want to delete ${studentName}? This action cannot be undone.`)) {
       return;
     }
 
@@ -146,13 +215,30 @@ const StudentManagement: React.FC = () => {
         toast.error('Failed to delete student: ' + error.message);
       } else {
         console.log('Student deleted successfully, refetching list...');
+        
+        enhancedSecurityService.logSecurityEvent({
+          type: 'login_success',
+          userId: admin?.id,
+          timestamp: new Date().toISOString(),
+          details: `Admin deleted student: ${studentName}`,
+          userAgent: navigator.userAgent,
+          severity: 'medium'
+        });
+        
         toast.success('Student deleted successfully');
-        // Force a fresh fetch of the students list
         await fetchStudents();
       }
     } catch (error) {
       console.error('Error deleting student:', error);
       toast.error('Failed to delete student');
+      enhancedSecurityService.logSecurityEvent({
+        type: 'suspicious_activity',
+        userId: admin?.id,
+        timestamp: new Date().toISOString(),
+        details: `Error deleting student: ${error}`,
+        userAgent: navigator.userAgent,
+        severity: 'high'
+      });
     } finally {
       setIsLoading(false);
     }
@@ -169,6 +255,7 @@ const StudentManagement: React.FC = () => {
         <CardTitle className="flex items-center gap-2">
           <Users className="w-5 h-5" />
           Student Management
+          <Shield className="w-4 h-4 text-green-600" title="Enhanced Security Enabled" />
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -182,6 +269,7 @@ const StudentManagement: React.FC = () => {
                 value={newStudent.full_name}
                 onChange={(e) => setNewStudent(prev => ({ ...prev, full_name: e.target.value }))}
                 placeholder="Student full name"
+                maxLength={100}
               />
             </div>
             <div>
@@ -227,7 +315,8 @@ const StudentManagement: React.FC = () => {
                 type="password"
                 value={newStudent.password}
                 onChange={(e) => setNewStudent(prev => ({ ...prev, password: e.target.value }))}
-                placeholder="Student password"
+                placeholder="Minimum 8 characters, include uppercase, lowercase, number"
+                minLength={8}
               />
             </div>
             <div className="md:col-span-2">
