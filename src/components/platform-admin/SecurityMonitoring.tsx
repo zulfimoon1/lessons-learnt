@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -20,8 +21,19 @@ const SecurityMonitoring: React.FC = () => {
   const [metrics, setMetrics] = useState({ failedLogins: 0, blockedIPs: 0, suspiciousActivity: 0 });
   const [isLoading, setIsLoading] = useState(true);
 
-  // Check if user is platform admin
-  if (!isAuthenticated || !admin) {
+  console.log('🔒 SecurityMonitoring: Auth state check', { 
+    admin: !!admin, 
+    isAuthenticated, 
+    adminObject: admin
+  });
+
+  // Platform admin access should work - let's check both conditions more carefully
+  const hasAccess = isAuthenticated && admin;
+  
+  console.log('🔒 SecurityMonitoring: Access check', { hasAccess, isAuthenticated, admin: !!admin });
+
+  if (!hasAccess) {
+    console.log('🔒 SecurityMonitoring: Access denied - showing error');
     return (
       <Card>
         <CardHeader>
@@ -32,8 +44,17 @@ const SecurityMonitoring: React.FC = () => {
         </CardHeader>
         <CardContent>
           <p className="text-gray-600">Only platform administrators can access the security monitoring dashboard.</p>
-          <p className="text-sm text-gray-500 mt-2">Admin status: {isAuthenticated ? 'Authenticated' : 'Not authenticated'}</p>
-          <p className="text-sm text-gray-500">Admin object: {admin ? 'Present' : 'Missing'}</p>
+          <div className="mt-4 p-4 bg-gray-50 rounded-lg">
+            <p className="text-sm text-gray-500 font-mono">Debug Info:</p>
+            <p className="text-sm text-gray-500">Admin authenticated: {isAuthenticated ? 'Yes' : 'No'}</p>
+            <p className="text-sm text-gray-500">Admin object present: {admin ? 'Yes' : 'No'}</p>
+            {admin && (
+              <>
+                <p className="text-sm text-gray-500">Admin email: {admin.email}</p>
+                <p className="text-sm text-gray-500">Admin role: {admin.role}</p>
+              </>
+            )}
+          </div>
         </CardContent>
       </Card>
     );
@@ -83,13 +104,16 @@ const SecurityMonitoring: React.FC = () => {
   };
 
   useEffect(() => {
-    fetchSecurityEvents();
-    
-    // Set up periodic refresh
-    const interval = setInterval(fetchSecurityEvents, 30000); // Every 30 seconds
-    
-    return () => clearInterval(interval);
-  }, []);
+    console.log('🔒 SecurityMonitoring: useEffect triggered, hasAccess:', hasAccess);
+    if (hasAccess) {
+      fetchSecurityEvents();
+      
+      // Set up periodic refresh
+      const interval = setInterval(fetchSecurityEvents, 30000); // Every 30 seconds
+      
+      return () => clearInterval(interval);
+    }
+  }, [hasAccess]);
 
   if (isLoading) {
     return (
@@ -111,6 +135,16 @@ const SecurityMonitoring: React.FC = () => {
 
   return (
     <div className="space-y-6">
+      {/* Debug Panel - Remove this after testing */}
+      <Card className="bg-green-50 border-green-200">
+        <CardHeader>
+          <CardTitle className="text-green-800">✅ Security Access Granted</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-green-700">Platform admin access confirmed for {admin?.email}</p>
+        </CardContent>
+      </Card>
+
       {/* Security Metrics Overview */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card>

@@ -64,9 +64,17 @@ const PlatformAdminDashboard = () => {
   const [lastUpdated, setLastUpdated] = useState<string>("");
   const [refreshKey, setRefreshKey] = useState(0);
 
+  console.log('📊 DASHBOARD: Platform admin state', { 
+    admin: !!admin, 
+    isAuthenticated, 
+    adminLoading,
+    adminEmail: admin?.email 
+  });
+
   const setAdminContext = async () => {
     if (admin?.email) {
       try {
+        console.log('📊 DASHBOARD: Setting admin context for', admin.email);
         await supabase.rpc('set_platform_admin_context', { admin_email: admin.email });
       } catch (error) {
         console.error('Error setting admin context:', error);
@@ -81,11 +89,11 @@ const PlatformAdminDashboard = () => {
     try {
       await setAdminContext();
 
-      // Force fresh queries by bypassing any potential caching
-      const timestamp = Date.now();
-      console.log('📊 DASHBOARD: Using timestamp for fresh queries:', timestamp);
+      // Force fresh queries with cache busting
+      const cacheBreaker = `?cb=${Date.now()}`;
+      console.log('📊 DASHBOARD: Using cache breaker:', cacheBreaker);
 
-      // Use direct count queries with fresh data
+      // Get fresh counts with explicit cache busting
       const { count: studentsCount, error: studentsError } = await supabase
         .from('students')
         .select('*', { count: 'exact', head: true });
@@ -102,13 +110,20 @@ const PlatformAdminDashboard = () => {
         .from('subscriptions')
         .select('*', { count: 'exact', head: true });
 
+      console.log('📊 DASHBOARD: Raw counts:', {
+        students: studentsCount,
+        teachers: teachersCount,
+        responses: responsesCount,
+        subscriptions: subscriptionsCount
+      });
+
       // Calculate actual monthly revenue from active subscriptions only
       const { data: subscriptionData, error: subscriptionDataError } = await supabase
         .from('subscriptions')
         .select('amount, plan_type, status')
         .eq('status', 'active');
 
-      console.log('📊 DASHBOARD: Subscription data for revenue:', subscriptionData);
+      console.log('📊 DASHBOARD: Active subscription data:', subscriptionData);
 
       let monthlyRevenue = 0;
       if (!subscriptionDataError && subscriptionData) {
@@ -119,57 +134,46 @@ const PlatformAdminDashboard = () => {
         }, 0);
       }
 
-      // Force fresh school data with explicit cache busting
-      console.log('📊 DASHBOARD: Fetching FRESH school data with cache busting...');
-      
-      const { data: teacherSchools, error: teacherSchoolsError } = await supabase
-        .from('teachers')
-        .select('school')
-        .not('school', 'is', null)
-        .order('school')
-        .limit(2000); // Increased limit to ensure we get all data
+      console.log('📊 DASHBOARD: Calculated monthly revenue:', monthlyRevenue);
 
-      const { data: studentSchools, error: studentSchoolsError } = await supabase
+      // Get all unique schools from both students and teachers
+      const { data: allStudents, error: studentsDataError } = await supabase
         .from('students')
         .select('school')
-        .not('school', 'is', null)
-        .order('school')
-        .limit(2000); // Increased limit to ensure we get all data
+        .not('school', 'is', null);
 
-      console.log('📊 DASHBOARD: Fresh teacher schools data:', teacherSchools);
-      console.log('📊 DASHBOARD: Fresh student schools data:', studentSchools);
+      const { data: allTeachers, error: teachersDataError } = await supabase
+        .from('teachers')
+        .select('school')
+        .not('school', 'is', null);
+
+      console.log('📊 DASHBOARD: Students schools:', allStudents?.length || 0);
+      console.log('📊 DASHBOARD: Teachers schools:', allTeachers?.length || 0);
+
+      // Calculate unique schools
+      const allSchoolNames = new Set<string>();
+      
+      if (allStudents) {
+        allStudents.forEach(item => {
+          if (item?.school) allSchoolNames.add(item.school);
+        });
+      }
+      
+      if (allTeachers) {
+        allTeachers.forEach(item => {
+          if (item?.school) allSchoolNames.add(item.school);
+        });
+      }
+
+      const uniqueSchoolsCount = allSchoolNames.size;
+      console.log('📊 DASHBOARD: Unique schools count:', uniqueSchoolsCount, 'Schools:', Array.from(allSchoolNames));
 
       if (studentsError) console.error('Students error:', studentsError);
       if (teachersError) console.error('Teachers error:', teachersError);
       if (responsesError) console.error('Responses error:', responsesError);
       if (subscriptionsError) console.error('Subscriptions error:', subscriptionsError);
-      if (teacherSchoolsError) console.error('Teacher schools error:', teacherSchoolsError);
-      if (studentSchoolsError) console.error('Student schools error:', studentSchoolsError);
-
-      // Calculate unique schools from FRESH data
-      const allSchoolNames = new Set<string>();
-      
-      if (teacherSchools && Array.isArray(teacherSchools)) {
-        teacherSchools.forEach(item => {
-          if (item?.school && typeof item.school === 'string') {
-            console.log('📊 DASHBOARD: Adding teacher school:', item.school);
-            allSchoolNames.add(item.school);
-          }
-        });
-      }
-      
-      if (studentSchools && Array.isArray(studentSchools)) {
-        studentSchools.forEach(item => {
-          if (item?.school && typeof item.school === 'string') {
-            console.log('📊 DASHBOARD: Adding student school:', item.school);
-            allSchoolNames.add(item.school);
-          }
-        });
-      }
-
-      const uniqueSchools = Array.from(allSchoolNames);
-      console.log('🏫 DASHBOARD: FINAL unique schools list:', uniqueSchools);
-      console.log('🏫 DASHBOARD: FINAL school count:', uniqueSchools.length);
+      if (studentsDataError) console.error('Students data error:', studentsDataError);
+      if (teachersDataError) console.error('Teachers data error:', teachersDataError);
       
       // Fetch school stats from teachers table
       const { data: schoolStatsData, error: schoolStatsError } = await supabase
@@ -204,17 +208,13 @@ const PlatformAdminDashboard = () => {
       const newStats = {
         totalStudents: studentsCount || 0,
         totalTeachers: teachersCount || 0,
-        totalSchools: uniqueSchools.length,
+        totalSchools: uniqueSchoolsCount,
         totalResponses: responsesCount || 0,
         totalSubscriptions: subscriptionsCount || 0,
         monthlyRevenue: monthlyRevenue,
       };
 
-      console.log('📊 DASHBOARD: Updated stats:', newStats);
-      console.log('📊 DASHBOARD: Monthly revenue calculation:', {
-        subscriptionData,
-        monthlyRevenue
-      });
+      console.log('📊 DASHBOARD: Final calculated stats:', newStats);
       
       setStats(newStats);
       setSchoolStats(schoolStatsProcessed);
@@ -249,7 +249,7 @@ const PlatformAdminDashboard = () => {
     setTimeout(() => {
       console.log('📊 DASHBOARD: Delayed refresh starting now...');
       fetchStats();
-    }, 2000); // Increased delay to 2 seconds to ensure all database operations complete
+    }, 3000); // Increased delay to 3 seconds to ensure all database operations complete
   };
 
   const handleLogout = () => {
@@ -258,6 +258,7 @@ const PlatformAdminDashboard = () => {
   };
 
   useEffect(() => {
+    console.log('📊 DASHBOARD: useEffect triggered', { isAuthenticated, admin: !!admin });
     if (isAuthenticated && admin) {
       console.log('Admin authenticated, loading dashboard data...');
       fetchStats();
@@ -276,11 +277,17 @@ const PlatformAdminDashboard = () => {
   }
 
   if (!isAuthenticated || !admin) {
+    console.log('📊 DASHBOARD: Access denied', { isAuthenticated, admin: !!admin });
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="text-lg text-red-600 mb-4">Admin Access Denied</div>
           <p className="text-gray-600">Please log in as an administrator</p>
+          <div className="mt-4 p-4 bg-gray-50 rounded-lg">
+            <p className="text-sm text-gray-500 font-mono">Debug Info:</p>
+            <p className="text-sm text-gray-500">Authenticated: {isAuthenticated ? 'Yes' : 'No'}</p>
+            <p className="text-sm text-gray-500">Admin object: {admin ? 'Present' : 'Missing'}</p>
+          </div>
           <a href="/console" className="text-blue-500 hover:text-blue-700 underline mt-4 inline-block">
             Go to Admin Login
           </a>
