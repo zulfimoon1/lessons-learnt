@@ -40,23 +40,11 @@ export const setCurrentUser = (user: User) => {
 
 // Password utilities
 export const validatePassword = (password: string): { isValid: boolean; message: string } => {
-  if (password.length < 8) {
-    return { isValid: false, message: 'Password must be at least 8 characters long' };
+  if (password.length < 6) {
+    return { isValid: false, message: 'Password must be at least 6 characters long' };
   }
   
-  if (!/(?=.*[a-z])/.test(password)) {
-    return { isValid: false, message: 'Password must contain at least one lowercase letter' };
-  }
-  
-  if (!/(?=.*[A-Z])/.test(password)) {
-    return { isValid: false, message: 'Password must contain at least one uppercase letter' };
-  }
-  
-  if (!/(?=.*\d)/.test(password)) {
-    return { isValid: false, message: 'Password must contain at least one number' };
-  }
-  
-  return { isValid: true, message: 'Password is strong' };
+  return { isValid: true, message: 'Password is valid' };
 };
 
 // Secure logging for development
@@ -66,69 +54,7 @@ const logSecurely = (message: string, ...args: any[]) => {
   }
 };
 
-// Teacher login with simple name/password
-export const teacherSimpleLoginService = async (name: string, password: string, school: string) => {
-  try {
-    logSecurely('teacherSimpleLoginService: Attempting login for teacher at school:', school);
-
-    if (!name?.trim() || !password?.trim() || !school?.trim()) {
-      return { error: 'All fields are required.' };
-    }
-
-    const { data: teachers, error: searchError } = await supabase
-      .from('teachers')
-      .select('*')
-      .eq('name', name.trim())
-      .eq('school', school.trim());
-
-    if (searchError) {
-      logSecurely('teacherSimpleLoginService: Database error:', searchError.message);
-      return { error: 'Unable to connect to the database. Please try again.' };
-    }
-
-    if (!teachers || teachers.length === 0) {
-      return { error: 'Invalid credentials. Please check your name, school, and try again.' };
-    }
-
-    // Check password for each matching teacher
-    for (const teacher of teachers) {
-      if (!teacher.password_hash) {
-        continue;
-      }
-      
-      try {
-        logSecurely('teacherSimpleLoginService: Comparing password for teacher:', teacher.name);
-        const isValidPassword = await bcrypt.compare(password, teacher.password_hash);
-        logSecurely('teacherSimpleLoginService: Password comparison result:', isValidPassword);
-        
-        if (isValidPassword) {
-          logSecurely('teacherSimpleLoginService: Successful login for teacher ID:', teacher.id);
-          const teacherData: Teacher = {
-            id: teacher.id,
-            name: teacher.name,
-            email: teacher.email,
-            school: teacher.school,
-            role: teacher.role as 'teacher' | 'admin' | 'doctor',
-            specialization: teacher.specialization,
-            license_number: teacher.license_number,
-            is_available: teacher.is_available
-          };
-          return { teacher: teacherData };
-        }
-      } catch (bcryptError) {
-        logSecurely('teacherSimpleLoginService: Password comparison error:', bcryptError);
-        continue;
-      }
-    }
-
-    return { error: 'Invalid credentials. Please check your password and try again.' };
-  } catch (error) {
-    logSecurely('teacherSimpleLoginService: Unexpected error:', error);
-    return { error: 'An unexpected error occurred. Please try again.' };
-  }
-};
-
-// Teacher login with email/password for new auth system
+// Teacher login with email/password
 export const teacherEmailLoginService = async (email: string, password: string) => {
   try {
     logSecurely('teacherEmailLoginService: Attempting login for teacher:', email);
@@ -187,7 +113,7 @@ export const teacherEmailLoginService = async (email: string, password: string) 
   }
 };
 
-// Student login with simple name/password - FIXED VERSION
+// Student login with simple name/password
 export const studentSimpleLoginService = async (fullName: string, password: string) => {
   try {
     logSecurely('studentSimpleLoginService: Attempting login for student:', fullName);
@@ -264,7 +190,7 @@ export const teacherSignupService = async (
   license_number?: string
 ) => {
   try {
-    logSecurely('teacherSignupService: Creating teacher account');
+    logSecurely('teacherSignupService: Creating teacher account for:', email);
 
     // Enhanced input validation
     if (!name?.trim() || !email?.trim() || !school?.trim() || !password?.trim()) {
@@ -278,15 +204,15 @@ export const teacherSignupService = async (
     }
 
     // Password strength validation
-    if (password.length < 8) {
-      return { error: 'Password must be at least 8 characters long.' };
+    if (password.length < 6) {
+      return { error: 'Password must be at least 6 characters long.' };
     }
 
     // Check if teacher already exists
     const { data: existingTeachers, error: checkError } = await supabase
       .from('teachers')
       .select('id')
-      .eq('email', email.trim());
+      .eq('email', email.trim().toLowerCase());
 
     if (checkError) {
       logSecurely('teacherSignupService: Database error during duplicate check:', checkError.message);
@@ -297,10 +223,12 @@ export const teacherSignupService = async (
       return { error: 'A teacher with this email already exists.' };
     }
 
-    // Hash the password with higher cost for better security
+    // Hash the password
     const passwordHash = await bcrypt.hash(password, 12);
 
-    // Create new teacher
+    // Create new teacher with proper role mapping
+    const teacherRole = role === 'admin' ? 'admin' : role === 'doctor' ? 'doctor' : 'teacher';
+
     const { data: newTeacher, error: insertError } = await supabase
       .from('teachers')
       .insert({
@@ -308,19 +236,27 @@ export const teacherSignupService = async (
         email: email.trim().toLowerCase(),
         school: school.trim(),
         password_hash: passwordHash,
-        role,
+        role: teacherRole,
         specialization: specialization?.trim() || null,
-        license_number: license_number?.trim() || null
+        license_number: license_number?.trim() || null,
+        is_available: true
       })
       .select()
       .single();
 
     if (insertError) {
       logSecurely('teacherSignupService: Database error during insertion:', insertError.message);
+      if (insertError.code === '23505') {
+        return { error: 'A teacher with this email already exists.' };
+      }
       return { error: 'Failed to create account. Please try again.' };
     }
 
-    logSecurely('teacherSignupService: Teacher account created successfully');
+    if (!newTeacher) {
+      return { error: 'Failed to create account. Please try again.' };
+    }
+
+    logSecurely('teacherSignupService: Teacher account created successfully:', newTeacher.id);
     const teacherData: Teacher = {
       id: newTeacher.id,
       name: newTeacher.name,
@@ -347,7 +283,7 @@ export const studentSignupService = async (
   password: string
 ) => {
   try {
-    logSecurely('studentSignupService: Creating student account');
+    logSecurely('studentSignupService: Creating student account for:', fullName);
 
     // Enhanced input validation
     if (!fullName?.trim() || !school?.trim() || !grade?.trim() || !password?.trim()) {
@@ -375,7 +311,7 @@ export const studentSignupService = async (
       return { error: 'A student with this name already exists at this school.' };
     }
 
-    // Hash the password with higher cost for better security
+    // Hash the password
     const passwordHash = await bcrypt.hash(password, 12);
 
     // Create new student
@@ -392,10 +328,17 @@ export const studentSignupService = async (
 
     if (insertError) {
       logSecurely('studentSignupService: Database error during insertion:', insertError.message);
+      if (insertError.code === '23505') {
+        return { error: 'A student with this name already exists at this school.' };
+      }
       return { error: 'Failed to create account. Please try again.' };
     }
 
-    logSecurely('studentSignupService: Student account created successfully');
+    if (!newStudent) {
+      return { error: 'Failed to create account. Please try again.' };
+    }
+
+    logSecurely('studentSignupService: Student account created successfully:', newStudent.id);
     const studentData: Student = {
       id: newStudent.id,
       full_name: newStudent.full_name,

@@ -237,7 +237,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         return { teacher };
       }
       
-      return { error: result.error };
+      return { error: 'Unknown error occurred during signup.' };
     } catch (error) {
       console.error('AuthContext: Teacher signup error:', error);
       await securityService.recordAttempt(email, 'teacher-signup', false);
@@ -369,7 +369,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         return { student };
       }
       
-      return { error: result.error };
+      return { error: 'Unknown error occurred during signup.' };
     } catch (error) {
       console.error('AuthContext: Student signup error:', error);
       await securityService.recordAttempt(identifier, 'student-signup', false);
