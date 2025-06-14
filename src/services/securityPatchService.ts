@@ -4,9 +4,10 @@ import { supabase } from '@/integrations/supabase/client';
 class SecurityPatchService {
   private async logSecurityEvent(eventType: string, details: string, severity: 'low' | 'medium' | 'high' = 'medium') {
     try {
-      await supabase.rpc('log_security_event_secure', {
+      // Use the existing log_critical_security_event function instead
+      await supabase.rpc('log_critical_security_event', {
         event_type: eventType,
-        user_identifier: 'system',
+        user_id: null, // Use null for system events
         details,
         severity
       });
@@ -72,7 +73,27 @@ class SecurityPatchService {
       }
     }
 
-    return supabase.from(tableName);
+    // Return appropriate table query based on tableName
+    switch (tableName) {
+      case 'students':
+        return supabase.from('students');
+      case 'teachers':
+        return supabase.from('teachers');
+      case 'mental_health_alerts':
+        return supabase.from('mental_health_alerts');
+      case 'discount_codes':
+        return supabase.from('discount_codes');
+      case 'subscriptions':
+        return supabase.from('subscriptions');
+      case 'feedback':
+        return supabase.from('feedback');
+      case 'class_schedules':
+        return supabase.from('class_schedules');
+      case 'weekly_summaries':
+        return supabase.from('weekly_summaries');
+      default:
+        throw new Error(`Table ${tableName} not supported for secure queries`);
+    }
   }
 
   async auditDataAccess(userEmail: string, dataType: string, recordCount: number) {
