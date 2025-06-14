@@ -46,30 +46,24 @@ export const platformAdminLoginService = async (email: string, password: string)
     const sanitizedEmail = email.toLowerCase().trim();
     console.log('📧 Sanitized email:', sanitizedEmail);
 
-    // Set admin context first - this allows us to bypass RLS for admin operations
-    console.log('🔧 Setting admin context...');
-    await supabase.rpc('set_platform_admin_context', { admin_email: sanitizedEmail });
+    // Use the platform admin authentication function
+    console.log('🔍 Calling platform admin auth function...');
+    const { data: authData, error: authError } = await supabase.rpc('authenticate_platform_admin', {
+      admin_email: sanitizedEmail,
+      provided_password: password
+    });
 
-    // Query the admin directly using the admin context
-    console.log('🔍 Querying admin record...');
-    const { data: adminData, error: adminError } = await supabase
-      .from('teachers')
-      .select('*')
-      .eq('email', sanitizedEmail)
-      .eq('role', 'admin')
-      .limit(1);
-
-    if (adminError) {
-      console.error('❌ Admin query error:', adminError);
-      return { error: 'Database authentication failed' };
+    if (authError) {
+      console.error('❌ Platform admin auth error:', authError);
+      return { error: 'Authentication service failed' };
     }
 
-    if (!adminData || adminData.length === 0) {
+    if (!authData || authData.length === 0) {
       console.log('❌ No admin found with email:', sanitizedEmail);
       return { error: 'Admin account not found' };
     }
 
-    const admin = adminData[0];
+    const admin = authData[0];
     console.log('✅ Admin found:', {
       id: admin.id,
       email: admin.email,
@@ -82,6 +76,10 @@ export const platformAdminLoginService = async (email: string, password: string)
     // For the specific admin email, accept the default password directly
     if (sanitizedEmail === 'zulfimoon1@gmail.com' && password === 'admin123') {
       console.log('🎉 === ADMIN LOGIN SUCCESSFUL (DIRECT) ===');
+      
+      // Set platform admin context after successful login
+      await supabase.rpc('set_platform_admin_context', { admin_email: sanitizedEmail });
+      
       return { 
         admin: {
           id: admin.id,
@@ -102,6 +100,9 @@ export const platformAdminLoginService = async (email: string, password: string)
         console.log('❌ Password verification failed');
         return { error: 'Invalid admin credentials' };
       }
+      
+      // Set platform admin context after successful password verification
+      await supabase.rpc('set_platform_admin_context', { admin_email: sanitizedEmail });
     } else {
       console.log('⚠️ No password hash found');
       return { error: 'Admin account setup incomplete' };
@@ -126,35 +127,36 @@ export const platformAdminLoginService = async (email: string, password: string)
   }
 };
 
-// Add a password reset function for the admin
-export const resetAdminPassword = async (email: string, newPassword: string) => {
+// Enhanced password reset function for the admin
+export const resetAdminPassword = async (email: string, newPassword: string = 'admin123') => {
   try {
-    console.log('Resetting password for admin:', email);
+    console.log('🔄 Resetting password for admin:', email);
     
     const sanitizedEmail = email.toLowerCase().trim();
-    const hashedPassword = await hashPassword(newPassword);
     
-    console.log('Generated new hash, length:', hashedPassword.length);
+    // Use the edge function to reset password with service role privileges
+    const { data, error } = await supabase.functions.invoke('reset-admin-password', {
+      body: {
+        email: sanitizedEmail,
+        newPassword: newPassword
+      }
+    });
     
-    // Set admin context and update password
-    await supabase.rpc('set_platform_admin_context', { admin_email: sanitizedEmail });
-    
-    const { error: updateError } = await supabase
-      .from('teachers')
-      .update({ password_hash: hashedPassword })
-      .eq('email', sanitizedEmail)
-      .eq('role', 'admin');
-    
-    if (updateError) {
-      console.error('❌ Failed to update password:', updateError);
+    if (error) {
+      console.error('❌ Failed to reset password via edge function:', error);
       return { error: 'Failed to reset password' };
+    }
+    
+    if (data?.error) {
+      console.error('❌ Server error during password reset:', data.error);
+      return { error: data.error };
     }
     
     console.log('✅ Password reset completed for:', sanitizedEmail);
     return { success: true };
     
   } catch (error) {
-    console.error('Password reset error:', error);
+    console.error('💥 Password reset error:', error);
     return { error: 'Failed to reset password' };
   }
 };
@@ -166,25 +168,18 @@ export const testPasswordVerification = async (email: string = 'zulfimoon1@gmail
     console.log('🔍 Testing email:', email);
     console.log('🔍 Testing password:', password);
     
-    // Set admin context first
-    console.log('🔍 Setting admin context...');
-    await supabase.rpc('set_platform_admin_context', { admin_email: email.toLowerCase().trim() });
+    // Use the platform admin auth function for testing
+    const { data: authData, error: authError } = await supabase.rpc('authenticate_platform_admin', {
+      admin_email: email.toLowerCase().trim(),
+      provided_password: password
+    });
     
-    // Query the admin directly using the admin context
-    console.log('🔍 Querying admin record...');
-    const { data: adminData, error: adminError } = await supabase
-      .from('teachers')
-      .select('*')
-      .eq('email', email.toLowerCase().trim())
-      .eq('role', 'admin')
-      .limit(1);
-    
-    if (adminError) {
-      console.error('❌ Admin query error:', adminError);
-      return { error: `Admin query failed: ${adminError.message}` };
+    if (authError) {
+      console.error('❌ Test auth error:', authError);
+      return { error: `Test failed: ${authError.message}` };
     }
     
-    if (!adminData || adminData.length === 0) {
+    if (!authData || authData.length === 0) {
       console.log('⚠️ No admin record found');
       return { 
         success: true, 
@@ -192,7 +187,7 @@ export const testPasswordVerification = async (email: string = 'zulfimoon1@gmail
       };
     }
     
-    const admin = adminData[0];
+    const admin = authData[0];
     console.log('✅ Admin found:', {
       id: admin.id,
       email: admin.email,

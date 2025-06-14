@@ -41,14 +41,14 @@ const AdminLoginTab = ({
       
       if (result.error) {
         toast({
-          title: "Reset Failed",
+          title: "Reset Failed", 
           description: result.error,
           variant: "destructive",
         });
       } else {
         toast({
-          title: "✅ Password Reset",
-          description: "Password has been reset to 'admin123'",
+          title: "✅ Password Reset Successful",
+          description: "Password has been reset to 'admin123'. You can now log in.",
         });
       }
     } catch (error) {
@@ -79,8 +79,8 @@ const AdminLoginTab = ({
     console.log('🔍 Testing with password:', testPassword);
 
     toast({
-      title: "🔍 Testing Password",
-      description: "Running password verification test...",
+      title: "🔍 Testing Connection",
+      description: "Verifying admin account access...",
     });
 
     try {
@@ -91,28 +91,28 @@ const AdminLoginTab = ({
       if (result.error) {
         console.error('❌ Test failed with error:', result.error);
         toast({
-          title: "❌ Test Failed",
+          title: "❌ Connection Test Failed",
           description: result.error,
           variant: "destructive",
         });
       } else if (result.success) {
         console.log('✅ Test successful!');
         toast({
-          title: "✅ Test Successful",
-          description: result.message || "Password verification test completed successfully",
+          title: "✅ Connection Test Successful",
+          description: result.message || "Admin account is accessible and ready for login",
         });
       } else {
         console.log('⚠️ Unexpected result format:', result);
         toast({
           title: "⚠️ Test Completed",
-          description: result.message || "Password verification test completed",
+          description: result.message || "Connection test completed with unknown status",
         });
       }
     } catch (error) {
       console.error('💥 Test password error:', error);
       toast({
-        title: "💥 Test Failed",
-        description: `An error occurred during password test: ${error.message}`,
+        title: "💥 Connection Test Failed",
+        description: `Network error occurred: ${error.message}`,
         variant: "destructive",
       });
     }
@@ -175,11 +175,11 @@ const AdminLoginTab = ({
           onClick={handlePasswordTest}
           disabled={!email}
         >
-          🔍 Test Password Verification
+          🔍 Test Connection
         </Button>
         
         <p className="text-xs text-gray-500 text-center">
-          Development only: These buttons help debug authentication issues
+          Use these tools if you're having trouble logging in
         </p>
       </div>
     </div>

@@ -37,6 +37,7 @@ export const PlatformAdminProvider: React.FC<{ children: React.ReactNode }> = ({
         console.log('✅ Found stored admin session:', parsed.email);
         setAdmin(parsed);
         setIsAuthenticated(true);
+        // Restore admin context
         await setAdminContext(parsed.email);
       } else {
         console.log('❌ No stored admin session found');
@@ -52,10 +53,19 @@ export const PlatformAdminProvider: React.FC<{ children: React.ReactNode }> = ({
   const setAdminContext = async (email: string) => {
     try {
       console.log('🔧 Setting admin context for:', email);
-      await supabase.rpc('set_platform_admin_context', { admin_email: email });
+      const { error } = await supabase.rpc('set_platform_admin_context', { 
+        admin_email: email 
+      });
+      
+      if (error) {
+        console.error('❌ Error setting admin context:', error);
+        throw error;
+      }
+      
       console.log('✅ Admin context set successfully');
     } catch (error) {
-      console.error('❌ Error setting admin context:', error);
+      console.error('❌ Failed to set admin context:', error);
+      throw error;
     }
   };
 
@@ -93,9 +103,7 @@ export const PlatformAdminProvider: React.FC<{ children: React.ReactNode }> = ({
       setIsAuthenticated(true);
       localStorage.setItem('platformAdmin', JSON.stringify(adminData));
       
-      // Set admin context for database operations
-      await setAdminContext(adminData.email);
-      
+      // Admin context should already be set by the login service
       console.log('🎉 Login successful!');
       return { success: true };
     } catch (error) {
@@ -112,6 +120,9 @@ export const PlatformAdminProvider: React.FC<{ children: React.ReactNode }> = ({
       localStorage.removeItem('platformAdmin');
       setAdmin(null);
       setIsAuthenticated(false);
+      
+      // Clear admin context
+      await supabase.rpc('set_platform_admin_context', { admin_email: '' });
     } catch (error) {
       console.error('❌ Logout error:', error);
     }
