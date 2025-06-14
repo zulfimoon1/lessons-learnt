@@ -36,19 +36,10 @@ const PlatformAdminDashboard: React.FC = () => {
     setActiveTab(tabId);
   };
 
-  // Mock data for components that require props
-  const mockSchoolStats = {
-    totalSchools: 0,
-    activeSchools: 0,
-    totalStudents: 0,
-    totalTeachers: 0
-  };
+  // Mock data for components that require props - now as arrays
+  const mockSchoolStats = [];
 
-  const mockFeedbackStats = {
-    totalResponses: 0,
-    avgRating: 0,
-    responseRate: 0
-  };
+  const mockFeedbackStats = [];
 
   const renderTabContent = () => {
     switch (activeTab) {
