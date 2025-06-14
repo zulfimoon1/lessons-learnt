@@ -1,3 +1,4 @@
+
 import { securityValidationService } from './securityValidationService';
 import { securityMonitoringService } from './securityMonitoringService';
 import { supabase } from '@/integrations/supabase/client';
@@ -9,8 +10,98 @@ interface AuthenticationResult {
   requiresMFA?: boolean;
 }
 
+interface RateLimitResult {
+  allowed: boolean;
+  message?: string;
+  delay?: number;
+}
+
+interface ValidationResult {
+  isValid: boolean;
+  message?: string;
+  sanitized?: string;
+}
+
 class EnhancedSecurityService {
   private sessionTokens = new Map<string, string>();
+
+  // Add missing methods that other services expect
+  async checkRateLimit(identifier: string, action: string): Promise<RateLimitResult> {
+    const allowed = securityValidationService.checkRateLimit(identifier);
+    return {
+      allowed,
+      message: allowed ? undefined : 'Rate limit exceeded. Please try again later.',
+      delay: allowed ? undefined : 1000
+    };
+  }
+
+  validateAndSanitizeInput(input: string, fieldType: string): ValidationResult {
+    const validation = securityValidationService.validateInput(input, fieldType, {
+      maxLength: fieldType === 'email' ? 254 : 1000,
+      allowHtml: false,
+      requireAlphanumeric: ['name', 'school', 'grade'].includes(fieldType)
+    });
+
+    return {
+      isValid: validation.isValid,
+      message: validation.isValid ? undefined : validation.errors.join(', '),
+      sanitized: validation.isValid ? input.trim() : undefined
+    };
+  }
+
+  async recordAttempt(identifier: string, action: string, success: boolean): Promise<void> {
+    const eventType = success ? 'login_success' : 'unauthorized_access';
+    await securityValidationService.logSecurityEvent(
+      eventType,
+      identifier,
+      `${action}: ${success ? 'success' : 'failed'}`,
+      success ? 'low' : 'medium'
+    );
+  }
+
+  async logSecurityEvent(event: {
+    type: string;
+    userId?: string;
+    timestamp: string;
+    details: string;
+    userAgent?: string;
+    severity: 'low' | 'medium' | 'high';
+  }): Promise<void> {
+    // Map to valid security event types
+    const eventTypeMap: Record<string, 'unauthorized_access' | 'suspicious_activity' | 'form_validation_failed' | 'rate_limit_exceeded'> = {
+      'unauthorized_access': 'unauthorized_access',
+      'suspicious_activity': 'suspicious_activity',
+      'form_validation_failed': 'form_validation_failed',
+      'rate_limit_exceeded': 'rate_limit_exceeded',
+      'login_success': 'unauthorized_access', // Map to closest valid type
+      'admin_login_success': 'unauthorized_access',
+      'admin_rate_limit_exceeded': 'rate_limit_exceeded',
+      'admin_invalid_email_format': 'form_validation_failed',
+      'admin_invalid_password_format': 'form_validation_failed',
+      'admin_login_user_not_found': 'unauthorized_access',
+      'admin_login_invalid_password': 'unauthorized_access',
+      'admin_login_system_error': 'suspicious_activity',
+      'admin_password_updated': 'unauthorized_access'
+    };
+
+    const mappedType = eventTypeMap[event.type] || 'suspicious_activity';
+    
+    await securityValidationService.logSecurityEvent(
+      mappedType,
+      event.userId,
+      event.details,
+      event.severity
+    );
+  }
+
+  getSecurityMetrics() {
+    // Return basic metrics that can be used by SecurityMonitoring
+    return {
+      failedLogins: 0,
+      blockedIPs: 0,
+      suspiciousActivity: 0
+    };
+  }
 
   // Enhanced authentication with security validation
   async authenticateUser(

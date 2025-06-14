@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { AlertTriangle, Shield, Eye, Activity, Lock, Users } from 'lucide-react';
-import { enhancedSecurityService } from '@/services/enhancedSecurityService';
+import { securityMonitoringService } from '@/services/securityMonitoringService';
 import { usePlatformAdmin } from '@/contexts/PlatformAdminContext';
 
 interface SecurityEvent {
@@ -32,7 +32,7 @@ const SecurityMonitoring: React.FC = () => {
   
   console.log('🔒 SecurityMonitoring: Final access decision', { hasAccess });
 
-  const fetchSecurityEvents = () => {
+  const fetchSecurityEvents = async () => {
     try {
       // Get events from local storage
       const localEvents = JSON.parse(localStorage.getItem('security_logs') || '[]');
@@ -41,7 +41,14 @@ const SecurityMonitoring: React.FC = () => {
       );
       
       setSecurityEvents(last24Hours.slice(-50)); // Last 50 events
-      setMetrics(enhancedSecurityService.getSecurityMetrics());
+      
+      // Get security metrics from the monitoring service
+      const serviceMetrics = await securityMonitoringService.getSecurityMetrics();
+      setMetrics({
+        failedLogins: serviceMetrics.recentAttempts || 0,
+        blockedIPs: serviceMetrics.blockedIPs?.length || 0,
+        suspiciousActivity: serviceMetrics.suspiciousPatterns?.length || 0
+      });
     } catch (error) {
       console.error('Error fetching security events:', error);
     } finally {

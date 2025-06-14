@@ -28,8 +28,9 @@ class SecurePlatformAdminService {
       const rateLimitKey = `admin_login_${loginData.email}`;
       if (!securityValidationService.checkRateLimit(rateLimitKey, this.ADMIN_RATE_LIMIT_ATTEMPTS, this.ADMIN_RATE_LIMIT_WINDOW)) {
         await securityValidationService.logSecurityEvent(
-          'admin_rate_limit_exceeded',
-          `Email: ${loginData.email}`,
+          'rate_limit_exceeded',
+          loginData.email,
+          'Admin login rate limit exceeded',
           'high'
         );
         return { success: false, error: 'Too many failed attempts. Please try again later.' };
@@ -39,8 +40,9 @@ class SecurePlatformAdminService {
       const emailValidation = securityValidationService.validateInput(loginData.email, 'email');
       if (!emailValidation.isValid) {
         await securityValidationService.logSecurityEvent(
-          'admin_invalid_email_format',
-          `Email: ${loginData.email}, Errors: ${emailValidation.errors.join(', ')}`,
+          'form_validation_failed',
+          loginData.email,
+          `Admin email validation failed: ${emailValidation.errors.join(', ')}`,
           'medium'
         );
         return { success: false, error: 'Invalid email format' };
@@ -49,8 +51,9 @@ class SecurePlatformAdminService {
       const passwordValidation = securityValidationService.validateInput(loginData.password, 'password', { minLength: 1, maxLength: 128 });
       if (!passwordValidation.isValid) {
         await securityValidationService.logSecurityEvent(
-          'admin_invalid_password_format',
-          `Email: ${loginData.email}`,
+          'form_validation_failed',
+          loginData.email,
+          'Admin password validation failed',
           'medium'
         );
         return { success: false, error: 'Invalid password format' };
@@ -68,8 +71,9 @@ class SecurePlatformAdminService {
 
       if (fetchError || !adminUser) {
         await securityValidationService.logSecurityEvent(
-          'admin_login_user_not_found',
-          `Email: ${loginData.email}`,
+          'unauthorized_access',
+          loginData.email,
+          'Admin login attempt with non-existent user',
           'medium'
         );
         console.error('❌ Admin user not found:', fetchError);
@@ -78,13 +82,14 @@ class SecurePlatformAdminService {
 
       console.log('✅ Admin user found, verifying password...');
 
-      // REMOVED: Hardcoded password bypass - now only using proper bcrypt verification
+      // Verify password using bcrypt
       const isValidPassword = await bcrypt.compare(loginData.password, adminUser.password_hash);
 
       if (!isValidPassword) {
         await securityValidationService.logSecurityEvent(
-          'admin_login_invalid_password',
-          `Email: ${loginData.email}`,
+          'unauthorized_access',
+          loginData.email,
+          'Admin login with invalid password',
           'high'
         );
         console.error('❌ Invalid password for admin');
@@ -94,8 +99,9 @@ class SecurePlatformAdminService {
       console.log('✅ Admin authentication successful');
       
       await securityValidationService.logSecurityEvent(
-        'admin_login_success',
-        `Email: ${loginData.email}`,
+        'unauthorized_access', // Using closest available type for successful login
+        loginData.email,
+        'Successful admin login',
         'low'
       );
 
@@ -113,8 +119,9 @@ class SecurePlatformAdminService {
     } catch (error) {
       console.error('💥 Error in admin authentication:', error);
       await securityValidationService.logSecurityEvent(
-        'admin_login_system_error',
-        `Email: ${loginData.email}, Error: ${error}`,
+        'suspicious_activity',
+        loginData.email,
+        `Admin authentication system error: ${error}`,
         'high'
       );
       return { 
@@ -158,8 +165,9 @@ class SecurePlatformAdminService {
 
       console.log('✅ Admin password updated successfully');
       await securityValidationService.logSecurityEvent(
-        'admin_password_updated',
-        `Email: ${email}`,
+        'unauthorized_access', // Using closest available type for admin action
+        email,
+        'Admin password updated successfully',
         'medium'
       );
 

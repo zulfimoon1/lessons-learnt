@@ -1,53 +1,49 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { hashPassword, verifyPassword } from './securePasswordService';
-import { enhancedSecurityService } from './enhancedSecurityService';
+import { securityValidationService } from './securityValidationService';
 
 export const secureStudentLogin = async (fullName: string, school: string, grade: string, password: string) => {
   try {
     const identifier = `${fullName}-${school}-${grade}`;
     
     // Rate limiting check
-    const rateCheck = await enhancedSecurityService.checkRateLimit(identifier, 'student_login');
-    if (!rateCheck.allowed) {
-      return { error: rateCheck.message };
-    }
-
-    // Apply progressive delay if needed
-    if (rateCheck.delay) {
-      await new Promise(resolve => setTimeout(resolve, rateCheck.delay));
+    if (!securityValidationService.checkRateLimit(identifier)) {
+      return { error: 'Too many login attempts. Please try again later.' };
     }
 
     // Enhanced input validation
-    const nameValidation = enhancedSecurityService.validateAndSanitizeInput(fullName, 'name');
+    const nameValidation = securityValidationService.validateInput(fullName, 'name');
     if (!nameValidation.isValid) {
-      await enhancedSecurityService.recordAttempt(identifier, 'student_login', false);
-      return { error: nameValidation.message };
+      return { error: nameValidation.errors.join(', ') };
     }
 
-    const schoolValidation = enhancedSecurityService.validateAndSanitizeInput(school, 'school');
+    const schoolValidation = securityValidationService.validateInput(school, 'school');
     if (!schoolValidation.isValid) {
-      await enhancedSecurityService.recordAttempt(identifier, 'student_login', false);
-      return { error: schoolValidation.message };
+      return { error: schoolValidation.errors.join(', ') };
     }
 
-    const gradeValidation = enhancedSecurityService.validateAndSanitizeInput(grade, 'grade');
+    const gradeValidation = securityValidationService.validateInput(grade, 'grade');
     if (!gradeValidation.isValid) {
-      await enhancedSecurityService.recordAttempt(identifier, 'student_login', false);
-      return { error: gradeValidation.message };
+      return { error: gradeValidation.errors.join(', ') };
     }
 
     // Database query with proper error handling
     const { data: students, error } = await supabase
       .from('students')
       .select('id, full_name, school, grade, password_hash')
-      .eq('full_name', nameValidation.sanitized)
-      .eq('school', schoolValidation.sanitized)
-      .eq('grade', gradeValidation.sanitized)
+      .eq('full_name', nameValidation.sanitizedValue)
+      .eq('school', schoolValidation.sanitizedValue)
+      .eq('grade', gradeValidation.sanitizedValue)
       .limit(1);
 
     if (error || !students || students.length === 0) {
-      await enhancedSecurityService.recordAttempt(identifier, 'student_login', false);
+      await securityValidationService.logSecurityEvent(
+        'unauthorized_access',
+        undefined,
+        'Invalid student login credentials',
+        'medium'
+      );
       return { error: 'Invalid credentials' };
     }
 
@@ -56,7 +52,12 @@ export const secureStudentLogin = async (fullName: string, school: string, grade
     // Verify password
     const isPasswordValid = await verifyPassword(password, student.password_hash);
     if (!isPasswordValid) {
-      await enhancedSecurityService.recordAttempt(identifier, 'student_login', false);
+      await securityValidationService.logSecurityEvent(
+        'unauthorized_access',
+        undefined,
+        'Invalid student password',
+        'medium'
+      );
       return { error: 'Invalid credentials' };
     }
 
@@ -67,11 +68,14 @@ export const secureStudentLogin = async (fullName: string, school: string, grade
     });
 
     if (signInError) {
-      await enhancedSecurityService.recordAttempt(identifier, 'student_login', false);
+      await securityValidationService.logSecurityEvent(
+        'unauthorized_access',
+        undefined,
+        'Student authentication failed',
+        'medium'
+      );
       return { error: 'Authentication failed' };
     }
-
-    await enhancedSecurityService.recordAttempt(identifier, 'student_login', true);
 
     return { 
       user: {
@@ -92,38 +96,35 @@ export const secureStudentLogin = async (fullName: string, school: string, grade
 export const secureTeacherLogin = async (email: string, password: string) => {
   try {
     // Rate limiting check
-    const rateCheck = await enhancedSecurityService.checkRateLimit(email, 'teacher_login');
-    if (!rateCheck.allowed) {
-      return { error: rateCheck.message };
-    }
-
-    // Apply progressive delay if needed
-    if (rateCheck.delay) {
-      await new Promise(resolve => setTimeout(resolve, rateCheck.delay));
+    if (!securityValidationService.checkRateLimit(email)) {
+      return { error: 'Too many login attempts. Please try again later.' };
     }
 
     // Enhanced input validation
-    const emailValidation = enhancedSecurityService.validateAndSanitizeInput(email, 'email');
+    const emailValidation = securityValidationService.validateInput(email, 'email');
     if (!emailValidation.isValid) {
-      await enhancedSecurityService.recordAttempt(email, 'teacher_login', false);
-      return { error: emailValidation.message };
+      return { error: emailValidation.errors.join(', ') };
     }
 
-    const passwordValidation = enhancedSecurityService.validateAndSanitizeInput(password, 'password');
+    const passwordValidation = securityValidationService.validateInput(password, 'password');
     if (!passwordValidation.isValid) {
-      await enhancedSecurityService.recordAttempt(email, 'teacher_login', false);
-      return { error: passwordValidation.message };
+      return { error: passwordValidation.errors.join(', ') };
     }
 
     // Database query with proper error handling
     const { data: teachers, error } = await supabase
       .from('teachers')
       .select('id, name, email, school, role, password_hash')
-      .eq('email', emailValidation.sanitized)
+      .eq('email', emailValidation.sanitizedValue)
       .limit(1);
 
     if (error || !teachers || teachers.length === 0) {
-      await enhancedSecurityService.recordAttempt(email, 'teacher_login', false);
+      await securityValidationService.logSecurityEvent(
+        'unauthorized_access',
+        undefined,
+        'Invalid teacher login credentials',
+        'medium'
+      );
       return { error: 'Invalid credentials' };
     }
 
@@ -132,7 +133,12 @@ export const secureTeacherLogin = async (email: string, password: string) => {
     // Verify password
     const isPasswordValid = await verifyPassword(password, teacher.password_hash);
     if (!isPasswordValid) {
-      await enhancedSecurityService.recordAttempt(email, 'teacher_login', false);
+      await securityValidationService.logSecurityEvent(
+        'unauthorized_access',
+        undefined,
+        'Invalid teacher password',
+        'medium'
+      );
       return { error: 'Invalid credentials' };
     }
 
@@ -143,11 +149,14 @@ export const secureTeacherLogin = async (email: string, password: string) => {
     });
 
     if (signInError) {
-      await enhancedSecurityService.recordAttempt(email, 'teacher_login', false);
+      await securityValidationService.logSecurityEvent(
+        'unauthorized_access',
+        undefined,
+        'Teacher authentication failed',
+        'medium'
+      );
       return { error: 'Authentication failed' };
     }
-
-    await enhancedSecurityService.recordAttempt(email, 'teacher_login', true);
 
     return { 
       teacher: {
@@ -168,33 +177,33 @@ export const secureTeacherLogin = async (email: string, password: string) => {
 export const secureStudentSignup = async (fullName: string, school: string, grade: string, password: string) => {
   try {
     // Enhanced input validation
-    const nameValidation = enhancedSecurityService.validateAndSanitizeInput(fullName, 'name');
+    const nameValidation = securityValidationService.validateInput(fullName, 'name');
     if (!nameValidation.isValid) {
-      return { error: nameValidation.message };
+      return { error: nameValidation.errors.join(', ') };
     }
 
-    const schoolValidation = enhancedSecurityService.validateAndSanitizeInput(school, 'school');
+    const schoolValidation = securityValidationService.validateInput(school, 'school');
     if (!schoolValidation.isValid) {
-      return { error: schoolValidation.message };
+      return { error: schoolValidation.errors.join(', ') };
     }
 
-    const gradeValidation = enhancedSecurityService.validateAndSanitizeInput(grade, 'grade');
+    const gradeValidation = securityValidationService.validateInput(grade, 'grade');
     if (!gradeValidation.isValid) {
-      return { error: gradeValidation.message };
+      return { error: gradeValidation.errors.join(', ') };
     }
 
-    const passwordValidation = enhancedSecurityService.validateAndSanitizeInput(password, 'password');
+    const passwordValidation = securityValidationService.validateInput(password, 'password');
     if (!passwordValidation.isValid) {
-      return { error: passwordValidation.message };
+      return { error: passwordValidation.errors.join(', ') };
     }
 
     // Check if student already exists
     const { data: existingStudents } = await supabase
       .from('students')
       .select('id')
-      .eq('full_name', nameValidation.sanitized)
-      .eq('school', schoolValidation.sanitized)
-      .eq('grade', gradeValidation.sanitized)
+      .eq('full_name', nameValidation.sanitizedValue)
+      .eq('school', schoolValidation.sanitizedValue)
+      .eq('grade', gradeValidation.sanitizedValue)
       .limit(1);
 
     if (existingStudents && existingStudents.length > 0) {
@@ -208,9 +217,9 @@ export const secureStudentSignup = async (fullName: string, school: string, grad
     const { data: student, error } = await supabase
       .from('students')
       .insert([{
-        full_name: nameValidation.sanitized,
-        school: schoolValidation.sanitized,
-        grade: gradeValidation.sanitized,
+        full_name: nameValidation.sanitizedValue,
+        school: schoolValidation.sanitizedValue,
+        grade: gradeValidation.sanitizedValue,
         password_hash: hashedPassword
       }])
       .select()
@@ -263,24 +272,24 @@ export const secureStudentSignup = async (fullName: string, school: string, grad
 export const secureTeacherSignup = async (name: string, email: string, school: string, password: string, role: string = 'teacher') => {
   try {
     // Enhanced input validation
-    const nameValidation = enhancedSecurityService.validateAndSanitizeInput(name, 'name');
+    const nameValidation = securityValidationService.validateInput(name, 'name');
     if (!nameValidation.isValid) {
-      return { error: nameValidation.message };
+      return { error: nameValidation.errors.join(', ') };
     }
 
-    const emailValidation = enhancedSecurityService.validateAndSanitizeInput(email, 'email');
+    const emailValidation = securityValidationService.validateInput(email, 'email');
     if (!emailValidation.isValid) {
-      return { error: emailValidation.message };
+      return { error: emailValidation.errors.join(', ') };
     }
 
-    const schoolValidation = enhancedSecurityService.validateAndSanitizeInput(school, 'school');
+    const schoolValidation = securityValidationService.validateInput(school, 'school');
     if (!schoolValidation.isValid) {
-      return { error: schoolValidation.message };
+      return { error: schoolValidation.errors.join(', ') };
     }
 
-    const passwordValidation = enhancedSecurityService.validateAndSanitizeInput(password, 'password');
+    const passwordValidation = securityValidationService.validateInput(password, 'password');
     if (!passwordValidation.isValid) {
-      return { error: passwordValidation.message };
+      return { error: passwordValidation.errors.join(', ') };
     }
 
     // Validate role
@@ -293,7 +302,7 @@ export const secureTeacherSignup = async (name: string, email: string, school: s
     const { data: existingTeachers } = await supabase
       .from('teachers')
       .select('id')
-      .eq('email', emailValidation.sanitized)
+      .eq('email', emailValidation.sanitizedValue)
       .limit(1);
 
     if (existingTeachers && existingTeachers.length > 0) {
@@ -307,9 +316,9 @@ export const secureTeacherSignup = async (name: string, email: string, school: s
     const { data: teacher, error } = await supabase
       .from('teachers')
       .insert([{
-        name: nameValidation.sanitized,
-        email: emailValidation.sanitized,
-        school: schoolValidation.sanitized,
+        name: nameValidation.sanitizedValue,
+        email: emailValidation.sanitizedValue,
+        school: schoolValidation.sanitizedValue,
         role: role,
         password_hash: hashedPassword
       }])
@@ -323,7 +332,7 @@ export const secureTeacherSignup = async (name: string, email: string, school: s
 
     // Create auth user for session management
     const { data: authData, error: authError } = await supabase.auth.signUp({
-      email: emailValidation.sanitized,
+      email: emailValidation.sanitizedValue,
       password: password,
       options: {
         emailRedirectTo: `${window.location.origin}/teacher-dashboard`,

@@ -1,10 +1,10 @@
-
 import { supabase } from '@/integrations/supabase/client';
 
 interface SecurityValidationResult {
   isValid: boolean;
   errors: string[];
   riskLevel: 'low' | 'medium' | 'high';
+  sanitizedValue?: string;
 }
 
 interface SecurityEventLog {
@@ -25,6 +25,7 @@ class SecurityValidationService {
   // Enhanced input validation with XSS and injection prevention
   validateInput(input: string, fieldName: string, options: {
     maxLength?: number;
+    minLength?: number;
     allowHtml?: boolean;
     requireAlphanumeric?: boolean;
   } = {}): SecurityValidationResult {
@@ -33,6 +34,7 @@ class SecurityValidationService {
 
     const {
       maxLength = 1000,
+      minLength = 0,
       allowHtml = false,
       requireAlphanumeric = false
     } = options;
@@ -40,6 +42,11 @@ class SecurityValidationService {
     // Length validation
     if (input.length > maxLength) {
       errors.push(`${fieldName} exceeds maximum length of ${maxLength} characters`);
+      riskLevel = 'medium';
+    }
+
+    if (input.length < minLength) {
+      errors.push(`${fieldName} must be at least ${minLength} characters long`);
       riskLevel = 'medium';
     }
 
@@ -71,28 +78,29 @@ class SecurityValidationService {
     const mentalHealthRisk = this.detectMentalHealthRisk(input);
     if (mentalHealthRisk.level > 0) {
       // Don't add to errors, but log for monitoring
-      this.logSecurityEvent('mental_health_content_detected', undefined, 
+      this.logSecurityEvent('suspicious_activity', undefined, 
         `Mental health risk level ${mentalHealthRisk.level} detected in ${fieldName}`, 'medium');
     }
 
     return {
       isValid: errors.length === 0,
       errors,
-      riskLevel
+      riskLevel,
+      sanitizedValue: errors.length === 0 ? input.trim() : undefined
     };
   }
 
-  // Rate limiting
-  checkRateLimit(identifier: string): boolean {
+  // Rate limiting with enhanced tracking
+  checkRateLimit(identifier: string, maxAttempts: number = this.MAX_REQUESTS_PER_WINDOW, windowMs: number = this.RATE_LIMIT_WINDOW): boolean {
     const now = Date.now();
     const userLimit = this.rateLimitMap.get(identifier);
 
-    if (!userLimit || now - userLimit.lastReset > this.RATE_LIMIT_WINDOW) {
+    if (!userLimit || now - userLimit.lastReset > windowMs) {
       this.rateLimitMap.set(identifier, { count: 1, lastReset: now });
       return true;
     }
 
-    if (userLimit.count >= this.MAX_REQUESTS_PER_WINDOW) {
+    if (userLimit.count >= maxAttempts) {
       this.logSecurityEvent('rate_limit_exceeded', identifier, 
         `Rate limit exceeded: ${userLimit.count} requests in window`, 'medium');
       return false;

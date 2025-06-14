@@ -10,7 +10,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { hashPassword } from '@/services/securePasswordService';
 import { usePlatformAdmin } from '@/contexts/PlatformAdminContext';
-import { enhancedSecurityService } from '@/services/enhancedSecurityService';
+import { securityValidationService } from '@/services/securityValidationService';
 
 interface Student {
   id: string;
@@ -42,14 +42,12 @@ const StudentManagement: React.FC = () => {
         console.log('Admin context set successfully');
       } catch (error) {
         console.error('Error setting admin context:', error);
-        enhancedSecurityService.logSecurityEvent({
-          type: 'suspicious_activity',
-          userId: admin.id,
-          timestamp: new Date().toISOString(),
-          details: `Failed to set admin context: ${error}`,
-          userAgent: navigator.userAgent,
-          severity: 'medium'
-        });
+        await securityValidationService.logSecurityEvent(
+          'suspicious_activity',
+          admin.id,
+          `Failed to set admin context: ${error}`,
+          'medium'
+        );
       }
     }
   };
@@ -77,14 +75,12 @@ const StudentManagement: React.FC = () => {
     } catch (error) {
       console.error('Error fetching students:', error);
       toast.error('Failed to fetch students');
-      enhancedSecurityService.logSecurityEvent({
-        type: 'suspicious_activity',
-        userId: admin?.id,
-        timestamp: new Date().toISOString(),
-        details: `Error fetching students: ${error}`,
-        userAgent: navigator.userAgent,
-        severity: 'medium'
-      });
+      await securityValidationService.logSecurityEvent(
+        'suspicious_activity',
+        admin?.id,
+        `Error fetching students: ${error}`,
+        'medium'
+      );
     }
   };
 
@@ -107,27 +103,27 @@ const StudentManagement: React.FC = () => {
 
   const addStudent = async () => {
     // Enhanced input validation using security service
-    const nameValidation = enhancedSecurityService.validateAndSanitizeInput(newStudent.full_name, 'name');
+    const nameValidation = securityValidationService.validateInput(newStudent.full_name, 'name');
     if (!nameValidation.isValid) {
-      toast.error(nameValidation.message);
+      toast.error(nameValidation.errors.join(', '));
       return;
     }
 
-    const schoolValidation = enhancedSecurityService.validateAndSanitizeInput(newStudent.school, 'school');
+    const schoolValidation = securityValidationService.validateInput(newStudent.school, 'school');
     if (!schoolValidation.isValid) {
-      toast.error(schoolValidation.message);
+      toast.error(schoolValidation.errors.join(', '));
       return;
     }
 
-    const gradeValidation = enhancedSecurityService.validateAndSanitizeInput(newStudent.grade, 'grade');
+    const gradeValidation = securityValidationService.validateInput(newStudent.grade, 'grade');
     if (!gradeValidation.isValid) {
-      toast.error(gradeValidation.message);
+      toast.error(gradeValidation.errors.join(', '));
       return;
     }
 
-    const passwordValidation = enhancedSecurityService.validateAndSanitizeInput(newStudent.password, 'password');
+    const passwordValidation = securityValidationService.validateInput(newStudent.password, 'password');
     if (!passwordValidation.isValid) {
-      toast.error(passwordValidation.message);
+      toast.error(passwordValidation.errors.join(', '));
       return;
     }
 
@@ -139,9 +135,9 @@ const StudentManagement: React.FC = () => {
       const { data: existingStudent } = await supabase
         .from('students')
         .select('id')
-        .eq('full_name', nameValidation.sanitized)
-        .eq('school', schoolValidation.sanitized)
-        .eq('grade', gradeValidation.sanitized)
+        .eq('full_name', nameValidation.sanitizedValue)
+        .eq('school', schoolValidation.sanitizedValue)
+        .eq('grade', gradeValidation.sanitizedValue)
         .single();
 
       if (existingStudent) {
@@ -149,27 +145,25 @@ const StudentManagement: React.FC = () => {
         return;
       }
 
-      const passwordHash = await hashPassword(passwordValidation.sanitized);
+      const passwordHash = await hashPassword(passwordValidation.sanitizedValue);
 
       const { error } = await supabase
         .from('students')
         .insert({
-          full_name: nameValidation.sanitized,
-          school: schoolValidation.sanitized,
-          grade: gradeValidation.sanitized,
+          full_name: nameValidation.sanitizedValue,
+          school: schoolValidation.sanitizedValue,
+          grade: gradeValidation.sanitizedValue,
           password_hash: passwordHash
         });
 
       if (error) throw error;
 
-      enhancedSecurityService.logSecurityEvent({
-        type: 'login_success',
-        userId: admin?.id,
-        timestamp: new Date().toISOString(),
-        details: `Admin created new student: ${nameValidation.sanitized}`,
-        userAgent: navigator.userAgent,
-        severity: 'low'
-      });
+      await securityValidationService.logSecurityEvent(
+        'unauthorized_access', // Using closest available type for admin action
+        admin?.id,
+        `Admin created new student: ${nameValidation.sanitizedValue}`,
+        'low'
+      );
 
       toast.success('Student added successfully');
       setNewStudent({
@@ -182,14 +176,12 @@ const StudentManagement: React.FC = () => {
     } catch (error) {
       console.error('Error adding student:', error);
       toast.error('Failed to add student');
-      enhancedSecurityService.logSecurityEvent({
-        type: 'suspicious_activity',
-        userId: admin?.id,
-        timestamp: new Date().toISOString(),
-        details: `Error adding student: ${error}`,
-        userAgent: navigator.userAgent,
-        severity: 'medium'
-      });
+      await securityValidationService.logSecurityEvent(
+        'suspicious_activity',
+        admin?.id,
+        `Error adding student: ${error}`,
+        'medium'
+      );
     } finally {
       setIsLoading(false);
     }
@@ -216,14 +208,12 @@ const StudentManagement: React.FC = () => {
       } else {
         console.log('Student deleted successfully, refetching list...');
         
-        enhancedSecurityService.logSecurityEvent({
-          type: 'login_success',
-          userId: admin?.id,
-          timestamp: new Date().toISOString(),
-          details: `Admin deleted student: ${studentName}`,
-          userAgent: navigator.userAgent,
-          severity: 'medium'
-        });
+        await securityValidationService.logSecurityEvent(
+          'unauthorized_access', // Using closest available type for admin action
+          admin?.id,
+          `Admin deleted student: ${studentName}`,
+          'medium'
+        );
         
         toast.success('Student deleted successfully');
         await fetchStudents();
@@ -231,14 +221,12 @@ const StudentManagement: React.FC = () => {
     } catch (error) {
       console.error('Error deleting student:', error);
       toast.error('Failed to delete student');
-      enhancedSecurityService.logSecurityEvent({
-        type: 'suspicious_activity',
-        userId: admin?.id,
-        timestamp: new Date().toISOString(),
-        details: `Error deleting student: ${error}`,
-        userAgent: navigator.userAgent,
-        severity: 'high'
-      });
+      await securityValidationService.logSecurityEvent(
+        'suspicious_activity',
+        admin?.id,
+        `Error deleting student: ${error}`,
+        'high'
+      );
     } finally {
       setIsLoading(false);
     }
