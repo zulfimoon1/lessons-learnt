@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 
 export interface DiscountCode {
@@ -52,6 +51,87 @@ const setAdminContext = async (adminEmail: string) => {
 };
 
 export const discountCodeService = {
+  async testConnection(adminEmail?: string) {
+    console.log('🧪 TESTING DISCOUNT CODE CONNECTION');
+    
+    try {
+      if (!adminEmail) {
+        throw new Error('Admin email is required for testing');
+      }
+      
+      // Set admin context
+      await setAdminContext(adminEmail);
+      
+      // Test if we can read discount codes
+      console.log('📋 Testing read access to discount codes...');
+      const { data, error, count } = await supabase
+        .from('discount_codes')
+        .select('*', { count: 'exact' })
+        .limit(1);
+
+      if (error) {
+        console.error('❌ Read test failed:', error);
+        return { success: false, error: error.message, operation: 'read' };
+      }
+
+      console.log('✅ Read test successful. Found', count, 'discount codes');
+
+      // Test if we can create a discount code (test entry)
+      console.log('📝 Testing write access...');
+      const testCode = {
+        code: 'TEST_' + Date.now(),
+        discount_percent: 10,
+        description: 'Test code - will be deleted',
+        school_name: 'Test School',
+        is_active: false
+      };
+
+      const { data: createData, error: createError } = await supabase
+        .from('discount_codes')
+        .insert([{
+          ...testCode,
+          created_by: adminEmail,
+          current_uses: 0
+        }])
+        .select()
+        .single();
+
+      if (createError) {
+        console.error('❌ Write test failed:', createError);
+        return { success: false, error: createError.message, operation: 'write' };
+      }
+
+      console.log('✅ Write test successful. Created test code:', createData.id);
+
+      // Clean up test code
+      const { error: deleteError } = await supabase
+        .from('discount_codes')
+        .delete()
+        .eq('id', createData.id);
+
+      if (deleteError) {
+        console.warn('⚠️ Failed to clean up test code:', deleteError);
+      } else {
+        console.log('🧹 Test code cleaned up successfully');
+      }
+
+      return { 
+        success: true, 
+        message: 'All tests passed successfully!',
+        readCount: count,
+        testCodeId: createData.id
+      };
+
+    } catch (error) {
+      console.error('💥 Test failed:', error);
+      return { 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Unknown error',
+        operation: 'setup'
+      };
+    }
+  },
+
   async getAllDiscountCodes(adminEmail?: string) {
     console.log('=== FETCHING DISCOUNT CODES ===');
     

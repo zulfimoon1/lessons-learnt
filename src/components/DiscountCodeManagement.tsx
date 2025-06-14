@@ -19,7 +19,8 @@ import {
   CalendarIcon,
   UsersIcon,
   PercentIcon,
-  SchoolIcon
+  SchoolIcon,
+  TestTubeIcon
 } from "lucide-react";
 
 const DiscountCodeManagement = () => {
@@ -31,6 +32,7 @@ const DiscountCodeManagement = () => {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editingCode, setEditingCode] = useState<DiscountCode | null>(null);
   const [isCreating, setIsCreating] = useState(false);
+  const [isTesting, setIsTesting] = useState(false);
   const [formData, setFormData] = useState({
     code: '',
     discount_percent: 10,
@@ -84,6 +86,48 @@ const DiscountCodeManagement = () => {
       is_active: true,
       school_name: ''
     });
+  };
+
+  const handleTestConnection = async () => {
+    if (!admin?.email) {
+      toast({
+        title: "Error",
+        description: "No admin email found",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsTesting(true);
+    
+    try {
+      console.log('🧪 Starting connection test...');
+      const result = await discountCodeService.testConnection(admin.email);
+      
+      if (result.success) {
+        toast({
+          title: "Test Successful! ✅",
+          description: `Connection working. Found ${result.readCount} existing codes.`,
+        });
+        console.log('🎉 Test completed successfully:', result);
+      } else {
+        toast({
+          title: "Test Failed ❌",
+          description: `${result.operation} failed: ${result.error}`,
+          variant: "destructive",
+        });
+        console.error('❌ Test failed:', result);
+      }
+    } catch (error) {
+      console.error('💥 Test error:', error);
+      toast({
+        title: "Test Error",
+        description: "Unexpected error during testing",
+        variant: "destructive",
+      });
+    } finally {
+      setIsTesting(false);
+    }
   };
 
   const handleCreate = async () => {
@@ -330,107 +374,118 @@ const DiscountCodeManagement = () => {
             </CardTitle>
             <CardDescription>Create and manage discount codes for subscriptions</CardDescription>
           </div>
-          <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-            <DialogTrigger asChild>
-              <Button className="flex items-center gap-2">
-                <PlusIcon className="w-4 h-4" />
-                Create Code
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Create Discount Code</DialogTitle>
-                <DialogDescription>Add a new discount code for customers to use</DialogDescription>
-              </DialogHeader>
-              
-              <div className="space-y-4">
-                <div>
-                  <Label htmlFor="code">Code *</Label>
-                  <Input
-                    id="code"
-                    value={formData.code}
-                    onChange={(e) => setFormData({...formData, code: e.target.value})}
-                    placeholder="EDUCATION10"
-                    className="uppercase"
-                    required
-                  />
-                </div>
+          <div className="flex items-center gap-2">
+            <Button 
+              variant="outline"
+              onClick={handleTestConnection}
+              disabled={isTesting}
+              className="flex items-center gap-2"
+            >
+              <TestTubeIcon className="w-4 h-4" />
+              {isTesting ? 'Testing...' : 'Test Connection'}
+            </Button>
+            <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+              <DialogTrigger asChild>
+                <Button className="flex items-center gap-2">
+                  <PlusIcon className="w-4 h-4" />
+                  Create Code
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Create Discount Code</DialogTitle>
+                  <DialogDescription>Add a new discount code for customers to use</DialogDescription>
+                </DialogHeader>
+                
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="code">Code *</Label>
+                    <Input
+                      id="code"
+                      value={formData.code}
+                      onChange={(e) => setFormData({...formData, code: e.target.value})}
+                      placeholder="EDUCATION10"
+                      className="uppercase"
+                      required
+                    />
+                  </div>
 
-                <div>
-                  <Label htmlFor="school_name">School Name *</Label>
-                  <Input
-                    id="school_name"
-                    value={formData.school_name}
-                    onChange={(e) => setFormData({...formData, school_name: e.target.value})}
-                    placeholder="Enter school name"
-                    required
-                  />
+                  <div>
+                    <Label htmlFor="school_name">School Name *</Label>
+                    <Input
+                      id="school_name"
+                      value={formData.school_name}
+                      onChange={(e) => setFormData({...formData, school_name: e.target.value})}
+                      placeholder="Enter school name"
+                      required
+                    />
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="discount_percent">Discount Percentage</Label>
+                    <Input
+                      id="discount_percent"
+                      type="number"
+                      min="1"
+                      max="100"
+                      value={formData.discount_percent}
+                      onChange={(e) => setFormData({...formData, discount_percent: parseInt(e.target.value) || 10})}
+                    />
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="description">Description</Label>
+                    <Textarea
+                      id="description"
+                      value={formData.description}
+                      onChange={(e) => setFormData({...formData, description: e.target.value})}
+                      placeholder="Description of the discount code"
+                    />
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="max_uses">Max Uses (optional)</Label>
+                    <Input
+                      id="max_uses"
+                      type="number"
+                      min="1"
+                      value={formData.max_uses}
+                      onChange={(e) => setFormData({...formData, max_uses: e.target.value})}
+                      placeholder="Unlimited if empty"
+                    />
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="expires_at">Expiration Date (optional)</Label>
+                    <Input
+                      id="expires_at"
+                      type="datetime-local"
+                      value={formData.expires_at}
+                      onChange={(e) => setFormData({...formData, expires_at: e.target.value})}
+                    />
+                  </div>
+                  
+                  <div className="flex items-center space-x-2">
+                    <Switch
+                      id="is_active"
+                      checked={formData.is_active}
+                      onCheckedChange={(checked) => setFormData({...formData, is_active: checked})}
+                    />
+                    <Label htmlFor="is_active">Active</Label>
+                  </div>
                 </div>
                 
-                <div>
-                  <Label htmlFor="discount_percent">Discount Percentage</Label>
-                  <Input
-                    id="discount_percent"
-                    type="number"
-                    min="1"
-                    max="100"
-                    value={formData.discount_percent}
-                    onChange={(e) => setFormData({...formData, discount_percent: parseInt(e.target.value) || 10})}
-                  />
-                </div>
-                
-                <div>
-                  <Label htmlFor="description">Description</Label>
-                  <Textarea
-                    id="description"
-                    value={formData.description}
-                    onChange={(e) => setFormData({...formData, description: e.target.value})}
-                    placeholder="Description of the discount code"
-                  />
-                </div>
-                
-                <div>
-                  <Label htmlFor="max_uses">Max Uses (optional)</Label>
-                  <Input
-                    id="max_uses"
-                    type="number"
-                    min="1"
-                    value={formData.max_uses}
-                    onChange={(e) => setFormData({...formData, max_uses: e.target.value})}
-                    placeholder="Unlimited if empty"
-                  />
-                </div>
-                
-                <div>
-                  <Label htmlFor="expires_at">Expiration Date (optional)</Label>
-                  <Input
-                    id="expires_at"
-                    type="datetime-local"
-                    value={formData.expires_at}
-                    onChange={(e) => setFormData({...formData, expires_at: e.target.value})}
-                  />
-                </div>
-                
-                <div className="flex items-center space-x-2">
-                  <Switch
-                    id="is_active"
-                    checked={formData.is_active}
-                    onCheckedChange={(checked) => setFormData({...formData, is_active: checked})}
-                  />
-                  <Label htmlFor="is_active">Active</Label>
-                </div>
-              </div>
-              
-              <DialogFooter>
-                <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)} disabled={isCreating}>
-                  Cancel
-                </Button>
-                <Button onClick={handleCreate} disabled={isCreating}>
-                  {isCreating ? 'Creating...' : 'Create Code'}
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
+                <DialogFooter>
+                  <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)} disabled={isCreating}>
+                    Cancel
+                  </Button>
+                  <Button onClick={handleCreate} disabled={isCreating}>
+                    {isCreating ? 'Creating...' : 'Create Code'}
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          </div>
         </div>
       </CardHeader>
       
