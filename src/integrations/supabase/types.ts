@@ -913,6 +913,35 @@ export type Database = {
           updated_at: string | null
         }
       }
+      platform_admin_create_discount_code_with_duration: {
+        Args: {
+          admin_email_param: string
+          code_param: string
+          discount_percent_param: number
+          description_param?: string
+          max_uses_param?: number
+          expires_at_param?: string
+          is_active_param?: boolean
+          school_name_param?: string
+          created_by_param?: string
+          duration_months_param?: number
+        }
+        Returns: {
+          code: string
+          created_at: string | null
+          created_by: string | null
+          current_uses: number | null
+          description: string | null
+          discount_percent: number
+          duration_months: number | null
+          expires_at: string | null
+          id: string
+          is_active: boolean | null
+          max_uses: number | null
+          school_name: string | null
+          updated_at: string | null
+        }
+      }
       platform_admin_delete_discount_code: {
         Args: { admin_email_param: string; code_id_param: string }
         Returns: boolean

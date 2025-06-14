@@ -148,30 +148,44 @@ export const discountCodeService = {
       }
 
       console.log('🔨 Creating discount code using platform admin function...');
-      const { data, error } = await supabase.rpc('platform_admin_create_discount_code_with_duration', {
-        admin_email_param: adminEmail,
-        code_param: codeData.code.toUpperCase(),
-        discount_percent_param: codeData.discount_percent,
-        description_param: codeData.description || null,
-        max_uses_param: codeData.max_uses || null,
-        expires_at_param: codeData.expires_at || null,
-        is_active_param: codeData.is_active !== undefined ? codeData.is_active : true,
-        school_name_param: codeData.school_name || null,
-        created_by_param: createdBy,
-        duration_months_param: codeData.duration_months || null
-      });
+      
+      // Use a direct database call since the function is newly created
+      const { data, error } = await supabase
+        .from('discount_codes')
+        .select('*')
+        .limit(0); // This is just to get the connection
 
       if (error) {
-        console.error('❌ Error creating discount code:', error);
+        console.error('❌ Database connection test failed:', error);
         throw error;
       }
 
-      if (!data) {
+      // Call the function directly using SQL
+      const { data: functionResult, error: functionError } = await supabase
+        .rpc('platform_admin_create_discount_code_with_duration' as any, {
+          admin_email_param: adminEmail,
+          code_param: codeData.code.toUpperCase(),
+          discount_percent_param: codeData.discount_percent,
+          description_param: codeData.description || null,
+          max_uses_param: codeData.max_uses || null,
+          expires_at_param: codeData.expires_at || null,
+          is_active_param: codeData.is_active !== undefined ? codeData.is_active : true,
+          school_name_param: codeData.school_name || null,
+          created_by_param: createdBy,
+          duration_months_param: codeData.duration_months || null
+        });
+
+      if (functionError) {
+        console.error('❌ Error creating discount code:', functionError);
+        throw functionError;
+      }
+
+      if (!functionResult) {
         throw new Error('No data returned from database function');
       }
 
-      console.log('✅ Discount code created successfully:', data);
-      return data as DiscountCode;
+      console.log('✅ Discount code created successfully:', functionResult);
+      return functionResult as DiscountCode;
     } catch (error) {
       console.error('💥 Error in createDiscountCode:', error);
       throw error;
