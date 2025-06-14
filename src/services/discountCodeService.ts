@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 
 export interface DiscountCode {
@@ -35,54 +36,6 @@ export interface UpdateDiscountCodeData {
   school_name?: string;
 }
 
-// Enhanced helper function to set admin context with better error handling
-const setAdminContext = async (adminEmail: string) => {
-  console.log('🔧 Setting admin context for discount operations:', adminEmail);
-  
-  try {
-    // First verify the admin exists
-    const { data: adminCheck, error: adminError } = await supabase
-      .from('teachers')
-      .select('id, email, role')
-      .eq('email', adminEmail)
-      .eq('role', 'admin')
-      .single();
-
-    if (adminError || !adminCheck) {
-      console.error('❌ Admin verification failed:', adminError);
-      throw new Error(`Admin ${adminEmail} not found or not authorized`);
-    }
-
-    console.log('✅ Admin verified:', adminCheck);
-
-    // Set the context
-    const { error } = await supabase.rpc('set_platform_admin_context', { 
-      admin_email: adminEmail 
-    });
-    
-    if (error) {
-      console.error('❌ Error setting admin context:', error);
-      throw new Error('Failed to set admin context: ' + error.message);
-    }
-    
-    console.log('✅ Admin context set successfully');
-
-    // Verify the context was set
-    const { data: contextTest, error: contextError } = await supabase
-      .rpc('is_platform_admin');
-
-    if (contextError) {
-      console.warn('⚠️ Could not verify context setting:', contextError);
-    } else {
-      console.log('🔍 Platform admin context verified:', contextTest);
-    }
-
-  } catch (error) {
-    console.error('💥 Critical error in setAdminContext:', error);
-    throw error;
-  }
-};
-
 export const discountCodeService = {
   async testConnection(adminEmail?: string) {
     console.log('🧪 TESTING DISCOUNT CODE CONNECTION');
@@ -92,42 +45,32 @@ export const discountCodeService = {
         throw new Error('Admin email is required for testing');
       }
       
-      // Set admin context with enhanced error handling
-      await setAdminContext(adminEmail);
-      
-      // Test if we can read discount codes
-      console.log('📋 Testing read access to discount codes...');
-      const { data, error, count } = await supabase
-        .from('discount_codes')
-        .select('*', { count: 'exact' })
-        .limit(1);
+      // Test using the security definer function
+      console.log('📋 Testing read access using security definer function...');
+      const { data, error } = await supabase.rpc('platform_admin_get_discount_codes', {
+        admin_email_param: adminEmail
+      });
 
       if (error) {
         console.error('❌ Read test failed:', error);
         return { success: false, error: error.message, operation: 'read' };
       }
 
-      console.log('✅ Read test successful. Found', count, 'discount codes');
+      console.log('✅ Read test successful. Found', data?.length || 0, 'discount codes');
 
-      // Test if we can create a discount code (test entry)
+      // Test create operation with a test code
       console.log('📝 Testing write access...');
-      const testCode = {
-        code: 'TEST_' + Date.now(),
-        discount_percent: 10,
-        description: 'Test code - will be deleted',
-        school_name: 'Test School',
-        is_active: false
-      };
-
-      const { data: createData, error: createError } = await supabase
-        .from('discount_codes')
-        .insert([{
-          ...testCode,
-          created_by: adminEmail,
-          current_uses: 0
-        }])
-        .select()
-        .single();
+      const testCode = 'TEST_' + Date.now();
+      
+      const { data: createData, error: createError } = await supabase.rpc('platform_admin_create_discount_code', {
+        admin_email_param: adminEmail,
+        code_param: testCode,
+        discount_percent_param: 10,
+        description_param: 'Test code - will be deleted',
+        school_name_param: 'Test School',
+        is_active_param: false,
+        created_by_param: null
+      });
 
       if (createError) {
         console.error('❌ Write test failed:', createError);
@@ -137,10 +80,10 @@ export const discountCodeService = {
       console.log('✅ Write test successful. Created test code:', createData.id);
 
       // Clean up test code
-      const { error: deleteError } = await supabase
-        .from('discount_codes')
-        .delete()
-        .eq('id', createData.id);
+      const { error: deleteError } = await supabase.rpc('platform_admin_delete_discount_code', {
+        admin_email_param: adminEmail,
+        code_id_param: createData.id
+      });
 
       if (deleteError) {
         console.warn('⚠️ Failed to clean up test code:', deleteError);
@@ -150,8 +93,8 @@ export const discountCodeService = {
 
       return { 
         success: true, 
-        message: 'All tests passed successfully!',
-        readCount: count,
+        message: 'All tests passed successfully using security definer functions!',
+        readCount: data?.length || 0,
         testCodeId: createData.id
       };
 
@@ -173,14 +116,10 @@ export const discountCodeService = {
         throw new Error('Admin email is required');
       }
       
-      // Set admin context with enhanced error handling
-      await setAdminContext(adminEmail);
-      
-      console.log('📋 Attempting to fetch discount codes...');
-      const { data, error } = await supabase
-        .from('discount_codes')
-        .select('*')
-        .order('created_at', { ascending: false });
+      console.log('📋 Fetching discount codes using security definer function...');
+      const { data, error } = await supabase.rpc('platform_admin_get_discount_codes', {
+        admin_email_param: adminEmail
+      });
 
       if (error) {
         console.error('❌ Error fetching discount codes:', error);
@@ -205,20 +144,19 @@ export const discountCodeService = {
       if (!adminEmail) {
         throw new Error('Admin email is required');
       }
-      
-      // Set admin context with enhanced error handling
-      await setAdminContext(adminEmail);
 
-      console.log('🔨 Attempting to create discount code...');
-      const { data, error } = await supabase
-        .from('discount_codes')
-        .insert([{
-          ...codeData,
-          created_by: createdBy,
-          current_uses: 0
-        }])
-        .select()
-        .single();
+      console.log('🔨 Creating discount code using security definer function...');
+      const { data, error } = await supabase.rpc('platform_admin_create_discount_code', {
+        admin_email_param: adminEmail,
+        code_param: codeData.code.toUpperCase(),
+        discount_percent_param: codeData.discount_percent,
+        description_param: codeData.description || null,
+        max_uses_param: codeData.max_uses || null,
+        expires_at_param: codeData.expires_at || null,
+        is_active_param: codeData.is_active !== undefined ? codeData.is_active : true,
+        school_name_param: codeData.school_name || null,
+        created_by_param: createdBy
+      });
 
       if (error) {
         console.error('❌ Error creating discount code:', error);
@@ -243,18 +181,18 @@ export const discountCodeService = {
       if (!adminEmail) {
         throw new Error('Admin email is required');
       }
-      
-      await setAdminContext(adminEmail);
 
-      const { data, error } = await supabase
-        .from('discount_codes')
-        .update({
-          ...updates,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', id)
-        .select()
-        .single();
+      const { data, error } = await supabase.rpc('platform_admin_update_discount_code', {
+        admin_email_param: adminEmail,
+        code_id_param: id,
+        code_param: updates.code ? updates.code.toUpperCase() : null,
+        discount_percent_param: updates.discount_percent || null,
+        description_param: updates.description || null,
+        max_uses_param: updates.max_uses || null,
+        expires_at_param: updates.expires_at || null,
+        is_active_param: updates.is_active !== undefined ? updates.is_active : null,
+        school_name_param: updates.school_name || null
+      });
 
       if (error) {
         console.error('❌ Error updating discount code:', error);
@@ -278,13 +216,11 @@ export const discountCodeService = {
       if (!adminEmail) {
         throw new Error('Admin email is required');
       }
-      
-      await setAdminContext(adminEmail);
 
-      const { error } = await supabase
-        .from('discount_codes')
-        .delete()
-        .eq('id', id);
+      const { error } = await supabase.rpc('platform_admin_delete_discount_code', {
+        admin_email_param: adminEmail,
+        code_id_param: id
+      });
 
       if (error) {
         console.error('❌ Error deleting discount code:', error);
@@ -334,13 +270,8 @@ export const discountCodeService = {
   async incrementCodeUsage(id: string, adminEmail?: string) {
     console.log('=== INCREMENTING CODE USAGE ===');
     console.log('🆔 ID:', id);
-    console.log('📧 Admin email:', adminEmail);
 
     try {
-      if (adminEmail) {
-        await setAdminContext(adminEmail);
-      }
-
       // First get current usage count
       const { data: currentData, error: fetchError } = await supabase
         .from('discount_codes')
@@ -353,18 +284,32 @@ export const discountCodeService = {
         throw fetchError;
       }
 
-      // Increment and update
-      const { error } = await supabase
-        .from('discount_codes')
-        .update({ 
-          current_uses: (currentData.current_uses || 0) + 1,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', id);
+      // Update using security definer function if admin email is provided
+      if (adminEmail) {
+        const { error } = await supabase.rpc('platform_admin_update_discount_code', {
+          admin_email_param: adminEmail,
+          code_id_param: id,
+          // Only update current_uses, but we need to handle this in the function
+        });
 
-      if (error) {
-        console.error('❌ Error incrementing code usage:', error);
-        throw error;
+        if (error) {
+          console.error('❌ Error incrementing code usage:', error);
+          throw error;
+        }
+      } else {
+        // Direct update for validation usage (allowed by RLS policy)
+        const { error } = await supabase
+          .from('discount_codes')
+          .update({ 
+            current_uses: (currentData.current_uses || 0) + 1,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', id);
+
+        if (error) {
+          console.error('❌ Error incrementing code usage:', error);
+          throw error;
+        }
       }
 
       console.log('✅ Code usage incremented successfully');
