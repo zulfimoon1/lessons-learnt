@@ -51,56 +51,25 @@ const setAdminContext = async (adminEmail: string) => {
   console.log('✅ Admin context set successfully');
 };
 
-// Test function to verify admin access with detailed debugging
-const testAdminAccess = async (adminEmail: string) => {
-  console.log('🧪 Testing admin access for:', adminEmail);
+// Test function to verify the admin context is working
+const testAdminContext = async () => {
+  console.log('🧪 Testing admin context...');
   
-  // First check if the admin exists in teachers table
-  console.log('🔍 Checking if admin exists in teachers table...');
-  const { data: adminCheck, error: adminCheckError } = await supabase
-    .from('teachers')
-    .select('email, role')
-    .eq('email', adminEmail)
-    .eq('role', 'admin');
+  try {
+    // Test if we can access current_setting
+    const { data, error } = await supabase.rpc('check_platform_admin_for_discount_codes');
     
-  if (adminCheckError) {
-    console.error('❌ Error checking admin in teachers table:', adminCheckError);
-  } else {
-    console.log('👤 Admin check result:', adminCheck);
-  }
-  
-  // Now test the RPC function
-  const { data, error } = await supabase.rpc('check_platform_admin_for_discount_codes');
-  
-  if (error) {
-    console.error('❌ Error testing admin access:', error);
+    if (error) {
+      console.error('❌ Error testing admin context:', error);
+      return false;
+    }
+    
+    console.log('✅ Admin context test result:', data);
+    return data;
+  } catch (error) {
+    console.error('❌ Exception during admin context test:', error);
     return false;
   }
-  
-  console.log('✅ Admin access test result:', data);
-  return data;
-};
-
-// Fallback function to verify admin without RLS
-const verifyAdminDirectly = async (adminEmail: string) => {
-  console.log('🔄 Using fallback admin verification for:', adminEmail);
-  
-  // Use a direct query to check admin status
-  const { data, error } = await supabase
-    .from('teachers')
-    .select('email, role')
-    .eq('email', adminEmail)
-    .eq('role', 'admin')
-    .maybeSingle();
-    
-  if (error) {
-    console.error('❌ Error in fallback admin verification:', error);
-    return false;
-  }
-  
-  const isAdmin = !!data;
-  console.log('🔍 Fallback admin verification result:', isAdmin);
-  return isAdmin;
 };
 
 export const discountCodeService = {
@@ -112,15 +81,10 @@ export const discountCodeService = {
       if (adminEmail) {
         await setAdminContext(adminEmail);
         
-        // Test admin access with detailed debugging
-        const hasAccess = await testAdminAccess(adminEmail);
+        // Test admin context
+        const hasAccess = await testAdminContext();
         if (!hasAccess) {
-          console.log('⚠️ RPC function test failed, trying fallback verification...');
-          const fallbackAccess = await verifyAdminDirectly(adminEmail);
-          if (!fallbackAccess) {
-            throw new Error('Admin access verification failed - not authorized');
-          }
-          console.log('✅ Fallback verification successful, proceeding...');
+          throw new Error('Admin access verification failed');
         }
       }
       
@@ -155,15 +119,10 @@ export const discountCodeService = {
       if (adminEmail) {
         await setAdminContext(adminEmail);
         
-        // Test admin access with detailed debugging
-        const hasAccess = await testAdminAccess(adminEmail);
+        // Test admin context
+        const hasAccess = await testAdminContext();
         if (!hasAccess) {
-          console.log('⚠️ RPC function test failed, trying fallback verification...');
-          const fallbackAccess = await verifyAdminDirectly(adminEmail);
-          if (!fallbackAccess) {
-            throw new Error('Admin access verification failed - not authorized');
-          }
-          console.log('✅ Fallback verification successful, proceeding...');
+          throw new Error('Admin access verification failed');
         }
       }
 
@@ -201,15 +160,10 @@ export const discountCodeService = {
       if (adminEmail) {
         await setAdminContext(adminEmail);
         
-        // Test admin access with detailed debugging
-        const hasAccess = await testAdminAccess(adminEmail);
+        // Test admin context
+        const hasAccess = await testAdminContext();
         if (!hasAccess) {
-          console.log('⚠️ RPC function test failed, trying fallback verification...');
-          const fallbackAccess = await verifyAdminDirectly(adminEmail);
-          if (!fallbackAccess) {
-            throw new Error('Admin access verification failed - not authorized');
-          }
-          console.log('✅ Fallback verification successful, proceeding...');
+          throw new Error('Admin access verification failed');
         }
       }
 
@@ -246,15 +200,10 @@ export const discountCodeService = {
       if (adminEmail) {
         await setAdminContext(adminEmail);
         
-        // Test admin access with detailed debugging
-        const hasAccess = await testAdminAccess(adminEmail);
+        // Test admin context
+        const hasAccess = await testAdminContext();
         if (!hasAccess) {
-          console.log('⚠️ RPC function test failed, trying fallback verification...');
-          const fallbackAccess = await verifyAdminDirectly(adminEmail);
-          if (!fallbackAccess) {
-            throw new Error('Admin access verification failed - not authorized');
-          }
-          console.log('✅ Fallback verification successful, proceeding...');
+          throw new Error('Admin access verification failed');
         }
       }
 
