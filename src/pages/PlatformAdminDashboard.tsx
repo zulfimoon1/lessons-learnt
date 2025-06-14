@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { usePlatformAdmin } from "@/contexts/PlatformAdminContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -126,7 +127,7 @@ const PlatformAdminDashboard = () => {
         }, 0);
       }
 
-      // Get unique schools
+      // Get unique schools - EXCLUDE platform administration entries
       const { data: allStudents } = await supabase
         .from('students')
         .select('school')
@@ -138,18 +139,33 @@ const PlatformAdminDashboard = () => {
         .not('school', 'is', null);
 
       const allSchoolNames = new Set<string>();
+      
+      // Filter out platform administration entries
+      const excludedSchools = ['Platform Administration', 'platform administration', 'admin'];
+      
       if (allStudents) {
         allStudents.forEach(item => {
-          if (item?.school) allSchoolNames.add(item.school);
+          if (item?.school && !excludedSchools.some(excluded => 
+            item.school.toLowerCase().includes(excluded.toLowerCase())
+          )) {
+            allSchoolNames.add(item.school);
+          }
         });
       }
+      
       if (allTeachers) {
         allTeachers.forEach(item => {
-          if (item?.school) allSchoolNames.add(item.school);
+          if (item?.school && !excludedSchools.some(excluded => 
+            item.school.toLowerCase().includes(excluded.toLowerCase())
+          )) {
+            allSchoolNames.add(item.school);
+          }
         });
       }
 
-      // School stats
+      console.log('📊 DASHBOARD: Filtered schools:', Array.from(allSchoolNames));
+
+      // School stats - also filter out platform administration
       const { data: schoolStatsData } = await supabase
         .from('teachers')
         .select('school')
@@ -157,8 +173,14 @@ const PlatformAdminDashboard = () => {
 
       let schoolStatsProcessed: SchoolStats[] = [];
       if (schoolStatsData) {
+        const filteredSchoolStats = schoolStatsData.filter(teacher => 
+          teacher.school && !excludedSchools.some(excluded => 
+            teacher.school.toLowerCase().includes(excluded.toLowerCase())
+          )
+        );
+        
         schoolStatsProcessed = Object.entries(
-          schoolStatsData.reduce((acc, teacher) => {
+          filteredSchoolStats.reduce((acc, teacher) => {
             acc[teacher.school] = (acc[teacher.school] || 0) + 1;
             return acc;
           }, {} as Record<string, number>)

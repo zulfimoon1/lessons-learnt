@@ -53,21 +53,36 @@ const SchoolManagement: React.FC<SchoolManagementProps> = ({ onDataChange }) => 
       if (teacherError) throw teacherError;
       if (studentError) throw studentError;
 
+      // Filter out platform administration entries
+      const excludedSchools = ['Platform Administration', 'platform administration', 'admin'];
+      
+      const filteredTeacherSchools = (teacherSchools || []).filter(item => 
+        item.school && !excludedSchools.some(excluded => 
+          item.school.toLowerCase().includes(excluded.toLowerCase())
+        )
+      );
+      
+      const filteredStudentSchools = (studentSchools || []).filter(item => 
+        item.school && !excludedSchools.some(excluded => 
+          item.school.toLowerCase().includes(excluded.toLowerCase())
+        )
+      );
+
       // Combine and count schools
-      const allSchools = [...(teacherSchools || []), ...(studentSchools || [])];
+      const allSchools = [...filteredTeacherSchools, ...filteredStudentSchools];
       const schoolCounts = allSchools.reduce((acc, { school }) => {
         acc[school] = (acc[school] || 0) + 1;
         return acc;
       }, {} as Record<string, number>);
 
       // Get teacher counts per school
-      const teacherCounts = (teacherSchools || []).reduce((acc, { school }) => {
+      const teacherCounts = filteredTeacherSchools.reduce((acc, { school }) => {
         acc[school] = (acc[school] || 0) + 1;
         return acc;
       }, {} as Record<string, number>);
 
       // Get student counts per school
-      const studentCounts = (studentSchools || []).reduce((acc, { school }) => {
+      const studentCounts = filteredStudentSchools.reduce((acc, { school }) => {
         acc[school] = (acc[school] || 0) + 1;
         return acc;
       }, {} as Record<string, number>);
@@ -79,7 +94,7 @@ const SchoolManagement: React.FC<SchoolManagementProps> = ({ onDataChange }) => 
       }));
 
       setSchools(schoolList);
-      console.log('🏫 Schools updated:', schoolList.length, 'schools found');
+      console.log('🏫 Schools updated:', schoolList.length, 'schools found (excluding platform admin)');
     } catch (error) {
       console.error('Error fetching schools:', error);
       toast.error('Failed to fetch schools');
