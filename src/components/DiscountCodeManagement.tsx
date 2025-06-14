@@ -47,18 +47,19 @@ const DiscountCodeManagement = () => {
     console.log('Admin loading:', adminLoading);
     console.log('Admin data:', admin);
     console.log('Admin ID:', admin?.id);
+    console.log('Admin email:', admin?.email);
   }, [admin, adminLoading]);
 
   useEffect(() => {
-    if (!adminLoading) {
+    if (!adminLoading && admin?.email) {
       loadDiscountCodes();
     }
-  }, [adminLoading]);
+  }, [adminLoading, admin?.email]);
 
   const loadDiscountCodes = async () => {
     try {
-      console.log('Loading discount codes...');
-      const codes = await discountCodeService.getAllDiscountCodes();
+      console.log('Loading discount codes with admin email:', admin?.email);
+      const codes = await discountCodeService.getAllDiscountCodes(admin?.email);
       console.log('Loaded discount codes:', codes);
       setDiscountCodes(codes);
     } catch (error) {
@@ -90,6 +91,7 @@ const DiscountCodeManagement = () => {
     console.log('Admin loading state:', adminLoading);
     console.log('Admin object:', admin);
     console.log('Admin ID:', admin?.id);
+    console.log('Admin email:', admin?.email);
     console.log('Form data:', formData);
     
     if (adminLoading) {
@@ -117,6 +119,16 @@ const DiscountCodeManagement = () => {
       toast({
         title: "Error",
         description: "Admin ID is missing. Please log out and log in again.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!admin.email) {
+      console.error('Admin object exists but has no email:', admin);
+      toast({
+        title: "Error",
+        description: "Admin email is missing. Please log out and log in again.",
         variant: "destructive",
       });
       return;
@@ -169,8 +181,9 @@ const DiscountCodeManagement = () => {
 
       console.log('Creating discount code with data:', createData);
       console.log('Created by admin ID:', admin.id);
+      console.log('Admin email:', admin.email);
       
-      const result = await discountCodeService.createDiscountCode(createData, admin.id);
+      const result = await discountCodeService.createDiscountCode(createData, admin.id, admin.email);
       console.log('Discount code created successfully:', result);
       
       toast({
@@ -208,7 +221,7 @@ const DiscountCodeManagement = () => {
   };
 
   const handleUpdate = async () => {
-    if (!editingCode) return;
+    if (!editingCode || !admin?.email) return;
 
     // Validate required fields
     if (!formData.code.trim()) {
@@ -238,7 +251,7 @@ const DiscountCodeManagement = () => {
         expires_at: formData.expires_at || undefined,
         is_active: formData.is_active,
         school_name: formData.school_name.trim()
-      });
+      }, admin.email);
 
       toast({
         title: "Success",
@@ -261,9 +274,10 @@ const DiscountCodeManagement = () => {
 
   const handleDelete = async (id: string) => {
     if (!confirm('Are you sure you want to delete this discount code?')) return;
+    if (!admin?.email) return;
 
     try {
-      await discountCodeService.deleteDiscountCode(id);
+      await discountCodeService.deleteDiscountCode(id, admin.email);
       
       toast({
         title: "Success",

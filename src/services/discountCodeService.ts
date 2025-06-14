@@ -36,11 +36,31 @@ export interface UpdateDiscountCodeData {
   school_name?: string;
 }
 
+// Helper function to set admin context
+const setAdminContext = async (adminEmail: string) => {
+  console.log('🔧 Setting admin context for discount operations:', adminEmail);
+  const { error } = await supabase.rpc('set_platform_admin_context', { 
+    admin_email: adminEmail 
+  });
+  
+  if (error) {
+    console.error('❌ Error setting admin context:', error);
+    throw new Error('Failed to set admin context');
+  }
+  
+  console.log('✅ Admin context set successfully');
+};
+
 export const discountCodeService = {
-  async getAllDiscountCodes() {
+  async getAllDiscountCodes(adminEmail?: string) {
     console.log('=== FETCHING DISCOUNT CODES ===');
     
     try {
+      // Set admin context if provided
+      if (adminEmail) {
+        await setAdminContext(adminEmail);
+      }
+      
       console.log('Fetching discount codes...');
 
       const { data, error } = await supabase
@@ -61,69 +81,102 @@ export const discountCodeService = {
     }
   },
 
-  async createDiscountCode(codeData: CreateDiscountCodeData, createdBy: string) {
+  async createDiscountCode(codeData: CreateDiscountCodeData, createdBy: string, adminEmail?: string) {
     console.log('=== CREATING DISCOUNT CODE ===');
     console.log('Code data:', codeData);
     console.log('Created by:', createdBy);
+    console.log('Admin email:', adminEmail);
 
-    const { data, error } = await supabase
-      .from('discount_codes')
-      .insert([{
-        ...codeData,
-        created_by: createdBy,
-        current_uses: 0
-      }])
-      .select()
-      .single();
+    try {
+      // Set admin context if provided
+      if (adminEmail) {
+        await setAdminContext(adminEmail);
+      }
 
-    if (error) {
-      console.error('Error creating discount code:', error);
+      const { data, error } = await supabase
+        .from('discount_codes')
+        .insert([{
+          ...codeData,
+          created_by: createdBy,
+          current_uses: 0
+        }])
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error creating discount code:', error);
+        throw error;
+      }
+
+      console.log('Discount code created:', data);
+      return data;
+    } catch (error) {
+      console.error('Error in createDiscountCode:', error);
       throw error;
     }
-
-    console.log('Discount code created:', data);
-    return data;
   },
 
-  async updateDiscountCode(id: string, updates: UpdateDiscountCodeData) {
+  async updateDiscountCode(id: string, updates: UpdateDiscountCodeData, adminEmail?: string) {
     console.log('=== UPDATING DISCOUNT CODE ===');
     console.log('ID:', id);
     console.log('Updates:', updates);
+    console.log('Admin email:', adminEmail);
 
-    const { data, error } = await supabase
-      .from('discount_codes')
-      .update({
-        ...updates,
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', id)
-      .select()
-      .single();
+    try {
+      // Set admin context if provided
+      if (adminEmail) {
+        await setAdminContext(adminEmail);
+      }
 
-    if (error) {
-      console.error('Error updating discount code:', error);
+      const { data, error } = await supabase
+        .from('discount_codes')
+        .update({
+          ...updates,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error updating discount code:', error);
+        throw error;
+      }
+
+      console.log('Discount code updated:', data);
+      return data;
+    } catch (error) {
+      console.error('Error in updateDiscountCode:', error);
       throw error;
     }
-
-    console.log('Discount code updated:', data);
-    return data;
   },
 
-  async deleteDiscountCode(id: string) {
+  async deleteDiscountCode(id: string, adminEmail?: string) {
     console.log('=== DELETING DISCOUNT CODE ===');
     console.log('ID:', id);
+    console.log('Admin email:', adminEmail);
 
-    const { error } = await supabase
-      .from('discount_codes')
-      .delete()
-      .eq('id', id);
+    try {
+      // Set admin context if provided
+      if (adminEmail) {
+        await setAdminContext(adminEmail);
+      }
 
-    if (error) {
-      console.error('Error deleting discount code:', error);
+      const { error } = await supabase
+        .from('discount_codes')
+        .delete()
+        .eq('id', id);
+
+      if (error) {
+        console.error('Error deleting discount code:', error);
+        throw error;
+      }
+
+      console.log('Discount code deleted successfully');
+    } catch (error) {
+      console.error('Error in deleteDiscountCode:', error);
       throw error;
     }
-
-    console.log('Discount code deleted successfully');
   },
 
   async validateDiscountCode(code: string) {
@@ -159,36 +212,47 @@ export const discountCodeService = {
     };
   },
 
-  async incrementCodeUsage(id: string) {
+  async incrementCodeUsage(id: string, adminEmail?: string) {
     console.log('=== INCREMENTING CODE USAGE ===');
     console.log('ID:', id);
+    console.log('Admin email:', adminEmail);
 
-    // First get current usage count
-    const { data: currentData, error: fetchError } = await supabase
-      .from('discount_codes')
-      .select('current_uses')
-      .eq('id', id)
-      .single();
+    try {
+      // Set admin context if provided
+      if (adminEmail) {
+        await setAdminContext(adminEmail);
+      }
 
-    if (fetchError) {
-      console.error('Error fetching current usage:', fetchError);
-      throw fetchError;
-    }
+      // First get current usage count
+      const { data: currentData, error: fetchError } = await supabase
+        .from('discount_codes')
+        .select('current_uses')
+        .eq('id', id)
+        .single();
 
-    // Increment and update
-    const { error } = await supabase
-      .from('discount_codes')
-      .update({ 
-        current_uses: (currentData.current_uses || 0) + 1,
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', id);
+      if (fetchError) {
+        console.error('Error fetching current usage:', fetchError);
+        throw fetchError;
+      }
 
-    if (error) {
-      console.error('Error incrementing code usage:', error);
+      // Increment and update
+      const { error } = await supabase
+        .from('discount_codes')
+        .update({ 
+          current_uses: (currentData.current_uses || 0) + 1,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', id);
+
+      if (error) {
+        console.error('Error incrementing code usage:', error);
+        throw error;
+      }
+
+      console.log('Code usage incremented successfully');
+    } catch (error) {
+      console.error('Error in incrementCodeUsage:', error);
       throw error;
     }
-
-    console.log('Code usage incremented successfully');
   }
 };
