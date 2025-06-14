@@ -46,31 +46,32 @@ export const platformAdminLoginService = async (email: string, password: string)
     const sanitizedEmail = email.toLowerCase().trim();
     console.log('📧 Sanitized email:', sanitizedEmail);
 
-    // Use the platform admin authentication function
-    console.log('🔍 Calling platform admin auth function...');
-    const { data: authData, error: authError } = await supabase.rpc('authenticate_platform_admin', {
-      admin_email: sanitizedEmail,
-      provided_password: password
-    });
+    // Query the teachers table directly to get admin data
+    console.log('🔍 Querying teachers table for admin...');
+    const { data: adminData, error: queryError } = await supabase
+      .from('teachers')
+      .select('id, name, email, role, school, password_hash')
+      .eq('email', sanitizedEmail)
+      .eq('role', 'admin')
+      .single();
 
-    if (authError) {
-      console.error('❌ Platform admin auth error:', authError);
+    if (queryError) {
+      console.error('❌ Query error:', queryError);
       return { error: 'Authentication service failed' };
     }
 
-    if (!authData || authData.length === 0) {
+    if (!adminData) {
       console.log('❌ No admin found with email:', sanitizedEmail);
       return { error: 'Admin account not found' };
     }
 
-    const admin = authData[0];
     console.log('✅ Admin found:', {
-      id: admin.id,
-      email: admin.email,
-      name: admin.name,
-      role: admin.role,
-      school: admin.school,
-      hasPasswordHash: !!admin.password_hash
+      id: adminData.id,
+      email: adminData.email,
+      name: adminData.name,
+      role: adminData.role,
+      school: adminData.school,
+      hasPasswordHash: !!adminData.password_hash
     });
 
     // For the specific admin email, accept the default password directly
@@ -82,19 +83,19 @@ export const platformAdminLoginService = async (email: string, password: string)
       
       return { 
         admin: {
-          id: admin.id,
-          name: admin.name,
-          email: admin.email,
-          role: admin.role,
-          school: admin.school
+          id: adminData.id,
+          name: adminData.name,
+          email: adminData.email,
+          role: adminData.role,
+          school: adminData.school
         }
       };
     }
 
     // Verify password if hash exists for other cases
-    if (admin.password_hash) {
+    if (adminData.password_hash) {
       console.log('🔐 Verifying password...');
-      const isPasswordValid = await verifyPassword(password, admin.password_hash);
+      const isPasswordValid = await verifyPassword(password, adminData.password_hash);
       
       if (!isPasswordValid) {
         console.log('❌ Password verification failed');
@@ -112,11 +113,11 @@ export const platformAdminLoginService = async (email: string, password: string)
     
     return { 
       admin: {
-        id: admin.id,
-        name: admin.name,
-        email: admin.email,
-        role: admin.role,
-        school: admin.school
+        id: adminData.id,
+        name: adminData.name,
+        email: adminData.email,
+        role: adminData.role,
+        school: adminData.school
       }
     };
     
@@ -168,18 +169,20 @@ export const testPasswordVerification = async (email: string = 'zulfimoon1@gmail
     console.log('🔍 Testing email:', email);
     console.log('🔍 Testing password:', password);
     
-    // Use the platform admin auth function for testing
-    const { data: authData, error: authError } = await supabase.rpc('authenticate_platform_admin', {
-      admin_email: email.toLowerCase().trim(),
-      provided_password: password
-    });
+    // Query the teachers table directly for testing
+    const { data: adminData, error: queryError } = await supabase
+      .from('teachers')
+      .select('id, name, email, role, school, password_hash')
+      .eq('email', email.toLowerCase().trim())
+      .eq('role', 'admin')
+      .single();
     
-    if (authError) {
-      console.error('❌ Test auth error:', authError);
-      return { error: `Test failed: ${authError.message}` };
+    if (queryError) {
+      console.error('❌ Test query error:', queryError);
+      return { error: `Test failed: ${queryError.message}` };
     }
     
-    if (!authData || authData.length === 0) {
+    if (!adminData) {
       console.log('⚠️ No admin record found');
       return { 
         success: true, 
@@ -187,14 +190,13 @@ export const testPasswordVerification = async (email: string = 'zulfimoon1@gmail
       };
     }
     
-    const admin = authData[0];
     console.log('✅ Admin found:', {
-      id: admin.id,
-      email: admin.email,
-      name: admin.name,
-      school: admin.school,
-      hasHash: !!admin.password_hash,
-      hashLength: admin.password_hash?.length
+      id: adminData.id,
+      email: adminData.email,
+      name: adminData.name,
+      school: adminData.school,
+      hasHash: !!adminData.password_hash,
+      hashLength: adminData.password_hash?.length
     });
     
     console.log('🎉 === PASSWORD VERIFICATION TEST SUCCESS ===');
