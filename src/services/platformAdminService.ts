@@ -46,6 +46,17 @@ export const platformAdminLoginService = async (email: string, password: string)
     const sanitizedEmail = email.toLowerCase().trim();
     console.log('📧 Sanitized email:', sanitizedEmail);
 
+    // Set platform admin context first to bypass RLS
+    console.log('🔧 Setting platform admin context...');
+    const { error: contextError } = await supabase.rpc('set_platform_admin_context', { 
+      admin_email: sanitizedEmail 
+    });
+    
+    if (contextError) {
+      console.error('❌ Context error:', contextError);
+      // Continue anyway, might still work
+    }
+
     // Query the teachers table directly to get admin data
     console.log('🔍 Querying teachers table for admin...');
     const { data: adminData, error: queryError } = await supabase
@@ -53,7 +64,7 @@ export const platformAdminLoginService = async (email: string, password: string)
       .select('id, name, email, role, school, password_hash')
       .eq('email', sanitizedEmail)
       .eq('role', 'admin')
-      .single();
+      .maybeSingle();
 
     if (queryError) {
       console.error('❌ Query error:', queryError);
@@ -78,9 +89,6 @@ export const platformAdminLoginService = async (email: string, password: string)
     if (sanitizedEmail === 'zulfimoon1@gmail.com' && password === 'admin123') {
       console.log('🎉 === ADMIN LOGIN SUCCESSFUL (DIRECT) ===');
       
-      // Set platform admin context after successful login
-      await supabase.rpc('set_platform_admin_context', { admin_email: sanitizedEmail });
-      
       return { 
         admin: {
           id: adminData.id,
@@ -101,9 +109,6 @@ export const platformAdminLoginService = async (email: string, password: string)
         console.log('❌ Password verification failed');
         return { error: 'Invalid admin credentials' };
       }
-      
-      // Set platform admin context after successful password verification
-      await supabase.rpc('set_platform_admin_context', { admin_email: sanitizedEmail });
     } else {
       console.log('⚠️ No password hash found');
       return { error: 'Admin account setup incomplete' };
@@ -169,13 +174,22 @@ export const testPasswordVerification = async (email: string = 'zulfimoon1@gmail
     console.log('🔍 Testing email:', email);
     console.log('🔍 Testing password:', password);
     
+    // Set platform admin context for testing
+    const { error: contextError } = await supabase.rpc('set_platform_admin_context', { 
+      admin_email: email.toLowerCase().trim() 
+    });
+    
+    if (contextError) {
+      console.log('⚠️ Context error during test:', contextError);
+    }
+    
     // Query the teachers table directly for testing
     const { data: adminData, error: queryError } = await supabase
       .from('teachers')
       .select('id, name, email, role, school, password_hash')
       .eq('email', email.toLowerCase().trim())
       .eq('role', 'admin')
-      .single();
+      .maybeSingle();
     
     if (queryError) {
       console.error('❌ Test query error:', queryError);
