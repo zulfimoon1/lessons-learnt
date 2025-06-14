@@ -1,69 +1,59 @@
+import React from 'react';
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+} from 'react-router-dom';
+import { Toaster } from 'sonner';
+import { QueryClient, QueryClientProvider } from 'react-query';
 
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { LanguageProvider } from "@/contexts/LanguageContext";
-import { AuthProvider } from "@/contexts/AuthContext";
-import { PlatformAdminProvider } from "@/contexts/PlatformAdminContext";
-import Index from "./pages/Index";
-import TeacherLogin from "./pages/TeacherLogin";
-import StudentLogin from "./pages/StudentLogin";
-import TeacherDashboard from "./pages/TeacherDashboard";
-import StudentDashboard from "./pages/StudentDashboard";
-import AdminDashboard from "./pages/AdminDashboard";
-import Demo from "./pages/Demo";
-import PricingPage from "./pages/PricingPage";
-import EnhancedPricingPage from "./pages/EnhancedPricingPage";
-import PricingShowcase from "./pages/PricingShowcase";
-import HowItWorks from "./pages/HowItWorks";
-import AcceptInvitation from "./pages/AcceptInvitation";
-import SecureAuth from "./pages/SecureAuth";
-import ResetPassword from "./pages/ResetPassword";
-import PlatformAdminLogin from "./pages/PlatformAdminLogin";
-import PlatformAdminDashboard from "./pages/PlatformAdminDashboard";
-import NotFound from "./pages/NotFound";
+import AuthProvider from '@/contexts/AuthContext';
+import SupabaseAuthProvider from '@/contexts/SupabaseAuthContext';
+import LanguageProvider from '@/contexts/LanguageContext';
+import PlatformAdminProvider from '@/contexts/PlatformAdminContext';
+
+import LandingPage from '@/pages/LandingPage';
+import TeacherLogin from '@/pages/TeacherLogin';
+import TeacherSignup from '@/pages/TeacherSignup';
+import StudentLogin from '@/pages/StudentLogin';
+import StudentDashboard from '@/pages/StudentDashboard';
+import TeacherDashboard from '@/pages/TeacherDashboard';
+import PlatformAdminLogin from '@/pages/PlatformAdminLogin';
+import PlatformAdminDashboard from '@/pages/PlatformAdminDashboard';
+import SchoolOverview from '@/components/platform-admin/SchoolOverview';
+import SecurityMonitoring from '@/components/platform-admin/SecurityMonitoring';
+import EnhancedSecurityHeaders from '@/components/security/EnhancedSecurityHeaders';
+import SecurityHeaders from '@/components/SecurityHeaders';
 
 const queryClient = new QueryClient();
 
 function App() {
-  // No basename needed for custom domain - use root path
-  console.log('🔧 App: Using root path for custom domain');
-
   return (
     <QueryClientProvider client={queryClient}>
-      <LanguageProvider>
-        <AuthProvider>
+      <SupabaseAuthProvider>
+        <LanguageProvider>
           <PlatformAdminProvider>
-            <TooltipProvider>
-              <Toaster />
-              <Sonner />
-              <BrowserRouter>
+            <AuthProvider>
+              <Router>
+                <EnhancedSecurityHeaders />
+                <SecurityHeaders />
+                <Toaster />
                 <Routes>
-                  <Route path="/" element={<Index />} />
+                  <Route path="/" element={<LandingPage />} />
                   <Route path="/teacher-login" element={<TeacherLogin />} />
+                  <Route path="/teacher-signup" element={<TeacherSignup />} />
                   <Route path="/student-login" element={<StudentLogin />} />
-                  <Route path="/teacher-dashboard" element={<TeacherDashboard />} />
                   <Route path="/student-dashboard" element={<StudentDashboard />} />
-                  <Route path="/admin-dashboard" element={<AdminDashboard />} />
-                  <Route path="/demo" element={<Demo />} />
-                  <Route path="/pricing" element={<PricingPage />} />
-                  <Route path="/enhanced-pricing" element={<EnhancedPricingPage />} />
-                  <Route path="/pricing-showcase" element={<PricingShowcase />} />
-                  <Route path="/how-it-works" element={<HowItWorks />} />
-                  <Route path="/accept-invitation" element={<AcceptInvitation />} />
-                  <Route path="/secure-auth" element={<SecureAuth />} />
-                  <Route path="/reset-password" element={<ResetPassword />} />
+                  <Route path="/teacher-dashboard" element={<TeacherDashboard />} />
                   <Route path="/console" element={<PlatformAdminLogin />} />
-                  <Route path="/platform-admin" element={<PlatformAdminDashboard />} />
-                  <Route path="*" element={<NotFound />} />
+                  <Route path="/platform-admin/*" element={<PlatformAdminDashboard />} />
                 </Routes>
-              </BrowserRouter>
-            </TooltipProvider>
+              </Router>
+            </AuthProvider>
           </PlatformAdminProvider>
-        </AuthProvider>
-      </LanguageProvider>
+        </LanguageProvider>
+      </SupabaseAuthProvider>
     </QueryClientProvider>
   );
 }
