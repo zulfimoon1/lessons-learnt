@@ -101,7 +101,19 @@ serve(async (req) => {
       console.log("New customer created:", customerId);
     }
 
-    // Create line items
+    // Calculate the base price
+    const basePrice = amount || (tierType === 'admin' ? 1499 : 999);
+    
+    // Apply discount to the unit amount
+    const discountedPrice = Math.round(basePrice * (1 - validatedDiscountPercent / 100));
+    
+    console.log("Price calculation:", { 
+      basePrice, 
+      discountPercent: validatedDiscountPercent, 
+      discountedPrice 
+    });
+
+    // Create line items with discounted price
     const planName = tierType === 'admin' ? 'School Admin Bundle' : 'Teacher Plan';
     const billingInterval = isAnnual ? 'year' : 'month';
     
@@ -111,9 +123,9 @@ serve(async (req) => {
           currency: "usd",
           product_data: {
             name: `LessonLens ${planName}`,
-            description: `${isAnnual ? 'Annual' : 'Monthly'} subscription for ${teacherCount} teacher${teacherCount > 1 ? 's' : ''} - ${schoolName}`,
+            description: `${isAnnual ? 'Annual' : 'Monthly'} subscription for ${teacherCount} teacher${teacherCount > 1 ? 's' : ''} - ${schoolName}${validatedDiscountPercent > 0 ? ` (${validatedDiscountPercent}% discount applied)` : ''}`,
           },
-          unit_amount: amount || (tierType === 'admin' ? 1499 : 999),
+          unit_amount: discountedPrice,
           recurring: {
             interval: billingInterval,
           },
@@ -135,7 +147,7 @@ serve(async (req) => {
         teacherCount: teacherCount.toString(),
         tierType: tierType,
         isAnnual: isAnnual.toString(),
-        originalAmount: amount?.toString() || '0',
+        originalAmount: basePrice.toString(),
         discountCode: discountCode || '',
         discountPercent: validatedDiscountPercent.toString(),
         schoolName: schoolName,
@@ -186,7 +198,7 @@ serve(async (req) => {
     const subscriptionData = {
       school_name: schoolName,
       stripe_customer_id: customerId,
-      amount: amount || (tierType === 'admin' ? 1499 : 999),
+      amount: discountedPrice,
       plan_type: `${tierType}_${isAnnual ? 'annual' : 'monthly'}`,
       status: 'trialing',
       current_period_start: new Date().toISOString(),
