@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -40,14 +41,7 @@ const SecurityMonitoring: React.FC = () => {
       );
       
       setSecurityEvents(last24Hours.slice(-50)); // Last 50 events
-      
-      // Map the security service metrics to our expected format
-      const serviceMetrics = enhancedSecurityService.getSecurityMetrics();
-      setMetrics({
-        failedLogins: serviceMetrics.failedLogins || 0,
-        blockedIPs: serviceMetrics.accountLockouts || 0, // Use lockouts as blocked IPs proxy
-        suspiciousActivity: serviceMetrics.suspiciousActivity || 0
-      });
+      setMetrics(enhancedSecurityService.getSecurityMetrics());
     } catch (error) {
       console.error('Error fetching security events:', error);
     } finally {
