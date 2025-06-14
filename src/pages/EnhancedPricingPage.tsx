@@ -40,7 +40,8 @@ const EnhancedPricingPage = () => {
 
     setIsValidatingDiscount(true);
     try {
-      const result = await discountCodeService.validateDiscountCode(code.trim());
+      // Pass teacher email for enhanced validation
+      const result = await discountCodeService.validateDiscountCode(code.trim(), teacher?.email);
       if (result.valid) {
         setDiscountPercent(result.discountPercent);
         toast({

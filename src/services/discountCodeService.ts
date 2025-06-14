@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 
 export interface DiscountCode {
@@ -233,37 +232,89 @@ export const discountCodeService = {
     }
   },
 
-  async validateDiscountCode(code: string) {
+  async validateDiscountCode(code: string, teacherEmail?: string) {
     console.log('=== VALIDATING DISCOUNT CODE ===');
     console.log('🔍 Code:', code);
+    console.log('👤 Teacher email:', teacherEmail);
 
-    const { data, error } = await supabase
-      .from('discount_codes')
-      .select('*')
-      .eq('code', code.toUpperCase())
-      .eq('is_active', true)
-      .single();
+    try {
+      // If we have a teacher email, try to use the platform admin function first
+      if (teacherEmail) {
+        console.log('📋 Attempting validation via platform admin function...');
+        
+        try {
+          const { data: discountCodes, error } = await supabase.rpc('platform_admin_get_discount_codes', {
+            admin_email_param: teacherEmail
+          });
 
-    if (error) {
-      console.error('❌ Error validating discount code:', error);
-      return { valid: false, error: 'Invalid discount code' };
+          if (!error && discountCodes) {
+            console.log('✅ Successfully retrieved discount codes via admin function');
+            const matchingCode = discountCodes.find(dc => dc.code === code.toUpperCase());
+            
+            if (!matchingCode) {
+              return { valid: false, error: 'Invalid discount code' };
+            }
+
+            // Check if code has expired
+            if (matchingCode.expires_at && new Date(matchingCode.expires_at) < new Date()) {
+              return { valid: false, error: 'Discount code has expired' };
+            }
+
+            // Check if code has reached max uses
+            if (matchingCode.max_uses && matchingCode.current_uses >= matchingCode.max_uses) {
+              return { valid: false, error: 'Discount code has reached maximum usage limit' };
+            }
+
+            // Check if code is active
+            if (!matchingCode.is_active) {
+              return { valid: false, error: 'Discount code is not active' };
+            }
+
+            return {
+              valid: true,
+              discountCode: matchingCode,
+              discountPercent: matchingCode.discount_percent
+            };
+          }
+        } catch (adminError) {
+          console.log('⚠️ Admin function failed, falling back to direct query:', adminError);
+        }
+      }
+
+      // Fallback to direct query (for public validation)
+      console.log('📋 Attempting direct validation query...');
+      const { data, error } = await supabase
+        .from('discount_codes')
+        .select('*')
+        .eq('code', code.toUpperCase())
+        .eq('is_active', true)
+        .single();
+
+      if (error) {
+        console.error('❌ Error validating discount code:', error);
+        return { valid: false, error: 'Invalid discount code' };
+      }
+
+      // Check if code has expired
+      if (data.expires_at && new Date(data.expires_at) < new Date()) {
+        return { valid: false, error: 'Discount code has expired' };
+      }
+
+      // Check if code has reached max uses
+      if (data.max_uses && data.current_uses >= data.max_uses) {
+        return { valid: false, error: 'Discount code has reached maximum usage limit' };
+      }
+
+      return {
+        valid: true,
+        discountCode: data,
+        discountPercent: data.discount_percent
+      };
+
+    } catch (error) {
+      console.error('💥 Error in validateDiscountCode:', error);
+      return { valid: false, error: 'Failed to validate discount code' };
     }
-
-    // Check if code has expired
-    if (data.expires_at && new Date(data.expires_at) < new Date()) {
-      return { valid: false, error: 'Discount code has expired' };
-    }
-
-    // Check if code has reached max uses
-    if (data.max_uses && data.current_uses >= data.max_uses) {
-      return { valid: false, error: 'Discount code has reached maximum usage limit' };
-    }
-
-    return {
-      valid: true,
-      discountCode: data,
-      discountPercent: data.discount_percent
-    };
   },
 
   async incrementCodeUsage(id: string, adminEmail?: string): Promise<void> {

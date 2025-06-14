@@ -42,11 +42,13 @@ const PricingPage = () => {
     setDiscountError("");
 
     try {
-      const result = await discountCodeService.validateDiscountCode(code.trim());
+      // Pass teacher email for enhanced validation
+      const result = await discountCodeService.validateDiscountCode(code.trim(), teacher?.email);
       
       if (result.valid) {
         setDiscountPercent(result.discountPercent);
         setDiscountCode(code.trim().toUpperCase());
+        setDiscount(result.discountPercent); // Set the discount state as well
         toast({
           title: "Success",
           description: `${result.discountPercent}% discount applied!`,
@@ -55,12 +57,14 @@ const PricingPage = () => {
         setDiscountError(result.error);
         setDiscountPercent(0);
         setDiscountCode("");
+        setDiscount(0);
       }
     } catch (error) {
       console.error('Error validating discount code:', error);
       setDiscountError("Failed to validate discount code. Please try again.");
       setDiscountPercent(0);
       setDiscountCode("");
+      setDiscount(0);
     } finally {
       setIsValidatingDiscount(false);
     }
