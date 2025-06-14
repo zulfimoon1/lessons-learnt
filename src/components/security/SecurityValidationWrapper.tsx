@@ -1,6 +1,7 @@
 
 import React, { ReactNode } from 'react';
 import { securityValidationService } from '@/services/securityValidationService';
+import { securityPatchService } from '@/services/securityPatchService';
 
 interface SecurityValidationWrapperProps {
   children: ReactNode;
@@ -59,14 +60,47 @@ const SecurityValidationWrapper: React.FC<SecurityValidationWrapperProps> = ({
           return;
         }
       }
+
+      // Additional security check for sensitive operations
+      const formAction = form.action || window.location.pathname;
+      if (formAction.includes('/admin') || formAction.includes('/platform')) {
+        const userEmail = localStorage.getItem('platform_admin') ? 
+          JSON.parse(localStorage.getItem('platform_admin') || '{}').email : null;
+        
+        if (!userEmail) {
+          event.preventDefault();
+          console.error('Administrative action requires authentication');
+          return;
+        }
+      }
     };
 
-    // Add event listener for form submissions
+    // Enhanced input monitoring for XSS prevention
+    const handleInput = (event: Event) => {
+      const input = event.target as HTMLInputElement;
+      if (!input || !input.value) return;
+
+      const validation = securityValidationService.validateInput(
+        input.value,
+        input.name || 'unnamed_field',
+        { maxLength: maxInputLength }
+      );
+
+      if (!validation.isValid) {
+        input.setCustomValidity(validation.errors.join(', '));
+      } else {
+        input.setCustomValidity('');
+      }
+    };
+
+    // Add event listeners
     document.addEventListener('submit', handleFormSubmit);
+    document.addEventListener('input', handleInput);
 
     // Cleanup
     return () => {
       document.removeEventListener('submit', handleFormSubmit);
+      document.removeEventListener('input', handleInput);
     };
   }, [maxInputLength, logSecurityEvents]);
 

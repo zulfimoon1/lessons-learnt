@@ -1,55 +1,75 @@
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from "recharts";
-import { UserIcon } from "lucide-react";
-import { StudentStatistics as StudentStats } from "@/services/platformAdminService";
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Users, TrendingUp, Calendar, Award } from 'lucide-react';
+import { usePlatformAdmin } from '@/contexts/PlatformAdminContext';
+import { secureStudentService } from '@/services/secureStudentService';
+import { StudentStatistics } from '@/types/adminTypes';
 
-interface SchoolStats {
-  school: string;
-  total_teachers: number;
-}
+const StudentStatisticsComponent = () => {
+  const { admin } = usePlatformAdmin();
+  const [statistics, setStatistics] = useState<StudentStatistics | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-interface StudentStatisticsProps {
-  studentStats: StudentStats[];
-  schoolStats: SchoolStats[];
-}
+  useEffect(() => {
+    const fetchStatistics = async () => {
+      if (!admin?.email) {
+        setError('Admin authentication required');
+        setIsLoading(false);
+        return;
+      }
 
-const StudentStatistics = ({ studentStats, schoolStats }: StudentStatisticsProps) => {
-  const studentChartData = studentStats.map(stat => ({
-    name: stat.school,
-    students: stat.total_students,
-    responseRate: stat.student_response_rate
-  }));
+      try {
+        console.log('🔍 Fetching student statistics securely...');
+        const stats = await secureStudentService.getStudentStatistics(admin.email);
+        setStatistics(stats);
+        setError(null);
+      } catch (err) {
+        console.error('❌ Error fetching student statistics:', err);
+        setError(err instanceof Error ? err.message : 'Failed to fetch statistics');
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-  const studentChartConfig = {
-    students: {
-      label: "Total Students",
-      color: "#94c270",
-    },
-    responseRate: {
-      label: "Response Rate (%)",
-      color: "#6b7280",
-    },
-  };
+    fetchStatistics();
+  }, [admin]);
 
-  if (!studentStats || studentStats.length === 0) {
+  if (isLoading) {
+    return (
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        {[...Array(4)].map((_, i) => (
+          <Card key={i} className="animate-pulse">
+            <CardContent className="p-6">
+              <div className="h-16 bg-gray-200 rounded"></div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <Card className="border-red-200">
+        <CardContent className="p-6">
+          <div className="text-red-600 text-center">
+            <Users className="w-8 h-8 mx-auto mb-2" />
+            <p>Error loading student statistics: {error}</p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (!statistics) {
     return (
       <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <UserIcon className="w-5 h-5" />
-            Student Statistics by School
-          </CardTitle>
-          <CardDescription>Students enrolled and their response rates</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="text-center py-8">
-            <p className="text-muted-foreground">No student data found in the database</p>
-            <p className="text-xs text-muted-foreground mt-2">
-              Student statistics will appear here once students register and create accounts
-            </p>
+        <CardContent className="p-6">
+          <div className="text-gray-500 text-center">
+            <Users className="w-8 h-8 mx-auto mb-2" />
+            <p>No student statistics available</p>
           </div>
         </CardContent>
       </Card>
@@ -57,69 +77,81 @@ const StudentStatistics = ({ studentStats, schoolStats }: StudentStatisticsProps
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <UserIcon className="w-5 h-5" />
-          Student Statistics by School
-        </CardTitle>
-        <CardDescription>Students enrolled and their response rates ({studentStats.length} schools)</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-8">
-          {studentChartData.length > 0 ? (
-            <ChartContainer config={studentChartConfig} className="h-[400px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={studentChartData} barSize={40}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis 
-                    dataKey="name" 
-                    tick={{ fontSize: 11 }}
-                    angle={-45}
-                    textAnchor="end"
-                    height={100}
-                  />
-                  <YAxis yAxisId="left" orientation="left" stroke="#94c270" />
-                  <YAxis yAxisId="right" orientation="right" stroke="#6b7280" domain={[0, 100]} />
-                  <ChartTooltip content={<ChartTooltipContent />} />
-                  <Bar dataKey="students" fill="var(--color-students)" yAxisId="left" />
-                  <Bar dataKey="responseRate" fill="var(--color-responseRate)" yAxisId="right" />
-                </BarChart>
-              </ResponsiveContainer>
-            </ChartContainer>
-          ) : (
-            <div className="text-center py-8">
-              <p className="text-muted-foreground">No data available for chart visualization</p>
-            </div>
-          )}
-          
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>School</TableHead>
-                <TableHead>Total Students</TableHead>
-                <TableHead>Response Rate</TableHead>
-                <TableHead>Teachers</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {studentStats.map((stat, index) => {
-                const schoolTeacherCount = schoolStats.find(s => s.school === stat.school)?.total_teachers || 0;
-                return (
-                  <TableRow key={index}>
-                    <TableCell className="font-medium">{stat.school}</TableCell>
-                    <TableCell>{stat.total_students}</TableCell>
-                    <TableCell>{stat.student_response_rate}%</TableCell>
-                    <TableCell>{schoolTeacherCount}</TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
-        </div>
-      </CardContent>
-    </Card>
+    <div className="space-y-6">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Students</CardTitle>
+            <Users className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{statistics.totalStudents}</div>
+            <p className="text-xs text-muted-foreground">
+              Across all schools
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Active Students</CardTitle>
+            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{statistics.activeStudents}</div>
+            <p className="text-xs text-muted-foreground">
+              Active in last 30 days
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">New This Week</CardTitle>
+            <Calendar className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{statistics.studentsThisWeek}</div>
+            <p className="text-xs text-muted-foreground">
+              Students joined this week
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Average Grade</CardTitle>
+            <Award className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{statistics.averageGrade}</div>
+            <p className="text-xs text-muted-foreground">
+              Across all schools
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Top Schools by Student Count</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-2">
+            {statistics.topPerformingSchools.map((school, index) => (
+              <div key={school.school} className="flex items-center justify-between p-2 rounded-lg bg-gray-50">
+                <div className="flex items-center space-x-2">
+                  <span className="text-sm font-medium text-gray-600">#{index + 1}</span>
+                  <span className="font-medium">{school.school}</span>
+                </div>
+                <span className="text-sm text-gray-600">{school.studentCount} students</span>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+    </div>
   );
 };
 
-export default StudentStatistics;
+export default StudentStatisticsComponent;

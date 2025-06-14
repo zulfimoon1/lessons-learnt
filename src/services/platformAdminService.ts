@@ -2,6 +2,9 @@
 import { supabase } from '@/integrations/supabase/client';
 import { securePlatformAdminService } from './securePlatformAdminService';
 
+// Export types for components
+export type { StudentStatistics, TeacherStatistics, PlatformStatistics } from '@/types/adminTypes';
+
 // Legacy service - now using secure implementation
 export interface PlatformAdmin {
   id: string;
