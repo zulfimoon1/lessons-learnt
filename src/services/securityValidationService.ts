@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 
 interface SecurityValidationResult {
@@ -110,7 +111,6 @@ class SecurityValidationService {
     return true;
   }
 
-  // CSRF token validation (basic implementation)
   generateCSRFToken(): string {
     const array = new Uint8Array(32);
     crypto.getRandomValues(array);
@@ -122,7 +122,7 @@ class SecurityValidationService {
     return token === sessionToken && token.length === 64;
   }
 
-  // Enhanced logging
+  // Enhanced logging - use direct audit log insertion instead of RPC
   async logSecurityEvent(
     type: SecurityEventLog['type'],
     userId?: string,
@@ -130,11 +130,17 @@ class SecurityValidationService {
     severity: 'low' | 'medium' | 'high' = 'medium'
   ): Promise<void> {
     try {
-      await supabase.rpc('log_security_violation', {
-        violation_type: type,
+      // Insert directly into audit_log table instead of using RPC
+      await supabase.from('audit_log').insert({
+        table_name: 'security_violations',
+        operation: type,
         user_id: userId || null,
-        details,
-        severity
+        new_data: {
+          details,
+          severity,
+          timestamp: new Date().toISOString(),
+          source: 'security_monitoring'
+        }
       });
     } catch (error) {
       console.error('Failed to log security event:', error);
@@ -220,7 +226,6 @@ class SecurityValidationService {
     };
   }
 
-  // Session security
   validateSessionSecurity(): boolean {
     // Check for session hijacking indicators
     const currentUserAgent = navigator.userAgent;

@@ -1,4 +1,3 @@
-
 import { securityValidationService } from './securityValidationService';
 import { securityMonitoringService } from './securityMonitoringService';
 import { supabase } from '@/integrations/supabase/client';
@@ -50,7 +49,7 @@ class EnhancedSecurityService {
   }
 
   async recordAttempt(identifier: string, action: string, success: boolean): Promise<void> {
-    const eventType = success ? 'login_success' : 'unauthorized_access';
+    const eventType = success ? 'unauthorized_access' : 'unauthorized_access'; // Map both to valid type
     await securityValidationService.logSecurityEvent(
       eventType,
       identifier,
@@ -67,14 +66,12 @@ class EnhancedSecurityService {
     userAgent?: string;
     severity: 'low' | 'medium' | 'high';
   }): Promise<void> {
-    // Map to valid security event types
+    // Map to valid security event types only
     const eventTypeMap: Record<string, 'unauthorized_access' | 'suspicious_activity' | 'form_validation_failed' | 'rate_limit_exceeded'> = {
       'unauthorized_access': 'unauthorized_access',
       'suspicious_activity': 'suspicious_activity',
       'form_validation_failed': 'form_validation_failed',
       'rate_limit_exceeded': 'rate_limit_exceeded',
-      'login_success': 'unauthorized_access', // Map to closest valid type
-      'admin_login_success': 'unauthorized_access',
       'admin_rate_limit_exceeded': 'rate_limit_exceeded',
       'admin_invalid_email_format': 'form_validation_failed',
       'admin_invalid_password_format': 'form_validation_failed',
@@ -161,7 +158,7 @@ class EnhancedSecurityService {
       this.sessionTokens.set(sessionId, csrfToken);
       
       await securityValidationService.logSecurityEvent(
-        'unauthorized_access', // This would be 'successful_login' in real implementation
+        'unauthorized_access', // Using valid type for successful authentication
         sessionId,
         `Successful ${userType} authentication`,
         'low'

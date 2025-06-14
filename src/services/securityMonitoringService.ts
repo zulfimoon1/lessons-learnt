@@ -32,9 +32,15 @@ class SecurityMonitoringService {
         .gte('timestamp', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString());
 
       const totalViolations = violations?.length || 0;
-      const criticalViolations = violations?.filter(v => 
-        v.new_data?.severity === 'high'
-      ).length || 0;
+      
+      // Safe access to new_data property with proper type checking
+      const criticalViolations = violations?.filter(v => {
+        if (v.new_data && typeof v.new_data === 'object' && v.new_data !== null) {
+          const data = v.new_data as Record<string, any>;
+          return data.severity === 'high';
+        }
+        return false;
+      }).length || 0;
 
       const recentAttempts = violations?.filter(v => 
         new Date(v.timestamp) > new Date(Date.now() - 60 * 60 * 1000)
@@ -109,7 +115,6 @@ class SecurityMonitoringService {
     }
   }
 
-  // Monitor for specific security threats
   async monitorForThreats(): Promise<void> {
     try {
       // Check for unusual login patterns
@@ -144,7 +149,6 @@ class SecurityMonitoringService {
     }
   }
 
-  // Real-time security monitoring
   startRealTimeMonitoring(): void {
     // Monitor every 5 minutes
     setInterval(() => {
@@ -157,7 +161,6 @@ class SecurityMonitoringService {
     }, 60 * 60 * 1000);
   }
 
-  // Compliance monitoring for FERPA/student privacy
   async auditDataAccess(operation: string, tableName: string, recordCount: number): Promise<void> {
     if (['students', 'mental_health_alerts', 'weekly_summaries'].includes(tableName)) {
       await securityValidationService.logSecurityEvent(
@@ -175,7 +178,6 @@ class SecurityMonitoringService {
     }
   }
 
-  // Security headers validation
   validateSecurityHeaders(): boolean {
     const hasCSP = document.querySelector('meta[http-equiv="Content-Security-Policy"]') !== null;
     const hasXFrameOptions = true; // Would check actual headers in real implementation
