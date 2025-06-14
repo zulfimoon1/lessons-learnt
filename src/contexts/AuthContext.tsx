@@ -102,7 +102,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     initializeAuth();
   }, []);
 
-  // Teacher login function
+  // Teacher login function that handles both login and signup
   const teacherLogin = async (
     email: string, 
     password: string, 
@@ -110,7 +110,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     school?: string,
     role: 'teacher' | 'admin' | 'doctor' = 'teacher'
   ): Promise<{ teacher?: Teacher; error?: string }> => {
-    console.log('AuthContext: Teacher login attempt for:', email);
+    console.log('AuthContext: Teacher authentication attempt for:', email, { isSignup: !!(name && school) });
     
     // If name and school are provided, this is a signup request
     if (name && school) {
@@ -279,6 +279,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
       
       if (result.student) {
+        // Verify the student data matches the provided school and grade
+        if (result.student.school !== school.trim() || result.student.grade !== grade.trim()) {
+          console.log('AuthContext: School/grade mismatch:', {
+            expected: { school: school.trim(), grade: grade.trim() },
+            actual: { school: result.student.school, grade: result.student.grade }
+          });
+          return { error: 'Invalid credentials. Please check your school and grade information.' };
+        }
+
         const student: Student = {
           id: result.student.id,
           full_name: result.student.full_name,
