@@ -1,12 +1,13 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { LanguageProvider } from "@/contexts/LanguageContext";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { LanguageProvider } from "@/contexts/LanguageContext";
 import { PlatformAdminProvider } from "@/contexts/PlatformAdminContext";
+import SecurityValidationWrapper from "@/components/security/SecurityValidationWrapper";
+import SecurityGuard from "@/components/auth/SecurityGuard";
 import Index from "./pages/Index";
 import TeacherLogin from "./pages/TeacherLogin";
 import StudentLogin from "./pages/StudentLogin";
@@ -27,19 +28,22 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
-function App() {
-  // No basename needed for custom domain - use root path
-  console.log('🔧 App: Using root path for custom domain');
-
-  return (
-    <QueryClientProvider client={queryClient}>
-      <LanguageProvider>
-        <AuthProvider>
-          <PlatformAdminProvider>
-            <TooltipProvider>
-              <Toaster />
-              <Sonner />
-              <BrowserRouter>
+const App = () => (
+  <QueryClientProvider client={queryClient}>
+    <TooltipProvider>
+      <Toaster />
+      <Sonner />
+      <BrowserRouter>
+        <LanguageProvider>
+          <AuthProvider>
+            <PlatformAdminProvider>
+              <SecurityValidationWrapper
+                validationRules={{
+                  maxInputLength: 1000,
+                  enableRateLimit: true,
+                  logSecurityEvents: true
+                }}
+              >
                 <Routes>
                   <Route path="/" element={<Index />} />
                   <Route path="/teacher-login" element={<TeacherLogin />} />
@@ -55,17 +59,66 @@ function App() {
                   <Route path="/accept-invitation" element={<AcceptInvitation />} />
                   <Route path="/secure-auth" element={<SecureAuth />} />
                   <Route path="/reset-password" element={<ResetPassword />} />
-                  <Route path="/console" element={<PlatformAdminLogin />} />
-                  <Route path="/platform-admin" element={<PlatformAdminDashboard />} />
+                  
+                  {/* Platform Admin Routes with Enhanced Security */}
+                  <Route 
+                    path="/console" 
+                    element={
+                      <SecurityGuard requireAuth={false}>
+                        <PlatformAdminLogin />
+                      </SecurityGuard>
+                    } 
+                  />
+                  <Route 
+                    path="/platform-admin" 
+                    element={
+                      <SecurityGuard requireAuth={true} userType="admin">
+                        <PlatformAdminDashboard />
+                      </SecurityGuard>
+                    } 
+                  />
+                  
+                  {/* Teacher Routes with Security */}
+                  <Route 
+                    path="/teacher-dashboard" 
+                    element={
+                      <SecurityGuard requireAuth={true} userType="teacher">
+                        <TeacherDashboard />
+                      </SecurityGuard>
+                    } 
+                  />
+                  <Route 
+                    path="/admin-dashboard" 
+                    element={
+                      <SecurityGuard 
+                        requireAuth={true} 
+                        userType="teacher" 
+                        allowedRoles={['admin']}
+                      >
+                        <AdminDashboard />
+                      </SecurityGuard>
+                    } 
+                  />
+                  
+                  {/* Student Routes with Security */}
+                  <Route 
+                    path="/student-dashboard" 
+                    element={
+                      <SecurityGuard requireAuth={true} userType="student">
+                        <StudentDashboard />
+                      </SecurityGuard>
+                    } 
+                  />
+                  
                   <Route path="*" element={<NotFound />} />
                 </Routes>
-              </BrowserRouter>
-            </TooltipProvider>
-          </PlatformAdminProvider>
-        </AuthProvider>
-      </LanguageProvider>
-    </QueryClientProvider>
-  );
-}
+              </SecurityValidationWrapper>
+            </PlatformAdminProvider>
+          </AuthProvider>
+        </LanguageProvider>
+      </BrowserRouter>
+    </TooltipProvider>
+  </QueryClientProvider>
+);
 
 export default App;

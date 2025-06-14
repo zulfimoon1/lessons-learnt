@@ -1,663 +1,572 @@
-import { useState, useEffect } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Switch } from "@/components/ui/switch";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { useToast } from "@/hooks/use-toast";
-import { discountCodeService, DiscountCode, CreateDiscountCodeData } from "@/services/discountCodeService";
-import { usePlatformAdmin } from "@/contexts/PlatformAdminContext";
-import { 
-  PlusIcon, 
-  EditIcon, 
-  TrashIcon,
-  TagIcon,
-  CalendarIcon,
-  UsersIcon,
-  PercentIcon,
-  SchoolIcon,
-  TestTubeIcon
-} from "lucide-react";
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Switch } from '@/components/ui/switch';
+import { useToast } from '@/hooks/use-toast';
+import { usePlatformAdmin } from '@/contexts/PlatformAdminContext';
+import { secureDiscountCodeService, DiscountCode } from '@/services/secureDiscountCodeService';
+import { Plus, Edit, Trash2, TestTube, Shield } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 
 const DiscountCodeManagement = () => {
-  const { admin, isLoading: adminLoading } = usePlatformAdmin();
+  const { admin } = usePlatformAdmin();
   const { toast } = useToast();
   const [discountCodes, setDiscountCodes] = useState<DiscountCode[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editingCode, setEditingCode] = useState<DiscountCode | null>(null);
-  const [isCreating, setIsCreating] = useState(false);
-  const [isTesting, setIsTesting] = useState(false);
-  const [formData, setFormData] = useState({
-    code: '',
-    discount_percent: 10,
-    description: '',
-    max_uses: '',
-    expires_at: '',
-    is_active: true,
-    school_name: ''
-  });
 
-  // Debug the admin state
-  useEffect(() => {
-    console.log('=== DISCOUNT CODE MANAGEMENT DEBUG ===');
-    console.log('Admin loading:', adminLoading);
-    console.log('Admin data:', admin);
-    console.log('Admin ID:', admin?.id);
-    console.log('Admin email:', admin?.email);
-  }, [admin, adminLoading]);
+  const [code, setCode] = useState('');
+  const [discountPercent, setDiscountPercent] = useState(10);
+  const [description, setDescription] = useState('');
+  const [maxUses, setMaxUses] = useState<number | undefined>(undefined);
+  const [expiresAt, setExpiresAt] = useState<string | undefined>(undefined);
+  const [isActive, setIsActive] = useState(true);
+  const [schoolName, setSchoolName] = useState('');
+  const [durationMonths, setDurationMonths] = useState<number | undefined>(undefined);
 
-  useEffect(() => {
-    if (!adminLoading && admin?.email) {
-      loadDiscountCodes();
-    }
-  }, [adminLoading, admin?.email]);
+  const resetForm = () => {
+    setCode('');
+    setDiscountPercent(10);
+    setDescription('');
+    setMaxUses(undefined);
+    setExpiresAt(undefined);
+    setIsActive(true);
+    setSchoolName('');
+    setDurationMonths(undefined);
+    setEditingCode(null);
+  };
 
-  const loadDiscountCodes = async () => {
+  const handleCreate = async () => {
+    if (!admin?.email) return;
+
+    setIsLoading(true);
     try {
-      console.log('Loading discount codes with admin email:', admin?.email);
-      const codes = await discountCodeService.getAllDiscountCodes(admin?.email);
-      console.log('Loaded discount codes:', codes);
-      setDiscountCodes(codes);
-    } catch (error) {
-      console.error('Error loading discount codes:', error);
+      console.log('🔨 Creating discount code with secure service...');
+      const newCode = await secureDiscountCodeService.createDiscountCode(
+        {
+          code,
+          discount_percent: discountPercent,
+          description,
+          max_uses: maxUses,
+          expires_at: expiresAt,
+          is_active: isActive,
+          school_name: schoolName,
+          duration_months: durationMonths
+        },
+        admin.id,
+        admin.email
+      );
+
+      setDiscountCodes([...discountCodes, newCode]);
+      setIsCreateDialogOpen(false);
+      resetForm();
+
       toast({
-        title: "Error",
-        description: "Failed to load discount codes",
-        variant: "destructive",
+        title: 'Success',
+        description: 'Discount code created successfully',
+      });
+    } catch (error: any) {
+      console.error('❌ Error creating discount code:', error);
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to create discount code',
+        variant: 'destructive',
       });
     } finally {
       setIsLoading(false);
     }
   };
 
-  const resetForm = () => {
-    setFormData({
-      code: '',
-      discount_percent: 10,
-      description: '',
-      max_uses: '',
-      expires_at: '',
-      is_active: true,
-      school_name: ''
-    });
-  };
-
-  const handleTestConnection = async () => {
-    if (!admin?.email) {
-      toast({
-        title: "Error",
-        description: "No admin email found",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setIsTesting(true);
-    
-    try {
-      console.log('🧪 Starting connection test...');
-      const result = await discountCodeService.testConnection(admin.email);
-      
-      if (result.success) {
-        toast({
-          title: "Test Successful! ✅",
-          description: `Connection working. Found ${result.readCount} existing codes.`,
-        });
-        console.log('🎉 Test completed successfully:', result);
-      } else {
-        toast({
-          title: "Test Failed ❌",
-          description: `${result.operation} failed: ${result.error}`,
-          variant: "destructive",
-        });
-        console.error('❌ Test failed:', result);
-      }
-    } catch (error) {
-      console.error('💥 Test error:', error);
-      toast({
-        title: "Test Error",
-        description: "Unexpected error during testing",
-        variant: "destructive",
-      });
-    } finally {
-      setIsTesting(false);
-    }
-  };
-
-  const handleCreate = async () => {
-    console.log('=== CREATE DISCOUNT CODE DETAILED DEBUG ===');
-    console.log('Admin loading state:', adminLoading);
-    console.log('Admin object:', admin);
-    console.log('Admin ID:', admin?.id);
-    console.log('Admin email:', admin?.email);
-    console.log('Form data:', formData);
-    
-    if (adminLoading) {
-      console.error('Admin is still loading');
-      toast({
-        title: "Error",
-        description: "Please wait for authentication to load",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (!admin) {
-      console.error('No admin found in context');
-      toast({
-        title: "Error",
-        description: "You must be logged in as an admin. Please refresh the page and try again.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (!admin.id) {
-      console.error('Admin object exists but has no ID:', admin);
-      toast({
-        title: "Error",
-        description: "Admin ID is missing. Please log out and log in again.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (!admin.email) {
-      console.error('Admin object exists but has no email:', admin);
-      toast({
-        title: "Error",
-        description: "Admin email is missing. Please log out and log in again.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    // Validate required fields
-    if (!formData.code.trim()) {
-      console.error('Code is required');
-      toast({
-        title: "Error",
-        description: "Code is required",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (!formData.school_name.trim()) {
-      console.error('School name is required');
-      toast({
-        title: "Error",
-        description: "School name is required",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    // Validate discount percentage
-    if (isNaN(formData.discount_percent) || formData.discount_percent < 1 || formData.discount_percent > 100) {
-      console.error('Invalid discount percentage:', formData.discount_percent);
-      toast({
-        title: "Error",
-        description: "Discount percentage must be between 1 and 100",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setIsCreating(true);
-
-    try {
-      const createData: CreateDiscountCodeData = {
-        code: formData.code.toUpperCase().trim(),
-        discount_percent: formData.discount_percent,
-        description: formData.description || undefined,
-        max_uses: formData.max_uses ? parseInt(formData.max_uses) : undefined,
-        expires_at: formData.expires_at || undefined,
-        is_active: formData.is_active,
-        school_name: formData.school_name.trim()
-      };
-
-      console.log('Creating discount code with data:', createData);
-      console.log('Created by admin ID:', admin.id);
-      console.log('Admin email:', admin.email);
-      
-      const result = await discountCodeService.createDiscountCode(createData, admin.id, admin.email);
-      console.log('Discount code created successfully:', result);
-      
-      toast({
-        title: "Success",
-        description: "Discount code created successfully",
-      });
-
-      resetForm();
-      setIsCreateDialogOpen(false);
-      loadDiscountCodes();
-    } catch (error) {
-      console.error('Error creating discount code:', error);
-      toast({
-        title: "Error",
-        description: error instanceof Error ? error.message : "Failed to create discount code",
-        variant: "destructive",
-      });
-    } finally {
-      setIsCreating(false);
-    }
-  };
-
-  const handleEdit = (code: DiscountCode) => {
-    setEditingCode(code);
-    setFormData({
-      code: code.code,
-      discount_percent: code.discount_percent,
-      description: code.description || '',
-      max_uses: code.max_uses?.toString() || '',
-      expires_at: code.expires_at ? new Date(code.expires_at).toISOString().slice(0, 16) : '',
-      is_active: code.is_active,
-      school_name: code.school_name || ''
-    });
-    setIsEditDialogOpen(true);
-  };
-
   const handleUpdate = async () => {
-    if (!editingCode || !admin?.email) return;
+    if (!admin?.email || !editingCode?.id) return;
 
-    // Validate required fields
-    if (!formData.code.trim()) {
-      toast({
-        title: "Error",
-        description: "Code is required",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (!formData.school_name.trim()) {
-      toast({
-        title: "Error",
-        description: "School name is required",
-        variant: "destructive",
-      });
-      return;
-    }
-
+    setIsLoading(true);
     try {
-      await discountCodeService.updateDiscountCode(editingCode.id, {
-        code: formData.code.toUpperCase().trim(),
-        discount_percent: formData.discount_percent,
-        description: formData.description || undefined,
-        max_uses: formData.max_uses ? parseInt(formData.max_uses) : undefined,
-        expires_at: formData.expires_at || undefined,
-        is_active: formData.is_active,
-        school_name: formData.school_name.trim()
-      }, admin.email);
+      console.log('🔄 Updating discount code with secure service...');
+      const updatedCode = await secureDiscountCodeService.updateDiscountCode(
+        editingCode.id,
+        {
+          code,
+          discount_percent: discountPercent,
+          description,
+          max_uses: maxUses,
+          expires_at: expiresAt,
+          is_active: isActive,
+          school_name: schoolName,
+          duration_months: durationMonths
+        },
+        admin.email
+      );
 
-      toast({
-        title: "Success",
-        description: "Discount code updated successfully",
-      });
-
-      resetForm();
-      setIsEditDialogOpen(false);
+      setDiscountCodes(
+        discountCodes.map((code) => (code.id === editingCode.id ? updatedCode : code))
+      );
       setEditingCode(null);
-      loadDiscountCodes();
-    } catch (error) {
-      console.error('Error updating discount code:', error);
+      resetForm();
+
       toast({
-        title: "Error",
-        description: "Failed to update discount code",
-        variant: "destructive",
+        title: 'Success',
+        description: 'Discount code updated successfully',
       });
+    } catch (error: any) {
+      console.error('❌ Error updating discount code:', error);
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to update discount code',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this discount code?')) return;
     if (!admin?.email) return;
 
+    setIsLoading(true);
     try {
-      await discountCodeService.deleteDiscountCode(id, admin.email);
-      
-      toast({
-        title: "Success",
-        description: "Discount code deleted successfully",
-      });
+      console.log('🔥 Deleting discount code with secure service...');
+      await secureDiscountCodeService.deleteDiscountCode(id, admin.email);
+      setDiscountCodes(discountCodes.filter((code) => code.id !== id));
 
-      loadDiscountCodes();
-    } catch (error) {
-      console.error('Error deleting discount code:', error);
       toast({
-        title: "Error",
-        description: "Failed to delete discount code",
-        variant: "destructive",
+        title: 'Success',
+        description: 'Discount code deleted successfully',
       });
+    } catch (error) {
+      console.error('❌ Error deleting discount code:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to delete discount code',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const formatDate = (dateString: string | null) => {
-    if (!dateString) return 'No expiration';
-    return new Date(dateString).toLocaleDateString();
+  const loadDiscountCodes = async () => {
+    if (!admin?.email) return;
+    
+    setIsLoading(true);
+    try {
+      console.log('📋 Loading discount codes with secure service...');
+      const codes = await secureDiscountCodeService.getAllDiscountCodes(admin.email);
+      setDiscountCodes(codes);
+      console.log('✅ Loaded', codes.length, 'discount codes');
+    } catch (error) {
+      console.error('❌ Error loading discount codes:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to load discount codes',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  if (adminLoading || isLoading) {
-    return (
-      <div className="flex items-center justify-center p-8">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-      </div>
-    );
-  }
+  const testConnection = async () => {
+    if (!admin?.email) return;
+    
+    setIsLoading(true);
+    try {
+      console.log('🧪 Testing secure discount code connection...');
+      const result = await secureDiscountCodeService.testConnection(admin.email);
+      
+      if (result.success) {
+        toast({
+          title: 'Connection Test Successful',
+          description: `${result.message} Found ${result.readCount} codes.`,
+        });
+      } else {
+        toast({
+          title: 'Connection Test Failed',
+          description: result.error,
+          variant: 'destructive',
+        });
+      }
+    } catch (error) {
+      console.error('❌ Connection test error:', error);
+      toast({
+        title: 'Test Failed',
+        description: 'Connection test failed',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-  if (!admin) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Authentication Required</CardTitle>
-          <CardDescription>You must be logged in as a platform admin to manage discount codes.</CardDescription>
-        </CardHeader>
-      </Card>
-    );
-  }
+  useEffect(() => {
+    if (admin?.email) {
+      loadDiscountCodes();
+    }
+  }, [admin]);
 
   return (
     <Card>
       <CardHeader>
-        <div className="flex items-center justify-between">
-          <div>
-            <CardTitle className="flex items-center gap-2">
-              <TagIcon className="w-5 h-5" />
-              Discount Code Management
-            </CardTitle>
-            <CardDescription>Create and manage discount codes for subscriptions</CardDescription>
-          </div>
-          <div className="flex items-center gap-2">
-            <Button 
-              variant="outline"
-              onClick={handleTestConnection}
-              disabled={isTesting}
-              className="flex items-center gap-2"
-            >
-              <TestTubeIcon className="w-4 h-4" />
-              {isTesting ? 'Testing...' : 'Test Connection'}
-            </Button>
-            <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-              <DialogTrigger asChild>
-                <Button className="flex items-center gap-2">
-                  <PlusIcon className="w-4 h-4" />
-                  Create Code
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Create Discount Code</DialogTitle>
-                  <DialogDescription>Add a new discount code for customers to use</DialogDescription>
-                </DialogHeader>
-                
-                <div className="space-y-4">
-                  <div>
-                    <Label htmlFor="code">Code *</Label>
-                    <Input
-                      id="code"
-                      value={formData.code}
-                      onChange={(e) => setFormData({...formData, code: e.target.value})}
-                      placeholder="EDUCATION10"
-                      className="uppercase"
-                      required
-                    />
-                  </div>
-
-                  <div>
-                    <Label htmlFor="school_name">School Name *</Label>
-                    <Input
-                      id="school_name"
-                      value={formData.school_name}
-                      onChange={(e) => setFormData({...formData, school_name: e.target.value})}
-                      placeholder="Enter school name"
-                      required
-                    />
-                  </div>
-                  
-                  <div>
-                    <Label htmlFor="discount_percent">Discount Percentage</Label>
-                    <Input
-                      id="discount_percent"
-                      type="number"
-                      min="1"
-                      max="100"
-                      value={formData.discount_percent}
-                      onChange={(e) => setFormData({...formData, discount_percent: parseInt(e.target.value) || 10})}
-                    />
-                  </div>
-                  
-                  <div>
-                    <Label htmlFor="description">Description</Label>
-                    <Textarea
-                      id="description"
-                      value={formData.description}
-                      onChange={(e) => setFormData({...formData, description: e.target.value})}
-                      placeholder="Description of the discount code"
-                    />
-                  </div>
-                  
-                  <div>
-                    <Label htmlFor="max_uses">Max Uses (optional)</Label>
-                    <Input
-                      id="max_uses"
-                      type="number"
-                      min="1"
-                      value={formData.max_uses}
-                      onChange={(e) => setFormData({...formData, max_uses: e.target.value})}
-                      placeholder="Unlimited if empty"
-                    />
-                  </div>
-                  
-                  <div>
-                    <Label htmlFor="expires_at">Expiration Date (optional)</Label>
-                    <Input
-                      id="expires_at"
-                      type="datetime-local"
-                      value={formData.expires_at}
-                      onChange={(e) => setFormData({...formData, expires_at: e.target.value})}
-                    />
-                  </div>
-                  
-                  <div className="flex items-center space-x-2">
-                    <Switch
-                      id="is_active"
-                      checked={formData.is_active}
-                      onCheckedChange={(checked) => setFormData({...formData, is_active: checked})}
-                    />
-                    <Label htmlFor="is_active">Active</Label>
-                  </div>
-                </div>
-                
-                <DialogFooter>
-                  <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)} disabled={isCreating}>
-                    Cancel
-                  </Button>
-                  <Button onClick={handleCreate} disabled={isCreating}>
-                    {isCreating ? 'Creating...' : 'Create Code'}
-                  </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
-          </div>
-        </div>
+        <CardTitle className="flex items-center gap-2">
+          <Shield className="w-5 h-5 text-green-600" />
+          Secure Discount Code Management
+        </CardTitle>
       </CardHeader>
-      
       <CardContent>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Code</TableHead>
-              <TableHead>School</TableHead>
-              <TableHead>Discount</TableHead>
-              <TableHead>Description</TableHead>
-              <TableHead>Usage</TableHead>
-              <TableHead>Expires</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {discountCodes.map((code) => (
-              <TableRow key={code.id}>
-                <TableCell className="font-mono font-medium">{code.code}</TableCell>
-                <TableCell>
-                  <div className="flex items-center gap-1">
-                    <SchoolIcon className="w-3 h-3" />
-                    {code.school_name || '-'}
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <div className="flex items-center gap-1">
-                    <PercentIcon className="w-3 h-3" />
-                    {code.discount_percent}%
-                  </div>
-                </TableCell>
-                <TableCell>{code.description || '-'}</TableCell>
-                <TableCell>
-                  <div className="flex items-center gap-1">
-                    <UsersIcon className="w-3 h-3" />
-                    {code.current_uses}/{code.max_uses || '∞'}
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <div className="flex items-center gap-1">
-                    <CalendarIcon className="w-3 h-3" />
-                    {formatDate(code.expires_at)}
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <Badge variant={code.is_active ? "default" : "secondary"}>
-                    {code.is_active ? "Active" : "Inactive"}
-                  </Badge>
-                </TableCell>
-                <TableCell>
-                  <div className="flex items-center gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleEdit(code)}
-                    >
-                      <EditIcon className="w-3 h-3" />
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleDelete(code.id)}
-                    >
-                      <TrashIcon className="w-3 h-3" />
-                    </Button>
-                  </div>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-        
-        {discountCodes.length === 0 && (
-          <div className="text-center py-8 text-muted-foreground">
-            No discount codes created yet. Create your first discount code to get started.
+        <div className="flex gap-2 mb-6">
+          <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+            <DialogTrigger asChild>
+              <Button className="flex items-center gap-2">
+                <Plus className="w-4 h-4" />
+                Create Code
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Create Discount Code</DialogTitle>
+              </DialogHeader>
+              <div className="grid gap-4 py-4">
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="code" className="text-right">
+                    Code
+                  </Label>
+                  <Input
+                    id="code"
+                    value={code}
+                    onChange={(e) => setCode(e.target.value)}
+                    className="col-span-3"
+                  />
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="discountPercent" className="text-right">
+                    Discount Percent
+                  </Label>
+                  <Input
+                    id="discountPercent"
+                    type="number"
+                    value={discountPercent.toString()}
+                    onChange={(e) => setDiscountPercent(Number(e.target.value))}
+                    className="col-span-3"
+                  />
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="description" className="text-right">
+                    Description
+                  </Label>
+                  <Textarea
+                    id="description"
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    className="col-span-3"
+                  />
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="maxUses" className="text-right">
+                    Max Uses
+                  </Label>
+                  <Input
+                    id="maxUses"
+                    type="number"
+                    value={maxUses !== undefined ? maxUses.toString() : ''}
+                    onChange={(e) =>
+                      setMaxUses(e.target.value ? Number(e.target.value) : undefined)
+                    }
+                    className="col-span-3"
+                  />
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="expiresAt" className="text-right">
+                    Expires At
+                  </Label>
+                  <Input
+                    id="expiresAt"
+                    type="datetime-local"
+                    value={expiresAt || ''}
+                    onChange={(e) => setExpiresAt(e.target.value)}
+                    className="col-span-3"
+                  />
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="isActive" className="text-right">
+                    Is Active
+                  </Label>
+                  <Switch
+                    id="isActive"
+                    checked={isActive}
+                    onCheckedChange={setIsActive}
+                    className="col-span-3"
+                  />
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="schoolName" className="text-right">
+                    School Name
+                  </Label>
+                  <Input
+                    id="schoolName"
+                    value={schoolName}
+                    onChange={(e) => setSchoolName(e.target.value)}
+                    className="col-span-3"
+                  />
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="durationMonths" className="text-right">
+                    Duration Months
+                  </Label>
+                  <Input
+                    id="durationMonths"
+                    type="number"
+                    value={durationMonths !== undefined ? durationMonths.toString() : ''}
+                    onChange={(e) =>
+                      setDurationMonths(e.target.value ? Number(e.target.value) : undefined)
+                    }
+                    className="col-span-3"
+                  />
+                </div>
+              </div>
+              <Button onClick={handleCreate}>Create Discount Code</Button>
+            </DialogContent>
+          </Dialog>
+          
+          <Button
+            onClick={testConnection}
+            disabled={isLoading}
+            variant="outline"
+            className="flex items-center gap-2"
+          >
+            <TestTube className="w-4 h-4" />
+            Test Connection
+          </Button>
+          
+          <Button
+            onClick={loadDiscountCodes}
+            disabled={isLoading}
+            variant="outline"
+          >
+            Refresh
+          </Button>
+        </div>
+
+        {/* Security Status */}
+        <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+          <div className="flex items-center gap-2 text-green-800">
+            <Shield className="w-4 h-4" />
+            <span className="font-medium">Security Enhanced</span>
           </div>
+          <p className="text-sm text-green-700 mt-1">
+            All operations are now secured with input validation, rate limiting, and audit logging.
+          </p>
+        </div>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Discount Codes</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {isLoading ? (
+              <p>Loading discount codes...</p>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Code
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Discount (%)
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Description
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Max Uses
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Expires At
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Is Active
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        School Name
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Duration (Months)
+                      </th>
+                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Actions
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {discountCodes.map((discountCode) => (
+                      <tr key={discountCode.id}>
+                        <td className="px-6 py-4 whitespace-nowrap">{discountCode.code}</td>
+                        <td className="px-6 py-4 whitespace-nowrap">{discountCode.discount_percent}</td>
+                        <td className="px-6 py-4 whitespace-nowrap">{discountCode.description}</td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          {discountCode.max_uses === null ? 'Unlimited' : discountCode.max_uses}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          {discountCode.expires_at ? new Date(discountCode.expires_at).toLocaleString() : 'Never'}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          {discountCode.is_active ? 'Yes' : 'No'}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">{discountCode.school_name}</td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          {discountCode.duration_months === null ? 'N/A' : discountCode.duration_months}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-right">
+                          <div className="flex justify-end gap-2">
+                            <Button
+                              onClick={() => {
+                                setEditingCode(discountCode);
+                                setCode(discountCode.code);
+                                setDiscountPercent(discountCode.discount_percent);
+                                setDescription(discountCode.description || '');
+                                setMaxUses(discountCode.max_uses || undefined);
+                                setExpiresAt(discountCode.expires_at || undefined);
+                                setIsActive(discountCode.is_active);
+                                setSchoolName(discountCode.school_name || '');
+                                setDurationMonths(discountCode.duration_months || undefined);
+                              }}
+                              variant="outline"
+                              size="icon"
+                            >
+                              <Edit className="w-4 h-4" />
+                            </Button>
+                            <Button
+                              onClick={() => handleDelete(discountCode.id)}
+                              variant="destructive"
+                              size="icon"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {editingCode && (
+          <Dialog open={!!editingCode} onOpenChange={() => setEditingCode(null)}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Edit Discount Code</DialogTitle>
+              </DialogHeader>
+              <div className="grid gap-4 py-4">
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="code" className="text-right">
+                    Code
+                  </Label>
+                  <Input
+                    id="code"
+                    value={code}
+                    onChange={(e) => setCode(e.target.value)}
+                    className="col-span-3"
+                  />
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="discountPercent" className="text-right">
+                    Discount Percent
+                  </Label>
+                  <Input
+                    id="discountPercent"
+                    type="number"
+                    value={discountPercent.toString()}
+                    onChange={(e) => setDiscountPercent(Number(e.target.value))}
+                    className="col-span-3"
+                  />
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="description" className="text-right">
+                    Description
+                  </Label>
+                  <Textarea
+                    id="description"
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    className="col-span-3"
+                  />
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="maxUses" className="text-right">
+                    Max Uses
+                  </Label>
+                  <Input
+                    id="maxUses"
+                    type="number"
+                    value={maxUses !== undefined ? maxUses.toString() : ''}
+                    onChange={(e) =>
+                      setMaxUses(e.target.value ? Number(e.target.value) : undefined)
+                    }
+                    className="col-span-3"
+                  />
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="expiresAt" className="text-right">
+                    Expires At
+                  </Label>
+                  <Input
+                    id="expiresAt"
+                    type="datetime-local"
+                    value={expiresAt || ''}
+                    onChange={(e) => setExpiresAt(e.target.value)}
+                    className="col-span-3"
+                  />
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="isActive" className="text-right">
+                    Is Active
+                  </Label>
+                  <Switch
+                    id="isActive"
+                    checked={isActive}
+                    onCheckedChange={setIsActive}
+                    className="col-span-3"
+                  />
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="schoolName" className="text-right">
+                    School Name
+                  </Label>
+                  <Input
+                    id="schoolName"
+                    value={schoolName}
+                    onChange={(e) => setSchoolName(e.target.value)}
+                    className="col-span-3"
+                  />
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="durationMonths" className="text-right">
+                    Duration Months
+                  </Label>
+                  <Input
+                    id="durationMonths"
+                    type="number"
+                    value={durationMonths !== undefined ? durationMonths.toString() : ''}
+                    onChange={(e) =>
+                      setDurationMonths(e.target.value ? Number(e.target.value) : undefined)
+                    }
+                    className="col-span-3"
+                  />
+                </div>
+              </div>
+              <Button onClick={handleUpdate}>Update Discount Code</Button>
+            </DialogContent>
+          </Dialog>
         )}
       </CardContent>
-
-      {/* Edit Dialog */}
-      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Edit Discount Code</DialogTitle>
-            <DialogDescription>Update the discount code details</DialogDescription>
-          </DialogHeader>
-          
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="edit-code">Code *</Label>
-              <Input
-                id="edit-code"
-                value={formData.code}
-                onChange={(e) => setFormData({...formData, code: e.target.value})}
-                className="uppercase"
-                required
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="edit-school_name">School Name *</Label>
-              <Input
-                id="edit-school_name"
-                value={formData.school_name}
-                onChange={(e) => setFormData({...formData, school_name: e.target.value})}
-                placeholder="Enter school name"
-                required
-              />
-            </div>
-            
-            <div>
-              <Label htmlFor="edit-discount_percent">Discount Percentage</Label>
-              <Input
-                id="edit-discount_percent"
-                type="number"
-                min="1"
-                max="100"
-                value={formData.discount_percent}
-                onChange={(e) => setFormData({...formData, discount_percent: parseInt(e.target.value) || 10})}
-              />
-            </div>
-            
-            <div>
-              <Label htmlFor="edit-description">Description</Label>
-              <Textarea
-                id="edit-description"
-                value={formData.description}
-                onChange={(e) => setFormData({...formData, description: e.target.value})}
-              />
-            </div>
-            
-            <div>
-              <Label htmlFor="edit-max_uses">Max Uses</Label>
-              <Input
-                id="edit-max_uses"
-                type="number"
-                min="1"
-                value={formData.max_uses}
-                onChange={(e) => setFormData({...formData, max_uses: e.target.value})}
-              />
-            </div>
-            
-            <div>
-              <Label htmlFor="edit-expires_at">Expiration Date</Label>
-              <Input
-                id="edit-expires_at"
-                type="datetime-local"
-                value={formData.expires_at}
-                onChange={(e) => setFormData({...formData, expires_at: e.target.value})}
-              />
-            </div>
-            
-            <div className="flex items-center space-x-2">
-              <Switch
-                id="edit-is_active"
-                checked={formData.is_active}
-                onCheckedChange={(checked) => setFormData({...formData, is_active: checked})}
-              />
-              <Label htmlFor="edit-is_active">Active</Label>
-            </div>
-          </div>
-          
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
-              Cancel
-            </Button>
-            <Button onClick={handleUpdate}>Update Code</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </Card>
   );
 };

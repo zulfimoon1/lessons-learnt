@@ -1,147 +1,25 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { securePlatformAdminService } from '@/services/securePlatformAdminService';
 
-interface PlatformAdmin {
+interface AdminUser {
   id: string;
   email: string;
   name: string;
   role: string;
+  school: string;
 }
 
 interface PlatformAdminContextType {
-  admin: PlatformAdmin | null;
+  admin: AdminUser | null;
   isLoading: boolean;
   isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
   logout: () => void;
+  validateSession: () => Promise<void>;
 }
 
 const PlatformAdminContext = createContext<PlatformAdminContextType | undefined>(undefined);
-
-export const PlatformAdminProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [admin, setAdmin] = useState<PlatformAdmin | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-
-  useEffect(() => {
-    checkAdminSession();
-  }, []);
-
-  const checkAdminSession = async () => {
-    try {
-      console.log('🔍 Checking admin session...');
-      const adminData = localStorage.getItem('platformAdmin');
-      if (adminData) {
-        const parsed = JSON.parse(adminData);
-        console.log('✅ Found stored admin session:', parsed.email);
-        setAdmin(parsed);
-        setIsAuthenticated(true);
-        // Restore admin context
-        await setAdminContext(parsed.email);
-      } else {
-        console.log('❌ No stored admin session found');
-      }
-    } catch (error) {
-      console.error('❌ Error checking admin session:', error);
-      localStorage.removeItem('platformAdmin');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const setAdminContext = async (email: string) => {
-    try {
-      console.log('🔧 Setting admin context for:', email);
-      const { error } = await supabase.rpc('set_platform_admin_context', { 
-        admin_email: email 
-      });
-      
-      if (error) {
-        console.error('❌ Error setting admin context:', error);
-        throw error;
-      }
-      
-      console.log('✅ Admin context set successfully');
-    } catch (error) {
-      console.error('❌ Failed to set admin context:', error);
-      throw error;
-    }
-  };
-
-  const login = async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
-    try {
-      setIsLoading(true);
-      console.log('🚀 === PLATFORM ADMIN LOGIN ATTEMPT ===');
-      console.log('📧 Email:', email);
-
-      // Import the login service dynamically
-      const { platformAdminLoginService } = await import('@/services/platformAdminService');
-      const result = await platformAdminLoginService(email, password);
-      
-      console.log('📊 Login service result:', result);
-      
-      if ('error' in result && result.error) {
-        console.error('❌ Login failed:', result.error);
-        return { success: false, error: result.error };
-      }
-
-      if (!('admin' in result && result.admin)) {
-        console.error('❌ No admin data in result');
-        return { success: false, error: 'Authentication failed' };
-      }
-
-      const adminData = {
-        id: result.admin.id,
-        email: result.admin.email,
-        name: result.admin.name,
-        role: result.admin.role
-      };
-      
-      console.log('✅ Setting admin data:', adminData);
-      setAdmin(adminData);
-      setIsAuthenticated(true);
-      localStorage.setItem('platformAdmin', JSON.stringify(adminData));
-      
-      // Admin context should already be set by the login service
-      console.log('🎉 Login successful!');
-      return { success: true };
-    } catch (error) {
-      console.error('💥 Login error:', error);
-      return { success: false, error: 'An unexpected error occurred' };
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const logout = async () => {
-    try {
-      console.log('🚪 Logging out platform admin');
-      localStorage.removeItem('platformAdmin');
-      setAdmin(null);
-      setIsAuthenticated(false);
-      
-      // Clear admin context
-      await supabase.rpc('set_platform_admin_context', { admin_email: '' });
-    } catch (error) {
-      console.error('❌ Logout error:', error);
-    }
-  };
-
-  const value = {
-    admin,
-    isLoading,
-    isAuthenticated,
-    login,
-    logout
-  };
-
-  return (
-    <PlatformAdminContext.Provider value={value}>
-      {children}
-    </PlatformAdminContext.Provider>
-  );
-};
 
 export const usePlatformAdmin = () => {
   const context = useContext(PlatformAdminContext);
@@ -149,4 +27,106 @@ export const usePlatformAdmin = () => {
     throw new Error('usePlatformAdmin must be used within a PlatformAdminProvider');
   }
   return context;
+};
+
+export const PlatformAdminProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [admin, setAdmin] = useState<AdminUser | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  // Load admin from localStorage on mount
+  useEffect(() => {
+    const loadStoredAdmin = async () => {
+      try {
+        const storedAdmin = localStorage.getItem('platform_admin');
+        if (storedAdmin) {
+          const adminData = JSON.parse(storedAdmin);
+          
+          // Validate the stored session
+          const validation = await securePlatformAdminService.validateAdminSession(adminData.email);
+          if (validation.valid && validation.admin) {
+            setAdmin(validation.admin);
+            setIsAuthenticated(true);
+            console.log('🔐 Admin session restored:', adminData.email);
+          } else {
+            // Clear invalid session
+            localStorage.removeItem('platform_admin');
+            console.log('🔒 Invalid admin session cleared');
+          }
+        }
+      } catch (error) {
+        console.error('Error loading stored admin session:', error);
+        localStorage.removeItem('platform_admin');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadStoredAdmin();
+  }, []);
+
+  const login = async (email: string, password: string) => {
+    console.log('🔐 PLATFORM ADMIN LOGIN:', email);
+    setIsLoading(true);
+    
+    try {
+      const result = await securePlatformAdminService.authenticateAdmin({ email, password });
+      
+      if (result.success && result.admin) {
+        setAdmin(result.admin);
+        setIsAuthenticated(true);
+        
+        // Store in localStorage for persistence
+        localStorage.setItem('platform_admin', JSON.stringify(result.admin));
+        
+        console.log('✅ Platform admin login successful');
+        return { success: true };
+      } else {
+        console.error('❌ Platform admin login failed:', result.error);
+        return { success: false, error: result.error || 'Authentication failed' };
+      }
+    } catch (error) {
+      console.error('💥 Platform admin login error:', error);
+      return { success: false, error: 'Authentication system error' };
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const logout = () => {
+    console.log('🔓 Platform admin logout');
+    setAdmin(null);
+    setIsAuthenticated(false);
+    localStorage.removeItem('platform_admin');
+  };
+
+  const validateSession = async () => {
+    if (!admin?.email) return;
+    
+    try {
+      const validation = await securePlatformAdminService.validateAdminSession(admin.email);
+      if (!validation.valid) {
+        console.log('🔒 Admin session validation failed, logging out');
+        logout();
+      }
+    } catch (error) {
+      console.error('Error validating admin session:', error);
+      logout();
+    }
+  };
+
+  const value: PlatformAdminContextType = {
+    admin,
+    isLoading,
+    isAuthenticated,
+    login,
+    logout,
+    validateSession,
+  };
+
+  return (
+    <PlatformAdminContext.Provider value={value}>
+      {children}
+    </PlatformAdminContext.Provider>
+  );
 };
