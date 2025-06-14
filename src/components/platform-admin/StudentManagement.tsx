@@ -45,7 +45,7 @@ const StudentManagement: React.FC = () => {
         enhancedSecurityService.logSecurityEvent({
           type: 'suspicious_activity',
           userId: admin.id,
-          timestamp: new Date().toISOString(),
+          timestamp: Date.now(),
           details: `Failed to set admin context: ${error}`,
           userAgent: navigator.userAgent,
           severity: 'medium'
@@ -80,7 +80,7 @@ const StudentManagement: React.FC = () => {
       enhancedSecurityService.logSecurityEvent({
         type: 'suspicious_activity',
         userId: admin?.id,
-        timestamp: new Date().toISOString(),
+        timestamp: Date.now(),
         details: `Error fetching students: ${error}`,
         userAgent: navigator.userAgent,
         severity: 'medium'
@@ -165,7 +165,7 @@ const StudentManagement: React.FC = () => {
       enhancedSecurityService.logSecurityEvent({
         type: 'login_success',
         userId: admin?.id,
-        timestamp: new Date().toISOString(),
+        timestamp: Date.now(),
         details: `Admin created new student: ${nameValidation.sanitized}`,
         userAgent: navigator.userAgent,
         severity: 'low'
@@ -185,7 +185,7 @@ const StudentManagement: React.FC = () => {
       enhancedSecurityService.logSecurityEvent({
         type: 'suspicious_activity',
         userId: admin?.id,
-        timestamp: new Date().toISOString(),
+        timestamp: Date.now(),
         details: `Error adding student: ${error}`,
         userAgent: navigator.userAgent,
         severity: 'medium'
@@ -219,7 +219,7 @@ const StudentManagement: React.FC = () => {
         enhancedSecurityService.logSecurityEvent({
           type: 'login_success',
           userId: admin?.id,
-          timestamp: new Date().toISOString(),
+          timestamp: Date.now(),
           details: `Admin deleted student: ${studentName}`,
           userAgent: navigator.userAgent,
           severity: 'medium'
@@ -234,7 +234,7 @@ const StudentManagement: React.FC = () => {
       enhancedSecurityService.logSecurityEvent({
         type: 'suspicious_activity',
         userId: admin?.id,
-        timestamp: new Date().toISOString(),
+        timestamp: Date.now(),
         details: `Error deleting student: ${error}`,
         userAgent: navigator.userAgent,
         severity: 'high'

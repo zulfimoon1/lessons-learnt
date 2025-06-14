@@ -246,3 +246,12 @@ class SecureAuthService {
 }
 
 export const secureAuthService = new SecureAuthService();
+
+// Export the specific functions that enhancedAuthService needs
+export const secureTeacherLogin = secureAuthService.teacherLogin.bind(secureAuthService);
+export const secureTeacherSignup = secureAuthService.teacherSignup.bind(secureAuthService);
+export const secureStudentLogin = secureAuthService.studentLogin.bind(secureAuthService);
+export const secureStudentSignup = async (fullName: string, school: string, grade: string, password: string) => {
+  // Implementation for student signup would go here
+  return { success: false, error: 'Student signup not implemented yet' };
+};
