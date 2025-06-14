@@ -1,44 +1,112 @@
 
 export const enTeacherTranslations = {
-  'teacher.dashboard': 'Teacher Dashboard',
-  'teacher.myClasses': 'My Classes',
-  'teacher.students': 'Students',
-  'teacher.analytics': 'Analytics',
-  'teacher.feedback': 'Feedback',
-  'teacher.reports': 'Reports',
-  'teacher.schedule': 'Schedule',
-  'teacher.profile': 'Profile',
-  'teacher.settings': 'Settings',
-  'teacher.logout': 'Logout',
-  'teacher.welcome': 'Welcome',
-  'teacher.overview': 'Overview',
-  'teacher.recentActivity': 'Recent Activity',
-  'teacher.upcomingClasses': 'Upcoming Classes',
-  'teacher.studentFeedback': 'Student Feedback',
-  'teacher.classPerformance': 'Class Performance',
+  // Teacher Dashboard
+  'teacher.dashboard.title': 'Teacher Dashboard',
+  'teacher.dashboard.description': 'Mrs. Johnson logs into her comprehensive teacher dashboard',
+  'teacher.dashboard.welcome': 'Teacher Dashboard',
+  'teacher.dashboard.welcomeBack': 'Welcome back, Mrs. Johnson',
+  
+  // Form Labels
+  'teacher.classDetailsTitle': 'Class Details',
+  'teacher.classDetailsDescription': 'Enter the details for your class',
+  'teacher.subjectLabel': 'Subject',
+  'teacher.selectSubject': 'Select Subject',
+  'teacher.lessonTopicLabel': 'Lesson Topic',
+  'teacher.lessonTopicPlaceholder': 'Enter lesson topic',
+  'teacher.descriptionLabel': 'Description',
+  'teacher.descriptionPlaceholder': 'Enter lesson description',
+  
+  'teacher.scheduleDetailsTitle': 'Schedule Details',
+  'teacher.scheduleDetailsDescription': 'Set the date and time for your class',
+  'teacher.dateLabel': 'Date',
+  'teacher.timeLabel': 'Time',
+  'teacher.durationLabel': 'Duration (minutes)',
+  'teacher.schoolLabel': 'School',
+  'teacher.classGradeLabel': 'Class/Grade',
+  
+  // Alerts
+  'teacher.alerts.title': 'Review Alerts',
+  'teacher.alerts.description': 'Mrs. Johnson checks mental health alerts and classroom activity warnings',
+  'teacher.alerts.count': '3 alerts',
+  'teacher.alerts.recent': 'Recent alerts - priority review',
+  'teacher.alerts.distress': 'Student showing signs of distress',
+  'teacher.alerts.anonymous': 'Class 10A - Anonymous student in math lesson',
+  'teacher.alerts.clickReview': 'Click to review and take action',
+  'teacher.alerts.lowUnderstanding': 'Poor chemistry understanding',
+  'teacher.alerts.struggling': '15 students struggling with today\'s topic',
+  'teacher.alerts.address': 'Address',
+  
+  // Mental Health
+  'teacher.mentalHealth.title': 'Mental Health Support System',
+  'teacher.mentalHealth.description': 'Mrs. Johnson reviews and manages student mental health support requests',
+  'teacher.mentalHealth.center': 'Mental Health Support Center - Teacher Interface',
+  'teacher.mentalHealth.activeSessions': 'Active Support Sessions',
+  'teacher.mentalHealth.anonymousStudent': 'Anonymous Student - Class 10A',
+  'teacher.mentalHealth.activeChat': 'Active Chat',
+  'teacher.mentalHealth.started': 'Started 15 min. ago',
+  'teacher.mentalHealth.connected': 'Connected to Dr. Sarah Wilson - School Psychologist',
+  'teacher.mentalHealth.monitor': 'Monitor (read-only)',
+  'teacher.mentalHealth.emergency': 'Emergency Override',
+  'teacher.mentalHealth.pendingRequests': 'Pending Support Requests',
+  'teacher.mentalHealth.examStress': 'Requested counselor session for exam stress',
+  'teacher.mentalHealth.waiting': 'Waiting 8 minutes',
+  'teacher.mentalHealth.assignCounselor': 'Assign Counselor',
+  'teacher.mentalHealth.connectNow': 'Connect Now',
+  'teacher.mentalHealth.weeklyOverview': 'Weekly Mental Health Overview',
+  'teacher.mentalHealth.supportSessions': 'Support Sessions',
+  'teacher.mentalHealth.positiveOutcomes': 'Positive Outcomes',
+  'teacher.mentalHealth.supportRating': 'Support Rating',
+  'teacher.mentalHealth.privacy': 'Privacy & Confidentiality',
+  'teacher.mentalHealth.privacyDescription': 'All mental health communication is encrypted and confidential. Teachers can monitor for safety purposes only. Individual conversation content is only accessible to licensed mental health professionals.',
   'teacher.mentalHealthAlerts': 'Mental Health Alerts',
-  'teacher.weeklyReport': 'Weekly Report',
-  'teacher.monthlyReport': 'Monthly Report',
-  'teacher.exportData': 'Export Data',
-  'teacher.createClass': 'Create Class',
-  'teacher.editClass': 'Edit Class',
-  'teacher.deleteClass': 'Delete Class',
-  'teacher.addStudent': 'Add Student',
-  'teacher.removeStudent': 'Remove Student',
-  'teacher.viewStudent': 'View Student',
-  'teacher.contactParent': 'Contact Parent',
-  'teacher.scheduleAppointment': 'Schedule Appointment',
-  'teacher.sendMessage': 'Send Message',
-  'teacher.markAttendance': 'Mark Attendance',
-  'teacher.gradeAssignment': 'Grade Assignment',
-  'teacher.createAssignment': 'Create Assignment',
-  'teacher.viewAssignments': 'View Assignments',
-  'teacher.lessonPlanning': 'Lesson Planning',
-  'teacher.resourceLibrary': 'Resource Library',
-  'teacher.collaborationTools': 'Collaboration Tools',
-  'teacher.supportTicket': 'Support Ticket',
-  'teacher.helpCenter': 'Help Center',
-  'teacher.trainingMaterials': 'Training Materials',
-  'teacher.bestPractices': 'Best Practices',
-  'teacher.communityForum': 'Community Forum',
+  
+  // Performance
+  'teacher.performance.title': 'Classroom Performance Analysis',
+  'teacher.performance.description': 'Mrs. Johnson reviews today\'s live classroom performance metrics',
+  
+  // Mood
+  'teacher.mood.title': 'Student Mood Overview',
+  'teacher.mood.description': 'Mrs. Johnson examines her students\' emotional state',
+  
+  // Feedback
+  'teacher.feedback.title': 'Individual Student Feedback',
+  'teacher.feedback.description': 'Mrs. Johnson reviews detailed individual student feedback',
+  
+  // Concerns
+  'teacher.concerns.title': 'Address Student Concerns',
+  'teacher.concerns.description': 'Mrs. Johnson takes action on students who need support',
+  
+  // Trends
+  'teacher.trends.title': 'Weekly Performance Trends',
+  'teacher.trends.description': 'Mrs. Johnson analyzes weekly performance and engagement trends',
+  
+  // Improvements
+  'teacher.improvements.title': 'Plan Lesson Improvements',
+  'teacher.improvements.description': 'Mrs. Johnson plans improvements based on student feedback',
+  
+  // Simulation
+  'teacher.simulation.title': 'Teacher Journey Simulation',
+  
+  // Statistics
+  'teacher.stats.totalStudents': 'Total Students',
+  'teacher.stats.avgUnderstanding': 'Avg Understanding',
+  'teacher.stats.lessonRating': 'Lesson Rating',
+  'teacher.stats.needSupport': 'Need Support',
+  
+  // Classes
+  'teacher.classes.today': 'Today\'s Classes',
+  'teacher.classes.mathematics': 'Mathematics - Class 10A',
+  'teacher.classes.algebra': '9:00 AM - Algebra II',
+  'teacher.classes.students': '25 students',
+  'teacher.classes.live': 'Live',
+  'teacher.classes.understanding': '89% understanding',
+  'teacher.classes.responses': '23 responses',
+  
+  // Dashboard navigation
+  'teacher.dashboard': 'Teacher Dashboard',
+  
+  // Common actions
+  'common.play': 'Play',
+  'common.pause': 'Pause',
+  'common.reset': 'Reset'
 };

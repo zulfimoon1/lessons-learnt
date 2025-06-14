@@ -6,6 +6,24 @@ export const ltTeacherTranslations = {
   'teacher.dashboard.welcome': 'Mokytojo skydelis',
   'teacher.dashboard.welcomeBack': 'Sveiki sugrįžę, ponia Johnson',
   
+  // Form Labels
+  'teacher.classDetailsTitle': 'Klasės duomenys',
+  'teacher.classDetailsDescription': 'Įveskite savo klasės duomenis',
+  'teacher.subjectLabel': 'Dalykas',
+  'teacher.selectSubject': 'Pasirinkite dalyką',
+  'teacher.lessonTopicLabel': 'Pamokos tema',
+  'teacher.lessonTopicPlaceholder': 'Įveskite pamokos temą',
+  'teacher.descriptionLabel': 'Aprašymas',
+  'teacher.descriptionPlaceholder': 'Įveskite pamokos aprašymą',
+  
+  'teacher.scheduleDetailsTitle': 'Tvarkaraščio duomenys',
+  'teacher.scheduleDetailsDescription': 'Nustatykite savo klasės datą ir laiką',
+  'teacher.dateLabel': 'Data',
+  'teacher.timeLabel': 'Laikas',
+  'teacher.durationLabel': 'Trukmė (minutės)',
+  'teacher.schoolLabel': 'Mokykla',
+  'teacher.classGradeLabel': 'Klasė/Kursas',
+  
   // Alerts
   'teacher.alerts.title': 'Peržiūrėti įspėjimus',
   'teacher.alerts.description': 'Ponia Johnson tikrina psichinės sveikatos įspėjimus ir klasės veiklos perspėjimus',
@@ -40,6 +58,7 @@ export const ltTeacherTranslations = {
   'teacher.mentalHealth.supportRating': 'Palaikymo įvertinimas',
   'teacher.mentalHealth.privacy': 'Privatumas ir konfidencialumas',
   'teacher.mentalHealth.privacyDescription': 'Visa psichinės sveikatos komunikacija yra šifruota ir konfidenciali. Mokytojai gali stebėti tik saugumo tikslais. Individualūs pokalbių turiniai prieinami tik licencijuotiems psichinės sveikatos specialistams.',
+  'teacher.mentalHealthAlerts': 'Psichinės sveikatos įspėjimai',
   
   // Performance
   'teacher.performance.title': 'Klasės veiklos analizė',
@@ -82,6 +101,9 @@ export const ltTeacherTranslations = {
   'teacher.classes.live': 'Tiesioginė',
   'teacher.classes.understanding': '89% supratimas',
   'teacher.classes.responses': '23 atsakymai',
+  
+  // Dashboard navigation
+  'teacher.dashboard': 'Mokytojo skydelis',
   
   // Common actions
   'common.play': 'Paleisti',
