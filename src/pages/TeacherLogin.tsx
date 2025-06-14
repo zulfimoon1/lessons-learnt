@@ -145,6 +145,7 @@ const TeacherLogin = () => {
     setIsLoading(true);
 
     try {
+      // Use teacherLogin with signup parameters
       const result = await teacherLogin(
         signupData.email.trim(),
         signupData.password,
