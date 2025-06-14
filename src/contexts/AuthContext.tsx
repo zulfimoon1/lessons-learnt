@@ -29,17 +29,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   // Initialize auth state
   useEffect(() => {
     const initializeAuth = async () => {
-      console.log('AuthContext: Starting secure initialization...');
+      console.log('AuthContext: Starting initialization...');
       
       try {
-        // Check session validity
-        const isValidSession = await securityService.validateSession();
-        if (!isValidSession) {
-          console.log('Invalid session, clearing auth state');
-          setIsLoading(false);
-          return;
-        }
-
         // Restore teacher from localStorage
         const savedTeacher = localStorage.getItem('teacher');
         if (savedTeacher) {
@@ -95,7 +87,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         });
       } finally {
         setIsLoading(false);
-        console.log('AuthContext: Secure initialization complete');
+        console.log('AuthContext: Initialization complete');
       }
     };
 
@@ -115,12 +107,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     // If name and school are provided, this is a signup request
     if (name && school) {
       return await teacherSignup(name, email, school, password, role);
-    }
-    
-    // Validate session
-    const isValidSession = await securityService.validateSession();
-    if (!isValidSession) {
-      return { error: 'Session invalid. Please refresh and try again.' };
     }
     
     // Check rate limiting
@@ -248,12 +234,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   // Student login
   const studentLogin = async (fullName: string, school: string, grade: string, password: string) => {
     console.log('AuthContext: Student login attempt for:', fullName);
-    
-    // Validate session
-    const isValidSession = await securityService.validateSession();
-    if (!isValidSession) {
-      return { error: 'Session invalid. Please refresh and try again.' };
-    }
     
     // Check rate limiting
     const identifier = `${fullName}-${school}-${grade}`;
