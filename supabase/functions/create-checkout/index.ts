@@ -155,18 +155,30 @@ serve(async (req) => {
 
     // Increment discount code usage if one was used
     if (discountCodeId) {
-      const { error: incrementError } = await supabaseAdmin
+      // Get current usage first
+      const { data: currentCode, error: fetchError } = await supabaseAdmin
         .from('discount_codes')
-        .update({
-          current_uses: supabaseAdmin.sql`current_uses + 1`,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', discountCodeId);
+        .select('current_uses')
+        .eq('id', discountCodeId)
+        .single();
 
-      if (incrementError) {
-        console.error("Error incrementing discount code usage:", incrementError);
+      if (fetchError) {
+        console.error("Error fetching current usage:", fetchError);
       } else {
-        console.log("Discount code usage incremented");
+        // Update with incremented usage
+        const { error: incrementError } = await supabaseAdmin
+          .from('discount_codes')
+          .update({
+            current_uses: (currentCode.current_uses || 0) + 1,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', discountCodeId);
+
+        if (incrementError) {
+          console.error("Error incrementing discount code usage:", incrementError);
+        } else {
+          console.log("Discount code usage incremented");
+        }
       }
     }
 
