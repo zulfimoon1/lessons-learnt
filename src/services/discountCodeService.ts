@@ -51,19 +51,19 @@ export const discountCodeService = {
         admin_email: adminEmail
       });
 
-      // Test using direct table access with RLS
+      // Test read access
       console.log('📋 Testing read access...');
-      const { data, error } = await supabase
+      const { data, error, count } = await supabase
         .from('discount_codes')
-        .select('*')
-        .limit(10);
+        .select('*', { count: 'exact' })
+        .limit(5);
 
       if (error) {
         console.error('❌ Read test failed:', error);
         return { success: false, error: error.message, operation: 'read' };
       }
 
-      console.log('✅ Read test successful. Found', data?.length || 0, 'discount codes');
+      console.log('✅ Read test successful. Found', count || 0, 'discount codes');
 
       // Test create operation with a test code
       console.log('📝 Testing write access...');
@@ -104,7 +104,7 @@ export const discountCodeService = {
       return { 
         success: true, 
         message: 'All tests passed successfully!',
-        readCount: data?.length || 0,
+        readCount: count || 0,
         testCodeId: createData.id
       };
 
