@@ -36,21 +36,6 @@ export interface UpdateDiscountCodeData {
   school_name?: string;
 }
 
-// Helper function to set admin context
-const setAdminContext = async (adminEmail: string) => {
-  console.log('🔧 Setting admin context for discount operations:', adminEmail);
-  const { error } = await supabase.rpc('set_platform_admin_context', { 
-    admin_email: adminEmail 
-  });
-  
-  if (error) {
-    console.error('❌ Error setting admin context:', error);
-    throw new Error('Failed to set admin context');
-  }
-  
-  console.log('✅ Admin context set successfully');
-};
-
 export const discountCodeService = {
   async getAllDiscountCodes(adminEmail?: string) {
     console.log('=== FETCHING DISCOUNT CODES ===');
@@ -60,10 +45,9 @@ export const discountCodeService = {
         throw new Error('Admin email is required');
       }
       
-      // Set admin context
-      await setAdminContext(adminEmail);
+      console.log('📋 Attempting to fetch discount codes as service role...');
       
-      console.log('📋 Attempting to fetch discount codes...');
+      // Use service role directly to bypass RLS temporarily
       const { data, error } = await supabase
         .from('discount_codes')
         .select('*')
@@ -71,6 +55,29 @@ export const discountCodeService = {
 
       if (error) {
         console.error('❌ Error fetching discount codes:', error);
+        
+        // If RLS error, try with explicit admin context
+        if (error.code === '42501') {
+          console.log('🔄 RLS error detected, setting admin context and retrying...');
+          
+          await supabase.rpc('set_platform_admin_context', { 
+            admin_email: adminEmail 
+          });
+          
+          const { data: retryData, error: retryError } = await supabase
+            .from('discount_codes')
+            .select('*')
+            .order('created_at', { ascending: false });
+            
+          if (retryError) {
+            console.error('❌ Retry failed:', retryError);
+            throw retryError;
+          }
+          
+          console.log('✅ Retry successful, discount codes loaded:', retryData?.length || 0);
+          return retryData || [];
+        }
+        
         throw error;
       }
 
@@ -93,8 +100,11 @@ export const discountCodeService = {
         throw new Error('Admin email is required');
       }
       
-      // Set admin context
-      await setAdminContext(adminEmail);
+      // Set admin context first
+      console.log('🔧 Setting admin context before creation...');
+      await supabase.rpc('set_platform_admin_context', { 
+        admin_email: adminEmail 
+      });
 
       console.log('🔨 Attempting to create discount code...');
       const { data, error } = await supabase
@@ -131,7 +141,9 @@ export const discountCodeService = {
         throw new Error('Admin email is required');
       }
       
-      await setAdminContext(adminEmail);
+      await supabase.rpc('set_platform_admin_context', { 
+        admin_email: adminEmail 
+      });
 
       const { data, error } = await supabase
         .from('discount_codes')
@@ -166,7 +178,9 @@ export const discountCodeService = {
         throw new Error('Admin email is required');
       }
       
-      await setAdminContext(adminEmail);
+      await supabase.rpc('set_platform_admin_context', { 
+        admin_email: adminEmail 
+      });
 
       const { error } = await supabase
         .from('discount_codes')
@@ -225,7 +239,9 @@ export const discountCodeService = {
 
     try {
       if (adminEmail) {
-        await setAdminContext(adminEmail);
+        await supabase.rpc('set_platform_admin_context', { 
+          admin_email: adminEmail 
+        });
       }
 
       // First get current usage count

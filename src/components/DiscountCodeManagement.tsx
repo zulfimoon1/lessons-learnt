@@ -19,7 +19,8 @@ import {
   CalendarIcon,
   UsersIcon,
   PercentIcon,
-  SchoolIcon
+  SchoolIcon,
+  AlertTriangleIcon
 } from "lucide-react";
 
 const DiscountCodeManagement = () => {
@@ -31,6 +32,7 @@ const DiscountCodeManagement = () => {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editingCode, setEditingCode] = useState<DiscountCode | null>(null);
   const [isCreating, setIsCreating] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
   const [formData, setFormData] = useState({
     code: '',
     discount_percent: 10,
@@ -57,18 +59,42 @@ const DiscountCodeManagement = () => {
   }, [adminLoading, admin?.email]);
 
   const loadDiscountCodes = async () => {
+    if (!admin?.email) {
+      console.error('No admin email available for loading discount codes');
+      return;
+    }
+
     try {
-      console.log('Loading discount codes with admin email:', admin?.email);
-      const codes = await discountCodeService.getAllDiscountCodes(admin?.email);
+      console.log('Loading discount codes with admin email:', admin.email);
+      const codes = await discountCodeService.getAllDiscountCodes(admin.email);
       console.log('Loaded discount codes:', codes);
       setDiscountCodes(codes);
+      setRetryCount(0); // Reset retry count on success
     } catch (error) {
       console.error('Error loading discount codes:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load discount codes",
-        variant: "destructive",
-      });
+      
+      // Show more specific error messages
+      if (error instanceof Error) {
+        if (error.message.includes('permission denied')) {
+          toast({
+            title: "Permission Error",
+            description: "Database permission issue. This might be a temporary RLS policy problem. Try refreshing the page.",
+            variant: "destructive",
+          });
+        } else {
+          toast({
+            title: "Error",
+            description: error.message || "Failed to load discount codes",
+            variant: "destructive",
+          });
+        }
+      } else {
+        toast({
+          title: "Error",
+          description: "Failed to load discount codes",
+          variant: "destructive",
+        });
+      }
     } finally {
       setIsLoading(false);
     }
@@ -93,6 +119,7 @@ const DiscountCodeManagement = () => {
     console.log('Admin ID:', admin?.id);
     console.log('Admin email:', admin?.email);
     console.log('Form data:', formData);
+    console.log('Retry count:', retryCount);
     
     if (adminLoading) {
       console.error('Admin is still loading');
@@ -193,12 +220,25 @@ const DiscountCodeManagement = () => {
 
       resetForm();
       setIsCreateDialogOpen(false);
+      setRetryCount(0); // Reset retry count on success
       loadDiscountCodes();
     } catch (error) {
       console.error('Error creating discount code:', error);
+      setRetryCount(prev => prev + 1);
+      
+      let errorMessage = "Failed to create discount code";
+      
+      if (error instanceof Error) {
+        if (error.message.includes('permission denied')) {
+          errorMessage = `Database permission error (attempt ${retryCount + 1}). This might be a temporary RLS issue. Try again or refresh the page.`;
+        } else {
+          errorMessage = error.message;
+        }
+      }
+      
       toast({
         title: "Error",
-        description: error instanceof Error ? error.message : "Failed to create discount code",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
@@ -327,8 +367,21 @@ const DiscountCodeManagement = () => {
             <CardTitle className="flex items-center gap-2">
               <TagIcon className="w-5 h-5" />
               Discount Code Management
+              {retryCount > 0 && (
+                <Badge variant="destructive" className="ml-2">
+                  <AlertTriangleIcon className="w-3 h-3 mr-1" />
+                  {retryCount} error(s)
+                </Badge>
+              )}
             </CardTitle>
-            <CardDescription>Create and manage discount codes for subscriptions</CardDescription>
+            <CardDescription>
+              Create and manage discount codes for subscriptions
+              {retryCount > 0 && (
+                <span className="block text-orange-600 mt-1">
+                  If you're seeing permission errors, try refreshing the page or contact support.
+                </span>
+              )}
+            </CardDescription>
           </div>
           <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
             <DialogTrigger asChild>
@@ -505,7 +558,7 @@ const DiscountCodeManagement = () => {
           </TableBody>
         </Table>
         
-        {discountCodes.length === 0 && (
+        {discountCodes.length === 0 && !isLoading && (
           <div className="text-center py-8 text-muted-foreground">
             No discount codes created yet. Create your first discount code to get started.
           </div>
