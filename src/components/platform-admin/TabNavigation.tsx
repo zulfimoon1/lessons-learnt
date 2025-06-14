@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { BarChart3, Users, GraduationCap, Building, MessageSquare, TrendingUp, CreditCard, Receipt, Stethoscope, Shield, ShieldCheck } from 'lucide-react';
+import { BarChart3, Users, GraduationCap, Building, MessageSquare, TrendingUp, CreditCard, Receipt, Stethoscope, Shield, ShieldCheck, Tag } from 'lucide-react';
 
 interface TabNavigationProps {
   activeTab: string;
@@ -8,7 +8,15 @@ interface TabNavigationProps {
 }
 
 const TabNavigation: React.FC<TabNavigationProps> = ({ activeTab, onTabChange }) => {
-  const tabs = [
+  // Check if this is being used in the login page context
+  const isLoginContext = activeTab === 'login' || activeTab === 'create';
+  
+  const loginTabs = [
+    { id: 'login', label: 'Sign In', icon: Users },
+    { id: 'create', label: 'Request Access', icon: Shield }
+  ];
+
+  const dashboardTabs = [
     { id: 'overview', label: 'Overview', icon: BarChart3 },
     { id: 'teachers', label: 'Teachers', icon: Users },
     { id: 'students', label: 'Students', icon: GraduationCap },
@@ -17,10 +25,13 @@ const TabNavigation: React.FC<TabNavigationProps> = ({ activeTab, onTabChange })
     { id: 'feedback', label: 'Feedback Analytics', icon: TrendingUp },
     { id: 'subscriptions', label: 'Subscriptions', icon: CreditCard },
     { id: 'transactions', label: 'Transactions', icon: Receipt },
+    { id: 'discount-codes', label: 'Discount Codes', icon: Tag },
     { id: 'doctors', label: 'Doctors', icon: Stethoscope },
     { id: 'security', label: 'Security', icon: Shield },
     { id: 'advanced-security', label: 'Advanced Security', icon: ShieldCheck }
   ];
+
+  const tabs = isLoginContext ? loginTabs : dashboardTabs;
 
   return (
     <div className="w-full mb-6">

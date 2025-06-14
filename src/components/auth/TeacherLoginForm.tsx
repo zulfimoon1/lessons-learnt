@@ -20,7 +20,12 @@ const TeacherLoginForm: React.FC<TeacherLoginFormProps> = ({ onLogin, isLoading 
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await onLogin(loginData.email, loginData.password);
+    
+    if (!loginData.email.trim() || !loginData.password.trim()) {
+      return;
+    }
+
+    await onLogin(loginData.email.trim(), loginData.password);
   };
 
   return (
@@ -55,7 +60,7 @@ const TeacherLoginForm: React.FC<TeacherLoginFormProps> = ({ onLogin, isLoading 
       <Button 
         type="submit" 
         className="w-full bg-emerald-600 hover:bg-emerald-700"
-        disabled={isLoading}
+        disabled={isLoading || !loginData.email.trim() || !loginData.password.trim()}
       >
         {isLoading ? t('auth.loggingIn') : (
           <>

@@ -22,7 +22,12 @@ const StudentLoginForm: React.FC<StudentLoginFormProps> = ({ onLogin, isLoading 
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await onLogin(loginData.fullName, loginData.school, loginData.grade, loginData.password);
+    
+    if (!loginData.fullName.trim() || !loginData.school.trim() || !loginData.grade.trim() || !loginData.password.trim()) {
+      return;
+    }
+
+    await onLogin(loginData.fullName.trim(), loginData.school.trim(), loginData.grade.trim(), loginData.password);
   };
 
   return (
@@ -87,7 +92,7 @@ const StudentLoginForm: React.FC<StudentLoginFormProps> = ({ onLogin, isLoading 
       <Button 
         type="submit" 
         className="w-full"
-        disabled={isLoading}
+        disabled={isLoading || !loginData.fullName.trim() || !loginData.school.trim() || !loginData.grade.trim() || !loginData.password.trim()}
       >
         {isLoading ? t('auth.loggingIn') : (
           <>
