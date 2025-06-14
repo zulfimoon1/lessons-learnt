@@ -41,7 +41,7 @@ export const discountCodeService = {
     console.log('=== FETCHING DISCOUNT CODES ===');
     
     try {
-      console.log('📋 Fetching discount codes...');
+      console.log('📋 Fetching discount codes directly...');
 
       const { data, error } = await supabase
         .from('discount_codes')
@@ -67,7 +67,7 @@ export const discountCodeService = {
     console.log('👤 Created by:', createdBy);
 
     try {
-      console.log('🔨 Attempting to create discount code...');
+      console.log('🔨 Attempting to create discount code directly...');
       const { data, error } = await supabase
         .from('discount_codes')
         .insert([{
