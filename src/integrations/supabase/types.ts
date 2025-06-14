@@ -807,10 +807,6 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: boolean
       }
-      is_platform_admin_for_discount_codes: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
-      }
       is_teacher_in_school: {
         Args: { target_school: string }
         Returns: boolean
