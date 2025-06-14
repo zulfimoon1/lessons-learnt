@@ -1,14 +1,13 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { usePlatformAdmin } from '@/contexts/PlatformAdminContext';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
-import { BarChart3, Users, GraduationCap, Building, MessageSquare, TrendingUp, CreditCard, Receipt, Stethoscope, Shield, ShieldCheck } from 'lucide-react';
 import SchoolOverview from '@/components/platform-admin/SchoolOverview';
 import TeacherManagement from '@/components/platform-admin/TeacherManagement';
 import StudentManagement from '@/components/platform-admin/StudentManagement';
 import SchoolManagement from '@/components/platform-admin/SchoolManagement';
-import ResponseManagement from '@/components/platform-admin/ResponseManagement';
 import FeedbackAnalytics from '@/components/platform-admin/FeedbackAnalytics';
 import SubscriptionManagement from '@/components/platform-admin/SubscriptionManagement';
 import TransactionManagement from '@/components/platform-admin/TransactionManagement';
@@ -37,20 +36,32 @@ const PlatformAdminDashboard: React.FC = () => {
     setActiveTab(tabId);
   };
 
+  // Mock data for components that require props
+  const mockSchoolStats = {
+    totalSchools: 0,
+    activeSchools: 0,
+    totalStudents: 0,
+    totalTeachers: 0
+  };
+
+  const mockFeedbackStats = {
+    totalResponses: 0,
+    avgRating: 0,
+    responseRate: 0
+  };
+
   const renderTabContent = () => {
     switch (activeTab) {
       case 'overview':
-        return <SchoolOverview />;
+        return <SchoolOverview schoolStats={mockSchoolStats} />;
       case 'teachers':
         return <TeacherManagement />;
       case 'students':
         return <StudentManagement />;
       case 'schools':
         return <SchoolManagement />;
-      case 'responses':
-        return <ResponseManagement />;
       case 'feedback':
-        return <FeedbackAnalytics />;
+        return <FeedbackAnalytics feedbackStats={mockFeedbackStats} />;
       case 'subscriptions':
         return <SubscriptionManagement />;
       case 'transactions':
@@ -62,7 +73,7 @@ const PlatformAdminDashboard: React.FC = () => {
       case 'advanced-security':
         return <AdvancedSecurityMonitoring />;
       default:
-        return <SchoolOverview />;
+        return <SchoolOverview schoolStats={mockSchoolStats} />;
     }
   };
 
