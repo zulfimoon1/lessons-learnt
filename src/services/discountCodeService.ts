@@ -45,11 +45,18 @@ export const discountCodeService = {
         throw new Error('Admin email is required for testing');
       }
       
-      // Test using the security definer function
-      console.log('📋 Testing read access using security definer function...');
-      const { data, error } = await supabase.rpc('platform_admin_get_discount_codes', {
-        admin_email_param: adminEmail
+      // Set the admin context first
+      console.log('🔧 Setting platform admin context...');
+      await supabase.rpc('set_platform_admin_context', {
+        admin_email: adminEmail
       });
+
+      // Test using direct table access with RLS
+      console.log('📋 Testing read access...');
+      const { data, error } = await supabase
+        .from('discount_codes')
+        .select('*')
+        .limit(10);
 
       if (error) {
         console.error('❌ Read test failed:', error);
@@ -62,15 +69,18 @@ export const discountCodeService = {
       console.log('📝 Testing write access...');
       const testCode = 'TEST_' + Date.now();
       
-      const { data: createData, error: createError } = await supabase.rpc('platform_admin_create_discount_code', {
-        admin_email_param: adminEmail,
-        code_param: testCode,
-        discount_percent_param: 10,
-        description_param: 'Test code - will be deleted',
-        school_name_param: 'Test School',
-        is_active_param: false,
-        created_by_param: null
-      });
+      const { data: createData, error: createError } = await supabase
+        .from('discount_codes')
+        .insert({
+          code: testCode,
+          discount_percent: 10,
+          description: 'Test code - will be deleted',
+          school_name: 'Test School',
+          is_active: false,
+          created_by: null
+        })
+        .select()
+        .single();
 
       if (createError) {
         console.error('❌ Write test failed:', createError);
@@ -80,10 +90,10 @@ export const discountCodeService = {
       console.log('✅ Write test successful. Created test code:', createData.id);
 
       // Clean up test code
-      const { error: deleteError } = await supabase.rpc('platform_admin_delete_discount_code', {
-        admin_email_param: adminEmail,
-        code_id_param: createData.id
-      });
+      const { error: deleteError } = await supabase
+        .from('discount_codes')
+        .delete()
+        .eq('id', createData.id);
 
       if (deleteError) {
         console.warn('⚠️ Failed to clean up test code:', deleteError);
@@ -93,7 +103,7 @@ export const discountCodeService = {
 
       return { 
         success: true, 
-        message: 'All tests passed successfully using security definer functions!',
+        message: 'All tests passed successfully!',
         readCount: data?.length || 0,
         testCodeId: createData.id
       };
@@ -108,7 +118,7 @@ export const discountCodeService = {
     }
   },
 
-  async getAllDiscountCodes(adminEmail?: string) {
+  async getAllDiscountCodes(adminEmail?: string): Promise<DiscountCode[]> {
     console.log('=== FETCHING DISCOUNT CODES ===');
     
     try {
@@ -116,10 +126,17 @@ export const discountCodeService = {
         throw new Error('Admin email is required');
       }
       
-      console.log('📋 Fetching discount codes using security definer function...');
-      const { data, error } = await supabase.rpc('platform_admin_get_discount_codes', {
-        admin_email_param: adminEmail
+      // Set the admin context first
+      console.log('🔧 Setting platform admin context...');
+      await supabase.rpc('set_platform_admin_context', {
+        admin_email: adminEmail
       });
+      
+      console.log('📋 Fetching discount codes...');
+      const { data, error } = await supabase
+        .from('discount_codes')
+        .select('*')
+        .order('created_at', { ascending: false });
 
       if (error) {
         console.error('❌ Error fetching discount codes:', error);
@@ -134,7 +151,7 @@ export const discountCodeService = {
     }
   },
 
-  async createDiscountCode(codeData: CreateDiscountCodeData, createdBy: string, adminEmail?: string) {
+  async createDiscountCode(codeData: CreateDiscountCodeData, createdBy: string, adminEmail?: string): Promise<DiscountCode> {
     console.log('=== CREATING DISCOUNT CODE ===');
     console.log('📝 Code data:', codeData);
     console.log('👤 Created by:', createdBy);
@@ -145,18 +162,28 @@ export const discountCodeService = {
         throw new Error('Admin email is required');
       }
 
-      console.log('🔨 Creating discount code using security definer function...');
-      const { data, error } = await supabase.rpc('platform_admin_create_discount_code', {
-        admin_email_param: adminEmail,
-        code_param: codeData.code.toUpperCase(),
-        discount_percent_param: codeData.discount_percent,
-        description_param: codeData.description || null,
-        max_uses_param: codeData.max_uses || null,
-        expires_at_param: codeData.expires_at || null,
-        is_active_param: codeData.is_active !== undefined ? codeData.is_active : true,
-        school_name_param: codeData.school_name || null,
-        created_by_param: createdBy
+      // Set the admin context first
+      console.log('🔧 Setting platform admin context...');
+      await supabase.rpc('set_platform_admin_context', {
+        admin_email: adminEmail
       });
+
+      console.log('🔨 Creating discount code...');
+      const { data, error } = await supabase
+        .from('discount_codes')
+        .insert({
+          code: codeData.code.toUpperCase(),
+          discount_percent: codeData.discount_percent,
+          description: codeData.description || null,
+          max_uses: codeData.max_uses || null,
+          expires_at: codeData.expires_at || null,
+          is_active: codeData.is_active !== undefined ? codeData.is_active : true,
+          school_name: codeData.school_name || null,
+          created_by: createdBy,
+          current_uses: 0
+        })
+        .select()
+        .single();
 
       if (error) {
         console.error('❌ Error creating discount code:', error);
@@ -171,7 +198,7 @@ export const discountCodeService = {
     }
   },
 
-  async updateDiscountCode(id: string, updates: UpdateDiscountCodeData, adminEmail?: string) {
+  async updateDiscountCode(id: string, updates: UpdateDiscountCodeData, adminEmail?: string): Promise<DiscountCode> {
     console.log('=== UPDATING DISCOUNT CODE ===');
     console.log('🆔 ID:', id);
     console.log('📝 Updates:', updates);
@@ -182,17 +209,30 @@ export const discountCodeService = {
         throw new Error('Admin email is required');
       }
 
-      const { data, error } = await supabase.rpc('platform_admin_update_discount_code', {
-        admin_email_param: adminEmail,
-        code_id_param: id,
-        code_param: updates.code ? updates.code.toUpperCase() : null,
-        discount_percent_param: updates.discount_percent || null,
-        description_param: updates.description || null,
-        max_uses_param: updates.max_uses || null,
-        expires_at_param: updates.expires_at || null,
-        is_active_param: updates.is_active !== undefined ? updates.is_active : null,
-        school_name_param: updates.school_name || null
+      // Set the admin context first
+      console.log('🔧 Setting platform admin context...');
+      await supabase.rpc('set_platform_admin_context', {
+        admin_email: adminEmail
       });
+
+      const updateData: any = {
+        updated_at: new Date().toISOString()
+      };
+
+      if (updates.code !== undefined) updateData.code = updates.code.toUpperCase();
+      if (updates.discount_percent !== undefined) updateData.discount_percent = updates.discount_percent;
+      if (updates.description !== undefined) updateData.description = updates.description;
+      if (updates.max_uses !== undefined) updateData.max_uses = updates.max_uses;
+      if (updates.expires_at !== undefined) updateData.expires_at = updates.expires_at;
+      if (updates.is_active !== undefined) updateData.is_active = updates.is_active;
+      if (updates.school_name !== undefined) updateData.school_name = updates.school_name;
+
+      const { data, error } = await supabase
+        .from('discount_codes')
+        .update(updateData)
+        .eq('id', id)
+        .select()
+        .single();
 
       if (error) {
         console.error('❌ Error updating discount code:', error);
@@ -207,7 +247,7 @@ export const discountCodeService = {
     }
   },
 
-  async deleteDiscountCode(id: string, adminEmail?: string) {
+  async deleteDiscountCode(id: string, adminEmail?: string): Promise<void> {
     console.log('=== DELETING DISCOUNT CODE ===');
     console.log('🆔 ID:', id);
     console.log('📧 Admin email:', adminEmail);
@@ -217,10 +257,16 @@ export const discountCodeService = {
         throw new Error('Admin email is required');
       }
 
-      const { error } = await supabase.rpc('platform_admin_delete_discount_code', {
-        admin_email_param: adminEmail,
-        code_id_param: id
+      // Set the admin context first
+      console.log('🔧 Setting platform admin context...');
+      await supabase.rpc('set_platform_admin_context', {
+        admin_email: adminEmail
       });
+
+      const { error } = await supabase
+        .from('discount_codes')
+        .delete()
+        .eq('id', id);
 
       if (error) {
         console.error('❌ Error deleting discount code:', error);
@@ -267,7 +313,7 @@ export const discountCodeService = {
     };
   },
 
-  async incrementCodeUsage(id: string, adminEmail?: string) {
+  async incrementCodeUsage(id: string, adminEmail?: string): Promise<void> {
     console.log('=== INCREMENTING CODE USAGE ===');
     console.log('🆔 ID:', id);
 
@@ -284,32 +330,18 @@ export const discountCodeService = {
         throw fetchError;
       }
 
-      // Update using security definer function if admin email is provided
-      if (adminEmail) {
-        const { error } = await supabase.rpc('platform_admin_update_discount_code', {
-          admin_email_param: adminEmail,
-          code_id_param: id,
-          // Only update current_uses, but we need to handle this in the function
-        });
+      // Update with incremented usage
+      const { error } = await supabase
+        .from('discount_codes')
+        .update({ 
+          current_uses: (currentData.current_uses || 0) + 1,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', id);
 
-        if (error) {
-          console.error('❌ Error incrementing code usage:', error);
-          throw error;
-        }
-      } else {
-        // Direct update for validation usage (allowed by RLS policy)
-        const { error } = await supabase
-          .from('discount_codes')
-          .update({ 
-            current_uses: (currentData.current_uses || 0) + 1,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', id);
-
-        if (error) {
-          console.error('❌ Error incrementing code usage:', error);
-          throw error;
-        }
+      if (error) {
+        console.error('❌ Error incrementing code usage:', error);
+        throw error;
       }
 
       console.log('✅ Code usage incremented successfully');
