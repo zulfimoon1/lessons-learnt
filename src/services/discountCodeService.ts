@@ -35,19 +35,52 @@ export interface UpdateDiscountCodeData {
   school_name?: string;
 }
 
-// Helper function to set admin context
+// Enhanced helper function to set admin context with better error handling
 const setAdminContext = async (adminEmail: string) => {
   console.log('🔧 Setting admin context for discount operations:', adminEmail);
-  const { error } = await supabase.rpc('set_platform_admin_context', { 
-    admin_email: adminEmail 
-  });
   
-  if (error) {
-    console.error('❌ Error setting admin context:', error);
-    throw new Error('Failed to set admin context');
+  try {
+    // First verify the admin exists
+    const { data: adminCheck, error: adminError } = await supabase
+      .from('teachers')
+      .select('id, email, role')
+      .eq('email', adminEmail)
+      .eq('role', 'admin')
+      .single();
+
+    if (adminError || !adminCheck) {
+      console.error('❌ Admin verification failed:', adminError);
+      throw new Error(`Admin ${adminEmail} not found or not authorized`);
+    }
+
+    console.log('✅ Admin verified:', adminCheck);
+
+    // Set the context
+    const { error } = await supabase.rpc('set_platform_admin_context', { 
+      admin_email: adminEmail 
+    });
+    
+    if (error) {
+      console.error('❌ Error setting admin context:', error);
+      throw new Error('Failed to set admin context: ' + error.message);
+    }
+    
+    console.log('✅ Admin context set successfully');
+
+    // Verify the context was set
+    const { data: contextTest, error: contextError } = await supabase
+      .rpc('is_platform_admin');
+
+    if (contextError) {
+      console.warn('⚠️ Could not verify context setting:', contextError);
+    } else {
+      console.log('🔍 Platform admin context verified:', contextTest);
+    }
+
+  } catch (error) {
+    console.error('💥 Critical error in setAdminContext:', error);
+    throw error;
   }
-  
-  console.log('✅ Admin context set successfully');
 };
 
 export const discountCodeService = {
@@ -59,7 +92,7 @@ export const discountCodeService = {
         throw new Error('Admin email is required for testing');
       }
       
-      // Set admin context
+      // Set admin context with enhanced error handling
       await setAdminContext(adminEmail);
       
       // Test if we can read discount codes
@@ -140,7 +173,7 @@ export const discountCodeService = {
         throw new Error('Admin email is required');
       }
       
-      // Set admin context
+      // Set admin context with enhanced error handling
       await setAdminContext(adminEmail);
       
       console.log('📋 Attempting to fetch discount codes...');
@@ -173,7 +206,7 @@ export const discountCodeService = {
         throw new Error('Admin email is required');
       }
       
-      // Set admin context
+      // Set admin context with enhanced error handling
       await setAdminContext(adminEmail);
 
       console.log('🔨 Attempting to create discount code...');
