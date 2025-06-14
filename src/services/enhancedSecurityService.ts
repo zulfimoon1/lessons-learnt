@@ -1,3 +1,4 @@
+
 export interface SecurityConfig {
   passwordPolicy: {
     minLength: number;
@@ -53,7 +54,7 @@ export interface LoginAttempt {
 }
 
 export interface SecurityEvent {
-  type: 'login_attempt' | 'password_change' | 'suspicious_activity' | 'account_lockout';
+  type: 'login_attempt' | 'password_change' | 'suspicious_activity' | 'account_lockout' | 'login_success' | 'user_created';
   userId?: string;
   email?: string;
   timestamp: number;
@@ -61,6 +62,20 @@ export interface SecurityEvent {
   severity: 'low' | 'medium' | 'high' | 'critical';
   userAgent: string;
   ipAddress?: string;
+}
+
+export interface ValidationResult {
+  isValid: boolean;
+  sanitized: string;
+  message?: string;
+}
+
+export interface RateLimitResult {
+  allowed: boolean;
+  remainingAttempts: number;
+  lockoutUntil?: number;
+  message?: string;
+  delay?: number;
 }
 
 class EnhancedSecurityService {
@@ -114,60 +129,70 @@ class EnhancedSecurityService {
     };
   }
 
-  checkRateLimit(email: string): { allowed: boolean; remainingAttempts: number; lockoutUntil?: number } {
+  checkRateLimit(identifier: string, context?: string): RateLimitResult {
     const now = Date.now();
     const config = SECURITY_CONFIG.rateLimiting;
     
     // Check if account is locked
-    const lockoutUntil = this.lockedAccounts.get(email);
+    const lockoutUntil = this.lockedAccounts.get(identifier);
     if (lockoutUntil && now < lockoutUntil) {
+      const minutes = Math.ceil((lockoutUntil - now) / (1000 * 60));
       return {
         allowed: false,
         remainingAttempts: 0,
         lockoutUntil,
+        message: `Account locked. Try again in ${minutes} minute${minutes === 1 ? '' : 's'}.`
       };
     }
 
     // Clean old attempts
-    const attempts = this.loginAttempts.get(email) || [];
+    const attempts = this.loginAttempts.get(identifier) || [];
     const windowStart = now - (config.windowMinutes * 60 * 1000);
     const recentAttempts = attempts.filter(attempt => attempt.timestamp > windowStart);
     
-    this.loginAttempts.set(email, recentAttempts);
+    this.loginAttempts.set(identifier, recentAttempts);
 
     // Count failed attempts
     const failedAttempts = recentAttempts.filter(attempt => !attempt.success).length;
     const remainingAttempts = Math.max(0, config.maxAttempts - failedAttempts);
 
+    // Calculate progressive delay
+    let delay = 0;
+    if (failedAttempts > 0) {
+      delay = Math.min(1000 * Math.pow(2, failedAttempts - 1), 30000); // Max 30 seconds
+    }
+
     return {
       allowed: failedAttempts < config.maxAttempts,
       remainingAttempts,
+      delay,
+      message: remainingAttempts <= 2 ? `${remainingAttempts} attempts remaining` : undefined
     };
   }
 
-  recordLoginAttempt(email: string, success: boolean, userAgent: string): void {
+  recordLoginAttempt(identifier: string, success: boolean, userAgent: string): void {
     const now = Date.now();
     const attempt: LoginAttempt = {
-      email,
+      email: identifier,
       timestamp: now,
       success,
       userAgent,
     };
 
-    const attempts = this.loginAttempts.get(email) || [];
+    const attempts = this.loginAttempts.get(identifier) || [];
     attempts.push(attempt);
-    this.loginAttempts.set(email, attempts);
+    this.loginAttempts.set(identifier, attempts);
 
     // If failed attempt exceeds limit, lock account
     if (!success) {
-      const rateLimit = this.checkRateLimit(email);
+      const rateLimit = this.checkRateLimit(identifier);
       if (!rateLimit.allowed) {
         const lockoutUntil = now + (SECURITY_CONFIG.rateLimiting.lockoutMinutes * 60 * 1000);
-        this.lockedAccounts.set(email, lockoutUntil);
+        this.lockedAccounts.set(identifier, lockoutUntil);
         
         this.logSecurityEvent({
           type: 'account_lockout',
-          email,
+          email: identifier,
           timestamp: now,
           details: `Account locked due to ${SECURITY_CONFIG.rateLimiting.maxAttempts} failed login attempts`,
           severity: 'high',
@@ -176,17 +201,87 @@ class EnhancedSecurityService {
       }
     } else {
       // Clear lockout on successful login
-      this.lockedAccounts.delete(email);
+      this.lockedAccounts.delete(identifier);
     }
 
     this.logSecurityEvent({
       type: 'login_attempt',
-      email,
+      email: identifier,
       timestamp: now,
       details: success ? 'Successful login' : 'Failed login attempt',
       severity: success ? 'low' : 'medium',
       userAgent,
     });
+  }
+
+  recordAttempt(identifier: string, context: string, success: boolean): void {
+    this.recordLoginAttempt(identifier, success, navigator.userAgent);
+  }
+
+  validateAndSanitizeInput(input: string, type: 'name' | 'email' | 'school' | 'grade' | 'password'): ValidationResult {
+    if (!input || typeof input !== 'string') {
+      return {
+        isValid: false,
+        sanitized: '',
+        message: `${type} is required`
+      };
+    }
+
+    const sanitized = this.sanitizeInput(input);
+
+    switch (type) {
+      case 'email':
+        if (!this.validateEmail(sanitized)) {
+          return {
+            isValid: false,
+            sanitized,
+            message: 'Invalid email format'
+          };
+        }
+        break;
+      case 'name':
+        if (sanitized.length < 2 || sanitized.length > 100) {
+          return {
+            isValid: false,
+            sanitized,
+            message: 'Name must be 2-100 characters'
+          };
+        }
+        break;
+      case 'school':
+        if (sanitized.length < 2 || sanitized.length > 200) {
+          return {
+            isValid: false,
+            sanitized,
+            message: 'School name must be 2-200 characters'
+          };
+        }
+        break;
+      case 'grade':
+        if (sanitized.length < 1 || sanitized.length > 20) {
+          return {
+            isValid: false,
+            sanitized,
+            message: 'Grade must be 1-20 characters'
+          };
+        }
+        break;
+      case 'password':
+        const passwordValidation = this.validatePassword(input);
+        if (!passwordValidation.isValid) {
+          return {
+            isValid: false,
+            sanitized,
+            message: passwordValidation.errors.join(', ')
+          };
+        }
+        break;
+    }
+
+    return {
+      isValid: true,
+      sanitized
+    };
   }
 
   logSecurityEvent(event: SecurityEvent): void {
@@ -211,6 +306,22 @@ class EnhancedSecurityService {
       return this.securityEvents.filter(event => event.email === email);
     }
     return [...this.securityEvents];
+  }
+
+  getSecurityMetrics() {
+    const now = Date.now();
+    const last24Hours = now - (24 * 60 * 60 * 1000);
+    
+    const recentEvents = this.securityEvents.filter(event => event.timestamp > last24Hours);
+    
+    return {
+      totalEvents: recentEvents.length,
+      loginAttempts: recentEvents.filter(e => e.type === 'login_attempt').length,
+      failedLogins: recentEvents.filter(e => e.type === 'login_attempt' && e.details.includes('Failed')).length,
+      accountLockouts: recentEvents.filter(e => e.type === 'account_lockout').length,
+      suspiciousActivity: recentEvents.filter(e => e.type === 'suspicious_activity').length,
+      criticalEvents: recentEvents.filter(e => e.severity === 'critical').length,
+    };
   }
 
   sanitizeInput(input: string): string {

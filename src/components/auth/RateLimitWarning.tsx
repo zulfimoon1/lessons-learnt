@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { AlertTriangle, Clock } from 'lucide-react';
-import { Alert, AlertContent, AlertDescription } from '@/components/ui/alert';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 interface RateLimitWarningProps {
   remainingAttempts: number;
@@ -23,12 +23,10 @@ const RateLimitWarning: React.FC<RateLimitWarningProps> = ({
     return (
       <Alert variant="destructive" className={className}>
         <AlertTriangle className="h-4 w-4" />
-        <AlertContent>
-          <AlertDescription>
-            Account temporarily locked due to too many failed attempts. 
-            Try again in {formatLockoutTime(lockoutUntil)}.
-          </AlertDescription>
-        </AlertContent>
+        <AlertDescription>
+          Account temporarily locked due to too many failed attempts. 
+          Try again in {formatLockoutTime(lockoutUntil)}.
+        </AlertDescription>
       </Alert>
     );
   }
@@ -37,11 +35,9 @@ const RateLimitWarning: React.FC<RateLimitWarningProps> = ({
     return (
       <Alert variant="destructive" className={className}>
         <Clock className="h-4 w-4" />
-        <AlertContent>
-          <AlertDescription>
-            Warning: {remainingAttempts} login attempt{remainingAttempts === 1 ? '' : 's'} remaining before account lockout.
-          </AlertDescription>
-        </AlertContent>
+        <AlertDescription>
+          Warning: {remainingAttempts} login attempt{remainingAttempts === 1 ? '' : 's'} remaining before account lockout.
+        </AlertDescription>
       </Alert>
     );
   }
