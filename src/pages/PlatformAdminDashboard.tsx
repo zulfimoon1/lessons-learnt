@@ -15,7 +15,6 @@ import DoctorManagement from '@/components/platform-admin/DoctorManagement';
 import SecurityMonitoring from '@/components/platform-admin/SecurityMonitoring';
 import TabNavigation from '@/components/platform-admin/TabNavigation';
 import AdvancedSecurityMonitoring from '@/components/security/AdvancedSecurityMonitoring';
-import DiscountCodeManagement from '@/components/DiscountCodeManagement';
 
 const PlatformAdminDashboard: React.FC = () => {
   const { admin, isAuthenticated } = usePlatformAdmin();
@@ -39,6 +38,7 @@ const PlatformAdminDashboard: React.FC = () => {
 
   // Mock data for components that require props - now as arrays
   const mockSchoolStats = [];
+
   const mockFeedbackStats = [];
 
   const renderTabContent = () => {
@@ -63,8 +63,6 @@ const PlatformAdminDashboard: React.FC = () => {
         return <SecurityMonitoring />;
       case 'advanced-security':
         return <AdvancedSecurityMonitoring />;
-      case 'discount-codes':
-        return <DiscountCodeManagement />;
       default:
         return <SchoolOverview schoolStats={mockSchoolStats} />;
     }
