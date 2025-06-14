@@ -22,7 +22,48 @@ export const ltTeacherTranslations = {
   'teacher.timeLabel': 'Laikas',
   'teacher.durationLabel': 'Trukmė (minutės)',
   'teacher.schoolLabel': 'Mokykla',
+  'teacher.schoolPlaceholder': 'Įveskite mokyklos pavadinimą',
   'teacher.classGradeLabel': 'Klasė/Kursas',
+  'teacher.classGradePlaceholder': 'pvz., 5 klasė, 7 kursas',
+  
+  // Subject options
+  'teacher.mathematics': 'Matematika',
+  'teacher.science': 'Gamtos mokslai',
+  'teacher.english': 'Anglų kalba',
+  'teacher.history': 'Istorija',
+  'teacher.geography': 'Geografija',
+  'teacher.art': 'Dailė',
+  'teacher.music': 'Muzika',
+  'teacher.physicalEducation': 'Kūno kultūra',
+  'teacher.computerScience': 'Informatika',
+  'teacher.other': 'Kita',
+  
+  // Duration options
+  'teacher.30minutes': '30 minučių',
+  'teacher.45minutes': '45 minutės',
+  'teacher.60minutes': '60 minučių',
+  'teacher.90minutes': '90 minučių',
+  'teacher.120minutes': '120 minučių',
+  
+  // Recurring schedule
+  'teacher.recurringScheduleTitle': 'Pasikartojantis tvarkaraštis',
+  'teacher.recurringScheduleDescription': 'Nustatykite pasikartojančias pamokas',
+  'teacher.makeRecurring': 'Padaryti pasikartojančią pamoką',
+  'teacher.repeatPatternLabel': 'Kartojimo šablonas',
+  'teacher.numberOfClassesLabel': 'Pamokų skaičius',
+  'teacher.endDateLabel': 'Pabaigos data',
+  'teacher.weekly': 'Kas savaitę',
+  'teacher.biweekly': 'Kas dvi savaites',
+  'teacher.monthly': 'Kas mėnesį',
+  'teacher.endDateMustBeAfterStart': 'Pabaigos data turi būti po pradžios datos',
+  'teacher.previewText': 'Bus sukurtos {count} pamokos nuo {date}, kartojant {pattern}',
+  
+  // Buttons
+  'teacher.scheduleClass': 'Suplanuoti pamoką',
+  'teacher.scheduleMultipleClasses': 'Suplanuoti {count} pamokas',
+  'teacher.classScheduledSuccess': 'Pamoka sėkmingai suplanuota!',
+  'teacher.classesScheduledSuccess': '{count} pamokos sėkmingai suplanuotos!',
+  'teacher.scheduleClassFailed': 'Nepavyko suplanuoti pamokos. Bandykite dar kartą.',
   
   // Alerts
   'teacher.alerts.title': 'Peržiūrėti įspėjimus',
@@ -59,6 +100,12 @@ export const ltTeacherTranslations = {
   'teacher.mentalHealth.privacy': 'Privatumas ir konfidencialumas',
   'teacher.mentalHealth.privacyDescription': 'Visa psichinės sveikatos komunikacija yra šifruota ir konfidenciali. Mokytojai gali stebėti tik saugumo tikslais. Individualūs pokalbių turiniai prieinami tik licencijuotiems psichinės sveikatos specialistams.',
   'teacher.mentalHealthAlerts': 'Psichinės sveikatos įspėjimai',
+  'teacher.mentalHealthProfessional': 'Psichinės sveikatos specialistas',
+  'teacher.availability': 'Prieinamumas',
+  'teacher.available': 'Prieinamas',
+  'teacher.busy': 'Užimtas',
+  'teacher.active': 'Aktyvus',
+  'teacher.inactive': 'Neaktyvus',
   
   // Performance
   'teacher.performance.title': 'Klasės veiklos analizė',
@@ -108,5 +155,9 @@ export const ltTeacherTranslations = {
   // Common actions
   'common.play': 'Paleisti',
   'common.pause': 'Pristabdyti',
-  'common.reset': 'Iš naujo'
+  'common.reset': 'Iš naujo',
+  
+  // Error messages
+  'teacher.missingInfo': 'Trūksta mokytojo informacijos',
+  'teacher.checkoutFailed': 'Nepavyko sukurti atsiskaitymo sesijos'
 };

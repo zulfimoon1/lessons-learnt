@@ -22,7 +22,48 @@ export const enTeacherTranslations = {
   'teacher.timeLabel': 'Time',
   'teacher.durationLabel': 'Duration (minutes)',
   'teacher.schoolLabel': 'School',
+  'teacher.schoolPlaceholder': 'Enter school name',
   'teacher.classGradeLabel': 'Class/Grade',
+  'teacher.classGradePlaceholder': 'e.g., Grade 5, Year 7',
+  
+  // Subject options
+  'teacher.mathematics': 'Mathematics',
+  'teacher.science': 'Science',
+  'teacher.english': 'English',
+  'teacher.history': 'History',
+  'teacher.geography': 'Geography',
+  'teacher.art': 'Art',
+  'teacher.music': 'Music',
+  'teacher.physicalEducation': 'Physical Education',
+  'teacher.computerScience': 'Computer Science',
+  'teacher.other': 'Other',
+  
+  // Duration options
+  'teacher.30minutes': '30 minutes',
+  'teacher.45minutes': '45 minutes',
+  'teacher.60minutes': '60 minutes',
+  'teacher.90minutes': '90 minutes',
+  'teacher.120minutes': '120 minutes',
+  
+  // Recurring schedule
+  'teacher.recurringScheduleTitle': 'Recurring Schedule',
+  'teacher.recurringScheduleDescription': 'Set up recurring classes',
+  'teacher.makeRecurring': 'Make this a recurring class',
+  'teacher.repeatPatternLabel': 'Repeat Pattern',
+  'teacher.numberOfClassesLabel': 'Number of Classes',
+  'teacher.endDateLabel': 'End Date',
+  'teacher.weekly': 'Weekly',
+  'teacher.biweekly': 'Bi-weekly',
+  'teacher.monthly': 'Monthly',
+  'teacher.endDateMustBeAfterStart': 'End date must be after start date',
+  'teacher.previewText': 'This will create {count} classes starting from {date}, repeating {pattern}',
+  
+  // Buttons
+  'teacher.scheduleClass': 'Schedule Class',
+  'teacher.scheduleMultipleClasses': 'Schedule {count} Classes',
+  'teacher.classScheduledSuccess': 'Class scheduled successfully!',
+  'teacher.classesScheduledSuccess': '{count} classes scheduled successfully!',
+  'teacher.scheduleClassFailed': 'Failed to schedule class. Please try again.',
   
   // Alerts
   'teacher.alerts.title': 'Review Alerts',
@@ -59,6 +100,12 @@ export const enTeacherTranslations = {
   'teacher.mentalHealth.privacy': 'Privacy & Confidentiality',
   'teacher.mentalHealth.privacyDescription': 'All mental health communication is encrypted and confidential. Teachers can monitor for safety purposes only. Individual conversation content is only accessible to licensed mental health professionals.',
   'teacher.mentalHealthAlerts': 'Mental Health Alerts',
+  'teacher.mentalHealthProfessional': 'Mental Health Professional',
+  'teacher.availability': 'Availability',
+  'teacher.available': 'Available',
+  'teacher.busy': 'Busy',
+  'teacher.active': 'Active',
+  'teacher.inactive': 'Inactive',
   
   // Performance
   'teacher.performance.title': 'Classroom Performance Analysis',
@@ -108,5 +155,9 @@ export const enTeacherTranslations = {
   // Common actions
   'common.play': 'Play',
   'common.pause': 'Pause',
-  'common.reset': 'Reset'
+  'common.reset': 'Reset',
+  
+  // Error messages
+  'teacher.missingInfo': 'Missing teacher information',
+  'teacher.checkoutFailed': 'Failed to create checkout session'
 };
