@@ -166,8 +166,12 @@ export const discountCodeService = {
         throw error;
       }
 
+      if (!data) {
+        throw new Error('No data returned from database function');
+      }
+
       console.log('✅ Discount code created successfully:', data);
-      return data;
+      return data as DiscountCode;
     } catch (error) {
       console.error('💥 Error in createDiscountCode:', error);
       throw error;
