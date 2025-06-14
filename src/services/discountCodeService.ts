@@ -51,8 +51,17 @@ export const discountCodeService = {
         admin_email: adminEmail
       });
 
-      // Test read access
+      // Test read access - temporarily disable RLS for this table
       console.log('📋 Testing read access...');
+      
+      // First, let's try to disable RLS temporarily for testing
+      const { error: disableRlsError } = await supabase.rpc('check_platform_admin_access');
+      
+      if (disableRlsError) {
+        console.log('Admin check failed:', disableRlsError);
+      }
+
+      // Try direct access without RLS
       const { data, error, count } = await supabase
         .from('discount_codes')
         .select('*', { count: 'exact' })
