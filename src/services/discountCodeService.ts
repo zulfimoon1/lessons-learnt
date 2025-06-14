@@ -45,9 +45,13 @@ export const discountCodeService = {
         throw new Error('Admin email is required');
       }
       
-      console.log('📋 Attempting to fetch discount codes as service role...');
+      console.log('📋 Setting admin context and fetching discount codes...');
       
-      // Use service role directly to bypass RLS temporarily
+      // Set admin context first
+      await supabase.rpc('set_platform_admin_context', { 
+        admin_email: adminEmail 
+      });
+
       const { data, error } = await supabase
         .from('discount_codes')
         .select('*')
@@ -55,29 +59,6 @@ export const discountCodeService = {
 
       if (error) {
         console.error('❌ Error fetching discount codes:', error);
-        
-        // If RLS error, try with explicit admin context
-        if (error.code === '42501') {
-          console.log('🔄 RLS error detected, setting admin context and retrying...');
-          
-          await supabase.rpc('set_platform_admin_context', { 
-            admin_email: adminEmail 
-          });
-          
-          const { data: retryData, error: retryError } = await supabase
-            .from('discount_codes')
-            .select('*')
-            .order('created_at', { ascending: false });
-            
-          if (retryError) {
-            console.error('❌ Retry failed:', retryError);
-            throw retryError;
-          }
-          
-          console.log('✅ Retry successful, discount codes loaded:', retryData?.length || 0);
-          return retryData || [];
-        }
-        
         throw error;
       }
 
