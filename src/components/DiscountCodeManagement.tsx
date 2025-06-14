@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -19,8 +20,7 @@ import {
   CalendarIcon,
   UsersIcon,
   PercentIcon,
-  SchoolIcon,
-  AlertTriangleIcon
+  SchoolIcon
 } from "lucide-react";
 
 const DiscountCodeManagement = () => {
@@ -32,7 +32,6 @@ const DiscountCodeManagement = () => {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editingCode, setEditingCode] = useState<DiscountCode | null>(null);
   const [isCreating, setIsCreating] = useState(false);
-  const [retryCount, setRetryCount] = useState(0);
   const [formData, setFormData] = useState({
     code: '',
     discount_percent: 10,
@@ -43,58 +42,25 @@ const DiscountCodeManagement = () => {
     school_name: ''
   });
 
-  // Debug the admin state
   useEffect(() => {
-    console.log('=== DISCOUNT CODE MANAGEMENT DEBUG ===');
-    console.log('Admin loading:', adminLoading);
-    console.log('Admin data:', admin);
-    console.log('Admin ID:', admin?.id);
-    console.log('Admin email:', admin?.email);
-  }, [admin, adminLoading]);
-
-  useEffect(() => {
-    if (!adminLoading && admin?.email) {
+    if (!adminLoading && admin) {
       loadDiscountCodes();
     }
-  }, [adminLoading, admin?.email]);
+  }, [adminLoading, admin]);
 
   const loadDiscountCodes = async () => {
-    if (!admin?.email) {
-      console.error('No admin email available for loading discount codes');
-      return;
-    }
-
     try {
-      console.log('Loading discount codes with admin email:', admin.email);
-      const codes = await discountCodeService.getAllDiscountCodes(admin.email);
+      console.log('Loading discount codes...');
+      const codes = await discountCodeService.getAllDiscountCodes();
       console.log('Loaded discount codes:', codes);
       setDiscountCodes(codes);
-      setRetryCount(0); // Reset retry count on success
     } catch (error) {
       console.error('Error loading discount codes:', error);
-      
-      // Show more specific error messages
-      if (error instanceof Error) {
-        if (error.message.includes('permission denied')) {
-          toast({
-            title: "Permission Error",
-            description: "Database permission issue. This might be a temporary RLS policy problem. Try refreshing the page.",
-            variant: "destructive",
-          });
-        } else {
-          toast({
-            title: "Error",
-            description: error.message || "Failed to load discount codes",
-            variant: "destructive",
-          });
-        }
-      } else {
-        toast({
-          title: "Error",
-          description: "Failed to load discount codes",
-          variant: "destructive",
-        });
-      }
+      toast({
+        title: "Error",
+        description: "Failed to load discount codes",
+        variant: "destructive",
+      });
     } finally {
       setIsLoading(false);
     }
@@ -113,49 +79,10 @@ const DiscountCodeManagement = () => {
   };
 
   const handleCreate = async () => {
-    console.log('=== CREATE DISCOUNT CODE DETAILED DEBUG ===');
-    console.log('Admin loading state:', adminLoading);
-    console.log('Admin object:', admin);
-    console.log('Admin ID:', admin?.id);
-    console.log('Admin email:', admin?.email);
-    console.log('Form data:', formData);
-    console.log('Retry count:', retryCount);
-    
-    if (adminLoading) {
-      console.error('Admin is still loading');
+    if (!admin?.id) {
       toast({
         title: "Error",
-        description: "Please wait for authentication to load",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (!admin) {
-      console.error('No admin found in context');
-      toast({
-        title: "Error",
-        description: "You must be logged in as an admin. Please refresh the page and try again.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (!admin.id) {
-      console.error('Admin object exists but has no ID:', admin);
-      toast({
-        title: "Error",
-        description: "Admin ID is missing. Please log out and log in again.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (!admin.email) {
-      console.error('Admin object exists but has no email:', admin);
-      toast({
-        title: "Error",
-        description: "Admin email is missing. Please log out and log in again.",
+        description: "You must be logged in as an admin",
         variant: "destructive",
       });
       return;
@@ -163,7 +90,6 @@ const DiscountCodeManagement = () => {
 
     // Validate required fields
     if (!formData.code.trim()) {
-      console.error('Code is required');
       toast({
         title: "Error",
         description: "Code is required",
@@ -173,21 +99,9 @@ const DiscountCodeManagement = () => {
     }
 
     if (!formData.school_name.trim()) {
-      console.error('School name is required');
       toast({
         title: "Error",
         description: "School name is required",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    // Validate discount percentage
-    if (isNaN(formData.discount_percent) || formData.discount_percent < 1 || formData.discount_percent > 100) {
-      console.error('Invalid discount percentage:', formData.discount_percent);
-      toast({
-        title: "Error",
-        description: "Discount percentage must be between 1 and 100",
         variant: "destructive",
       });
       return;
@@ -206,12 +120,7 @@ const DiscountCodeManagement = () => {
         school_name: formData.school_name.trim()
       };
 
-      console.log('Creating discount code with data:', createData);
-      console.log('Created by admin ID:', admin.id);
-      console.log('Admin email:', admin.email);
-      
-      const result = await discountCodeService.createDiscountCode(createData, admin.id, admin.email);
-      console.log('Discount code created successfully:', result);
+      await discountCodeService.createDiscountCode(createData, admin.id);
       
       toast({
         title: "Success",
@@ -220,25 +129,12 @@ const DiscountCodeManagement = () => {
 
       resetForm();
       setIsCreateDialogOpen(false);
-      setRetryCount(0); // Reset retry count on success
       loadDiscountCodes();
     } catch (error) {
       console.error('Error creating discount code:', error);
-      setRetryCount(prev => prev + 1);
-      
-      let errorMessage = "Failed to create discount code";
-      
-      if (error instanceof Error) {
-        if (error.message.includes('permission denied')) {
-          errorMessage = `Database permission error (attempt ${retryCount + 1}). This might be a temporary RLS issue. Try again or refresh the page.`;
-        } else {
-          errorMessage = error.message;
-        }
-      }
-      
       toast({
         title: "Error",
-        description: errorMessage,
+        description: "Failed to create discount code",
         variant: "destructive",
       });
     } finally {
@@ -261,7 +157,7 @@ const DiscountCodeManagement = () => {
   };
 
   const handleUpdate = async () => {
-    if (!editingCode || !admin?.email) return;
+    if (!editingCode) return;
 
     // Validate required fields
     if (!formData.code.trim()) {
@@ -291,7 +187,7 @@ const DiscountCodeManagement = () => {
         expires_at: formData.expires_at || undefined,
         is_active: formData.is_active,
         school_name: formData.school_name.trim()
-      }, admin.email);
+      });
 
       toast({
         title: "Success",
@@ -314,10 +210,9 @@ const DiscountCodeManagement = () => {
 
   const handleDelete = async (id: string) => {
     if (!confirm('Are you sure you want to delete this discount code?')) return;
-    if (!admin?.email) return;
 
     try {
-      await discountCodeService.deleteDiscountCode(id, admin.email);
+      await discountCodeService.deleteDiscountCode(id);
       
       toast({
         title: "Success",
@@ -367,20 +262,9 @@ const DiscountCodeManagement = () => {
             <CardTitle className="flex items-center gap-2">
               <TagIcon className="w-5 h-5" />
               Discount Code Management
-              {retryCount > 0 && (
-                <Badge variant="destructive" className="ml-2">
-                  <AlertTriangleIcon className="w-3 h-3 mr-1" />
-                  {retryCount} error(s)
-                </Badge>
-              )}
             </CardTitle>
             <CardDescription>
               Create and manage discount codes for subscriptions
-              {retryCount > 0 && (
-                <span className="block text-orange-600 mt-1">
-                  If you're seeing permission errors, try refreshing the page or contact support.
-                </span>
-              )}
             </CardDescription>
           </div>
           <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>

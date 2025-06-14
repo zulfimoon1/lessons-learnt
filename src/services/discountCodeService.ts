@@ -37,20 +37,11 @@ export interface UpdateDiscountCodeData {
 }
 
 export const discountCodeService = {
-  async getAllDiscountCodes(adminEmail?: string) {
+  async getAllDiscountCodes() {
     console.log('=== FETCHING DISCOUNT CODES ===');
     
     try {
-      if (!adminEmail) {
-        throw new Error('Admin email is required');
-      }
-      
-      console.log('📋 Setting admin context and fetching discount codes...');
-      
-      // Set admin context first
-      await supabase.rpc('set_platform_admin_context', { 
-        admin_email: adminEmail 
-      });
+      console.log('📋 Fetching discount codes...');
 
       const { data, error } = await supabase
         .from('discount_codes')
@@ -70,23 +61,12 @@ export const discountCodeService = {
     }
   },
 
-  async createDiscountCode(codeData: CreateDiscountCodeData, createdBy: string, adminEmail?: string) {
+  async createDiscountCode(codeData: CreateDiscountCodeData, createdBy: string) {
     console.log('=== CREATING DISCOUNT CODE ===');
     console.log('📝 Code data:', codeData);
     console.log('👤 Created by:', createdBy);
-    console.log('📧 Admin email:', adminEmail);
 
     try {
-      if (!adminEmail) {
-        throw new Error('Admin email is required');
-      }
-      
-      // Set admin context first
-      console.log('🔧 Setting admin context before creation...');
-      await supabase.rpc('set_platform_admin_context', { 
-        admin_email: adminEmail 
-      });
-
       console.log('🔨 Attempting to create discount code...');
       const { data, error } = await supabase
         .from('discount_codes')
@@ -111,21 +91,12 @@ export const discountCodeService = {
     }
   },
 
-  async updateDiscountCode(id: string, updates: UpdateDiscountCodeData, adminEmail?: string) {
+  async updateDiscountCode(id: string, updates: UpdateDiscountCodeData) {
     console.log('=== UPDATING DISCOUNT CODE ===');
     console.log('🆔 ID:', id);
     console.log('📝 Updates:', updates);
-    console.log('📧 Admin email:', adminEmail);
 
     try {
-      if (!adminEmail) {
-        throw new Error('Admin email is required');
-      }
-      
-      await supabase.rpc('set_platform_admin_context', { 
-        admin_email: adminEmail 
-      });
-
       const { data, error } = await supabase
         .from('discount_codes')
         .update({
@@ -149,20 +120,11 @@ export const discountCodeService = {
     }
   },
 
-  async deleteDiscountCode(id: string, adminEmail?: string) {
+  async deleteDiscountCode(id: string) {
     console.log('=== DELETING DISCOUNT CODE ===');
     console.log('🆔 ID:', id);
-    console.log('📧 Admin email:', adminEmail);
 
     try {
-      if (!adminEmail) {
-        throw new Error('Admin email is required');
-      }
-      
-      await supabase.rpc('set_platform_admin_context', { 
-        admin_email: adminEmail 
-      });
-
       const { error } = await supabase
         .from('discount_codes')
         .delete()
@@ -213,18 +175,11 @@ export const discountCodeService = {
     };
   },
 
-  async incrementCodeUsage(id: string, adminEmail?: string) {
+  async incrementCodeUsage(id: string) {
     console.log('=== INCREMENTING CODE USAGE ===');
     console.log('🆔 ID:', id);
-    console.log('📧 Admin email:', adminEmail);
 
     try {
-      if (adminEmail) {
-        await supabase.rpc('set_platform_admin_context', { 
-          admin_email: adminEmail 
-        });
-      }
-
       // First get current usage count
       const { data: currentData, error: fetchError } = await supabase
         .from('discount_codes')
