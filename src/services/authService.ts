@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import bcrypt from 'bcryptjs';
 import { Teacher, Student } from '@/types/auth';
@@ -179,7 +178,7 @@ export const studentSimpleLoginService = async (fullName: string, password: stri
   }
 };
 
-// Teacher signup with enhanced security
+// Teacher signup using edge function to bypass RLS
 export const teacherSignupService = async (
   name: string,
   email: string,
@@ -208,74 +207,55 @@ export const teacherSignupService = async (
       return { error: 'Password must be at least 6 characters long.' };
     }
 
-    // Check if teacher already exists
-    const { data: existingTeachers, error: checkError } = await supabase
-      .from('teachers')
-      .select('id')
-      .eq('email', email.trim().toLowerCase());
-
-    if (checkError) {
-      logSecurely('teacherSignupService: Database error during duplicate check:', checkError.message);
-      return { error: 'Database error. Please try again.' };
-    }
-
-    if (existingTeachers && existingTeachers.length > 0) {
-      return { error: 'A teacher with this email already exists.' };
-    }
-
     // Hash the password
     const passwordHash = await bcrypt.hash(password, 12);
 
-    // Create new teacher with proper role mapping
-    const teacherRole = role === 'admin' ? 'admin' : role === 'doctor' ? 'doctor' : 'teacher';
-
-    const { data: newTeacher, error: insertError } = await supabase
-      .from('teachers')
-      .insert({
+    // Call edge function for account creation
+    const { data, error } = await supabase.functions.invoke('create-teacher-account', {
+      body: {
         name: name.trim(),
         email: email.trim().toLowerCase(),
         school: school.trim(),
         password_hash: passwordHash,
-        role: teacherRole,
+        role: role,
         specialization: specialization?.trim() || null,
-        license_number: license_number?.trim() || null,
-        is_available: true
-      })
-      .select()
-      .single();
-
-    if (insertError) {
-      logSecurely('teacherSignupService: Database error during insertion:', insertError.message);
-      if (insertError.code === '23505') {
-        return { error: 'A teacher with this email already exists.' };
+        license_number: license_number?.trim() || null
       }
+    });
+
+    if (error) {
+      logSecurely('teacherSignupService: Edge function error:', error);
       return { error: 'Failed to create account. Please try again.' };
     }
 
-    if (!newTeacher) {
-      return { error: 'Failed to create account. Please try again.' };
+    if (data?.error) {
+      logSecurely('teacherSignupService: Server error:', data.error);
+      return { error: data.error };
     }
 
-    logSecurely('teacherSignupService: Teacher account created successfully:', newTeacher.id);
-    const teacherData: Teacher = {
-      id: newTeacher.id,
-      name: newTeacher.name,
-      email: newTeacher.email,
-      school: newTeacher.school,
-      role: newTeacher.role as 'teacher' | 'admin' | 'doctor',
-      specialization: newTeacher.specialization,
-      license_number: newTeacher.license_number,
-      is_available: newTeacher.is_available
-    };
+    if (data?.teacher) {
+      logSecurely('teacherSignupService: Teacher account created successfully:', data.teacher.id);
+      const teacherData: Teacher = {
+        id: data.teacher.id,
+        name: data.teacher.name,
+        email: data.teacher.email,
+        school: data.teacher.school,
+        role: data.teacher.role as 'teacher' | 'admin' | 'doctor',
+        specialization: data.teacher.specialization,
+        license_number: data.teacher.license_number,
+        is_available: data.teacher.is_available
+      };
+      return { teacher: teacherData };
+    }
 
-    return { teacher: teacherData };
+    return { error: 'Failed to create account. Please try again.' };
   } catch (error) {
     logSecurely('teacherSignupService: Unexpected error occurred:', error);
     return { error: 'An unexpected error occurred. Please try again.' };
   }
 };
 
-// Student signup with enhanced security
+// Student signup using edge function
 export const studentSignupService = async (
   fullName: string,
   school: string,
@@ -295,58 +275,41 @@ export const studentSignupService = async (
       return { error: 'Password must be at least 6 characters long.' };
     }
 
-    // Check if student already exists
-    const { data: existingStudents, error: checkError } = await supabase
-      .from('students')
-      .select('id')
-      .eq('full_name', fullName.trim())
-      .eq('school', school.trim());
-
-    if (checkError) {
-      logSecurely('studentSignupService: Database error during duplicate check:', checkError.message);
-      return { error: 'Database error. Please try again.' };
-    }
-
-    if (existingStudents && existingStudents.length > 0) {
-      return { error: 'A student with this name already exists at this school.' };
-    }
-
     // Hash the password
     const passwordHash = await bcrypt.hash(password, 12);
 
-    // Create new student
-    const { data: newStudent, error: insertError } = await supabase
-      .from('students')
-      .insert({
+    // Call edge function for account creation
+    const { data, error } = await supabase.functions.invoke('create-student-account', {
+      body: {
         full_name: fullName.trim(),
         school: school.trim(),
         grade: grade.trim(),
         password_hash: passwordHash
-      })
-      .select()
-      .single();
-
-    if (insertError) {
-      logSecurely('studentSignupService: Database error during insertion:', insertError.message);
-      if (insertError.code === '23505') {
-        return { error: 'A student with this name already exists at this school.' };
       }
+    });
+
+    if (error) {
+      logSecurely('studentSignupService: Edge function error:', error);
       return { error: 'Failed to create account. Please try again.' };
     }
 
-    if (!newStudent) {
-      return { error: 'Failed to create account. Please try again.' };
+    if (data?.error) {
+      logSecurely('studentSignupService: Server error:', data.error);
+      return { error: data.error };
     }
 
-    logSecurely('studentSignupService: Student account created successfully:', newStudent.id);
-    const studentData: Student = {
-      id: newStudent.id,
-      full_name: newStudent.full_name,
-      school: newStudent.school,
-      grade: newStudent.grade
-    };
+    if (data?.student) {
+      logSecurely('studentSignupService: Student account created successfully:', data.student.id);
+      const studentData: Student = {
+        id: data.student.id,
+        full_name: data.student.full_name,
+        school: data.student.school,
+        grade: data.student.grade
+      };
+      return { student: studentData };
+    }
 
-    return { student: studentData };
+    return { error: 'Failed to create account. Please try again.' };
   } catch (error) {
     logSecurely('studentSignupService: Unexpected error occurred:', error);
     return { error: 'An unexpected error occurred. Please try again.' };
