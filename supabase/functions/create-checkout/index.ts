@@ -113,7 +113,103 @@ serve(async (req) => {
       discountedPrice 
     });
 
-    // Create line items with discounted price
+    // For 100% discount, create a free subscription directly instead of using checkout
+    if (validatedDiscountPercent >= 100) {
+      console.log("Creating free subscription for 100% discount");
+      
+      // Create a free subscription directly
+      const subscription = await stripe.subscriptions.create({
+        customer: customerId,
+        items: [{
+          price_data: {
+            currency: "usd",
+            product_data: {
+              name: `LessonLens ${tierType === 'admin' ? 'School Admin Bundle' : 'Teacher Plan'}`,
+            },
+            unit_amount: 0, // Free
+            recurring: {
+              interval: isAnnual ? 'year' : 'month',
+            },
+          },
+        }],
+        trial_period_days: trialDays,
+        metadata: {
+          teacherCount: teacherCount.toString(),
+          tierType: tierType,
+          isAnnual: isAnnual.toString(),
+          originalAmount: basePrice.toString(),
+          discountCode: discountCode || '',
+          discountPercent: validatedDiscountPercent.toString(),
+          schoolName: schoolName,
+          adminEmail: teacherEmail,
+          adminName: teacherName || teacherEmail.split('@')[0],
+          discountCodeId: discountCodeId || '',
+          trialDays: trialDays.toString(),
+          freeSubscription: 'true'
+        }
+      });
+
+      console.log("Free subscription created:", subscription.id);
+
+      // Increment discount code usage if one was used
+      if (discountCodeId) {
+        const { data: currentCode, error: fetchError } = await supabaseAdmin
+          .from('discount_codes')
+          .select('current_uses')
+          .eq('id', discountCodeId)
+          .single();
+
+        if (fetchError) {
+          console.error("Error fetching current usage:", fetchError);
+        } else {
+          const { error: incrementError } = await supabaseAdmin
+            .from('discount_codes')
+            .update({
+              current_uses: (currentCode.current_uses || 0) + 1,
+              updated_at: new Date().toISOString(),
+            })
+            .eq('id', discountCodeId);
+
+          if (incrementError) {
+            console.error("Error incrementing discount code usage:", incrementError);
+          } else {
+            console.log("Discount code usage incremented");
+          }
+        }
+      }
+
+      // Store subscription data
+      const subscriptionData = {
+        school_name: schoolName,
+        stripe_customer_id: customerId,
+        amount: 0, // Free subscription
+        plan_type: `${tierType}_${isAnnual ? 'annual' : 'monthly'}`,
+        status: 'trialing',
+        current_period_start: new Date().toISOString(),
+        current_period_end: new Date(Date.now() + (trialDays * 24 * 60 * 60 * 1000)).toISOString(),
+      };
+
+      console.log("Inserting subscription data:", subscriptionData);
+
+      const { error: insertError } = await supabaseAdmin
+        .from('subscriptions')
+        .insert(subscriptionData);
+
+      if (insertError) {
+        console.error("Error storing subscription:", insertError);
+      } else {
+        console.log("Subscription data stored successfully");
+      }
+
+      // Return success URL directly for free subscriptions
+      const successUrl = `${req.headers.get("origin")}/teacher-dashboard?success=true&free=true`;
+      return new Response(JSON.stringify({ url: successUrl }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 200,
+      });
+    }
+
+    // For paid subscriptions (discounts less than 100%), create normal checkout
     const planName = tierType === 'admin' ? 'School Admin Bundle' : 'Teacher Plan';
     const billingInterval = isAnnual ? 'year' : 'month';
     
@@ -167,7 +263,6 @@ serve(async (req) => {
 
     // Increment discount code usage if one was used
     if (discountCodeId) {
-      // Get current usage first
       const { data: currentCode, error: fetchError } = await supabaseAdmin
         .from('discount_codes')
         .select('current_uses')
@@ -177,7 +272,6 @@ serve(async (req) => {
       if (fetchError) {
         console.error("Error fetching current usage:", fetchError);
       } else {
-        // Update with incremented usage
         const { error: incrementError } = await supabaseAdmin
           .from('discount_codes')
           .update({
