@@ -782,6 +782,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: boolean
       }
+      check_platform_admin_for_discount_codes: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
       detect_self_harm_language: {
         Args: { text_content: string }
         Returns: number

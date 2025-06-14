@@ -51,6 +51,20 @@ const setAdminContext = async (adminEmail: string) => {
   console.log('✅ Admin context set successfully');
 };
 
+// Test function to verify admin access
+const testAdminAccess = async () => {
+  console.log('🧪 Testing admin access...');
+  const { data, error } = await supabase.rpc('check_platform_admin_for_discount_codes');
+  
+  if (error) {
+    console.error('❌ Error testing admin access:', error);
+    return false;
+  }
+  
+  console.log('✅ Admin access test result:', data);
+  return data;
+};
+
 export const discountCodeService = {
   async getAllDiscountCodes(adminEmail?: string) {
     console.log('=== FETCHING DISCOUNT CODES ===');
@@ -59,6 +73,12 @@ export const discountCodeService = {
       // Set admin context if provided
       if (adminEmail) {
         await setAdminContext(adminEmail);
+        
+        // Test admin access
+        const hasAccess = await testAdminAccess();
+        if (!hasAccess) {
+          throw new Error('Admin access verification failed');
+        }
       }
       
       console.log('Fetching discount codes...');
@@ -91,6 +111,12 @@ export const discountCodeService = {
       // Set admin context if provided
       if (adminEmail) {
         await setAdminContext(adminEmail);
+        
+        // Test admin access
+        const hasAccess = await testAdminAccess();
+        if (!hasAccess) {
+          throw new Error('Admin access verification failed');
+        }
       }
 
       const { data, error } = await supabase
@@ -126,6 +152,12 @@ export const discountCodeService = {
       // Set admin context if provided
       if (adminEmail) {
         await setAdminContext(adminEmail);
+        
+        // Test admin access
+        const hasAccess = await testAdminAccess();
+        if (!hasAccess) {
+          throw new Error('Admin access verification failed');
+        }
       }
 
       const { data, error } = await supabase
@@ -160,6 +192,12 @@ export const discountCodeService = {
       // Set admin context if provided
       if (adminEmail) {
         await setAdminContext(adminEmail);
+        
+        // Test admin access
+        const hasAccess = await testAdminAccess();
+        if (!hasAccess) {
+          throw new Error('Admin access verification failed');
+        }
       }
 
       const { error } = await supabase
