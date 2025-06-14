@@ -8,7 +8,14 @@ import { UserIcon, Mail, School, ShieldIcon } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 interface TeacherSignupFormProps {
-  onSignup: () => Promise<void>;
+  onSignup: (signupData: {
+    name: string;
+    email: string;
+    school: string;
+    role: 'teacher' | 'admin' | 'doctor';
+    password: string;
+    confirmPassword: string;
+  }) => Promise<void>;
   isLoading: boolean;
 }
 
@@ -25,7 +32,7 @@ const TeacherSignupForm: React.FC<TeacherSignupFormProps> = ({ onSignup, isLoadi
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await onSignup();
+    await onSignup(signupData);
   };
 
   return (

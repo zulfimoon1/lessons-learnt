@@ -104,12 +104,97 @@ const TeacherLogin = () => {
     }
   };
 
-  const handleSignup = async () => {
-    toast({
-      title: "Signup Not Available",
-      description: "Please contact your administrator to create a teacher account.",
-      variant: "destructive",
-    });
+  const handleSignup = async (signupData: {
+    name: string;
+    email: string;
+    school: string;
+    role: 'teacher' | 'admin' | 'doctor';
+    password: string;
+    confirmPassword: string;
+  }) => {
+    console.log('TeacherLogin: Signup attempt for:', signupData.name);
+
+    // Validate input
+    if (!signupData.name.trim() || !signupData.email.trim() || !signupData.school.trim() || !signupData.password) {
+      toast({
+        title: "Missing information",
+        description: "Please fill in all required fields",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (signupData.password !== signupData.confirmPassword) {
+      toast({
+        title: "Password mismatch",
+        description: "Passwords do not match",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (signupData.password.length < 6) {
+      toast({
+        title: "Password too short",
+        description: "Password must be at least 6 characters long",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      const result = await teacherLogin(
+        signupData.email.trim(),
+        signupData.password,
+        signupData.name.trim(),
+        signupData.school.trim(),
+        signupData.role
+      );
+
+      console.log('TeacherLogin: Signup result received:', result);
+
+      if (result.error) {
+        console.error('TeacherLogin: Signup failed with error:', result.error);
+        toast({
+          title: "Signup Failed",
+          description: result.error,
+          variant: "destructive",
+        });
+      } else if (result.teacher) {
+        console.log('TeacherLogin: Signup successful, redirecting');
+        
+        toast({
+          title: "Account Created Successfully",
+          description: "Welcome! Your account has been created.",
+        });
+        
+        setTimeout(() => {
+          if (result.teacher.role === "admin") {
+            navigate("/admin-dashboard", { replace: true });
+          } else {
+            navigate("/teacher-dashboard", { replace: true });
+          }
+        }, 100);
+      } else {
+        console.error('TeacherLogin: No error but no teacher data returned');
+        toast({
+          title: "Signup Failed",
+          description: "Signup failed. Please try again.",
+          variant: "destructive",
+        });
+      }
+    } catch (err) {
+      console.error('TeacherLogin: Unexpected error during signup:', err);
+      toast({
+        title: "Signup Failed",
+        description: "An unexpected error occurred. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
