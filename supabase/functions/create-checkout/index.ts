@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@14.21.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
@@ -49,6 +48,7 @@ serve(async (req) => {
     // Validate discount code if provided
     let validatedDiscountPercent = 0;
     let discountCodeId = null;
+    let discountDurationMonths = null;
     
     if (discountCode) {
       const { data: discountData, error: discountError } = await supabaseAdmin
@@ -72,7 +72,12 @@ serve(async (req) => {
 
       validatedDiscountPercent = discountData.discount_percent;
       discountCodeId = discountData.id;
-      console.log("Discount code validated:", { code: discountCode, percent: validatedDiscountPercent });
+      discountDurationMonths = discountData.duration_months;
+      console.log("Discount code validated:", { 
+        code: discountCode, 
+        percent: validatedDiscountPercent,
+        durationMonths: discountDurationMonths 
+      });
     }
 
     console.log("Teacher authenticated:", teacherEmail);
@@ -110,14 +115,23 @@ serve(async (req) => {
     console.log("Price calculation:", { 
       basePrice, 
       discountPercent: validatedDiscountPercent, 
-      discountedPrice 
+      discountedPrice,
+      durationMonths: discountDurationMonths
     });
+
+    // Calculate discount expiration date if duration is specified
+    let discountExpiresAt = null;
+    if (discountDurationMonths && validatedDiscountPercent > 0) {
+      const expirationDate = new Date();
+      expirationDate.setMonth(expirationDate.getMonth() + discountDurationMonths);
+      discountExpiresAt = expirationDate.toISOString();
+      console.log("Discount will expire at:", discountExpiresAt);
+    }
 
     // For 100% discount, create a free subscription directly instead of using checkout
     if (validatedDiscountPercent >= 100) {
       console.log("Creating free subscription for 100% discount");
       
-      // Create a free subscription directly
       const subscription = await stripe.subscriptions.create({
         customer: customerId,
         items: [{
@@ -126,7 +140,7 @@ serve(async (req) => {
             product_data: {
               name: `LessonLens ${tierType === 'admin' ? 'School Admin Bundle' : 'Teacher Plan'}`,
             },
-            unit_amount: 0, // Free
+            unit_amount: 0,
             recurring: {
               interval: isAnnual ? 'year' : 'month',
             },
@@ -145,7 +159,8 @@ serve(async (req) => {
           adminName: teacherName || teacherEmail.split('@')[0],
           discountCodeId: discountCodeId || '',
           trialDays: trialDays.toString(),
-          freeSubscription: 'true'
+          freeSubscription: 'true',
+          discountExpiresAt: discountExpiresAt || ''
         }
       });
 
@@ -178,15 +193,18 @@ serve(async (req) => {
         }
       }
 
-      // Store subscription data
+      // Store subscription data with discount tracking
       const subscriptionData = {
         school_name: schoolName,
         stripe_customer_id: customerId,
-        amount: 0, // Free subscription
+        amount: 0,
+        original_amount: basePrice,
         plan_type: `${tierType}_${isAnnual ? 'annual' : 'monthly'}`,
         status: 'trialing',
         current_period_start: new Date().toISOString(),
         current_period_end: new Date(Date.now() + (trialDays * 24 * 60 * 60 * 1000)).toISOString(),
+        discount_code_id: discountCodeId,
+        discount_expires_at: discountExpiresAt
       };
 
       console.log("Inserting subscription data:", subscriptionData);
@@ -201,7 +219,6 @@ serve(async (req) => {
         console.log("Subscription data stored successfully");
       }
 
-      // Return success URL directly for free subscriptions
       const successUrl = `${req.headers.get("origin")}/teacher-dashboard?success=true&free=true`;
       return new Response(JSON.stringify({ url: successUrl }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -219,7 +236,7 @@ serve(async (req) => {
           currency: "usd",
           product_data: {
             name: `LessonLens ${planName}`,
-            description: `${isAnnual ? 'Annual' : 'Monthly'} subscription for ${teacherCount} teacher${teacherCount > 1 ? 's' : ''} - ${schoolName}${validatedDiscountPercent > 0 ? ` (${validatedDiscountPercent}% discount applied)` : ''}`,
+            description: `${isAnnual ? 'Annual' : 'Monthly'} subscription for ${teacherCount} teacher${teacherCount > 1 ? 's' : ''} - ${schoolName}${validatedDiscountPercent > 0 ? ` (${validatedDiscountPercent}% discount${discountDurationMonths ? ` for ${discountDurationMonths} months` : ''})` : ''}`,
           },
           unit_amount: discountedPrice,
           recurring: {
@@ -250,7 +267,9 @@ serve(async (req) => {
         adminEmail: teacherEmail,
         adminName: teacherName || teacherEmail.split('@')[0],
         discountCodeId: discountCodeId || '',
-        trialDays: trialDays.toString()
+        trialDays: trialDays.toString(),
+        discountExpiresAt: discountExpiresAt || '',
+        discountDurationMonths: discountDurationMonths?.toString() || ''
       },
     };
 
@@ -288,15 +307,18 @@ serve(async (req) => {
       }
     }
 
-    // Store subscription intent
+    // Store subscription intent with discount tracking
     const subscriptionData = {
       school_name: schoolName,
       stripe_customer_id: customerId,
       amount: discountedPrice,
+      original_amount: basePrice,
       plan_type: `${tierType}_${isAnnual ? 'annual' : 'monthly'}`,
       status: 'trialing',
       current_period_start: new Date().toISOString(),
       current_period_end: new Date(Date.now() + (trialDays * 24 * 60 * 60 * 1000)).toISOString(),
+      discount_code_id: discountCodeId,
+      discount_expires_at: discountExpiresAt
     };
 
     console.log("Inserting subscription data:", subscriptionData);

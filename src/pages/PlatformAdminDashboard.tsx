@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { usePlatformAdmin } from "@/contexts/PlatformAdminContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -19,6 +18,7 @@ import TeacherManagement from "@/components/platform-admin/TeacherManagement";
 import StudentManagement from "@/components/platform-admin/StudentManagement";
 import DoctorManagement from "@/components/platform-admin/DoctorManagement";
 import SecurityMonitoring from "@/components/platform-admin/SecurityMonitoring";
+import DiscountNotifications from "@/components/platform-admin/DiscountNotifications";
 
 interface DashboardStats {
   totalStudents: number;
@@ -428,6 +428,9 @@ const PlatformAdminDashboard = () => {
           </TabsContent>
 
           <TabsContent value="analytics" className="space-y-6">
+            {/* Payment Notifications */}
+            <DiscountNotifications adminEmail={admin?.email} />
+
             {/* Enhanced Subscription Management */}
             <SubscriptionManagement />
 

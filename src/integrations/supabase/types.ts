@@ -127,6 +127,7 @@ export type Database = {
           current_uses: number | null
           description: string | null
           discount_percent: number
+          duration_months: number | null
           expires_at: string | null
           id: string
           is_active: boolean | null
@@ -141,6 +142,7 @@ export type Database = {
           current_uses?: number | null
           description?: string | null
           discount_percent: number
+          duration_months?: number | null
           expires_at?: string | null
           id?: string
           is_active?: boolean | null
@@ -155,6 +157,7 @@ export type Database = {
           current_uses?: number | null
           description?: string | null
           discount_percent?: number
+          duration_months?: number | null
           expires_at?: string | null
           id?: string
           is_active?: boolean | null
@@ -396,6 +399,47 @@ export type Database = {
         }
         Relationships: []
       }
+      payment_notifications: {
+        Row: {
+          admin_email: string
+          created_at: string
+          id: string
+          notification_type: string
+          scheduled_for: string
+          school_name: string
+          sent_at: string | null
+          subscription_id: string | null
+        }
+        Insert: {
+          admin_email: string
+          created_at?: string
+          id?: string
+          notification_type: string
+          scheduled_for: string
+          school_name: string
+          sent_at?: string | null
+          subscription_id?: string | null
+        }
+        Update: {
+          admin_email?: string
+          created_at?: string
+          id?: string
+          notification_type?: string
+          scheduled_for?: string
+          school_name?: string
+          sent_at?: string | null
+          subscription_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_notifications_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           created_at: string | null
@@ -496,7 +540,10 @@ export type Database = {
           currency: string
           current_period_end: string | null
           current_period_start: string | null
+          discount_code_id: string | null
+          discount_expires_at: string | null
           id: string
+          original_amount: number | null
           plan_type: string
           school_name: string
           status: string
@@ -510,7 +557,10 @@ export type Database = {
           currency?: string
           current_period_end?: string | null
           current_period_start?: string | null
+          discount_code_id?: string | null
+          discount_expires_at?: string | null
           id?: string
+          original_amount?: number | null
           plan_type?: string
           school_name: string
           status?: string
@@ -524,7 +574,10 @@ export type Database = {
           currency?: string
           current_period_end?: string | null
           current_period_start?: string | null
+          discount_code_id?: string | null
+          discount_expires_at?: string | null
           id?: string
+          original_amount?: number | null
           plan_type?: string
           school_name?: string
           status?: string
@@ -532,7 +585,15 @@ export type Database = {
           stripe_subscription_id?: string | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "subscriptions_discount_code_id_fkey"
+            columns: ["discount_code_id"]
+            isOneToOne: false
+            referencedRelation: "discount_codes"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       support_chat_messages: {
         Row: {
@@ -843,6 +904,7 @@ export type Database = {
           current_uses: number | null
           description: string | null
           discount_percent: number
+          duration_months: number | null
           expires_at: string | null
           id: string
           is_active: boolean | null
@@ -868,6 +930,7 @@ export type Database = {
           current_uses: number | null
           description: string | null
           discount_percent: number
+          duration_months: number | null
           expires_at: string | null
           id: string
           is_active: boolean | null
@@ -895,6 +958,7 @@ export type Database = {
           current_uses: number | null
           description: string | null
           discount_percent: number
+          duration_months: number | null
           expires_at: string | null
           id: string
           is_active: boolean | null
@@ -903,12 +967,20 @@ export type Database = {
           updated_at: string | null
         }
       }
+      process_expired_discounts: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       safe_get_teacher_info: {
         Args: { user_uuid: string }
         Returns: {
           user_role: string
           user_school: string
         }[]
+      }
+      schedule_discount_notifications: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
       }
       set_platform_admin_context: {
         Args: { admin_email: string }

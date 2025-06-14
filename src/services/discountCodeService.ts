@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 
 export interface DiscountCode {
@@ -13,6 +14,7 @@ export interface DiscountCode {
   created_at: string;
   updated_at: string;
   school_name: string | null;
+  duration_months: number | null;
 }
 
 export interface CreateDiscountCodeData {
@@ -23,6 +25,7 @@ export interface CreateDiscountCodeData {
   expires_at?: string;
   is_active?: boolean;
   school_name?: string;
+  duration_months?: number;
 }
 
 export interface UpdateDiscountCodeData {
@@ -33,6 +36,7 @@ export interface UpdateDiscountCodeData {
   expires_at?: string;
   is_active?: boolean;
   school_name?: string;
+  duration_months?: number;
 }
 
 export const discountCodeService = {
@@ -144,7 +148,7 @@ export const discountCodeService = {
       }
 
       console.log('🔨 Creating discount code using platform admin function...');
-      const { data, error } = await supabase.rpc('platform_admin_create_discount_code', {
+      const { data, error } = await supabase.rpc('platform_admin_create_discount_code_with_duration', {
         admin_email_param: adminEmail,
         code_param: codeData.code.toUpperCase(),
         discount_percent_param: codeData.discount_percent,
@@ -153,7 +157,8 @@ export const discountCodeService = {
         expires_at_param: codeData.expires_at || null,
         is_active_param: codeData.is_active !== undefined ? codeData.is_active : true,
         school_name_param: codeData.school_name || null,
-        created_by_param: createdBy
+        created_by_param: createdBy,
+        duration_months_param: codeData.duration_months || null
       });
 
       if (error) {
@@ -273,7 +278,8 @@ export const discountCodeService = {
             return {
               valid: true,
               discountCode: matchingCode,
-              discountPercent: matchingCode.discount_percent
+              discountPercent: matchingCode.discount_percent,
+              durationMonths: matchingCode.duration_months
             };
           }
         } catch (adminError) {
@@ -308,7 +314,8 @@ export const discountCodeService = {
       return {
         valid: true,
         discountCode: data,
-        discountPercent: data.discount_percent
+        discountPercent: data.discount_percent,
+        durationMonths: data.duration_months
       };
 
     } catch (error) {
