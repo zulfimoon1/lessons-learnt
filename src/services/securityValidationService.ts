@@ -1,202 +1,234 @@
 
-// Enhanced security validation service
-export interface ValidationResult {
+import { supabase } from '@/integrations/supabase/client';
+
+interface SecurityValidationResult {
   isValid: boolean;
   errors: string[];
-  sanitizedValue?: string;
+  riskLevel: 'low' | 'medium' | 'high';
 }
 
-export interface SecurityConfig {
-  maxLength: number;
-  minLength?: number;
-  allowSpecialChars?: boolean;
-  allowHtml?: boolean;
+interface SecurityEventLog {
+  type: 'unauthorized_access' | 'suspicious_activity' | 'form_validation_failed' | 'rate_limit_exceeded';
+  userId?: string;
+  timestamp: string;
+  details: string;
+  userAgent?: string;
+  ipAddress?: string;
+  severity: 'low' | 'medium' | 'high';
 }
 
 class SecurityValidationService {
-  private readonly dangerousPatterns = [
-    /<script[^>]*>.*?<\/script>/gi,
-    /javascript:/gi,
-    /vbscript:/gi,
-    /on\w+\s*=/gi,
-    /expression\s*\(/gi,
-    /url\s*\(/gi,
-    /import\s*\(/gi,
-    /eval\s*\(/gi,
-    /<iframe/gi,
-    /<object/gi,
-    /<embed/gi,
-    /data:text\/html/gi
-  ];
+  private rateLimitMap = new Map<string, { count: number; lastReset: number }>();
+  private readonly RATE_LIMIT_WINDOW = 60000; // 1 minute
+  private readonly MAX_REQUESTS_PER_WINDOW = 30;
 
-  private readonly sqlInjectionPatterns = [
-    /(\b(ALTER|CREATE|DELETE|DROP|EXEC(UTE)?|INSERT|MERGE|SELECT|UPDATE|UNION)\b)/gi,
-    /(INFORMATION_SCHEMA|sysobjects|syscolumns)/gi,
-    /(1=1|1 = 1)/gi,
-    /('|\"|;|--|\|\|)/g
-  ];
-
-  validateInput(input: string, type: string, config?: SecurityConfig): ValidationResult {
+  // Enhanced input validation with XSS and injection prevention
+  validateInput(input: string, fieldName: string, options: {
+    maxLength?: number;
+    allowHtml?: boolean;
+    requireAlphanumeric?: boolean;
+  } = {}): SecurityValidationResult {
     const errors: string[] = [];
-    
-    if (!input || typeof input !== 'string') {
-      return { isValid: false, errors: ['Input is required and must be a string'] };
-    }
+    let riskLevel: 'low' | 'medium' | 'high' = 'low';
 
-    const trimmedInput = input.trim();
-    
+    const {
+      maxLength = 1000,
+      allowHtml = false,
+      requireAlphanumeric = false
+    } = options;
+
     // Length validation
-    const maxLength = config?.maxLength || 1000;
-    const minLength = config?.minLength || 0;
-    
-    if (trimmedInput.length > maxLength) {
-      errors.push(`Input too long (max ${maxLength} characters)`);
-    }
-    
-    if (trimmedInput.length < minLength) {
-      errors.push(`Input too short (min ${minLength} characters)`);
+    if (input.length > maxLength) {
+      errors.push(`${fieldName} exceeds maximum length of ${maxLength} characters`);
+      riskLevel = 'medium';
     }
 
-    // XSS validation
-    if (!config?.allowHtml) {
-      for (const pattern of this.dangerousPatterns) {
-        if (pattern.test(trimmedInput)) {
-          errors.push('Input contains potentially dangerous content');
-          break;
-        }
-      }
+    // XSS prevention
+    if (!allowHtml && this.containsHtmlTags(input)) {
+      errors.push(`${fieldName} contains potentially dangerous HTML content`);
+      riskLevel = 'high';
     }
 
-    // SQL injection validation
-    for (const pattern of this.sqlInjectionPatterns) {
-      if (pattern.test(trimmedInput)) {
-        errors.push('Input contains potentially malicious SQL patterns');
-        break;
-      }
+    // SQL injection prevention
+    if (this.containsSqlInjectionPattern(input)) {
+      errors.push(`${fieldName} contains potentially dangerous SQL patterns`);
+      riskLevel = 'high';
     }
 
-    // Type-specific validation
-    switch (type) {
-      case 'email':
-        if (!this.validateEmail(trimmedInput)) {
-          errors.push('Invalid email format');
-        }
-        break;
-      case 'name':
-        if (!this.validateName(trimmedInput)) {
-          errors.push('Name contains invalid characters');
-        }
-        break;
-      case 'school':
-        if (!this.validateSchoolName(trimmedInput)) {
-          errors.push('School name contains invalid characters');
-        }
-        break;
-      case 'grade':
-        if (!this.validateGrade(trimmedInput)) {
-          errors.push('Invalid grade format');
-        }
-        break;
-      case 'alphanumeric':
-        if (!/^[a-zA-Z0-9_-]+$/.test(trimmedInput)) {
-          errors.push('Only letters, numbers, hyphens, and underscores allowed');
-        }
-        break;
+    // Script injection prevention
+    if (this.containsScriptInjection(input)) {
+      errors.push(`${fieldName} contains potentially dangerous script content`);
+      riskLevel = 'high';
     }
 
-    const sanitizedValue = this.sanitizeInput(trimmedInput, config?.allowSpecialChars);
+    // Alphanumeric requirement
+    if (requireAlphanumeric && !/^[a-zA-Z0-9\s\-_.,!?]+$/.test(input)) {
+      errors.push(`${fieldName} contains invalid characters`);
+      riskLevel = 'medium';
+    }
+
+    // Check for mental health risk keywords
+    const mentalHealthRisk = this.detectMentalHealthRisk(input);
+    if (mentalHealthRisk.level > 0) {
+      // Don't add to errors, but log for monitoring
+      this.logSecurityEvent('mental_health_content_detected', undefined, 
+        `Mental health risk level ${mentalHealthRisk.level} detected in ${fieldName}`, 'medium');
+    }
 
     return {
       isValid: errors.length === 0,
       errors,
-      sanitizedValue
+      riskLevel
     };
   }
 
-  private validateEmail(email: string): boolean {
-    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-    return emailRegex.test(email) && email.length <= 254;
-  }
-
-  private validateName(name: string): boolean {
-    return /^[a-zA-Z\s'-]{2,100}$/.test(name);
-  }
-
-  private validateSchoolName(school: string): boolean {
-    return school.length >= 2 && 
-           school.length <= 100 && 
-           !/[<>"';()&+]/.test(school);
-  }
-
-  private validateGrade(grade: string): boolean {
-    return /^([0-9]{1,2}|K)$/.test(grade);
-  }
-
-  private sanitizeInput(input: string, allowSpecialChars = false): string {
-    let sanitized = input;
-    
-    // Remove or escape dangerous characters
-    if (!allowSpecialChars) {
-      sanitized = sanitized.replace(/[<>\"';&()]/g, '');
-    } else {
-      sanitized = sanitized
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#x27;')
-        .replace(/&/g, '&amp;');
-    }
-    
-    return sanitized;
-  }
-
-  // Rate limiting helper
-  private rateLimitMap = new Map<string, { attempts: number; lastAttempt: number }>();
-
-  checkRateLimit(identifier: string, maxAttempts = 5, windowMs = 300000): boolean {
+  // Rate limiting
+  checkRateLimit(identifier: string): boolean {
     const now = Date.now();
-    const record = this.rateLimitMap.get(identifier);
-    
-    if (!record) {
-      this.rateLimitMap.set(identifier, { attempts: 1, lastAttempt: now });
+    const userLimit = this.rateLimitMap.get(identifier);
+
+    if (!userLimit || now - userLimit.lastReset > this.RATE_LIMIT_WINDOW) {
+      this.rateLimitMap.set(identifier, { count: 1, lastReset: now });
       return true;
     }
-    
-    if (now - record.lastAttempt > windowMs) {
-      // Reset window
-      this.rateLimitMap.set(identifier, { attempts: 1, lastAttempt: now });
-      return true;
-    }
-    
-    if (record.attempts >= maxAttempts) {
+
+    if (userLimit.count >= this.MAX_REQUESTS_PER_WINDOW) {
+      this.logSecurityEvent('rate_limit_exceeded', identifier, 
+        `Rate limit exceeded: ${userLimit.count} requests in window`, 'medium');
       return false;
     }
-    
-    record.attempts++;
-    record.lastAttempt = now;
+
+    userLimit.count++;
     return true;
   }
 
-  // Security audit logging
-  async logSecurityEvent(eventType: string, details: string, severity: 'low' | 'medium' | 'high' = 'medium') {
+  // CSRF token validation (basic implementation)
+  generateCSRFToken(): string {
+    const array = new Uint8Array(32);
+    crypto.getRandomValues(array);
+    return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
+  }
+
+  validateCSRFToken(token: string, sessionToken: string): boolean {
+    // In a real implementation, you'd store and validate against server-side tokens
+    return token === sessionToken && token.length === 64;
+  }
+
+  // Enhanced logging
+  async logSecurityEvent(
+    type: SecurityEventLog['type'],
+    userId?: string,
+    details: string = '',
+    severity: 'low' | 'medium' | 'high' = 'medium'
+  ): Promise<void> {
     try {
-      console.warn(`SECURITY EVENT [${severity.toUpperCase()}]: ${eventType}`, details);
-      
-      // In production, this would send to a secure logging service
-      // For now, we'll use console logging with structured data
-      const securityEvent = {
-        timestamp: new Date().toISOString(),
-        type: eventType,
-        severity,
+      await supabase.rpc('log_security_violation', {
+        violation_type: type,
+        user_id: userId || null,
         details,
-        userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : 'server',
-        url: typeof window !== 'undefined' ? window.location.href : 'server'
-      };
-      
-      console.warn('Security Event:', JSON.stringify(securityEvent));
+        severity
+      });
     } catch (error) {
       console.error('Failed to log security event:', error);
     }
+  }
+
+  // Private helper methods
+  private containsHtmlTags(input: string): boolean {
+    const htmlPattern = /<[^>]*>/gi;
+    return htmlPattern.test(input);
+  }
+
+  private containsSqlInjectionPattern(input: string): boolean {
+    const sqlPatterns = [
+      /(\bUNION\b|\bSELECT\b|\bINSERT\b|\bUPDATE\b|\bDELETE\b|\bDROP\b|\bALTER\b)/gi,
+      /(\bOR\b|\bAND\b)\s+\d+\s*=\s*\d+/gi,
+      /['";]\s*(OR|AND)\s+['"]?\w+['"]?\s*=\s*['"]?\w+['"]?/gi,
+      /(\bEXEC\b|\bEXECUTE\b|\bsp_\w+)/gi
+    ];
+    
+    return sqlPatterns.some(pattern => pattern.test(input));
+  }
+
+  private containsScriptInjection(input: string): boolean {
+    const scriptPatterns = [
+      /<script[^>]*>.*?<\/script>/gi,
+      /javascript:/gi,
+      /on\w+\s*=\s*["'][^"']*["']/gi,
+      /eval\s*\(/gi,
+      /setTimeout\s*\(/gi,
+      /setInterval\s*\(/gi
+    ];
+    
+    return scriptPatterns.some(pattern => pattern.test(input));
+  }
+
+  private detectMentalHealthRisk(text: string): { level: number; keywords: string[] } {
+    const highRiskKeywords = ['kill myself', 'end my life', 'want to die', 'suicide', 'hurt myself', 'cut myself'];
+    const mediumRiskKeywords = ['hopeless', 'worthless', 'hate myself', 'better off dead', 'no point living', 'cant go on'];
+    const lowRiskKeywords = ['depressed', 'sad all the time', 'feel empty', 'dont care anymore', 'tired of everything'];
+    
+    const lowerText = text.toLowerCase();
+    const foundKeywords: string[] = [];
+    
+    for (const keyword of highRiskKeywords) {
+      if (lowerText.includes(keyword)) {
+        foundKeywords.push(keyword);
+        return { level: 5, keywords: foundKeywords };
+      }
+    }
+    
+    for (const keyword of mediumRiskKeywords) {
+      if (lowerText.includes(keyword)) {
+        foundKeywords.push(keyword);
+      }
+    }
+    
+    if (foundKeywords.length > 0) {
+      return { level: 3, keywords: foundKeywords };
+    }
+    
+    for (const keyword of lowRiskKeywords) {
+      if (lowerText.includes(keyword)) {
+        foundKeywords.push(keyword);
+      }
+    }
+    
+    return { level: foundKeywords.length > 0 ? 1 : 0, keywords: foundKeywords };
+  }
+
+  // Authentication validation
+  validateAuthContext(requiredRole?: string[], requiredSchool?: string): {
+    isValid: boolean;
+    user: any;
+    error?: string;
+  } {
+    // This would integrate with your existing auth system
+    // For now, returning a basic structure
+    return {
+      isValid: false,
+      user: null,
+      error: 'Authentication validation not implemented'
+    };
+  }
+
+  // Session security
+  validateSessionSecurity(): boolean {
+    // Check for session hijacking indicators
+    const currentUserAgent = navigator.userAgent;
+    const storedUserAgent = sessionStorage.getItem('initial_user_agent');
+    
+    if (storedUserAgent && storedUserAgent !== currentUserAgent) {
+      this.logSecurityEvent('suspicious_activity', undefined, 
+        'User agent changed during session', 'high');
+      return false;
+    }
+    
+    if (!storedUserAgent) {
+      sessionStorage.setItem('initial_user_agent', currentUserAgent);
+    }
+    
+    return true;
   }
 }
 

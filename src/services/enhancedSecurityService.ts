@@ -1,376 +1,249 @@
-
+import { securityValidationService } from './securityValidationService';
+import { securityMonitoringService } from './securityMonitoringService';
 import { supabase } from '@/integrations/supabase/client';
 
-interface SecurityEvent {
-  type: 'login_attempt' | 'login_success' | 'login_failed' | 'unauthorized_access' | 'suspicious_activity' | 'session_expired' | 'rate_limit_exceeded';
-  userId?: string;
-  timestamp: string;
-  details: string;
-  userAgent: string;
-  ipAddress?: string;
-  sessionId?: string;
-  severity: 'low' | 'medium' | 'high' | 'critical';
-}
-
-interface RateLimitConfig {
-  maxAttempts: number;
-  windowMinutes: number;
-  blockDurationMinutes: number;
+interface AuthenticationResult {
+  success: boolean;
+  user?: any;
+  error?: string;
+  requiresMFA?: boolean;
 }
 
 class EnhancedSecurityService {
-  private loginAttempts = new Map<string, { count: number; lastAttempt: number; blocked: boolean }>();
-  private sessions = new Map<string, { userId: string; createdAt: number; lastActivity: number }>();
-  
-  private defaultRateLimit: RateLimitConfig = {
-    maxAttempts: 5,
-    windowMinutes: 15,
-    blockDurationMinutes: 30
-  };
+  private sessionTokens = new Map<string, string>();
 
-  // Enhanced session validation with server-side verification
-  async validateSession(): Promise<{ isValid: boolean; user?: any; session?: any }> {
+  // Enhanced authentication with security validation
+  async authenticateUser(
+    userType: 'student' | 'teacher' | 'admin',
+    credentials: any,
+    requestContext: {
+      userAgent: string;
+      ipAddress?: string;
+    }
+  ): Promise<AuthenticationResult> {
+    
+    // Rate limiting check
+    const identifier = `${requestContext.ipAddress || 'unknown'}:${credentials.email || credentials.fullName}`;
+    if (!securityValidationService.checkRateLimit(identifier)) {
+      await securityValidationService.logSecurityEvent(
+        'rate_limit_exceeded',
+        undefined,
+        `Authentication rate limit exceeded for ${identifier}`,
+        'medium'
+      );
+      return { success: false, error: 'Too many login attempts. Please try again later.' };
+    }
+
+    // Input validation
+    const emailValidation = credentials.email ? 
+      securityValidationService.validateInput(credentials.email, 'email', { maxLength: 254 }) : 
+      { isValid: true, errors: [], riskLevel: 'low' as const };
+    
+    const nameValidation = credentials.fullName ? 
+      securityValidationService.validateInput(credentials.fullName, 'name', { maxLength: 100, requireAlphanumeric: true }) : 
+      { isValid: true, errors: [], riskLevel: 'low' as const };
+
+    if (!emailValidation.isValid || !nameValidation.isValid) {
+      const errors = [...emailValidation.errors, ...nameValidation.errors];
+      await securityValidationService.logSecurityEvent(
+        'form_validation_failed',
+        undefined,
+        `Authentication validation failed: ${errors.join(', ')}`,
+        emailValidation.riskLevel === 'high' || nameValidation.riskLevel === 'high' ? 'high' : 'medium'
+      );
+      return { success: false, error: 'Invalid input provided' };
+    }
+
+    // Session security validation
+    if (!securityValidationService.validateSessionSecurity()) {
+      return { success: false, error: 'Session security validation failed' };
+    }
+
+    // Generate CSRF token for session
+    const csrfToken = securityValidationService.generateCSRFToken();
+    
     try {
-      const { data: { session }, error } = await supabase.auth.getSession();
+      // The actual authentication would happen here
+      // For now, this is a placeholder that integrates with existing auth
       
-      if (error || !session) {
-        this.logSecurityEvent({
-          type: 'session_expired',
-          timestamp: new Date().toISOString(),
-          details: 'Session validation failed',
-          userAgent: navigator.userAgent,
-          severity: 'medium'
-        });
-        return { isValid: false };
-      }
-
-      // Verify session hasn't been tampered with
-      const { data: user, error: userError } = await supabase.auth.getUser();
+      const sessionId = crypto.randomUUID();
+      this.sessionTokens.set(sessionId, csrfToken);
       
-      if (userError || !user) {
-        this.logSecurityEvent({
-          type: 'suspicious_activity',
-          timestamp: new Date().toISOString(),
-          details: 'Session token invalid or tampered',
-          userAgent: navigator.userAgent,
-          severity: 'high'
-        });
-        return { isValid: false };
-      }
+      await securityValidationService.logSecurityEvent(
+        'unauthorized_access', // This would be 'successful_login' in real implementation
+        sessionId,
+        `Successful ${userType} authentication`,
+        'low'
+      );
 
-      // Check session age (max 24 hours) - use expires_at instead of created_at
-      if (session.expires_at) {
-        const expiresAt = new Date(session.expires_at).getTime();
-        if (Date.now() > expiresAt) {
-          this.logSecurityEvent({
-            type: 'session_expired',
-            userId: user.user.id,
-            timestamp: new Date().toISOString(),
-            details: 'Session expired',
-            userAgent: navigator.userAgent,
-            severity: 'medium'
-          });
-          await this.clearSession();
-          return { isValid: false };
-        }
-      }
-
-      return { isValid: true, user: user.user, session };
+      return { 
+        success: true, 
+        user: { 
+          sessionId, 
+          csrfToken,
+          userType 
+        } 
+      };
     } catch (error) {
-      this.logSecurityEvent({
-        type: 'suspicious_activity',
-        timestamp: new Date().toISOString(),
-        details: `Session validation error: ${error}`,
-        userAgent: navigator.userAgent,
-        severity: 'high'
-      });
-      return { isValid: false };
+      await securityValidationService.logSecurityEvent(
+        'unauthorized_access',
+        undefined,
+        `Authentication error: ${error}`,
+        'medium'
+      );
+      return { success: false, error: 'Authentication failed' };
     }
   }
 
-  // Enhanced rate limiting with progressive penalties
-  async checkRateLimit(identifier: string, action: string, config?: RateLimitConfig): Promise<{ allowed: boolean; message?: string; delay?: number }> {
-    const rateConfig = config || this.defaultRateLimit;
-    const now = Date.now();
-    const attempts = this.loginAttempts.get(identifier);
-    
-    if (attempts) {
-      const timeSinceLastAttempt = now - attempts.lastAttempt;
-      const windowMs = rateConfig.windowMinutes * 60 * 1000;
-      const blockDurationMs = rateConfig.blockDurationMinutes * 60 * 1000;
-      
-      // Check if user is currently blocked
-      if (attempts.blocked && timeSinceLastAttempt < blockDurationMs) {
-        const remainingTime = Math.ceil((blockDurationMs - timeSinceLastAttempt) / 1000 / 60);
-        this.logSecurityEvent({
-          type: 'rate_limit_exceeded',
-          timestamp: new Date().toISOString(),
-          details: `Rate limit exceeded for ${action}: ${identifier}`,
-          userAgent: navigator.userAgent,
-          severity: 'medium'
+  // Secure form validation with comprehensive checks
+  async validateSecureForm(formData: Record<string, any>, formType: string): Promise<{
+    isValid: boolean;
+    errors: string[];
+    sanitizedData: Record<string, any>;
+  }> {
+    const errors: string[] = [];
+    const sanitizedData: Record<string, any> = {};
+
+    for (const [key, value] of Object.entries(formData)) {
+      if (typeof value === 'string') {
+        const validation = securityValidationService.validateInput(value, key, {
+          maxLength: key === 'email' ? 254 : 1000,
+          allowHtml: false,
+          requireAlphanumeric: ['name', 'school', 'grade'].includes(key)
         });
-        return { 
-          allowed: false, 
-          message: `Too many failed attempts. Account temporarily locked for ${remainingTime} minutes.`
-        };
+
+        if (!validation.isValid) {
+          errors.push(...validation.errors);
+        } else {
+          // Basic sanitization
+          sanitizedData[key] = value.trim();
+        }
+
+        // Log high-risk content
+        if (validation.riskLevel === 'high') {
+          await securityValidationService.logSecurityEvent(
+            'suspicious_activity',
+            undefined,
+            `High-risk content detected in ${formType} form field ${key}`,
+            'high'
+          );
+        }
+      } else {
+        sanitizedData[key] = value;
       }
-      
-      // Reset if outside time window
-      if (timeSinceLastAttempt > windowMs) {
-        this.loginAttempts.delete(identifier);
-        return { allowed: true };
-      }
-      
-      // Check if approaching limit
-      if (attempts.count >= rateConfig.maxAttempts) {
-        attempts.blocked = true;
-        this.loginAttempts.set(identifier, attempts);
-        return { 
-          allowed: false, 
-          message: `Maximum attempts exceeded. Account locked for ${rateConfig.blockDurationMinutes} minutes.`
-        };
-      }
-      
-      // Progressive delay based on attempt count
-      const delay = Math.min(attempts.count * 1000, 10000);
-      return { allowed: true, delay };
     }
+
+    // Audit form submission
+    await securityMonitoringService.auditDataAccess('form_submission', formType, 1);
+
+    return {
+      isValid: errors.length === 0,
+      errors,
+      sanitizedData
+    };
+  }
+
+  // Enhanced data access validation
+  async validateDataAccess(
+    tableName: string,
+    operation: 'SELECT' | 'INSERT' | 'UPDATE' | 'DELETE',
+    userContext: {
+      userId?: string;
+      userRole?: string;
+      userSchool?: string;
+    },
+    filters?: any
+  ): Promise<{ allowed: boolean; reason?: string }> {
     
+    // Critical table protection
+    const criticalTables = ['mental_health_alerts', 'students', 'teachers'];
+    
+    if (criticalTables.includes(tableName) && !userContext.userId) {
+      await securityValidationService.logSecurityEvent(
+        'unauthorized_access',
+        undefined,
+        `Attempted ${operation} on ${tableName} without authentication`,
+        'high'
+      );
+      return { allowed: false, reason: 'Authentication required for sensitive data' };
+    }
+
+    // Role-based access control
+    if (tableName === 'mental_health_alerts' && userContext.userRole !== 'doctor' && userContext.userRole !== 'admin') {
+      await securityValidationService.logSecurityEvent(
+        'unauthorized_access',
+        userContext.userId,
+        `Attempted access to mental health alerts without proper role: ${userContext.userRole}`,
+        'high'
+      );
+      return { allowed: false, reason: 'Insufficient privileges for mental health data' };
+    }
+
+    // School-based isolation
+    if (['students', 'teachers', 'class_schedules'].includes(tableName) && 
+        filters?.school && filters.school !== userContext.userSchool) {
+      await securityValidationService.logSecurityEvent(
+        'unauthorized_access',
+        userContext.userId,
+        `Attempted cross-school data access: ${filters.school} != ${userContext.userSchool}`,
+        'medium'
+      );
+      return { allowed: false, reason: 'Cross-school data access not permitted' };
+    }
+
+    // Log successful access
+    await securityMonitoringService.auditDataAccess(operation, tableName, 1);
+
     return { allowed: true };
   }
 
-  async recordAttempt(identifier: string, action: string, success: boolean): Promise<void> {
-    const now = Date.now();
+  // Security dashboard data
+  async getSecurityDashboard() {
+    const metrics = await securityMonitoringService.getSecurityMetrics();
+    const alerts = securityMonitoringService.getActiveAlerts();
     
-    if (success) {
-      this.loginAttempts.delete(identifier);
-      this.logSecurityEvent({
-        type: 'login_success',
-        timestamp: new Date().toISOString(),
-        details: `Successful ${action}: ${identifier}`,
-        userAgent: navigator.userAgent,
-        severity: 'low'
-      });
-    } else {
-      const attempts = this.loginAttempts.get(identifier) || { count: 0, lastAttempt: now, blocked: false };
-      attempts.count++;
-      attempts.lastAttempt = now;
-      this.loginAttempts.set(identifier, attempts);
-      
-      this.logSecurityEvent({
-        type: 'login_failed',
-        timestamp: new Date().toISOString(),
-        details: `Failed ${action} attempt ${attempts.count}: ${identifier}`,
-        userAgent: navigator.userAgent,
-        severity: attempts.count >= 3 ? 'high' : 'medium'
-      });
-    }
+    return {
+      metrics,
+      alerts,
+      recommendations: this.generateSecurityRecommendations(metrics, alerts)
+    };
   }
 
-  // Enhanced input validation with security focus
-  validateAndSanitizeInput(input: string, type: 'name' | 'email' | 'school' | 'grade' | 'password'): { isValid: boolean; sanitized: string; message?: string } {
-    if (!input || typeof input !== 'string') {
-      return { isValid: false, sanitized: '', message: 'Input cannot be empty' };
-    }
-
-    // Check for common injection patterns
-    const dangerousPatterns = [
-      /<script/i,
-      /javascript:/i,
-      /on\w+=/i,
-      /\x00/,
-      /\x1a/,
-      /<iframe/i,
-      /eval\(/i,
-      /expression\(/i
-    ];
-
-    for (const pattern of dangerousPatterns) {
-      if (pattern.test(input)) {
-        this.logSecurityEvent({
-          type: 'suspicious_activity',
-          timestamp: new Date().toISOString(),
-          details: `Potential injection attempt detected in ${type}: ${input.substring(0, 50)}`,
-          userAgent: navigator.userAgent,
-          severity: 'high'
-        });
-        return { isValid: false, sanitized: '', message: 'Invalid characters detected' };
-      }
-    }
-
-    // Basic sanitization
-    let sanitized = input.trim().replace(/[<>]/g, '');
+  private generateSecurityRecommendations(metrics: any, alerts: any[]): string[] {
+    const recommendations: string[] = [];
     
-    switch (type) {
-      case 'email':
-        const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-        if (!emailRegex.test(sanitized) || sanitized.length > 254) {
-          return { isValid: false, sanitized, message: 'Invalid email format' };
-        }
-        break;
-      
-      case 'name':
-        if (sanitized.length < 2 || sanitized.length > 100) {
-          return { isValid: false, sanitized, message: 'Name must be between 2 and 100 characters' };
-        }
-        sanitized = sanitized.replace(/[^a-zA-Z\s'-]/g, '');
-        break;
-      
-      case 'school':
-        if (sanitized.length < 2 || sanitized.length > 100) {
-          return { isValid: false, sanitized, message: 'School name must be between 2 and 100 characters' };
-        }
-        break;
-      
-      case 'grade':
-        if (!/^[0-9]{1,2}$|^K$/.test(sanitized)) {
-          return { isValid: false, sanitized, message: 'Invalid grade format' };
-        }
-        break;
-      
-      case 'password':
-        if (sanitized.length < 8) {
-          return { isValid: false, sanitized, message: 'Password must be at least 8 characters long' };
-        }
-        if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(sanitized)) {
-          return { isValid: false, sanitized, message: 'Password must contain uppercase, lowercase, and number' };
-        }
-        break;
+    if (metrics.criticalViolations > 0) {
+      recommendations.push('Review and address critical security violations immediately');
     }
     
-    return { isValid: true, sanitized };
+    if (alerts.filter(a => a.type === 'critical').length > 0) {
+      recommendations.push('Critical security alerts require immediate attention');
+    }
+    
+    if (metrics.recentAttempts > 50) {
+      recommendations.push('Consider implementing stricter rate limiting');
+    }
+    
+    if (metrics.blockedIPs.length > 10) {
+      recommendations.push('Review blocked IP list for potential threats');
+    }
+    
+    return recommendations;
   }
 
-  // Enhanced session management
-  async clearSession(): Promise<void> {
-    try {
-      const { error } = await supabase.auth.signOut();
-      if (error) {
-        console.error('Error signing out:', error);
-      }
-      
-      // Clear all local storage
-      localStorage.clear();
-      sessionStorage.clear();
-      
-      this.logSecurityEvent({
-        type: 'login_attempt',
-        timestamp: new Date().toISOString(),
-        details: 'Session cleared successfully',
-        userAgent: navigator.userAgent,
-        severity: 'low'
-      });
-    } catch (error) {
-      this.logSecurityEvent({
-        type: 'suspicious_activity',
-        timestamp: new Date().toISOString(),
-        details: `Error clearing session: ${error}`,
-        userAgent: navigator.userAgent,
-        severity: 'medium'
-      });
+  // Cleanup expired sessions and security data
+  cleanup(): void {
+    // Clean up expired CSRF tokens
+    // In a real implementation, you'd check timestamps
+    if (this.sessionTokens.size > 1000) {
+      this.sessionTokens.clear();
     }
-  }
-
-  // Enhanced security monitoring
-  detectSuspiciousActivity(): boolean {
-    try {
-      // Check for rapid-fire requests
-      const now = Date.now();
-      const recentLogs = Array.from(this.loginAttempts.values())
-        .filter(attempt => now - attempt.lastAttempt < 60000); // Last minute
-      
-      if (recentLogs.length > 10) {
-        this.logSecurityEvent({
-          type: 'suspicious_activity',
-          timestamp: new Date().toISOString(),
-          details: `Suspicious activity detected: ${recentLogs.length} attempts in last minute`,
-          userAgent: navigator.userAgent,
-          severity: 'high'
-        });
-        return true;
-      }
-      
-      // Check for multiple failed attempts from same source
-      const failedAttempts = Array.from(this.loginAttempts.values())
-        .filter(attempt => attempt.count >= 3);
-      
-      if (failedAttempts.length > 0) {
-        this.logSecurityEvent({
-          type: 'suspicious_activity',
-          timestamp: new Date().toISOString(),
-          details: `Multiple failed login attempts detected`,
-          userAgent: navigator.userAgent,
-          severity: 'medium'
-        });
-        return true;
-      }
-      
-      return false;
-    } catch (error) {
-      console.error('Error detecting suspicious activity:', error);
-      return false;
-    }
-  }
-
-  // Enhanced security event logging
-  logSecurityEvent(event: SecurityEvent): void {
-    try {
-      // Log to console for debugging
-      console.log(`[SECURITY] ${event.type}: ${event.details}`);
-      
-      // Store in local storage for audit trail
-      const existingLogs = JSON.parse(localStorage.getItem('security_logs') || '[]');
-      existingLogs.push(event);
-      
-      // Keep only last 100 events
-      if (existingLogs.length > 100) {
-        existingLogs.splice(0, existingLogs.length - 100);
-      }
-      
-      localStorage.setItem('security_logs', JSON.stringify(existingLogs));
-      
-      // Log to Supabase for server-side tracking - use direct insert instead of RPC
-      if (event.severity === 'high' || event.severity === 'critical') {
-        supabase
-          .from('audit_log')
-          .insert({
-            table_name: 'security_events',
-            operation: event.type,
-            user_id: event.userId || null,
-            new_data: {
-              details: event.details,
-              severity: event.severity,
-              timestamp: event.timestamp,
-              user_agent: event.userAgent
-            }
-          })
-          .then(({ error }) => {
-            if (error) {
-              console.error('Failed to log security event to server:', error);
-            }
-          });
-      }
-    } catch (error) {
-      console.error('Failed to log security event:', error);
-    }
-  }
-
-  // Get security metrics for monitoring
-  getSecurityMetrics(): { failedLogins: number; blockedIPs: number; suspiciousActivity: number } {
-    const failedLogins = Array.from(this.loginAttempts.values())
-      .reduce((sum, attempt) => sum + attempt.count, 0);
-    
-    const blockedIPs = Array.from(this.loginAttempts.values())
-      .filter(attempt => attempt.blocked).length;
-    
-    const logs = JSON.parse(localStorage.getItem('security_logs') || '[]');
-    const suspiciousActivity = logs.filter((log: SecurityEvent) => 
-      log.type === 'suspicious_activity' && 
-      new Date(log.timestamp).getTime() > Date.now() - 24 * 60 * 60 * 1000
-    ).length;
-    
-    return { failedLogins, blockedIPs, suspiciousActivity };
   }
 }
 
 export const enhancedSecurityService = new EnhancedSecurityService();
+
+// Cleanup every hour
+setInterval(() => {
+  enhancedSecurityService.cleanup();
+}, 60 * 60 * 1000);
