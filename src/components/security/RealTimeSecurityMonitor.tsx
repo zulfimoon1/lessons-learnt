@@ -47,9 +47,14 @@ const RealTimeSecurityMonitor: React.FC = () => {
               .limit(10);
 
             if (recentEvents) {
-              const highSeverityEvents = recentEvents.filter(event => 
-                event.new_data?.severity === 'high'
-              );
+              const highSeverityEvents = recentEvents.filter(event => {
+                // Safely check if new_data exists and has severity property
+                if (event.new_data && typeof event.new_data === 'object' && event.new_data !== null) {
+                  const data = event.new_data as Record<string, any>;
+                  return data.severity === 'high';
+                }
+                return false;
+              });
               
               if (highSeverityEvents.length > 0) {
                 warnings.push(`${highSeverityEvents.length} high-severity security events detected`);
