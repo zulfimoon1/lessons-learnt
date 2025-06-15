@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
-import { securityValidationService } from '@/services/securityValidationService';
+import { enhancedSecurityValidationService } from '@/services/enhancedSecurityValidationService';
 
 interface SecurityEnhancedInputProps {
   type?: string;
@@ -44,8 +44,8 @@ const SecurityEnhancedInput: React.FC<SecurityEnhancedInputProps> = ({
       return;
     }
 
-    // Real-time validation
-    const validation = securityValidationService.validateInput(value, name, {
+    // Enhanced real-time validation
+    const validation = enhancedSecurityValidationService.validateInput(value, name, {
       maxLength,
       allowHtml: false,
       requireAlphanumeric: ['name', 'school', 'grade'].includes(validateAs)
@@ -53,10 +53,19 @@ const SecurityEnhancedInput: React.FC<SecurityEnhancedInputProps> = ({
 
     setValidationState(validation);
 
-    // Check rate limiting for rapid input
+    // Enhanced rate limiting check
     const rateLimitKey = `input_${name}_${Date.now()}`;
-    const isRateLimited = !securityValidationService.checkRateLimit(rateLimitKey, 50, 60000);
+    const isRateLimited = !enhancedSecurityValidationService.checkRateLimit(rateLimitKey, 50, 60000);
     setRateLimitWarning(isRateLimited);
+
+    // Log high-risk input attempts
+    if (validation.riskLevel === 'high') {
+      enhancedSecurityValidationService.logSecurityEvent({
+        type: 'suspicious_activity',
+        details: `High-risk input detected in field ${name}: ${validation.errors.join(', ')}`,
+        severity: 'high'
+      });
+    }
 
   }, [value, name, maxLength, validateAs]);
 
