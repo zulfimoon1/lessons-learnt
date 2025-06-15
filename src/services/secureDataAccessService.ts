@@ -1,5 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
+import { enhancedSecurityValidationService } from './enhancedSecurityValidationService';
 
 interface AccessContext {
   userId: string;
@@ -42,9 +43,9 @@ class SecureDataAccessService {
     context: AccessContext
   ): Promise<void> {
     try {
-      await supabase.rpc('log_security_event', {
-        event_type: 'suspicious_activity',
-        user_id: context.userId,
+      await enhancedSecurityValidationService.logSecurityEvent({
+        type: 'session_restored',
+        userId: context.userId,
         details: `Data access: ${operation} on ${resource}`,
         severity: 'low'
       });

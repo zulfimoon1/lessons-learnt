@@ -33,7 +33,7 @@ class EnhancedSecureSessionService {
     sessionStorage.setItem(this.sessionKey, JSON.stringify(session));
     
     await enhancedSecurityValidationService.logSecurityEvent({
-      type: 'suspicious_activity', // Using valid enum value for session creation
+      type: 'session_restored',
       userId,
       details: 'Enhanced secure session created',
       severity: 'low'

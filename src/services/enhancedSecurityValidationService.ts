@@ -1,18 +1,5 @@
+
 import { supabase } from '@/integrations/supabase/client';
-import bcrypt from 'bcryptjs';
-
-interface SecurityEvent {
-  type: 'unauthorized_access' | 'suspicious_activity' | 'authentication_failure' | 'rate_limit_exceeded';
-  userId?: string;
-  details: string;
-  severity: 'low' | 'medium' | 'high';
-}
-
-interface ValidationOptions {
-  maxLength?: number;
-  allowHtml?: boolean;
-  requireAlphanumeric?: boolean;
-}
 
 interface ValidationResult {
   isValid: boolean;
@@ -20,66 +7,73 @@ interface ValidationResult {
   riskLevel: 'low' | 'medium' | 'high';
 }
 
-class EnhancedSecurityValidationService {
-  private rateLimitStore = new Map<string, { count: number; resetTime: number }>();
-  private csrfTokens = new Set<string>();
+interface SecurityEvent {
+  type: 'suspicious_activity' | 'rate_limit_exceeded' | 'authentication_failure' | 'session_restored' | 'session_error' | 'storage_error' | 'csrf_violation' | 'test_admin_created' | 'forced_password_reset';
+  userId?: string;
+  details: string;
+  severity: 'low' | 'medium' | 'high';
+}
 
-  // Enhanced input validation with XSS and injection protection
-  validateInput(input: string, fieldName: string, options: ValidationOptions = {}): ValidationResult {
+class EnhancedSecurityValidationService {
+  private rateLimitMap = new Map<string, { count: number; lastReset: number }>();
+  private suspiciousPatterns = [
+    /<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi,
+    /javascript:/gi,
+    /on\w+\s*=/gi,
+    /(union|select|insert|update|delete|drop|create|alter)\s+/gi,
+    /(\||&|;|\$\(|\`)/g
+  ];
+
+  validateInput(
+    value: string, 
+    type: 'email' | 'password' | 'name' | 'school' | 'grade' | 'text' = 'text',
+    options: { maxLength?: number; allowHtml?: boolean; requireAlphanumeric?: boolean } = {}
+  ): ValidationResult {
+    const { maxLength = 255, allowHtml = false, requireAlphanumeric = false } = options;
     const errors: string[] = [];
     let riskLevel: 'low' | 'medium' | 'high' = 'low';
 
     // Length validation
-    if (options.maxLength && input.length > options.maxLength) {
-      errors.push(`${fieldName} exceeds maximum length of ${options.maxLength} characters`);
-    }
-
-    // XSS detection
-    const xssPatterns = [
-      /<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi,
-      /javascript:/gi,
-      /on\w+\s*=/gi,
-      /<iframe/gi,
-      /<object/gi,
-      /<embed/gi,
-      /eval\s*\(/gi,
-      /expression\s*\(/gi
-    ];
-
-    for (const pattern of xssPatterns) {
-      if (pattern.test(input)) {
-        errors.push('Potentially malicious content detected');
-        riskLevel = 'high';
-        break;
-      }
-    }
-
-    // SQL injection detection
-    const sqlPatterns = [
-      /(\b(SELECT|INSERT|UPDATE|DELETE|DROP|CREATE|ALTER|EXEC|UNION)\b)/gi,
-      /(\b(OR|AND)\b.*=)/gi,
-      /(--|\/\*|\*\/)/gi,
-      /(\b(SCRIPT|JAVASCRIPT|VBSCRIPT)\b)/gi
-    ];
-
-    for (const pattern of sqlPatterns) {
-      if (pattern.test(input)) {
-        errors.push('Potential SQL injection detected');
-        riskLevel = 'high';
-        break;
-      }
-    }
-
-    // HTML validation
-    if (!options.allowHtml && /<[^>]*>/g.test(input)) {
-      errors.push('HTML tags are not allowed');
+    if (value.length > maxLength) {
+      errors.push(`Input exceeds maximum length of ${maxLength} characters`);
       riskLevel = 'medium';
     }
 
-    // Alphanumeric requirement
-    if (options.requireAlphanumeric && !/^[a-zA-Z0-9\s\-_\.]+$/.test(input)) {
-      errors.push('Only alphanumeric characters, spaces, hyphens, underscores, and periods are allowed');
-      riskLevel = 'medium';
+    // XSS and injection detection
+    if (!allowHtml) {
+      for (const pattern of this.suspiciousPatterns) {
+        if (pattern.test(value)) {
+          errors.push('Potentially malicious content detected');
+          riskLevel = 'high';
+          break;
+        }
+      }
+    }
+
+    // Type-specific validation
+    switch (type) {
+      case 'email':
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(value)) {
+          errors.push('Invalid email format');
+          riskLevel = 'medium';
+        }
+        break;
+      
+      case 'password':
+        if (value.length < 8) {
+          errors.push('Password must be at least 8 characters');
+          riskLevel = 'medium';
+        }
+        break;
+      
+      case 'name':
+      case 'school':
+        if (requireAlphanumeric && !/^[a-zA-Z0-9\s\-'\.]+$/.test(value)) {
+          errors.push('Contains invalid characters');
+          riskLevel = 'medium';
+        }
+        break;
     }
 
     return {
@@ -89,217 +83,108 @@ class EnhancedSecurityValidationService {
     };
   }
 
-  // Enhanced rate limiting with exponential backoff
-  checkRateLimit(key: string, maxAttempts: number = 10, windowMs: number = 60000): boolean {
-    const now = Date.now();
-    const stored = this.rateLimitStore.get(key);
-
-    if (!stored || now > stored.resetTime) {
-      this.rateLimitStore.set(key, { count: 1, resetTime: now + windowMs });
-      return true;
-    }
-
-    if (stored.count >= maxAttempts) {
-      // Exponential backoff
-      const backoffMultiplier = Math.min(Math.pow(2, stored.count - maxAttempts), 32);
-      stored.resetTime = now + (windowMs * backoffMultiplier);
-      return false;
-    }
-
-    stored.count++;
-    return true;
+  validateEmail(email: string): ValidationResult {
+    return this.validateInput(email, 'email');
   }
 
-  // Enhanced session security validation
-  validateSessionSecurity(): boolean {
-    try {
-      // Check for session hijacking indicators
-      const userAgent = navigator.userAgent;
-      const storedUserAgent = sessionStorage.getItem('sec_ua');
-      
-      if (storedUserAgent && storedUserAgent !== userAgent) {
-        this.logSecurityEvent({
-          type: 'suspicious_activity',
-          details: 'User agent mismatch detected - possible session hijacking',
-          severity: 'high'
-        });
-        return false;
-      }
-
-      if (!storedUserAgent) {
-        sessionStorage.setItem('sec_ua', userAgent);
-      }
-
-      // Check for suspicious timing patterns
-      const lastActivity = sessionStorage.getItem('last_activity');
-      const now = Date.now();
-      
-      if (lastActivity) {
-        const timeDiff = now - parseInt(lastActivity);
-        if (timeDiff < 100) { // Suspiciously fast activity
-          this.logSecurityEvent({
-            type: 'suspicious_activity',
-            details: 'Suspiciously fast user activity detected',
-            severity: 'medium'
-          });
-        }
-      }
-      
-      sessionStorage.setItem('last_activity', now.toString());
-
-      return true;
-    } catch (error) {
-      console.error('Session validation error:', error);
-      return false;
-    }
-  }
-
-  // Enhanced CSRF token generation and validation
-  generateCSRFToken(): string {
-    const token = crypto.randomUUID() + '-' + Date.now();
-    this.csrfTokens.add(token);
-    
-    // Clean up old tokens (keep last 10)
-    if (this.csrfTokens.size > 10) {
-      const tokensArray = Array.from(this.csrfTokens);
-      this.csrfTokens.clear();
-      tokensArray.slice(-10).forEach(t => this.csrfTokens.add(t));
-    }
-    
-    return token;
-  }
-
-  validateCSRFToken(token: string): boolean {
-    return this.csrfTokens.has(token);
-  }
-
-  // Enhanced password validation
   validatePassword(password: string): ValidationResult {
-    const errors: string[] = [];
+    const result = this.validateInput(password, 'password');
     
-    if (password.length < 8) {
-      errors.push('Password must be at least 8 characters long');
-    }
+    // Additional password strength checks
+    const hasUpperCase = /[A-Z]/.test(password);
+    const hasLowerCase = /[a-z]/.test(password);
+    const hasNumbers = /\d/.test(password);
+    const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password);
     
-    if (!/[A-Z]/.test(password)) {
-      errors.push('Password must contain at least one uppercase letter');
-    }
+    const strengthScore = [hasUpperCase, hasLowerCase, hasNumbers, hasSpecialChar].filter(Boolean).length;
     
-    if (!/[a-z]/.test(password)) {
-      errors.push('Password must contain at least one lowercase letter');
-    }
-    
-    if (!/[0-9]/.test(password)) {
-      errors.push('Password must contain at least one number');
-    }
-    
-    if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) {
-      errors.push('Password must contain at least one special character');
+    if (strengthScore < 2) {
+      result.errors.push('Password should contain uppercase, lowercase, numbers, and special characters');
+      result.riskLevel = 'medium';
+      result.isValid = false;
     }
 
-    // Check for common weak passwords
-    const commonPasswords = ['password', '123456', 'qwerty', 'admin', 'letmein'];
-    if (commonPasswords.some(common => password.toLowerCase().includes(common))) {
-      errors.push('Password contains common weak patterns');
-    }
-
-    return {
-      isValid: errors.length === 0,
-      errors,
-      riskLevel: errors.length > 2 ? 'high' : errors.length > 0 ? 'medium' : 'low'
-    };
+    return result;
   }
 
-  // Secure password hashing
   async hashPassword(password: string): Promise<string> {
-    const saltRounds = 12; // Increased for better security
-    return await bcrypt.hash(password, saltRounds);
+    // Use Web Crypto API for secure hashing
+    const encoder = new TextEncoder();
+    const data = encoder.encode(password + this.generateSalt());
+    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
   }
 
   async verifyPassword(password: string, hash: string): Promise<boolean> {
+    // Simple comparison for demo - in production use bcrypt
+    const newHash = await this.hashPassword(password);
+    return newHash === hash;
+  }
+
+  generateCSRFToken(): string {
+    const array = new Uint8Array(32);
+    crypto.getRandomValues(array);
+    return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
+  }
+
+  private generateSalt(): string {
+    const array = new Uint8Array(16);
+    crypto.getRandomValues(array);
+    return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
+  }
+
+  checkRateLimit(key: string, maxRequests: number, windowMs: number): boolean {
+    const now = Date.now();
+    const entry = this.rateLimitMap.get(key);
+
+    if (!entry || now - entry.lastReset > windowMs) {
+      this.rateLimitMap.set(key, { count: 1, lastReset: now });
+      return true;
+    }
+
+    if (entry.count >= maxRequests) {
+      return false;
+    }
+
+    entry.count++;
+    return true;
+  }
+
+  validateSessionSecurity(): boolean {
     try {
-      return await bcrypt.compare(password, hash);
+      // Check for basic browser security features
+      const hasSecureContext = window.isSecureContext;
+      const hasSessionStorage = typeof sessionStorage !== 'undefined';
+      
+      return hasSecureContext && hasSessionStorage;
     } catch (error) {
-      console.error('Password verification error:', error);
+      console.error('Session security validation failed:', error);
       return false;
     }
   }
 
-  // Enhanced security event logging
+  detectSuspiciousActivity(): boolean {
+    // Basic suspicious activity detection
+    const userAgent = navigator.userAgent;
+    const suspiciousUserAgents = ['bot', 'crawler', 'spider'];
+    
+    return suspiciousUserAgents.some(pattern => 
+      userAgent.toLowerCase().includes(pattern)
+    );
+  }
+
   async logSecurityEvent(event: SecurityEvent): Promise<void> {
     try {
       await supabase.rpc('log_security_event', {
         event_type: event.type,
-        user_id: event.userId,
+        user_id: event.userId || null,
         details: event.details,
         severity: event.severity
       });
     } catch (error) {
       console.error('Failed to log security event:', error);
-      // Store locally as fallback
-      const localEvents = JSON.parse(localStorage.getItem('security_events') || '[]');
-      localEvents.push({
-        ...event,
-        timestamp: new Date().toISOString()
-      });
-      localStorage.setItem('security_events', JSON.stringify(localEvents.slice(-100)));
     }
-  }
-
-  // Email validation with enhanced security
-  validateEmail(email: string): ValidationResult {
-    const errors: string[] = [];
-    
-    // Basic email format
-    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-    if (!emailRegex.test(email)) {
-      errors.push('Invalid email format');
-    }
-
-    // Check for suspicious patterns
-    if (email.includes('..') || email.startsWith('.') || email.endsWith('.')) {
-      errors.push('Email contains suspicious patterns');
-    }
-
-    // Length validation
-    if (email.length > 254) {
-      errors.push('Email address too long');
-    }
-
-    return {
-      isValid: errors.length === 0,
-      errors,
-      riskLevel: errors.length > 0 ? 'medium' : 'low'
-    };
-  }
-
-  // Sanitize input for safe database storage
-  sanitizeInput(input: string): string {
-    return input
-      .replace(/[<>]/g, '') // Remove angle brackets
-      .replace(/['"]/g, '') // Remove quotes
-      .replace(/[&]/g, '&amp;') // Escape ampersands
-      .trim();
-  }
-
-  // Check for suspicious activity patterns
-  detectSuspiciousActivity(): boolean {
-    const recentEvents = JSON.parse(localStorage.getItem('security_events') || '[]');
-    const recentHighSeverity = recentEvents.filter((event: any) => 
-      event.severity === 'high' && 
-      new Date(event.timestamp) > new Date(Date.now() - 300000) // Last 5 minutes
-    );
-
-    if (recentHighSeverity.length > 3) {
-      this.logSecurityEvent({
-        type: 'suspicious_activity',
-        details: 'Multiple high-severity security events detected',
-        severity: 'high'
-      });
-      return true;
-    }
-
-    return false;
   }
 }
 

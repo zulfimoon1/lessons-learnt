@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { enhancedSecurityValidationService } from './enhancedSecurityValidationService';
 
@@ -27,7 +28,7 @@ interface SecureSession {
 }
 
 class UnifiedAuthService {
-  private sessionKey = 'secure_session';
+  private sessionKey = `secure_session_${window.location.hostname}`;
   private maxSessionDuration = 8 * 60 * 60 * 1000; // 8 hours
 
   // Unified login for both teachers and students
@@ -85,7 +86,7 @@ class UnifiedAuthService {
         this.storeSecureSession(session);
 
         await enhancedSecurityValidationService.logSecurityEvent({
-          type: 'suspicious_activity', // Using valid enum value for success logging
+          type: 'session_restored',
           userId: user.id,
           details: `Successful ${credentials.userType} login`,
           severity: 'low'
@@ -211,7 +212,6 @@ class UnifiedAuthService {
     }));
   }
 
-  // Fix the getSecureSession method to be async where needed
   getSecureSession(): SecureSession | null {
     try {
       const stored = sessionStorage.getItem(this.sessionKey);
@@ -230,7 +230,6 @@ class UnifiedAuthService {
       const currentFingerprint = this.generateFingerprint();
       
       if (storedFingerprint !== currentFingerprint) {
-        // Make this async call properly
         this.logSessionViolation(session.userId);
         this.clearSecureSession();
         return null;
@@ -244,7 +243,6 @@ class UnifiedAuthService {
     }
   }
 
-  // New helper method to handle async logging
   private async logSessionViolation(userId: string): Promise<void> {
     try {
       await enhancedSecurityValidationService.logSecurityEvent({

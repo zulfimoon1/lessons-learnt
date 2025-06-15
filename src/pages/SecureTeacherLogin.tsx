@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -21,8 +22,8 @@ const SecureTeacherLogin = () => {
   // Redirect if already logged in
   useEffect(() => {
     if (teacher && !authLoading) {
-      if (teacher.role === "admin") {
-        navigate("/admin-dashboard", { replace: true });
+      if (teacher.role === 'admin') {
+        navigate("/teacher-dashboard", { replace: true });
       } else {
         navigate("/teacher-dashboard", { replace: true });
       }
@@ -58,27 +59,20 @@ const SecureTeacherLogin = () => {
 
       if (result.error) {
         toast({
-          title: "Login Failed",
+          title: "Login failed",
           description: result.error,
           variant: "destructive",
         });
       } else if (result.teacher) {
         toast({
-          title: "Login Successful",
-          description: "Welcome back!",
+          title: "Welcome back!",
+          description: "Login successful",
         });
-        
-        setTimeout(() => {
-          if (result.teacher.role === "admin") {
-            navigate("/admin-dashboard", { replace: true });
-          } else {
-            navigate("/teacher-dashboard", { replace: true });
-          }
-        }, 100);
+        navigate("/teacher-dashboard", { replace: true });
       }
     } catch (err) {
       toast({
-        title: "Login Failed",
+        title: "Login failed",
         description: "An unexpected error occurred. Please try again.",
         variant: "destructive",
       });
@@ -87,36 +81,20 @@ const SecureTeacherLogin = () => {
     }
   };
 
-  const handleSignup = async (signupData: {
-    name: string;
-    email: string;
-    school: string;
-    role: 'teacher' | 'admin' | 'doctor';
-    password: string;
-    confirmPassword: string;
-  }) => {
-    if (!signupData.name.trim() || !signupData.email.trim() || !signupData.school.trim() || !signupData.password) {
+  const handleSignup = async (name: string, email: string, school: string, password: string, confirmPassword: string, role: 'teacher' | 'admin' | 'doctor') => {
+    if (!name.trim() || !email.trim() || !school.trim() || !password || !confirmPassword) {
       toast({
-        title: "Missing information",
+        title: t('teacher.missingInfo') || "Missing information",
         description: "Please fill in all required fields",
         variant: "destructive",
       });
       return;
     }
 
-    if (signupData.password !== signupData.confirmPassword) {
+    if (password !== confirmPassword) {
       toast({
-        title: "Password mismatch",
-        description: "Passwords do not match",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (signupData.password.length < 6) {
-      toast({
-        title: "Password too short",
-        description: "Password must be at least 6 characters long",
+        title: t('teacher.passwordMismatch') || "Password mismatch",
+        description: t('teacher.passwordsDoNotMatch') || "Passwords do not match",
         variant: "destructive",
       });
       return;
@@ -125,37 +103,24 @@ const SecureTeacherLogin = () => {
     setIsLoading(true);
 
     try {
-      const result = await teacherLogin(
-        signupData.email.trim(),
-        signupData.password,
-        signupData.name.trim(),
-        signupData.school.trim(),
-        signupData.role
-      );
+      const result = await teacherLogin(email.trim(), password, name.trim(), school.trim(), role);
 
       if (result.error) {
         toast({
-          title: "Signup Failed",
+          title: t('teacher.signupFailed') || "Signup failed",
           description: result.error,
           variant: "destructive",
         });
       } else if (result.teacher) {
         toast({
-          title: "Account Created Successfully",
-          description: "Welcome! Your account has been created.",
+          title: t('teacher.accountCreated') || "Account created!",
+          description: t('teacher.welcomeToApp') || "Welcome to Lesson Lens!",
         });
-        
-        setTimeout(() => {
-          if (result.teacher.role === "admin") {
-            navigate("/admin-dashboard", { replace: true });
-          } else {
-            navigate("/teacher-dashboard", { replace: true });
-          }
-        }, 100);
+        navigate("/teacher-dashboard", { replace: true });
       }
     } catch (err) {
       toast({
-        title: "Signup Failed",
+        title: t('teacher.signupFailed') || "Signup failed",
         description: "An unexpected error occurred. Please try again.",
         variant: "destructive",
       });
@@ -167,12 +132,13 @@ const SecureTeacherLogin = () => {
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <AuthHeader />
+      
       <div className="w-full max-w-md">
         <SessionSecurityMonitor />
         <Card className="bg-card/80 backdrop-blur-sm border-border">
           <CardHeader className="text-center">
-            <div className="w-16 h-16 bg-emerald-600 rounded-full mx-auto flex items-center justify-center mb-4">
-              <BookOpenIcon className="w-8 h-8 text-white" />
+            <div className="w-16 h-16 bg-primary rounded-full mx-auto flex items-center justify-center mb-4">
+              <BookOpenIcon className="w-8 h-8 text-primary-foreground" />
             </div>
             <CardTitle className="text-2xl text-foreground">{t('login.teacher.title')}</CardTitle>
             <CardDescription>
