@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -53,11 +52,11 @@ const EnhancedSecurityDashboard: React.FC = () => {
           const health = healthCheck[0];
           
           setMetrics({
-            totalEvents: parseInt(data.total_events) || 0,
-            highSeverityEvents: parseInt(data.high_severity_events) || 0,
-            mediumSeverityEvents: parseInt(data.medium_severity_events) || 0,
-            lowSeverityEvents: parseInt(data.low_severity_events) || 0,
-            recentViolations: parseInt(data.recent_violations) || 0,
+            totalEvents: Number(data.total_events) || 0,
+            highSeverityEvents: Number(data.high_severity_events) || 0,
+            mediumSeverityEvents: Number(data.medium_severity_events) || 0,
+            lowSeverityEvents: Number(data.low_severity_events) || 0,
+            recentViolations: Number(data.recent_violations) || 0,
             securityScore: health.security_score || 100,
             violations: health.violations || [],
             recommendations: health.recommendations || []
@@ -65,11 +64,11 @@ const EnhancedSecurityDashboard: React.FC = () => {
         } else {
           setMetrics(prev => ({
             ...prev,
-            totalEvents: parseInt(data.total_events) || 0,
-            highSeverityEvents: parseInt(data.high_severity_events) || 0,
-            mediumSeverityEvents: parseInt(data.medium_severity_events) || 0,
-            lowSeverityEvents: parseInt(data.low_severity_events) || 0,
-            recentViolations: parseInt(data.recent_violations) || 0
+            totalEvents: Number(data.total_events) || 0,
+            highSeverityEvents: Number(data.high_severity_events) || 0,
+            mediumSeverityEvents: Number(data.medium_severity_events) || 0,
+            lowSeverityEvents: Number(data.low_severity_events) || 0,
+            recentViolations: Number(data.recent_violations) || 0
           }));
         }
       }

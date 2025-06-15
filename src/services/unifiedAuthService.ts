@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { enhancedSecurityValidationService } from './enhancedSecurityValidationService';
 
@@ -212,6 +211,7 @@ class UnifiedAuthService {
     }));
   }
 
+  // Fix the getSecureSession method to be async where needed
   getSecureSession(): SecureSession | null {
     try {
       const stored = sessionStorage.getItem(this.sessionKey);
@@ -230,12 +230,8 @@ class UnifiedAuthService {
       const currentFingerprint = this.generateFingerprint();
       
       if (storedFingerprint !== currentFingerprint) {
-        await enhancedSecurityValidationService.logSecurityEvent({
-          type: 'suspicious_activity',
-          userId: session.userId,
-          details: 'Session fingerprint mismatch detected',
-          severity: 'high'
-        });
+        // Make this async call properly
+        this.logSessionViolation(session.userId);
         this.clearSecureSession();
         return null;
       }
@@ -245,6 +241,20 @@ class UnifiedAuthService {
       console.error('Session validation error:', error);
       this.clearSecureSession();
       return null;
+    }
+  }
+
+  // New helper method to handle async logging
+  private async logSessionViolation(userId: string): Promise<void> {
+    try {
+      await enhancedSecurityValidationService.logSecurityEvent({
+        type: 'suspicious_activity',
+        userId: userId,
+        details: 'Session fingerprint mismatch detected',
+        severity: 'high'
+      });
+    } catch (error) {
+      console.error('Failed to log session violation:', error);
     }
   }
 
