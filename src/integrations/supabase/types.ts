@@ -847,6 +847,14 @@ export type Database = {
         Args: { text_content: string }
         Returns: number
       }
+      enhanced_security_check: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          security_score: number
+          violations: string[]
+          recommendations: string[]
+        }[]
+      }
       get_current_user_info: {
         Args: Record<PropertyKey, never>
         Returns: {
@@ -858,6 +866,16 @@ export type Database = {
         Args: { stat_type: string }
         Returns: {
           count: number
+        }[]
+      }
+      get_security_dashboard_data: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          total_events: number
+          high_severity_events: number
+          medium_severity_events: number
+          low_severity_events: number
+          recent_violations: number
         }[]
       }
       get_user_school: {
