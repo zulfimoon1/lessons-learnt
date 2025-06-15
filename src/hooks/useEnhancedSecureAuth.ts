@@ -139,14 +139,8 @@ export const useEnhancedSecureAuth = () => {
     return newToken;
   };
 
-  const validateSecureAction = async (action: string) => {
-    const rateLimitKey = `secure_action_${authState.user?.id}_${action}`;
-    return enhancedSecurityValidationService.checkRateLimit(rateLimitKey, 10, 60000);
-  };
-
   return {
     ...authState,
-    refreshSecurityToken,
-    validateSecureAction
+    refreshSecurityToken
   };
 };

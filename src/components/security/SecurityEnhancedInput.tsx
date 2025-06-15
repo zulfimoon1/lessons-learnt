@@ -1,122 +1,54 @@
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Input } from '@/components/ui/input';
 import { enhancedSecurityValidationService } from '@/services/enhancedSecurityValidationService';
 
-interface SecurityEnhancedInputProps {
-  type?: string;
-  name: string;
-  placeholder?: string;
-  value: string;
-  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  required?: boolean;
-  className?: string;
-  maxLength?: number;
+interface SecurityEnhancedInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   validateAs?: 'email' | 'password' | 'name' | 'school' | 'grade' | 'text';
+  maxLength?: number;
 }
 
 const SecurityEnhancedInput: React.FC<SecurityEnhancedInputProps> = ({
-  type = 'text',
-  name,
-  placeholder,
-  value,
+  validateAs = 'text',
+  maxLength = 255,
   onChange,
-  required = false,
-  className = '',
-  maxLength = 1000,
-  validateAs = 'text'
+  ...props
 }) => {
-  const [validationState, setValidationState] = useState<{
-    isValid: boolean;
-    errors: string[];
-    riskLevel: 'low' | 'medium' | 'high';
-  }>({
-    isValid: true,
-    errors: [],
-    riskLevel: 'low'
-  });
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    
+    // Basic input validation based on type
+    const validation = enhancedSecurityValidationService.validateInput(
+      value,
+      validateAs,
+      { 
+        maxLength,
+        allowHtml: false,
+        requireAlphanumeric: validateAs === 'name' || validateAs === 'school'
+      }
+    );
 
-  const [rateLimitWarning, setRateLimitWarning] = useState(false);
-
-  useEffect(() => {
-    if (!value) {
-      setValidationState({ isValid: true, errors: [], riskLevel: 'low' });
-      return;
-    }
-
-    // Enhanced real-time validation
-    const validation = enhancedSecurityValidationService.validateInput(value, name, {
-      maxLength,
-      allowHtml: false,
-      requireAlphanumeric: ['name', 'school', 'grade'].includes(validateAs)
-    });
-
-    setValidationState(validation);
-
-    // Enhanced rate limiting check
-    const rateLimitKey = `input_${name}_${Date.now()}`;
-    const isRateLimited = !enhancedSecurityValidationService.checkRateLimit(rateLimitKey, 50, 60000);
-    setRateLimitWarning(isRateLimited);
-
-    // Log high-risk input attempts
+    // Log high-risk inputs
     if (validation.riskLevel === 'high') {
       enhancedSecurityValidationService.logSecurityEvent({
         type: 'suspicious_activity',
-        details: `High-risk input detected in field ${name}: ${validation.errors.join(', ')}`,
-        severity: 'high'
+        details: `High-risk input detected in ${validateAs} field`,
+        severity: 'medium'
       });
     }
 
-  }, [value, name, maxLength, validateAs]);
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    onChange(e);
-  };
-
-  const getInputClassName = () => {
-    let baseClass = className;
-    
-    if (!validationState.isValid) {
-      baseClass += ' border-red-500 focus:border-red-500';
-    } else if (validationState.riskLevel === 'medium') {
-      baseClass += ' border-yellow-500 focus:border-yellow-500';
+    // Still call the original onChange
+    if (onChange) {
+      onChange(e);
     }
-
-    if (rateLimitWarning) {
-      baseClass += ' border-orange-500';
-    }
-
-    return baseClass;
   };
 
   return (
-    <div className="space-y-1">
-      <Input
-        type={type}
-        name={name}
-        placeholder={placeholder}
-        value={value}
-        onChange={handleChange}
-        required={required}
-        className={getInputClassName()}
-        maxLength={maxLength}
-      />
-      {!validationState.isValid && (
-        <div className="text-xs text-red-600">
-          {validationState.errors.join(', ')}
-        </div>
-      )}
-      {rateLimitWarning && (
-        <div className="text-xs text-orange-600">
-          Please slow down your typing
-        </div>
-      )}
-      {validationState.riskLevel === 'high' && (
-        <div className="text-xs text-red-600 font-semibold">
-          Potentially dangerous content detected
-        </div>
-      )}
-    </div>
+    <Input
+      {...props}
+      onChange={handleChange}
+      maxLength={maxLength}
+    />
   );
 };
 
