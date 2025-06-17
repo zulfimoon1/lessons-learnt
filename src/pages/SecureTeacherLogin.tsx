@@ -15,7 +15,7 @@ const SecureTeacherLogin = () => {
   const { t } = useLanguage();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { teacher, loginTeacher, signupTeacher, isLoading: authLoading } = useAuth();
+  const { teacher, teacherLogin, isLoading: authLoading } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
 
   // Redirect if already logged in
@@ -54,7 +54,7 @@ const SecureTeacherLogin = () => {
     setIsLoading(true);
 
     try {
-      const result = await loginTeacher(email.trim(), password);
+      const result = await teacherLogin(email.trim(), password);
 
       if (result.error) {
         toast({
@@ -111,7 +111,7 @@ const SecureTeacherLogin = () => {
     setIsLoading(true);
 
     try {
-      const result = await signupTeacher(name.trim(), email.trim(), school.trim(), password, role);
+      const result = await teacherLogin(email.trim(), password, name.trim(), school.trim(), role);
 
       if (result.error) {
         toast({

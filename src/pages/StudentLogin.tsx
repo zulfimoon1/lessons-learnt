@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -16,7 +15,7 @@ const StudentLogin = () => {
   const { t } = useLanguage();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { student, isLoading: authLoading, loginStudent, signupStudent } = useAuth();
+  const { student, isLoading: authLoading, studentLogin, studentSignup } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [showTester, setShowTester] = useState(false);
 
@@ -58,7 +57,7 @@ const StudentLogin = () => {
     try {
       console.log('StudentLogin: Attempting login with credentials:', { fullName, school, grade });
       
-      const result = await loginStudent(fullName.trim(), school.trim(), grade.trim(), password);
+      const result = await studentLogin(fullName.trim(), school.trim(), grade.trim(), password);
 
       if (result.error) {
         console.log('StudentLogin: Login failed with error:', result.error);
@@ -111,7 +110,7 @@ const StudentLogin = () => {
     try {
       console.log('StudentLogin: Attempting signup for:', fullName);
       
-      const result = await signupStudent(fullName.trim(), school.trim(), grade.trim(), password);
+      const result = await studentSignup(fullName.trim(), school.trim(), grade.trim(), password);
 
       if (result.error) {
         console.log('StudentLogin: Signup failed with error:', result.error);
