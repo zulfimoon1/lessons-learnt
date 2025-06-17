@@ -28,9 +28,11 @@ const SchoolManagement: React.FC<SchoolManagementProps> = ({ onDataChange }) => 
   const setAdminContext = async () => {
     if (admin?.email) {
       try {
+        console.log('🔧 Setting admin context for:', admin.email);
         await supabase.rpc('set_platform_admin_context', { admin_email: admin.email });
+        console.log('✅ Admin context set successfully');
       } catch (error) {
-        console.error('Error setting admin context:', error);
+        console.error('❌ Error setting admin context:', error);
       }
     }
   };
@@ -107,37 +109,62 @@ const SchoolManagement: React.FC<SchoolManagementProps> = ({ onDataChange }) => 
       return;
     }
 
+    if (!admin?.email) {
+      toast.error('Admin authentication required');
+      return;
+    }
+
     setIsLoading(true);
     try {
+      console.log('🏫 Creating new school:', newSchoolName.trim());
+      console.log('🔧 Admin email:', admin.email);
+      
+      // Ensure admin context is set
       await setAdminContext();
       
-      // Create a placeholder teacher for the new school
-      const { error } = await supabase
+      // Create a placeholder teacher for the new school with enhanced data
+      const adminEmail = `admin@${newSchoolName.toLowerCase().replace(/\s+/g, '')}.edu`;
+      const teacherData = {
+        name: `${newSchoolName} Administrator`,
+        email: adminEmail,
+        school: newSchoolName.trim(),
+        role: 'admin',
+        password_hash: '$2b$12$placeholder.hash.for.new.school.admin.account'
+      };
+
+      console.log('📝 Creating teacher record:', teacherData);
+
+      const { data: insertResult, error } = await supabase
         .from('teachers')
-        .insert({
-          name: 'Administrator',
-          email: `admin@${newSchoolName.toLowerCase().replace(/\s+/g, '')}.edu`,
-          school: newSchoolName.trim(),
-          role: 'admin',
-          password_hash: '$2b$10$placeholder' // This should be properly hashed
-        });
+        .insert(teacherData)
+        .select()
+        .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ Error creating school teacher:', error);
+        throw error;
+      }
 
-      toast.success('School added successfully');
+      console.log('✅ School teacher created successfully:', insertResult);
+      toast.success(`School "${newSchoolName}" added successfully`);
       setNewSchoolName('');
       await fetchSchools();
       
       // Trigger main dashboard refresh
       console.log('🔄 Triggering dashboard refresh after school creation...');
-      console.log('🔍 onDataChange callback exists:', !!onDataChange);
       if (onDataChange) {
         console.log('🚀 Calling onDataChange callback now...');
         onDataChange();
       }
     } catch (error) {
-      console.error('Error adding school:', error);
-      toast.error('Failed to add school');
+      console.error('💥 Error adding school:', error);
+      if (error.message?.includes('permission denied')) {
+        toast.error('Permission denied: Unable to create school. Please check admin permissions.');
+      } else if (error.message?.includes('unique constraint')) {
+        toast.error('A school with this name or email already exists');
+      } else {
+        toast.error(`Failed to add school: ${error.message}`);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -159,7 +186,10 @@ const SchoolManagement: React.FC<SchoolManagementProps> = ({ onDataChange }) => 
 
     setIsLoading(true);
     try {
-      // Use the new secure database function
+      // Ensure admin context is set
+      await setAdminContext();
+      
+      // Use the secure database function
       const { data, error } = await supabase.rpc('platform_admin_delete_school', {
         school_name_param: schoolName,
         admin_email_param: admin.email
@@ -178,17 +208,14 @@ const SchoolManagement: React.FC<SchoolManagementProps> = ({ onDataChange }) => 
       console.log('🔄 Refreshing local schools list...');
       await fetchSchools();
       
-      // CRITICAL: Trigger dashboard refresh
+      // Trigger dashboard refresh
       console.log('🔄 Triggering main dashboard refresh after school deletion...');
       if (onDataChange) {
         console.log('✅ Calling onDataChange callback NOW!');
-        // Use a small delay to ensure UI updates properly
         setTimeout(() => {
           console.log('🚀 Executing delayed onDataChange callback...');
           onDataChange();
         }, 100);
-      } else {
-        console.log('❌ No onDataChange callback provided!');
       }
       
     } catch (error) {
@@ -227,15 +254,16 @@ const SchoolManagement: React.FC<SchoolManagementProps> = ({ onDataChange }) => 
                 value={newSchoolName}
                 onChange={(e) => setNewSchoolName(e.target.value)}
                 placeholder="Enter school name"
+                disabled={isLoading}
               />
             </div>
             <Button 
               onClick={addSchool} 
-              disabled={isLoading}
+              disabled={isLoading || !newSchoolName.trim()}
               className="mt-6"
             >
               <Plus className="w-4 h-4 mr-2" />
-              Add School
+              {isLoading ? 'Adding...' : 'Add School'}
             </Button>
           </div>
 
