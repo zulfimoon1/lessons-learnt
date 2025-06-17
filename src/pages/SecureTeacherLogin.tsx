@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -80,16 +81,7 @@ const SecureTeacherLogin = () => {
     }
   };
 
-  const handleSignup = async (signupData: {
-    name: string;
-    email: string;
-    school: string;
-    role: 'teacher' | 'admin' | 'doctor';
-    password: string;
-    confirmPassword: string;
-  }) => {
-    const { name, email, school, role, password, confirmPassword } = signupData;
-    
+  const handleSignup = async (name: string, email: string, school: string, password: string, confirmPassword: string, role: 'teacher' | 'admin' | 'doctor') => {
     if (!name.trim() || !email.trim() || !school.trim() || !password || !confirmPassword) {
       toast({
         title: t('teacher.missingInfo') || "Missing information",
