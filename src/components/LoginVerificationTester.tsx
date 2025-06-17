@@ -14,7 +14,7 @@ interface TestResult {
 }
 
 const LoginVerificationTester: React.FC = () => {
-  const { studentLogin, studentSignup } = useAuth();
+  const { loginStudent, signupStudent } = useAuth();
   const [testResults, setTestResults] = useState<TestResult[]>([]);
   const [isRunning, setIsRunning] = useState(false);
 
@@ -39,7 +39,7 @@ const LoginVerificationTester: React.FC = () => {
     // Test 1: Student Login Input Validation
     updateTestResult('Student Login Validation', 'running');
     try {
-      const result = await studentLogin('', '', '', '');
+      const result = await loginStudent('', '', '', '');
       if (result.error) {
         updateTestResult('Student Login Validation', 'success', 'Input validation working', result.error);
       } else {
@@ -52,7 +52,7 @@ const LoginVerificationTester: React.FC = () => {
     // Test 2: Student Login with Invalid Credentials
     updateTestResult('Invalid Credentials Test', 'running');
     try {
-      const result = await studentLogin('NonExistent User', 'NonExistent School', 'Grade 1', 'wrongpassword');
+      const result = await loginStudent('NonExistent User', 'NonExistent School', 'Grade 1', 'wrongpassword');
       if (result.error && result.error.includes('Invalid credentials')) {
         updateTestResult('Invalid Credentials Test', 'success', 'Invalid credentials properly rejected', result.error);
       } else {
@@ -65,7 +65,7 @@ const LoginVerificationTester: React.FC = () => {
     // Test 3: Student Signup Input Validation
     updateTestResult('Student Signup Validation', 'running');
     try {
-      const result = await studentSignup('', '', '', '');
+      const result = await signupStudent('', '', '', '');
       if (result.error) {
         updateTestResult('Student Signup Validation', 'success', 'Signup validation working', result.error);
       } else {
@@ -78,7 +78,7 @@ const LoginVerificationTester: React.FC = () => {
     // Test 4: Password Strength Test
     updateTestResult('Password Strength Test', 'running');
     try {
-      const result = await studentSignup('Test User', 'Test School', 'Grade 1', '123');
+      const result = await signupStudent('Test User', 'Test School', 'Grade 1', '123');
       if (result.error && (result.error.includes('password') || result.error.includes('strength'))) {
         updateTestResult('Password Strength Test', 'success', 'Password strength validation working', result.error);
       } else {
@@ -93,7 +93,7 @@ const LoginVerificationTester: React.FC = () => {
     try {
       // Attempt multiple rapid logins
       const promises = Array(6).fill(0).map(() => 
-        studentLogin('Rate Test User', 'Rate Test School', 'Grade 1', 'wrongpassword')
+        loginStudent('Rate Test User', 'Rate Test School', 'Grade 1', 'wrongpassword')
       );
       
       const results = await Promise.all(promises);

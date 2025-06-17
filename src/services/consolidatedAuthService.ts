@@ -33,6 +33,7 @@ interface AuthUser {
   name?: string;
   school: string;
   role: string;
+  grade?: string;
   userType: 'teacher' | 'student' | 'admin';
 }
 
@@ -133,7 +134,7 @@ class ConsolidatedAuthService {
         return { success: false, error: emailValidation.message };
       }
 
-      const sanitizedEmail = emailValidation.sanitizedValue;
+      const sanitizedEmail = credentials.email.toLowerCase().trim();
       console.log('🔍 Looking up teacher/admin:', sanitizedEmail);
 
       // Direct database query for teachers/admins
@@ -217,9 +218,9 @@ class ConsolidatedAuthService {
       }
 
       // Sanitize inputs
-      const sanitizedName = nameValidation.sanitizedValue;
-      const sanitizedSchool = schoolValidation.sanitizedValue;
-      const sanitizedGrade = gradeValidation.sanitizedValue;
+      const sanitizedName = credentials.fullName.trim();
+      const sanitizedSchool = credentials.school.trim();
+      const sanitizedGrade = credentials.grade.trim();
 
       const identifier = `${sanitizedName}-${sanitizedSchool}-${sanitizedGrade}`;
       console.log('🔍 Looking up student:', { fullName: sanitizedName, school: sanitizedSchool, grade: sanitizedGrade });
@@ -273,6 +274,7 @@ class ConsolidatedAuthService {
           fullName: student.full_name,
           school: student.school,
           role: 'student',
+          grade: student.grade,
           userType: 'student'
         }
       };
@@ -310,11 +312,15 @@ class ConsolidatedAuthService {
           return { success: false, error: schoolValidation.message };
         }
 
+        const sanitizedEmail = credentials.email.toLowerCase().trim();
+        const sanitizedName = credentials.name!.trim();
+        const sanitizedSchool = credentials.school.trim();
+
         // Check if teacher already exists
         const { data: existingTeacher } = await supabase
           .from('teachers')
           .select('id')
-          .eq('email', emailValidation.sanitizedValue)
+          .eq('email', sanitizedEmail)
           .limit(1);
 
         if (existingTeacher && existingTeacher.length > 0) {
@@ -324,9 +330,9 @@ class ConsolidatedAuthService {
         const { data: teacher, error } = await supabase
           .from('teachers')
           .insert([{
-            name: nameValidation.sanitizedValue,
-            email: emailValidation.sanitizedValue,
-            school: schoolValidation.sanitizedValue,
+            name: sanitizedName,
+            email: sanitizedEmail,
+            school: sanitizedSchool,
             role: credentials.role || 'teacher',
             password_hash: passwordHash
           }])
@@ -366,13 +372,17 @@ class ConsolidatedAuthService {
           return { success: false, error: gradeValidation.message };
         }
 
+        const sanitizedName = credentials.fullName!.trim();
+        const sanitizedSchool = credentials.school.trim();
+        const sanitizedGrade = credentials.grade!.trim();
+
         // Check if student already exists
         const { data: existingStudent } = await supabase
           .from('students')
           .select('id')
-          .eq('full_name', nameValidation.sanitizedValue)
-          .eq('school', schoolValidation.sanitizedValue)
-          .eq('grade', gradeValidation.sanitizedValue)
+          .eq('full_name', sanitizedName)
+          .eq('school', sanitizedSchool)
+          .eq('grade', sanitizedGrade)
           .limit(1);
 
         if (existingStudent && existingStudent.length > 0) {
@@ -382,9 +392,9 @@ class ConsolidatedAuthService {
         const { data: student, error } = await supabase
           .from('students')
           .insert([{
-            full_name: nameValidation.sanitizedValue,
-            school: schoolValidation.sanitizedValue,
-            grade: gradeValidation.sanitizedValue,
+            full_name: sanitizedName,
+            school: sanitizedSchool,
+            grade: sanitizedGrade,
             password_hash: passwordHash
           }])
           .select()
@@ -402,6 +412,7 @@ class ConsolidatedAuthService {
             fullName: student.full_name,
             school: student.school,
             role: 'student',
+            grade: student.grade,
             userType: 'student'
           }
         };
