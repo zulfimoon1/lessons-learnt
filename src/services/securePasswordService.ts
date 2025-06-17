@@ -1,120 +1,100 @@
 
 import bcrypt from 'bcryptjs';
 
-interface PasswordValidationResult {
-  isValid: boolean;
-  errors: string[];
-  strength: 'weak' | 'medium' | 'strong';
-}
+const SALT_ROUNDS = 12;
 
-class SecurePasswordService {
-  private readonly saltRounds = 12; // High security salt rounds
-  
-  /**
-   * Hash password using bcrypt with high security salt rounds
-   */
-  async hashPassword(password: string): Promise<string> {
-    try {
-      return await bcrypt.hash(password, this.saltRounds);
-    } catch (error) {
-      console.error('Password hashing failed:', error);
-      throw new Error('Password hashing failed');
-    }
+export const hashPassword = async (password: string): Promise<string> => {
+  try {
+    console.log('Hashing password with bcryptjs...');
+    const salt = await bcrypt.genSalt(SALT_ROUNDS);
+    const hash = await bcrypt.hash(password, salt);
+    console.log('Password hashed successfully, length:', hash.length);
+    return hash;
+  } catch (error) {
+    console.error('Password hashing error:', error);
+    throw new Error('Failed to hash password');
   }
+};
 
-  /**
-   * Verify password against bcrypt hash
-   */
-  async verifyPassword(password: string, hash: string): Promise<boolean> {
-    try {
-      return await bcrypt.compare(password, hash);
-    } catch (error) {
-      console.error('Password verification failed:', error);
+export const verifyPassword = async (password: string, hashedPassword: string): Promise<boolean> => {
+  try {
+    console.log('=== BCRYPT VERIFICATION DEBUG ===');
+    console.log('Input password:', password);
+    console.log('Input password length:', password.length);
+    console.log('Stored hash:', hashedPassword);
+    console.log('Stored hash length:', hashedPassword.length);
+    console.log('Hash format check - starts with $2b$:', hashedPassword.startsWith('$2b$'));
+    
+    // Ensure we have valid inputs
+    if (!password || !hashedPassword) {
+      console.error('Missing password or hash');
       return false;
     }
-  }
-
-  /**
-   * Validate password strength and security requirements
-   */
-  validatePassword(password: string): PasswordValidationResult {
-    const errors: string[] = [];
-    let strength: 'weak' | 'medium' | 'strong' = 'weak';
-
-    // Length check
-    if (password.length < 8) {
-      errors.push('Password must be at least 8 characters long');
-    }
-
-    // Character requirements
-    const hasUpperCase = /[A-Z]/.test(password);
-    const hasLowerCase = /[a-z]/.test(password);
-    const hasNumbers = /\d/.test(password);
-    const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password);
-
-    if (!hasUpperCase) errors.push('Password must contain at least one uppercase letter');
-    if (!hasLowerCase) errors.push('Password must contain at least one lowercase letter');
-    if (!hasNumbers) errors.push('Password must contain at least one number');
-    if (!hasSpecialChar) errors.push('Password must contain at least one special character');
-
-    // Common patterns check
-    const commonPatterns = [
-      /123456/,
-      /password/i,
-      /qwerty/i,
-      /admin/i,
-      /letmein/i
-    ];
-
-    if (commonPatterns.some(pattern => pattern.test(password))) {
-      errors.push('Password contains common patterns and is not secure');
-    }
-
-    // Determine strength
-    const criteriasMet = [hasUpperCase, hasLowerCase, hasNumbers, hasSpecialChar].filter(Boolean).length;
     
-    if (password.length >= 12 && criteriasMet >= 4) {
-      strength = 'strong';
-    } else if (password.length >= 8 && criteriasMet >= 3) {
-      strength = 'medium';
-    }
-
-    return {
-      isValid: errors.length === 0,
-      errors,
-      strength
-    };
-  }
-
-  /**
-   * Generate a secure random password
-   */
-  generateSecurePassword(length: number = 16): string {
-    const charset = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*';
-    let password = '';
-    
-    // Ensure at least one character from each category
-    password += 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'[Math.floor(Math.random() * 26)]; // Uppercase
-    password += 'abcdefghijklmnopqrstuvwxyz'[Math.floor(Math.random() * 26)]; // Lowercase
-    password += '0123456789'[Math.floor(Math.random() * 10)]; // Number
-    password += '!@#$%^&*'[Math.floor(Math.random() * 8)]; // Special
-    
-    // Fill the rest randomly
-    for (let i = 4; i < length; i++) {
-      password += charset[Math.floor(Math.random() * charset.length)];
+    // Validate hash format
+    if (!hashedPassword.startsWith('$2b$') && !hashedPassword.startsWith('$2a$')) {
+      console.error('Invalid hash format - not bcrypt');
+      return false;
     }
     
-    // Shuffle the password
-    return password.split('').sort(() => Math.random() - 0.5).join('');
+    // Test the bcrypt library directly with a known working example
+    console.log('Testing bcrypt with known values...');
+    const testHash = await bcrypt.hash('test123', 12);
+    const testResult = await bcrypt.compare('test123', testHash);
+    console.log('Bcrypt test with known values:', testResult);
+    
+    if (!testResult) {
+      console.error('CRITICAL: bcrypt library is not working correctly');
+      return false;
+    }
+    
+    // Now test the actual password
+    console.log('Testing actual password against stored hash...');
+    const result = await bcrypt.compare(password, hashedPassword);
+    console.log('Actual bcrypt.compare result:', result);
+    
+    // Additional debug: try with string conversion
+    const stringPassword = String(password);
+    const stringHash = String(hashedPassword);
+    console.log('Testing with explicit string conversion...');
+    const stringResult = await bcrypt.compare(stringPassword, stringHash);
+    console.log('String conversion result:', stringResult);
+    
+    return result || stringResult;
+    
+  } catch (error) {
+    console.error('Password verification error:', error);
+    console.error('Error type:', typeof error);
+    console.error('Error message:', error.message);
+    console.error('Error stack:', error.stack);
+    return false;
   }
+};
 
-  /**
-   * Check if a hash is using the old weak hashing (SHA-256)
-   */
-  isWeakHash(hash: string): boolean {
-    // bcrypt hashes start with $2a$, $2b$, or $2y$
-    return !hash.startsWith('$2a$') && !hash.startsWith('$2b$') && !hash.startsWith('$2y$');
+export const validatePasswordStrength = (password: string): { isValid: boolean; message: string } => {
+  if (password.length < 8) {
+    return { isValid: false, message: 'Password must be at least 8 characters long' };
   }
-}
+  
+  if (!/(?=.*[a-z])/.test(password)) {
+    return { isValid: false, message: 'Password must contain at least one lowercase letter' };
+  }
+  
+  if (!/(?=.*[A-Z])/.test(password)) {
+    return { isValid: false, message: 'Password must contain at least one uppercase letter' };
+  }
+  
+  if (!/(?=.*\d)/.test(password)) {
+    return { isValid: false, message: 'Password must contain at least one number' };
+  }
+  
+  return { isValid: true, message: 'Password is strong' };
+};
 
-export const securePasswordService = new SecurePasswordService();
+// Helper function to generate a fresh hash for testing
+export const generateTestHash = async (password: string = 'admin123'): Promise<string> => {
+  console.log('Generating fresh hash for:', password);
+  const hash = await hashPassword(password);
+  console.log('Generated hash:', hash);
+  return hash;
+};

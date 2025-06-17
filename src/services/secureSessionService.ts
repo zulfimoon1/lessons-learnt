@@ -1,205 +1,198 @@
 
-interface SecureSession {
-  userId: string;
-  userType: 'teacher' | 'student' | 'admin';
-  school: string;
-  sessionId: string;
-  csrfToken: string;
-  expiresAt: number;
-  fingerprint: string;
-  createdAt: number;
+// Enhanced secure session management service
+interface SecureSessionData {
+  data: any;
+  timestamp: number;
+  signature: string;
 }
 
 class SecureSessionService {
-  private readonly sessionTimeout = 2 * 60 * 60 * 1000; // 2 hours for security
-  private readonly mentalHealthTimeout = 30 * 60 * 1000; // 30 minutes for mental health data
+  private readonly SESSION_TIMEOUT = 30 * 60 * 1000; // 30 minutes
+  private readonly SECRET_KEY = 'lovable-session-key'; // In production, use environment variable
 
-  /**
-   * Generate environment-based session key
-   */
-  private getSessionKey(): string {
-    const baseKey = 'secure_session';
-    const envHash = this.hashString(window.location.origin);
-    return `${baseKey}_${envHash}`;
-  }
-
-  /**
-   * Generate device fingerprint for session validation
-   */
-  private generateFingerprint(): string {
-    const components = [
-      navigator.userAgent,
-      navigator.language,
-      screen.width + 'x' + screen.height,
-      Intl.DateTimeFormat().resolvedOptions().timeZone,
-      navigator.platform
-    ];
-    
-    return this.hashString(components.join('|'));
-  }
-
-  /**
-   * Simple hash function for fingerprinting
-   */
-  private hashString(str: string): string {
+  // Simple signature generation for client-side validation
+  private generateSignature(data: string): string {
     let hash = 0;
-    for (let i = 0; i < str.length; i++) {
-      const char = str.charCodeAt(i);
-      hash = ((hash << 5) - hash) + char;
-      hash = hash & hash; // Convert to 32-bit integer
-    }
-    return Math.abs(hash).toString(36);
-  }
-
-  /**
-   * Generate secure CSRF token
-   */
-  private generateCSRFToken(): string {
-    const array = new Uint8Array(32);
-    crypto.getRandomValues(array);
-    return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
-  }
-
-  /**
-   * Encrypt session data (basic encryption for sensitive data)
-   */
-  private encryptSessionData(data: string): string {
-    // Basic XOR encryption with session key
-    const key = this.getSessionKey();
-    let encrypted = '';
     for (let i = 0; i < data.length; i++) {
-      encrypted += String.fromCharCode(data.charCodeAt(i) ^ key.charCodeAt(i % key.length));
+      const char = data.charCodeAt(i);
+      hash = ((hash << 5) - hash) + char;
+      hash = hash & hash; // Convert to 32bit integer
     }
-    return btoa(encrypted);
+    return hash.toString();
   }
 
-  /**
-   * Decrypt session data
-   */
-  private decryptSessionData(encryptedData: string): string {
+  securelyStoreUserData(key: string, data: any): void {
     try {
-      const key = this.getSessionKey();
-      const data = atob(encryptedData);
-      let decrypted = '';
-      for (let i = 0; i < data.length; i++) {
-        decrypted += String.fromCharCode(data.charCodeAt(i) ^ key.charCodeAt(i % key.length));
-      }
-      return decrypted;
+      const timestamp = Date.now();
+      const dataString = JSON.stringify(data);
+      const signature = this.generateSignature(dataString + timestamp + this.SECRET_KEY);
+      
+      const secureData: SecureSessionData = {
+        data,
+        timestamp,
+        signature
+      };
+      
+      sessionStorage.setItem(`secure_${key}`, JSON.stringify(secureData));
+      
+      // Set session timeout
+      setTimeout(() => {
+        this.clearSession(key);
+      }, this.SESSION_TIMEOUT);
+      
     } catch (error) {
-      console.error('Session decryption failed:', error);
-      return '';
+      console.error('Failed to securely store user data:', error);
     }
   }
 
-  /**
-   * Create secure session with encryption
-   */
-  createSecureSession(
-    userId: string, 
-    userType: 'teacher' | 'student' | 'admin', 
-    school: string,
-    isMentalHealthAccess: boolean = false
-  ): SecureSession {
-    const timeout = isMentalHealthAccess ? this.mentalHealthTimeout : this.sessionTimeout;
-    
-    const session: SecureSession = {
-      userId,
-      userType,
-      school,
-      sessionId: crypto.randomUUID(),
-      csrfToken: this.generateCSRFToken(),
-      expiresAt: Date.now() + timeout,
-      fingerprint: this.generateFingerprint(),
-      createdAt: Date.now()
-    };
-
-    // Store encrypted session in sessionStorage (more secure than localStorage)
-    const encryptedSession = this.encryptSessionData(JSON.stringify(session));
-    sessionStorage.setItem(this.getSessionKey(), encryptedSession);
-
-    return session;
-  }
-
-  /**
-   * Get and validate secure session
-   */
-  getSecureSession(): SecureSession | null {
+  securelyRetrieveUserData(key: string): any | null {
     try {
-      const encryptedSession = sessionStorage.getItem(this.getSessionKey());
-      if (!encryptedSession) return null;
-
-      const sessionData = this.decryptSessionData(encryptedSession);
-      if (!sessionData) return null;
-
-      const session: SecureSession = JSON.parse(sessionData);
-
-      // Validate expiration
-      if (Date.now() > session.expiresAt) {
-        this.clearSession();
+      const storedData = sessionStorage.getItem(`secure_${key}`);
+      if (!storedData) return null;
+      
+      const secureData: SecureSessionData = JSON.parse(storedData);
+      const now = Date.now();
+      
+      // Check if session has expired
+      if (now - secureData.timestamp > this.SESSION_TIMEOUT) {
+        this.clearSession(key);
         return null;
       }
-
-      // Validate fingerprint
-      if (session.fingerprint !== this.generateFingerprint()) {
-        console.warn('Session fingerprint mismatch - potential security threat');
-        this.clearSession();
+      
+      // Verify signature
+      const dataString = JSON.stringify(secureData.data);
+      const expectedSignature = this.generateSignature(dataString + secureData.timestamp + this.SECRET_KEY);
+      
+      if (secureData.signature !== expectedSignature) {
+        console.warn('Session signature verification failed');
+        this.clearSession(key);
         return null;
       }
-
-      return session;
+      
+      return secureData.data;
     } catch (error) {
-      console.error('Session validation failed:', error);
-      this.clearSession();
+      console.error('Failed to retrieve user data:', error);
+      this.clearSession(key);
       return null;
     }
   }
 
-  /**
-   * Refresh session with new expiration and CSRF token
-   */
-  refreshSession(isMentalHealthAccess: boolean = false): boolean {
-    const session = this.getSecureSession();
-    if (!session) return false;
-
-    const timeout = isMentalHealthAccess ? this.mentalHealthTimeout : this.sessionTimeout;
-    session.expiresAt = Date.now() + timeout;
-    session.csrfToken = this.generateCSRFToken();
-
-    const encryptedSession = this.encryptSessionData(JSON.stringify(session));
-    sessionStorage.setItem(this.getSessionKey(), encryptedSession);
-
-    return true;
+  clearSession(key: string): void {
+    sessionStorage.removeItem(`secure_${key}`);
   }
 
-  /**
-   * Clear session securely
-   */
-  clearSession(): void {
-    sessionStorage.removeItem(this.getSessionKey());
-    
-    // Clear any legacy localStorage items
-    ['student', 'teacher', 'platformAdmin', 'auth_token', 'user_session'].forEach(key => {
-      localStorage.removeItem(key);
+  clearAllSessions(): void {
+    const keys = Object.keys(sessionStorage);
+    keys.forEach(key => {
+      if (key.startsWith('secure_')) {
+        sessionStorage.removeItem(key);
+      }
     });
   }
 
-  /**
-   * Validate session for mental health data access
-   */
-  validateMentalHealthAccess(userRole: string): boolean {
-    const session = this.getSecureSession();
-    if (!session) return false;
-
-    // Only doctors and admins can access mental health data
-    return ['doctor', 'admin'].includes(userRole);
+  isSessionValid(key: string): boolean {
+    const data = this.securelyRetrieveUserData(key);
+    return data !== null;
   }
 
-  /**
-   * Get current CSRF token
-   */
-  getCSRFToken(): string {
-    const session = this.getSecureSession();
-    return session?.csrfToken || '';
+  // New method to detect concurrent sessions
+  detectConcurrentSessions(): boolean {
+    try {
+      const sessionId = sessionStorage.getItem('session_id');
+      const storedSessionId = localStorage.getItem('last_session_id');
+      
+      if (sessionId && storedSessionId && sessionId !== storedSessionId) {
+        console.warn('Concurrent session detected');
+        return true;
+      }
+      
+      // Update session tracking
+      if (sessionId) {
+        localStorage.setItem('last_session_id', sessionId);
+      }
+      
+      return false;
+    } catch (error) {
+      console.error('Error detecting concurrent sessions:', error);
+      return false;
+    }
+  }
+
+  // New method to check session validity
+  checkSessionValidity(): boolean {
+    try {
+      // Check if we have a valid session ID
+      const sessionId = sessionStorage.getItem('session_id');
+      if (!sessionId) {
+        // Generate new session ID
+        const newSessionId = crypto.getRandomValues(new Uint8Array(16)).reduce((acc, byte) => 
+          acc + byte.toString(16).padStart(2, '0'), ''
+        );
+        sessionStorage.setItem('session_id', newSessionId);
+        return true;
+      }
+      
+      // Check session fingerprint
+      const fingerprint = sessionStorage.getItem('session_fingerprint');
+      if (!fingerprint) {
+        // Generate fingerprint
+        const newFingerprint = this.generateSessionFingerprint();
+        sessionStorage.setItem('session_fingerprint', newFingerprint);
+        return true;
+      }
+      
+      // Validate fingerprint hasn't changed dramatically
+      const currentFingerprint = this.generateSessionFingerprint();
+      const similarity = this.calculateFingerprintSimilarity(fingerprint, currentFingerprint);
+      
+      if (similarity < 0.8) {
+        console.warn('Session fingerprint mismatch detected');
+        return false;
+      }
+      
+      return true;
+    } catch (error) {
+      console.error('Error checking session validity:', error);
+      return false;
+    }
+  }
+
+  private generateSessionFingerprint(): string {
+    try {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      let fingerprint = '';
+      
+      if (ctx) {
+        ctx.textBaseline = 'top';
+        ctx.font = '14px Arial';
+        ctx.fillText('Security fingerprint', 2, 2);
+        fingerprint += canvas.toDataURL().slice(-50);
+      }
+      
+      // Add other browser characteristics
+      fingerprint += navigator.userAgent.slice(-20);
+      fingerprint += screen.width + 'x' + screen.height;
+      fingerprint += new Date().getTimezoneOffset().toString();
+      
+      return this.generateSignature(fingerprint);
+    } catch {
+      return 'fallback-fingerprint';
+    }
+  }
+
+  private calculateFingerprintSimilarity(fp1: string, fp2: string): number {
+    if (fp1 === fp2) return 1;
+    if (!fp1 || !fp2) return 0;
+    
+    const len = Math.max(fp1.length, fp2.length);
+    let matches = 0;
+    
+    for (let i = 0; i < Math.min(fp1.length, fp2.length); i++) {
+      if (fp1[i] === fp2[i]) matches++;
+    }
+    
+    return matches / len;
   }
 }
 
