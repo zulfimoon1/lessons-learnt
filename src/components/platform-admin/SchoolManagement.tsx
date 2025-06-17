@@ -70,13 +70,6 @@ const SchoolManagement: React.FC<SchoolManagementProps> = ({ onDataChange }) => 
         )
       );
 
-      // Combine and count schools
-      const allSchools = [...filteredTeacherSchools, ...filteredStudentSchools];
-      const schoolCounts = allSchools.reduce((acc, { school }) => {
-        acc[school] = (acc[school] || 0) + 1;
-        return acc;
-      }, {} as Record<string, number>);
-
       // Get teacher counts per school
       const teacherCounts = filteredTeacherSchools.reduce((acc, { school }) => {
         acc[school] = (acc[school] || 0) + 1;
@@ -89,7 +82,13 @@ const SchoolManagement: React.FC<SchoolManagementProps> = ({ onDataChange }) => 
         return acc;
       }, {} as Record<string, number>);
 
-      const schoolList = Object.keys(schoolCounts).map(name => ({
+      // Get all unique school names
+      const allSchoolNames = new Set([
+        ...Object.keys(teacherCounts),
+        ...Object.keys(studentCounts)
+      ]);
+
+      const schoolList = Array.from(allSchoolNames).map(name => ({
         name,
         teacher_count: teacherCounts[name] || 0,
         student_count: studentCounts[name] || 0
@@ -117,7 +116,6 @@ const SchoolManagement: React.FC<SchoolManagementProps> = ({ onDataChange }) => 
     setIsLoading(true);
     try {
       console.log('🏫 Creating new school:', newSchoolName.trim());
-      console.log('🔧 Admin email:', admin.email);
       
       // Ensure admin context is set
       await setAdminContext();

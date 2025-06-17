@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -7,8 +8,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Trash2, Plus, Users } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { hashPassword } from '@/services/securePasswordService';
 import { usePlatformAdmin } from '@/contexts/PlatformAdminContext';
+import bcrypt from 'bcryptjs';
 
 interface Teacher {
   id: string;
@@ -39,9 +40,11 @@ const TeacherManagement: React.FC = () => {
   const setAdminContext = async () => {
     if (admin?.email) {
       try {
+        console.log('🔧 Setting admin context for teacher management:', admin.email);
         await supabase.rpc('set_platform_admin_context', { admin_email: admin.email });
+        console.log('✅ Admin context set successfully');
       } catch (error) {
-        console.error('Error setting admin context:', error);
+        console.error('❌ Error setting admin context:', error);
       }
     }
   };
@@ -49,15 +52,22 @@ const TeacherManagement: React.FC = () => {
   const fetchTeachers = async () => {
     try {
       await setAdminContext();
+      console.log('📊 Fetching teachers...');
+      
       const { data, error } = await supabase
         .from('teachers')
         .select('*')
         .order('name');
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ Error fetching teachers:', error);
+        throw error;
+      }
+      
+      console.log('✅ Teachers fetched:', data?.length || 0);
       setTeachers(data || []);
     } catch (error) {
-      console.error('Error fetching teachers:', error);
+      console.error('💥 Error fetching teachers:', error);
       toast.error('Failed to fetch teachers');
     }
   };
@@ -65,17 +75,23 @@ const TeacherManagement: React.FC = () => {
   const fetchSchools = async () => {
     try {
       await setAdminContext();
+      console.log('📊 Fetching schools for dropdown...');
+      
       const { data, error } = await supabase
         .from('teachers')
         .select('school')
         .not('school', 'is', null);
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ Error fetching schools:', error);
+        throw error;
+      }
       
       const uniqueSchools = [...new Set(data?.map(item => item.school) || [])];
+      console.log('✅ Schools fetched:', uniqueSchools.length);
       setSchools(uniqueSchools);
     } catch (error) {
-      console.error('Error fetching schools:', error);
+      console.error('💥 Error fetching schools:', error);
     }
   };
 
@@ -85,26 +101,45 @@ const TeacherManagement: React.FC = () => {
       return;
     }
 
+    if (!admin?.email) {
+      toast.error('Admin authentication required');
+      return;
+    }
+
     setIsLoading(true);
     try {
+      console.log('👨‍🏫 Creating new teacher:', newTeacher.name);
       await setAdminContext();
-      const passwordHash = await hashPassword(newTeacher.password);
+      
+      // Hash the password
+      const passwordHash = await bcrypt.hash(newTeacher.password, 12);
+      console.log('🔐 Password hashed successfully');
 
-      const { error } = await supabase
+      const teacherData = {
+        name: newTeacher.name,
+        email: newTeacher.email,
+        school: newTeacher.school,
+        role: newTeacher.role,
+        specialization: newTeacher.specialization || null,
+        license_number: newTeacher.license_number || null,
+        password_hash: passwordHash
+      };
+
+      console.log('📝 Inserting teacher data...');
+      const { data: insertResult, error } = await supabase
         .from('teachers')
-        .insert({
-          name: newTeacher.name,
-          email: newTeacher.email,
-          school: newTeacher.school,
-          role: newTeacher.role,
-          specialization: newTeacher.specialization || null,
-          license_number: newTeacher.license_number || null,
-          password_hash: passwordHash
-        });
+        .insert(teacherData)
+        .select()
+        .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ Error creating teacher:', error);
+        throw error;
+      }
 
+      console.log('✅ Teacher created successfully:', insertResult);
       toast.success('Teacher added successfully');
+      
       setNewTeacher({
         name: '',
         email: '',
@@ -114,10 +149,17 @@ const TeacherManagement: React.FC = () => {
         license_number: '',
         password: ''
       });
+      
       fetchTeachers();
     } catch (error) {
-      console.error('Error adding teacher:', error);
-      toast.error('Failed to add teacher');
+      console.error('💥 Error adding teacher:', error);
+      if (error.message?.includes('permission denied')) {
+        toast.error('Permission denied: Unable to create teacher. Please check admin permissions.');
+      } else if (error.message?.includes('unique constraint')) {
+        toast.error('A teacher with this email already exists');
+      } else {
+        toast.error(`Failed to add teacher: ${error.message}`);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -128,21 +170,36 @@ const TeacherManagement: React.FC = () => {
       return;
     }
 
+    if (!admin?.email) {
+      toast.error('Admin authentication required');
+      return;
+    }
+
     setIsLoading(true);
     try {
+      console.log('🗑️ Deleting teacher:', teacherName);
       await setAdminContext();
+      
       const { error } = await supabase
         .from('teachers')
         .delete()
         .eq('id', teacherId);
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ Error deleting teacher:', error);
+        throw error;
+      }
 
+      console.log('✅ Teacher deleted successfully');
       toast.success('Teacher deleted successfully');
       fetchTeachers();
     } catch (error) {
-      console.error('Error deleting teacher:', error);
-      toast.error('Failed to delete teacher');
+      console.error('💥 Error deleting teacher:', error);
+      if (error.message?.includes('permission denied')) {
+        toast.error('Permission denied: Unable to delete teacher.');
+      } else {
+        toast.error(`Failed to delete teacher: ${error.message}`);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -172,6 +229,7 @@ const TeacherManagement: React.FC = () => {
                 value={newTeacher.name}
                 onChange={(e) => setNewTeacher(prev => ({ ...prev, name: e.target.value }))}
                 placeholder="Teacher name"
+                disabled={isLoading}
               />
             </div>
             <div>
@@ -182,6 +240,7 @@ const TeacherManagement: React.FC = () => {
                 value={newTeacher.email}
                 onChange={(e) => setNewTeacher(prev => ({ ...prev, email: e.target.value }))}
                 placeholder="teacher@school.com"
+                disabled={isLoading}
               />
             </div>
             <div>
@@ -189,6 +248,7 @@ const TeacherManagement: React.FC = () => {
               <Select
                 value={newTeacher.school}
                 onValueChange={(value) => setNewTeacher(prev => ({ ...prev, school: value }))}
+                disabled={isLoading}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select school" />
@@ -207,6 +267,7 @@ const TeacherManagement: React.FC = () => {
               <Select
                 value={newTeacher.role}
                 onValueChange={(value) => setNewTeacher(prev => ({ ...prev, role: value }))}
+                disabled={isLoading}
               >
                 <SelectTrigger>
                   <SelectValue />
@@ -226,6 +287,7 @@ const TeacherManagement: React.FC = () => {
                 value={newTeacher.password}
                 onChange={(e) => setNewTeacher(prev => ({ ...prev, password: e.target.value }))}
                 placeholder="Password"
+                disabled={isLoading}
               />
             </div>
             <div>
@@ -235,12 +297,13 @@ const TeacherManagement: React.FC = () => {
                 value={newTeacher.specialization}
                 onChange={(e) => setNewTeacher(prev => ({ ...prev, specialization: e.target.value }))}
                 placeholder="Subject specialization"
+                disabled={isLoading}
               />
             </div>
             <div className="md:col-span-2">
               <Button onClick={addTeacher} disabled={isLoading} className="w-full">
                 <Plus className="w-4 h-4 mr-2" />
-                Add Teacher
+                {isLoading ? 'Adding...' : 'Add Teacher'}
               </Button>
             </div>
           </div>
