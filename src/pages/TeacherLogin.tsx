@@ -15,7 +15,7 @@ const TeacherLogin = () => {
   const { t } = useLanguage();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { teacher, teacherLogin, isLoading: authLoading } = useAuth();
+  const { teacher, loginTeacher, isLoading: authLoading } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
 
   // Redirect if already logged in
@@ -59,7 +59,7 @@ const TeacherLogin = () => {
     console.log('TeacherLogin: Starting login process with email:', email);
 
     try {
-      const result = await teacherLogin(email.trim(), password);
+      const result = await loginTeacher(email.trim(), password);
       console.log('TeacherLogin: Login result received:', result);
 
       if (result.error) {
@@ -145,8 +145,8 @@ const TeacherLogin = () => {
     setIsLoading(true);
 
     try {
-      // Use teacherLogin with signup parameters
-      const result = await teacherLogin(
+      // Use loginTeacher with signup parameters
+      const result = await loginTeacher(
         signupData.email.trim(),
         signupData.password,
         signupData.name.trim(),
