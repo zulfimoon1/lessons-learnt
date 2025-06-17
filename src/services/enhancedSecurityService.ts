@@ -26,7 +26,7 @@ class EnhancedSecurityService {
     // SQL injection patterns
     const sqlPatterns = [
       /(\bUNION\b|\bSELECT\b|\bINSERT\b|\bUPDATE\b|\bDELETE\b|\bDROP\b|\bCREATE\b|\bALTER\b)/gi,
-      /('|(\\')|(;\s*--)|(;\s*\/\*)/gi,
+      /('|(\\')|(;\s*--)|(;\s*\/\*))/gi,
       /(\bOR\b|\bAND\b)\s+\d+\s*=\s*\d+/gi
     ];
 
@@ -146,6 +146,43 @@ class EnhancedSecurityService {
       console.error('Session validation error:', error);
       return false;
     }
+  }
+
+  // Add the missing validateSecureForm method
+  async validateSecureForm(inputs: Record<string, string>, formAction: string): Promise<{ isValid: boolean; errors: string[] }> {
+    const errors: string[] = [];
+
+    // Validate each input
+    for (const [key, value] of Object.entries(inputs)) {
+      if (typeof value === 'string') {
+        let validationType: 'email' | 'password' | 'text' = 'text';
+        
+        if (key.toLowerCase().includes('email')) {
+          validationType = 'email';
+        } else if (key.toLowerCase().includes('password')) {
+          validationType = 'password';
+        }
+
+        if (!this.validateInput(value, validationType)) {
+          errors.push(`Invalid input in ${key} field`);
+        }
+      }
+    }
+
+    // Additional validation for sensitive forms
+    if (formAction.includes('/admin') || formAction.includes('/platform')) {
+      // Log admin form access
+      await this.logSecurityEvent(
+        'admin_form_access',
+        `Administrative form accessed: ${formAction}`,
+        'medium'
+      );
+    }
+
+    return {
+      isValid: errors.length === 0,
+      errors
+    };
   }
 
   // Log security events with enhanced details

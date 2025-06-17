@@ -10,13 +10,15 @@ interface SecureFormWrapperProps {
   onSubmit: (data: Record<string, any>) => void;
   validateFields?: Record<string, 'email' | 'password' | 'text' | 'html'>;
   rateLimitKey?: string;
+  className?: string;
 }
 
 const SecureFormWrapper: React.FC<SecureFormWrapperProps> = ({
   children,
   onSubmit,
   validateFields = {},
-  rateLimitKey
+  rateLimitKey,
+  className
 }) => {
   const [securityError, setSecurityError] = useState<string | null>(null);
   const [isBlocked, setIsBlocked] = useState(false);
@@ -91,8 +93,15 @@ const SecureFormWrapper: React.FC<SecureFormWrapperProps> = ({
     onSubmit(sanitizedData);
   }, [onSubmit, validateFields, rateLimitKey, toast]);
 
+  const handleFormSubmit = useCallback((e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    const data = Object.fromEntries(formData.entries());
+    handleSecureSubmit(data);
+  }, [handleSecureSubmit]);
+
   return (
-    <div className="relative">
+    <div className={className}>
       {securityError && (
         <Alert className="mb-4 border-red-200 bg-red-50">
           <AlertTriangle className="h-4 w-4 text-red-600" />
@@ -105,13 +114,8 @@ const SecureFormWrapper: React.FC<SecureFormWrapperProps> = ({
       <div className={isBlocked ? 'opacity-50 pointer-events-none' : ''}>
         {React.Children.map(children, (child) => {
           if (React.isValidElement(child) && child.type === 'form') {
-            return React.cloneElement(child, {
-              onSubmit: (e: React.FormEvent) => {
-                e.preventDefault();
-                const formData = new FormData(e.target as HTMLFormElement);
-                const data = Object.fromEntries(formData.entries());
-                handleSecureSubmit(data);
-              }
+            return React.cloneElement(child as React.ReactElement<any>, {
+              onSubmit: handleFormSubmit
             });
           }
           return child;
