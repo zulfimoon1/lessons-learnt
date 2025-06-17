@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -13,13 +13,20 @@ import ComplianceFooter from "@/components/ComplianceFooter";
 import CookieConsent from "@/components/CookieConsent";
 
 const PlatformAdminLogin = () => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState("zulfimoon1@gmail.com");
+  const [password, setPassword] = useState("admin123");
   const [isLoading, setIsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState("login");
-  const { login } = usePlatformAdmin();
+  const { login, admin, isAuthenticated } = usePlatformAdmin();
   const { toast } = useToast();
   const navigate = useNavigate();
+
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (isAuthenticated && admin) {
+      navigate("/platform-admin");
+    }
+  }, [isAuthenticated, admin, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,7 +48,7 @@ const PlatformAdminLogin = () => {
 
     try {
       console.log('🔄 Calling login function...');
-      const result = await login(email, password);
+      const result = await login(email.trim(), password);
       console.log('📊 Login result:', result);
       
       if (result.error) {
@@ -130,10 +137,10 @@ const PlatformAdminLogin = () => {
                     <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
                       <div className="flex items-center gap-2 text-blue-800 text-sm">
                         <ShieldIcon className="w-4 h-4" />
-                        <span className="font-medium">Security Enhanced</span>
+                        <span className="font-medium">Ready to Login</span>
                       </div>
                       <p className="text-xs text-blue-700 mt-1">
-                        This login uses advanced security validation and audit logging.
+                        Default credentials: zulfimoon1@gmail.com / admin123
                       </p>
                     </div>
 
