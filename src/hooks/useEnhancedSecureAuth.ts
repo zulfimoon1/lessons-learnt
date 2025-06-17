@@ -82,7 +82,7 @@ export const useEnhancedSecureAuth = () => {
             user: {
               id: currentUser.id,
               email: teacher?.email,
-              fullName: student?.full_name || teacher?.name,
+              fullName: student?.fullName || teacher?.name,
               school: currentUser.school,
               role: teacher?.role || 'student',
               userType: teacher ? 'teacher' : 'student'

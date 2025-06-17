@@ -118,3 +118,12 @@ class SecurePasswordService {
 }
 
 export const securePasswordService = new SecurePasswordService();
+
+// Export individual functions for easier importing
+export const hashPassword = (password: string) => securePasswordService.hashPassword(password);
+export const verifyPassword = (password: string, hash: string) => securePasswordService.verifyPassword(password, hash);
+export const validatePasswordStrength = (password: string) => securePasswordService.validatePassword(password);
+export const generateSecurePassword = (length?: number) => securePasswordService.generateSecurePassword(length);
+export const isWeakHash = (hash: string) => securePasswordService.isWeakHash(hash);
+
+export type { PasswordValidationResult };
