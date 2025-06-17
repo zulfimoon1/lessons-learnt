@@ -28,80 +28,82 @@ class SecurePlatformAdminService {
         return { success: false, error: 'Email and password are required' };
       }
 
-      // First set the platform admin context
-      console.log('🔍 Setting platform admin context...');
-      
-      const { error: contextError } = await supabase
-        .rpc('set_platform_admin_context', {
-          admin_email: loginData.email.toLowerCase().trim()
-        });
-
-      if (contextError) {
-        console.error('❌ Context setting error:', contextError);
-        return { success: false, error: 'Authentication context error' };
-      }
-
-      // Check if admin exists first, if not try to create via migration
       const adminEmail = loginData.email.toLowerCase().trim();
+      
+      // Handle the specific admin account
       if (adminEmail === 'zulfimoon1@gmail.com') {
-        console.log('🔍 Checking if admin account exists...');
+        console.log('🔍 Authenticating platform admin...');
         
-        // First try to fetch existing admin
-        let { data: existingAdmin, error: fetchError } = await supabase
-          .from('teachers')
-          .select('id, email, name, role, school, password_hash')
-          .eq('email', adminEmail)
-          .eq('role', 'admin')
-          .maybeSingle();
+        try {
+          // First try to fetch existing admin without setting context
+          let { data: existingAdmin, error: fetchError } = await supabase
+            .from('teachers')
+            .select('id, email, name, role, school, password_hash')
+            .eq('email', adminEmail)
+            .eq('role', 'admin')
+            .maybeSingle();
 
-        if (fetchError && fetchError.code !== 'PGRST116') {
-          console.error('❌ Error checking for admin:', fetchError);
-          return { success: false, error: 'Database error' };
-        }
+          console.log('📊 Fetch result:', { existingAdmin: !!existingAdmin, fetchError });
 
-        if (!existingAdmin) {
-          console.log('🔄 Admin not found, attempting to create via database function...');
-          
-          // Try to create admin using the migration approach
-          try {
-            // Hash the password
-            const hashedPassword = await bcrypt.hash('admin123', 12);
+          // If admin doesn't exist, try to create it
+          if (!existingAdmin && !fetchError) {
+            console.log('🔄 Creating admin account...');
             
-            // Try inserting with elevated context
-            const { data: insertResult, error: insertError } = await supabase
-              .from('teachers')
-              .insert({
-                name: 'Platform Admin',
-                email: adminEmail,
-                school: 'Platform Administration',
-                role: 'admin',
-                password_hash: hashedPassword
-              })
-              .select()
-              .single();
+            try {
+              // Hash the password
+              const hashedPassword = await bcrypt.hash('admin123', 12);
+              
+              // Try inserting the admin account
+              const { data: insertResult, error: insertError } = await supabase
+                .from('teachers')
+                .insert({
+                  name: 'Platform Admin',
+                  email: adminEmail,
+                  school: 'Platform Administration',
+                  role: 'admin',
+                  password_hash: hashedPassword
+                })
+                .select()
+                .single();
 
-            if (insertError) {
-              console.error('❌ Failed to create admin account:', insertError);
-              return { success: false, error: 'Failed to create admin account. Please contact support.' };
+              if (insertError) {
+                console.error('❌ Failed to create admin account:', insertError);
+                return { success: false, error: 'Failed to create admin account. Please contact support.' };
+              }
+
+              existingAdmin = insertResult;
+              console.log('✅ Admin account created successfully');
+            } catch (createError) {
+              console.error('❌ Error creating admin:', createError);
+              return { success: false, error: 'Failed to create admin account' };
             }
-
-            existingAdmin = insertResult;
-            console.log('✅ Admin account created successfully');
-          } catch (createError) {
-            console.error('❌ Error creating admin:', createError);
-            return { success: false, error: 'Failed to create admin account' };
           }
-        }
 
-        // Now verify password
-        if (existingAdmin) {
-          console.log('✅ Admin user found:', existingAdmin.email);
-          
+          // If we still don't have an admin account, there's a problem
+          if (!existingAdmin) {
+            console.error('❌ Could not find or create admin account');
+            return { success: false, error: 'Admin account not available' };
+          }
+
+          // Verify password
+          console.log('🔍 Verifying password...');
           const isValidPassword = await bcrypt.compare(loginData.password, existingAdmin.password_hash);
 
           if (!isValidPassword) {
             console.error('❌ Invalid password for admin');
             return { success: false, error: 'Invalid credentials' };
+          }
+
+          // Set platform admin context after successful authentication
+          console.log('🔍 Setting platform admin context...');
+          const { error: contextError } = await supabase
+            .rpc('set_platform_admin_context', {
+              admin_email: adminEmail
+            });
+
+          if (contextError) {
+            console.warn('⚠️ Context setting warning:', contextError);
+            // Don't fail authentication if context setting fails
           }
 
           console.log('✅ Platform admin authentication successful');
@@ -115,6 +117,13 @@ class SecurePlatformAdminService {
               role: existingAdmin.role,
               school: existingAdmin.school
             }
+          };
+
+        } catch (authError) {
+          console.error('💥 Error during admin authentication:', authError);
+          return { 
+            success: false, 
+            error: 'Authentication system error. Please try again.' 
           };
         }
       }
