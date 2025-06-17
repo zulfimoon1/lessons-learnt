@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { securityValidationService } from './securityValidationService';
 import bcrypt from 'bcryptjs';
@@ -28,30 +29,38 @@ class SecurePlatformAdminService {
         return { success: false, error: 'Email and password are required' };
       }
 
-      // Use the platform admin authentication function that bypasses RLS
-      console.log('🔍 Calling platform admin authentication function...');
+      // First set the platform admin context
+      console.log('🔍 Setting platform admin context...');
       
-      const { data: adminData, error: fetchError } = await supabase
-        .rpc('authenticate_platform_admin', {
-          admin_email: loginData.email.toLowerCase().trim(),
-          provided_password: loginData.password
+      const { error: contextError } = await supabase
+        .rpc('set_platform_admin_context', {
+          admin_email: loginData.email.toLowerCase().trim()
         });
 
-      if (fetchError) {
-        console.error('❌ Database function error:', fetchError);
-        return { success: false, error: 'Database authentication error' };
+      if (contextError) {
+        console.error('❌ Context setting error:', contextError);
+        return { success: false, error: 'Authentication context error' };
       }
 
-      if (!adminData || adminData.length === 0) {
-        console.error('❌ No admin data returned');
+      // Now fetch the admin user directly
+      console.log('🔍 Fetching admin user...');
+      
+      const { data: adminData, error: fetchError } = await supabase
+        .from('teachers')
+        .select('id, email, name, role, school, password_hash')
+        .eq('email', loginData.email.toLowerCase().trim())
+        .eq('role', 'admin')
+        .single();
+
+      if (fetchError || !adminData) {
+        console.error('❌ No admin user found:', fetchError);
         return { success: false, error: 'Invalid credentials' };
       }
 
-      const adminUser = adminData[0];
-      console.log('✅ Admin user found:', adminUser.email);
+      console.log('✅ Admin user found:', adminData.email);
 
       // Verify password using bcrypt
-      const isValidPassword = await bcrypt.compare(loginData.password, adminUser.password_hash);
+      const isValidPassword = await bcrypt.compare(loginData.password, adminData.password_hash);
 
       if (!isValidPassword) {
         console.error('❌ Invalid password for admin');
@@ -63,11 +72,11 @@ class SecurePlatformAdminService {
       return {
         success: true,
         admin: {
-          id: adminUser.id,
-          email: adminUser.email,
-          name: adminUser.name,
-          role: adminUser.role,
-          school: adminUser.school
+          id: adminData.id,
+          email: adminData.email,
+          name: adminData.name,
+          role: adminData.role,
+          school: adminData.school
         }
       };
 
