@@ -921,17 +921,6 @@ export type Database = {
         }
         Returns: undefined
       }
-      log_enhanced_security_event: {
-        Args: {
-          event_type: string
-          user_id?: string
-          details?: string
-          severity?: string
-          ip_address?: string
-          user_agent?: string
-        }
-        Returns: undefined
-      }
       log_security_event: {
         Args: {
           event_type: string
@@ -1070,10 +1059,6 @@ export type Database = {
       set_platform_admin_context: {
         Args: { admin_email: string }
         Returns: undefined
-      }
-      validate_mental_health_access: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
       }
     }
     Enums: {
