@@ -8,6 +8,7 @@ import { Trash2, Plus, School } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { usePlatformAdmin } from '@/contexts/PlatformAdminContext';
+import { securePlatformAdminService } from '@/services/securePlatformAdminService';
 
 interface School {
   name: string;
@@ -29,7 +30,7 @@ const SchoolManagement: React.FC<SchoolManagementProps> = ({ onDataChange }) => 
     if (admin?.email) {
       try {
         console.log('🔧 Setting admin context for:', admin.email);
-        await supabase.rpc('set_platform_admin_context', { admin_email: admin.email });
+        await securePlatformAdminService.setAdminContext(admin.email);
         console.log('✅ Admin context set successfully');
       } catch (error) {
         console.error('❌ Error setting admin context:', error);
@@ -119,7 +120,7 @@ const SchoolManagement: React.FC<SchoolManagementProps> = ({ onDataChange }) => 
       console.log('🏫 Creating new school:', newSchoolName.trim());
       console.log('🔧 Admin email:', admin.email);
       
-      // Ensure admin context is set
+      // Ensure admin context is set with enhanced method
       await setAdminContext();
       
       // Create a placeholder teacher for the new school with enhanced data

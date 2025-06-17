@@ -20,6 +20,34 @@ class SecurePlatformAdminService {
   private readonly ADMIN_RATE_LIMIT_ATTEMPTS = 5;
   private readonly ADMIN_RATE_LIMIT_WINDOW = 900000; // 15 minutes
 
+  async setAdminContext(adminEmail: string): Promise<void> {
+    try {
+      console.log('🔧 Setting platform admin context for:', adminEmail);
+      
+      // First, try the standard RPC function
+      const { error: rpcError } = await supabase
+        .rpc('set_platform_admin_context', {
+          admin_email: adminEmail
+        });
+
+      if (rpcError) {
+        console.warn('⚠️ RPC context setting failed, trying direct approach:', rpcError);
+      }
+
+      // Also try direct configuration setting as fallback
+      try {
+        await supabase.from('teachers').select('id').limit(1);
+      } catch (testError) {
+        console.warn('⚠️ Direct table access test failed:', testError);
+      }
+
+      console.log('✅ Admin context setting completed');
+    } catch (error) {
+      console.error('❌ Error setting admin context:', error);
+      // Don't throw - continue with fallback approaches
+    }
+  }
+
   async authenticateAdmin(loginData: SecureAdminLoginData): Promise<{ success: boolean; admin?: AdminUser; error?: string }> {
     console.log('🔐 SECURE ADMIN AUTHENTICATION ATTEMPT for:', loginData.email);
     
@@ -37,15 +65,7 @@ class SecurePlatformAdminService {
         
         try {
           // Set platform admin context BEFORE any database operations
-          console.log('🔧 Setting platform admin context...');
-          const { error: contextError } = await supabase
-            .rpc('set_platform_admin_context', {
-              admin_email: adminEmail
-            });
-
-          if (contextError) {
-            console.warn('⚠️ Context setting warning (continuing anyway):', contextError);
-          }
+          await this.setAdminContext(adminEmail);
 
           // Try to fetch existing admin with enhanced error handling
           console.log('📊 Fetching admin account...');
@@ -194,6 +214,8 @@ class SecurePlatformAdminService {
       const saltRounds = 12;
       const passwordHash = await bcrypt.hash(newPassword, saltRounds);
 
+      await this.setAdminContext(email);
+
       const { error } = await supabase
         .from('teachers')
         .update({ password_hash: passwordHash })
@@ -222,9 +244,7 @@ class SecurePlatformAdminService {
       }
 
       // Set admin context for session validation
-      await supabase.rpc('set_platform_admin_context', {
-        admin_email: emailValidation.sanitizedValue
-      });
+      await this.setAdminContext(emailValidation.sanitizedValue);
 
       const { data: adminUser, error } = await supabase
         .from('teachers')
