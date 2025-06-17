@@ -81,7 +81,16 @@ const SecureTeacherLogin = () => {
     }
   };
 
-  const handleSignup = async (name: string, email: string, school: string, password: string, confirmPassword: string, role: 'teacher' | 'admin' | 'doctor') => {
+  const handleSignup = async (signupData: {
+    name: string;
+    email: string;
+    school: string;
+    role: 'teacher' | 'admin' | 'doctor';
+    password: string;
+    confirmPassword: string;
+  }) => {
+    const { name, email, school, password, confirmPassword, role } = signupData;
+    
     if (!name.trim() || !email.trim() || !school.trim() || !password || !confirmPassword) {
       toast({
         title: t('teacher.missingInfo') || "Missing information",

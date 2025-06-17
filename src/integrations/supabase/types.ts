@@ -837,15 +837,33 @@ export type Database = {
         }
         Relationships: []
       }
+      security_dashboard: {
+        Row: {
+          recent_alerts: number | null
+          recent_security_events: number | null
+          total_students: number | null
+          total_teachers: number | null
+          unreviewed_alerts: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       check_platform_admin_access: {
         Args: Record<PropertyKey, never>
         Returns: boolean
       }
+      decrypt_sensitive_data: {
+        Args: { encrypted_content: string }
+        Returns: string
+      }
       detect_self_harm_language: {
         Args: { text_content: string }
         Returns: number
+      }
+      encrypt_sensitive_data: {
+        Args: { content: string }
+        Returns: string
       }
       enhanced_security_check: {
         Args: Record<PropertyKey, never>
@@ -900,6 +918,17 @@ export type Database = {
           user_id: string
           details: string
           severity?: string
+        }
+        Returns: undefined
+      }
+      log_enhanced_security_event: {
+        Args: {
+          event_type: string
+          user_id?: string
+          details?: string
+          severity?: string
+          ip_address?: string
+          user_agent?: string
         }
         Returns: undefined
       }
@@ -1041,6 +1070,10 @@ export type Database = {
       set_platform_admin_context: {
         Args: { admin_email: string }
         Returns: undefined
+      }
+      validate_mental_health_access: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
       }
     }
     Enums: {

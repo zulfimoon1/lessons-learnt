@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeftIcon, CheckIcon, UsersIcon, CreditCardIcon } from "lucide-react";
+import { ArrowLeftIcon, CheckIcon, UsersIcon, CreditCardIcon, StarIcon, PhoneIcon } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -313,6 +313,47 @@ const PricingPage = () => {
                   "Create your educator account to start your free trial"
                 }
               </p>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Custom Pricing Banner */}
+        <div className="mt-12">
+          <Card className="bg-gradient-to-r from-purple-100 to-blue-100 border-purple-200">
+            <CardContent className="p-8">
+              <div className="text-center">
+                <div className="flex items-center justify-center mb-4">
+                  <Badge className="bg-purple-600 text-white px-4 py-2 text-sm font-semibold">
+                    <StarIcon className="w-4 h-4 mr-2" />
+                    Custom Pricing Available
+                  </Badge>
+                </div>
+                <h3 className="text-2xl font-bold text-gray-900 mb-4">
+                  Need a custom solution for your organization?
+                </h3>
+                <p className="text-gray-600 mb-6 max-w-2xl mx-auto">
+                  We offer tailored pricing and features for school districts, large organizations, 
+                  and enterprise customers. Get volume discounts, custom integrations, and dedicated support.
+                </p>
+                <div className="flex items-center justify-center gap-4 flex-wrap">
+                  <Button
+                    variant="outline"
+                    className="text-lg px-8 py-3 border-2 border-purple-600 text-purple-600 hover:bg-purple-50"
+                    onClick={() => {
+                      toast({
+                        title: "Coming Soon",
+                        description: "Custom pricing form will be available soon. Please contact support for now.",
+                      });
+                    }}
+                  >
+                    <PhoneIcon className="w-5 h-5 mr-2" />
+                    Request Custom Pricing
+                  </Button>
+                  <div className="text-sm text-gray-500">
+                    Perfect for 50+ teachers or district-wide implementation
+                  </div>
+                </div>
+              </div>
             </CardContent>
           </Card>
         </div>
