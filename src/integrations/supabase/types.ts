@@ -837,15 +837,33 @@ export type Database = {
         }
         Relationships: []
       }
+      security_dashboard: {
+        Row: {
+          recent_alerts: number | null
+          recent_security_events: number | null
+          total_students: number | null
+          total_teachers: number | null
+          unreviewed_alerts: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       check_platform_admin_access: {
         Args: Record<PropertyKey, never>
         Returns: boolean
       }
+      decrypt_sensitive_data: {
+        Args: { encrypted_content: string }
+        Returns: string
+      }
       detect_self_harm_language: {
         Args: { text_content: string }
         Returns: number
+      }
+      encrypt_sensitive_data: {
+        Args: { content: string }
+        Returns: string
       }
       enhanced_security_check: {
         Args: Record<PropertyKey, never>
