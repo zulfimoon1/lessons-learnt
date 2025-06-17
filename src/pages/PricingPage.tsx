@@ -357,28 +357,6 @@ const PricingPage = () => {
             </CardContent>
           </Card>
         </div>
-
-        {/* Custom Pricing Section */}
-        <div className="mt-12 text-center">
-          <h3 className="text-2xl font-bold text-gray-900 mb-4">Custom Pricing Available</h3>
-          <p className="text-gray-600 mb-6">
-            Need a custom solution for your school district or large organization? 
-            We offer tailored pricing and features for enterprise customers.
-          </p>
-          <Button
-            variant="outline"
-            className="text-lg px-8 py-3 border-2 border-gray-300 hover:border-gray-400"
-            onClick={() => {
-              // This will later link to a custom pricing form
-              toast({
-                title: "Coming Soon",
-                description: "Custom pricing form will be available soon. Please contact support for now.",
-              });
-            }}
-          >
-            Request Custom Pricing
-          </Button>
-        </div>
       </main>
     </div>
   );
