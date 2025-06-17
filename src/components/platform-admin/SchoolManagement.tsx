@@ -8,7 +8,6 @@ import { Trash2, Plus, School } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { usePlatformAdmin } from '@/contexts/PlatformAdminContext';
-import { securePlatformAdminService } from '@/services/securePlatformAdminService';
 
 interface School {
   name: string;
@@ -30,7 +29,7 @@ const SchoolManagement: React.FC<SchoolManagementProps> = ({ onDataChange }) => 
     if (admin?.email) {
       try {
         console.log('🔧 Setting admin context for:', admin.email);
-        await securePlatformAdminService.setAdminContext(admin.email);
+        await supabase.rpc('set_platform_admin_context', { admin_email: admin.email });
         console.log('✅ Admin context set successfully');
       } catch (error) {
         console.error('❌ Error setting admin context:', error);
@@ -120,10 +119,10 @@ const SchoolManagement: React.FC<SchoolManagementProps> = ({ onDataChange }) => 
       console.log('🏫 Creating new school:', newSchoolName.trim());
       console.log('🔧 Admin email:', admin.email);
       
-      // Ensure admin context is set with enhanced method
+      // Ensure admin context is set
       await setAdminContext();
       
-      // Create a placeholder teacher for the new school with enhanced data
+      // Create a placeholder teacher for the new school
       const adminEmail = `admin@${newSchoolName.toLowerCase().replace(/\s+/g, '')}.edu`;
       const teacherData = {
         name: `${newSchoolName} Administrator`,
@@ -152,9 +151,7 @@ const SchoolManagement: React.FC<SchoolManagementProps> = ({ onDataChange }) => 
       await fetchSchools();
       
       // Trigger main dashboard refresh
-      console.log('🔄 Triggering dashboard refresh after school creation...');
       if (onDataChange) {
-        console.log('🚀 Calling onDataChange callback now...');
         onDataChange();
       }
     } catch (error) {
@@ -206,15 +203,11 @@ const SchoolManagement: React.FC<SchoolManagementProps> = ({ onDataChange }) => 
       toast.success(`School "${schoolName}" and all associated data deleted successfully`);
       
       // Refresh local schools list
-      console.log('🔄 Refreshing local schools list...');
       await fetchSchools();
       
       // Trigger dashboard refresh
-      console.log('🔄 Triggering main dashboard refresh after school deletion...');
       if (onDataChange) {
-        console.log('✅ Calling onDataChange callback NOW!');
         setTimeout(() => {
-          console.log('🚀 Executing delayed onDataChange callback...');
           onDataChange();
         }, 100);
       }
@@ -228,7 +221,6 @@ const SchoolManagement: React.FC<SchoolManagementProps> = ({ onDataChange }) => 
       }
     } finally {
       setIsLoading(false);
-      console.log('🏁 School deletion process completed');
     }
   };
 
