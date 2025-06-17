@@ -1,60 +1,69 @@
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 import { consolidatedAuthService } from '@/services/consolidatedAuthService';
-import { secureSessionService } from '@/services/secureSessionService';
 
-interface AuthUser {
+interface Student {
   id: string;
-  email?: string;
-  fullName?: string;
-  name?: string;
+  fullName: string;
+  school: string;
+  grade: string;
+}
+
+interface Teacher {
+  id: string;
+  name: string;
+  email: string;
   school: string;
   role: string;
-  userType: 'teacher' | 'student' | 'admin';
-  grade?: string;
 }
 
 interface AuthContextType {
-  // Current authenticated users
-  teacher: AuthUser | null;
-  student: AuthUser | null;
-  
-  // Loading state
+  student: Student | null;
+  teacher: Teacher | null;
   isLoading: boolean;
-  
-  // Authentication methods
-  teacherLogin: (email: string, password: string, name?: string, school?: string, role?: string) => Promise<{ teacher?: AuthUser; error?: string }>;
-  studentLogin: (fullName: string, school: string, grade: string, password: string) => Promise<{ student?: AuthUser; error?: string }>;
-  studentSignup: (fullName: string, school: string, grade: string, password: string) => Promise<{ student?: AuthUser; error?: string }>;
-  
-  // Logout
+  loginStudent: (fullName: string, school: string, grade: string, password: string) => Promise<{ student?: Student; error?: string }>;
+  loginTeacher: (email: string, password: string) => Promise<{ teacher?: Teacher; error?: string }>;
+  signupStudent: (fullName: string, school: string, grade: string, password: string) => Promise<{ student?: Student; error?: string }>;
+  signupTeacher: (name: string, email: string, school: string, password: string, role?: string) => Promise<{ teacher?: Teacher; error?: string }>;
   logout: () => void;
-  
-  // Session management
-  refreshSession: () => boolean;
-  isAuthenticated: () => boolean;
-  getCSRFToken: () => string;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [teacher, setTeacher] = useState<AuthUser | null>(null);
-  const [student, setStudent] = useState<AuthUser | null>(null);
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (context === undefined) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+};
+
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [student, setStudent] = useState<Student | null>(null);
+  const [teacher, setTeacher] = useState<Teacher | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Initialize authentication state
   useEffect(() => {
     const initializeAuth = () => {
       try {
         const currentUser = consolidatedAuthService.getCurrentUser();
+        console.log('🔐 AuthContext: Checking current user:', currentUser);
         
-        if (currentUser) {
-          if (currentUser.userType === 'teacher') {
-            setTeacher(currentUser);
-          } else if (currentUser.userType === 'student') {
-            setStudent(currentUser);
-          }
+        if (currentUser && currentUser.userType === 'student') {
+          setStudent({
+            id: currentUser.id,
+            fullName: currentUser.fullName || '',
+            school: currentUser.school,
+            grade: currentUser.role // For students, role contains grade
+          });
+        } else if (currentUser && (currentUser.userType === 'teacher' || currentUser.userType === 'admin')) {
+          setTeacher({
+            id: currentUser.id,
+            name: currentUser.name || '',
+            email: currentUser.email || '',
+            school: currentUser.school,
+            role: currentUser.role
+          });
         }
       } catch (error) {
         console.error('Auth initialization error:', error);
@@ -64,76 +73,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     };
 
     initializeAuth();
-
-    // Set up session monitoring
-    const sessionCheckInterval = setInterval(() => {
-      const session = secureSessionService.getSecureSession();
-      if (!session) {
-        // Session expired, clear state
-        setTeacher(null);
-        setStudent(null);
-      }
-    }, 60000); // Check every minute
-
-    return () => clearInterval(sessionCheckInterval);
   }, []);
 
-  const teacherLogin = async (
-    email: string, 
-    password: string, 
-    name?: string, 
-    school?: string, 
-    role?: string
-  ): Promise<{ teacher?: AuthUser; error?: string }> => {
+  const loginStudent = async (fullName: string, school: string, grade: string, password: string) => {
     try {
       setIsLoading(true);
-
-      let result;
-      
-      if (name && school) {
-        // This is a signup request
-        result = await consolidatedAuthService.secureSignup({
-          userType: 'teacher',
-          name,
-          email,
-          school,
-          role: role || 'teacher',
-          password
-        });
-      } else {
-        // This is a login request
-        result = await consolidatedAuthService.secureLogin({
-          email,
-          password,
-          school: 'unknown', // Will be populated from database
-          userType: 'teacher'
-        });
-      }
-
-      if (result.success && result.user) {
-        setTeacher(result.user);
-        setStudent(null); // Clear any existing student session
-        return { teacher: result.user };
-      } else {
-        return { error: result.error || 'Authentication failed' };
-      }
-    } catch (error) {
-      console.error('Teacher authentication error:', error);
-      return { error: 'Authentication failed. Please try again.' };
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const studentLogin = async (
-    fullName: string, 
-    school: string, 
-    grade: string, 
-    password: string
-  ): Promise<{ student?: AuthUser; error?: string }> => {
-    try {
-      setIsLoading(true);
-
       const result = await consolidatedAuthService.secureLogin({
         fullName,
         school,
@@ -143,29 +87,59 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       });
 
       if (result.success && result.user) {
-        setStudent(result.user);
-        setTeacher(null); // Clear any existing teacher session
-        return { student: result.user };
+        const studentData = {
+          id: result.user.id,
+          fullName: result.user.fullName || fullName,
+          school: result.user.school,
+          grade: grade
+        };
+        setStudent(studentData);
+        return { student: studentData };
       } else {
         return { error: result.error || 'Authentication failed' };
       }
     } catch (error) {
-      console.error('Student authentication error:', error);
-      return { error: 'Authentication failed. Please try again.' };
+      console.error('Student login error:', error);
+      return { error: 'Login failed. Please try again.' };
     } finally {
       setIsLoading(false);
     }
   };
 
-  const studentSignup = async (
-    fullName: string, 
-    school: string, 
-    grade: string, 
-    password: string
-  ): Promise<{ student?: AuthUser; error?: string }> => {
+  const loginTeacher = async (email: string, password: string) => {
     try {
       setIsLoading(true);
+      const result = await consolidatedAuthService.secureLogin({
+        email,
+        password,
+        school: 'unknown', // Will be populated from database
+        userType: 'teacher'
+      });
 
+      if (result.success && result.user) {
+        const teacherData = {
+          id: result.user.id,
+          name: result.user.name || '',
+          email: result.user.email || email,
+          school: result.user.school,
+          role: result.user.role
+        };
+        setTeacher(teacherData);
+        return { teacher: teacherData };
+      } else {
+        return { error: result.error || 'Authentication failed' };
+      }
+    } catch (error) {
+      console.error('Teacher login error:', error);
+      return { error: 'Login failed. Please try again.' };
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const signupStudent = async (fullName: string, school: string, grade: string, password: string) => {
+    try {
+      setIsLoading(true);
       const result = await consolidatedAuthService.secureSignup({
         userType: 'student',
         fullName,
@@ -175,14 +149,52 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       });
 
       if (result.success && result.user) {
-        setStudent(result.user);
-        setTeacher(null); // Clear any existing teacher session
-        return { student: result.user };
+        const studentData = {
+          id: result.user.id,
+          fullName: result.user.fullName || fullName,
+          school: result.user.school,
+          grade: grade
+        };
+        setStudent(studentData);
+        return { student: studentData };
       } else {
         return { error: result.error || 'Registration failed' };
       }
     } catch (error) {
-      console.error('Student registration error:', error);
+      console.error('Student signup error:', error);
+      return { error: 'Registration failed. Please try again.' };
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const signupTeacher = async (name: string, email: string, school: string, password: string, role: string = 'teacher') => {
+    try {
+      setIsLoading(true);
+      const result = await consolidatedAuthService.secureSignup({
+        userType: 'teacher',
+        name,
+        email,
+        school,
+        role,
+        password
+      });
+
+      if (result.success && result.user) {
+        const teacherData = {
+          id: result.user.id,
+          name: result.user.name || name,
+          email: result.user.email || email,
+          school: result.user.school,
+          role: result.user.role
+        };
+        setTeacher(teacherData);
+        return { teacher: teacherData };
+      } else {
+        return { error: result.error || 'Registration failed' };
+      }
+    } catch (error) {
+      console.error('Teacher signup error:', error);
       return { error: 'Registration failed. Please try again.' };
     } finally {
       setIsLoading(false);
@@ -191,35 +203,19 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const logout = () => {
     consolidatedAuthService.logout();
-    setTeacher(null);
     setStudent(null);
-  };
-
-  const refreshSession = (): boolean => {
-    const currentUser = teacher || student;
-    const isMentalHealthUser = currentUser?.role === 'doctor';
-    return secureSessionService.refreshSession(isMentalHealthUser);
-  };
-
-  const isAuthenticated = (): boolean => {
-    return consolidatedAuthService.isAuthenticated();
-  };
-
-  const getCSRFToken = (): string => {
-    return secureSessionService.getCSRFToken();
+    setTeacher(null);
   };
 
   const value: AuthContextType = {
-    teacher,
     student,
+    teacher,
     isLoading,
-    teacherLogin,
-    studentLogin,
-    studentSignup,
-    logout,
-    refreshSession,
-    isAuthenticated,
-    getCSRFToken
+    loginStudent,
+    loginTeacher,
+    signupStudent,
+    signupTeacher,
+    logout
   };
 
   return (
@@ -227,12 +223,4 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       {children}
     </AuthContext.Provider>
   );
-};
-
-export const useAuth = (): AuthContextType => {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
 };

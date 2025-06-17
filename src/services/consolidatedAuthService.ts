@@ -1,7 +1,30 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { securePasswordService } from './securePasswordService';
+import { hashPassword, verifyPassword, validatePasswordStrength } from './securePasswordService';
+import { validateInput } from './secureInputValidation';
 import { secureSessionService } from './secureSessionService';
+import { logUserSecurityEvent } from '@/components/SecurityAuditLogger';
+
+interface LoginCredentials {
+  email?: string;
+  fullName?: string;
+  school: string;
+  grade?: string;
+  password: string;
+  role?: string;
+  userType: 'teacher' | 'student' | 'admin';
+}
+
+interface SignupCredentials {
+  userType: 'teacher' | 'student';
+  name?: string;
+  fullName?: string;
+  email?: string;
+  school: string;
+  grade?: string;
+  role?: string;
+  password: string;
+}
 
 interface AuthUser {
   id: string;
@@ -11,388 +34,404 @@ interface AuthUser {
   school: string;
   role: string;
   userType: 'teacher' | 'student' | 'admin';
-  grade?: string;
 }
 
 interface AuthResult {
   success: boolean;
   user?: AuthUser;
   error?: string;
-  requiresPasswordUpdate?: boolean;
 }
 
-class ConsolidatedAuthService {
-  /**
-   * Unified secure login for all user types
-   */
-  async secureLogin(credentials: {
-    email?: string;
-    fullName?: string;
-    school: string;
-    grade?: string;
-    password: string;
-    userType: 'teacher' | 'student';
-  }): Promise<AuthResult> {
-    try {
-      // Input validation
-      const { email, fullName, school, grade, password, userType } = credentials;
-      
-      if (!school.trim() || !password) {
-        return { success: false, error: 'Missing required fields' };
-      }
+// Enhanced client-side rate limiting
+const loginAttempts = new Map<string, { count: number; lastAttempt: number; blocked: boolean }>();
+const MAX_ATTEMPTS = 5;
+const LOCKOUT_DURATION = 15 * 60 * 1000; // 15 minutes
 
-      if (userType === 'teacher' && !email?.trim()) {
-        return { success: false, error: 'Email is required for teachers' };
-      }
-
-      if (userType === 'student' && (!fullName?.trim() || !grade?.trim())) {
-        return { success: false, error: 'Full name and grade are required for students' };
-      }
-
-      // Attempt login based on user type
-      let user: AuthUser | null = null;
-      let requiresPasswordUpdate = false;
-
-      if (userType === 'teacher') {
-        const result = await this.authenticateTeacher(email!, password);
-        user = result.user || null;
-        requiresPasswordUpdate = result.requiresPasswordUpdate || false;
-        if (result.error) return { success: false, error: result.error };
-      } else {
-        const result = await this.authenticateStudent(fullName!, school, grade!, password);
-        user = result.user || null;
-        requiresPasswordUpdate = result.requiresPasswordUpdate || false;
-        if (result.error) return { success: false, error: result.error };
-      }
-
-      if (!user) {
-        return { success: false, error: 'Authentication failed' };
-      }
-
-      // Create secure session
-      secureSessionService.createSecureSession(
-        user.id,
-        user.userType,
-        user.school,
-        user.role === 'doctor' // Mental health professionals get shorter sessions
-      );
-
+const checkClientRateLimit = (identifier: string): { allowed: boolean; message?: string } => {
+  const now = Date.now();
+  const attempts = loginAttempts.get(identifier);
+  
+  if (attempts) {
+    if (attempts.blocked && now - attempts.lastAttempt < LOCKOUT_DURATION) {
+      const remainingTime = Math.ceil((LOCKOUT_DURATION - (now - attempts.lastAttempt)) / 1000 / 60);
       return { 
-        success: true, 
-        user, 
-        requiresPasswordUpdate 
+        allowed: false, 
+        message: `Account temporarily locked. Try again in ${remainingTime} minutes.` 
       };
+    }
+    
+    if (now - attempts.lastAttempt > LOCKOUT_DURATION) {
+      loginAttempts.delete(identifier);
+    }
+  }
+  
+  return { allowed: true };
+};
 
+const recordFailedAttempt = (identifier: string) => {
+  const now = Date.now();
+  const attempts = loginAttempts.get(identifier) || { count: 0, lastAttempt: now, blocked: false };
+  attempts.count++;
+  attempts.lastAttempt = now;
+  
+  if (attempts.count >= MAX_ATTEMPTS) {
+    attempts.blocked = true;
+  }
+  
+  loginAttempts.set(identifier, attempts);
+};
+
+const clearFailedAttempts = (identifier: string) => {
+  loginAttempts.delete(identifier);
+};
+
+class ConsolidatedAuthService {
+  async secureLogin(credentials: LoginCredentials): Promise<AuthResult> {
+    try {
+      const identifier = credentials.email || `${credentials.fullName}-${credentials.school}`;
+      
+      // Client-side rate limiting check
+      const clientRateCheck = checkClientRateLimit(identifier);
+      if (!clientRateCheck.allowed) {
+        logUserSecurityEvent({
+          type: 'rate_limit_exceeded',
+          timestamp: new Date().toISOString(),
+          details: `Rate limit exceeded: ${identifier}`,
+          userAgent: navigator.userAgent
+        });
+        return { success: false, error: clientRateCheck.message };
+      }
+
+      console.log(`🔐 Consolidated auth login attempt for ${credentials.userType}:`, { identifier, userType: credentials.userType });
+
+      if (credentials.userType === 'teacher' || credentials.userType === 'admin') {
+        return await this.authenticateTeacher(credentials);
+      } else {
+        return await this.authenticateStudent(credentials);
+      }
     } catch (error) {
-      console.error('Secure login error:', error);
+      console.error('Consolidated auth login error:', error);
+      logUserSecurityEvent({
+        type: 'suspicious_activity',
+        timestamp: new Date().toISOString(),
+        details: `Login system error: ${error}`,
+        userAgent: navigator.userAgent
+      });
       return { success: false, error: 'Login failed. Please try again.' };
     }
   }
 
-  /**
-   * Authenticate teacher with secure password handling
-   */
-  private async authenticateTeacher(email: string, password: string): Promise<AuthResult> {
-    const { data: teachers, error } = await supabase
-      .from('teachers')
-      .select('*')
-      .eq('email', email.toLowerCase().trim())
-      .limit(1);
-
-    if (error) {
-      console.error('Teacher lookup error:', error);
-      return { success: false, error: 'Authentication failed' };
-    }
-
-    if (!teachers || teachers.length === 0) {
-      return { success: false, error: 'Invalid email or password' };
-    }
-
-    const teacher = teachers[0];
-    
-    // Check if password needs migration from weak hash
-    let requiresPasswordUpdate = false;
-    let isPasswordValid = false;
-
-    if (securePasswordService.isWeakHash(teacher.password_hash)) {
-      // Legacy SHA-256 verification for migration
-      const legacyHash = await this.legacyHashPassword(password);
-      isPasswordValid = legacyHash === teacher.password_hash;
-      requiresPasswordUpdate = true;
-    } else {
-      // Modern bcrypt verification
-      isPasswordValid = await securePasswordService.verifyPassword(password, teacher.password_hash);
-    }
-
-    if (!isPasswordValid) {
-      return { success: false, error: 'Invalid email or password' };
-    }
-
-    // Migrate password if needed
-    if (requiresPasswordUpdate) {
-      await this.migrateTeacherPassword(teacher.id, password);
-    }
-
-    return {
-      success: true,
-      user: {
-        id: teacher.id,
-        email: teacher.email,
-        name: teacher.name,
-        school: teacher.school,
-        role: teacher.role,
-        userType: 'teacher'
-      },
-      requiresPasswordUpdate
-    };
-  }
-
-  /**
-   * Authenticate student with secure password handling
-   */
-  private async authenticateStudent(fullName: string, school: string, grade: string, password: string): Promise<AuthResult> {
-    const { data: students, error } = await supabase
-      .from('students')
-      .select('*')
-      .eq('full_name', fullName.trim())
-      .eq('school', school.trim())
-      .eq('grade', grade.trim())
-      .limit(1);
-
-    if (error) {
-      console.error('Student lookup error:', error);
-      return { success: false, error: 'Authentication failed' };
-    }
-
-    if (!students || students.length === 0) {
-      return { success: false, error: 'Invalid credentials' };
-    }
-
-    const student = students[0];
-    
-    // Check if password needs migration from weak hash
-    let requiresPasswordUpdate = false;
-    let isPasswordValid = false;
-
-    if (securePasswordService.isWeakHash(student.password_hash)) {
-      // Legacy SHA-256 verification for migration
-      const legacyHash = await this.legacyHashPassword(password);
-      isPasswordValid = legacyHash === student.password_hash;
-      requiresPasswordUpdate = true;
-    } else {
-      // Modern bcrypt verification
-      isPasswordValid = await securePasswordService.verifyPassword(password, student.password_hash);
-    }
-
-    if (!isPasswordValid) {
-      return { success: false, error: 'Invalid credentials' };
-    }
-
-    // Migrate password if needed
-    if (requiresPasswordUpdate) {
-      await this.migrateStudentPassword(student.id, password);
-    }
-
-    return {
-      success: true,
-      user: {
-        id: student.id,
-        fullName: student.full_name,
-        school: student.school,
-        role: 'student',
-        userType: 'student',
-        grade: student.grade
-      },
-      requiresPasswordUpdate
-    };
-  }
-
-  /**
-   * Unified secure signup
-   */
-  async secureSignup(data: {
-    userType: 'teacher' | 'student';
-    name?: string;
-    fullName?: string;
-    email?: string;
-    school: string;
-    grade?: string;
-    role?: string;
-    password: string;
-  }): Promise<AuthResult> {
+  private async authenticateTeacher(credentials: LoginCredentials): Promise<AuthResult> {
     try {
-      // Validate password strength
-      const passwordValidation = securePasswordService.validatePassword(data.password);
+      if (!credentials.email) {
+        return { success: false, error: 'Email is required for teacher login' };
+      }
+
+      // Enhanced input validation
+      const emailValidation = validateInput.validateEmail(credentials.email);
+      if (!emailValidation.isValid) {
+        return { success: false, error: emailValidation.message };
+      }
+
+      const sanitizedEmail = emailValidation.sanitizedValue;
+      console.log('🔍 Looking up teacher/admin:', sanitizedEmail);
+
+      // Direct database query for teachers/admins
+      const { data: teachers, error } = await supabase
+        .from('teachers')
+        .select('id, name, email, school, role, password_hash')
+        .eq('email', sanitizedEmail)
+        .limit(1);
+
+      if (error || !teachers || teachers.length === 0) {
+        console.log('❌ Teacher/admin not found:', error);
+        recordFailedAttempt(sanitizedEmail);
+        return { success: false, error: 'Invalid credentials' };
+      }
+
+      const teacher = teachers[0];
+      console.log('✅ Teacher/admin found:', { id: teacher.id, email: teacher.email, role: teacher.role });
+
+      // Verify password
+      const isPasswordValid = await verifyPassword(credentials.password, teacher.password_hash);
+      if (!isPasswordValid) {
+        console.log('❌ Invalid password for teacher/admin');
+        recordFailedAttempt(sanitizedEmail);
+        return { success: false, error: 'Invalid credentials' };
+      }
+
+      // Clear failed attempts on successful login
+      clearFailedAttempts(sanitizedEmail);
+
+      // Create secure session
+      const userType = teacher.role === 'admin' ? 'admin' : 'teacher';
+      secureSessionService.createSecureSession(teacher.id, userType as any, teacher.school);
+
+      console.log(`✅ ${userType} login successful:`, teacher.email);
+
+      logUserSecurityEvent({
+        type: 'login_success',
+        userId: teacher.id,
+        timestamp: new Date().toISOString(),
+        details: `Successful ${userType} login: ${teacher.email}`,
+        userAgent: navigator.userAgent
+      });
+
+      return {
+        success: true,
+        user: {
+          id: teacher.id,
+          email: teacher.email,
+          name: teacher.name,
+          school: teacher.school,
+          role: teacher.role,
+          userType: userType as any
+        }
+      };
+    } catch (error) {
+      console.error('Teacher authentication error:', error);
+      return { success: false, error: 'Authentication failed. Please try again.' };
+    }
+  }
+
+  private async authenticateStudent(credentials: LoginCredentials): Promise<AuthResult> {
+    try {
+      if (!credentials.fullName || !credentials.grade) {
+        return { success: false, error: 'Full name and grade are required for student login' };
+      }
+
+      // Enhanced input validation
+      const nameValidation = validateInput.validateName(credentials.fullName);
+      if (!nameValidation.isValid) {
+        return { success: false, error: nameValidation.message };
+      }
+
+      const schoolValidation = validateInput.validateSchool(credentials.school);
+      if (!schoolValidation.isValid) {
+        return { success: false, error: schoolValidation.message };
+      }
+
+      const gradeValidation = validateInput.validateGrade(credentials.grade);
+      if (!gradeValidation.isValid) {
+        return { success: false, error: gradeValidation.message };
+      }
+
+      // Sanitize inputs
+      const sanitizedName = nameValidation.sanitizedValue;
+      const sanitizedSchool = schoolValidation.sanitizedValue;
+      const sanitizedGrade = gradeValidation.sanitizedValue;
+
+      const identifier = `${sanitizedName}-${sanitizedSchool}-${sanitizedGrade}`;
+      console.log('🔍 Looking up student:', { fullName: sanitizedName, school: sanitizedSchool, grade: sanitizedGrade });
+
+      // Direct database query for students
+      const { data: students, error } = await supabase
+        .from('students')
+        .select('id, full_name, school, grade, password_hash')
+        .eq('full_name', sanitizedName)
+        .eq('school', sanitizedSchool)
+        .eq('grade', sanitizedGrade)
+        .limit(1);
+
+      if (error || !students || students.length === 0) {
+        console.log('❌ Student not found');
+        recordFailedAttempt(identifier);
+        return { success: false, error: 'Invalid credentials' };
+      }
+
+      const student = students[0];
+      console.log('✅ Student found:', { id: student.id, fullName: student.full_name });
+
+      // Verify password
+      const isPasswordValid = await verifyPassword(credentials.password, student.password_hash);
+      if (!isPasswordValid) {
+        console.log('❌ Invalid password for student');
+        recordFailedAttempt(identifier);
+        return { success: false, error: 'Invalid credentials' };
+      }
+
+      // Clear failed attempts on successful login
+      clearFailedAttempts(identifier);
+
+      // Create secure session
+      secureSessionService.createSecureSession(student.id, 'student', student.school);
+
+      console.log('✅ Student login successful:', student.full_name);
+
+      logUserSecurityEvent({
+        type: 'login_success',
+        userId: student.id,
+        timestamp: new Date().toISOString(),
+        details: `Successful student login: ${student.full_name}`,
+        userAgent: navigator.userAgent
+      });
+
+      return {
+        success: true,
+        user: {
+          id: student.id,
+          fullName: student.full_name,
+          school: student.school,
+          role: 'student',
+          userType: 'student'
+        }
+      };
+    } catch (error) {
+      console.error('Student authentication error:', error);
+      return { success: false, error: 'Authentication failed. Please try again.' };
+    }
+  }
+
+  async secureSignup(credentials: SignupCredentials): Promise<AuthResult> {
+    try {
+      // Password strength validation
+      const passwordValidation = validatePasswordStrength(credentials.password);
       if (!passwordValidation.isValid) {
-        return { 
-          success: false, 
-          error: `Password requirements not met: ${passwordValidation.errors.join(', ')}` 
-        };
+        return { success: false, error: passwordValidation.errors[0] || 'Password does not meet requirements' };
       }
 
       // Hash password securely
-      const hashedPassword = await securePasswordService.hashPassword(data.password);
+      const passwordHash = await hashPassword(credentials.password);
 
-      if (data.userType === 'teacher') {
-        return await this.createTeacher({
-          name: data.name!,
-          email: data.email!,
-          school: data.school,
-          role: data.role || 'teacher',
-          password_hash: hashedPassword
-        });
+      if (credentials.userType === 'teacher' && credentials.email) {
+        // Enhanced input validation for teacher
+        const emailValidation = validateInput.validateEmail(credentials.email);
+        if (!emailValidation.isValid) {
+          return { success: false, error: emailValidation.message };
+        }
+
+        const nameValidation = validateInput.validateName(credentials.name!);
+        if (!nameValidation.isValid) {
+          return { success: false, error: nameValidation.message };
+        }
+
+        const schoolValidation = validateInput.validateSchool(credentials.school);
+        if (!schoolValidation.isValid) {
+          return { success: false, error: schoolValidation.message };
+        }
+
+        // Check if teacher already exists
+        const { data: existingTeacher } = await supabase
+          .from('teachers')
+          .select('id')
+          .eq('email', emailValidation.sanitizedValue)
+          .limit(1);
+
+        if (existingTeacher && existingTeacher.length > 0) {
+          return { success: false, error: 'Teacher already exists with this email' };
+        }
+
+        const { data: teacher, error } = await supabase
+          .from('teachers')
+          .insert([{
+            name: nameValidation.sanitizedValue,
+            email: emailValidation.sanitizedValue,
+            school: schoolValidation.sanitizedValue,
+            role: credentials.role || 'teacher',
+            password_hash: passwordHash
+          }])
+          .select()
+          .single();
+
+        if (error) {
+          console.error('Teacher signup error:', error);
+          return { success: false, error: 'Failed to create teacher account' };
+        }
+
+        return {
+          success: true,
+          user: {
+            id: teacher.id,
+            email: teacher.email,
+            name: teacher.name,
+            school: teacher.school,
+            role: teacher.role,
+            userType: 'teacher'
+          }
+        };
       } else {
-        return await this.createStudent({
-          full_name: data.fullName!,
-          school: data.school,
-          grade: data.grade!,
-          password_hash: hashedPassword
-        });
+        // Enhanced input validation for student
+        const nameValidation = validateInput.validateName(credentials.fullName!);
+        if (!nameValidation.isValid) {
+          return { success: false, error: nameValidation.message };
+        }
+
+        const schoolValidation = validateInput.validateSchool(credentials.school);
+        if (!schoolValidation.isValid) {
+          return { success: false, error: schoolValidation.message };
+        }
+
+        const gradeValidation = validateInput.validateGrade(credentials.grade!);
+        if (!gradeValidation.isValid) {
+          return { success: false, error: gradeValidation.message };
+        }
+
+        // Check if student already exists
+        const { data: existingStudent } = await supabase
+          .from('students')
+          .select('id')
+          .eq('full_name', nameValidation.sanitizedValue)
+          .eq('school', schoolValidation.sanitizedValue)
+          .eq('grade', gradeValidation.sanitizedValue)
+          .limit(1);
+
+        if (existingStudent && existingStudent.length > 0) {
+          return { success: false, error: 'Student already exists with these details' };
+        }
+
+        const { data: student, error } = await supabase
+          .from('students')
+          .insert([{
+            full_name: nameValidation.sanitizedValue,
+            school: schoolValidation.sanitizedValue,
+            grade: gradeValidation.sanitizedValue,
+            password_hash: passwordHash
+          }])
+          .select()
+          .single();
+
+        if (error) {
+          console.error('Student signup error:', error);
+          return { success: false, error: 'Failed to create student account' };
+        }
+
+        return {
+          success: true,
+          user: {
+            id: student.id,
+            fullName: student.full_name,
+            school: student.school,
+            role: 'student',
+            userType: 'student'
+          }
+        };
       }
-
     } catch (error) {
-      console.error('Secure signup error:', error);
-      return { success: false, error: 'Registration failed. Please try again.' };
+      console.error('Signup error:', error);
+      return { success: false, error: 'Signup failed. Please try again.' };
     }
   }
 
-  /**
-   * Create teacher account
-   */
-  private async createTeacher(teacherData: any): Promise<AuthResult> {
-    const { data: teacher, error } = await supabase
-      .from('teachers')
-      .insert([teacherData])
-      .select()
-      .single();
-
-    if (error) {
-      console.error('Teacher creation error:', error);
-      return { success: false, error: 'Email already exists or registration failed' };
-    }
-
-    return {
-      success: true,
-      user: {
-        id: teacher.id,
-        email: teacher.email,
-        name: teacher.name,
-        school: teacher.school,
-        role: teacher.role,
-        userType: 'teacher'
-      }
-    };
-  }
-
-  /**
-   * Create student account
-   */
-  private async createStudent(studentData: any): Promise<AuthResult> {
-    const { data: student, error } = await supabase
-      .from('students')
-      .insert([studentData])
-      .select()
-      .single();
-
-    if (error) {
-      console.error('Student creation error:', error);
-      return { success: false, error: 'Student already exists or registration failed' };
-    }
-
-    return {
-      success: true,
-      user: {
-        id: student.id,
-        fullName: student.full_name,
-        school: student.school,
-        role: 'student',
-        userType: 'student',
-        grade: student.grade
-      }
-    };
-  }
-
-  /**
-   * Migrate teacher password from weak hash to bcrypt
-   */
-  private async migrateTeacherPassword(teacherId: string, plainPassword: string): Promise<void> {
-    try {
-      const newHash = await securePasswordService.hashPassword(plainPassword);
-      await supabase
-        .from('teachers')
-        .update({ password_hash: newHash })
-        .eq('id', teacherId);
-      
-      console.log('Teacher password migrated to secure hash');
-    } catch (error) {
-      console.error('Password migration failed:', error);
-    }
-  }
-
-  /**
-   * Migrate student password from weak hash to bcrypt
-   */
-  private async migrateStudentPassword(studentId: string, plainPassword: string): Promise<void> {
-    try {
-      const newHash = await securePasswordService.hashPassword(plainPassword);
-      await supabase
-        .from('students')
-        .update({ password_hash: newHash })
-        .eq('id', studentId);
-      
-      console.log('Student password migrated to secure hash');
-    } catch (error) {
-      console.error('Password migration failed:', error);
-    }
-  }
-
-  /**
-   * Legacy SHA-256 hashing for migration compatibility
-   */
-  private async legacyHashPassword(password: string): Promise<string> {
-    const encoder = new TextEncoder();
-    const data = encoder.encode(password + 'legacy_salt');
-    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-    const hashArray = Array.from(new Uint8Array(hashBuffer));
-    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-  }
-
-  /**
-   * Get current authenticated user
-   */
   getCurrentUser(): AuthUser | null {
     const session = secureSessionService.getSecureSession();
     if (!session) return null;
 
+    // Return user data from session
     return {
       id: session.userId,
       school: session.school,
       role: session.userType,
-      userType: session.userType,
-      // Additional fields would be loaded separately if needed
+      userType: session.userType
     } as AuthUser;
   }
 
-  /**
-   * Secure logout with complete cleanup
-   */
+  isAuthenticated(): boolean {
+    const session = secureSessionService.getSecureSession();
+    return session !== null;
+  }
+
   logout(): void {
     secureSessionService.clearSession();
-  }
-
-  /**
-   * Check if user is authenticated
-   */
-  isAuthenticated(): boolean {
-    return secureSessionService.getSecureSession() !== null;
-  }
-
-  /**
-   * Validate CSRF token
-   */
-  validateCSRFToken(token: string): boolean {
-    const currentToken = secureSessionService.getCSRFToken();
-    return currentToken && currentToken === token;
   }
 }
 
