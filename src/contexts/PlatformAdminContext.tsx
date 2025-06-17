@@ -71,9 +71,6 @@ export const PlatformAdminProvider: React.FC<{ children: React.ReactNode }> = ({
     setIsLoading(true);
     
     try {
-      // Ensure the admin account exists first
-      await ensureAdminAccountExists();
-
       const result = await securePlatformAdminService.authenticateAdmin({ email, password });
       
       if (result.success && result.admin) {
@@ -94,53 +91,6 @@ export const PlatformAdminProvider: React.FC<{ children: React.ReactNode }> = ({
       return { success: false, error: 'Authentication system error' };
     } finally {
       setIsLoading(false);
-    }
-  };
-
-  const ensureAdminAccountExists = async () => {
-    try {
-      console.log('🔍 Ensuring admin account exists...');
-      
-      // Check if admin exists
-      const { data: existingAdmin, error } = await supabase
-        .from('teachers')
-        .select('id, email, role')
-        .eq('email', 'zulfimoon1@gmail.com')
-        .eq('role', 'admin')
-        .maybeSingle();
-
-      if (error && error.code !== 'PGRST116') {
-        console.error('Error checking admin:', error);
-        return;
-      }
-
-      if (!existingAdmin) {
-        console.log('🔄 Creating missing admin account...');
-        
-        // Import bcrypt dynamically
-        const bcrypt = await import('bcryptjs');
-        const hashedPassword = await bcrypt.hash('admin123', 12);
-
-        const { error: insertError } = await supabase
-          .from('teachers')
-          .insert({
-            name: 'Platform Admin',
-            email: 'zulfimoon1@gmail.com',
-            school: 'Platform Administration',
-            role: 'admin',
-            password_hash: hashedPassword
-          });
-
-        if (insertError) {
-          console.error('Error creating admin:', insertError);
-        } else {
-          console.log('✅ Admin account created successfully');
-        }
-      } else {
-        console.log('✅ Admin account already exists');
-      }
-    } catch (error) {
-      console.error('Error ensuring admin account:', error);
     }
   };
 
