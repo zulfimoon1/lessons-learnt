@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
+import { enhancedSecurityService } from "@/services/enhancedSecurityService";
 
 export interface MentalHealthAlert {
   id: string;
@@ -29,13 +30,40 @@ export const useMentalHealthAlerts = () => {
 
   const fetchAlerts = async () => {
     try {
-      // Check if user is authorized (teacher with doctor or admin role)
+      // Enhanced security validation for mental health data access
       if (!teacher || !['doctor', 'admin'].includes(teacher.role)) {
         console.log('User not authorized to view mental health alerts');
+        
+        await enhancedSecurityService.logSecurityEvent(
+          'unauthorized_mental_health_access',
+          `User attempted to access mental health alerts without proper authorization`,
+          'high'
+        );
+        
         setAlerts([]);
         setIsLoading(false);
         return;
       }
+
+      // Validate session before accessing sensitive data
+      const isValidSession = await enhancedSecurityService.validateSession();
+      if (!isValidSession) {
+        toast({
+          title: "Session Expired",
+          description: "Please log in again to access mental health data",
+          variant: "destructive"
+        });
+        setAlerts([]);
+        setIsLoading(false);
+        return;
+      }
+
+      // Log access to mental health data
+      await enhancedSecurityService.logSecurityEvent(
+        'mental_health_data_access',
+        `User ${teacher.email} accessed mental health alerts for school ${teacher.school}`,
+        'medium'
+      );
 
       const { data, error } = await supabase
         .from('mental_health_alerts')
@@ -51,6 +79,13 @@ export const useMentalHealthAlerts = () => {
       setAlerts(data || []);
     } catch (error) {
       console.error('Error in fetchAlerts:', error);
+      
+      await enhancedSecurityService.logSecurityEvent(
+        'mental_health_data_error',
+        `Error fetching mental health alerts: ${error}`,
+        'high'
+      );
+      
       toast({
         title: t('common.error'),
         description: t('teacher.failedToLoadSummaries'),
@@ -72,6 +107,24 @@ export const useMentalHealthAlerts = () => {
         return;
       }
 
+      // Validate session for sensitive operation
+      const isValidSession = await enhancedSecurityService.validateSession();
+      if (!isValidSession) {
+        toast({
+          title: "Session Expired",
+          description: "Please log in again to perform this action",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      // Log the review action
+      await enhancedSecurityService.logSecurityEvent(
+        'mental_health_alert_reviewed',
+        `Alert ${alertId} marked as reviewed by ${teacher.name}`,
+        'medium'
+      );
+
       const { error } = await supabase
         .from('mental_health_alerts')
         .update({
@@ -92,6 +145,13 @@ export const useMentalHealthAlerts = () => {
       fetchAlerts();
     } catch (error) {
       console.error('Error marking alert as reviewed:', error);
+      
+      await enhancedSecurityService.logSecurityEvent(
+        'mental_health_review_error',
+        `Error reviewing alert ${alertId}: ${error}`,
+        'high'
+      );
+      
       toast({
         title: t('common.error'),
         description: "Failed to mark alert as reviewed",

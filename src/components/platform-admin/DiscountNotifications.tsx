@@ -5,8 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { AlertTriangleIcon, BellIcon, CheckIcon, RefreshCwIcon } from "lucide-react";
+import { AlertTriangleIcon, BellIcon, CheckIcon, RefreshCwIcon, Shield } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { enhancedSecurityService } from "@/services/enhancedSecurityService";
 
 interface PaymentNotification {
   id: string;
@@ -27,10 +28,57 @@ const DiscountNotifications = ({ adminEmail }: DiscountNotificationsProps) => {
   const [notifications, setNotifications] = useState<PaymentNotification[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [securityValidated, setSecurityValidated] = useState(false);
   const { toast } = useToast();
+
+  useEffect(() => {
+    const validateSecurityAndFetch = async () => {
+      try {
+        // Enhanced security validation for admin operations
+        const isValidSession = await enhancedSecurityService.validateSession();
+        if (!isValidSession) {
+          toast({
+            title: "Security Error",
+            description: "Session expired. Please log in again.",
+            variant: "destructive"
+          });
+          return;
+        }
+
+        if (!adminEmail) {
+          await enhancedSecurityService.logSecurityEvent(
+            'unauthorized_admin_access',
+            'Attempt to access discount notifications without admin email',
+            'high'
+          );
+          return;
+        }
+
+        setSecurityValidated(true);
+        await fetchNotifications();
+      } catch (error) {
+        console.error('Security validation error:', error);
+        toast({
+          title: "Security Error",
+          description: "Unable to validate security credentials",
+          variant: "destructive"
+        });
+      }
+    };
+
+    validateSecurityAndFetch();
+  }, [adminEmail]);
 
   const fetchNotifications = async () => {
     try {
+      if (!securityValidated) return;
+
+      await enhancedSecurityService.logSecurityEvent(
+        'payment_notifications_accessed',
+        `Admin ${adminEmail} accessed payment notifications`,
+        'low'
+      );
+
       const { data, error } = await supabase
         .from('payment_notifications')
         .select('*')
@@ -40,6 +88,13 @@ const DiscountNotifications = ({ adminEmail }: DiscountNotificationsProps) => {
       setNotifications(data || []);
     } catch (error) {
       console.error('Error fetching notifications:', error);
+      
+      await enhancedSecurityService.logSecurityEvent(
+        'payment_notifications_error',
+        `Error fetching payment notifications: ${error}`,
+        'medium'
+      );
+      
       toast({
         title: "Error",
         description: "Failed to fetch payment notifications",
@@ -51,8 +106,27 @@ const DiscountNotifications = ({ adminEmail }: DiscountNotificationsProps) => {
   };
 
   const processDiscountExpirations = async () => {
+    if (!securityValidated) return;
+
     setIsProcessing(true);
     try {
+      // Validate session before sensitive operation
+      const isValidSession = await enhancedSecurityService.validateSession();
+      if (!isValidSession) {
+        toast({
+          title: "Session Expired",
+          description: "Please log in again to perform this action",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      await enhancedSecurityService.logSecurityEvent(
+        'discount_expiration_process_initiated',
+        `Admin ${adminEmail} initiated discount expiration processing`,
+        'medium'
+      );
+
       const { error } = await supabase.functions.invoke('process-discount-expirations');
       
       if (error) throw error;
@@ -62,10 +136,16 @@ const DiscountNotifications = ({ adminEmail }: DiscountNotificationsProps) => {
         description: "Discount expirations processed successfully"
       });
       
-      // Refresh the notifications list
       await fetchNotifications();
     } catch (error) {
       console.error('Error processing discount expirations:', error);
+      
+      await enhancedSecurityService.logSecurityEvent(
+        'discount_expiration_process_error',
+        `Error processing discount expirations: ${error}`,
+        'high'
+      );
+      
       toast({
         title: "Error",
         description: "Failed to process discount expirations",
@@ -75,10 +155,6 @@ const DiscountNotifications = ({ adminEmail }: DiscountNotificationsProps) => {
       setIsProcessing(false);
     }
   };
-
-  useEffect(() => {
-    fetchNotifications();
-  }, []);
 
   const getNotificationIcon = (type: string) => {
     switch (type) {
@@ -106,6 +182,24 @@ const DiscountNotifications = ({ adminEmail }: DiscountNotificationsProps) => {
     }
   };
 
+  if (!securityValidated) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Shield className="w-5 h-5 text-red-500" />
+            Security Validation Required
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-center py-8 text-gray-500">
+            Validating security credentials...
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   if (isLoading) {
     return (
       <Card>
@@ -126,6 +220,9 @@ const DiscountNotifications = ({ adminEmail }: DiscountNotificationsProps) => {
           <CardTitle className="flex items-center gap-2">
             <BellIcon className="w-5 h-5" />
             Payment Notifications
+            <Badge variant="outline" className="ml-2">
+              Secure Access
+            </Badge>
           </CardTitle>
           <div className="flex gap-2">
             <Button
