@@ -912,6 +912,10 @@ export type Database = {
         Args: { target_school: string }
         Returns: boolean
       }
+      is_zulfimoon_admin: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
       log_critical_security_event: {
         Args: {
           event_type: string
