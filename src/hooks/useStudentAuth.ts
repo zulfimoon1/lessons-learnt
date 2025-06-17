@@ -1,155 +1,165 @@
 
-import { useState, useEffect } from 'react';
-import { consolidatedAuthService } from '@/services/consolidatedAuthService';
+import { useState } from 'react';
+import { Student } from '@/types/auth';
+import { studentSimpleLoginService, studentSignupService } from '@/services/authService';
 import { secureSessionService } from '@/services/secureSessionService';
-
-interface Student {
-  id: string;
-  fullName: string;
-  school: string;
-  grade: string;
-}
 
 export const useStudentAuth = () => {
   const [student, setStudent] = useState<Student | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    const initializeAuth = () => {
-      try {
-        const currentUser = consolidatedAuthService.getCurrentUser();
-        if (currentUser && currentUser.userType === 'student') {
-          setStudent({
-            id: currentUser.id,
-            fullName: currentUser.fullName || '',
-            school: currentUser.school,
-            grade: currentUser.grade || ''
-          });
-        }
-      } catch (error) {
-        console.error('Student auth initialization error:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    initializeAuth();
-  }, []);
 
   const login = async (fullName: string, school: string, grade: string, password: string) => {
     try {
-      setIsLoading(true);
-
-      const result = await consolidatedAuthService.secureLogin({
-        fullName,
-        school,
-        grade,
-        password,
-        userType: 'student'
-      });
-
-      if (result.success && result.user) {
-        setStudent({
-          id: result.user.id,
-          fullName: result.user.fullName || fullName,
-          school: result.user.school,
-          grade: result.user.grade || grade
-        });
-        return { student: result.user };
-      } else {
-        return { error: result.error || 'Authentication failed' };
+      console.log('useStudentAuth: Starting login process for:', { fullName, school, grade });
+      
+      // Basic input validation
+      if (!fullName?.trim() || !school?.trim() || !grade?.trim() || !password?.trim()) {
+        return { error: 'All fields are required' };
       }
+
+      // Call the service with just fullName and password
+      const result = await studentSimpleLoginService(fullName.trim(), password.trim());
+      console.log('useStudentAuth: Login service result:', { 
+        success: !!result.student, 
+        error: result.error 
+      });
+      
+      if (result.student) {
+        // Verify the student data matches the provided school and grade
+        if (result.student.school !== school.trim() || result.student.grade !== grade.trim()) {
+          console.log('useStudentAuth: School/grade mismatch:', {
+            expected: { school: school.trim(), grade: grade.trim() },
+            actual: { school: result.student.school, grade: result.student.grade }
+          });
+          return { error: 'Invalid credentials. Please check your school and grade information.' };
+        }
+
+        const studentData: Student = {
+          id: result.student.id,
+          full_name: result.student.full_name,
+          school: result.student.school,
+          grade: result.student.grade
+        };
+        
+        setStudent(studentData);
+        
+        // Store student data securely
+        try {
+          secureSessionService.securelyStoreUserData('student', studentData);
+          localStorage.removeItem('teacher');
+          localStorage.removeItem('platformAdmin');
+          console.log('useStudentAuth: Student data saved securely');
+        } catch (storageError) {
+          console.warn('useStudentAuth: Failed to save student data to secure storage:', storageError);
+        }
+        
+        return { student: studentData };
+      }
+      
+      return { error: result.error || 'Login failed. Please check your credentials.' };
     } catch (error) {
-      console.error('Student login error:', error);
-      return { error: 'Login failed. Please try again.' };
-    } finally {
-      setIsLoading(false);
+      console.error('useStudentAuth: Unexpected error:', error);
+      return { error: 'Login failed. Please check your connection and try again.' };
     }
   };
 
   const signup = async (fullName: string, school: string, grade: string, password: string) => {
     try {
-      setIsLoading(true);
-
-      const result = await consolidatedAuthService.secureSignup({
-        userType: 'student',
-        fullName,
-        school,
-        grade,
-        password
-      });
-
-      if (result.success && result.user) {
-        setStudent({
-          id: result.user.id,
-          fullName: result.user.fullName || fullName,
-          school: result.user.school,
-          grade: result.user.grade || grade
-        });
-        return { student: result.user };
-      } else {
-        return { error: result.error || 'Registration failed' };
+      console.log('useStudentAuth: Starting signup process for:', { fullName, school, grade });
+      
+      // Basic input validation
+      if (!fullName?.trim() || !school?.trim() || !grade?.trim() || !password?.trim()) {
+        return { error: 'All fields are required' };
       }
+
+      // Basic password validation
+      if (password.length < 6) {
+        return { error: 'Password must be at least 6 characters long' };
+      }
+      
+      const result = await studentSignupService(fullName.trim(), school.trim(), grade.trim(), password);
+      console.log('useStudentAuth: Signup service result:', { 
+        success: !!result.student, 
+        error: result.error 
+      });
+      
+      if (result.student) {
+        const studentData: Student = {
+          id: result.student.id,
+          full_name: result.student.full_name,
+          school: result.student.school,
+          grade: result.student.grade
+        };
+        
+        setStudent(studentData);
+        
+        // Store student data securely
+        try {
+          secureSessionService.securelyStoreUserData('student', studentData);
+          localStorage.removeItem('teacher');
+          localStorage.removeItem('platformAdmin');
+          console.log('useStudentAuth: Student signup data saved securely');
+        } catch (storageError) {
+          console.warn('useStudentAuth: Failed to save student signup data to secure storage:', storageError);
+        }
+        
+        return { student: studentData };
+      }
+      
+      return { error: result.error || 'Signup failed. Please try again.' };
     } catch (error) {
-      console.error('Student signup error:', error);
-      return { error: 'Registration failed. Please try again.' };
-    } finally {
-      setIsLoading(false);
+      console.error('useStudentAuth: Unexpected signup error:', error);
+      return { error: 'Signup failed. Please check your connection and try again.' };
     }
   };
 
   const logout = () => {
-    consolidatedAuthService.logout();
     setStudent(null);
-  };
-
-  const getCurrentUser = (): Student | null => {
-    const session = secureSessionService.getSecureSession();
-    if (!session || session.userType !== 'student') return null;
-
-    const currentUser = consolidatedAuthService.getCurrentUser();
-    if (currentUser && currentUser.userType === 'student') {
-      return {
-        id: currentUser.id,
-        fullName: currentUser.fullName || '',
-        school: currentUser.school,
-        grade: currentUser.grade || ''
-      };
-    }
-    return null;
-  };
-
-  const updateProfile = async (updates: Partial<Student>) => {
     try {
-      setIsLoading(true);
-      
-      if (student) {
-        const updatedStudent = { ...student, ...updates };
-        setStudent(updatedStudent);
-        return { success: true };
+      localStorage.removeItem('student');
+      secureSessionService.clearSession('student');
+      sessionStorage.clear();
+    } catch (error) {
+      console.error('useStudentAuth: Error clearing student data:', error);
+    }
+  };
+
+  const restoreFromStorage = () => {
+    try {
+      // Try secure storage first
+      const savedStudent = secureSessionService.securelyRetrieveUserData('student');
+      if (savedStudent && savedStudent.id && savedStudent.full_name && savedStudent.school && savedStudent.grade) {
+        setStudent(savedStudent);
+        return true;
       }
       
-      return { error: 'No student logged in' };
+      // Fallback to regular localStorage for backward compatibility
+      const legacyStudent = localStorage.getItem('student');
+      if (legacyStudent) {
+        const parsedStudent = JSON.parse(legacyStudent);
+        if (parsedStudent && parsedStudent.id && parsedStudent.full_name && parsedStudent.school && parsedStudent.grade) {
+          setStudent(parsedStudent);
+          // Migrate to secure storage
+          secureSessionService.securelyStoreUserData('student', parsedStudent);
+          localStorage.removeItem('student');
+          return true;
+        } else {
+          localStorage.removeItem('student');
+        }
+      }
     } catch (error) {
-      console.error('Profile update error:', error);
-      return { error: 'Failed to update profile' };
-    } finally {
-      setIsLoading(false);
+      console.error('useStudentAuth: Error restoring student from storage:', error);
+      localStorage.removeItem('student');
+      secureSessionService.clearSession('student');
     }
-  };
-
-  const isAuthenticated = (): boolean => {
-    return consolidatedAuthService.isAuthenticated();
+    return false;
   };
 
   return {
     student,
-    isLoading,
     login,
     signup,
     logout,
-    getCurrentUser,
-    updateProfile,
-    isAuthenticated
+    restoreFromStorage,
+    setStudent
   };
 };

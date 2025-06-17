@@ -209,7 +209,7 @@ export const secureStudentSignup = async (fullName: string, school: string, grad
     // Password strength validation
     const passwordValidation = validatePasswordStrength(password);
     if (!passwordValidation.isValid) {
-      return { error: passwordValidation.errors[0] || 'Password does not meet requirements' };
+      return { error: passwordValidation.message };
     }
 
     // Check if student already exists

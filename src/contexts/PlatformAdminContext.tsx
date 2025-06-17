@@ -1,6 +1,6 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { consolidatedAuthService } from '@/services/consolidatedAuthService';
+import { securePlatformAdminService } from '@/services/securePlatformAdminService';
 
 interface AdminUser {
   id: string;
@@ -34,28 +34,29 @@ export const PlatformAdminProvider: React.FC<{ children: React.ReactNode }> = ({
   const [isLoading, setIsLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-  // Load admin from session on mount
+  // Load admin from localStorage on mount
   useEffect(() => {
-    const loadStoredAdmin = () => {
+    const loadStoredAdmin = async () => {
       try {
-        const currentUser = consolidatedAuthService.getCurrentUser();
-        console.log('🔐 Checking for existing admin session:', currentUser);
-        
-        if (currentUser && currentUser.userType === 'admin') {
-          setAdmin({
-            id: currentUser.id,
-            email: currentUser.email || '',
-            name: currentUser.name || '',
-            role: currentUser.role,
-            school: currentUser.school
-          });
-          setIsAuthenticated(true);
-          console.log('✅ Admin session restored:', currentUser.email);
-        } else {
-          console.log('❌ No valid admin session found');
+        const storedAdmin = localStorage.getItem('platform_admin');
+        if (storedAdmin) {
+          const adminData = JSON.parse(storedAdmin);
+          
+          // Validate the stored session
+          const validation = await securePlatformAdminService.validateAdminSession(adminData.email);
+          if (validation.valid && validation.admin) {
+            setAdmin(validation.admin);
+            setIsAuthenticated(true);
+            console.log('🔐 Admin session restored:', adminData.email);
+          } else {
+            // Clear invalid session
+            localStorage.removeItem('platform_admin');
+            console.log('🔒 Invalid admin session cleared');
+          }
         }
       } catch (error) {
         console.error('Error loading stored admin session:', error);
+        localStorage.removeItem('platform_admin');
       } finally {
         setIsLoading(false);
       }
@@ -65,28 +66,20 @@ export const PlatformAdminProvider: React.FC<{ children: React.ReactNode }> = ({
   }, []);
 
   const login = async (email: string, password: string) => {
-    console.log('🔐 PLATFORM ADMIN LOGIN ATTEMPT:', email);
+    console.log('🔐 PLATFORM ADMIN LOGIN:', email);
     setIsLoading(true);
     
     try {
-      const result = await consolidatedAuthService.secureLogin({
-        email,
-        password,
-        school: 'Platform Administration', // Will be populated from database
-        userType: 'admin'
-      });
+      const result = await securePlatformAdminService.authenticateAdmin({ email, password });
       
-      if (result.success && result.user && result.user.role === 'admin') {
-        setAdmin({
-          id: result.user.id,
-          email: result.user.email || email,
-          name: result.user.name || '',
-          role: result.user.role,
-          school: result.user.school
-        });
+      if (result.success && result.admin) {
+        setAdmin(result.admin);
         setIsAuthenticated(true);
         
-        console.log('✅ Platform admin login successful:', result.user.email);
+        // Store in localStorage for persistence
+        localStorage.setItem('platform_admin', JSON.stringify(result.admin));
+        
+        console.log('✅ Platform admin login successful');
         return { success: true };
       } else {
         console.error('❌ Platform admin login failed:', result.error);
@@ -102,17 +95,17 @@ export const PlatformAdminProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const logout = () => {
     console.log('🔓 Platform admin logout');
-    consolidatedAuthService.logout();
     setAdmin(null);
     setIsAuthenticated(false);
+    localStorage.removeItem('platform_admin');
   };
 
   const validateSession = async () => {
     if (!admin?.email) return;
     
     try {
-      const isAuth = consolidatedAuthService.isAuthenticated();
-      if (!isAuth) {
+      const validation = await securePlatformAdminService.validateAdminSession(admin.email);
+      if (!validation.valid) {
         console.log('🔒 Admin session validation failed, logging out');
         logout();
       }

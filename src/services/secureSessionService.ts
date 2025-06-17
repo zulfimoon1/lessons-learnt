@@ -113,8 +113,6 @@ class SecureSessionService {
       createdAt: Date.now()
     };
 
-    console.log('🔐 Creating secure session:', { userType, userId, school });
-
     // Store encrypted session in sessionStorage (more secure than localStorage)
     const encryptedSession = this.encryptSessionData(JSON.stringify(session));
     sessionStorage.setItem(this.getSessionKey(), encryptedSession);
@@ -128,34 +126,26 @@ class SecureSessionService {
   getSecureSession(): SecureSession | null {
     try {
       const encryptedSession = sessionStorage.getItem(this.getSessionKey());
-      if (!encryptedSession) {
-        console.log('🔒 No encrypted session found');
-        return null;
-      }
+      if (!encryptedSession) return null;
 
       const sessionData = this.decryptSessionData(encryptedSession);
-      if (!sessionData) {
-        console.log('🔒 Failed to decrypt session data');
-        return null;
-      }
+      if (!sessionData) return null;
 
       const session: SecureSession = JSON.parse(sessionData);
 
       // Validate expiration
       if (Date.now() > session.expiresAt) {
-        console.log('🔒 Session expired');
         this.clearSession();
         return null;
       }
 
       // Validate fingerprint
       if (session.fingerprint !== this.generateFingerprint()) {
-        console.warn('⚠️ Session fingerprint mismatch - potential security threat');
+        console.warn('Session fingerprint mismatch - potential security threat');
         this.clearSession();
         return null;
       }
 
-      console.log('✅ Valid session found:', { userType: session.userType, userId: session.userId });
       return session;
     } catch (error) {
       console.error('Session validation failed:', error);
@@ -171,26 +161,20 @@ class SecureSessionService {
     const session = this.getSecureSession();
     if (!session) return false;
 
-    try {
-      const timeout = isMentalHealthAccess ? this.mentalHealthTimeout : this.sessionTimeout;
-      session.expiresAt = Date.now() + timeout;
-      session.csrfToken = this.generateCSRFToken();
+    const timeout = isMentalHealthAccess ? this.mentalHealthTimeout : this.sessionTimeout;
+    session.expiresAt = Date.now() + timeout;
+    session.csrfToken = this.generateCSRFToken();
 
-      const encryptedSession = this.encryptSessionData(JSON.stringify(session));
-      sessionStorage.setItem(this.getSessionKey(), encryptedSession);
+    const encryptedSession = this.encryptSessionData(JSON.stringify(session));
+    sessionStorage.setItem(this.getSessionKey(), encryptedSession);
 
-      return true;
-    } catch (error) {
-      console.error('Session refresh failed:', error);
-      return false;
-    }
+    return true;
   }
 
   /**
    * Clear session securely
    */
   clearSession(): void {
-    console.log('🔓 Clearing secure session');
     sessionStorage.removeItem(this.getSessionKey());
     
     // Clear any legacy localStorage items

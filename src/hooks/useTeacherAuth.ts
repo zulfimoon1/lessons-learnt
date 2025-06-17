@@ -1,160 +1,161 @@
-
-import { useState, useEffect } from 'react';
-import { consolidatedAuthService } from '@/services/consolidatedAuthService';
+import { useState } from 'react';
+import { Teacher } from '@/types/auth';
+import { teacherEmailLoginService, teacherSignupService } from '@/services/authService';
 import { secureSessionService } from '@/services/secureSessionService';
-
-interface Teacher {
-  id: string;
-  name: string;
-  email: string;
-  school: string;
-  role: string;
-}
 
 export const useTeacherAuth = () => {
   const [teacher, setTeacher] = useState<Teacher | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    const initializeAuth = () => {
-      try {
-        const currentUser = consolidatedAuthService.getCurrentUser();
-        if (currentUser && currentUser.userType === 'teacher') {
-          setTeacher({
-            id: currentUser.id,
-            name: currentUser.name || '',
-            email: currentUser.email || '',
-            school: currentUser.school,
-            role: currentUser.role
-          });
-        }
-      } catch (error) {
-        console.error('Teacher auth initialization error:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    initializeAuth();
-  }, []);
 
   const login = async (email: string, password: string) => {
     try {
-      setIsLoading(true);
-
-      const result = await consolidatedAuthService.secureLogin({
-        email,
-        password,
-        school: 'unknown', // Will be populated from database
-        userType: 'teacher'
-      });
-
-      if (result.success && result.user) {
-        setTeacher({
-          id: result.user.id,
-          name: result.user.name || '',
-          email: result.user.email || email,
-          school: result.user.school,
-          role: result.user.role
-        });
-        return { teacher: result.user };
-      } else {
-        return { error: result.error || 'Authentication failed' };
+      console.log('useTeacherAuth: Starting login process with email:', email);
+      
+      // Enhanced input validation
+      if (!email?.trim() || !password?.trim()) {
+        return { error: 'Email and password are required' };
       }
+
+      // Basic email format validation
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email.trim())) {
+        return { error: 'Please enter a valid email address' };
+      }
+      
+      const result = await teacherEmailLoginService(email.trim(), password);
+      console.log('useTeacherAuth: Login service result', { 
+        success: !!result.teacher, 
+        error: result.error 
+      });
+      
+      if (result.teacher) {
+        // Ensure role is properly typed
+        const teacherData: Teacher = {
+          ...result.teacher,
+          role: result.teacher.role as 'teacher' | 'admin' | 'doctor'
+        };
+        
+        setTeacher(teacherData);
+        // Securely store teacher data
+        try {
+          secureSessionService.securelyStoreUserData('teacher', teacherData);
+          localStorage.removeItem('student');
+          localStorage.removeItem('platformAdmin');
+          console.log('useTeacherAuth: Teacher data saved successfully');
+        } catch (storageError) {
+          console.warn('useTeacherAuth: Failed to save teacher data to localStorage:', storageError);
+        }
+        
+        return { teacher: teacherData };
+      }
+      
+      return { error: result.error || 'Login failed. Please check your credentials.' };
     } catch (error) {
-      console.error('Teacher login error:', error);
-      return { error: 'Login failed. Please try again.' };
-    } finally {
-      setIsLoading(false);
+      console.error('useTeacherAuth: Unexpected error:', error);
+      return { error: 'Login failed. Please check your connection and try again.' };
     }
   };
 
-  const signup = async (name: string, email: string, school: string, password: string, role: string = 'teacher') => {
+  const signup = async (name: string, email: string, school: string, password: string, role: 'teacher' | 'admin' | 'doctor' = 'teacher') => {
     try {
-      setIsLoading(true);
-
-      const result = await consolidatedAuthService.secureSignup({
-        userType: 'teacher',
-        name,
-        email,
-        school,
-        role,
-        password
-      });
-
-      if (result.success && result.user) {
-        setTeacher({
-          id: result.user.id,
-          name: result.user.name || name,
-          email: result.user.email || email,
-          school: result.user.school,
-          role: result.user.role
-        });
-        return { teacher: result.user };
-      } else {
-        return { error: result.error || 'Registration failed' };
+      console.log('useTeacherAuth: Starting signup process for:', name);
+      
+      // Enhanced input validation
+      if (!name?.trim() || !email?.trim() || !school?.trim() || !password?.trim()) {
+        return { error: 'All fields are required' };
       }
+
+      // Basic email format validation
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email.trim())) {
+        return { error: 'Please enter a valid email address' };
+      }
+
+      // Basic password validation
+      if (password.length < 6) {
+        return { error: 'Password must be at least 6 characters long' };
+      }
+      
+      const result = await teacherSignupService(name.trim(), email.trim(), school.trim(), password, role);
+      console.log('useTeacherAuth: Signup service result', { 
+        success: !!result.teacher, 
+        error: result.error 
+      });
+      
+      if (result.teacher) {
+        // Ensure role is properly typed
+        const teacherData: Teacher = {
+          ...result.teacher,
+          role: result.teacher.role as 'teacher' | 'admin' | 'doctor'
+        };
+        
+        setTeacher(teacherData);
+        // Securely store teacher data
+        try {
+          secureSessionService.securelyStoreUserData('teacher', teacherData);
+          localStorage.removeItem('student');
+          localStorage.removeItem('platformAdmin');
+          console.log('useTeacherAuth: Teacher signup data saved successfully');
+        } catch (storageError) {
+          console.warn('useTeacherAuth: Failed to save teacher signup data to localStorage:', storageError);
+        }
+        
+        return { teacher: teacherData };
+      }
+      
+      return { error: result.error || 'Signup failed. Please try again.' };
     } catch (error) {
-      console.error('Teacher signup error:', error);
-      return { error: 'Registration failed. Please try again.' };
-    } finally {
-      setIsLoading(false);
+      console.error('useTeacherAuth: Unexpected signup error:', error);
+      return { error: 'Signup failed. Please check your connection and try again.' };
     }
   };
 
   const logout = () => {
-    consolidatedAuthService.logout();
     setTeacher(null);
-  };
-
-  const getCurrentUser = (): Teacher | null => {
-    const session = secureSessionService.getSecureSession();
-    if (!session || session.userType !== 'teacher') return null;
-
-    const currentUser = consolidatedAuthService.getCurrentUser();
-    if (currentUser && currentUser.userType === 'teacher') {
-      return {
-        id: currentUser.id,
-        name: currentUser.name || '',
-        email: currentUser.email || '',
-        school: currentUser.school,
-        role: currentUser.role
-      };
-    }
-    return null;
-  };
-
-  const updateProfile = async (updates: Partial<Teacher>) => {
     try {
-      setIsLoading(true);
-      
-      if (teacher) {
-        const updatedTeacher = { ...teacher, ...updates };
-        setTeacher(updatedTeacher);
-        return { success: true };
+      localStorage.removeItem('teacher');
+      secureSessionService.clearSession('teacher');
+    } catch (error) {
+      console.error('useTeacherAuth: Error clearing teacher data:', error);
+    }
+  };
+
+  const restoreFromStorage = () => {
+    try {
+      // Try secure storage first
+      const savedTeacher = secureSessionService.securelyRetrieveUserData('teacher');
+      if (savedTeacher && savedTeacher.id && savedTeacher.name) {
+        setTeacher(savedTeacher);
+        return true;
       }
       
-      return { error: 'No teacher logged in' };
+      // Fallback to regular localStorage for backward compatibility
+      const legacyTeacher = localStorage.getItem('teacher');
+      if (legacyTeacher) {
+        const parsedTeacher = JSON.parse(legacyTeacher);
+        if (parsedTeacher && parsedTeacher.id && parsedTeacher.name) {
+          setTeacher(parsedTeacher);
+          // Migrate to secure storage
+          secureSessionService.securelyStoreUserData('teacher', parsedTeacher);
+          localStorage.removeItem('teacher');
+          return true;
+        } else {
+          localStorage.removeItem('teacher');
+        }
+      }
     } catch (error) {
-      console.error('Profile update error:', error);
-      return { error: 'Failed to update profile' };
-    } finally {
-      setIsLoading(false);
+      console.error('useTeacherAuth: Error restoring teacher from storage:', error);
+      localStorage.removeItem('teacher');
+      secureSessionService.clearSession('teacher');
     }
-  };
-
-  const isAuthenticated = (): boolean => {
-    return consolidatedAuthService.isAuthenticated();
+    return false;
   };
 
   return {
     teacher,
-    isLoading,
     login,
     signup,
     logout,
-    getCurrentUser,
-    updateProfile,
-    isAuthenticated
+    restoreFromStorage,
+    setTeacher
   };
 };
