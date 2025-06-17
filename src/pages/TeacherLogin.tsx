@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -15,7 +14,7 @@ const TeacherLogin = () => {
   const { t } = useLanguage();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { teacher, loginTeacher, isLoading: authLoading } = useAuth();
+  const { teacher, loginTeacher, signupTeacher, isLoading: authLoading } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
 
   // Redirect if already logged in
@@ -145,12 +144,12 @@ const TeacherLogin = () => {
     setIsLoading(true);
 
     try {
-      // Use loginTeacher with signup parameters
-      const result = await loginTeacher(
-        signupData.email.trim(),
-        signupData.password,
+      // Use signupTeacher for signup
+      const result = await signupTeacher(
         signupData.name.trim(),
+        signupData.email.trim(),
         signupData.school.trim(),
+        signupData.password,
         signupData.role
       );
 

@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { consolidatedAuthService } from '@/services/consolidatedAuthService';
 
@@ -53,7 +54,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             id: currentUser.id,
             fullName: currentUser.fullName || '',
             school: currentUser.school,
-            grade: currentUser.role // For students, role contains grade
+            grade: currentUser.grade || currentUser.role // For students, role contains grade
           });
         } else if (currentUser && (currentUser.userType === 'teacher' || currentUser.userType === 'admin')) {
           setTeacher({
@@ -90,7 +91,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           id: result.user.id,
           fullName: result.user.fullName || fullName,
           school: result.user.school,
-          grade: grade
+          grade: result.user.grade || grade
         };
         setStudent(studentData);
         return { student: studentData };
@@ -152,7 +153,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           id: result.user.id,
           fullName: result.user.fullName || fullName,
           school: result.user.school,
-          grade: grade
+          grade: result.user.grade || grade
         };
         setStudent(studentData);
         return { student: studentData };
