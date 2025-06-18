@@ -1,7 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { securityValidationService } from './securityValidationService';
-import bcrypt from 'bcryptjs';
 
 export interface SecureAdminLoginData {
   email: string;
@@ -19,26 +18,15 @@ export interface AdminUser {
 class SecurePlatformAdminService {
   private readonly KNOWN_ADMIN = 'zulfimoon1@gmail.com';
 
-  // Bypass all RLS for known admin
-  private async executeWithServiceRole<T>(queryFn: () => Promise<T>): Promise<T> {
-    try {
-      // For the known admin, we'll use direct queries without any RLS
-      return await queryFn();
-    } catch (error) {
-      console.error('Service role query failed:', error);
-      throw error;
-    }
-  }
-
   async authenticateAdmin(loginData: SecureAdminLoginData): Promise<{ success: boolean; admin?: AdminUser; error?: string }> {
     console.log('🔐 ADMIN AUTH for:', loginData.email);
     
     try {
       const adminEmail = loginData.email.toLowerCase().trim();
       
-      // Direct authentication for known admin
+      // Direct authentication for known admin - bypass all RLS
       if (adminEmail === this.KNOWN_ADMIN && loginData.password === 'admin123') {
-        console.log('✅ Known admin authenticated');
+        console.log('✅ Known admin authenticated - bypassing all RLS checks');
         
         return {
           success: true,
@@ -67,12 +55,14 @@ class SecurePlatformAdminService {
   ): Promise<T> {
     console.log('🔍 Executing secure query for:', adminEmail);
     
-    // Always use service role for known admin
+    // For known admin, execute queries directly without RLS complications
     if (adminEmail === this.KNOWN_ADMIN) {
       try {
-        return await this.executeWithServiceRole(queryFn);
+        // Set admin context before any query
+        await this.setAdminContext(adminEmail);
+        return await queryFn();
       } catch (error) {
-        console.warn('Service role query failed:', error);
+        console.warn('Direct query failed:', error);
         if (fallbackValue !== undefined) {
           return fallbackValue;
         }
@@ -92,6 +82,18 @@ class SecurePlatformAdminService {
     }
   }
 
+  private async setAdminContext(adminEmail: string): Promise<void> {
+    try {
+      console.log('🔧 Setting admin context for:', adminEmail);
+      // Use the RPC function to set context
+      await supabase.rpc('set_platform_admin_context', { admin_email: adminEmail });
+      console.log('✅ Admin context set successfully');
+    } catch (error) {
+      console.warn('⚠️ Could not set admin context:', error);
+      // Continue anyway - we'll rely on direct queries
+    }
+  }
+
   async getPlatformStats(adminEmail: string): Promise<{
     studentsCount: number;
     teachersCount: number;
@@ -103,9 +105,9 @@ class SecurePlatformAdminService {
     return await this.executeSecureQuery(
       adminEmail,
       async () => {
-        console.log('📊 Fetching counts directly...');
+        console.log('📊 Fetching counts with direct queries...');
         
-        // Direct count queries without any RLS complications
+        // Use Promise.allSettled to ensure we get some data even if some queries fail
         const [studentsResult, teachersResult, feedbackResult, subscriptionsResult] = await Promise.allSettled([
           supabase.from('students').select('*', { count: 'exact', head: true }),
           supabase.from('teachers').select('*', { count: 'exact', head: true }),
@@ -114,10 +116,10 @@ class SecurePlatformAdminService {
         ]);
 
         console.log('📊 Count results:', {
-          students: studentsResult,
-          teachers: teachersResult,
-          feedback: feedbackResult,
-          subscriptions: subscriptionsResult
+          students: studentsResult.status === 'fulfilled' ? studentsResult.value.count : 'failed',
+          teachers: teachersResult.status === 'fulfilled' ? teachersResult.value.count : 'failed',
+          feedback: feedbackResult.status === 'fulfilled' ? feedbackResult.value.count : 'failed',
+          subscriptions: subscriptionsResult.status === 'fulfilled' ? subscriptionsResult.value.count : 'failed'
         });
 
         return {
@@ -179,6 +181,9 @@ class SecurePlatformAdminService {
     }
 
     try {
+      // Set admin context first
+      await this.setAdminContext(adminEmail);
+      
       const { data, error } = await queryBuilder;
       
       if (error) {
