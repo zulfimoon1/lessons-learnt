@@ -283,11 +283,24 @@ class SecurePlatformAdminService {
       // Set admin context for RLS
       await supabase.rpc('set_platform_admin_context', { admin_email: adminEmail });
       
-      // Delete all data related to the school
+      // First get the IDs we need for cascading deletes
+      const { data: scheduleIds } = await supabase
+        .from('class_schedules')
+        .select('id')
+        .eq('school', schoolName);
+      
+      const scheduleIdArray = scheduleIds?.map(s => s.id) || [];
+      
+      // Delete feedback related to this school's class schedules
+      if (scheduleIdArray.length > 0) {
+        await supabase
+          .from('feedback')
+          .delete()
+          .in('class_schedule_id', scheduleIdArray);
+      }
+      
+      // Delete all other data related to the school
       const deletions = await Promise.allSettled([
-        supabase.from('feedback').delete().in('class_schedule_id', 
-          supabase.from('class_schedules').select('id').eq('school', schoolName)
-        ),
         supabase.from('mental_health_alerts').delete().eq('school', schoolName),
         supabase.from('weekly_summaries').delete().eq('school', schoolName),
         supabase.from('class_schedules').delete().eq('school', schoolName),
