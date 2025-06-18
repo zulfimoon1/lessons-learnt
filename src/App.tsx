@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { SupabaseAuthProvider } from "@/contexts/SupabaseAuthContext";
 import { SecurePlatformAdminProvider } from "@/contexts/SecurePlatformAdminContext";
+import { LanguageProvider } from "@/contexts/LanguageContext";
 import Index from "./pages/Index";
 import TeacherLogin from "./pages/TeacherLogin";
 import StudentLogin from "./pages/StudentLogin";
@@ -18,46 +19,48 @@ const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <SupabaseAuthProvider>
-      <SecurePlatformAdminProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/secure-auth" element={<SecureAuth />} />
-              <Route path="/teacher-login" element={<TeacherLogin />} />
-              <Route path="/student-login" element={<StudentLogin />} />
-              <Route 
-                path="/teacher-dashboard" 
-                element={
-                  <ProtectedRoute userType="teacher">
-                    <TeacherDashboard />
-                  </ProtectedRoute>
-                } 
-              />
-              <Route 
-                path="/student-dashboard" 
-                element={
-                  <ProtectedRoute userType="student">
-                    <StudentDashboard />
-                  </ProtectedRoute>
-                } 
-              />
-              <Route 
-                path="/console" 
-                element={
-                  <ProtectedRoute userType="admin">
-                    <SecureAuth />
-                  </ProtectedRoute>
-                } 
-              />
-            </Routes>
-          </BrowserRouter>
-        </TooltipProvider>
-      </SecurePlatformAdminProvider>
-    </SupabaseAuthProvider>
+    <LanguageProvider>
+      <SupabaseAuthProvider>
+        <SecurePlatformAdminProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
+              <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="/secure-auth" element={<SecureAuth />} />
+                <Route path="/teacher-login" element={<TeacherLogin />} />
+                <Route path="/student-login" element={<StudentLogin />} />
+                <Route 
+                  path="/teacher-dashboard" 
+                  element={
+                    <ProtectedRoute userType="teacher">
+                      <TeacherDashboard />
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route 
+                  path="/student-dashboard" 
+                  element={
+                    <ProtectedRoute userType="student">
+                      <StudentDashboard />
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route 
+                  path="/console" 
+                  element={
+                    <ProtectedRoute userType="admin">
+                      <SecureAuth />
+                    </ProtectedRoute>
+                  } 
+                />
+              </Routes>
+            </BrowserRouter>
+          </TooltipProvider>
+        </SecurePlatformAdminProvider>
+      </SupabaseAuthProvider>
+    </LanguageProvider>
   </QueryClientProvider>
 );
 
