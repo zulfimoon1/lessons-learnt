@@ -29,11 +29,21 @@ const SchoolManagement: React.FC<SchoolManagementProps> = ({ onDataChange }) => 
     if (admin?.email) {
       try {
         console.log('🔧 Setting admin context for:', admin.email);
-        await supabase.rpc('set_platform_admin_context', { admin_email: admin.email });
-        console.log('✅ Admin context set successfully');
+        const { error } = await supabase.rpc('set_platform_admin_context', { 
+          admin_email: admin.email 
+        });
+        
+        if (error) {
+          console.warn('⚠️ Context setting returned error:', error);
+        } else {
+          console.log('✅ Admin context set successfully');
+        }
+        
+        // Give context time to propagate
+        await new Promise(resolve => setTimeout(resolve, 100));
       } catch (error) {
         console.error('❌ Error setting admin context:', error);
-        // Continue - the new policies are more permissive
+        // Continue - the new policies should be more permissive
       }
     }
   };
@@ -44,7 +54,7 @@ const SchoolManagement: React.FC<SchoolManagementProps> = ({ onDataChange }) => 
       console.log('📊 Fetching schools...');
       
       // Try to get data with improved error handling
-      const [teacherResult, studentResult] = await Promise.all([
+      const [teacherResult, studentResult] = await Promise.allSettled([
         supabase.from('teachers').select('school').not('school', 'is', null),
         supabase.from('students').select('school').not('school', 'is', null)
       ]);
@@ -55,16 +65,16 @@ const SchoolManagement: React.FC<SchoolManagementProps> = ({ onDataChange }) => 
       let teacherSchools = [];
       let studentSchools = [];
 
-      if (!teacherResult.error && teacherResult.data) {
-        teacherSchools = teacherResult.data;
+      if (teacherResult.status === 'fulfilled' && !teacherResult.value.error && teacherResult.value.data) {
+        teacherSchools = teacherResult.value.data;
       } else {
-        console.warn('⚠️ Teacher query failed:', teacherResult.error);
+        console.warn('⚠️ Teacher query failed:', teacherResult.status === 'fulfilled' ? teacherResult.value.error : teacherResult.reason);
       }
 
-      if (!studentResult.error && studentResult.data) {
-        studentSchools = studentResult.data;
+      if (studentResult.status === 'fulfilled' && !studentResult.value.error && studentResult.value.data) {
+        studentSchools = studentResult.value.data;
       } else {
-        console.warn('⚠️ Student query failed:', studentResult.error);
+        console.warn('⚠️ Student query failed:', studentResult.status === 'fulfilled' ? studentResult.value.error : studentResult.reason);
       }
 
       // Filter out platform administration entries
@@ -155,6 +165,8 @@ const SchoolManagement: React.FC<SchoolManagementProps> = ({ onDataChange }) => 
         // Handle specific error cases
         if (error.code === '23505') {
           toast.error(`A school administrator with the email "${adminEmail}" already exists. Please choose a different school name.`);
+        } else if (error.message?.includes('401') || error.message?.includes('Unauthorized')) {
+          toast.error('Permission denied. Please try refreshing the page and logging in again.');
         } else {
           toast.error(`Failed to add school: ${error.message}`);
         }
@@ -193,7 +205,7 @@ const SchoolManagement: React.FC<SchoolManagementProps> = ({ onDataChange }) => 
     try {
       await setAdminContext();
       
-      // Use the secure database function
+      // Use the secure database function with better error handling
       const { data, error } = await supabase.rpc('platform_admin_delete_school', {
         school_name_param: schoolName,
         admin_email_param: admin.email
@@ -201,7 +213,15 @@ const SchoolManagement: React.FC<SchoolManagementProps> = ({ onDataChange }) => 
 
       if (error) {
         console.error('❌ Database function error:', error);
-        throw error;
+        
+        if (error.message?.includes('401') || error.message?.includes('Unauthorized')) {
+          toast.error('Permission denied. Please try refreshing the page and logging in again.');
+        } else if (error.message?.includes('Unauthorized')) {
+          toast.error('Unauthorized: You do not have permission to delete schools');
+        } else {
+          toast.error(`Failed to delete school: ${error.message}`);
+        }
+        return;
       }
 
       console.log('✅ School deletion results:', data);
@@ -217,8 +237,8 @@ const SchoolManagement: React.FC<SchoolManagementProps> = ({ onDataChange }) => 
       
     } catch (error) {
       console.error('❌ Error deleting school:', error);
-      if (error.message?.includes('Unauthorized')) {
-        toast.error('Unauthorized: You do not have permission to delete schools');
+      if (error.message?.includes('401') || error.message?.includes('Unauthorized')) {
+        toast.error('Permission denied. Please try refreshing the page and logging in again.');
       } else {
         toast.error(`Failed to delete school: ${error.message}`);
       }

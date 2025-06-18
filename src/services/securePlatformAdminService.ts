@@ -24,12 +24,20 @@ class SecurePlatformAdminService {
     try {
       console.log('🔧 Setting platform admin context for:', adminEmail);
       
-      // Set the context using the improved function
-      await supabase.rpc('set_platform_admin_context', { admin_email: adminEmail });
-      console.log('✅ Admin context setting completed');
+      // Use the improved context function with better error handling
+      const { error } = await supabase.rpc('set_platform_admin_context', { 
+        admin_email: adminEmail 
+      });
       
-      // Short delay to ensure context propagation
-      await new Promise(resolve => setTimeout(resolve, 100));
+      if (error) {
+        console.warn('⚠️ Context function returned error:', error);
+        // Continue anyway - the new policies should still work
+      } else {
+        console.log('✅ Admin context set successfully');
+      }
+      
+      // Give the context a moment to propagate
+      await new Promise(resolve => setTimeout(resolve, 200));
     } catch (error) {
       console.error('❌ Error setting admin context:', error);
       // Don't throw - continue with operations as the new policies are more permissive
@@ -47,12 +55,12 @@ class SecurePlatformAdminService {
 
       const adminEmail = loginData.email.toLowerCase().trim();
       
+      // Set admin context first for all authentication attempts
+      await this.setAdminContext(adminEmail);
+      
       // Handle the specific admin account with enhanced validation
       if (adminEmail === 'zulfimoon1@gmail.com') {
         console.log('🔍 Authenticating platform admin...');
-        
-        // Set admin context first
-        await this.setAdminContext(adminEmail);
         
         // For the known admin, provide direct access with correct password
         if (loginData.password === 'admin123') {
@@ -70,7 +78,7 @@ class SecurePlatformAdminService {
           };
         }
 
-        // Try database verification with the improved context
+        // Try database verification with better error handling
         try {
           const { data, error } = await supabase
             .from('teachers')
@@ -133,15 +141,15 @@ class SecurePlatformAdminService {
                 };
               }
             }
-          } else {
-            console.warn('⚠️ Database query error or no admin found:', error);
+          } else if (error) {
+            console.warn('⚠️ Database query error:', error);
           }
 
         } catch (authError) {
           console.error('💥 Error during database admin authentication:', authError);
         }
 
-        // Final fallback for known admin
+        // Final fallback for known admin with correct password
         if (loginData.password === 'admin123') {
           console.log('✅ Ultimate fallback admin authentication');
           return {
@@ -162,7 +170,7 @@ class SecurePlatformAdminService {
     } catch (error) {
       console.error('💥 Error in admin authentication:', error);
       
-      // Emergency fallback for known admin
+      // Emergency fallback for known admin with correct credentials
       if (loginData.email === 'zulfimoon1@gmail.com' && loginData.password === 'admin123') {
         console.log('🚨 Emergency admin access granted');
         try {
