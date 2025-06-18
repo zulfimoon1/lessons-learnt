@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { SchoolIcon, LogOutIcon, RefreshCwIcon, UsersIcon, MessageSquareIcon, Settings, Users, School, Shield, AlertTriangle } from "lucide-react";
+import { SchoolIcon, LogOutIcon, RefreshCwIcon, UsersIcon, MessageSquareIcon, Settings, Users, School, Shield } from "lucide-react";
 import { toast } from "sonner";
 import StatsCard from "@/components/dashboard/StatsCard";
 import SchoolOverview from "@/components/platform-admin/SchoolOverview";
@@ -65,7 +65,6 @@ const PlatformAdminDashboard = () => {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<string>("");
   const [refreshKey, setRefreshKey] = useState(0);
-  const [hasPermissionIssues, setHasPermissionIssues] = useState(false);
 
   console.log('📊 DASHBOARD: State check', { 
     admin: !!admin, 
@@ -82,7 +81,6 @@ const PlatformAdminDashboard = () => {
     }
 
     setIsRefreshing(true);
-    setHasPermissionIssues(false);
     
     try {
       console.log('📊 Getting platform stats for admin:', admin.email);
@@ -117,9 +115,6 @@ const PlatformAdminDashboard = () => {
         
         if (subError) {
           console.warn('Subscription data fetch error:', subError);
-          if (subError.message.includes('permission denied')) {
-            setHasPermissionIssues(true);
-          }
         } else if (subscriptionData) {
           monthlyRevenue = subscriptionData.reduce((total, sub) => {
             const monthlyAmount = sub.plan_type === 'yearly' ? sub.amount / 12 : sub.amount;
@@ -129,9 +124,6 @@ const PlatformAdminDashboard = () => {
         }
       } catch (error) {
         console.warn('Could not fetch subscription data:', error);
-        if (error instanceof Error && error.message.includes('permission denied')) {
-          setHasPermissionIssues(true);
-        }
       }
 
       // Get feedback analytics with improved error handling
@@ -146,18 +138,12 @@ const PlatformAdminDashboard = () => {
         const { data, error: feedbackError } = await supabase.from('feedback_analytics').select('*');
         if (feedbackError) {
           console.warn('Feedback analytics error:', feedbackError);
-          if (feedbackError.message.includes('permission denied')) {
-            setHasPermissionIssues(true);
-          }
         } else if (data) {
           feedbackAnalyticsData = data;
           console.log('📈 Feedback analytics received:', data.length, 'records');
         }
       } catch (error) {
         console.warn('Could not fetch feedback analytics:', error);
-        if (error instanceof Error && error.message.includes('permission denied')) {
-          setHasPermissionIssues(true);
-        }
       }
       
       const newStats = {
@@ -177,24 +163,11 @@ const PlatformAdminDashboard = () => {
       setLastUpdated(new Date().toLocaleString());
       setRefreshKey(Date.now());
       
-      if (hasPermissionIssues) {
-        toast.warning('Some data may be limited due to permission restrictions - this is normal during setup');
-      } else {
-        toast.success('Dashboard data refreshed successfully');
-      }
+      toast.success('Dashboard data refreshed successfully');
       
     } catch (error) {
       console.error('❌ Failed to fetch dashboard stats:', error);
-      if (error instanceof Error && error.message.includes('permission denied')) {
-        setHasPermissionIssues(true);
-        toast.warning('Limited access due to database permissions. Retrying...');
-        // Retry once after a longer delay
-        setTimeout(() => {
-          fetchStats();
-        }, 2000);
-      } else {
-        toast.error('Failed to refresh dashboard data. Please try again.');
-      }
+      toast.error('Failed to refresh dashboard data. Please try again.');
     } finally {
       setIsRefreshing(false);
     }
@@ -220,7 +193,7 @@ const PlatformAdminDashboard = () => {
     console.log('📊 Dashboard useEffect triggered', { isAuthenticated, admin: !!admin });
     if (isAuthenticated && admin?.email) {
       console.log('Loading dashboard data for admin:', admin.email);
-      // Add a longer delay to ensure context is fully set
+      // Add a delay to ensure context is fully set
       setTimeout(() => {
         fetchStats();
       }, 1000);
@@ -271,12 +244,6 @@ const PlatformAdminDashboard = () => {
               <RefreshCwIcon className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
               {isRefreshing ? 'Refreshing...' : 'Refresh'}
             </Button>
-            {hasPermissionIssues && (
-              <div className="flex items-center gap-1 text-orange-600 text-sm">
-                <AlertTriangle className="w-4 h-4" />
-                Setup Mode
-              </div>
-            )}
           </div>
           <div className="flex items-center gap-4">
             <span className="text-sm text-gray-600">Welcome, {admin?.email}</span>
@@ -289,23 +256,6 @@ const PlatformAdminDashboard = () => {
       </header>
 
       <div className="max-w-7xl mx-auto px-6 py-8">
-        {/* Permission Issues Warning */}
-        {hasPermissionIssues && (
-          <Card className="mb-6 bg-blue-50 border-blue-200">
-            <CardContent className="pt-6">
-              <div className="flex items-center gap-2 text-blue-800">
-                <AlertTriangle className="w-5 h-5" />
-                <div>
-                  <h3 className="font-medium">Dashboard Setup Mode</h3>
-                  <p className="text-sm text-blue-700 mt-1">
-                    The dashboard is initializing with the updated permissions. Some data may take a moment to load fully.
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
         {/* System Information */}
         <Card className="mb-8 bg-blue-50 border-blue-200">
           <CardHeader>
