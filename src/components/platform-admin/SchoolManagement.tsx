@@ -60,28 +60,29 @@ const SchoolManagement: React.FC<SchoolManagementProps> = ({ onDataChange }) => 
     try {
       console.log('➕ Adding school:', newSchoolName.trim());
       
-      await securePlatformAdminService.createSchool(admin.email, newSchoolName.trim());
+      const result = await securePlatformAdminService.createSchool(admin.email, newSchoolName.trim());
 
       console.log('✅ School created successfully');
-      toast.success(`School "${newSchoolName}" added successfully`);
+      toast.success(`School "${newSchoolName}" added successfully (simulated)`);
       setNewSchoolName('');
       
-      // Refresh data
-      setTimeout(async () => {
-        await fetchSchools();
-        if (onDataChange) {
-          onDataChange();
-        }
-      }, 500);
+      // Add to local state for demo
+      const newSchool: School = {
+        name: newSchoolName.trim(),
+        teacher_count: Math.floor(Math.random() * 10) + 1,
+        student_count: Math.floor(Math.random() * 200) + 50
+      };
+      setSchools(prev => [...prev, newSchool]);
+      
+      if (onDataChange) {
+        onDataChange();
+      }
       
     } catch (error: any) {
       console.error('❌ Error adding school:', error);
       
       let errorMessage = 'Failed to add school';
-      
-      if (error.message?.includes('already exists')) {
-        errorMessage = 'School administrator already exists';
-      } else if (error.message) {
+      if (error.message) {
         errorMessage = error.message;
       }
       
@@ -108,15 +109,14 @@ const SchoolManagement: React.FC<SchoolManagementProps> = ({ onDataChange }) => 
       await securePlatformAdminService.deleteSchool(admin.email, schoolName);
 
       console.log('✅ School deleted successfully');
-      toast.success(`School "${schoolName}" deleted successfully`);
+      toast.success(`School "${schoolName}" deleted successfully (simulated)`);
       
-      // Refresh data
-      setTimeout(async () => {
-        await fetchSchools();
-        if (onDataChange) {
-          onDataChange();
-        }
-      }, 500);
+      // Remove from local state for demo
+      setSchools(prev => prev.filter(school => school.name !== schoolName));
+      
+      if (onDataChange) {
+        onDataChange();
+      }
       
     } catch (error: any) {
       console.error('❌ Error deleting school:', error);
@@ -144,21 +144,21 @@ const SchoolManagement: React.FC<SchoolManagementProps> = ({ onDataChange }) => 
         <CardTitle className="flex items-center gap-2">
           <School className="w-5 h-5" />
           School Management
-          <div className="flex items-center gap-1 text-green-600">
+          <div className="flex items-center gap-1 text-blue-600">
             <CheckCircle className="w-4 h-4" />
-            <span className="text-xs">Full Access</span>
+            <span className="text-xs">Mock Mode</span>
           </div>
         </CardTitle>
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
-          <div className="bg-green-50 border border-green-200 rounded-lg p-3">
-            <div className="flex items-center gap-2 text-green-800">
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+            <div className="flex items-center gap-2 text-blue-800">
               <CheckCircle className="w-4 h-4" />
-              <span className="text-sm font-medium">Database Access Restored</span>
+              <span className="text-sm font-medium">Working with Mock Data</span>
             </div>
-            <p className="text-xs text-green-700 mt-1">
-              All school management operations are now working properly.
+            <p className="text-xs text-blue-700 mt-1">
+              School operations are simulated while database permissions are being resolved.
             </p>
           </div>
 

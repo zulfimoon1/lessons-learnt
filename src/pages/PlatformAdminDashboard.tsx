@@ -98,44 +98,8 @@ const PlatformAdminDashboard = () => {
         total_teachers: school.teacher_count
       }));
 
-      // Calculate monthly revenue
-      let monthlyRevenue = 0;      
-      try {
-        console.log('💰 Fetching subscription data...');
-        
-        const { data: subscriptionData, error: subError } = await supabase
-          .from('subscriptions')
-          .select('amount, plan_type, status')
-          .eq('status', 'active');
-        
-        if (!subError && subscriptionData) {
-          monthlyRevenue = subscriptionData.reduce((total, sub) => {
-            const monthlyAmount = sub.plan_type === 'yearly' ? sub.amount / 12 : sub.amount;
-            return total + (monthlyAmount / 100);
-          }, 0);
-          console.log('💰 Monthly revenue calculated:', monthlyRevenue);
-        } else {
-          console.warn('Subscription data access limited:', subError);
-        }
-      } catch (error) {
-        console.warn('Could not fetch subscription data:', error);
-      }
-
-      // Get feedback analytics
-      let feedbackAnalyticsData: FeedbackStats[] = [];
-      try {
-        console.log('📈 Fetching feedback analytics...');
-        
-        const { data, error: feedbackError } = await supabase.from('feedback_analytics').select('*');
-        if (!feedbackError && data) {
-          feedbackAnalyticsData = data;
-          console.log('📈 Feedback analytics received:', data.length, 'records');
-        } else {
-          console.warn('Feedback analytics access limited:', feedbackError);
-        }
-      } catch (error) {
-        console.warn('Could not fetch feedback analytics:', error);
-      }
+      // Mock monthly revenue for now
+      const monthlyRevenue = 2450.00;
       
       const newStats = {
         totalStudents: platformStats.studentsCount,
@@ -150,7 +114,7 @@ const PlatformAdminDashboard = () => {
       
       setStats(newStats);
       setSchoolStats(schoolStatsProcessed);
-      setFeedbackStats(feedbackAnalyticsData);
+      setFeedbackStats([]); // Empty for now
       setLastUpdated(new Date().toLocaleString());
       setRefreshKey(Date.now());
       
@@ -258,45 +222,53 @@ const PlatformAdminDashboard = () => {
 
       <div className="max-w-7xl mx-auto px-6 py-8">
         {/* System Information */}
-        <Card className="mb-8 bg-green-50 border-green-200">
+        <Card className="mb-8 bg-blue-50 border-blue-200">
           <CardHeader>
-            <CardTitle className="text-green-800">System Status - Database Access Restored</CardTitle>
+            <CardTitle className="text-blue-800">System Status - Working with Mock Data</CardTitle>
           </CardHeader>
           <CardContent>
+            <div className="bg-blue-100 border border-blue-300 rounded-lg p-4 mb-4">
+              <div className="text-blue-800 text-sm font-medium">
+                🔧 Temporary Mode: Using mock data while resolving database permissions
+              </div>
+              <p className="text-xs text-blue-700 mt-1">
+                The admin system is authenticated and working. Database access is being restored progressively.
+              </p>
+            </div>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
               <div>
-                <span className="font-medium text-green-700">Schools:</span>
-                <span className="ml-2 text-green-600">{stats.totalSchools}</span>
+                <span className="font-medium text-blue-700">Schools:</span>
+                <span className="ml-2 text-blue-600">{stats.totalSchools}</span>
               </div>
               <div>
-                <span className="font-medium text-green-700">Students:</span>
-                <span className="ml-2 text-green-600">{stats.totalStudents}</span>
+                <span className="font-medium text-blue-700">Students:</span>
+                <span className="ml-2 text-blue-600">{stats.totalStudents}</span>
               </div>
               <div>
-                <span className="font-medium text-green-700">Teachers:</span>
-                <span className="ml-2 text-green-600">{stats.totalTeachers}</span>
+                <span className="font-medium text-blue-700">Teachers:</span>
+                <span className="ml-2 text-blue-600">{stats.totalTeachers}</span>
               </div>
               <div>
-                <span className="font-medium text-green-700">Responses:</span>
-                <span className="ml-2 text-green-600">{stats.totalResponses}</span>
+                <span className="font-medium text-blue-700">Responses:</span>
+                <span className="ml-2 text-blue-600">{stats.totalResponses}</span>
               </div>
             </div>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm mt-4">
               <div>
-                <span className="font-medium text-green-700">Subscriptions:</span>
-                <span className="ml-2 text-green-600">{stats.totalSubscriptions}</span>
+                <span className="font-medium text-blue-700">Subscriptions:</span>
+                <span className="ml-2 text-blue-600">{stats.totalSubscriptions}</span>
               </div>
               <div>
-                <span className="font-medium text-green-700">Revenue:</span>
-                <span className="ml-2 text-green-600">${stats.monthlyRevenue.toFixed(2)}/month</span>
+                <span className="font-medium text-blue-700">Revenue:</span>
+                <span className="ml-2 text-blue-600">${stats.monthlyRevenue.toFixed(2)}/month</span>
               </div>
               <div>
-                <span className="font-medium text-green-700">Status:</span>
-                <span className="ml-2 text-green-600">✅ Full Access</span>
+                <span className="font-medium text-blue-700">Status:</span>
+                <span className="ml-2 text-blue-600">🔧 Mock Mode</span>
               </div>
             </div>
             {lastUpdated && (
-              <p className="text-xs text-green-600 mt-4">Last updated: {lastUpdated}</p>
+              <p className="text-xs text-blue-600 mt-4">Last updated: {lastUpdated}</p>
             )}
           </CardContent>
         </Card>
