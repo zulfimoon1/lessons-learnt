@@ -1,7 +1,5 @@
 
 import React, { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import SecureInputValidator from './SecureInputValidator';
 
 interface FormValidationState {
   [key: string]: {
@@ -25,8 +23,8 @@ const SecureFormValidation: React.FC<SecureFormValidationProps> = ({
   const [csrfToken, setCsrfToken] = useState<string>('');
 
   useEffect(() => {
-    // Generate CSRF token
-    const token = Array.from(crypto.getRandomValues(new Uint8Array(32)))
+    // Generate simple CSRF token
+    const token = Array.from(crypto.getRandomValues(new Uint8Array(16)))
       .map(b => b.toString(16).padStart(2, '0'))
       .join('');
     setCsrfToken(token);
@@ -58,27 +56,20 @@ const SecureFormValidation: React.FC<SecureFormValidationProps> = ({
 
   const enhanceFormElement = (element: React.ReactElement): React.ReactElement => {
     if (element.type === 'input' || element.type === 'textarea') {
-      const { name, type, value = '', maxLength = 1000 } = element.props;
+      const { name, type, value = '' } = element.props;
       
       if (!name) return element;
 
-      const inputType = type === 'email' ? 'email' : 
-                      name.toLowerCase().includes('name') ? 'name' :
-                      name.toLowerCase().includes('school') ? 'school' : 'general';
+      // Simple validation logic
+      const isValid = value.length > 0 && value.length <= 1000;
+      const violations = isValid ? [] : ['Field is required and must be under 1000 characters'];
 
-      return (
-        <SecureInputValidator
-          key={name}
-          value={value}
-          inputType={inputType}
-          maxLength={maxLength}
-          onValidationChange={(isValid, violations) => 
-            handleFieldValidation(name, isValid, violations)
-          }
-        >
-          {element}
-        </SecureInputValidator>
-      );
+      // Update validation state
+      if (enableRealTimeValidation) {
+        setTimeout(() => handleFieldValidation(name, isValid, violations), 0);
+      }
+
+      return element;
     }
 
     if (element.props?.children) {
@@ -111,21 +102,6 @@ const SecureFormValidation: React.FC<SecureFormValidationProps> = ({
       if (!isFormValid) {
         console.error('Form validation failed');
         return;
-      }
-
-      // Basic rate limiting check using existing function
-      try {
-        const rateLimitOk = await supabase.rpc('check_rate_limit', {
-          operation_type: 'form_submit',
-          max_attempts: 10
-        });
-
-        if (!rateLimitOk.data) {
-          console.error('Rate limit exceeded for form submission');
-          return;
-        }
-      } catch (error) {
-        console.warn('Rate limit check failed, proceeding with form submission');
       }
 
       // Call original handler

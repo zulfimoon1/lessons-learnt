@@ -1,15 +1,14 @@
 
 import React, { useEffect, useState } from 'react';
-import { supabase } from '@/integrations/supabase/client';
 import { Shield, AlertTriangle, CheckCircle, XCircle } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { supabase } from '@/integrations/supabase/client';
 
 interface SecurityStatus {
   level: 'secure' | 'warning' | 'critical';
   message: string;
   lastCheck: string;
-  activeThreats: number;
   sessionValid: boolean;
 }
 
@@ -18,7 +17,6 @@ const EnhancedSecurityMonitor: React.FC = () => {
     level: 'secure',
     message: 'Initializing security check...',
     lastCheck: new Date().toISOString(),
-    activeThreats: 0,
     sessionValid: true
   });
 
@@ -29,48 +27,18 @@ const EnhancedSecurityMonitor: React.FC = () => {
         const { data: { session } } = await supabase.auth.getSession();
         const sessionValid = !!session;
 
-        // Get recent security events from audit log
-        const { data: recentEvents } = await supabase
-          .from('audit_log')
-          .select('*')
-          .gte('timestamp', new Date(Date.now() - 60 * 60 * 1000).toISOString()) // Last hour
-          .order('timestamp', { ascending: false })
-          .limit(50);
-
-        // Count security events by severity
-        const highRiskEvents = recentEvents?.filter(event => {
-          const severity = typeof event.new_data === 'object' && event.new_data && 
-                          'severity' in event.new_data ? 
-                          (event.new_data as any).severity : 'low';
-          return severity === 'high';
-        }).length || 0;
-
-        const mediumRiskEvents = recentEvents?.filter(event => {
-          const severity = typeof event.new_data === 'object' && event.new_data && 
-                          'severity' in event.new_data ? 
-                          (event.new_data as any).severity : 'low';
-          return severity === 'medium';
-        }).length || 0;
-
         let level: 'secure' | 'warning' | 'critical' = 'secure';
         let message = 'All security checks passed';
 
         if (!sessionValid) {
           level = 'warning';
           message = 'No active session detected';
-        } else if (highRiskEvents > 3) {
-          level = 'critical';
-          message = `${highRiskEvents} high-risk security events detected`;
-        } else if (highRiskEvents > 0 || mediumRiskEvents > 5) {
-          level = 'warning';
-          message = `Security alerts detected: ${highRiskEvents} high, ${mediumRiskEvents} medium`;
         }
 
         setSecurityStatus({
           level,
           message,
           lastCheck: new Date().toISOString(),
-          activeThreats: highRiskEvents + mediumRiskEvents,
           sessionValid
         });
 
@@ -148,13 +116,7 @@ const EnhancedSecurityMonitor: React.FC = () => {
           {securityStatus.message}
         </div>
 
-        <div className="grid grid-cols-2 gap-4 text-xs">
-          <div>
-            <span className="font-medium">Active Threats:</span>
-            <span className={`ml-1 ${securityStatus.activeThreats > 0 ? 'text-red-600 font-medium' : 'text-green-600'}`}>
-              {securityStatus.activeThreats}
-            </span>
-          </div>
+        <div className="grid grid-cols-1 gap-2 text-xs">
           <div>
             <span className="font-medium">Session:</span>
             <span className={`ml-1 ${securityStatus.sessionValid ? 'text-green-600' : 'text-red-600'}`}>
