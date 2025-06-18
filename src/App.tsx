@@ -61,7 +61,7 @@ const App = () => {
             </SecurePlatformAdminProvider>
           </SupabaseAuthProvider>
         </AuthProvider>
-      </TooltipProvider>
+      </LanguageProvider>
     </QueryClientProvider>
   );
 };
