@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { enhancedSecurityService } from './enhancedSecurityService';
 
@@ -29,10 +28,8 @@ class SecureAuthenticationService {
 
       // Check rate limiting using existing function
       const rateLimitOk = await supabase.rpc('check_rate_limit', {
-        user_id: email,
-        operation: 'login_attempt',
-        max_attempts: this.MAX_LOGIN_ATTEMPTS,
-        window_minutes: 15
+        operation_type: 'login_attempt',
+        max_attempts: this.MAX_LOGIN_ATTEMPTS
       });
 
       if (!rateLimitOk.data) {
@@ -84,10 +81,8 @@ class SecureAuthenticationService {
 
       // Check rate limiting for signups
       const rateLimitOk = await supabase.rpc('check_rate_limit', {
-        user_id: email,
-        operation: 'signup_attempt',
-        max_attempts: 3,
-        window_minutes: 60
+        operation_type: 'signup_attempt',
+        max_attempts: 3
       });
 
       if (!rateLimitOk.data) {

@@ -116,10 +116,8 @@ const SecureFormValidation: React.FC<SecureFormValidationProps> = ({
       // Basic rate limiting check using existing function
       try {
         const rateLimitOk = await supabase.rpc('check_rate_limit', {
-          user_id: 'form_submission',
-          operation: 'form_submit',
-          max_attempts: 10,
-          window_minutes: 5
+          operation_type: 'form_submit',
+          max_attempts: 10
         });
 
         if (!rateLimitOk.data) {
