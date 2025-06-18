@@ -1,21 +1,47 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
-import { Teacher, Student } from '@/types/auth';
+import { User, Session } from '@supabase/supabase-js';
 
-interface SupabaseAuthContextType {
+interface Teacher {
+  id: string;
+  name: string;
+  email: string;
+  school: string;
+  role: 'teacher' | 'admin' | 'doctor';
+  specialization?: string;
+  license_number?: string;
+  created_at: string;
+}
+
+interface Student {
+  id: string;
+  full_name: string;
+  school: string;
+  grade: string;
+  created_at: string;
+}
+
+interface AuthContextType {
   user: User | null;
   session: Session | null;
   teacher: Teacher | null;
   student: Student | null;
   isLoading: boolean;
-  signUp: (email: string, password: string, userData: any) => Promise<{ error?: string }>;
+  signUp: (email: string, password: string, metadata?: any) => Promise<{ error?: string }>;
   signIn: (email: string, password: string) => Promise<{ error?: string }>;
   signOut: () => Promise<void>;
 }
 
-const SupabaseAuthContext = createContext<SupabaseAuthContextType | undefined>(undefined);
+const SupabaseAuthContext = createContext<AuthContextType | undefined>(undefined);
+
+export const useSupabaseAuth = () => {
+  const context = useContext(SupabaseAuthContext);
+  if (context === undefined) {
+    throw new Error('useSupabaseAuth must be used within a SupabaseAuthProvider');
+  }
+  return context;
+};
 
 export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
@@ -24,173 +50,112 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const [student, setStudent] = useState<Student | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    console.log('SupabaseAuth: Setting up auth state listener');
-
-    // Set up auth state listener FIRST
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        console.log('SupabaseAuth: Auth state changed:', event, session?.user?.id);
-        setSession(session);
-        setUser(session?.user ?? null);
-        
-        // Clear previous profile data
-        setTeacher(null);
-        setStudent(null);
-        
-        // Fetch user profile data if authenticated
-        if (session?.user) {
-          setTimeout(() => {
-            fetchUserProfile(session.user.id);
-          }, 0);
-        }
-      }
-    );
-
-    // THEN check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      console.log('SupabaseAuth: Initial session check:', session?.user?.id);
-      setSession(session);
-      setUser(session?.user ?? null);
-      
-      if (session?.user) {
-        fetchUserProfile(session.user.id);
-      } else {
-        setIsLoading(false);
-      }
-    });
-
-    return () => {
-      console.log('SupabaseAuth: Cleaning up auth listener');
-      subscription.unsubscribe();
-    };
-  }, []);
-
-  const fetchUserProfile = async (userId: string) => {
+  const loadUserProfile = async (userId: string) => {
     try {
-      console.log('SupabaseAuth: Fetching profile for user:', userId);
-      
-      // Try to find teacher profile first
-      const { data: teacherData, error: teacherError } = await supabase
+      // Try to load as teacher first
+      const { data: teacherData } = await supabase
         .from('teachers')
         .select('*')
         .eq('id', userId)
         .single();
 
-      if (teacherData && !teacherError) {
-        console.log('SupabaseAuth: Found teacher profile');
-        const teacherProfile: Teacher = {
-          id: teacherData.id,
-          name: teacherData.name,
-          email: teacherData.email,
-          school: teacherData.school,
-          role: teacherData.role as 'teacher' | 'admin' | 'doctor',
-          specialization: teacherData.specialization,
-          license_number: teacherData.license_number,
-          is_available: teacherData.is_available
-        };
-        setTeacher(teacherProfile);
-        setIsLoading(false);
+      if (teacherData) {
+        setTeacher(teacherData);
+        setStudent(null);
         return;
       }
 
-      // Try to find student profile
-      const { data: studentData, error: studentError } = await supabase
+      // If not a teacher, try student
+      const { data: studentData } = await supabase
         .from('students')
         .select('*')
         .eq('id', userId)
         .single();
 
-      if (studentData && !studentError) {
-        console.log('SupabaseAuth: Found student profile');
-        const studentProfile: Student = {
-          id: studentData.id,
-          full_name: studentData.full_name,
-          school: studentData.school,
-          grade: studentData.grade
-        };
-        setStudent(studentProfile);
+      if (studentData) {
+        setStudent(studentData);
+        setTeacher(null);
+        return;
       }
-      
-      setIsLoading(false);
     } catch (error) {
-      console.error('SupabaseAuth: Error fetching user profile:', error);
-      setIsLoading(false);
+      console.error('Error loading user profile:', error);
     }
   };
 
-  const signUp = async (email: string, password: string, userData: any) => {
+  useEffect(() => {
+    // Get initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+      if (session?.user) {
+        loadUserProfile(session.user.id);
+      }
+      setIsLoading(false);
+    });
+
+    // Listen for auth changes
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+      
+      if (session?.user) {
+        await loadUserProfile(session.user.id);
+      } else {
+        setTeacher(null);
+        setStudent(null);
+      }
+      setIsLoading(false);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const signUp = async (email: string, password: string, metadata?: any) => {
     try {
-      console.log('SupabaseAuth: Starting signup for:', email);
-      
-      const redirectUrl = `${window.location.origin}/`;
-      
-      const { data, error } = await supabase.auth.signUp({
+      const { error } = await supabase.auth.signUp({
         email,
         password,
         options: {
-          emailRedirectTo: redirectUrl,
-          data: userData
+          data: metadata
         }
       });
 
       if (error) {
-        console.error('SupabaseAuth: Signup error:', error);
         return { error: error.message };
       }
 
-      if (data.user) {
-        console.log('SupabaseAuth: Signup successful');
-        return {};
-      }
-
-      return { error: 'Signup failed' };
+      return {};
     } catch (error) {
-      console.error('SupabaseAuth: Unexpected signup error:', error);
-      return { error: 'An unexpected error occurred during signup' };
+      return { error: 'Signup failed' };
     }
   };
 
   const signIn = async (email: string, password: string) => {
     try {
-      console.log('SupabaseAuth: Starting signin for:', email);
-      
-      const { data, error } = await supabase.auth.signInWithPassword({
+      const { error } = await supabase.auth.signInWithPassword({
         email,
         password
       });
 
       if (error) {
-        console.error('SupabaseAuth: Signin error:', error);
         return { error: error.message };
       }
 
-      if (data.user) {
-        console.log('SupabaseAuth: Signin successful');
-        return {};
-      }
-
-      return { error: 'Signin failed' };
+      return {};
     } catch (error) {
-      console.error('SupabaseAuth: Unexpected signin error:', error);
-      return { error: 'An unexpected error occurred during signin' };
+      return { error: 'Sign in failed' };
     }
   };
 
   const signOut = async () => {
-    try {
-      console.log('SupabaseAuth: Signing out');
-      await supabase.auth.signOut();
-      setUser(null);
-      setSession(null);
-      setTeacher(null);
-      setStudent(null);
-    } catch (error) {
-      console.error('SupabaseAuth: Signout error:', error);
-    }
+    await supabase.auth.signOut();
+    setTeacher(null);
+    setStudent(null);
   };
 
-  const value: SupabaseAuthContextType = {
+  const value: AuthContextType = {
     user,
     session,
     teacher,
@@ -206,12 +171,4 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
       {children}
     </SupabaseAuthContext.Provider>
   );
-};
-
-export const useSupabaseAuth = (): SupabaseAuthContextType => {
-  const context = useContext(SupabaseAuthContext);
-  if (context === undefined) {
-    throw new Error('useSupabaseAuth must be used within a SupabaseAuthProvider');
-  }
-  return context;
 };

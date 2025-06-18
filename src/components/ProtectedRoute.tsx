@@ -1,17 +1,17 @@
 
 import React from 'react';
-import SecurityGuard from './auth/SecurityGuard';
+import SecureProtectedRoute from './SecureProtectedRoute';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
   requireAuth?: boolean;
-  userType?: 'teacher' | 'student';
+  userType?: 'teacher' | 'student' | 'admin';
   allowedRoles?: string[];
   redirectTo?: string;
 }
 
 const ProtectedRoute: React.FC<ProtectedRouteProps> = (props) => {
-  return <SecurityGuard {...props} />;
+  return <SecureProtectedRoute {...props} />;
 };
 
 export default ProtectedRoute;
