@@ -16,7 +16,7 @@ import TeacherLogin from "./pages/TeacherLogin";
 import StudentLogin from "./pages/StudentLogin";
 import TeacherDashboard from "./pages/TeacherDashboard";
 import StudentDashboard from "./pages/StudentDashboard";
-import PlatformConsole from "./pages/PlatformConsole";
+import PlatformAdminDashboard from "./pages/PlatformAdminDashboard";
 import SecureAuth from "./pages/SecureAuth";
 import SecureAuthGuard from "./components/SecureAuthGuard";
 
@@ -69,7 +69,7 @@ const App = () => {
                           path="/console" 
                           element={
                             <SecureAuthGuard requireAuth userType="admin">
-                              <PlatformConsole />
+                              <PlatformAdminDashboard />
                             </SecureAuthGuard>
                           } 
                         />

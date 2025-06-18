@@ -113,17 +113,21 @@ const SecureFormValidation: React.FC<SecureFormValidationProps> = ({
         return;
       }
 
-      // Rate limiting check
-      const rateLimitOk = await supabase.rpc('check_enhanced_rate_limit', {
-        operation_type: 'form_submission',
-        identifier: 'user_form',
-        max_attempts: 10,
-        window_minutes: 5
-      });
+      // Basic rate limiting check using existing function
+      try {
+        const rateLimitOk = await supabase.rpc('check_rate_limit', {
+          user_id: 'form_submission',
+          operation: 'form_submit',
+          max_attempts: 10,
+          window_minutes: 5
+        });
 
-      if (!rateLimitOk.data) {
-        console.error('Rate limit exceeded for form submission');
-        return;
+        if (!rateLimitOk.data) {
+          console.error('Rate limit exceeded for form submission');
+          return;
+        }
+      } catch (error) {
+        console.warn('Rate limit check failed, proceeding with form submission');
       }
 
       // Call original handler

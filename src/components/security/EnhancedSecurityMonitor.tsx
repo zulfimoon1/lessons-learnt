@@ -25,35 +25,39 @@ const EnhancedSecurityMonitor: React.FC = () => {
   useEffect(() => {
     const checkSecurityStatus = async () => {
       try {
-        // Check session security
-        const sessionCheck = await supabase.rpc('validate_session_security', {
-          user_agent: navigator.userAgent,
-          ip_address: 'client-side'
-        });
+        // Check if user is authenticated
+        const { data: { session } } = await supabase.auth.getSession();
+        const sessionValid = !!session;
 
-        // Get recent security events
+        // Get recent security events from audit log
         const { data: recentEvents } = await supabase
           .from('audit_log')
           .select('*')
-          .eq('table_name', 'security_events')
           .gte('timestamp', new Date(Date.now() - 60 * 60 * 1000).toISOString()) // Last hour
           .order('timestamp', { ascending: false })
           .limit(50);
 
-        const highRiskEvents = recentEvents?.filter(event => 
-          event.new_data?.severity === 'high'
-        ).length || 0;
+        // Count security events by severity
+        const highRiskEvents = recentEvents?.filter(event => {
+          const severity = typeof event.new_data === 'object' && event.new_data && 
+                          'severity' in event.new_data ? 
+                          (event.new_data as any).severity : 'low';
+          return severity === 'high';
+        }).length || 0;
 
-        const mediumRiskEvents = recentEvents?.filter(event => 
-          event.new_data?.severity === 'medium'
-        ).length || 0;
+        const mediumRiskEvents = recentEvents?.filter(event => {
+          const severity = typeof event.new_data === 'object' && event.new_data && 
+                          'severity' in event.new_data ? 
+                          (event.new_data as any).severity : 'low';
+          return severity === 'medium';
+        }).length || 0;
 
         let level: 'secure' | 'warning' | 'critical' = 'secure';
         let message = 'All security checks passed';
 
-        if (!sessionCheck.data) {
-          level = 'critical';
-          message = 'Session security validation failed';
+        if (!sessionValid) {
+          level = 'warning';
+          message = 'No active session detected';
         } else if (highRiskEvents > 3) {
           level = 'critical';
           message = `${highRiskEvents} high-risk security events detected`;
@@ -67,7 +71,7 @@ const EnhancedSecurityMonitor: React.FC = () => {
           message,
           lastCheck: new Date().toISOString(),
           activeThreats: highRiskEvents + mediumRiskEvents,
-          sessionValid: sessionCheck.data || false
+          sessionValid
         });
 
       } catch (error) {

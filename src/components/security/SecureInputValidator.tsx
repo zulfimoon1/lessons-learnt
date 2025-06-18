@@ -1,6 +1,5 @@
 
 import React, { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
 
 interface ValidationResult {
   isValid: boolean;
@@ -30,7 +29,7 @@ const SecureInputValidator: React.FC<SecureInputValidatorProps> = ({
   });
 
   useEffect(() => {
-    const validateInput = async () => {
+    const validateInput = () => {
       if (!value) {
         const result = { isValid: true, riskLevel: 'low', violations: [] };
         setValidationResult(result);
@@ -38,33 +37,79 @@ const SecureInputValidator: React.FC<SecureInputValidatorProps> = ({
         return;
       }
 
-      try {
-        const { data, error } = await supabase.rpc('validate_secure_input', {
-          input_text: value,
-          input_type: inputType,
-          max_length: maxLength
+      let isValid = true;
+      let riskLevel = 'low';
+      const violations: string[] = [];
+
+      // Check length
+      if (value.length > maxLength) {
+        isValid = false;
+        violations.push(`Input exceeds maximum length of ${maxLength} characters`);
+      }
+
+      // Check for SQL injection patterns
+      if (/(\bunion\b|\bselect\b|\binsert\b|\bupdate\b|\bdelete\b|\bdrop\b|\bcreate\b|\balter\b|\bexec\b|\bexecute\b)/i.test(value)) {
+        isValid = false;
+        riskLevel = 'high';
+        violations.push('Potential SQL injection detected');
+      }
+
+      // Check for XSS patterns
+      if (/<script|javascript:|on\w+\s*=/i.test(value)) {
+        isValid = false;
+        riskLevel = 'high';
+        violations.push('Potential XSS attack detected');
+      }
+
+      // Check for path traversal
+      if (/\.\.[\/\\]/.test(value)) {
+        isValid = false;
+        riskLevel = 'medium';
+        violations.push('Path traversal attempt detected');
+      }
+
+      // Type-specific validations
+      switch (inputType) {
+        case 'email':
+          if (!/^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/.test(value)) {
+            isValid = false;
+            violations.push('Invalid email format');
+          }
+          break;
+        case 'name':
+          if (/[<>"';&=]/.test(value)) {
+            isValid = false;
+            violations.push('Invalid characters in name field');
+          }
+          break;
+        case 'school':
+          if (/[<>"';&=]/.test(value)) {
+            isValid = false;
+            violations.push('Invalid characters in school field');
+          }
+          break;
+      }
+
+      const result: ValidationResult = {
+        isValid,
+        riskLevel,
+        violations
+      };
+
+      setValidationResult(result);
+      onValidationChange(result.isValid, result.violations);
+
+      // Log high-risk inputs to console for monitoring
+      if (riskLevel === 'high') {
+        console.warn('High-risk input detected:', {
+          inputType,
+          violations,
+          value: value.substring(0, 50) + '...'
         });
-
-        if (error) {
-          console.error('Input validation error:', error);
-          return;
-        }
-
-        const result: ValidationResult = {
-          isValid: data.is_valid,
-          riskLevel: data.risk_level,
-          violations: data.violations || []
-        };
-
-        setValidationResult(result);
-        onValidationChange(result.isValid, result.violations);
-
-      } catch (error) {
-        console.error('Input validation failed:', error);
       }
     };
 
-    // Debounce validation to avoid excessive API calls
+    // Debounce validation to avoid excessive calls
     const timeoutId = setTimeout(validateInput, 300);
     return () => clearTimeout(timeoutId);
   }, [value, inputType, maxLength, onValidationChange]);
