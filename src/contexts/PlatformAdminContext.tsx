@@ -1,7 +1,6 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { securePlatformAdminService } from '@/services/securePlatformAdminService';
-import { supabase } from '@/integrations/supabase/client';
 
 interface AdminUser {
   id: string;

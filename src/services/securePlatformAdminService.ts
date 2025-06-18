@@ -28,6 +28,9 @@ class SecurePlatformAdminService {
       if (adminEmail === this.KNOWN_ADMIN && loginData.password === 'admin123') {
         console.log('✅ Known admin authenticated');
         
+        // Set admin context immediately after authentication
+        await this.setAdminContext(adminEmail);
+        
         return {
           success: true,
           admin: {
@@ -51,8 +54,17 @@ class SecurePlatformAdminService {
   async setAdminContext(adminEmail: string): Promise<void> {
     try {
       console.log('🔧 Setting admin context for:', adminEmail);
-      await supabase.rpc('set_platform_admin_context', { admin_email: adminEmail });
-      console.log('✅ Admin context set successfully');
+      
+      // Use the updated RPC function that handles platform admin context
+      const { error } = await supabase.rpc('set_platform_admin_context', { 
+        admin_email: adminEmail 
+      });
+      
+      if (error) {
+        console.warn('⚠️ Failed to set admin context via RPC:', error);
+      } else {
+        console.log('✅ Admin context set successfully via RPC');
+      }
     } catch (error) {
       console.warn('⚠️ Failed to set admin context:', error);
       // Continue anyway - the RLS policies should handle direct email check
@@ -66,8 +78,11 @@ class SecurePlatformAdminService {
   ): Promise<T> {
     console.log('🔍 Executing secure query for:', adminEmail);
     
-    // Always set admin context first
+    // Always set admin context first and wait for it
     await this.setAdminContext(adminEmail);
+    
+    // Add a small delay to ensure context is properly set
+    await new Promise(resolve => setTimeout(resolve, 100));
     
     try {
       const result = await queryFn();
@@ -97,6 +112,9 @@ class SecurePlatformAdminService {
     return this.executeSecureQuery(
       adminEmail,
       async () => {
+        // Ensure admin context is set before each query
+        await this.setAdminContext(adminEmail);
+        
         // Use Promise.allSettled to prevent one failure from breaking everything
         const [studentsResult, teachersResult, feedbackResult, subscriptionsResult] = await Promise.allSettled([
           supabase.from('students').select('id', { count: 'exact', head: true }),
@@ -138,6 +156,9 @@ class SecurePlatformAdminService {
     return this.executeSecureQuery(
       adminEmail,
       async () => {
+        // Ensure admin context is set
+        await this.setAdminContext(adminEmail);
+        
         // Get data with error handling
         const [teachersResult, studentsResult] = await Promise.allSettled([
           supabase
@@ -189,6 +210,9 @@ class SecurePlatformAdminService {
 
       // Always validate the known admin
       if (emailValidation.sanitizedValue === this.KNOWN_ADMIN) {
+        // Set admin context for validation
+        await this.setAdminContext(emailValidation.sanitizedValue);
+        
         return {
           valid: true,
           admin: {
@@ -219,6 +243,9 @@ class SecurePlatformAdminService {
     return this.executeSecureQuery(
       adminEmail,
       async () => {
+        // Ensure admin context is set before operation
+        await this.setAdminContext(adminEmail);
+        
         // Generate admin email for the school
         const adminSchoolEmail = 'admin@' + schoolName.toLowerCase().replace(/\s+/g, '') + '.edu';
         
@@ -263,35 +290,23 @@ class SecurePlatformAdminService {
     return this.executeSecureQuery(
       adminEmail,
       async () => {
-        // First get the IDs we need for cascading deletes
-        const { data: scheduleIds } = await supabase
-          .from('class_schedules')
-          .select('id')
-          .eq('school', schoolName);
+        // Ensure admin context is set before operation
+        await this.setAdminContext(adminEmail);
         
-        const scheduleIdArray = scheduleIds?.map(s => s.id) || [];
-        
-        // Delete feedback related to this school's class schedules
-        if (scheduleIdArray.length > 0) {
-          await supabase
-            .from('feedback')
-            .delete()
-            .in('class_schedule_id', scheduleIdArray);
-        }
-        
-        // Delete all other data related to the school
-        const deletions = await Promise.allSettled([
-          supabase.from('mental_health_alerts').delete().eq('school', schoolName),
-          supabase.from('weekly_summaries').delete().eq('school', schoolName),
-          supabase.from('class_schedules').delete().eq('school', schoolName),
-          supabase.from('students').delete().eq('school', schoolName),
-          supabase.from('school_psychologists').delete().eq('school', schoolName),
-          supabase.from('mental_health_articles').delete().eq('school', schoolName),
-          supabase.from('teachers').delete().eq('school', schoolName)
-        ]);
+        // Use the platform admin delete function
+        const { data, error } = await supabase
+          .rpc('platform_admin_delete_school', {
+            school_name_param: schoolName,
+            admin_email_param: adminEmail
+          });
 
-        console.log('✅ School deleted:', { schoolName, deletions: deletions.length });
-        return { success: true, schoolName, deletedAt: new Date().toISOString() };
+        if (error) {
+          console.error('❌ School deletion failed:', error);
+          throw new Error(`Failed to delete school: ${error.message}`);
+        }
+
+        console.log('✅ School deleted:', { schoolName, data });
+        return { success: true, schoolName, deletedAt: new Date().toISOString(), data };
       }
     );
   }
