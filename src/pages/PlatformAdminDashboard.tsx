@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { usePlatformAdmin } from "@/contexts/PlatformAdminContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -65,7 +66,7 @@ const PlatformAdminDashboard = () => {
   const [lastUpdated, setLastUpdated] = useState<string>("");
   const [refreshKey, setRefreshKey] = useState(0);
 
-  console.log('📊 DASHBOARD: Platform admin state', { 
+  console.log('📊 DASHBOARD: State check', { 
     admin: !!admin, 
     isAuthenticated, 
     adminLoading,
@@ -73,7 +74,7 @@ const PlatformAdminDashboard = () => {
   });
 
   const fetchStats = async () => {
-    console.log('📊 DASHBOARD: Starting fetchStats...');
+    console.log('📊 DASHBOARD: Fetching stats...');
     if (!admin?.email) {
       console.warn('No admin email available');
       return;
@@ -82,31 +83,33 @@ const PlatformAdminDashboard = () => {
     setIsRefreshing(true);
     
     try {
-      // Use the enhanced service method for getting stats
-      const platformStats = await securePlatformAdminService.getPlatformStats(admin.email);
+      console.log('📊 Getting platform stats...');
       
-      console.log('📊 DASHBOARD: Platform stats retrieved:', platformStats);
+      // Get basic stats
+      const platformStats = await securePlatformAdminService.getPlatformStats(admin.email);
+      console.log('📊 Platform stats received:', platformStats);
 
-      // Get school data with enhanced error handling
+      // Get additional data for schools and revenue
       let schoolStatsProcessed: SchoolStats[] = [];
       let totalSchools = 0;
       let monthlyRevenue = 0;
       
       try {
-        // Use the secure query method for additional data
         await securePlatformAdminService.executeSecureQuery(
           admin.email,
           async () => {
+            console.log('📊 Getting additional school data...');
+            
             const [studentsResult, teachersResult, subscriptionResult] = await Promise.allSettled([
-              supabase.from('students').select('school').not('school', 'is', null),
-              supabase.from('teachers').select('school').not('school', 'is', null),
+              supabase.from('students').select('school'),
+              supabase.from('teachers').select('school'),
               supabase.from('subscriptions').select('amount, plan_type, status').eq('status', 'active')
             ]);
 
             const allSchools = new Set<string>();
             const excludedSchools = ['Platform Administration', 'platform administration', 'admin'];
             
-            // Process students
+            // Process school data
             if (studentsResult.status === 'fulfilled' && studentsResult.value.data) {
               studentsResult.value.data.forEach(item => {
                 if (item?.school && !excludedSchools.some(excluded => 
@@ -117,7 +120,6 @@ const PlatformAdminDashboard = () => {
               });
             }
             
-            // Process teachers
             if (teachersResult.status === 'fulfilled' && teachersResult.value.data) {
               teachersResult.value.data.forEach(item => {
                 if (item?.school && !excludedSchools.some(excluded => 
@@ -127,7 +129,7 @@ const PlatformAdminDashboard = () => {
                 }
               });
               
-              // Calculate teacher counts per school
+              // Calculate teacher counts
               const teacherCounts = teachersResult.value.data
                 .filter(teacher => teacher.school && !excludedSchools.some(excluded => 
                   teacher.school.toLowerCase().includes(excluded.toLowerCase())
@@ -150,6 +152,8 @@ const PlatformAdminDashboard = () => {
             }
             
             totalSchools = allSchools.size;
+            console.log('📊 Processed additional data:', { totalSchools, revenue: monthlyRevenue, schoolStats: schoolStatsProcessed.length });
+            
             return true;
           },
           true
@@ -158,7 +162,7 @@ const PlatformAdminDashboard = () => {
         console.warn('Could not fetch additional data:', error);
       }
 
-      // Get feedback analytics with error handling
+      // Get feedback analytics
       let feedbackAnalyticsData: FeedbackStats[] = [];
       try {
         await securePlatformAdminService.executeSecureQuery(
@@ -185,7 +189,7 @@ const PlatformAdminDashboard = () => {
         monthlyRevenue: monthlyRevenue,
       };
 
-      console.log('📊 DASHBOARD: Setting new stats:', newStats);
+      console.log('📊 Final stats:', newStats);
       
       setStats(newStats);
       setSchoolStats(schoolStatsProcessed);
@@ -193,13 +197,11 @@ const PlatformAdminDashboard = () => {
       setLastUpdated(new Date().toLocaleString());
       setRefreshKey(Date.now());
       
-      toast.success('Data refreshed successfully');
+      toast.success('Dashboard data refreshed successfully');
       
     } catch (error) {
-      console.error('❌ DASHBOARD: Failed to fetch stats:', error);
-      toast.error('Failed to refresh data - using cached values');
-      
-      // Keep existing stats, don't reset to zero
+      console.error('❌ Failed to fetch dashboard stats:', error);
+      toast.error('Failed to refresh dashboard data');
     } finally {
       setIsRefreshing(false);
     }
@@ -210,7 +212,7 @@ const PlatformAdminDashboard = () => {
   };
 
   const handleDataChange = () => {
-    console.log('📊 DASHBOARD: Data changed, refreshing...');
+    console.log('📊 Data changed, refreshing dashboard...');
     setTimeout(() => {
       fetchStats();
     }, 500);
@@ -222,9 +224,9 @@ const PlatformAdminDashboard = () => {
   };
 
   useEffect(() => {
-    console.log('📊 DASHBOARD: useEffect triggered', { isAuthenticated, admin: !!admin });
+    console.log('📊 Dashboard useEffect triggered', { isAuthenticated, admin: !!admin });
     if (isAuthenticated && admin) {
-      console.log('Admin authenticated, loading dashboard data...');
+      console.log('Loading dashboard data...');
       fetchStats();
     }
   }, [isAuthenticated, admin]);
@@ -241,17 +243,12 @@ const PlatformAdminDashboard = () => {
   }
 
   if (!isAuthenticated || !admin) {
-    console.log('📊 DASHBOARD: Access denied', { isAuthenticated, admin: !!admin });
+    console.log('📊 Access denied', { isAuthenticated, admin: !!admin });
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="text-lg text-red-600 mb-4">Admin Access Denied</div>
           <p className="text-gray-600">Please log in as an administrator</p>
-          <div className="mt-4 p-4 bg-gray-50 rounded-lg">
-            <p className="text-sm text-gray-500 font-mono">Debug Info:</p>
-            <p className="text-sm text-gray-500">Authenticated: {isAuthenticated ? 'Yes' : 'No'}</p>
-            <p className="text-sm text-gray-500">Admin object: {admin ? 'Present' : 'Missing'}</p>
-          </div>
           <a href="/console" className="text-blue-500 hover:text-blue-700 underline mt-4 inline-block">
             Go to Admin Login
           </a>
@@ -290,7 +287,7 @@ const PlatformAdminDashboard = () => {
       </header>
 
       <div className="max-w-7xl mx-auto px-6 py-8">
-        {/* System Information Header */}
+        {/* System Information */}
         <Card className="mb-8 bg-blue-50 border-blue-200">
           <CardHeader>
             <CardTitle className="text-blue-800">System Information</CardTitle>
@@ -320,12 +317,12 @@ const PlatformAdminDashboard = () => {
                 <span className="ml-2 text-blue-600">{stats.totalSubscriptions}</span>
               </div>
               <div>
-                <span className="font-medium text-blue-700">Active:</span>
-                <span className="ml-2 text-blue-600">{stats.totalSubscriptions}</span>
-              </div>
-              <div>
                 <span className="font-medium text-blue-700">Revenue:</span>
                 <span className="ml-2 text-blue-600">${stats.monthlyRevenue.toFixed(2)}/month</span>
+              </div>
+              <div>
+                <span className="font-medium text-blue-700">Status:</span>
+                <span className="ml-2 text-green-600">Online</span>
               </div>
             </div>
             {lastUpdated && (
@@ -376,7 +373,6 @@ const PlatformAdminDashboard = () => {
           </TabsList>
 
           <TabsContent value="management" className="space-y-6">
-            {/* User Management Section */}
             <Tabs defaultValue="schools" className="space-y-4">
               <TabsList>
                 <TabsTrigger value="schools">Schools</TabsTrigger>
@@ -404,25 +400,12 @@ const PlatformAdminDashboard = () => {
           </TabsContent>
 
           <TabsContent value="analytics" className="space-y-6">
-            {/* Payment Notifications */}
             <DiscountNotifications adminEmail={admin?.email} />
-
-            {/* Enhanced Subscription Management */}
             <SubscriptionManagement />
-
-            {/* Transaction Management */}
             <TransactionManagement />
-
-            {/* Discount Code Management */}
             <DiscountCodeManagement />
-
-            {/* Responses & Schedule Management */}
             <ResponsesManagement />
-
-            {/* School Overview */}
             <SchoolOverview schoolStats={schoolStats} />
-
-            {/* Response Analytics */}
             <FeedbackAnalytics feedbackStats={feedbackStats} />
           </TabsContent>
 
