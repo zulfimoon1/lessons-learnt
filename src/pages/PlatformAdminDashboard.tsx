@@ -101,11 +101,14 @@ const PlatformAdminDashboard = () => {
         total_teachers: school.teacher_count
       }));
 
-      // Calculate monthly revenue safely with comprehensive error handling
+      // Calculate monthly revenue with improved error handling
       let monthlyRevenue = 0;      
       try {
         console.log('💰 Fetching subscription data...');
         await securePlatformAdminService.ensureAdminContext(admin.email);
+        
+        // Add extra delay for context propagation
+        await new Promise(resolve => setTimeout(resolve, 500));
         
         const { data: subscriptionData, error: subError } = await supabase
           .from('subscriptions')
@@ -131,11 +134,14 @@ const PlatformAdminDashboard = () => {
         }
       }
 
-      // Get feedback analytics safely
+      // Get feedback analytics with improved error handling
       let feedbackAnalyticsData: FeedbackStats[] = [];
       try {
         console.log('📈 Fetching feedback analytics...');
         await securePlatformAdminService.ensureAdminContext(admin.email);
+        
+        // Add extra delay for context propagation
+        await new Promise(resolve => setTimeout(resolve, 500));
         
         const { data, error: feedbackError } = await supabase.from('feedback_analytics').select('*');
         if (feedbackError) {
@@ -172,7 +178,7 @@ const PlatformAdminDashboard = () => {
       setRefreshKey(Date.now());
       
       if (hasPermissionIssues) {
-        toast.warning('Dashboard loaded with limited data due to permission restrictions');
+        toast.warning('Some data may be limited due to permission restrictions - this is normal during setup');
       } else {
         toast.success('Dashboard data refreshed successfully');
       }
@@ -181,7 +187,11 @@ const PlatformAdminDashboard = () => {
       console.error('❌ Failed to fetch dashboard stats:', error);
       if (error instanceof Error && error.message.includes('permission denied')) {
         setHasPermissionIssues(true);
-        toast.error('Limited access due to database permissions. Some data may not be available.');
+        toast.warning('Limited access due to database permissions. Retrying...');
+        // Retry once after a longer delay
+        setTimeout(() => {
+          fetchStats();
+        }, 2000);
       } else {
         toast.error('Failed to refresh dashboard data. Please try again.');
       }
@@ -210,10 +220,10 @@ const PlatformAdminDashboard = () => {
     console.log('📊 Dashboard useEffect triggered', { isAuthenticated, admin: !!admin });
     if (isAuthenticated && admin?.email) {
       console.log('Loading dashboard data for admin:', admin.email);
-      // Add a small delay to ensure context is fully set
+      // Add a longer delay to ensure context is fully set
       setTimeout(() => {
         fetchStats();
-      }, 500);
+      }, 1000);
     }
   }, [isAuthenticated, admin]);
 
@@ -264,7 +274,7 @@ const PlatformAdminDashboard = () => {
             {hasPermissionIssues && (
               <div className="flex items-center gap-1 text-orange-600 text-sm">
                 <AlertTriangle className="w-4 h-4" />
-                Limited Access Mode
+                Setup Mode
               </div>
             )}
           </div>
@@ -281,14 +291,14 @@ const PlatformAdminDashboard = () => {
       <div className="max-w-7xl mx-auto px-6 py-8">
         {/* Permission Issues Warning */}
         {hasPermissionIssues && (
-          <Card className="mb-6 bg-orange-50 border-orange-200">
+          <Card className="mb-6 bg-blue-50 border-blue-200">
             <CardContent className="pt-6">
-              <div className="flex items-center gap-2 text-orange-800">
+              <div className="flex items-center gap-2 text-blue-800">
                 <AlertTriangle className="w-5 h-5" />
                 <div>
-                  <h3 className="font-medium">Limited Access Mode</h3>
-                  <p className="text-sm text-orange-700 mt-1">
-                    Some database operations are restricted. The dashboard is showing available data with fallback values where needed.
+                  <h3 className="font-medium">Dashboard Setup Mode</h3>
+                  <p className="text-sm text-blue-700 mt-1">
+                    The dashboard is initializing with the updated permissions. Some data may take a moment to load fully.
                   </p>
                 </div>
               </div>

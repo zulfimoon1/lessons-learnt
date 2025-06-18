@@ -62,54 +62,13 @@ class SecurePlatformAdminService {
       });
       
       if (error) {
-        console.warn('⚠️ RPC context setting failed, trying direct approach:', error);
-        // Fallback: try to create admin record if it doesn't exist
-        await this.ensureAdminRecord(adminEmail);
+        console.warn('⚠️ RPC context setting failed:', error);
       } else {
         console.log('✅ Admin context set successfully via RPC');
         this.adminContextSet = true;
       }
     } catch (error) {
-      console.warn('⚠️ Failed to set admin context, trying fallback:', error);
-      await this.ensureAdminRecord(adminEmail);
-    }
-  }
-
-  private async ensureAdminRecord(adminEmail: string): Promise<void> {
-    try {
-      // First check if admin exists, if not create it
-      const { data: existingAdmin, error: checkError } = await supabase
-        .from('teachers')
-        .select('id, email, role')
-        .eq('email', adminEmail)
-        .eq('role', 'admin')
-        .maybeSingle();
-
-      if (checkError && !checkError.message.includes('permission denied')) {
-        console.error('Error checking admin:', checkError);
-        return;
-      }
-
-      if (!existingAdmin) {
-        console.log('🔨 Creating admin record...');
-        const { error: insertError } = await supabase
-          .from('teachers')
-          .insert({
-            name: 'Platform Admin',
-            email: adminEmail,
-            school: 'Platform Administration',
-            role: 'admin',
-            password_hash: '$2b$12$LQv3c1yX1/Y6GdE9e5Q8M.QmK5J5Q5Q5Q5Q5Q5Q5Q5Q5Q5Q5Q5Q5Qu'
-          });
-
-        if (insertError) {
-          console.warn('Failed to create admin record:', insertError);
-        } else {
-          console.log('✅ Admin record created');
-        }
-      }
-    } catch (error) {
-      console.warn('Fallback admin setup failed:', error);
+      console.warn('⚠️ Failed to set admin context:', error);
     }
   }
 
@@ -124,7 +83,7 @@ class SecurePlatformAdminService {
     await this.ensureAdminContext(adminEmail);
     
     // Add delay to ensure context propagation
-    await new Promise(resolve => setTimeout(resolve, 200));
+    await new Promise(resolve => setTimeout(resolve, 300));
     
     try {
       const result = await queryFn();
@@ -138,7 +97,7 @@ class SecurePlatformAdminService {
         console.log('🔄 Retrying with fresh context...');
         this.adminContextSet = false;
         await this.ensureAdminContext(adminEmail);
-        await new Promise(resolve => setTimeout(resolve, 300));
+        await new Promise(resolve => setTimeout(resolve, 500));
         
         try {
           const retryResult = await queryFn();
