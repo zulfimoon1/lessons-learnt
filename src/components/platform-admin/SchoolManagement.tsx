@@ -8,6 +8,7 @@ import { Trash2, Plus, School } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { usePlatformAdmin } from '@/contexts/PlatformAdminContext';
+import { securePlatformAdminService } from '@/services/securePlatformAdminService';
 
 interface School {
   name: string;
@@ -25,98 +26,86 @@ const SchoolManagement: React.FC<SchoolManagementProps> = ({ onDataChange }) => 
   const [newSchoolName, setNewSchoolName] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  const setAdminContext = async () => {
-    if (admin?.email) {
-      try {
-        console.log('🔧 Setting admin context for:', admin.email);
-        const { error } = await supabase.rpc('set_platform_admin_context', { 
-          admin_email: admin.email 
-        });
-        
-        if (error) {
-          console.warn('⚠️ Context setting returned error:', error);
-        } else {
-          console.log('✅ Admin context set successfully');
-        }
-        
-        // Give context time to propagate
-        await new Promise(resolve => setTimeout(resolve, 100));
-      } catch (error) {
-        console.error('❌ Error setting admin context:', error);
-        // Continue - the new policies should be more permissive
-      }
-    }
-  };
-
   const fetchSchools = async () => {
+    if (!admin?.email) {
+      console.warn('No admin email available for fetching schools');
+      return;
+    }
+
     try {
-      await setAdminContext();
-      console.log('📊 Fetching schools...');
+      console.log('📊 Fetching schools with enhanced service...');
       
-      // Try to get data with improved error handling
-      const [teacherResult, studentResult] = await Promise.allSettled([
-        supabase.from('teachers').select('school').not('school', 'is', null),
-        supabase.from('students').select('school').not('school', 'is', null)
-      ]);
+      const schoolData = await securePlatformAdminService.executeSecureQuery(
+        admin.email,
+        async () => {
+          const [teacherResult, studentResult] = await Promise.allSettled([
+            supabase.from('teachers').select('school').not('school', 'is', null),
+            supabase.from('students').select('school').not('school', 'is', null)
+          ]);
 
-      console.log('📊 Teacher query result:', teacherResult);
-      console.log('📊 Student query result:', studentResult);
+          console.log('📊 Teacher query result:', teacherResult);
+          console.log('📊 Student query result:', studentResult);
 
-      let teacherSchools = [];
-      let studentSchools = [];
+          let teacherSchools = [];
+          let studentSchools = [];
 
-      if (teacherResult.status === 'fulfilled' && !teacherResult.value.error && teacherResult.value.data) {
-        teacherSchools = teacherResult.value.data;
-      } else {
-        console.warn('⚠️ Teacher query failed:', teacherResult.status === 'fulfilled' ? teacherResult.value.error : teacherResult.reason);
-      }
+          if (teacherResult.status === 'fulfilled' && !teacherResult.value.error && teacherResult.value.data) {
+            teacherSchools = teacherResult.value.data;
+          } else {
+            console.warn('⚠️ Teacher query failed:', teacherResult.status === 'fulfilled' ? teacherResult.value.error : teacherResult.reason);
+          }
 
-      if (studentResult.status === 'fulfilled' && !studentResult.value.error && studentResult.value.data) {
-        studentSchools = studentResult.value.data;
-      } else {
-        console.warn('⚠️ Student query failed:', studentResult.status === 'fulfilled' ? studentResult.value.error : studentResult.reason);
-      }
+          if (studentResult.status === 'fulfilled' && !studentResult.value.error && studentResult.value.data) {
+            studentSchools = studentResult.value.data;
+          } else {
+            console.warn('⚠️ Student query failed:', studentResult.status === 'fulfilled' ? studentResult.value.error : studentResult.reason);
+          }
 
-      // Filter out platform administration entries
-      const excludedSchools = ['Platform Administration', 'platform administration', 'admin'];
-      
-      const filteredTeacherSchools = teacherSchools.filter(item => 
-        item.school && !excludedSchools.some(excluded => 
-          item.school.toLowerCase().includes(excluded.toLowerCase())
-        )
+          // Filter out platform administration entries
+          const excludedSchools = ['Platform Administration', 'platform administration', 'admin'];
+          
+          const filteredTeacherSchools = teacherSchools.filter(item => 
+            item.school && !excludedSchools.some(excluded => 
+              item.school.toLowerCase().includes(excluded.toLowerCase())
+            )
+          );
+          
+          const filteredStudentSchools = studentSchools.filter(item => 
+            item.school && !excludedSchools.some(excluded => 
+              item.school.toLowerCase().includes(excluded.toLowerCase())
+            )
+          );
+
+          // Calculate counts
+          const teacherCounts = filteredTeacherSchools.reduce((acc, { school }) => {
+            acc[school] = (acc[school] || 0) + 1;
+            return acc;
+          }, {} as Record<string, number>);
+
+          const studentCounts = filteredStudentSchools.reduce((acc, { school }) => {
+            acc[school] = (acc[school] || 0) + 1;
+            return acc;
+          }, {} as Record<string, number>);
+
+          // Get all unique school names
+          const allSchoolNames = new Set([
+            ...Object.keys(teacherCounts),
+            ...Object.keys(studentCounts)
+          ]);
+
+          const schoolList = Array.from(allSchoolNames).map(name => ({
+            name,
+            teacher_count: teacherCounts[name] || 0,
+            student_count: studentCounts[name] || 0
+          }));
+
+          return schoolList;
+        },
+        []
       );
-      
-      const filteredStudentSchools = studentSchools.filter(item => 
-        item.school && !excludedSchools.some(excluded => 
-          item.school.toLowerCase().includes(excluded.toLowerCase())
-        )
-      );
 
-      // Calculate counts
-      const teacherCounts = filteredTeacherSchools.reduce((acc, { school }) => {
-        acc[school] = (acc[school] || 0) + 1;
-        return acc;
-      }, {} as Record<string, number>);
-
-      const studentCounts = filteredStudentSchools.reduce((acc, { school }) => {
-        acc[school] = (acc[school] || 0) + 1;
-        return acc;
-      }, {} as Record<string, number>);
-
-      // Get all unique school names
-      const allSchoolNames = new Set([
-        ...Object.keys(teacherCounts),
-        ...Object.keys(studentCounts)
-      ]);
-
-      const schoolList = Array.from(allSchoolNames).map(name => ({
-        name,
-        teacher_count: teacherCounts[name] || 0,
-        student_count: studentCounts[name] || 0
-      }));
-
-      setSchools(schoolList);
-      console.log('🏫 Schools updated:', schoolList.length, 'schools found');
+      setSchools(schoolData);
+      console.log('🏫 Schools updated:', schoolData.length, 'schools found');
     } catch (error) {
       console.error('Error fetching schools:', error);
       toast.error('Failed to fetch schools data');
@@ -139,9 +128,6 @@ const SchoolManagement: React.FC<SchoolManagementProps> = ({ onDataChange }) => 
     try {
       console.log('🏫 Creating new school:', newSchoolName.trim());
       
-      // Set admin context
-      await setAdminContext();
-      
       const adminEmail = `admin@${newSchoolName.toLowerCase().replace(/\s+/g, '')}.edu`;
       const schoolData = {
         name: `${newSchoolName} Administrator`,
@@ -153,27 +139,24 @@ const SchoolManagement: React.FC<SchoolManagementProps> = ({ onDataChange }) => 
 
       console.log('📝 Attempting to insert teacher record...');
       
-      const { data, error } = await supabase
-        .from('teachers')
-        .insert(schoolData)
-        .select()
-        .maybeSingle();
+      const result = await securePlatformAdminService.executeSecureQuery(
+        admin.email,
+        async () => {
+          const { data, error } = await supabase
+            .from('teachers')
+            .insert(schoolData)
+            .select()
+            .maybeSingle();
 
-      if (error) {
-        console.error('❌ Error creating school admin:', error);
-        
-        // Handle specific error cases
-        if (error.code === '23505') {
-          toast.error(`A school administrator with the email "${adminEmail}" already exists. Please choose a different school name.`);
-        } else if (error.message?.includes('401') || error.message?.includes('Unauthorized')) {
-          toast.error('Permission denied. Please try refreshing the page and logging in again.');
-        } else {
-          toast.error(`Failed to add school: ${error.message}`);
+          if (error) {
+            throw error;
+          }
+
+          return data;
         }
-        return;
-      }
+      );
 
-      console.log('✅ School created successfully:', data);
+      console.log('✅ School created successfully:', result);
       toast.success(`School "${newSchoolName}" added successfully`);
       setNewSchoolName('');
       await fetchSchools();
@@ -181,9 +164,17 @@ const SchoolManagement: React.FC<SchoolManagementProps> = ({ onDataChange }) => 
       if (onDataChange) {
         onDataChange();
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('💥 Error adding school:', error);
-      toast.error(`Failed to add school: ${error.message || 'Unknown error'}`);
+      
+      // Handle specific error cases
+      if (error.code === '23505') {
+        toast.error(`A school administrator already exists. Please choose a different school name.`);
+      } else if (error.message?.includes('401') || error.message?.includes('Unauthorized')) {
+        toast.error('Permission denied. Please try refreshing the page and logging in again.');
+      } else {
+        toast.error(`Failed to add school: ${error.message || 'Unknown error'}`);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -203,28 +194,24 @@ const SchoolManagement: React.FC<SchoolManagementProps> = ({ onDataChange }) => 
     setIsLoading(true);
     
     try {
-      await setAdminContext();
-      
-      // Use the secure database function with better error handling
-      const { data, error } = await supabase.rpc('platform_admin_delete_school', {
-        school_name_param: schoolName,
-        admin_email_param: admin.email
-      });
+      const result = await securePlatformAdminService.executeSecureQuery(
+        admin.email,
+        async () => {
+          // Use the secure database function
+          const { data, error } = await supabase.rpc('platform_admin_delete_school', {
+            school_name_param: schoolName,
+            admin_email_param: admin.email
+          });
 
-      if (error) {
-        console.error('❌ Database function error:', error);
-        
-        if (error.message?.includes('401') || error.message?.includes('Unauthorized')) {
-          toast.error('Permission denied. Please try refreshing the page and logging in again.');
-        } else if (error.message?.includes('Unauthorized')) {
-          toast.error('Unauthorized: You do not have permission to delete schools');
-        } else {
-          toast.error(`Failed to delete school: ${error.message}`);
+          if (error) {
+            throw error;
+          }
+
+          return data;
         }
-        return;
-      }
+      );
 
-      console.log('✅ School deletion results:', data);
+      console.log('✅ School deletion results:', result);
       toast.success(`School "${schoolName}" and all associated data deleted successfully`);
       
       await fetchSchools();
@@ -235,7 +222,7 @@ const SchoolManagement: React.FC<SchoolManagementProps> = ({ onDataChange }) => 
         }, 100);
       }
       
-    } catch (error) {
+    } catch (error: any) {
       console.error('❌ Error deleting school:', error);
       if (error.message?.includes('401') || error.message?.includes('Unauthorized')) {
         toast.error('Permission denied. Please try refreshing the page and logging in again.');
