@@ -64,7 +64,7 @@ class InputValidationService {
     if (!name || name.length < 2 || name.length > 100) return false;
     
     // Allow letters, numbers, spaces, and common punctuation
-    const schoolNameRegex = /^[a-zA-Z0-9\s\-.']+$/;
+    const schoolNameRegex = /^[a-zA-Z0-9\s'.'-]+$/;
     return schoolNameRegex.test(name);
   }
 
@@ -73,7 +73,7 @@ class InputValidationService {
     if (!name || name.length < 2 || name.length > 50) return false;
     
     // Allow letters, spaces, hyphens, and apostrophes
-    const nameRegex = /^[a-zA-Z\s\-.']+$/;
+    const nameRegex = /^[a-zA-Z\s'.'-]+$/;
     return nameRegex.test(name);
   }
 
