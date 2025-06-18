@@ -44,15 +44,20 @@ export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }
   };
 
   const t = (key: string, params?: Record<string, string>): string => {
-    let translation = translations[language][key] || key;
-    
-    if (params) {
-      Object.entries(params).forEach(([param, value]) => {
-        translation = translation.replace(`{${param}}`, value);
-      });
+    try {
+      let translation = translations[language][key] || key;
+      
+      if (params) {
+        Object.entries(params).forEach(([param, value]) => {
+          translation = translation.replace(`{${param}}`, value);
+        });
+      }
+      
+      return translation;
+    } catch (error) {
+      console.warn('Translation error:', error);
+      return key;
     }
-    
-    return translation;
   };
 
   const contextValue: LanguageContextType = {
