@@ -42,6 +42,8 @@ export const PlatformAdminProvider: React.FC<{ children: React.ReactNode }> = ({
         if (storedAdmin) {
           const adminData = JSON.parse(storedAdmin);
           
+          console.log('🔄 Validating stored admin session:', adminData.email);
+          
           // Validate the stored session
           const validation = await securePlatformAdminService.validateAdminSession(adminData.email);
           if (validation.valid && validation.admin) {
@@ -104,10 +106,13 @@ export const PlatformAdminProvider: React.FC<{ children: React.ReactNode }> = ({
     if (!admin?.email) return;
     
     try {
+      console.log('🔍 Validating admin session for:', admin.email);
       const validation = await securePlatformAdminService.validateAdminSession(admin.email);
       if (!validation.valid) {
         console.log('🔒 Admin session validation failed, logging out');
         logout();
+      } else {
+        console.log('✅ Admin session validation successful');
       }
     } catch (error) {
       console.error('Error validating admin session:', error);

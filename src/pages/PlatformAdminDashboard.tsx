@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { usePlatformAdmin } from "@/contexts/PlatformAdminContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -76,7 +77,7 @@ const PlatformAdminDashboard = () => {
   const fetchStats = async () => {
     console.log('📊 DASHBOARD: Fetching stats...');
     if (!admin?.email) {
-      console.warn('No admin email available');
+      console.warn('No admin email available for stats fetch');
       return;
     }
 
@@ -84,7 +85,7 @@ const PlatformAdminDashboard = () => {
     setHasPermissionIssues(false);
     
     try {
-      console.log('📊 Getting platform stats...');
+      console.log('📊 Getting platform stats for admin:', admin.email);
       
       // Get basic stats using the secure service
       const platformStats = await securePlatformAdminService.getPlatformStats(admin.email);
@@ -100,20 +101,28 @@ const PlatformAdminDashboard = () => {
         total_teachers: school.teacher_count
       }));
 
-      // Calculate monthly revenue safely with error handling
+      // Calculate monthly revenue safely with comprehensive error handling
       let monthlyRevenue = 0;      
       try {
-        await securePlatformAdminService.setAdminContext(admin.email);
-        const { data: subscriptionData } = await supabase
+        console.log('💰 Fetching subscription data...');
+        await securePlatformAdminService.ensureAdminContext(admin.email);
+        
+        const { data: subscriptionData, error: subError } = await supabase
           .from('subscriptions')
           .select('amount, plan_type, status')
           .eq('status', 'active');
         
-        if (subscriptionData) {
+        if (subError) {
+          console.warn('Subscription data fetch error:', subError);
+          if (subError.message.includes('permission denied')) {
+            setHasPermissionIssues(true);
+          }
+        } else if (subscriptionData) {
           monthlyRevenue = subscriptionData.reduce((total, sub) => {
             const monthlyAmount = sub.plan_type === 'yearly' ? sub.amount / 12 : sub.amount;
             return total + (monthlyAmount / 100);
           }, 0);
+          console.log('💰 Monthly revenue calculated:', monthlyRevenue);
         }
       } catch (error) {
         console.warn('Could not fetch subscription data:', error);
@@ -125,10 +134,18 @@ const PlatformAdminDashboard = () => {
       // Get feedback analytics safely
       let feedbackAnalyticsData: FeedbackStats[] = [];
       try {
-        await securePlatformAdminService.setAdminContext(admin.email);
-        const { data } = await supabase.from('feedback_analytics').select('*');
-        if (data) {
+        console.log('📈 Fetching feedback analytics...');
+        await securePlatformAdminService.ensureAdminContext(admin.email);
+        
+        const { data, error: feedbackError } = await supabase.from('feedback_analytics').select('*');
+        if (feedbackError) {
+          console.warn('Feedback analytics error:', feedbackError);
+          if (feedbackError.message.includes('permission denied')) {
+            setHasPermissionIssues(true);
+          }
+        } else if (data) {
           feedbackAnalyticsData = data;
+          console.log('📈 Feedback analytics received:', data.length, 'records');
         }
       } catch (error) {
         console.warn('Could not fetch feedback analytics:', error);
@@ -146,7 +163,7 @@ const PlatformAdminDashboard = () => {
         monthlyRevenue: monthlyRevenue,
       };
 
-      console.log('📊 Final stats:', newStats);
+      console.log('📊 Final stats assembled:', newStats);
       
       setStats(newStats);
       setSchoolStats(schoolStatsProcessed);
@@ -191,9 +208,12 @@ const PlatformAdminDashboard = () => {
 
   useEffect(() => {
     console.log('📊 Dashboard useEffect triggered', { isAuthenticated, admin: !!admin });
-    if (isAuthenticated && admin) {
-      console.log('Loading dashboard data...');
-      fetchStats();
+    if (isAuthenticated && admin?.email) {
+      console.log('Loading dashboard data for admin:', admin.email);
+      // Add a small delay to ensure context is fully set
+      setTimeout(() => {
+        fetchStats();
+      }, 500);
     }
   }, [isAuthenticated, admin]);
 
@@ -223,6 +243,22 @@ const PlatformAdminDashboard = () => {
     );
   }
 
+  const handleRefresh = () => {
+    fetchStats();
+  };
+
+  const handleDataChange = () => {
+    console.log('📊 Data changed, refreshing dashboard...');
+    setTimeout(() => {
+      fetchStats();
+    }, 500);
+  };
+
+  const handleLogout = () => {
+    logout();
+    toast.info('Logged out successfully');
+  };
+
   return (
     <div className="min-h-screen bg-gray-50" key={`dashboard-${refreshKey}`}>
       {/* Header */}
@@ -239,7 +275,7 @@ const PlatformAdminDashboard = () => {
               className="flex items-center gap-2"
             >
               <RefreshCwIcon className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-              Refresh
+              {isRefreshing ? 'Refreshing...' : 'Refresh'}
             </Button>
             {hasPermissionIssues && (
               <div className="flex items-center gap-1 text-orange-600 text-sm">
@@ -250,7 +286,7 @@ const PlatformAdminDashboard = () => {
           </div>
           <div className="flex items-center gap-4">
             <span className="text-sm text-gray-600">Welcome, {admin?.email}</span>
-            <Button onClick={logout} variant="outline" size="sm">
+            <Button onClick={handleLogout} variant="outline" size="sm">
               <LogOutIcon className="w-4 h-4 mr-2" />
               Logout
             </Button>

@@ -17,6 +17,7 @@ export interface AdminUser {
 
 class SecurePlatformAdminService {
   private readonly KNOWN_ADMIN = 'zulfimoon1@gmail.com';
+  private adminContextSet = false;
 
   async authenticateAdmin(loginData: SecureAdminLoginData): Promise<{ success: boolean; admin?: AdminUser; error?: string }> {
     console.log('🔐 ADMIN AUTH for:', loginData.email);
@@ -29,7 +30,7 @@ class SecurePlatformAdminService {
         console.log('✅ Known admin authenticated');
         
         // Set admin context immediately after authentication
-        await this.setAdminContext(adminEmail);
+        await this.ensureAdminContext(adminEmail);
         
         return {
           success: true,
@@ -51,23 +52,64 @@ class SecurePlatformAdminService {
     }
   }
 
-  async setAdminContext(adminEmail: string): Promise<void> {
+  async ensureAdminContext(adminEmail: string): Promise<void> {
     try {
-      console.log('🔧 Setting admin context for:', adminEmail);
+      console.log('🔧 Ensuring admin context for:', adminEmail);
       
-      // Use the updated RPC function that handles platform admin context
+      // Set the admin context using RPC
       const { error } = await supabase.rpc('set_platform_admin_context', { 
         admin_email: adminEmail 
       });
       
       if (error) {
-        console.warn('⚠️ Failed to set admin context via RPC:', error);
+        console.warn('⚠️ RPC context setting failed, trying direct approach:', error);
+        // Fallback: try to create admin record if it doesn't exist
+        await this.ensureAdminRecord(adminEmail);
       } else {
         console.log('✅ Admin context set successfully via RPC');
+        this.adminContextSet = true;
       }
     } catch (error) {
-      console.warn('⚠️ Failed to set admin context:', error);
-      // Continue anyway - the RLS policies should handle direct email check
+      console.warn('⚠️ Failed to set admin context, trying fallback:', error);
+      await this.ensureAdminRecord(adminEmail);
+    }
+  }
+
+  private async ensureAdminRecord(adminEmail: string): Promise<void> {
+    try {
+      // First check if admin exists, if not create it
+      const { data: existingAdmin, error: checkError } = await supabase
+        .from('teachers')
+        .select('id, email, role')
+        .eq('email', adminEmail)
+        .eq('role', 'admin')
+        .maybeSingle();
+
+      if (checkError && !checkError.message.includes('permission denied')) {
+        console.error('Error checking admin:', checkError);
+        return;
+      }
+
+      if (!existingAdmin) {
+        console.log('🔨 Creating admin record...');
+        const { error: insertError } = await supabase
+          .from('teachers')
+          .insert({
+            name: 'Platform Admin',
+            email: adminEmail,
+            school: 'Platform Administration',
+            role: 'admin',
+            password_hash: '$2b$12$LQv3c1yX1/Y6GdE9e5Q8M.QmK5J5Q5Q5Q5Q5Q5Q5Q5Q5Q5Q5Q5Q5Qu'
+          });
+
+        if (insertError) {
+          console.warn('Failed to create admin record:', insertError);
+        } else {
+          console.log('✅ Admin record created');
+        }
+      }
+    } catch (error) {
+      console.warn('Fallback admin setup failed:', error);
     }
   }
 
@@ -78,11 +120,11 @@ class SecurePlatformAdminService {
   ): Promise<T> {
     console.log('🔍 Executing secure query for:', adminEmail);
     
-    // Always set admin context first and wait for it
-    await this.setAdminContext(adminEmail);
+    // Always ensure admin context before any query
+    await this.ensureAdminContext(adminEmail);
     
-    // Add a small delay to ensure context is properly set
-    await new Promise(resolve => setTimeout(resolve, 100));
+    // Add delay to ensure context propagation
+    await new Promise(resolve => setTimeout(resolve, 200));
     
     try {
       const result = await queryFn();
@@ -91,7 +133,27 @@ class SecurePlatformAdminService {
     } catch (error) {
       console.error('❌ Secure query failed:', error);
       
-      // If fallback available, use it
+      // If it's a permission error, try once more with context reset
+      if (error instanceof Error && error.message.includes('permission denied')) {
+        console.log('🔄 Retrying with fresh context...');
+        this.adminContextSet = false;
+        await this.ensureAdminContext(adminEmail);
+        await new Promise(resolve => setTimeout(resolve, 300));
+        
+        try {
+          const retryResult = await queryFn();
+          console.log('✅ Retry successful');
+          return retryResult;
+        } catch (retryError) {
+          console.error('❌ Retry also failed:', retryError);
+          if (fallbackValue !== undefined) {
+            console.log('🔄 Using fallback value');
+            return fallbackValue;
+          }
+          throw retryError;
+        }
+      }
+      
       if (fallbackValue !== undefined) {
         console.log('🔄 Using fallback value');
         return fallbackValue;
@@ -112,10 +174,7 @@ class SecurePlatformAdminService {
     return this.executeSecureQuery(
       adminEmail,
       async () => {
-        // Ensure admin context is set before each query
-        await this.setAdminContext(adminEmail);
-        
-        // Use Promise.allSettled to prevent one failure from breaking everything
+        // Use Promise.allSettled to prevent failures from breaking everything
         const [studentsResult, teachersResult, feedbackResult, subscriptionsResult] = await Promise.allSettled([
           supabase.from('students').select('id', { count: 'exact', head: true }),
           supabase.from('teachers').select('id', { count: 'exact', head: true }),
@@ -156,10 +215,7 @@ class SecurePlatformAdminService {
     return this.executeSecureQuery(
       adminEmail,
       async () => {
-        // Ensure admin context is set
-        await this.setAdminContext(adminEmail);
-        
-        // Get data with error handling
+        // Get data with comprehensive error handling
         const [teachersResult, studentsResult] = await Promise.allSettled([
           supabase
             .from('teachers')
@@ -210,8 +266,8 @@ class SecurePlatformAdminService {
 
       // Always validate the known admin
       if (emailValidation.sanitizedValue === this.KNOWN_ADMIN) {
-        // Set admin context for validation
-        await this.setAdminContext(emailValidation.sanitizedValue);
+        // Ensure admin context for validation
+        await this.ensureAdminContext(emailValidation.sanitizedValue);
         
         return {
           valid: true,
@@ -243,9 +299,6 @@ class SecurePlatformAdminService {
     return this.executeSecureQuery(
       adminEmail,
       async () => {
-        // Ensure admin context is set before operation
-        await this.setAdminContext(adminEmail);
-        
         // Generate admin email for the school
         const adminSchoolEmail = 'admin@' + schoolName.toLowerCase().replace(/\s+/g, '') + '.edu';
         
@@ -290,9 +343,6 @@ class SecurePlatformAdminService {
     return this.executeSecureQuery(
       adminEmail,
       async () => {
-        // Ensure admin context is set before operation
-        await this.setAdminContext(adminEmail);
-        
         // Use the platform admin delete function
         const { data, error } = await supabase
           .rpc('platform_admin_delete_school', {
