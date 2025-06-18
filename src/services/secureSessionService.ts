@@ -1,198 +1,124 @@
 
-// Enhanced secure session management service
-interface SecureSessionData {
-  data: any;
-  timestamp: number;
-  signature: string;
+import { supabase } from '@/integrations/supabase/client';
+
+interface SecureSession {
+  sessionId: string;
+  userId: string;
+  userType: 'teacher' | 'student' | 'admin';
+  school: string;
+  createdAt: number;
+  lastActivity: number;
+  fingerprint: string;
 }
 
 class SecureSessionService {
-  private readonly SESSION_TIMEOUT = 30 * 60 * 1000; // 30 minutes
-  private readonly SECRET_KEY = 'lovable-session-key'; // In production, use environment variable
+  private static readonly SESSION_TIMEOUT = 8 * 60 * 60 * 1000; // 8 hours
+  private static readonly ACTIVITY_TIMEOUT = 30 * 60 * 1000; // 30 minutes
+  private static readonly SESSION_KEY = 'secure_session';
 
-  // Simple signature generation for client-side validation
-  private generateSignature(data: string): string {
-    let hash = 0;
-    for (let i = 0; i < data.length; i++) {
-      const char = data.charCodeAt(i);
-      hash = ((hash << 5) - hash) + char;
-      hash = hash & hash; // Convert to 32bit integer
+  private generateFingerprint(): string {
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    if (ctx) {
+      ctx.textBaseline = 'top';
+      ctx.font = '14px Arial';
+      ctx.fillText('Session fingerprint', 2, 2);
     }
-    return hash.toString();
+    
+    const fingerprint = [
+      navigator.userAgent,
+      navigator.language,
+      screen.width + 'x' + screen.height,
+      new Date().getTimezoneOffset(),
+      canvas.toDataURL()
+    ].join('|');
+    
+    return btoa(fingerprint).slice(0, 32);
   }
 
-  securelyStoreUserData(key: string, data: any): void {
-    try {
-      const timestamp = Date.now();
-      const dataString = JSON.stringify(data);
-      const signature = this.generateSignature(dataString + timestamp + this.SECRET_KEY);
-      
-      const secureData: SecureSessionData = {
-        data,
-        timestamp,
-        signature
-      };
-      
-      sessionStorage.setItem(`secure_${key}`, JSON.stringify(secureData));
-      
-      // Set session timeout
-      setTimeout(() => {
-        this.clearSession(key);
-      }, this.SESSION_TIMEOUT);
-      
-    } catch (error) {
-      console.error('Failed to securely store user data:', error);
-    }
+  async createSession(userId: string, userType: 'teacher' | 'student' | 'admin', school: string): Promise<SecureSession> {
+    const session: SecureSession = {
+      sessionId: crypto.randomUUID(),
+      userId,
+      userType,
+      school,
+      createdAt: Date.now(),
+      lastActivity: Date.now(),
+      fingerprint: this.generateFingerprint()
+    };
+
+    // Store in secure storage
+    sessionStorage.setItem(this.SESSION_KEY, JSON.stringify(session));
+    
+    // Log session creation
+    await this.logSecurityEvent('session_created', userId, `Session created for ${userType}`, 'low');
+    
+    return session;
   }
 
-  securelyRetrieveUserData(key: string): any | null {
+  getSession(): SecureSession | null {
     try {
-      const storedData = sessionStorage.getItem(`secure_${key}`);
-      if (!storedData) return null;
-      
-      const secureData: SecureSessionData = JSON.parse(storedData);
+      const stored = sessionStorage.getItem(this.SESSION_KEY);
+      if (!stored) return null;
+
+      const session: SecureSession = JSON.parse(stored);
       const now = Date.now();
-      
-      // Check if session has expired
-      if (now - secureData.timestamp > this.SESSION_TIMEOUT) {
-        this.clearSession(key);
+
+      // Check session timeout
+      if (now - session.createdAt > this.SESSION_TIMEOUT) {
+        this.clearSession();
         return null;
       }
-      
-      // Verify signature
-      const dataString = JSON.stringify(secureData.data);
-      const expectedSignature = this.generateSignature(dataString + secureData.timestamp + this.SECRET_KEY);
-      
-      if (secureData.signature !== expectedSignature) {
-        console.warn('Session signature verification failed');
-        this.clearSession(key);
+
+      // Check activity timeout
+      if (now - session.lastActivity > this.ACTIVITY_TIMEOUT) {
+        this.clearSession();
         return null;
       }
-      
-      return secureData.data;
+
+      // Validate fingerprint
+      if (session.fingerprint !== this.generateFingerprint()) {
+        this.clearSession();
+        this.logSecurityEvent('session_hijack_attempt', session.userId, 'Fingerprint mismatch detected', 'high');
+        return null;
+      }
+
+      // Update activity
+      session.lastActivity = now;
+      sessionStorage.setItem(this.SESSION_KEY, JSON.stringify(session));
+
+      return session;
     } catch (error) {
-      console.error('Failed to retrieve user data:', error);
-      this.clearSession(key);
+      console.error('Session validation error:', error);
+      this.clearSession();
       return null;
     }
   }
 
-  clearSession(key: string): void {
-    sessionStorage.removeItem(`secure_${key}`);
+  async refreshSession(): Promise<boolean> {
+    const session = this.getSession();
+    if (!session) return false;
+
+    session.lastActivity = Date.now();
+    sessionStorage.setItem(this.SESSION_KEY, JSON.stringify(session));
+    return true;
   }
 
-  clearAllSessions(): void {
-    const keys = Object.keys(sessionStorage);
-    keys.forEach(key => {
-      if (key.startsWith('secure_')) {
-        sessionStorage.removeItem(key);
-      }
-    });
+  clearSession(): void {
+    sessionStorage.removeItem(this.SESSION_KEY);
   }
 
-  isSessionValid(key: string): boolean {
-    const data = this.securelyRetrieveUserData(key);
-    return data !== null;
-  }
-
-  // New method to detect concurrent sessions
-  detectConcurrentSessions(): boolean {
+  private async logSecurityEvent(eventType: string, userId: string, details: string, severity: 'low' | 'medium' | 'high'): Promise<void> {
     try {
-      const sessionId = sessionStorage.getItem('session_id');
-      const storedSessionId = localStorage.getItem('last_session_id');
-      
-      if (sessionId && storedSessionId && sessionId !== storedSessionId) {
-        console.warn('Concurrent session detected');
-        return true;
-      }
-      
-      // Update session tracking
-      if (sessionId) {
-        localStorage.setItem('last_session_id', sessionId);
-      }
-      
-      return false;
+      await supabase.rpc('log_security_event_safe', {
+        event_type: eventType,
+        user_id: userId,
+        details,
+        severity
+      });
     } catch (error) {
-      console.error('Error detecting concurrent sessions:', error);
-      return false;
+      console.error('Security logging failed:', error);
     }
-  }
-
-  // New method to check session validity
-  checkSessionValidity(): boolean {
-    try {
-      // Check if we have a valid session ID
-      const sessionId = sessionStorage.getItem('session_id');
-      if (!sessionId) {
-        // Generate new session ID
-        const newSessionId = crypto.getRandomValues(new Uint8Array(16)).reduce((acc, byte) => 
-          acc + byte.toString(16).padStart(2, '0'), ''
-        );
-        sessionStorage.setItem('session_id', newSessionId);
-        return true;
-      }
-      
-      // Check session fingerprint
-      const fingerprint = sessionStorage.getItem('session_fingerprint');
-      if (!fingerprint) {
-        // Generate fingerprint
-        const newFingerprint = this.generateSessionFingerprint();
-        sessionStorage.setItem('session_fingerprint', newFingerprint);
-        return true;
-      }
-      
-      // Validate fingerprint hasn't changed dramatically
-      const currentFingerprint = this.generateSessionFingerprint();
-      const similarity = this.calculateFingerprintSimilarity(fingerprint, currentFingerprint);
-      
-      if (similarity < 0.8) {
-        console.warn('Session fingerprint mismatch detected');
-        return false;
-      }
-      
-      return true;
-    } catch (error) {
-      console.error('Error checking session validity:', error);
-      return false;
-    }
-  }
-
-  private generateSessionFingerprint(): string {
-    try {
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d');
-      let fingerprint = '';
-      
-      if (ctx) {
-        ctx.textBaseline = 'top';
-        ctx.font = '14px Arial';
-        ctx.fillText('Security fingerprint', 2, 2);
-        fingerprint += canvas.toDataURL().slice(-50);
-      }
-      
-      // Add other browser characteristics
-      fingerprint += navigator.userAgent.slice(-20);
-      fingerprint += screen.width + 'x' + screen.height;
-      fingerprint += new Date().getTimezoneOffset().toString();
-      
-      return this.generateSignature(fingerprint);
-    } catch {
-      return 'fallback-fingerprint';
-    }
-  }
-
-  private calculateFingerprintSimilarity(fp1: string, fp2: string): number {
-    if (fp1 === fp2) return 1;
-    if (!fp1 || !fp2) return 0;
-    
-    const len = Math.max(fp1.length, fp2.length);
-    let matches = 0;
-    
-    for (let i = 0; i < Math.min(fp1.length, fp2.length); i++) {
-      if (fp1[i] === fp2[i]) matches++;
-    }
-    
-    return matches / len;
   }
 }
 

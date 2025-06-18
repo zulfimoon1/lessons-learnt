@@ -949,6 +949,15 @@ export type Database = {
         }
         Returns: undefined
       }
+      log_security_event_safe: {
+        Args: {
+          event_type: string
+          user_id?: string
+          details?: string
+          severity?: string
+        }
+        Returns: undefined
+      }
       platform_admin_create_discount_code: {
         Args: {
           admin_email_param: string
