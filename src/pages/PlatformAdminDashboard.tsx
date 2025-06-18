@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { usePlatformAdmin } from "@/contexts/PlatformAdminContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -85,11 +84,11 @@ const PlatformAdminDashboard = () => {
     try {
       console.log('📊 Getting platform stats...');
       
-      // Get basic stats
+      // Get basic stats using the secure service
       const platformStats = await securePlatformAdminService.getPlatformStats(admin.email);
       console.log('📊 Platform stats received:', platformStats);
 
-      // Get additional data for schools and revenue
+      // Get additional data safely
       let schoolStatsProcessed: SchoolStats[] = [];
       let totalSchools = 0;
       let monthlyRevenue = 0;
@@ -100,6 +99,7 @@ const PlatformAdminDashboard = () => {
           async () => {
             console.log('📊 Getting additional school data...');
             
+            // Get data with error handling
             const [studentsResult, teachersResult, subscriptionResult] = await Promise.allSettled([
               supabase.from('students').select('school'),
               supabase.from('teachers').select('school'),
@@ -109,7 +109,7 @@ const PlatformAdminDashboard = () => {
             const allSchools = new Set<string>();
             const excludedSchools = ['Platform Administration', 'platform administration', 'admin'];
             
-            // Process school data
+            // Process school data safely
             if (studentsResult.status === 'fulfilled' && studentsResult.value.data) {
               studentsResult.value.data.forEach(item => {
                 if (item?.school && !excludedSchools.some(excluded => 
@@ -143,7 +143,7 @@ const PlatformAdminDashboard = () => {
                 .map(([school, total_teachers]) => ({ school, total_teachers }));
             }
 
-            // Calculate revenue
+            // Calculate revenue safely
             if (subscriptionResult.status === 'fulfilled' && subscriptionResult.value.data) {
               monthlyRevenue = subscriptionResult.value.data.reduce((total, sub) => {
                 const monthlyAmount = sub.plan_type === 'yearly' ? sub.amount / 12 : sub.amount;
@@ -160,9 +160,10 @@ const PlatformAdminDashboard = () => {
         );
       } catch (error) {
         console.warn('Could not fetch additional data:', error);
+        toast.warning('Some dashboard data may be incomplete');
       }
 
-      // Get feedback analytics
+      // Get feedback analytics safely
       let feedbackAnalyticsData: FeedbackStats[] = [];
       try {
         await securePlatformAdminService.executeSecureQuery(
@@ -201,7 +202,7 @@ const PlatformAdminDashboard = () => {
       
     } catch (error) {
       console.error('❌ Failed to fetch dashboard stats:', error);
-      toast.error('Failed to refresh dashboard data');
+      toast.error('Failed to refresh dashboard data. Please check permissions.');
     } finally {
       setIsRefreshing(false);
     }

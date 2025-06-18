@@ -24,9 +24,12 @@ class SecurePlatformAdminService {
     try {
       const adminEmail = loginData.email.toLowerCase().trim();
       
-      // Direct authentication for known admin - bypass all RLS
+      // Direct authentication for known admin
       if (adminEmail === this.KNOWN_ADMIN && loginData.password === 'admin123') {
-        console.log('✅ Known admin authenticated - bypassing all RLS checks');
+        console.log('✅ Known admin authenticated - setting context');
+        
+        // Set admin context for database access
+        await this.setAdminContext(adminEmail);
         
         return {
           success: true,
@@ -48,6 +51,22 @@ class SecurePlatformAdminService {
     }
   }
 
+  private async setAdminContext(adminEmail: string): Promise<void> {
+    try {
+      console.log('🔧 Setting admin context for:', adminEmail);
+      // Use the RPC function to set context properly
+      const { error } = await supabase.rpc('set_platform_admin_context', { admin_email: adminEmail });
+      if (error) {
+        console.warn('⚠️ Could not set admin context via RPC:', error);
+      } else {
+        console.log('✅ Admin context set successfully via RPC');
+      }
+    } catch (error) {
+      console.warn('⚠️ Could not set admin context:', error);
+      // Continue anyway - the simplified policies should work
+    }
+  }
+
   async executeSecureQuery<T>(
     adminEmail: string,
     queryFn: () => Promise<T>,
@@ -55,22 +74,27 @@ class SecurePlatformAdminService {
   ): Promise<T> {
     console.log('🔍 Executing secure query for:', adminEmail);
     
-    // For known admin, execute queries directly without RLS complications
+    // For known admin, set context and execute queries
     if (adminEmail === this.KNOWN_ADMIN) {
       try {
-        // Set admin context before any query
+        // Ensure context is set before query
         await this.setAdminContext(adminEmail);
-        return await queryFn();
+        
+        // Execute the query
+        const result = await queryFn();
+        console.log('✅ Secure query executed successfully');
+        return result;
       } catch (error) {
-        console.warn('Direct query failed:', error);
+        console.error('❌ Secure query failed:', error);
         if (fallbackValue !== undefined) {
+          console.log('🔄 Using fallback value');
           return fallbackValue;
         }
         throw error;
       }
     }
     
-    // For other admins, try normal approach
+    // For other users, try normal approach
     try {
       return await queryFn();
     } catch (error) {
@@ -79,18 +103,6 @@ class SecurePlatformAdminService {
         return fallbackValue;
       }
       throw error;
-    }
-  }
-
-  private async setAdminContext(adminEmail: string): Promise<void> {
-    try {
-      console.log('🔧 Setting admin context for:', adminEmail);
-      // Use the RPC function to set context
-      await supabase.rpc('set_platform_admin_context', { admin_email: adminEmail });
-      console.log('✅ Admin context set successfully');
-    } catch (error) {
-      console.warn('⚠️ Could not set admin context:', error);
-      // Continue anyway - we'll rely on direct queries
     }
   }
 
@@ -107,7 +119,7 @@ class SecurePlatformAdminService {
       async () => {
         console.log('📊 Fetching counts with direct queries...');
         
-        // Use Promise.allSettled to ensure we get some data even if some queries fail
+        // Use Promise.allSettled to get data even if some queries fail
         const [studentsResult, teachersResult, feedbackResult, subscriptionsResult] = await Promise.allSettled([
           supabase.from('students').select('*', { count: 'exact', head: true }),
           supabase.from('teachers').select('*', { count: 'exact', head: true }),
@@ -147,6 +159,9 @@ class SecurePlatformAdminService {
 
       // Always validate the known admin
       if (emailValidation.sanitizedValue === this.KNOWN_ADMIN) {
+        // Set context for validation
+        await this.setAdminContext(emailValidation.sanitizedValue);
+        
         return {
           valid: true,
           admin: {
@@ -191,7 +206,7 @@ class SecurePlatformAdminService {
         throw error;
       }
       
-      console.log(`✅ Direct ${operation} successful:`, data);
+      console.log(`✅ Direct ${operation} successful`);
       return data;
     } catch (error) {
       console.error(`💥 Direct ${operation} error:`, error);
