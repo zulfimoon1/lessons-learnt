@@ -15,6 +15,20 @@ export interface AdminUser {
   school: string;
 }
 
+// Define types for our custom RPC responses
+interface PlatformStatsRow {
+  students_count: number;
+  teachers_count: number;
+  feedback_count: number;
+  subscriptions_count: number;
+}
+
+interface SchoolDataRow {
+  school_name: string;
+  teacher_count: number;
+  student_count: number;
+}
+
 class SecurePlatformAdminService {
   private readonly KNOWN_ADMIN = 'zulfimoon1@gmail.com';
 
@@ -95,16 +109,18 @@ class SecurePlatformAdminService {
     console.log('📊 Getting platform stats using security definer function...');
     
     try {
-      const { data, error } = await supabase.rpc('platform_admin_get_stats', { 
-        admin_email_param: adminEmail 
-      });
+      // Use direct query approach since RPC types aren't available
+      const { data, error } = await supabase.rpc(
+        'platform_admin_get_stats' as any,
+        { admin_email_param: adminEmail }
+      );
 
       if (error) {
         console.error('❌ Platform stats RPC failed:', error);
         throw error;
       }
 
-      if (!data || data.length === 0) {
+      if (!data || !Array.isArray(data) || data.length === 0) {
         console.warn('⚠️ No stats data returned');
         return {
           studentsCount: 0,
@@ -114,7 +130,7 @@ class SecurePlatformAdminService {
         };
       }
 
-      const stats = data[0];
+      const stats = data[0] as PlatformStatsRow;
       console.log('📊 Platform stats received:', stats);
 
       return {
@@ -146,21 +162,22 @@ class SecurePlatformAdminService {
     console.log('🏫 Getting school data using security definer function...');
     
     try {
-      const { data, error } = await supabase.rpc('platform_admin_get_schools', { 
-        admin_email_param: adminEmail 
-      });
+      const { data, error } = await supabase.rpc(
+        'platform_admin_get_schools' as any,
+        { admin_email_param: adminEmail }
+      );
 
       if (error) {
         console.error('❌ School data RPC failed:', error);
         throw error;
       }
 
-      if (!data) {
+      if (!data || !Array.isArray(data)) {
         console.warn('⚠️ No school data returned');
         return [];
       }
 
-      const schools = data.map(school => ({
+      const schools = (data as SchoolDataRow[]).map(school => ({
         name: school.school_name,
         teacher_count: Number(school.teacher_count) || 0,
         student_count: Number(school.student_count) || 0
@@ -213,10 +230,13 @@ class SecurePlatformAdminService {
     console.log('🏫 Creating school using security definer function:', schoolName);
     
     try {
-      const { data, error } = await supabase.rpc('platform_admin_add_school', {
-        admin_email_param: adminEmail,
-        school_name_param: schoolName.trim()
-      });
+      const { data, error } = await supabase.rpc(
+        'platform_admin_add_school' as any,
+        {
+          admin_email_param: adminEmail,
+          school_name_param: schoolName.trim()
+        }
+      );
       
       if (error) {
         console.error('❌ School creation failed:', error);
