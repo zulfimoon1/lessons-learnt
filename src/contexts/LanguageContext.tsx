@@ -1,5 +1,5 @@
 
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { translations } from '@/translations';
 
 type Language = 'en' | 'lt';
@@ -7,10 +7,67 @@ type Language = 'en' | 'lt';
 interface LanguageContextType {
   language: Language;
   setLanguage: (lang: Language) => void;
-  t: (key: string, interpolations?: Record<string, string>) => string;
+  t: (key: string, params?: Record<string, string>) => string;
+  isLoading: boolean;
 }
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
+
+export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+  const [language, setLanguage] = useState<Language>('en');
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const initializeLanguage = () => {
+      try {
+        const savedLanguage = localStorage.getItem('language') as Language;
+        if (savedLanguage && (savedLanguage === 'en' || savedLanguage === 'lt')) {
+          setLanguage(savedLanguage);
+        }
+      } catch (error) {
+        console.warn('Failed to load language from localStorage:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    initializeLanguage();
+  }, []);
+
+  const changeLanguage = (lang: Language) => {
+    setLanguage(lang);
+    try {
+      localStorage.setItem('language', lang);
+    } catch (error) {
+      console.warn('Failed to save language to localStorage:', error);
+    }
+  };
+
+  const t = (key: string, params?: Record<string, string>): string => {
+    let translation = translations[language][key] || key;
+    
+    if (params) {
+      Object.entries(params).forEach(([param, value]) => {
+        translation = translation.replace(`{${param}}`, value);
+      });
+    }
+    
+    return translation;
+  };
+
+  const contextValue: LanguageContextType = {
+    language,
+    setLanguage: changeLanguage,
+    t,
+    isLoading
+  };
+
+  return (
+    <LanguageContext.Provider value={contextValue}>
+      {children}
+    </LanguageContext.Provider>
+  );
+};
 
 export const useLanguage = () => {
   const context = useContext(LanguageContext);
@@ -18,40 +75,4 @@ export const useLanguage = () => {
     throw new Error('useLanguage must be used within a LanguageProvider');
   }
   return context;
-};
-
-export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [language, setLanguage] = useState<Language>('en');
-
-  const t = (key: string, interpolations?: Record<string, string>): string => {
-    const keys = key.split('.');
-    let value: any = translations[language];
-    
-    for (const k of keys) {
-      value = value?.[k];
-    }
-    
-    let result = value || key;
-    
-    // Handle interpolations
-    if (interpolations && typeof result === 'string') {
-      Object.entries(interpolations).forEach(([placeholder, replacement]) => {
-        result = result.replace(new RegExp(`{{\\s*${placeholder}\\s*}}`, 'g'), replacement);
-      });
-    }
-    
-    return result;
-  };
-
-  const value: LanguageContextType = {
-    language,
-    setLanguage,
-    t,
-  };
-
-  return (
-    <LanguageContext.Provider value={value}>
-      {children}
-    </LanguageContext.Provider>
-  );
 };

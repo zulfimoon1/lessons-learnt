@@ -1,5 +1,6 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { securePlatformAdminService } from '@/services/securePlatformAdminService';
 import { supabase } from '@/integrations/supabase/client';
 
 interface AdminUser {
@@ -41,9 +42,18 @@ export const PlatformAdminProvider: React.FC<{ children: React.ReactNode }> = ({
         const storedAdmin = localStorage.getItem('platform_admin');
         if (storedAdmin) {
           const adminData = JSON.parse(storedAdmin);
-          setAdmin(adminData);
-          setIsAuthenticated(true);
-          console.log('🔐 Admin session restored:', adminData.email);
+          
+          // Validate the stored session
+          const validation = await securePlatformAdminService.validateAdminSession(adminData.email);
+          if (validation.valid && validation.admin) {
+            setAdmin(validation.admin);
+            setIsAuthenticated(true);
+            console.log('🔐 Admin session restored:', adminData.email);
+          } else {
+            // Clear invalid session
+            localStorage.removeItem('platform_admin');
+            console.log('🔒 Invalid admin session cleared');
+          }
         }
       } catch (error) {
         console.error('Error loading stored admin session:', error);
@@ -61,27 +71,20 @@ export const PlatformAdminProvider: React.FC<{ children: React.ReactNode }> = ({
     setIsLoading(true);
     
     try {
-      // Simple admin authentication using hardcoded credentials for now
-      if (email === 'zulfimoon1@gmail.com' && password === 'admin123') {
-        const adminData: AdminUser = {
-          id: '1',
-          email: email,
-          name: 'Platform Admin',
-          role: 'admin',
-          school: 'Platform'
-        };
-        
-        setAdmin(adminData);
+      const result = await securePlatformAdminService.authenticateAdmin({ email, password });
+      
+      if (result.success && result.admin) {
+        setAdmin(result.admin);
         setIsAuthenticated(true);
         
         // Store in localStorage for persistence
-        localStorage.setItem('platform_admin', JSON.stringify(adminData));
+        localStorage.setItem('platform_admin', JSON.stringify(result.admin));
         
         console.log('✅ Platform admin login successful');
         return { success: true };
       } else {
-        console.error('❌ Platform admin login failed');
-        return { success: false, error: 'Invalid credentials' };
+        console.error('❌ Platform admin login failed:', result.error);
+        return { success: false, error: result.error || 'Authentication failed' };
       }
     } catch (error) {
       console.error('💥 Platform admin login error:', error);
@@ -99,8 +102,16 @@ export const PlatformAdminProvider: React.FC<{ children: React.ReactNode }> = ({
   };
 
   const validateSession = async () => {
-    // Simple session validation
-    if (!admin?.email) {
+    if (!admin?.email) return;
+    
+    try {
+      const validation = await securePlatformAdminService.validateAdminSession(admin.email);
+      if (!validation.valid) {
+        console.log('🔒 Admin session validation failed, logging out');
+        logout();
+      }
+    } catch (error) {
+      console.error('Error validating admin session:', error);
       logout();
     }
   };

@@ -1,10 +1,11 @@
 
 import { supabase } from '@/integrations/supabase/client';
+import { securePlatformAdminService } from './securePlatformAdminService';
 
 // Export types for components
 export type { StudentStatistics, TeacherStatistics, PlatformStatistics } from '@/types/adminTypes';
 
-// Simple platform admin service
+// Legacy service - now using secure implementation
 export interface PlatformAdmin {
   id: string;
   name: string;
@@ -13,33 +14,30 @@ export interface PlatformAdmin {
   school: string;
 }
 
+// Redirect to secure service
 export const platformAdminLoginService = async (email: string, password: string) => {
-  console.log('Platform admin login attempt:', email);
+  console.log('⚠️ Using legacy platformAdminLoginService - redirecting to secure service');
+  const result = await securePlatformAdminService.authenticateAdmin({ email, password });
   
-  // Simple hardcoded admin for now
-  if (email === 'zulfimoon1@gmail.com' && password === 'admin123') {
-    const admin: PlatformAdmin = {
-      id: '1',
-      email: email,
-      name: 'Platform Admin',
-      role: 'admin',
-      school: 'Platform'
-    };
-    return { admin };
+  if (result.success && result.admin) {
+    return { admin: result.admin };
   } else {
-    return { error: 'Invalid credentials' };
+    return { error: result.error };
   }
 };
 
+// Redirect password reset to secure service
 export const resetAdminPassword = async (email: string, newPassword: string = 'admin123') => {
-  console.log('Password reset for admin:', email);
-  return { success: true, message: 'Password reset successful' };
+  console.log('⚠️ Using legacy resetAdminPassword - redirecting to secure service');
+  return await securePlatformAdminService.createSecureAdminPassword(email, newPassword);
 };
 
+// Enhanced test function using secure service
 export const testPasswordVerification = async (email: string = 'zulfimoon1@gmail.com', password: string = 'admin123') => {
-  const result = await platformAdminLoginService(email, password);
+  console.log('⚠️ Using legacy testPasswordVerification - redirecting to secure service');
+  const result = await securePlatformAdminService.authenticateAdmin({ email, password });
   
-  if (result.admin) {
+  if (result.success) {
     return { 
       success: true, 
       message: '🎉 Admin authentication test successful!' 

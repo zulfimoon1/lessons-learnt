@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { useSupabaseAuth } from "@/contexts/SupabaseAuthContext";
+import { enhancedSecureTeacherSignup, enhancedSecureStudentSignup, enhancedSecureTeacherLogin, enhancedSecureStudentLogin } from "@/services/enhancedSecureAuthService";
 import { UserIcon, GraduationCapIcon, ShieldIcon } from "lucide-react";
 import ComplianceFooter from "@/components/ComplianceFooter";
 import CookieConsent from "@/components/CookieConsent";
@@ -16,7 +17,7 @@ import DataProtectionBanner from "@/components/DataProtectionBanner";
 const SecureAuth = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState("signin");
-  const { signIn, signUp } = useSupabaseAuth();
+  const { signIn } = useSupabaseAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -71,7 +72,7 @@ const SecureAuth = () => {
     setIsLoading(true);
 
     try {
-      const result = await signIn(signInData.email, signInData.password);
+      const result = await enhancedSecureTeacherLogin(signInData.email, signInData.password);
       
       if (result.error) {
         toast({
@@ -112,9 +113,12 @@ const SecureAuth = () => {
     setIsLoading(true);
 
     try {
-      const studentEmail = `${studentSignInData.fullName.toLowerCase().replace(/\s+/g, '.')}@${studentSignInData.school.toLowerCase().replace(/\s+/g, '')}.student`;
-      
-      const result = await signIn(studentEmail, studentSignInData.password);
+      const result = await enhancedSecureStudentLogin(
+        studentSignInData.fullName,
+        studentSignInData.school,
+        studentSignInData.grade,
+        studentSignInData.password
+      );
       
       if (result.error) {
         toast({
@@ -164,12 +168,13 @@ const SecureAuth = () => {
     setIsLoading(true);
 
     try {
-      const result = await signUp(teacherData.email, teacherData.password, {
-        user_type: 'teacher',
-        name: teacherData.name,
-        school: teacherData.school,
-        role: teacherData.role
-      });
+      const result = await enhancedSecureTeacherSignup(
+        teacherData.name,
+        teacherData.email,
+        teacherData.school,
+        teacherData.password,
+        teacherData.role
+      );
       
       if (result.error) {
         toast({
@@ -219,14 +224,12 @@ const SecureAuth = () => {
     setIsLoading(true);
 
     try {
-      const studentEmail = `${studentData.fullName.toLowerCase().replace(/\s+/g, '.')}@${studentData.school.toLowerCase().replace(/\s+/g, '')}.student`;
-      
-      const result = await signUp(studentEmail, studentData.password, {
-        user_type: 'student',
-        full_name: studentData.fullName,
-        school: studentData.school,
-        grade: studentData.grade
-      });
+      const result = await enhancedSecureStudentSignup(
+        studentData.fullName,
+        studentData.school,
+        studentData.grade,
+        studentData.password
+      );
       
       if (result.error) {
         toast({

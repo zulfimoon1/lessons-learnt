@@ -1,5 +1,5 @@
-
 import { supabase } from '@/integrations/supabase/client';
+import { securityValidationService } from './securityValidationService';
 
 interface SecurityMetrics {
   totalViolations: number;
@@ -24,6 +24,7 @@ class SecurityMonitoringService {
 
   async getSecurityMetrics(): Promise<SecurityMetrics> {
     try {
+      // Get security violations from audit log
       const { data: violations } = await supabase
         .from('audit_log')
         .select('*')
@@ -32,6 +33,7 @@ class SecurityMonitoringService {
 
       const totalViolations = violations?.length || 0;
       
+      // Safe access to new_data property with proper type checking
       const criticalViolations = violations?.filter(v => {
         if (v.new_data && typeof v.new_data === 'object' && v.new_data !== null) {
           const data = v.new_data as Record<string, any>;
@@ -69,8 +71,14 @@ class SecurityMonitoringService {
     
     this.suspiciousActivities.set(key, count + 1);
     
+    // Flag as suspicious if more than 10 identical activities in short time
     if (count > 10) {
-      console.warn(`Anomalous activity detected: ${activity} repeated ${count} times for user ${userId}`);
+      await securityValidationService.logSecurityEvent(
+        'suspicious_activity',
+        userId,
+        `Anomalous activity detected: ${activity} repeated ${count} times`,
+        'high'
+      );
       return true;
     }
     
@@ -88,6 +96,7 @@ class SecurityMonitoringService {
     
     this.alerts.unshift(alert);
     
+    // Keep only last 50 alerts
     if (this.alerts.length > 50) {
       this.alerts = this.alerts.slice(0, 50);
     }
@@ -106,8 +115,72 @@ class SecurityMonitoringService {
     }
   }
 
+  async monitorForThreats(): Promise<void> {
+    try {
+      // Check for unusual login patterns
+      const { data: recentLogins } = await supabase
+        .from('audit_log')
+        .select('*')
+        .in('operation', ['student_login', 'teacher_login'])
+        .gte('timestamp', new Date(Date.now() - 60 * 60 * 1000).toISOString());
+
+      if (recentLogins && recentLogins.length > 100) {
+        this.createSecurityAlert('warning', 
+          `Unusual login activity detected: ${recentLogins.length} logins in the last hour`);
+      }
+
+      // Check for mental health alert spikes
+      const { data: mentalHealthAlerts } = await supabase
+        .from('mental_health_alerts')
+        .select('*')
+        .gte('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString());
+
+      const criticalAlerts = mentalHealthAlerts?.filter(alert => 
+        alert.severity_level >= 4
+      ).length || 0;
+
+      if (criticalAlerts > 5) {
+        this.createSecurityAlert('critical', 
+          `High number of critical mental health alerts: ${criticalAlerts} in last 24 hours`);
+      }
+
+    } catch (error) {
+      console.error('Error monitoring for threats:', error);
+    }
+  }
+
+  startRealTimeMonitoring(): void {
+    // Monitor every 5 minutes
+    setInterval(() => {
+      this.monitorForThreats();
+    }, 5 * 60 * 1000);
+
+    // Clear old suspicious activities every hour
+    setInterval(() => {
+      this.suspiciousActivities.clear();
+    }, 60 * 60 * 1000);
+  }
+
+  async auditDataAccess(operation: string, tableName: string, recordCount: number): Promise<void> {
+    if (['students', 'mental_health_alerts', 'weekly_summaries'].includes(tableName)) {
+      await securityValidationService.logSecurityEvent(
+        'unauthorized_access',
+        undefined,
+        `Accessed ${recordCount} records from ${tableName} via ${operation}`,
+        'low'
+      );
+
+      // Flag large data exports
+      if (recordCount > 100) {
+        this.createSecurityAlert('warning', 
+          `Large data export detected: ${recordCount} ${tableName} records`);
+      }
+    }
+  }
+
   validateSecurityHeaders(): boolean {
     const hasCSP = document.querySelector('meta[http-equiv="Content-Security-Policy"]') !== null;
+    const hasXFrameOptions = true; // Would check actual headers in real implementation
     
     if (!hasCSP) {
       this.createSecurityAlert('warning', 'Content Security Policy not detected');
@@ -119,3 +192,6 @@ class SecurityMonitoringService {
 }
 
 export const securityMonitoringService = new SecurityMonitoringService();
+
+// Start monitoring when service is imported
+securityMonitoringService.startRealTimeMonitoring();
