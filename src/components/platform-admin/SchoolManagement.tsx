@@ -5,7 +5,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Trash2, Plus, School } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { usePlatformAdmin } from '@/contexts/PlatformAdminContext';
 import { securePlatformAdminService } from '@/services/securePlatformAdminService';
@@ -33,80 +32,9 @@ const SchoolManagement: React.FC<SchoolManagementProps> = ({ onDataChange }) => 
     }
 
     try {
-      console.log('🏫 Fetching schools...');
+      console.log('🏫 Fetching schools using security definer function...');
       
-      const schoolData = await securePlatformAdminService.executeSecureQuery(
-        admin.email,
-        async () => {
-          console.log('📊 Getting teacher and student data...');
-          
-          // Get all teachers and students directly with better error handling
-          const [teachersQuery, studentsQuery] = await Promise.allSettled([
-            supabase.from('teachers').select('school'),
-            supabase.from('students').select('school')
-          ]);
-
-          let teachers = [];
-          let students = [];
-
-          if (teachersQuery.status === 'fulfilled' && teachersQuery.value.data) {
-            teachers = teachersQuery.value.data;
-          } else {
-            console.warn('Teachers query failed:', teachersQuery.status === 'rejected' ? teachersQuery.reason : 'No data');
-          }
-
-          if (studentsQuery.status === 'fulfilled' && studentsQuery.value.data) {
-            students = studentsQuery.value.data;
-          } else {
-            console.warn('Students query failed:', studentsQuery.status === 'rejected' ? studentsQuery.reason : 'No data');
-          }
-
-          console.log('📊 Raw data:', { teachers: teachers.length, students: students.length });
-
-          // Filter out admin/platform schools
-          const excludedSchools = ['Platform Administration', 'platform administration', 'admin'];
-          
-          const validTeachers = teachers.filter(t => 
-            t.school && !excludedSchools.some(excluded => 
-              t.school.toLowerCase().includes(excluded.toLowerCase())
-            )
-          );
-          
-          const validStudents = students.filter(s => 
-            s.school && !excludedSchools.some(excluded => 
-              s.school.toLowerCase().includes(excluded.toLowerCase())
-            )
-          );
-
-          // Count by school
-          const teacherCounts = validTeachers.reduce((acc, t) => {
-            acc[t.school] = (acc[t.school] || 0) + 1;
-            return acc;
-          }, {} as Record<string, number>);
-
-          const studentCounts = validStudents.reduce((acc, s) => {
-            acc[s.school] = (acc[s.school] || 0) + 1;
-            return acc;
-          }, {} as Record<string, number>);
-
-          // Get unique schools
-          const allSchools = new Set([
-            ...Object.keys(teacherCounts),
-            ...Object.keys(studentCounts)
-          ]);
-
-          const schoolList = Array.from(allSchools).map(name => ({
-            name,
-            teacher_count: teacherCounts[name] || 0,
-            student_count: studentCounts[name] || 0
-          }));
-
-          console.log('🏫 Processed schools:', schoolList);
-          return schoolList;
-        },
-        []
-      );
-
+      const schoolData = await securePlatformAdminService.getSchoolData(admin.email);
       setSchools(schoolData);
       console.log(`✅ Schools loaded: ${schoolData.length} schools`);
       
@@ -132,7 +60,6 @@ const SchoolManagement: React.FC<SchoolManagementProps> = ({ onDataChange }) => 
     try {
       console.log('➕ Adding school:', newSchoolName.trim());
       
-      // Use the new createSchool method with better error handling
       await securePlatformAdminService.createSchool(admin.email, newSchoolName.trim());
 
       console.log('✅ School created successfully');
@@ -152,8 +79,6 @@ const SchoolManagement: React.FC<SchoolManagementProps> = ({ onDataChange }) => 
         errorMessage = 'School administrator already exists';
       } else if (error.message?.includes('permission denied')) {
         errorMessage = 'Database access denied - please check permissions';
-      } else if (error.message?.includes('RLS')) {
-        errorMessage = 'Security policy blocking access - contact administrator';
       } else if (error.message) {
         errorMessage = error.message;
       }
@@ -178,24 +103,9 @@ const SchoolManagement: React.FC<SchoolManagementProps> = ({ onDataChange }) => 
     try {
       console.log('🗑️ Deleting school:', schoolName);
       
-      // Use the secure database function for deletion
-      const result = await securePlatformAdminService.executeSecureQuery(
-        admin.email,
-        async () => {
-          const { data, error } = await supabase.rpc('platform_admin_delete_school', {
-            school_name_param: schoolName,
-            admin_email_param: admin.email
-          });
+      await securePlatformAdminService.deleteSchool(admin.email, schoolName);
 
-          if (error) {
-            throw error;
-          }
-
-          return data;
-        }
-      );
-
-      console.log('✅ School deleted:', result);
+      console.log('✅ School deleted successfully');
       toast.success(`School "${schoolName}" deleted successfully`);
       
       await fetchSchools();

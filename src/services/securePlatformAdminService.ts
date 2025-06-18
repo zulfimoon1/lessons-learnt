@@ -48,38 +48,6 @@ class SecurePlatformAdminService {
     }
   }
 
-  private async setAdminContext(adminEmail: string): Promise<void> {
-    try {
-      console.log('🔧 Setting admin context for:', adminEmail);
-      
-      // Use RPC to set the context - this bypasses RLS
-      const { error } = await supabase.rpc('set_platform_admin_context', { 
-        admin_email: adminEmail 
-      });
-      
-      if (error) {
-        console.warn('⚠️ RPC context setting failed:', error);
-      } else {
-        console.log('✅ Admin context set via RPC');
-      }
-      
-      // Also try direct setting as fallback
-      const { error: directError } = await supabase
-        .from('teachers')
-        .select('id')
-        .eq('email', adminEmail)
-        .eq('role', 'admin')
-        .single();
-        
-      if (!directError) {
-        console.log('✅ Direct admin verification successful');
-      }
-      
-    } catch (error) {
-      console.warn('⚠️ Context setting error:', error);
-    }
-  }
-
   async executeSecureQuery<T>(
     adminEmail: string,
     queryFn: () => Promise<T>,
@@ -87,10 +55,9 @@ class SecurePlatformAdminService {
   ): Promise<T> {
     console.log('🔍 Executing secure query for:', adminEmail);
     
-    // For known admin, bypass RLS entirely using direct queries
+    // For known admin, use direct approach
     if (adminEmail === this.KNOWN_ADMIN) {
       try {
-        await this.setAdminContext(adminEmail);
         const result = await queryFn();
         console.log('✅ Secure query executed successfully');
         return result;
@@ -101,11 +68,6 @@ class SecurePlatformAdminService {
         if (fallbackValue !== undefined) {
           console.log('🔄 Using fallback value');
           return fallbackValue;
-        }
-        
-        // For critical failures, throw but with better error message
-        if (error instanceof Error && error.message.includes('permission denied')) {
-          throw new Error('Database access denied - RLS policy issue');
         }
         
         throw error;
@@ -130,40 +92,42 @@ class SecurePlatformAdminService {
     responsesCount: number;
     subscriptionsCount: number;
   }> {
-    console.log('📊 Getting platform stats...');
+    console.log('📊 Getting platform stats using security definer function...');
     
-    // Use security definer functions to bypass RLS completely
     try {
-      await this.setAdminContext(adminEmail);
-      
-      console.log('📊 Fetching counts using security definer functions...');
-      
-      // Try to use the security definer functions first
-      const [studentsResult, teachersResult, feedbackResult, subscriptionsResult] = await Promise.allSettled([
-        supabase.rpc('get_platform_stats', { stat_type: 'students' }),
-        supabase.rpc('get_platform_stats', { stat_type: 'teachers' }),
-        supabase.rpc('get_platform_stats', { stat_type: 'feedback' }),
-        supabase.from('subscriptions').select('*', { count: 'exact', head: true })
-      ]);
-
-      console.log('📊 RPC results:', {
-        students: studentsResult.status === 'fulfilled' ? studentsResult.value : 'failed',
-        teachers: teachersResult.status === 'fulfilled' ? teachersResult.value : 'failed',
-        feedback: feedbackResult.status === 'fulfilled' ? feedbackResult.value : 'failed',
-        subscriptions: subscriptionsResult.status === 'fulfilled' ? subscriptionsResult.value : 'failed'
+      const { data, error } = await supabase.rpc('platform_admin_get_stats', { 
+        admin_email_param: adminEmail 
       });
 
+      if (error) {
+        console.error('❌ Platform stats RPC failed:', error);
+        throw error;
+      }
+
+      if (!data || data.length === 0) {
+        console.warn('⚠️ No stats data returned');
+        return {
+          studentsCount: 0,
+          teachersCount: 0,
+          responsesCount: 0,
+          subscriptionsCount: 0,
+        };
+      }
+
+      const stats = data[0];
+      console.log('📊 Platform stats received:', stats);
+
       return {
-        studentsCount: studentsResult.status === 'fulfilled' && studentsResult.value.data ? studentsResult.value.data[0]?.count || 0 : 0,
-        teachersCount: teachersResult.status === 'fulfilled' && teachersResult.value.data ? teachersResult.value.data[0]?.count || 0 : 0,
-        responsesCount: feedbackResult.status === 'fulfilled' && feedbackResult.value.data ? feedbackResult.value.data[0]?.count || 0 : 0,
-        subscriptionsCount: subscriptionsResult.status === 'fulfilled' ? (subscriptionsResult.value.count || 0) : 0,
+        studentsCount: Number(stats.students_count) || 0,
+        teachersCount: Number(stats.teachers_count) || 0,
+        responsesCount: Number(stats.feedback_count) || 0,
+        subscriptionsCount: Number(stats.subscriptions_count) || 0,
       };
 
     } catch (error) {
       console.error('❌ Platform stats failed:', error);
       
-      // Return zeros as fallback instead of throwing
+      // Return zeros as fallback
       console.log('🔄 Using fallback stats (all zeros)');
       return {
         studentsCount: 0,
@@ -171,6 +135,43 @@ class SecurePlatformAdminService {
         responsesCount: 0,
         subscriptionsCount: 0,
       };
+    }
+  }
+
+  async getSchoolData(adminEmail: string): Promise<Array<{
+    name: string;
+    teacher_count: number;
+    student_count: number;
+  }>> {
+    console.log('🏫 Getting school data using security definer function...');
+    
+    try {
+      const { data, error } = await supabase.rpc('platform_admin_get_schools', { 
+        admin_email_param: adminEmail 
+      });
+
+      if (error) {
+        console.error('❌ School data RPC failed:', error);
+        throw error;
+      }
+
+      if (!data) {
+        console.warn('⚠️ No school data returned');
+        return [];
+      }
+
+      const schools = data.map(school => ({
+        name: school.school_name,
+        teacher_count: Number(school.teacher_count) || 0,
+        student_count: Number(school.student_count) || 0
+      }));
+
+      console.log('🏫 School data received:', schools);
+      return schools;
+
+    } catch (error) {
+      console.error('❌ School data failed:', error);
+      return [];
     }
   }
 
@@ -203,96 +204,63 @@ class SecurePlatformAdminService {
     }
   }
 
-  // Bypass RLS entirely for admin operations
-  async executeDirectQuery<T>(
-    adminEmail: string,
-    tableName: string,
-    operation: 'select' | 'insert' | 'update' | 'delete',
-    queryBuilder: any
-  ): Promise<T> {
-    console.log(`🔧 Direct ${operation} on ${tableName} for:`, adminEmail);
-    
-    if (adminEmail !== this.KNOWN_ADMIN) {
-      throw new Error('Unauthorized: Not a known admin');
-    }
-
-    try {
-      // Set context first
-      await this.setAdminContext(adminEmail);
-      
-      // Execute query with detailed logging
-      console.log(`🔧 Executing ${operation} query...`);
-      const { data, error } = await queryBuilder;
-      
-      if (error) {
-        console.error(`❌ Direct ${operation} failed:`, error);
-        
-        // If it's a permission error, try using security definer function
-        if (error.message?.includes('permission denied') && operation === 'insert' && tableName === 'teachers') {
-          console.log('🔄 Trying security definer approach for teacher insert...');
-          
-          // For teacher insertion, we'll use a different approach
-          throw new Error(`Permission denied for ${operation} on ${tableName}. RLS policy blocking access.`);
-        }
-        
-        throw error;
-      }
-      
-      console.log(`✅ Direct ${operation} successful`);
-      return data;
-    } catch (error) {
-      console.error(`💥 Direct ${operation} error:`, error);
-      throw error;
-    }
-  }
-
-  // New method to handle school creation with better error handling
+  // Method to handle school creation using security definer function
   async createSchool(adminEmail: string, schoolName: string): Promise<any> {
     if (adminEmail !== this.KNOWN_ADMIN) {
       throw new Error('Unauthorized: Not a known admin');
     }
 
-    console.log('🏫 Creating school:', schoolName);
+    console.log('🏫 Creating school using security definer function:', schoolName);
     
     try {
-      await this.setAdminContext(adminEmail);
-      
-      const adminTeacherEmail = `admin@${schoolName.toLowerCase().replace(/\s+/g, '')}.edu`;
-      
-      // Try direct insert first
-      const teacherData = {
-        name: `${schoolName} Administrator`,
-        email: adminTeacherEmail,
-        school: schoolName.trim(),
-        role: 'admin',
-        password_hash: '$2b$12$LQv3c1yX1/Y6GdE9e5Q8M.QmK5J5Q5Q5Q5Q5Q5Q5Q5Q5Q5Q5Q5Q5Qu'
-      };
-      
-      console.log('🔧 Inserting teacher data:', { ...teacherData, password_hash: '[REDACTED]' });
-      
-      const { data, error } = await supabase
-        .from('teachers')
-        .insert(teacherData)
-        .select()
-        .single();
+      const { data, error } = await supabase.rpc('platform_admin_add_school', {
+        admin_email_param: adminEmail,
+        school_name_param: schoolName.trim()
+      });
       
       if (error) {
         console.error('❌ School creation failed:', error);
         
-        if (error.code === '23505') {
+        if (error.message?.includes('duplicate key')) {
           throw new Error('School administrator already exists');
-        } else if (error.message?.includes('permission denied')) {
-          throw new Error('Database permission denied - please check RLS policies');
+        } else if (error.message?.includes('Unauthorized')) {
+          throw new Error('Database permission denied - please check permissions');
         } else {
           throw new Error(`Failed to create school: ${error.message}`);
         }
       }
       
       console.log('✅ School created successfully:', data);
-      return data;
+      return { id: data, success: true };
       
     } catch (error) {
       console.error('💥 School creation error:', error);
+      throw error;
+    }
+  }
+
+  async deleteSchool(adminEmail: string, schoolName: string): Promise<any> {
+    if (adminEmail !== this.KNOWN_ADMIN) {
+      throw new Error('Unauthorized: Not a known admin');
+    }
+
+    console.log('🗑️ Deleting school:', schoolName);
+    
+    try {
+      const { data, error } = await supabase.rpc('platform_admin_delete_school', {
+        school_name_param: schoolName,
+        admin_email_param: adminEmail
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      console.log('✅ School deleted:', data);
+      return data;
+      
+    } catch (error) {
+      console.error('💥 School deletion error:', error);
       throw error;
     }
   }

@@ -82,101 +82,47 @@ const PlatformAdminDashboard = () => {
     setIsRefreshing(true);
     
     try {
-      console.log('📊 Getting platform stats...');
+      console.log('📊 Getting platform stats using security definer functions...');
       
-      // Get basic stats using the secure service
+      // Get basic stats using the secure service with security definer functions
       const platformStats = await securePlatformAdminService.getPlatformStats(admin.email);
       console.log('📊 Platform stats received:', platformStats);
 
-      // Get additional data safely
-      let schoolStatsProcessed: SchoolStats[] = [];
-      let totalSchools = 0;
-      let monthlyRevenue = 0;
-      
+      // Get school data using security definer function
+      const schoolData = await securePlatformAdminService.getSchoolData(admin.email);
+      console.log('📊 School data received:', schoolData);
+
+      // Process school stats
+      const schoolStatsProcessed = schoolData.map(school => ({
+        school: school.name,
+        total_teachers: school.teacher_count
+      }));
+
+      // Calculate monthly revenue safely
+      let monthlyRevenue = 0;      
       try {
-        await securePlatformAdminService.executeSecureQuery(
-          admin.email,
-          async () => {
-            console.log('📊 Getting additional school data...');
-            
-            // Get data with error handling
-            const [studentsResult, teachersResult, subscriptionResult] = await Promise.allSettled([
-              supabase.from('students').select('school'),
-              supabase.from('teachers').select('school'),
-              supabase.from('subscriptions').select('amount, plan_type, status').eq('status', 'active')
-            ]);
-
-            const allSchools = new Set<string>();
-            const excludedSchools = ['Platform Administration', 'platform administration', 'admin'];
-            
-            // Process school data safely
-            if (studentsResult.status === 'fulfilled' && studentsResult.value.data) {
-              studentsResult.value.data.forEach(item => {
-                if (item?.school && !excludedSchools.some(excluded => 
-                  item.school.toLowerCase().includes(excluded.toLowerCase())
-                )) {
-                  allSchools.add(item.school);
-                }
-              });
-            }
-            
-            if (teachersResult.status === 'fulfilled' && teachersResult.value.data) {
-              teachersResult.value.data.forEach(item => {
-                if (item?.school && !excludedSchools.some(excluded => 
-                  item.school.toLowerCase().includes(excluded.toLowerCase())
-                )) {
-                  allSchools.add(item.school);
-                }
-              });
-              
-              // Calculate teacher counts
-              const teacherCounts = teachersResult.value.data
-                .filter(teacher => teacher.school && !excludedSchools.some(excluded => 
-                  teacher.school.toLowerCase().includes(excluded.toLowerCase())
-                ))
-                .reduce((acc, teacher) => {
-                  acc[teacher.school] = (acc[teacher.school] || 0) + 1;
-                  return acc;
-                }, {} as Record<string, number>);
-              
-              schoolStatsProcessed = Object.entries(teacherCounts)
-                .map(([school, total_teachers]) => ({ school, total_teachers }));
-            }
-
-            // Calculate revenue safely
-            if (subscriptionResult.status === 'fulfilled' && subscriptionResult.value.data) {
-              monthlyRevenue = subscriptionResult.value.data.reduce((total, sub) => {
-                const monthlyAmount = sub.plan_type === 'yearly' ? sub.amount / 12 : sub.amount;
-                return total + (monthlyAmount / 100);
-              }, 0);
-            }
-            
-            totalSchools = allSchools.size;
-            console.log('📊 Processed additional data:', { totalSchools, revenue: monthlyRevenue, schoolStats: schoolStatsProcessed.length });
-            
-            return true;
-          },
-          true
-        );
+        const { data: subscriptionData } = await supabase
+          .from('subscriptions')
+          .select('amount, plan_type, status')
+          .eq('status', 'active');
+        
+        if (subscriptionData) {
+          monthlyRevenue = subscriptionData.reduce((total, sub) => {
+            const monthlyAmount = sub.plan_type === 'yearly' ? sub.amount / 12 : sub.amount;
+            return total + (monthlyAmount / 100);
+          }, 0);
+        }
       } catch (error) {
-        console.warn('Could not fetch additional data:', error);
-        toast.warning('Some dashboard data may be incomplete');
+        console.warn('Could not fetch subscription data:', error);
       }
 
       // Get feedback analytics safely
       let feedbackAnalyticsData: FeedbackStats[] = [];
       try {
-        await securePlatformAdminService.executeSecureQuery(
-          admin.email,
-          async () => {
-            const { data, error } = await supabase.from('feedback_analytics').select('*');
-            if (!error && data) {
-              feedbackAnalyticsData = data;
-            }
-            return true;
-          },
-          true
-        );
+        const { data } = await supabase.from('feedback_analytics').select('*');
+        if (data) {
+          feedbackAnalyticsData = data;
+        }
       } catch (error) {
         console.warn('Could not fetch feedback analytics:', error);
       }
@@ -184,7 +130,7 @@ const PlatformAdminDashboard = () => {
       const newStats = {
         totalStudents: platformStats.studentsCount,
         totalTeachers: platformStats.teachersCount,
-        totalSchools: totalSchools,
+        totalSchools: schoolData.length,
         totalResponses: platformStats.responsesCount,
         totalSubscriptions: platformStats.subscriptionsCount,
         monthlyRevenue: monthlyRevenue,
