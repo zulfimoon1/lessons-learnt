@@ -853,6 +853,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: boolean
       }
+      check_rate_limit: {
+        Args: { operation_type: string; max_attempts?: number }
+        Returns: boolean
+      }
       decrypt_sensitive_data: {
         Args: { encrypted_content: string }
         Returns: string
@@ -1074,6 +1078,10 @@ export type Database = {
       set_platform_admin_context: {
         Args: { admin_email: string }
         Returns: undefined
+      }
+      validate_admin_operation: {
+        Args: { operation_name: string }
+        Returns: boolean
       }
       validate_mental_health_access: {
         Args: Record<PropertyKey, never>
