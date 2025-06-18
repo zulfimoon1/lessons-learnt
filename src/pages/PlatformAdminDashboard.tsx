@@ -243,22 +243,6 @@ const PlatformAdminDashboard = () => {
     );
   }
 
-  const handleRefresh = () => {
-    fetchStats();
-  };
-
-  const handleDataChange = () => {
-    console.log('📊 Data changed, refreshing dashboard...');
-    setTimeout(() => {
-      fetchStats();
-    }, 500);
-  };
-
-  const handleLogout = () => {
-    logout();
-    toast.info('Logged out successfully');
-  };
-
   return (
     <div className="min-h-screen bg-gray-50" key={`dashboard-${refreshKey}`}>
       {/* Header */}
