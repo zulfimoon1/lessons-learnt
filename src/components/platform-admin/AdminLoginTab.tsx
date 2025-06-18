@@ -39,16 +39,16 @@ const AdminLoginTab = ({
       const result = await resetAdminPassword(email, 'admin123');
       console.log('🔄 Password reset result:', result);
       
-      if (result.error) {
+      if (!result.success) {
         toast({
           title: "Reset Failed", 
-          description: result.error,
+          description: result.message,
           variant: "destructive",
         });
       } else {
         toast({
           title: "✅ Password Reset Successful",
-          description: "Password has been reset to 'admin123'. You can now log in.",
+          description: result.message,
         });
       }
     } catch (error) {
