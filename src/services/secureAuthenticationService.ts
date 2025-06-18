@@ -1,188 +1,255 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { enhancedSecurityService } from './enhancedSecurityService';
-import { inputValidationService } from './inputValidationService';
 
-interface LoginCredentials {
-  email: string;
-  password: string;
-  userType: 'teacher' | 'student';
+interface SecureAuthResponse {
+  user?: any;
+  error?: string;
+  requiresVerification?: boolean;
 }
 
-interface SignupData {
-  email: string;
-  password: string;
-  name: string;
-  school: string;
-  userType: 'teacher' | 'student';
-  grade?: string;
-  role?: string;
+interface SessionInfo {
+  userAgent: string;
+  ipAddress: string;
+  timestamp: number;
 }
 
 class SecureAuthenticationService {
-  async secureLogin(credentials: LoginCredentials): Promise<any> {
-    const { email, password, userType } = credentials;
-    
-    // Validate inputs
-    if (!inputValidationService.validateEmail(email)) {
-      throw new Error('Invalid email format');
-    }
-    
-    const passwordValidation = inputValidationService.validatePassword(password);
-    if (!passwordValidation.isValid) {
-      throw new Error('Invalid password format');
-    }
-    
-    // Check rate limiting
-    const isAllowed = await enhancedSecurityService.validateLoginAttempt(email);
-    if (!isAllowed) {
-      throw new Error('Too many login attempts. Please try again later.');
-    }
-    
+  private readonly MAX_LOGIN_ATTEMPTS = 5;
+  private readonly LOCKOUT_DURATION = 15 * 60 * 1000; // 15 minutes
+  private readonly SESSION_TIMEOUT = 4 * 60 * 60 * 1000; // 4 hours
+
+  async secureLogin(email: string, password: string): Promise<SecureAuthResponse> {
     try {
-      let userData = null;
-      
-      if (userType === 'teacher') {
-        // Query teachers table for authentication
-        const { data: teacherData, error: teacherError } = await supabase
-          .from('teachers')
-          .select('*')
-          .eq('email', email)
-          .single();
-          
-        if (teacherError || !teacherData) {
-          enhancedSecurityService.recordLoginAttempt(email, false);
-          throw new Error('Invalid credentials');
-        }
-        
-        // In a real implementation, you'd verify the password hash here
-        // For now, we'll use a simplified approach
-        userData = teacherData;
-        
-      } else if (userType === 'student') {
-        // For students, we don't have email-based auth in the current schema
-        // This would need to be implemented based on your student auth requirements
-        throw new Error('Student authentication not implemented in this method');
-      }
-      
-      if (userData) {
-        enhancedSecurityService.recordLoginAttempt(email, true);
-        
-        await enhancedSecurityService.logSecurityEvent({
-          type: 'successful_login',
-          userId: userData.id,
-          details: `Successful ${userType} login for ${email}`,
-          severity: 'low',
-          metadata: { userType, school: userData.school }
-        });
-        
-        return userData;
-      }
-      
-      throw new Error('Authentication failed');
-      
-    } catch (error) {
-      enhancedSecurityService.recordLoginAttempt(email, false);
-      
-      await enhancedSecurityService.logSecurityEvent({
-        type: 'failed_login',
-        details: `Failed login attempt for ${email}: ${error}`,
-        severity: 'medium',
-        metadata: { userType, email }
+      // Validate inputs
+      const emailValidation = await supabase.rpc('validate_secure_input', {
+        input_text: email,
+        input_type: 'email',
+        max_length: 254
       });
+
+      if (!emailValidation.data?.is_valid) {
+        await this.logSecurityEvent('invalid_input_attempt', 'Invalid email format during login');
+        return { error: 'Invalid email format' };
+      }
+
+      // Check rate limiting
+      const rateLimitOk = await supabase.rpc('check_enhanced_rate_limit', {
+        operation_type: 'login_attempt',
+        identifier: email,
+        max_attempts: this.MAX_LOGIN_ATTEMPTS,
+        window_minutes: 15
+      });
+
+      if (!rateLimitOk.data) {
+        return { error: 'Too many login attempts. Please try again later.' };
+      }
+
+      // Attempt authentication with Supabase
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) {
+        await this.logSecurityEvent('login_failed', `Login failed for ${email}: ${error.message}`);
+        return { error: 'Invalid credentials' };
+      }
+
+      if (!data.user) {
+        return { error: 'Authentication failed' };
+      }
+
+      // Validate session security
+      const sessionValid = await this.validateSessionSecurity();
+      if (!sessionValid) {
+        await supabase.auth.signOut();
+        return { error: 'Session security validation failed' };
+      }
+
+      // Store secure session info
+      this.storeSecureSessionInfo();
+
+      await this.logSecurityEvent('login_success', `Successful login for ${email}`);
+      return { user: data.user };
+
+    } catch (error) {
+      await this.logSecurityEvent('login_error', `Login error: ${error}`);
+      return { error: 'Login failed. Please try again.' };
+    }
+  }
+
+  async secureSignup(email: string, password: string, additionalData?: Record<string, any>): Promise<SecureAuthResponse> {
+    try {
+      // Validate inputs
+      const emailValidation = await supabase.rpc('validate_secure_input', {
+        input_text: email,
+        input_type: 'email',
+        max_length: 254
+      });
+
+      if (!emailValidation.data?.is_valid) {
+        return { error: 'Invalid email format' };
+      }
+
+      // Validate password strength
+      if (password.length < 8) {
+        return { error: 'Password must be at least 8 characters long' };
+      }
+
+      if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(password)) {
+        return { error: 'Password must contain uppercase, lowercase, and numbers' };
+      }
+
+      // Check rate limiting for signups
+      const rateLimitOk = await supabase.rpc('check_enhanced_rate_limit', {
+        operation_type: 'signup_attempt',
+        identifier: email,
+        max_attempts: 3,
+        window_minutes: 60
+      });
+
+      if (!rateLimitOk.data) {
+        return { error: 'Too many signup attempts. Please try again later.' };
+      }
+
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
+          data: additionalData
+        }
+      });
+
+      if (error) {
+        await this.logSecurityEvent('signup_failed', `Signup failed for ${email}: ${error.message}`);
+        return { error: error.message };
+      }
+
+      await this.logSecurityEvent('signup_success', `Account created for ${email}`);
       
+      return { 
+        user: data.user,
+        requiresVerification: !data.session 
+      };
+
+    } catch (error) {
+      await this.logSecurityEvent('signup_error', `Signup error: ${error}`);
+      return { error: 'Signup failed. Please try again.' };
+    }
+  }
+
+  async secureSignOut(): Promise<void> {
+    try {
+      await this.logSecurityEvent('logout_initiated', 'User initiated logout');
+      
+      // Clear local session data
+      this.clearSecureSessionInfo();
+      
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        throw error;
+      }
+
+      await this.logSecurityEvent('logout_success', 'User logged out successfully');
+    } catch (error) {
+      await this.logSecurityEvent('logout_error', `Logout error: ${error}`);
       throw error;
     }
   }
-  
-  async secureSignup(signupData: SignupData): Promise<any> {
-    const { email, password, name, school, userType } = signupData;
-    
-    // Validate all inputs
-    if (!inputValidationService.validateEmail(email)) {
-      throw new Error('Invalid email format');
-    }
-    
-    const passwordValidation = inputValidationService.validatePassword(password);
-    if (!passwordValidation.isValid) {
-      throw new Error(`Password requirements not met: ${passwordValidation.errors.join(', ')}`);
-    }
-    
-    if (!inputValidationService.validatePersonName(name)) {
-      throw new Error('Invalid name format');
-    }
-    
-    if (!inputValidationService.validateSchoolName(school)) {
-      throw new Error('Invalid school name format');
-    }
-    
+
+  async validateSessionSecurity(): Promise<boolean> {
     try {
-      // For teachers, create account in teachers table
-      if (userType === 'teacher') {
-        // Hash password (in production, use proper bcrypt)
-        const passwordHash = await this.hashPassword(password);
-        
-        const { data, error } = await supabase
-          .from('teachers')
-          .insert({
-            email: inputValidationService.sanitizeInput(email),
-            name: inputValidationService.sanitizeInput(name),
-            school: inputValidationService.sanitizeInput(school),
-            password_hash: passwordHash,
-            role: signupData.role || 'teacher'
-          })
-          .select()
-          .single();
-          
-        if (error) {
-          throw error;
-        }
-        
-        await enhancedSecurityService.logSecurityEvent({
-          type: 'user_registration',
-          userId: data.id,
-          details: `New ${userType} registration: ${email}`,
-          severity: 'low',
-          metadata: { userType, school, role: signupData.role }
-        });
-        
-        return data;
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        return false;
       }
-      
-      throw new Error('Signup method not implemented for this user type');
-      
-    } catch (error) {
-      await enhancedSecurityService.logSecurityEvent({
-        type: 'registration_error',
-        details: `Registration failed for ${email}: ${error}`,
-        severity: 'medium',
-        metadata: { userType, school }
+
+      // Check session timeout
+      const sessionInfo = this.getSecureSessionInfo();
+      if (sessionInfo && Date.now() - sessionInfo.timestamp > this.SESSION_TIMEOUT) {
+        await this.logSecurityEvent('session_expired', 'Session expired due to timeout');
+        await this.secureSignOut();
+        return false;
+      }
+
+      // Validate session with database
+      const sessionValid = await supabase.rpc('validate_session_security', {
+        user_agent: navigator.userAgent,
+        ip_address: this.getCurrentIP()
       });
-      
-      throw error;
+
+      return sessionValid.data || false;
+    } catch (error) {
+      await this.logSecurityEvent('session_validation_error', `Session validation error: ${error}`);
+      return false;
     }
   }
-  
-  private async hashPassword(password: string): Promise<string> {
-    // In production, use proper bcrypt
-    // For now, return a placeholder
-    return `hashed_${password}_${Date.now()}`;
-  }
-  
-  async validateSession(): Promise<boolean> {
-    return await enhancedSecurityService.checkSessionSecurity();
-  }
-  
-  async secureLogout(): Promise<void> {
-    await enhancedSecurityService.logSecurityEvent({
-      type: 'user_logout',
-      details: 'User initiated secure logout',
-      severity: 'low'
-    });
+
+  private storeSecureSessionInfo(): void {
+    const sessionInfo: SessionInfo = {
+      userAgent: navigator.userAgent,
+      ipAddress: this.getCurrentIP(),
+      timestamp: Date.now()
+    };
     
-    // Clear any security tokens
+    sessionStorage.setItem('secure_session_info', JSON.stringify(sessionInfo));
+  }
+
+  private getSecureSessionInfo(): SessionInfo | null {
+    try {
+      const stored = sessionStorage.getItem('secure_session_info');
+      return stored ? JSON.parse(stored) : null;
+    } catch {
+      return null;
+    }
+  }
+
+  private clearSecureSessionInfo(): void {
+    sessionStorage.removeItem('secure_session_info');
     sessionStorage.removeItem('csrf_token');
-    localStorage.removeItem('auth_context');
+    localStorage.removeItem('user_id');
+    localStorage.removeItem('user_email');
+    localStorage.removeItem('user_role');
+  }
+
+  private getCurrentIP(): string {
+    // This would typically come from a server-side service
+    // For now, return a placeholder
+    return 'client-side';
+  }
+
+  private async logSecurityEvent(eventType: string, details: string): Promise<void> {
+    try {
+      await enhancedSecurityService.logSecurityEvent({
+        type: eventType as any,
+        details,
+        severity: eventType.includes('failed') || eventType.includes('error') ? 'high' : 'low'
+      });
+    } catch (error) {
+      console.error('Failed to log security event:', error);
+    }
+  }
+
+  // Session monitoring
+  startSessionMonitoring(): void {
+    // Check session validity every 5 minutes
+    setInterval(async () => {
+      const isValid = await this.validateSessionSecurity();
+      if (!isValid) {
+        await this.secureSignOut();
+        window.location.href = '/auth';
+      }
+    }, 5 * 60 * 1000);
+
+    // Monitor for suspicious activity
+    document.addEventListener('visibilitychange', async () => {
+      if (document.visibilityState === 'visible') {
+        await this.validateSessionSecurity();
+      }
+    });
   }
 }
 

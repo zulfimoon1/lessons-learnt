@@ -1,133 +1,169 @@
 
 import React, { useEffect, useState } from 'react';
-import { enhancedSecurityService } from '@/services/enhancedSecurityService';
-import { enhancedSecurityValidationService } from '@/services/enhancedSecurityValidationService';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { supabase } from '@/integrations/supabase/client';
+import { Shield, AlertTriangle, CheckCircle, XCircle } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ShieldIcon, AlertTriangleIcon } from 'lucide-react';
 
 interface SecurityStatus {
   level: 'secure' | 'warning' | 'critical';
   message: string;
-  violations: number;
+  lastCheck: string;
+  activeThreats: number;
+  sessionValid: boolean;
 }
 
 const EnhancedSecurityMonitor: React.FC = () => {
   const [securityStatus, setSecurityStatus] = useState<SecurityStatus>({
     level: 'secure',
-    message: 'Security monitoring active',
-    violations: 0
+    message: 'Initializing security check...',
+    lastCheck: new Date().toISOString(),
+    activeThreats: 0,
+    sessionValid: true
   });
 
   useEffect(() => {
-    const initializeSecurityMonitoring = async () => {
-      // Start security monitoring
-      enhancedSecurityService.monitorSecurityViolations();
-      enhancedSecurityService.enhanceFormValidation();
-
-      // Check initial security status
-      await checkSecurityStatus();
-
-      // Set up periodic security checks
-      const securityCheckInterval = setInterval(checkSecurityStatus, 30000); // Every 30 seconds
-
-      return () => {
-        clearInterval(securityCheckInterval);
-      };
-    };
-
     const checkSecurityStatus = async () => {
       try {
-        const dashboardData = await enhancedSecurityService.getSecurityDashboardData();
-        
-        let level: 'secure' | 'warning' | 'critical' = 'secure';
-        let message = 'Security monitoring active';
+        // Check session security
+        const sessionCheck = await supabase.rpc('validate_session_security', {
+          user_agent: navigator.userAgent,
+          ip_address: 'client-side'
+        });
 
-        if (dashboardData.recentViolations > 5) {
+        // Get recent security events
+        const { data: recentEvents } = await supabase
+          .from('audit_log')
+          .select('*')
+          .eq('table_name', 'security_events')
+          .gte('timestamp', new Date(Date.now() - 60 * 60 * 1000).toISOString()) // Last hour
+          .order('timestamp', { ascending: false })
+          .limit(50);
+
+        const highRiskEvents = recentEvents?.filter(event => 
+          event.new_data?.severity === 'high'
+        ).length || 0;
+
+        const mediumRiskEvents = recentEvents?.filter(event => 
+          event.new_data?.severity === 'medium'
+        ).length || 0;
+
+        let level: 'secure' | 'warning' | 'critical' = 'secure';
+        let message = 'All security checks passed';
+
+        if (!sessionCheck.data) {
           level = 'critical';
-          message = `High security activity detected (${dashboardData.recentViolations} recent violations)`;
-        } else if (dashboardData.recentViolations > 0) {
+          message = 'Session security validation failed';
+        } else if (highRiskEvents > 3) {
+          level = 'critical';
+          message = `${highRiskEvents} high-risk security events detected`;
+        } else if (highRiskEvents > 0 || mediumRiskEvents > 5) {
           level = 'warning';
-          message = `Security monitoring active (${dashboardData.recentViolations} recent violations)`;
+          message = `Security alerts detected: ${highRiskEvents} high, ${mediumRiskEvents} medium`;
         }
 
         setSecurityStatus({
           level,
           message,
-          violations: dashboardData.recentViolations
+          lastCheck: new Date().toISOString(),
+          activeThreats: highRiskEvents + mediumRiskEvents,
+          sessionValid: sessionCheck.data || false
         });
 
-        // Log security check
-        if (level !== 'secure') {
-          enhancedSecurityService.logSecurityViolation({
-            type: 'security_status_check',
-            details: `Security status: ${level}, Recent violations: ${dashboardData.recentViolations}`,
-            severity: level === 'critical' ? 'high' : 'medium'
-          });
-        }
       } catch (error) {
         console.error('Security status check failed:', error);
-        setSecurityStatus({
+        setSecurityStatus(prev => ({
+          ...prev,
           level: 'warning',
-          message: 'Security monitoring degraded',
-          violations: 0
-        });
+          message: 'Security check failed - please refresh',
+          lastCheck: new Date().toISOString()
+        }));
       }
     };
 
-    initializeSecurityMonitoring();
+    // Initial check
+    checkSecurityStatus();
+
+    // Check every 30 seconds
+    const interval = setInterval(checkSecurityStatus, 30000);
+
+    return () => clearInterval(interval);
   }, []);
 
-  // Only show status for warning or critical levels
-  if (securityStatus.level === 'secure') {
-    return null;
-  }
-
-  const getStatusConfig = () => {
+  const getStatusIcon = () => {
     switch (securityStatus.level) {
-      case 'critical':
-        return {
-          icon: AlertTriangleIcon,
-          variant: 'destructive' as const,
-          badgeVariant: 'destructive' as const,
-          color: 'text-red-600'
-        };
+      case 'secure':
+        return <CheckCircle className="w-5 h-5 text-green-600" />;
       case 'warning':
-        return {
-          icon: ShieldIcon,
-          variant: 'default' as const,
-          badgeVariant: 'secondary' as const,
-          color: 'text-yellow-600'
-        };
-      default:
-        return {
-          icon: ShieldIcon,
-          variant: 'default' as const,
-          badgeVariant: 'secondary' as const,
-          color: 'text-green-600'
-        };
+        return <AlertTriangle className="w-5 h-5 text-yellow-600" />;
+      case 'critical':
+        return <XCircle className="w-5 h-5 text-red-600" />;
     }
   };
 
-  const config = getStatusConfig();
-  const Icon = config.icon;
+  const getStatusColor = () => {
+    switch (securityStatus.level) {
+      case 'secure':
+        return 'border-green-200 bg-green-50';
+      case 'warning':
+        return 'border-yellow-200 bg-yellow-50';
+      case 'critical':
+        return 'border-red-200 bg-red-50';
+    }
+  };
+
+  const getBadgeVariant = () => {
+    switch (securityStatus.level) {
+      case 'secure':
+        return 'default';
+      case 'warning':
+        return 'secondary';
+      case 'critical':
+        return 'destructive';
+    }
+  };
 
   return (
-    <div className="fixed top-4 right-4 z-50 max-w-sm">
-      <Alert variant={config.variant} className="border-2">
-        <Icon className="h-4 w-4" />
-        <AlertDescription className="flex items-center justify-between">
-          <span className="flex items-center gap-2">
-            <span>{securityStatus.message}</span>
-            {securityStatus.violations > 0 && (
-              <Badge variant={config.badgeVariant} className="text-xs">
-                {securityStatus.violations}
-              </Badge>
-            )}
-          </span>
-        </AlertDescription>
-      </Alert>
-    </div>
+    <Card className={`${getStatusColor()} border-2`}>
+      <CardHeader className="pb-3">
+        <CardTitle className="flex items-center gap-2 text-lg">
+          <Shield className="w-5 h-5" />
+          Security Monitor
+          {getStatusIcon()}
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        <div className="flex items-center justify-between">
+          <span className="text-sm font-medium">Status:</span>
+          <Badge variant={getBadgeVariant()}>
+            {securityStatus.level.toUpperCase()}
+          </Badge>
+        </div>
+        
+        <div className="text-sm text-gray-700">
+          {securityStatus.message}
+        </div>
+
+        <div className="grid grid-cols-2 gap-4 text-xs">
+          <div>
+            <span className="font-medium">Active Threats:</span>
+            <span className={`ml-1 ${securityStatus.activeThreats > 0 ? 'text-red-600 font-medium' : 'text-green-600'}`}>
+              {securityStatus.activeThreats}
+            </span>
+          </div>
+          <div>
+            <span className="font-medium">Session:</span>
+            <span className={`ml-1 ${securityStatus.sessionValid ? 'text-green-600' : 'text-red-600'}`}>
+              {securityStatus.sessionValid ? 'Valid' : 'Invalid'}
+            </span>
+          </div>
+        </div>
+
+        <div className="text-xs text-gray-500">
+          Last check: {new Date(securityStatus.lastCheck).toLocaleTimeString()}
+        </div>
+      </CardContent>
+    </Card>
   );
 };
 
