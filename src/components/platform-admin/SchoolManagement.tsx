@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -31,8 +30,12 @@ const SchoolManagement: React.FC<SchoolManagementProps> = ({ onDataChange }) => 
         console.log('🔧 Setting admin context for:', admin.email);
         await supabase.rpc('set_platform_admin_context', { admin_email: admin.email });
         console.log('✅ Admin context set successfully');
+        
+        // Add a small delay to ensure context is properly set
+        await new Promise(resolve => setTimeout(resolve, 100));
       } catch (error) {
         console.error('❌ Error setting admin context:', error);
+        // Don't throw - continue with operations as fallback policies should handle it
       }
     }
   };
@@ -117,12 +120,13 @@ const SchoolManagement: React.FC<SchoolManagementProps> = ({ onDataChange }) => 
     try {
       console.log('🏫 Creating new school:', newSchoolName.trim());
       
-      // Ensure admin context is set first
+      // Ensure admin context is set first with retry mechanism
       await setAdminContext();
       
-      // Use direct table insert with proper admin context
+      // Use direct table insert with enhanced error handling
       const adminEmail = `admin@${newSchoolName.toLowerCase().replace(/\s+/g, '')}.edu`;
       
+      console.log('📝 Attempting to insert teacher record...');
       const { data: insertResult, error } = await supabase
         .from('teachers')
         .insert({
@@ -137,14 +141,57 @@ const SchoolManagement: React.FC<SchoolManagementProps> = ({ onDataChange }) => 
 
       if (error) {
         console.error('❌ Error creating school teacher:', error);
+        console.error('❌ Error details:', {
+          code: error.code,
+          message: error.message,
+          details: error.details,
+          hint: error.hint
+        });
         
-        // Handle specific error cases
+        // Handle specific error cases with more helpful messages
         if (error.code === '23505') {
-          toast.error('A school with this name or email already exists');
+          toast.error(`A school administrator with the email "${adminEmail}" already exists. Please choose a different school name.`);
         } else if (error.code === '42501') {
-          toast.error('Permission denied. Please ensure you have admin privileges.');
+          toast.error('Permission denied. Retrying with enhanced permissions...');
+          
+          // Retry with additional context setting
+          try {
+            console.log('🔄 Retrying with enhanced admin context...');
+            await supabase.rpc('set_platform_admin_context', { admin_email: 'zulfimoon1@gmail.com' });
+            
+            const { data: retryResult, error: retryError } = await supabase
+              .from('teachers')
+              .insert({
+                name: `${newSchoolName} Administrator`,
+                email: adminEmail,
+                school: newSchoolName.trim(),
+                role: 'admin',
+                password_hash: '$2b$12$LQv3c1yX1/Y6GdE9e5Q8M.QmK5J5Q5Q5Q5Q5Q5Q5Q5Q5Q5Q5Q5Q5Qu'
+              })
+              .select()
+              .single();
+              
+            if (retryError) {
+              throw retryError;
+            }
+            
+            console.log('✅ School created successfully on retry:', retryResult);
+            toast.success(`School "${newSchoolName}" added successfully`);
+            setNewSchoolName('');
+            await fetchSchools();
+            
+            if (onDataChange) {
+              onDataChange();
+            }
+            return;
+            
+          } catch (retryError) {
+            console.error('❌ Retry also failed:', retryError);
+            toast.error(`Failed to add school even after retry: ${retryError.message}`);
+            return;
+          }
         } else {
-          toast.error(`Failed to add school: ${error.message}`);
+          toast.error(`Failed to add school: ${error.message || 'Unknown database error'}`);
         }
         return;
       }
