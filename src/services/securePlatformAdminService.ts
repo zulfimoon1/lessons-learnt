@@ -24,19 +24,15 @@ class SecurePlatformAdminService {
     try {
       console.log('🔧 Setting platform admin context for:', adminEmail);
       
-      // Set the context multiple times with different approaches
-      await Promise.all([
-        supabase.rpc('set_platform_admin_context', { admin_email: adminEmail }),
-        supabase.rpc('set_platform_admin_context', { admin_email: 'zulfimoon1@gmail.com' })
-      ]);
-
+      // Set the context using the improved function
+      await supabase.rpc('set_platform_admin_context', { admin_email: adminEmail });
       console.log('✅ Admin context setting completed');
       
-      // Add delay to ensure context propagation
-      await new Promise(resolve => setTimeout(resolve, 200));
+      // Short delay to ensure context propagation
+      await new Promise(resolve => setTimeout(resolve, 100));
     } catch (error) {
       console.error('❌ Error setting admin context:', error);
-      // Don't throw - continue with fallback approaches
+      // Don't throw - continue with operations as the new policies are more permissive
     }
   }
 
@@ -51,16 +47,16 @@ class SecurePlatformAdminService {
 
       const adminEmail = loginData.email.toLowerCase().trim();
       
-      // Handle the specific admin account with direct validation
+      // Handle the specific admin account with enhanced validation
       if (adminEmail === 'zulfimoon1@gmail.com') {
         console.log('🔍 Authenticating platform admin...');
+        
+        // Set admin context first
+        await this.setAdminContext(adminEmail);
         
         // For the known admin, provide direct access with correct password
         if (loginData.password === 'admin123') {
           console.log('✅ Direct admin password verification successful');
-          
-          // Set admin context after successful auth
-          await this.setAdminContext(adminEmail);
           
           return {
             success: true,
@@ -74,110 +70,90 @@ class SecurePlatformAdminService {
           };
         }
 
-        // Also try database verification with enhanced context setting
+        // Try database verification with the improved context
         try {
-          await this.setAdminContext(adminEmail);
-          
-          // Multiple attempts with different approaches
-          let existingAdmin = null;
-          
-          // Attempt 1: Direct query
-          try {
-            const { data, error } = await supabase
-              .from('teachers')
-              .select('id, email, name, role, school, password_hash')
-              .eq('email', adminEmail)
-              .eq('role', 'admin')
-              .maybeSingle();
-              
-            if (!error && data) {
-              existingAdmin = data;
-            }
-          } catch (queryError) {
-            console.warn('⚠️ Direct query failed:', queryError);
-          }
-
-          // Attempt 2: Using RPC function if direct query fails
-          if (!existingAdmin) {
-            try {
-              const { data, error } = await supabase.rpc('get_platform_stats', { stat_type: 'teachers' });
-              // If we can execute RPC functions, try a different approach
-              if (!error) {
-                console.log('📊 RPC access confirmed, attempting alternative admin verification');
-                // Use hardcoded admin data as fallback
-                if (loginData.password === 'admin123') {
+          const { data, error } = await supabase
+            .from('teachers')
+            .select('id, email, name, role, school, password_hash')
+            .eq('email', adminEmail)
+            .eq('role', 'admin')
+            .maybeSingle();
+            
+          if (!error && data) {
+            console.log('📊 Found admin in database:', data.email);
+            
+            // Validate password if hash exists
+            if (data.password_hash) {
+              try {
+                const isValidPassword = await bcrypt.compare(loginData.password, data.password_hash);
+                
+                if (isValidPassword) {
+                  console.log('✅ Database admin authentication successful');
                   return {
                     success: true,
                     admin: {
-                      id: 'admin-rpc-verified',
-                      email: adminEmail,
-                      name: 'Platform Admin',
-                      role: 'admin',
-                      school: 'Platform Administration'
+                      id: data.id,
+                      email: data.email,
+                      name: data.name,
+                      role: data.role,
+                      school: data.school
+                    }
+                  };
+                }
+              } catch (bcryptError) {
+                console.warn('⚠️ Bcrypt comparison failed, trying direct password:', bcryptError);
+                // Fall back to direct password comparison
+                if (loginData.password === 'admin123') {
+                  console.log('✅ Fallback admin authentication successful');
+                  return {
+                    success: true,
+                    admin: {
+                      id: data.id,
+                      email: data.email,
+                      name: data.name,
+                      role: data.role,
+                      school: data.school
                     }
                   };
                 }
               }
-            } catch (rpcError) {
-              console.warn('⚠️ RPC verification failed:', rpcError);
-            }
-          }
-
-          // If we have admin data from database, validate password
-          if (existingAdmin && existingAdmin.password_hash) {
-            try {
-              const isValidPassword = await bcrypt.compare(loginData.password, existingAdmin.password_hash);
-              
-              if (isValidPassword) {
-                console.log('✅ Database admin authentication successful');
-                return {
-                  success: true,
-                  admin: {
-                    id: existingAdmin.id,
-                    email: existingAdmin.email,
-                    name: existingAdmin.name,
-                    role: existingAdmin.role,
-                    school: existingAdmin.school
-                  }
-                };
-              }
-            } catch (bcryptError) {
-              console.warn('⚠️ Bcrypt comparison failed:', bcryptError);
-              // Fall back to direct password comparison
+            } else {
+              // No password hash, use direct comparison
               if (loginData.password === 'admin123') {
-                console.log('✅ Fallback admin authentication successful');
+                console.log('✅ No hash found, direct password successful');
                 return {
                   success: true,
                   admin: {
-                    id: existingAdmin.id,
-                    email: existingAdmin.email,
-                    name: existingAdmin.name,
-                    role: existingAdmin.role,
-                    school: existingAdmin.school
+                    id: data.id,
+                    email: data.email,
+                    name: data.name,
+                    role: data.role,
+                    school: data.school
                   }
                 };
               }
             }
+          } else {
+            console.warn('⚠️ Database query error or no admin found:', error);
           }
 
         } catch (authError) {
-          console.error('💥 Error during admin authentication:', authError);
-          
-          // Final fallback - if all else fails but password is correct
-          if (loginData.password === 'admin123') {
-            console.log('✅ Ultimate fallback admin authentication');
-            await this.setAdminContext(adminEmail);
-            return {
-              success: true,
-              admin: {
-                id: 'admin-fallback-access',
-                email: adminEmail,
-                name: 'Platform Admin',
-                role: 'admin',
-                school: 'Platform Administration'
-              }
-            };
-          }
+          console.error('💥 Error during database admin authentication:', authError);
+        }
+
+        // Final fallback for known admin
+        if (loginData.password === 'admin123') {
+          console.log('✅ Ultimate fallback admin authentication');
+          return {
+            success: true,
+            admin: {
+              id: 'admin-fallback-access',
+              email: adminEmail,
+              name: 'Platform Admin',
+              role: 'admin',
+              school: 'Platform Administration'
+            }
+          };
         }
       }
 
@@ -260,9 +236,11 @@ class SecurePlatformAdminService {
         return { valid: false };
       }
 
-      // For the known admin, always validate without database dependency
+      // Set admin context
+      await this.setAdminContext(emailValidation.sanitizedValue);
+
+      // For the known admin, always validate
       if (emailValidation.sanitizedValue === 'zulfimoon1@gmail.com') {
-        await this.setAdminContext(emailValidation.sanitizedValue);
         return {
           valid: true,
           admin: {
@@ -275,10 +253,8 @@ class SecurePlatformAdminService {
         };
       }
 
-      // For other potential admins, try database validation
+      // Try database validation for other admins
       try {
-        await this.setAdminContext(emailValidation.sanitizedValue);
-
         const { data: adminUser, error } = await supabase
           .from('teachers')
           .select('id, email, name, role, school')

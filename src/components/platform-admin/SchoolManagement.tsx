@@ -29,18 +29,11 @@ const SchoolManagement: React.FC<SchoolManagementProps> = ({ onDataChange }) => 
     if (admin?.email) {
       try {
         console.log('🔧 Setting admin context for:', admin.email);
-        // Set context with multiple approaches
-        await Promise.all([
-          supabase.rpc('set_platform_admin_context', { admin_email: admin.email }),
-          supabase.rpc('set_platform_admin_context', { admin_email: 'zulfimoon1@gmail.com' })
-        ]);
+        await supabase.rpc('set_platform_admin_context', { admin_email: admin.email });
         console.log('✅ Admin context set successfully');
-        
-        // Add delay for context propagation
-        await new Promise(resolve => setTimeout(resolve, 150));
       } catch (error) {
         console.error('❌ Error setting admin context:', error);
-        // Don't throw - continue with operations as fallback policies should handle it
+        // Continue - the new policies are more permissive
       }
     }
   };
@@ -48,41 +41,30 @@ const SchoolManagement: React.FC<SchoolManagementProps> = ({ onDataChange }) => 
   const fetchSchools = async () => {
     try {
       await setAdminContext();
+      console.log('📊 Fetching schools...');
       
-      // Try multiple approaches to get data
+      // Try to get data with improved error handling
+      const [teacherResult, studentResult] = await Promise.all([
+        supabase.from('teachers').select('school').not('school', 'is', null),
+        supabase.from('students').select('school').not('school', 'is', null)
+      ]);
+
+      console.log('📊 Teacher query result:', teacherResult);
+      console.log('📊 Student query result:', studentResult);
+
       let teacherSchools = [];
       let studentSchools = [];
 
-      // Attempt 1: Direct queries
-      try {
-        const [teacherResult, studentResult] = await Promise.all([
-          supabase.from('teachers').select('school').not('school', 'is', null),
-          supabase.from('students').select('school').not('school', 'is', null)
-        ]);
-
-        if (!teacherResult.error) teacherSchools = teacherResult.data || [];
-        if (!studentResult.error) studentSchools = studentResult.data || [];
-      } catch (directError) {
-        console.warn('⚠️ Direct queries failed:', directError);
+      if (!teacherResult.error && teacherResult.data) {
+        teacherSchools = teacherResult.data;
+      } else {
+        console.warn('⚠️ Teacher query failed:', teacherResult.error);
       }
 
-      // Attempt 2: Using RPC functions if direct queries fail
-      if (teacherSchools.length === 0 && studentSchools.length === 0) {
-        try {
-          const [teacherCount, studentCount] = await Promise.all([
-            supabase.rpc('get_platform_stats', { stat_type: 'teachers' }),
-            supabase.rpc('get_platform_stats', { stat_type: 'students' })
-          ]);
-
-          console.log('📊 Got counts via RPC:', { teachers: teacherCount.data, students: studentCount.data });
-          
-          // If we have counts but no details, create mock data for testing
-          if (teacherCount.data && teacherCount.data[0]?.count > 0) {
-            teacherSchools = [{ school: 'Demo School' }];
-          }
-        } catch (rpcError) {
-          console.warn('⚠️ RPC queries also failed:', rpcError);
-        }
+      if (!studentResult.error && studentResult.data) {
+        studentSchools = studentResult.data;
+      } else {
+        console.warn('⚠️ Student query failed:', studentResult.error);
       }
 
       // Filter out platform administration entries
@@ -127,9 +109,7 @@ const SchoolManagement: React.FC<SchoolManagementProps> = ({ onDataChange }) => 
       console.log('🏫 Schools updated:', schoolList.length, 'schools found');
     } catch (error) {
       console.error('Error fetching schools:', error);
-      toast.error('Failed to fetch schools. Using fallback data if available.');
-      
-      // Fallback: show at least some basic info
+      toast.error('Failed to fetch schools data');
       setSchools([]);
     }
   };
@@ -149,7 +129,7 @@ const SchoolManagement: React.FC<SchoolManagementProps> = ({ onDataChange }) => 
     try {
       console.log('🏫 Creating new school:', newSchoolName.trim());
       
-      // Enhanced admin context setting
+      // Set admin context
       await setAdminContext();
       
       const adminEmail = `admin@${newSchoolName.toLowerCase().replace(/\s+/g, '')}.edu`;
@@ -163,76 +143,31 @@ const SchoolManagement: React.FC<SchoolManagementProps> = ({ onDataChange }) => 
 
       console.log('📝 Attempting to insert teacher record...');
       
-      // Try multiple insertion approaches
-      let insertResult = null;
-      let finalError = null;
+      const { data, error } = await supabase
+        .from('teachers')
+        .insert(schoolData)
+        .select()
+        .single();
 
-      // Approach 1: Direct insert
-      try {
-        const { data, error } = await supabase
-          .from('teachers')
-          .insert(schoolData)
-          .select()
-          .single();
-
-        if (!error && data) {
-          insertResult = data;
-        } else {
-          finalError = error;
-        }
-      } catch (directError) {
-        console.warn('⚠️ Direct insert failed:', directError);
-        finalError = directError;
-      }
-
-      // Approach 2: Try with enhanced context if direct failed
-      if (!insertResult && finalError) {
-        try {
-          console.log('🔄 Retrying with enhanced admin context...');
-          await supabase.rpc('set_platform_admin_context', { admin_email: 'zulfimoon1@gmail.com' });
-          await new Promise(resolve => setTimeout(resolve, 100));
-          
-          const { data, error } = await supabase
-            .from('teachers')
-            .insert(schoolData)
-            .select()
-            .single();
-            
-          if (!error && data) {
-            insertResult = data;
-            finalError = null;
-          } else {
-            finalError = error;
-          }
-        } catch (retryError) {
-          console.warn('⚠️ Enhanced retry failed:', retryError);
-          finalError = retryError;
-        }
-      }
-
-      // Handle results
-      if (insertResult) {
-        console.log('✅ School created successfully:', insertResult);
-        toast.success(`School "${newSchoolName}" added successfully`);
-        setNewSchoolName('');
-        await fetchSchools();
-        
-        if (onDataChange) {
-          onDataChange();
-        }
-      } else {
-        console.error('❌ All insertion attempts failed:', finalError);
+      if (error) {
+        console.error('❌ Error creating school admin:', error);
         
         // Handle specific error cases
-        if (finalError?.code === '23505') {
+        if (error.code === '23505') {
           toast.error(`A school administrator with the email "${adminEmail}" already exists. Please choose a different school name.`);
-        } else if (finalError?.code === '42501') {
-          toast.error('Permission denied. The school may have been created but verification failed. Please refresh to check.');
-          // Still refresh in case it worked
-          setTimeout(() => fetchSchools(), 1000);
         } else {
-          toast.error(`Failed to add school: ${finalError?.message || 'Unknown database error'}. Please try refreshing.`);
+          toast.error(`Failed to add school: ${error.message}`);
         }
+        return;
+      }
+
+      console.log('✅ School created successfully:', data);
+      toast.success(`School "${newSchoolName}" added successfully`);
+      setNewSchoolName('');
+      await fetchSchools();
+      
+      if (onDataChange) {
+        onDataChange();
       }
     } catch (error) {
       console.error('💥 Error adding school:', error);
