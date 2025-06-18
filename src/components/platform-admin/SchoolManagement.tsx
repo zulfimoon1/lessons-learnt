@@ -117,30 +117,36 @@ const SchoolManagement: React.FC<SchoolManagementProps> = ({ onDataChange }) => 
     try {
       console.log('🏫 Creating new school:', newSchoolName.trim());
       
-      // Ensure admin context is set
+      // Ensure admin context is set first
       await setAdminContext();
       
-      // Create a placeholder teacher for the new school
+      // Use direct table insert with proper admin context
       const adminEmail = `admin@${newSchoolName.toLowerCase().replace(/\s+/g, '')}.edu`;
-      const teacherData = {
-        name: `${newSchoolName} Administrator`,
-        email: adminEmail,
-        school: newSchoolName.trim(),
-        role: 'admin',
-        password_hash: '$2b$12$placeholder.hash.for.new.school.admin.account'
-      };
-
-      console.log('📝 Creating teacher record:', teacherData);
-
+      
       const { data: insertResult, error } = await supabase
         .from('teachers')
-        .insert(teacherData)
+        .insert({
+          name: `${newSchoolName} Administrator`,
+          email: adminEmail,
+          school: newSchoolName.trim(),
+          role: 'admin',
+          password_hash: '$2b$12$LQv3c1yX1/Y6GdE9e5Q8M.QmK5J5Q5Q5Q5Q5Q5Q5Q5Q5Q5Q5Q5Q5Qu'
+        })
         .select()
         .single();
 
       if (error) {
         console.error('❌ Error creating school teacher:', error);
-        throw error;
+        
+        // Handle specific error cases
+        if (error.code === '23505') {
+          toast.error('A school with this name or email already exists');
+        } else if (error.code === '42501') {
+          toast.error('Permission denied. Please ensure you have admin privileges.');
+        } else {
+          toast.error(`Failed to add school: ${error.message}`);
+        }
+        return;
       }
 
       console.log('✅ School teacher created successfully:', insertResult);
@@ -154,13 +160,7 @@ const SchoolManagement: React.FC<SchoolManagementProps> = ({ onDataChange }) => 
       }
     } catch (error) {
       console.error('💥 Error adding school:', error);
-      if (error.message?.includes('permission denied')) {
-        toast.error('Permission denied: Unable to create school. Please check admin permissions.');
-      } else if (error.message?.includes('unique constraint')) {
-        toast.error('A school with this name or email already exists');
-      } else {
-        toast.error(`Failed to add school: ${error.message}`);
-      }
+      toast.error(`Failed to add school: ${error.message || 'Unknown error'}`);
     } finally {
       setIsLoading(false);
     }
@@ -246,6 +246,11 @@ const SchoolManagement: React.FC<SchoolManagementProps> = ({ onDataChange }) => 
                 onChange={(e) => setNewSchoolName(e.target.value)}
                 placeholder="Enter school name"
                 disabled={isLoading}
+                onKeyPress={(e) => {
+                  if (e.key === 'Enter' && !isLoading && newSchoolName.trim()) {
+                    addSchool();
+                  }
+                }}
               />
             </div>
             <Button 

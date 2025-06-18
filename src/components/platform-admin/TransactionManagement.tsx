@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -36,7 +37,7 @@ const TransactionManagement = () => {
   const [formData, setFormData] = useState({
     school_name: '',
     amount: '',
-    currency: 'usd',
+    currency: 'eur', // Changed default to EUR
     transaction_type: 'payment',
     status: 'completed',
     description: '',
@@ -96,7 +97,7 @@ const TransactionManagement = () => {
     if (calculatedAmount > 0) {
       setFormData({
         ...formData,
-        amount: (calculatedAmount / 100).toFixed(2) // Convert from cents to dollars
+        amount: (calculatedAmount / 100).toFixed(2) // Convert from cents to euros
       });
     }
   };
@@ -178,7 +179,7 @@ const TransactionManagement = () => {
     setFormData({
       school_name: '',
       amount: '',
-      currency: 'usd',
+      currency: 'eur', // Reset to EUR default
       transaction_type: 'payment',
       status: 'completed',
       description: '',
@@ -336,7 +337,7 @@ const TransactionManagement = () => {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label htmlFor="amount">Amount * (USD)</Label>
+                    <Label htmlFor="amount">Amount * (EUR)</Label>
                     <Input
                       id="amount"
                       type="number"
@@ -355,8 +356,8 @@ const TransactionManagement = () => {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="usd">USD</SelectItem>
                         <SelectItem value="eur">EUR</SelectItem>
+                        <SelectItem value="usd">USD</SelectItem>
                         <SelectItem value="gbp">GBP</SelectItem>
                       </SelectContent>
                     </Select>
