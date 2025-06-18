@@ -56,17 +56,26 @@ class SecurePlatformAdminService {
     try {
       console.log('🔧 Ensuring admin context for:', adminEmail);
       
-      // Set the admin context using RPC
-      const { error } = await supabase.rpc('set_platform_admin_context', { 
-        admin_email: adminEmail 
-      });
-      
-      if (error) {
-        console.warn('⚠️ RPC context setting failed:', error);
-      } else {
-        console.log('✅ Admin context set successfully via RPC');
-        this.adminContextSet = true;
+      // Set the admin context using RPC with retries
+      for (let attempt = 1; attempt <= 3; attempt++) {
+        const { error } = await supabase.rpc('set_platform_admin_context', { 
+          admin_email: adminEmail 
+        });
+        
+        if (!error) {
+          console.log(`✅ Admin context set successfully via RPC (attempt ${attempt})`);
+          this.adminContextSet = true;
+          return;
+        }
+        
+        console.warn(`⚠️ RPC context setting failed (attempt ${attempt}):`, error);
+        
+        if (attempt < 3) {
+          await new Promise(resolve => setTimeout(resolve, 500 * attempt));
+        }
       }
+      
+      console.warn('⚠️ All RPC attempts failed, but continuing...');
     } catch (error) {
       console.warn('⚠️ Failed to set admin context:', error);
     }
@@ -83,7 +92,7 @@ class SecurePlatformAdminService {
     await this.ensureAdminContext(adminEmail);
     
     // Add delay to ensure context propagation
-    await new Promise(resolve => setTimeout(resolve, 300));
+    await new Promise(resolve => setTimeout(resolve, 500));
     
     try {
       const result = await queryFn();
@@ -97,7 +106,7 @@ class SecurePlatformAdminService {
         console.log('🔄 Retrying with fresh context...');
         this.adminContextSet = false;
         await this.ensureAdminContext(adminEmail);
-        await new Promise(resolve => setTimeout(resolve, 500));
+        await new Promise(resolve => setTimeout(resolve, 1000));
         
         try {
           const retryResult = await queryFn();
@@ -133,6 +142,10 @@ class SecurePlatformAdminService {
     return this.executeSecureQuery(
       adminEmail,
       async () => {
+        // First ensure context is set with longer delay
+        await this.ensureAdminContext(adminEmail);
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
         // Use Promise.allSettled to prevent failures from breaking everything
         const [studentsResult, teachersResult, feedbackResult, subscriptionsResult] = await Promise.allSettled([
           supabase.from('students').select('id', { count: 'exact', head: true }),
@@ -174,6 +187,10 @@ class SecurePlatformAdminService {
     return this.executeSecureQuery(
       adminEmail,
       async () => {
+        // Ensure context with longer delay
+        await this.ensureAdminContext(adminEmail);
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
         // Get data with comprehensive error handling
         const [teachersResult, studentsResult] = await Promise.allSettled([
           supabase
@@ -258,6 +275,10 @@ class SecurePlatformAdminService {
     return this.executeSecureQuery(
       adminEmail,
       async () => {
+        // Ensure admin context with longer delay for write operations
+        await this.ensureAdminContext(adminEmail);
+        await new Promise(resolve => setTimeout(resolve, 1500));
+        
         // Generate admin email for the school
         const adminSchoolEmail = 'admin@' + schoolName.toLowerCase().replace(/\s+/g, '') + '.edu';
         
@@ -302,6 +323,10 @@ class SecurePlatformAdminService {
     return this.executeSecureQuery(
       adminEmail,
       async () => {
+        // Ensure admin context with longer delay for delete operations
+        await this.ensureAdminContext(adminEmail);
+        await new Promise(resolve => setTimeout(resolve, 1500));
+        
         // Use the platform admin delete function
         const { data, error } = await supabase
           .rpc('platform_admin_delete_school', {

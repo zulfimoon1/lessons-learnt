@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -74,11 +73,15 @@ const SchoolManagement: React.FC<SchoolManagementProps> = ({ onDataChange }) => 
       console.log('✅ School created successfully');
       toast.success(`School "${newSchoolName}" added successfully`);
       setNewSchoolName('');
-      await fetchSchools();
       
-      if (onDataChange) {
-        onDataChange();
-      }
+      // Wait a bit longer before refreshing to ensure data consistency
+      setTimeout(async () => {
+        await fetchSchools();
+        if (onDataChange) {
+          onDataChange();
+        }
+      }, 1000);
+      
     } catch (error: any) {
       console.error('❌ Error adding school:', error);
       
@@ -118,13 +121,13 @@ const SchoolManagement: React.FC<SchoolManagementProps> = ({ onDataChange }) => 
       console.log('✅ School deleted successfully');
       toast.success(`School "${schoolName}" deleted successfully`);
       
-      await fetchSchools();
-      
-      if (onDataChange) {
-        setTimeout(() => {
+      // Wait a bit longer before refreshing to ensure data consistency
+      setTimeout(async () => {
+        await fetchSchools();
+        if (onDataChange) {
           onDataChange();
-        }, 100);
-      }
+        }
+      }, 1500);
       
     } catch (error: any) {
       console.error('❌ Error deleting school:', error);
@@ -144,7 +147,10 @@ const SchoolManagement: React.FC<SchoolManagementProps> = ({ onDataChange }) => 
   };
 
   useEffect(() => {
-    fetchSchools();
+    // Add longer initial delay to ensure admin context is properly set
+    setTimeout(() => {
+      fetchSchools();
+    }, 1500);
   }, []);
 
   return (

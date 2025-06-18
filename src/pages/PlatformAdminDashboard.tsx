@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { usePlatformAdmin } from "@/contexts/PlatformAdminContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -85,11 +84,11 @@ const PlatformAdminDashboard = () => {
     try {
       console.log('📊 Getting platform stats for admin:', admin.email);
       
-      // Get basic stats using the secure service
+      // Get basic stats using the secure service with enhanced retry logic
       const platformStats = await securePlatformAdminService.getPlatformStats(admin.email);
       console.log('📊 Platform stats received:', platformStats);
 
-      // Get school data
+      // Get school data with enhanced error handling
       const schoolData = await securePlatformAdminService.getSchoolData(admin.email);
       console.log('📊 School data received:', schoolData);
 
@@ -99,14 +98,14 @@ const PlatformAdminDashboard = () => {
         total_teachers: school.teacher_count
       }));
 
-      // Calculate monthly revenue with improved error handling
+      // Calculate monthly revenue with enhanced error handling and longer delays
       let monthlyRevenue = 0;      
       try {
         console.log('💰 Fetching subscription data...');
         await securePlatformAdminService.ensureAdminContext(admin.email);
         
-        // Add extra delay for context propagation
-        await new Promise(resolve => setTimeout(resolve, 500));
+        // Add extra delay for context propagation for sensitive financial data
+        await new Promise(resolve => setTimeout(resolve, 1500));
         
         const { data: subscriptionData, error: subError } = await supabase
           .from('subscriptions')
@@ -126,14 +125,14 @@ const PlatformAdminDashboard = () => {
         console.warn('Could not fetch subscription data:', error);
       }
 
-      // Get feedback analytics with improved error handling
+      // Get feedback analytics with enhanced error handling and longer delays
       let feedbackAnalyticsData: FeedbackStats[] = [];
       try {
         console.log('📈 Fetching feedback analytics...');
         await securePlatformAdminService.ensureAdminContext(admin.email);
         
-        // Add extra delay for context propagation
-        await new Promise(resolve => setTimeout(resolve, 500));
+        // Add extra delay for context propagation for analytics data
+        await new Promise(resolve => setTimeout(resolve, 1500));
         
         const { data, error: feedbackError } = await supabase.from('feedback_analytics').select('*');
         if (feedbackError) {
@@ -193,10 +192,10 @@ const PlatformAdminDashboard = () => {
     console.log('📊 Dashboard useEffect triggered', { isAuthenticated, admin: !!admin });
     if (isAuthenticated && admin?.email) {
       console.log('Loading dashboard data for admin:', admin.email);
-      // Add a delay to ensure context is fully set
+      // Add a longer delay to ensure context is fully set
       setTimeout(() => {
         fetchStats();
-      }, 1000);
+      }, 2000);
     }
   }, [isAuthenticated, admin]);
 
