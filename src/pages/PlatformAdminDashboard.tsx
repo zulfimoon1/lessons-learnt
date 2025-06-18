@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { SchoolIcon, LogOutIcon, RefreshCwIcon, UsersIcon, MessageSquareIcon, Settings, Users, School, Shield } from "lucide-react";
+import { SchoolIcon, LogOutIcon, RefreshCwIcon, UsersIcon, MessageSquareIcon, Settings, Users, School, Shield, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 import StatsCard from "@/components/dashboard/StatsCard";
 import SchoolOverview from "@/components/platform-admin/SchoolOverview";
@@ -64,6 +64,7 @@ const PlatformAdminDashboard = () => {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<string>("");
   const [refreshKey, setRefreshKey] = useState(0);
+  const [hasPermissionIssues, setHasPermissionIssues] = useState(false);
 
   console.log('📊 DASHBOARD: State check', { 
     admin: !!admin, 
@@ -80,15 +81,16 @@ const PlatformAdminDashboard = () => {
     }
 
     setIsRefreshing(true);
+    setHasPermissionIssues(false);
     
     try {
-      console.log('📊 Getting platform stats using security definer functions...');
+      console.log('📊 Getting platform stats...');
       
-      // Get basic stats using the secure service with security definer functions
+      // Get basic stats using the secure service
       const platformStats = await securePlatformAdminService.getPlatformStats(admin.email);
       console.log('📊 Platform stats received:', platformStats);
 
-      // Get school data using security definer function
+      // Get school data
       const schoolData = await securePlatformAdminService.getSchoolData(admin.email);
       console.log('📊 School data received:', schoolData);
 
@@ -98,9 +100,10 @@ const PlatformAdminDashboard = () => {
         total_teachers: school.teacher_count
       }));
 
-      // Calculate monthly revenue safely
+      // Calculate monthly revenue safely with error handling
       let monthlyRevenue = 0;      
       try {
+        await securePlatformAdminService.setAdminContext(admin.email);
         const { data: subscriptionData } = await supabase
           .from('subscriptions')
           .select('amount, plan_type, status')
@@ -114,17 +117,24 @@ const PlatformAdminDashboard = () => {
         }
       } catch (error) {
         console.warn('Could not fetch subscription data:', error);
+        if (error instanceof Error && error.message.includes('permission denied')) {
+          setHasPermissionIssues(true);
+        }
       }
 
       // Get feedback analytics safely
       let feedbackAnalyticsData: FeedbackStats[] = [];
       try {
+        await securePlatformAdminService.setAdminContext(admin.email);
         const { data } = await supabase.from('feedback_analytics').select('*');
         if (data) {
           feedbackAnalyticsData = data;
         }
       } catch (error) {
         console.warn('Could not fetch feedback analytics:', error);
+        if (error instanceof Error && error.message.includes('permission denied')) {
+          setHasPermissionIssues(true);
+        }
       }
       
       const newStats = {
@@ -144,11 +154,20 @@ const PlatformAdminDashboard = () => {
       setLastUpdated(new Date().toLocaleString());
       setRefreshKey(Date.now());
       
-      toast.success('Dashboard data refreshed successfully');
+      if (hasPermissionIssues) {
+        toast.warning('Dashboard loaded with limited data due to permission restrictions');
+      } else {
+        toast.success('Dashboard data refreshed successfully');
+      }
       
     } catch (error) {
       console.error('❌ Failed to fetch dashboard stats:', error);
-      toast.error('Failed to refresh dashboard data. Please check permissions.');
+      if (error instanceof Error && error.message.includes('permission denied')) {
+        setHasPermissionIssues(true);
+        toast.error('Limited access due to database permissions. Some data may not be available.');
+      } else {
+        toast.error('Failed to refresh dashboard data. Please try again.');
+      }
     } finally {
       setIsRefreshing(false);
     }
@@ -222,6 +241,12 @@ const PlatformAdminDashboard = () => {
               <RefreshCwIcon className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
               Refresh
             </Button>
+            {hasPermissionIssues && (
+              <div className="flex items-center gap-1 text-orange-600 text-sm">
+                <AlertTriangle className="w-4 h-4" />
+                Limited Access Mode
+              </div>
+            )}
           </div>
           <div className="flex items-center gap-4">
             <span className="text-sm text-gray-600">Welcome, {admin?.email}</span>
@@ -234,6 +259,23 @@ const PlatformAdminDashboard = () => {
       </header>
 
       <div className="max-w-7xl mx-auto px-6 py-8">
+        {/* Permission Issues Warning */}
+        {hasPermissionIssues && (
+          <Card className="mb-6 bg-orange-50 border-orange-200">
+            <CardContent className="pt-6">
+              <div className="flex items-center gap-2 text-orange-800">
+                <AlertTriangle className="w-5 h-5" />
+                <div>
+                  <h3 className="font-medium">Limited Access Mode</h3>
+                  <p className="text-sm text-orange-700 mt-1">
+                    Some database operations are restricted. The dashboard is showing available data with fallback values where needed.
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* System Information */}
         <Card className="mb-8 bg-blue-50 border-blue-200">
           <CardHeader>

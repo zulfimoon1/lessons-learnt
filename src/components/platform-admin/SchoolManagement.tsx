@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Trash2, Plus, School } from 'lucide-react';
+import { Trash2, Plus, School, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
 import { usePlatformAdmin } from '@/contexts/PlatformAdminContext';
 import { securePlatformAdminService } from '@/services/securePlatformAdminService';
@@ -24,6 +24,7 @@ const SchoolManagement: React.FC<SchoolManagementProps> = ({ onDataChange }) => 
   const [schools, setSchools] = useState<School[]>([]);
   const [newSchoolName, setNewSchoolName] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [hasPermissionError, setHasPermissionError] = useState(false);
 
   const fetchSchools = async () => {
     if (!admin?.email) {
@@ -32,7 +33,8 @@ const SchoolManagement: React.FC<SchoolManagementProps> = ({ onDataChange }) => 
     }
 
     try {
-      console.log('🏫 Fetching schools using security definer function...');
+      console.log('🏫 Fetching schools...');
+      setHasPermissionError(false);
       
       const schoolData = await securePlatformAdminService.getSchoolData(admin.email);
       setSchools(schoolData);
@@ -40,7 +42,14 @@ const SchoolManagement: React.FC<SchoolManagementProps> = ({ onDataChange }) => 
       
     } catch (error) {
       console.error('❌ Error fetching schools:', error);
-      toast.error(`Failed to load schools: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      
+      if (error instanceof Error && error.message.includes('permission denied')) {
+        setHasPermissionError(true);
+        toast.error('Database permissions issue detected. Some features may be limited.');
+      } else {
+        toast.error(`Failed to load schools: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      }
+      
       setSchools([]);
     }
   };
@@ -79,6 +88,7 @@ const SchoolManagement: React.FC<SchoolManagementProps> = ({ onDataChange }) => 
         errorMessage = 'School administrator already exists';
       } else if (error.message?.includes('permission denied')) {
         errorMessage = 'Database access denied - please check permissions';
+        setHasPermissionError(true);
       } else if (error.message) {
         errorMessage = error.message;
       }
@@ -122,6 +132,7 @@ const SchoolManagement: React.FC<SchoolManagementProps> = ({ onDataChange }) => 
       let errorMessage = 'Failed to delete school';
       if (error.message?.includes('permission denied')) {
         errorMessage = 'Database access denied - please check permissions';
+        setHasPermissionError(true);
       } else if (error.message) {
         errorMessage = error.message;
       }
@@ -142,10 +153,28 @@ const SchoolManagement: React.FC<SchoolManagementProps> = ({ onDataChange }) => 
         <CardTitle className="flex items-center gap-2">
           <School className="w-5 h-5" />
           School Management
+          {hasPermissionError && (
+            <div className="flex items-center gap-1 text-orange-600">
+              <AlertTriangle className="w-4 h-4" />
+              <span className="text-xs">Limited Access</span>
+            </div>
+          )}
         </CardTitle>
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
+          {hasPermissionError && (
+            <div className="bg-orange-50 border border-orange-200 rounded-lg p-3">
+              <div className="flex items-center gap-2 text-orange-800">
+                <AlertTriangle className="w-4 h-4" />
+                <span className="text-sm font-medium">Database Permission Notice</span>
+              </div>
+              <p className="text-xs text-orange-700 mt-1">
+                Some database operations may be restricted. The system is using fallback data where possible.
+              </p>
+            </div>
+          )}
+
           {/* Add new school */}
           <div className="flex gap-2">
             <div className="flex-1">
@@ -177,7 +206,15 @@ const SchoolManagement: React.FC<SchoolManagementProps> = ({ onDataChange }) => 
           <div className="space-y-2">
             <h3 className="font-medium">Existing Schools ({schools.length})</h3>
             {schools.length === 0 ? (
-              <p className="text-muted-foreground">No schools found</p>
+              <div className="text-center py-8">
+                <School className="w-12 h-12 text-gray-400 mx-auto mb-2" />
+                <p className="text-muted-foreground">No schools found</p>
+                {hasPermissionError && (
+                  <p className="text-xs text-orange-600 mt-1">
+                    This may be due to database permission restrictions
+                  </p>
+                )}
+              </div>
             ) : (
               schools.map((school) => (
                 <div key={school.name} className="flex items-center justify-between p-3 border rounded">
