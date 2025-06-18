@@ -1,144 +1,162 @@
 
 import { useState, useEffect } from 'react';
-import { enhancedSecureSessionService } from '@/services/enhancedSecureSessionService';
-import { securityValidationService } from '@/services/securityValidationService';
-
-interface SecureAuthUser {
-  id: string;
-  email?: string;
-  fullName?: string;
-  school: string;
-  role: string;
-  userType: 'teacher' | 'student' | 'admin';
-}
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
+import { enhancedSecurityService } from '@/services/enhancedSecurityService';
 
 interface SecureAuthState {
-  user: SecureAuthUser | null;
+  user: any;
   isLoading: boolean;
-  sessionValid: boolean;
-  csrfToken: string;
+  isAuthenticated: boolean;
 }
 
 export const useSecureAuth = () => {
   const [authState, setAuthState] = useState<SecureAuthState>({
     user: null,
     isLoading: true,
-    sessionValid: false,
-    csrfToken: ''
+    isAuthenticated: false
   });
+  const { toast } = useToast();
 
   useEffect(() => {
-    const initializeSecureAuth = async () => {
+    let isMounted = true;
+
+    const checkAuth = async () => {
       try {
-        // Check for existing secure session
-        const session = await enhancedSecureSessionService.getSession();
+        const { data: { session }, error } = await supabase.auth.getSession();
         
-        if (session) {
-          // Validate session security
-          const isSessionSecure = securityValidationService.validateSessionSecurity();
+        if (!isMounted) return;
+
+        if (error) {
+          console.error('Auth check error:', error);
+          await enhancedSecurityService.logSecurityEvent({
+            type: 'auth_check_error',
+            details: `Authentication check failed: ${error.message}`,
+            severity: 'medium'
+          });
           
-          if (isSessionSecure) {
-            const refreshedSession = await enhancedSecureSessionService.refreshSession(session);
-            
-            if (refreshedSession) {
-              setAuthState({
-                user: {
-                  id: refreshedSession.userId,
-                  email: refreshedSession.userType === 'teacher' ? 'user@school.com' : undefined,
-                  fullName: refreshedSession.userType === 'student' ? 'Student Name' : 'User Name',
-                  school: refreshedSession.school,
-                  role: refreshedSession.userType,
-                  userType: refreshedSession.userType
-                },
-                isLoading: false,
-                sessionValid: true,
-                csrfToken: refreshedSession.csrfToken
-              });
-              return;
-            }
-          }
+          setAuthState({
+            user: null,
+            isLoading: false,
+            isAuthenticated: false
+          });
+          return;
         }
 
-        // No valid session found
-        setAuthState({
-          user: null,
-          isLoading: false,
-          sessionValid: false,
-          csrfToken: enhancedSecureSessionService.getCSRFToken()
-        });
+        if (session?.user) {
+          // Verify session security
+          const isSessionValid = await enhancedSecurityService.checkSessionSecurity();
+          
+          if (!isSessionValid) {
+            await supabase.auth.signOut();
+            setAuthState({
+              user: null,
+              isLoading: false,
+              isAuthenticated: false
+            });
+            
+            toast({
+              title: "Session Expired",
+              description: "Please log in again for security reasons.",
+              variant: "destructive",
+            });
+            return;
+          }
 
+          setAuthState({
+            user: session.user,
+            isLoading: false,
+            isAuthenticated: true
+          });
+        } else {
+          setAuthState({
+            user: null,
+            isLoading: false,
+            isAuthenticated: false
+          });
+        }
       } catch (error) {
-        console.error('Secure auth initialization failed:', error);
-        setAuthState({
-          user: null,
-          isLoading: false,
-          sessionValid: false,
-          csrfToken: ''
-        });
+        console.error('Auth state check error:', error);
+        
+        if (isMounted) {
+          setAuthState({
+            user: null,
+            isLoading: false,
+            isAuthenticated: false
+          });
+        }
       }
     };
 
-    initializeSecureAuth();
+    checkAuth();
 
-    // Set up session monitoring
-    const sessionMonitorInterval = setInterval(async () => {
-      if (authState.sessionValid) {
-        await enhancedSecureSessionService.detectSuspiciousActivity();
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        if (!isMounted) return;
+
+        console.log('Auth state change:', event);
+        
+        await enhancedSecurityService.logSecurityEvent({
+          type: 'auth_state_change',
+          details: `Authentication state changed: ${event}`,
+          severity: 'low',
+          metadata: { event }
+        });
+
+        if (session?.user) {
+          setAuthState({
+            user: session.user,
+            isLoading: false,
+            isAuthenticated: true
+          });
+        } else {
+          setAuthState({
+            user: null,
+            isLoading: false,
+            isAuthenticated: false
+          });
+        }
       }
-    }, 30000); // Check every 30 seconds
+    );
 
-    return () => clearInterval(sessionMonitorInterval);
-  }, []);
+    return () => {
+      isMounted = false;
+      subscription?.unsubscribe();
+    };
+  }, [toast]);
 
-  const secureLogin = async (credentials: any, userType: 'teacher' | 'student' | 'admin') => {
+  const secureSignOut = async () => {
     try {
-      // Rate limiting check
-      const rateLimitKey = `${userType}_login_${credentials.email || credentials.fullName}`;
-      if (!securityValidationService.checkRateLimit(rateLimitKey)) {
-        throw new Error('Too many login attempts. Please try again later.');
-      }
-
-      // Create secure session
-      const session = await enhancedSecureSessionService.createSession(
-        credentials.id || crypto.randomUUID(),
-        userType,
-        credentials.school || 'Unknown School'
-      );
-
-      setAuthState({
-        user: {
-          id: session.userId,
-          email: credentials.email,
-          fullName: credentials.fullName || credentials.name,
-          school: session.school,
-          role: session.userType,
-          userType: session.userType
-        },
-        isLoading: false,
-        sessionValid: true,
-        csrfToken: session.csrfToken
+      await enhancedSecurityService.logSecurityEvent({
+        type: 'user_logout',
+        details: 'User initiated logout',
+        severity: 'low'
       });
 
-      return { success: true };
-    } catch (error) {
-      console.error('Secure login failed:', error);
-      return { success: false, error: error instanceof Error ? error.message : 'Login failed' };
-    }
-  };
+      const { error } = await supabase.auth.signOut();
+      
+      if (error) {
+        console.error('Sign out error:', error);
+        throw error;
+      }
 
-  const secureLogout = () => {
-    enhancedSecureSessionService.clearSession();
-    setAuthState({
-      user: null,
-      isLoading: false,
-      sessionValid: false,
-      csrfToken: ''
-    });
+      // Clear any local security data
+      sessionStorage.removeItem('csrf_token');
+      
+      setAuthState({
+        user: null,
+        isLoading: false,
+        isAuthenticated: false
+      });
+    } catch (error) {
+      console.error('Secure sign out error:', error);
+      throw error;
+    }
   };
 
   return {
     ...authState,
-    secureLogin,
-    secureLogout
+    secureSignOut
   };
 };

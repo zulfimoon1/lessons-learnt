@@ -949,6 +949,16 @@ export type Database = {
         }
         Returns: undefined
       }
+      log_security_event_enhanced: {
+        Args: {
+          event_type: string
+          user_id?: string
+          details?: string
+          severity?: string
+          metadata?: Json
+        }
+        Returns: undefined
+      }
       log_security_event_safe: {
         Args: {
           event_type: string
