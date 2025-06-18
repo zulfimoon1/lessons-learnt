@@ -1,5 +1,6 @@
 
-import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import React from "react";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
 
 const AuthHeader = () => {
   return (
