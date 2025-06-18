@@ -1,11 +1,20 @@
+
 export class SecurityValidationService {
-  validateInput(input: string, type: 'email' | 'name' | 'school' | 'grade' | 'password'): { 
+  private rateLimitMap = new Map<string, { count: number; lastReset: number }>();
+
+  validateInput(input: string, type: 'email' | 'name' | 'school' | 'grade' | 'password', options: { 
+    maxLength?: number; 
+    allowHtml?: boolean; 
+    requireAlphanumeric?: boolean 
+  } = {}): { 
     isValid: boolean; 
     sanitizedValue: string; 
-    errors: string[] 
+    errors: string[];
+    riskLevel: 'low' | 'medium' | 'high';
   } {
     const errors: string[] = [];
     let sanitizedValue = input?.trim() || '';
+    let riskLevel: 'low' | 'medium' | 'high' = 'low';
 
     switch (type) {
       case 'email':
@@ -13,6 +22,7 @@ export class SecurityValidationService {
           errors.push('Email is required');
         } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(sanitizedValue)) {
           errors.push('Invalid email format');
+          riskLevel = 'medium';
         }
         sanitizedValue = sanitizedValue.toLowerCase();
         break;
@@ -51,18 +61,52 @@ export class SecurityValidationService {
     return {
       isValid: errors.length === 0,
       sanitizedValue,
-      errors
+      errors,
+      riskLevel
     };
+  }
+
+  checkRateLimit(key: string, maxRequests: number = 5, windowMs: number = 60000): boolean {
+    const now = Date.now();
+    const entry = this.rateLimitMap.get(key);
+
+    if (!entry || now - entry.lastReset > windowMs) {
+      this.rateLimitMap.set(key, { count: 1, lastReset: now });
+      return true;
+    }
+
+    if (entry.count >= maxRequests) {
+      return false;
+    }
+
+    entry.count++;
+    return true;
+  }
+
+  generateCSRFToken(): string {
+    const array = new Uint8Array(32);
+    crypto.getRandomValues(array);
+    return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
+  }
+
+  validateSessionSecurity(): boolean {
+    try {
+      const hasSecureContext = window.isSecureContext;
+      const hasSessionStorage = typeof sessionStorage !== 'undefined';
+      return hasSecureContext && hasSessionStorage;
+    } catch (error) {
+      console.error('Session security validation failed:', error);
+      return false;
+    }
   }
 
   async logSecurityEvent(
     eventType: string,
     userId: string | undefined,
     details: string,
-    severity: 'low' | 'medium' | 'high' | 'critical'
+    severity: 'low' | 'medium' | 'high' | 'critical' = 'medium'
   ): Promise<void> {
     try {
-      // Store security events in localStorage for now
       const existingLogs = JSON.parse(localStorage.getItem('security_logs') || '[]');
       const newEvent = {
         type: eventType,
@@ -73,7 +117,6 @@ export class SecurityValidationService {
       };
       existingLogs.push(newEvent);
       
-      // Keep only last 1000 events
       if (existingLogs.length > 1000) {
         existingLogs.splice(0, existingLogs.length - 1000);
       }

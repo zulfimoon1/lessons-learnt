@@ -88,24 +88,18 @@ const AdminLoginTab = ({
       const result = await testPasswordVerification(email, testPassword);
       console.log('🔍 Test password verification result:', result);
       
-      if (result.error) {
-        console.error('❌ Test failed with error:', result.error);
+      if (!result.success) {
+        console.error('❌ Test failed:', result.message);
         toast({
           title: "❌ Connection Test Failed",
-          description: result.error,
+          description: result.message,
           variant: "destructive",
         });
-      } else if (result.success) {
+      } else {
         console.log('✅ Test successful!');
         toast({
           title: "✅ Connection Test Successful",
           description: result.message || "Admin account is accessible and ready for login",
-        });
-      } else {
-        console.log('⚠️ Unexpected result format:', result);
-        toast({
-          title: "⚠️ Test Completed",
-          description: result.message || "Connection test completed with unknown status",
         });
       }
     } catch (error) {
