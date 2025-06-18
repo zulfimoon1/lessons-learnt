@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -91,25 +90,49 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             return { error: error.message };
           }
 
-          setTeacher(newTeacher);
-          localStorage.setItem('teacher', JSON.stringify(newTeacher));
-          return { teacher: newTeacher };
+          // Properly cast the teacher data
+          const teacherData: Teacher = {
+            id: newTeacher.id,
+            name: newTeacher.name,
+            email: newTeacher.email,
+            school: newTeacher.school,
+            role: newTeacher.role as 'teacher' | 'admin' | 'doctor',
+            specialization: newTeacher.specialization,
+            license_number: newTeacher.license_number,
+            created_at: newTeacher.created_at
+          };
+
+          setTeacher(teacherData);
+          localStorage.setItem('teacher', JSON.stringify(teacherData));
+          return { teacher: teacherData };
         } else {
           return { error: 'Teacher not found' };
         }
       }
 
-      const teacher = teachers[0];
+      const teacherRecord = teachers[0];
       const bcrypt = await import('bcryptjs');
-      const isValidPassword = await bcrypt.compare(password, teacher.password_hash);
+      const isValidPassword = await bcrypt.compare(password, teacherRecord.password_hash);
 
       if (!isValidPassword) {
         return { error: 'Invalid password' };
       }
 
-      setTeacher(teacher);
-      localStorage.setItem('teacher', JSON.stringify(teacher));
-      return { teacher };
+      // Properly cast the teacher data
+      const teacherData: Teacher = {
+        id: teacherRecord.id,
+        name: teacherRecord.name,
+        email: teacherRecord.email,
+        school: teacherRecord.school,
+        role: teacherRecord.role as 'teacher' | 'admin' | 'doctor',
+        specialization: teacherRecord.specialization,
+        license_number: teacherRecord.license_number,
+        created_at: teacherRecord.created_at
+      };
+
+      setTeacher(teacherData);
+      localStorage.setItem('teacher', JSON.stringify(teacherData));
+      return { teacher: teacherData };
     } catch (error) {
       return { error: 'Login failed' };
     }
