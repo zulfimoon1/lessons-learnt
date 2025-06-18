@@ -61,9 +61,17 @@ export const getSecurityMetrics = async () => {
       .eq('table_name', 'security_events')
       .gte('timestamp', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString());
 
+    // Safely handle the Json type by checking if new_data exists and has severity
+    const suspiciousActivities = securityEvents?.filter(e => {
+      if (e.new_data && typeof e.new_data === 'object' && 'severity' in e.new_data) {
+        return e.new_data.severity === 'high';
+      }
+      return false;
+    }).length || 0;
+
     return {
       loginAttempts: securityEvents?.filter(e => e.operation?.includes('login')).length || 0,
-      suspiciousActivities: securityEvents?.filter(e => e.new_data?.severity === 'high').length || 0,
+      suspiciousActivities,
       blockedIPs: [],
       lastSecurityScan: new Date().toISOString()
     };

@@ -60,7 +60,21 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
         .single();
 
       if (teacherData) {
-        setTeacher(teacherData);
+        // Properly cast the teacher data with role validation
+        const teacherProfile: Teacher = {
+          id: teacherData.id,
+          name: teacherData.name,
+          email: teacherData.email,
+          school: teacherData.school,
+          role: ['teacher', 'admin', 'doctor'].includes(teacherData.role) 
+            ? teacherData.role as 'teacher' | 'admin' | 'doctor'
+            : 'teacher', // fallback to teacher if role is invalid
+          specialization: teacherData.specialization,
+          license_number: teacherData.license_number,
+          created_at: teacherData.created_at
+        };
+        
+        setTeacher(teacherProfile);
         setStudent(null);
         return;
       }

@@ -12,7 +12,6 @@ import StudentLogin from "./pages/StudentLogin";
 import TeacherDashboard from "./pages/TeacherDashboard";
 import StudentDashboard from "./pages/StudentDashboard";
 import SecureAuth from "./pages/SecureAuth";
-import Console from "./pages/Console";
 import ProtectedRoute from "./components/ProtectedRoute";
 
 const queryClient = new QueryClient();
@@ -50,7 +49,7 @@ const App = () => (
                 path="/console" 
                 element={
                   <ProtectedRoute userType="admin">
-                    <Console />
+                    <SecureAuth />
                   </ProtectedRoute>
                 } 
               />
