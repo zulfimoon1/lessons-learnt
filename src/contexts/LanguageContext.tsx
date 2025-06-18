@@ -7,7 +7,7 @@ type Language = 'en' | 'lt';
 interface LanguageContextType {
   language: Language;
   setLanguage: (lang: Language) => void;
-  t: (key: string) => string;
+  t: (key: string, interpolations?: Record<string, string>) => string;
 }
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
@@ -23,7 +23,7 @@ export const useLanguage = () => {
 export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [language, setLanguage] = useState<Language>('en');
 
-  const t = (key: string): string => {
+  const t = (key: string, interpolations?: Record<string, string>): string => {
     const keys = key.split('.');
     let value: any = translations[language];
     
@@ -31,7 +31,16 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       value = value?.[k];
     }
     
-    return value || key;
+    let result = value || key;
+    
+    // Handle interpolations
+    if (interpolations && typeof result === 'string') {
+      Object.entries(interpolations).forEach(([placeholder, replacement]) => {
+        result = result.replace(new RegExp(`{{\\s*${placeholder}\\s*}}`, 'g'), replacement);
+      });
+    }
+    
+    return result;
   };
 
   const value: LanguageContextType = {

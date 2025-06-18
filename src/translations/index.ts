@@ -4,15 +4,59 @@ export const translations = {
     common: {
       loading: 'Loading...',
       back: 'Back',
-      days: 'Days'
+      days: 'Days',
+      success: 'Success',
+      error: 'Error',
+      preview: 'Preview'
+    },
+    welcome: {
+      title: 'Transform Education with Real Student Feedback',
+      subtitle: 'Empower teachers with actionable insights and support student mental health through our comprehensive platform.',
+      freeForStudents: 'Always FREE for students!'
+    },
+    tagline: {
+      studentLead: 'Student-led. Teacher-enhanced. Future-focused.'
     },
     auth: {
       login: 'Login',
       signUp: 'Sign Up',
+      signUpNow: 'Sign Up Now',
       email: 'Email',
       password: 'Password',
       fullName: 'Full Name',
-      loggingIn: 'Logging In...'
+      loggingIn: 'Logging In...',
+      studentLogin: 'Student Access',
+      teacherLogin: 'Teacher Portal'
+    },
+    features: {
+      studentFeedback: {
+        title: 'Student Voice',
+        description: 'Anonymous feedback system that encourages honest communication and helps improve learning experiences.'
+      },
+      teacherInsights: {
+        title: 'Teacher Insights',
+        description: 'Real-time analytics and actionable feedback to enhance teaching methods and student engagement.'
+      },
+      mentalHealth: {
+        title: 'Mental Health Support',
+        description: 'Integrated support system connecting students with qualified professionals when they need it most.'
+      }
+    },
+    platform: {
+      whySchools: 'Why Schools Choose Our Platform',
+      whySchoolsSubtitle: 'Trusted by educators worldwide to improve learning outcomes and student wellbeing',
+      studentInsights: 'Student Insights That Matter',
+      realTimeAnalytics: 'Real-Time Analytics',
+      realTimeAnalyticsDesc: 'Get instant feedback on lesson effectiveness and student engagement levels.',
+      mentalHealthMonitoring: 'Mental Health Monitoring',
+      mentalHealthMonitoringDesc: 'Early detection and intervention for students who need additional support.',
+      privacySecurity: 'Privacy & Security',
+      privacySecurityDesc: 'GDPR compliant with enterprise-grade security protecting student data.',
+      improvementPercent: '85%',
+      improvementTitle: 'Improvement in Student Engagement',
+      improvementDesc: 'Schools report significant increases in student participation and learning outcomes.',
+      readyToTransform: 'Ready to Transform Your Classroom?',
+      readyToTransformDesc: 'Join thousands of educators already using our platform to create better learning experiences.'
     },
     login: {
       teacher: {
@@ -25,7 +69,56 @@ export const translations = {
       }
     },
     teacher: {
-      missingInfo: 'Missing Information'
+      missingInfo: 'Missing Information',
+      activePlan: 'Active {{planType}} plan until {{date}}',
+      classDetailsTitle: 'Class Details',
+      classDetailsDescription: 'Basic information about your lesson',
+      subjectLabel: 'Subject',
+      selectSubject: 'Select a subject',
+      mathematics: 'Mathematics',
+      science: 'Science',
+      english: 'English',
+      history: 'History',
+      geography: 'Geography',
+      art: 'Art',
+      music: 'Music',
+      physicalEducation: 'Physical Education',
+      computerScience: 'Computer Science',
+      other: 'Other',
+      lessonTopicLabel: 'Lesson Topic',
+      lessonTopicPlaceholder: 'e.g., Introduction to Algebra',
+      descriptionLabel: 'Description (Optional)',
+      descriptionPlaceholder: 'Additional notes about the lesson...',
+      scheduleDetailsTitle: 'Schedule Details',
+      scheduleDetailsDescription: 'When and where the class takes place',
+      dateLabel: 'Date',
+      timeLabel: 'Time',
+      durationLabel: 'Duration',
+      '30minutes': '30 minutes',
+      '45minutes': '45 minutes',
+      '60minutes': '60 minutes',
+      '90minutes': '90 minutes',
+      '120minutes': '120 minutes',
+      schoolLabel: 'School',
+      schoolPlaceholder: 'Enter school name',
+      classGradeLabel: 'Class/Grade',
+      classGradePlaceholder: 'e.g., Grade 5A, Class 10B',
+      recurringScheduleTitle: 'Recurring Schedule (Optional)',
+      recurringScheduleDescription: 'Create multiple classes automatically',
+      makeRecurring: 'Make this a recurring class',
+      repeatPatternLabel: 'Repeat Pattern',
+      weekly: 'Weekly',
+      biweekly: 'Bi-weekly',
+      monthly: 'Monthly',
+      numberOfClassesLabel: 'Number of Classes',
+      endDateLabel: 'End Date (Optional)',
+      endDateMustBeAfterStart: 'End date must be after start date',
+      previewText: 'This will create {{count}} classes starting from {{date}}, repeating {{pattern}}',
+      scheduleMultipleClasses: 'Schedule {{count}} Classes',
+      scheduleClass: 'Schedule Class',
+      classesScheduledSuccess: '{{count}} classes scheduled successfully!',
+      classScheduledSuccess: 'Class scheduled successfully!',
+      scheduleClassFailed: 'Failed to schedule class. Please try again.'
     },
     student: {
       fullNamePlaceholder: 'Enter your full name',
@@ -33,7 +126,61 @@ export const translations = {
       passwordsDoNotMatch: 'Passwords do not match',
       signupFailed: 'Signup Failed',
       accountCreated: 'Account Created',
-      welcomeToApp: 'Welcome to Lesson Lens'
+      welcomeToApp: 'Welcome to Lesson Lens',
+      accessMentalHealthResources: 'Access mental health resources and support from {{school}}',
+      defaultName: 'Student'
+    },
+    dashboard: {
+      mentalHealthSupport: 'Mental Health Support',
+      noPsychologists: 'No school psychologists available at this time',
+      contactAdmin: 'Please contact your school administrator for assistance'
+    },
+    admin: {
+      subscription: 'Active Subscription'
+    },
+    chat: {
+      chatWithStudent: 'Chat with Student',
+      liveChatWithDoctor: 'Live Chat with Doctor',
+      anonymous: 'Anonymous',
+      connectedWithStudent: 'Connected with {{student}}',
+      connectedWithDoctor: 'Connected with {{doctor}}',
+      connecting: 'Connecting...',
+      waitingForDoctor: 'Waiting for doctor...',
+      doctor: 'Doctor'
+    },
+    performance: {
+      filters: 'Performance Filters',
+      filtersDesc: 'Filter and analyze performance data',
+      school: 'School',
+      allSchools: 'All Schools',
+      sortBy: 'Sort By',
+      overallScore: 'Overall Score',
+      totalResponses: 'Total Responses',
+      minResponses: 'Minimum Responses',
+      topSchools: 'Top Performing Schools',
+      schoolPerformance: 'Based on overall feedback scores',
+      topTeachers: 'Top Performing Teachers',
+      allTeachers: 'All teachers across schools',
+      teachersFromSchool: 'Teachers from {{school}}',
+      teacher: 'Teacher',
+      score: 'Score',
+      responses: 'Responses',
+      rating: 'Rating'
+    },
+    upload: {
+      bulkSchedule: 'Bulk Schedule Upload',
+      csvDescription: 'Upload multiple class schedules at once using a CSV file',
+      selectFile: 'Select CSV File',
+      csvFormat: 'CSV Format',
+      requiredColumns: 'Required columns',
+      formatNote: 'Date format: YYYY-MM-DD, Time format: HH:MM (24-hour)',
+      processing: 'Processing file...',
+      csvOnly: 'Please select a CSV file',
+      invalidHeaders: 'Invalid CSV format. Please check required headers.',
+      noValidData: 'No valid data found in the file',
+      success: 'Upload Successful',
+      schedulesUploaded: '{{count}} schedules uploaded successfully',
+      failed: 'Upload failed. Please try again.'
     },
     demo: {
       page: {
@@ -182,15 +329,59 @@ export const translations = {
     common: {
       loading: 'Kraunama...',
       back: 'Atgal',
-      days: 'Dienos'
+      days: 'Dienos',
+      success: 'Sėkmė',
+      error: 'Klaida',
+      preview: 'Peržiūra'
+    },
+    welcome: {
+      title: 'Transformuokite švietimą su tikrais mokinių atsiliepimais',
+      subtitle: 'Suteikite mokytojams veiksmingų įžvalgų ir palaikykite mokinių psichikos sveikatą per mūsų išsamią platformą.',
+      freeForStudents: 'Visada NEMOKAMA mokiniams!'
+    },
+    tagline: {
+      studentLead: 'Mokinių vadovaujama. Mokytojų tobulinama. Ateičiai orientuota.'
     },
     auth: {
       login: 'Prisijungti',
       signUp: 'Registruotis',
+      signUpNow: 'Registruotis dabar',
       email: 'El. paštas',
       password: 'Slaptažodis',
       fullName: 'Pilnas vardas',
-      loggingIn: 'Prisijungiama...'
+      loggingIn: 'Prisijungiama...',
+      studentLogin: 'Mokinio prieiga',
+      teacherLogin: 'Mokytojo portalas'
+    },
+    features: {
+      studentFeedback: {
+        title: 'Mokinių balsas',
+        description: 'Anoniminė atsiliepimų sistema, skatinanti sąžiningą bendravimą ir padedanti gerinti mokymosi patirtį.'
+      },
+      teacherInsights: {
+        title: 'Mokytojų įžvalgos',
+        description: 'Realaus laiko analitika ir veiksmingi atsiliepimai, gerinantys mokymo metodus ir mokinių įsitraukimą.'
+      },
+      mentalHealth: {
+        title: 'Psichikos sveikatos palaikymas',
+        description: 'Integruota palaikymo sistema, jungianti mokinius su kvalifikuotais specialistais, kai jie to labiausiai reikia.'
+      }
+    },
+    platform: {
+      whySchools: 'Kodėl mokyklos renkasi mūsų platformą',
+      whySchoolsSubtitle: 'Patikima švietimo specialistų visame pasaulyje mokymosi rezultatų ir mokinių gerovės gerinimui',
+      studentInsights: 'Svarbios mokinių įžvalgos',
+      realTimeAnalytics: 'Realaus laiko analitika',
+      realTimeAnalyticsDesc: 'Gaukite tiesioginius atsiliepimus apie pamokų efektyvumą ir mokinių įsitraukimo lygį.',
+      mentalHealthMonitoring: 'Psichikos sveikatos stebėjimas',
+      mentalHealthMonitoringDesc: 'Ankstyvasis aptikimas ir intervencija mokiniams, kuriems reikia papildomo palaikymo.',
+      privacySecurity: 'Privatumas ir saugumas',
+      privacySecurityDesc: 'GDPR atitinkanti su įmonės lygio saugumu, saugančiu mokinių duomenis.',
+      improvementPercent: '85%',
+      improvementTitle: 'Pagerėjimas mokinių įsitraukime',
+      improvementDesc: 'Mokyklos praneša apie reikšmingą mokinių dalyvavimo ir mokymosi rezultatų padidėjimą.',
+      readyToTransform: 'Pasiruošę transformuoti savo klasę?',
+      readyToTransformDesc: 'Prisijunkite prie tūkstančių švietimo specialistų, jau naudojančių mūsų platformą geresnei mokymosi patirčiai kurti.'
     },
     login: {
       teacher: {
@@ -203,7 +394,8 @@ export const translations = {
       }
     },
     teacher: {
-      missingInfo: 'Trūksta informacijos'
+      missingInfo: 'Trūksta informacijos',
+      activePlan: 'Aktyvus {{planType}} planas iki {{date}}'
     },
     student: {
       fullNamePlaceholder: 'Įveskite pilną vardą',
@@ -211,7 +403,27 @@ export const translations = {
       passwordsDoNotMatch: 'Slaptažodžiai nesutampa',
       signupFailed: 'Registracija nepavyko',
       accountCreated: 'Paskyra sukurta',
-      welcomeToApp: 'Sveiki atvykę į Lesson Lens'
+      welcomeToApp: 'Sveiki atvykę į Lesson Lens',
+      accessMentalHealthResources: 'Prieiga prie psichikos sveikatos išteklių ir palaikymo iš {{school}}',
+      defaultName: 'Mokinys'
+    },
+    dashboard: {
+      mentalHealthSupport: 'Psichikos sveikatos palaikymas',
+      noPsychologists: 'Šiuo metu nėra mokyklos psichologų',
+      contactAdmin: 'Kreipkitės į mokyklos administratorių dėl pagalbos'
+    },
+    admin: {
+      subscription: 'Aktyvi prenumerata'
+    },
+    chat: {
+      chatWithStudent: 'Pokalbis su mokiniu',
+      liveChatWithDoctor: 'Tiesioginiai pokalbiai su gydytoju',
+      anonymous: 'Anoniminis',
+      connectedWithStudent: 'Prisijungta su {{student}}',
+      connectedWithDoctor: 'Prisijungta su {{doctor}}',
+      connecting: 'Jungiamasi...',
+      waitingForDoctor: 'Laukiama gydytojo...',
+      doctor: 'Gydytojas'
     },
     demo: {
       page: {
