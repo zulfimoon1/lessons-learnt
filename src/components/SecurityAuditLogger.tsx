@@ -1,6 +1,4 @@
-
 import { useEffect } from 'react';
-import { securityService } from '@/services/securityService';
 
 interface SecurityEvent {
   type: 'login_success' | 'login_failed' | 'logout' | 'unauthorized_access' | 'suspicious_activity' | 'rate_limit_exceeded' | 'session_restored' | 'session_error' | 'csrf_violation' | 'test_admin_created' | 'forced_password_reset';
@@ -13,24 +11,27 @@ interface SecurityEvent {
   errorStack?: string;
 }
 
-// Enhanced security event logging for external use
+// Simple security event logging for external use
 export const logUserSecurityEvent = (event: SecurityEvent): void => {
-  securityService.logSecurityEvent(event);
-  
-  // Additional server-side logging could be implemented here
-  // For now, we're using client-side logging for demonstration
-  
-  // In production, you would send critical events to a secure logging service
-  if (['unauthorized_access', 'suspicious_activity', 'csrf_violation'].includes(event.type)) {
-    console.warn('CRITICAL SECURITY EVENT:', event);
+  try {
+    const existingEvents = JSON.parse(localStorage.getItem('security_events') || '[]');
+    existingEvents.push(event);
     
-    // Could trigger real-time alerts to administrators
-    // Could send to external security monitoring services
-    // Could integrate with SIEM systems
+    // Keep only last 100 events
+    if (existingEvents.length > 100) {
+      existingEvents.splice(0, existingEvents.length - 100);
+    }
+    
+    localStorage.setItem('security_events', JSON.stringify(existingEvents));
+    
+    if (['unauthorized_access', 'suspicious_activity', 'csrf_violation'].includes(event.type)) {
+      console.warn('CRITICAL SECURITY EVENT:', event);
+    }
+  } catch (error) {
+    console.error('Failed to log security event:', error);
   }
 };
 
-// Security audit functions
 export const getSecurityAuditLog = (): SecurityEvent[] => {
   try {
     return JSON.parse(localStorage.getItem('security_events') || '[]');
@@ -43,7 +44,7 @@ export const getSecurityAuditLog = (): SecurityEvent[] => {
 export const clearSecurityAuditLog = (): void => {
   try {
     localStorage.removeItem('security_events');
-    securityService.logSecurityEvent({
+    logUserSecurityEvent({
       type: 'session_restored',
       timestamp: new Date().toISOString(),
       details: 'Security audit log cleared by administrator',
@@ -64,13 +65,8 @@ export const exportSecurityAuditLog = (): string => {
   }
 };
 
-// Default component that initializes security monitoring
 const SecurityAuditLogger: React.FC = () => {
   useEffect(() => {
-    // Initialize security monitoring
-    securityService.monitorSecurityViolations();
-    
-    // Log application start
     logUserSecurityEvent({
       type: 'session_restored',
       timestamp: new Date().toISOString(),
@@ -79,7 +75,7 @@ const SecurityAuditLogger: React.FC = () => {
     });
   }, []);
 
-  return null; // This is a background service component
+  return null;
 };
 
 export default SecurityAuditLogger;

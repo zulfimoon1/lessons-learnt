@@ -71,12 +71,12 @@ const SecureAuth = () => {
     setIsLoading(true);
 
     try {
-      const { error } = await signIn(signInData.email, signInData.password);
+      const result = await signIn(signInData.email, signInData.password);
       
-      if (error) {
+      if (result.error) {
         toast({
           title: "Sign In Failed",
-          description: error.message,
+          description: result.error,
           variant: "destructive",
         });
       } else {
@@ -112,15 +112,14 @@ const SecureAuth = () => {
     setIsLoading(true);
 
     try {
-      // For student login, we'll use the school+grade+name as a unique identifier
       const studentEmail = `${studentSignInData.fullName.toLowerCase().replace(/\s+/g, '.')}@${studentSignInData.school.toLowerCase().replace(/\s+/g, '')}.student`;
       
-      const { error } = await signIn(studentEmail, studentSignInData.password);
+      const result = await signIn(studentEmail, studentSignInData.password);
       
-      if (error) {
+      if (result.error) {
         toast({
           title: "Sign In Failed",
-          description: error.message,
+          description: result.error,
           variant: "destructive",
         });
       } else {
@@ -165,17 +164,17 @@ const SecureAuth = () => {
     setIsLoading(true);
 
     try {
-      const { error } = await signUp(teacherData.email, teacherData.password, {
+      const result = await signUp(teacherData.email, teacherData.password, {
         user_type: 'teacher',
         name: teacherData.name,
         school: teacherData.school,
         role: teacherData.role
       });
       
-      if (error) {
+      if (result.error) {
         toast({
           title: "Signup Failed",
-          description: error.message,
+          description: result.error,
           variant: "destructive",
         });
       } else {
@@ -220,20 +219,19 @@ const SecureAuth = () => {
     setIsLoading(true);
 
     try {
-      // Generate a unique email for the student
       const studentEmail = `${studentData.fullName.toLowerCase().replace(/\s+/g, '.')}@${studentData.school.toLowerCase().replace(/\s+/g, '')}.student`;
       
-      const { error } = await signUp(studentEmail, studentData.password, {
+      const result = await signUp(studentEmail, studentData.password, {
         user_type: 'student',
         full_name: studentData.fullName,
         school: studentData.school,
         grade: studentData.grade
       });
       
-      if (error) {
+      if (result.error) {
         toast({
           title: "Signup Failed",
-          description: error.message,
+          description: result.error,
           variant: "destructive",
         });
       } else {
