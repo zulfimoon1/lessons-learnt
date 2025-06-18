@@ -39,10 +39,10 @@ const AdminLoginTab = ({
       const result = await resetAdminPassword(email, 'admin123');
       console.log('🔄 Password reset result:', result);
       
-      if (result.error) {
+      if (!result.success) {
         toast({
           title: "Reset Failed", 
-          description: result.error,
+          description: result.message,
           variant: "destructive",
         });
       } else {
@@ -112,7 +112,7 @@ const AdminLoginTab = ({
       console.error('💥 Test password error:', error);
       toast({
         title: "💥 Connection Test Failed",
-        description: `Network error occurred: ${error.message}`,
+        description: `Network error occurred: ${error instanceof Error ? error.message : 'Unknown error'}`,
         variant: "destructive",
       });
     }
