@@ -21,11 +21,11 @@ const SecureStudentLoginForm: React.FC<SecureStudentLoginFormProps> = ({ onLogin
     password: ""
   });
 
-  const handleSecureSubmit = async (formData: FormData, csrfToken: string) => {
-    const fullName = formData.get('fullName') as string;
-    const school = formData.get('school') as string;
-    const grade = formData.get('grade') as string;
-    const password = formData.get('password') as string;
+  const handleSecureSubmit = async (formData: Record<string, any>, csrfToken: string) => {
+    const fullName = formData.fullName as string;
+    const school = formData.school as string;
+    const grade = formData.grade as string;
+    const password = formData.password as string;
     
     await onLogin(fullName, school, grade, password);
   };

@@ -19,9 +19,9 @@ const SecureTeacherLoginForm: React.FC<SecureTeacherLoginFormProps> = ({ onLogin
     password: ""
   });
 
-  const handleSecureSubmit = async (formData: FormData, csrfToken: string) => {
-    const email = formData.get('email') as string;
-    const password = formData.get('password') as string;
+  const handleSecureSubmit = async (formData: Record<string, any>, csrfToken: string) => {
+    const email = formData.email as string;
+    const password = formData.password as string;
     
     await onLogin(email, password);
   };

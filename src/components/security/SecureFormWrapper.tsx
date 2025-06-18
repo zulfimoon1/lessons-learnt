@@ -6,12 +6,14 @@ interface SecureFormWrapperProps {
   children: React.ReactNode;
   onSubmit: (data: Record<string, any>, csrfToken: string) => Promise<void>;
   validateInputs?: boolean;
+  className?: string;
 }
 
 const SecureFormWrapper: React.FC<SecureFormWrapperProps> = ({
   children,
   onSubmit,
-  validateInputs = true
+  validateInputs = true,
+  className = ""
 }) => {
   const [csrfToken, setCSRFToken] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -90,7 +92,7 @@ const SecureFormWrapper: React.FC<SecureFormWrapperProps> = ({
   };
 
   return (
-    <form onSubmit={handleSubmit}>
+    <form onSubmit={handleSubmit} className={className}>
       <input type="hidden" name="csrf_token" value={csrfToken} />
       {children}
     </form>

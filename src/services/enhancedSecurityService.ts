@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { inputValidationService } from './inputValidationService';
 
@@ -7,6 +8,22 @@ interface SecurityEvent {
   details: string;
   severity: 'low' | 'medium' | 'high' | 'critical';
   metadata?: Record<string, any>;
+}
+
+interface SecurityViolation {
+  type: string;
+  userId?: string;
+  details: string;
+  severity: 'low' | 'medium' | 'high' | 'critical';
+  metadata?: Record<string, any>;
+}
+
+interface SecurityDashboardData {
+  recentViolations: number;
+  activeSessions: number;
+  failedLogins: number;
+  suspiciousActivities: number;
+  lastSecurityScan: string;
 }
 
 class EnhancedSecurityService {
@@ -28,6 +45,220 @@ class EnhancedSecurityService {
       // Store locally as fallback
       this.storeSecurityEventLocally(event);
     }
+  }
+
+  async logSecurityViolation(violation: SecurityViolation): Promise<void> {
+    // Alias for logSecurityEvent for backward compatibility
+    await this.logSecurityEvent(violation);
+  }
+
+  async validateSecureAccess(table: string, operation: string): Promise<boolean> {
+    try {
+      // Check if user has valid session
+      const { data: { session }, error } = await supabase.auth.getSession();
+      
+      if (error || !session) {
+        await this.logSecurityEvent({
+          type: 'unauthorized_access_attempt',
+          details: `Unauthorized ${operation} attempt on ${table}`,
+          severity: 'high'
+        });
+        return false;
+      }
+
+      // Additional security checks for sensitive tables
+      if (['mental_health_alerts', 'audit_log'].includes(table)) {
+        // Check if user has appropriate role
+        const { data: teacher } = await supabase
+          .from('teachers')
+          .select('role')
+          .eq('id', session.user.id)
+          .single();
+
+        if (!teacher || !['admin', 'doctor'].includes(teacher.role)) {
+          await this.logSecurityEvent({
+            type: 'insufficient_privileges',
+            userId: session.user.id,
+            details: `Insufficient privileges for ${operation} on ${table}`,
+            severity: 'high'
+          });
+          return false;
+        }
+      }
+
+      return true;
+    } catch (error) {
+      await this.logSecurityEvent({
+        type: 'access_validation_error',
+        details: `Error validating access: ${error}`,
+        severity: 'medium'
+      });
+      return false;
+    }
+  }
+
+  async validateSecureForm(formData: Record<string, any>, formAction: string): Promise<{ isValid: boolean; errors: string[] }> {
+    const errors: string[] = [];
+
+    try {
+      // Validate CSRF token
+      const csrfToken = formData.csrf_token;
+      const sessionToken = sessionStorage.getItem('csrf_token');
+      
+      if (!this.validateCSRFToken(csrfToken, sessionToken || '')) {
+        errors.push('CSRF token validation failed');
+      }
+
+      // Validate each form field
+      for (const [key, value] of Object.entries(formData)) {
+        if (key === 'csrf_token') continue;
+        
+        if (typeof value === 'string') {
+          let fieldType: 'email' | 'password' | 'name' | 'text' = 'text';
+          
+          if (key.toLowerCase().includes('email')) fieldType = 'email';
+          else if (key.toLowerCase().includes('password')) fieldType = 'password';
+          else if (key.toLowerCase().includes('name')) fieldType = 'name';
+          
+          if (!this.validateInputSecurity(value, fieldType)) {
+            errors.push(`Invalid input for field: ${key}`);
+          }
+        }
+      }
+
+      // Check for suspicious patterns
+      const combinedText = Object.values(formData).join(' ');
+      if (this.detectSuspiciousContent(combinedText)) {
+        errors.push('Suspicious content detected');
+        await this.logSecurityEvent({
+          type: 'suspicious_form_content',
+          details: `Suspicious content in form: ${formAction}`,
+          severity: 'high'
+        });
+      }
+
+      return {
+        isValid: errors.length === 0,
+        errors
+      };
+    } catch (error) {
+      return {
+        isValid: false,
+        errors: ['Form validation error']
+      };
+    }
+  }
+
+  async getSecurityDashboardData(): Promise<SecurityDashboardData> {
+    try {
+      // Get recent security events from audit log
+      const { data: recentEvents } = await supabase
+        .from('audit_log')
+        .select('*')
+        .gte('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
+        .order('created_at', { ascending: false })
+        .limit(100);
+
+      const violations = recentEvents?.filter(event => 
+        event.operation?.includes('violation') || 
+        event.operation?.includes('failed') ||
+        event.operation?.includes('suspicious')
+      ).length || 0;
+
+      return {
+        recentViolations: violations,
+        activeSessions: 0, // Would need session tracking
+        failedLogins: recentEvents?.filter(event => event.operation === 'login_failed').length || 0,
+        suspiciousActivities: recentEvents?.filter(event => event.operation?.includes('suspicious')).length || 0,
+        lastSecurityScan: new Date().toISOString()
+      };
+    } catch (error) {
+      console.error('Error getting security dashboard data:', error);
+      return {
+        recentViolations: 0,
+        activeSessions: 0,
+        failedLogins: 0,
+        suspiciousActivities: 0,
+        lastSecurityScan: new Date().toISOString()
+      };
+    }
+  }
+
+  monitorSecurityViolations(): void {
+    // Set up monitoring for security violations
+    console.log('Security violation monitoring initialized');
+    
+    // Monitor for suspicious activity patterns
+    setInterval(() => {
+      this.checkForAnomalousActivity();
+    }, 60000); // Check every minute
+  }
+
+  enhanceFormValidation(): void {
+    // Enhance form validation across the application
+    console.log('Enhanced form validation initialized');
+    
+    // Add event listeners for real-time validation
+    document.addEventListener('input', this.handleInputValidation.bind(this));
+    document.addEventListener('submit', this.handleFormValidation.bind(this));
+  }
+
+  private async checkForAnomalousActivity(): Promise<void> {
+    try {
+      // Check for unusual patterns in recent activity
+      const dashboardData = await this.getSecurityDashboardData();
+      
+      if (dashboardData.recentViolations > 10) {
+        await this.logSecurityEvent({
+          type: 'anomalous_activity_detected',
+          details: `High number of security violations: ${dashboardData.recentViolations}`,
+          severity: 'high'
+        });
+      }
+    } catch (error) {
+      console.error('Error checking for anomalous activity:', error);
+    }
+  }
+
+  private handleInputValidation(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (!input || !input.value) return;
+
+    const isValid = this.validateInputSecurity(input.value, 'text');
+    if (!isValid) {
+      input.classList.add('border-red-500');
+    } else {
+      input.classList.remove('border-red-500');
+    }
+  }
+
+  private async handleFormValidation(event: Event): Promise<void> {
+    const form = event.target as HTMLFormElement;
+    if (!form) return;
+
+    const formData = new FormData(form);
+    const data: Record<string, any> = {};
+    
+    formData.forEach((value, key) => {
+      data[key] = value.toString();
+    });
+
+    const validation = await this.validateSecureForm(data, form.action);
+    if (!validation.isValid) {
+      event.preventDefault();
+      console.warn('Form validation failed:', validation.errors);
+    }
+  }
+
+  private detectSuspiciousContent(text: string): boolean {
+    const suspiciousPatterns = [
+      /<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi,
+      /javascript:/gi,
+      /on\w+\s*=/gi,
+      /(union|select|insert|update|delete|drop|create|alter)\s+/gi
+    ];
+
+    return suspiciousPatterns.some(pattern => pattern.test(text));
   }
 
   private storeSecurityEventLocally(event: SecurityEvent): void {
