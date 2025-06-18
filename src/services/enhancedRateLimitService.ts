@@ -39,7 +39,7 @@ class EnhancedRateLimitService {
 
     let entry = this.cache.get(key);
     
-    if (!entry || now - entry.windowStart > this.WINDOW_SIZE) {
+    if (!entry || now - entry.windowStart > EnhancedRateLimitService.WINDOW_SIZE) {
       // New window
       entry = {
         key,
@@ -96,7 +96,7 @@ class EnhancedRateLimitService {
   cleanup(): void {
     const now = Date.now();
     for (const [key, entry] of this.cache.entries()) {
-      if (now - entry.windowStart > this.WINDOW_SIZE * 2) {
+      if (now - entry.windowStart > EnhancedRateLimitService.WINDOW_SIZE * 2) {
         this.cache.delete(key);
       }
     }

@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -89,8 +90,9 @@ export const SecureSupabaseAuthProvider: React.FC<{ children: React.ReactNode }>
         };
         setTeacher(teacherProfile);
         
-        // Create secure session
-        await secureSessionService.createSession(userId, teacherProfile.role, teacherProfile.school);
+        // Create secure session - map doctor role to admin for session management
+        const sessionUserType = teacherProfile.role === 'doctor' ? 'admin' : teacherProfile.role;
+        await secureSessionService.createSession(userId, sessionUserType, teacherProfile.school);
         setIsLoading(false);
         return;
       }

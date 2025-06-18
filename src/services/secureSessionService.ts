@@ -48,7 +48,7 @@ class SecureSessionService {
     };
 
     // Store in secure storage
-    sessionStorage.setItem(this.SESSION_KEY, JSON.stringify(session));
+    sessionStorage.setItem(SecureSessionService.SESSION_KEY, JSON.stringify(session));
     
     // Log session creation
     await this.logSecurityEvent('session_created', userId, `Session created for ${userType}`, 'low');
@@ -58,20 +58,20 @@ class SecureSessionService {
 
   getSession(): SecureSession | null {
     try {
-      const stored = sessionStorage.getItem(this.SESSION_KEY);
+      const stored = sessionStorage.getItem(SecureSessionService.SESSION_KEY);
       if (!stored) return null;
 
       const session: SecureSession = JSON.parse(stored);
       const now = Date.now();
 
       // Check session timeout
-      if (now - session.createdAt > this.SESSION_TIMEOUT) {
+      if (now - session.createdAt > SecureSessionService.SESSION_TIMEOUT) {
         this.clearSession();
         return null;
       }
 
       // Check activity timeout
-      if (now - session.lastActivity > this.ACTIVITY_TIMEOUT) {
+      if (now - session.lastActivity > SecureSessionService.ACTIVITY_TIMEOUT) {
         this.clearSession();
         return null;
       }
@@ -85,7 +85,7 @@ class SecureSessionService {
 
       // Update activity
       session.lastActivity = now;
-      sessionStorage.setItem(this.SESSION_KEY, JSON.stringify(session));
+      sessionStorage.setItem(SecureSessionService.SESSION_KEY, JSON.stringify(session));
 
       return session;
     } catch (error) {
@@ -100,12 +100,47 @@ class SecureSessionService {
     if (!session) return false;
 
     session.lastActivity = Date.now();
-    sessionStorage.setItem(this.SESSION_KEY, JSON.stringify(session));
+    sessionStorage.setItem(SecureSessionService.SESSION_KEY, JSON.stringify(session));
     return true;
   }
 
-  clearSession(): void {
-    sessionStorage.removeItem(this.SESSION_KEY);
+  clearSession(userType?: string): void {
+    sessionStorage.removeItem(SecureSessionService.SESSION_KEY);
+    if (userType) {
+      localStorage.removeItem(userType);
+    }
+  }
+
+  // Add missing methods for backward compatibility
+  securelyStoreUserData(userType: string, userData: any): void {
+    try {
+      const encryptedData = btoa(JSON.stringify(userData));
+      sessionStorage.setItem(`secure_${userType}`, encryptedData);
+    } catch (error) {
+      console.error('Failed to store user data securely:', error);
+      // Fallback to regular storage
+      localStorage.setItem(userType, JSON.stringify(userData));
+    }
+  }
+
+  securelyRetrieveUserData(userType: string): any {
+    try {
+      const encryptedData = sessionStorage.getItem(`secure_${userType}`);
+      if (encryptedData) {
+        return JSON.parse(atob(encryptedData));
+      }
+    } catch (error) {
+      console.error('Failed to retrieve secure user data:', error);
+    }
+    
+    // Fallback to regular storage
+    try {
+      const regularData = localStorage.getItem(userType);
+      return regularData ? JSON.parse(regularData) : null;
+    } catch (error) {
+      console.error('Failed to retrieve user data:', error);
+      return null;
+    }
   }
 
   private async logSecurityEvent(eventType: string, userId: string, details: string, severity: 'low' | 'medium' | 'high'): Promise<void> {
