@@ -8,7 +8,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { useSupabaseAuth } from "@/contexts/SupabaseAuthContext";
-import { enhancedSecureTeacherSignup, enhancedSecureStudentSignup, enhancedSecureTeacherLogin, enhancedSecureStudentLogin } from "@/services/enhancedSecureAuthService";
 import { UserIcon, GraduationCapIcon, ShieldIcon } from "lucide-react";
 import ComplianceFooter from "@/components/ComplianceFooter";
 import CookieConsent from "@/components/CookieConsent";
@@ -17,7 +16,7 @@ import DataProtectionBanner from "@/components/DataProtectionBanner";
 const SecureAuth = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState("signin");
-  const { signIn } = useSupabaseAuth();
+  const { signIn, signUp } = useSupabaseAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -72,12 +71,12 @@ const SecureAuth = () => {
     setIsLoading(true);
 
     try {
-      const result = await enhancedSecureTeacherLogin(signInData.email, signInData.password);
+      const { error } = await signIn(signInData.email, signInData.password);
       
-      if (result.error) {
+      if (error) {
         toast({
           title: "Sign In Failed",
-          description: result.error,
+          description: error.message,
           variant: "destructive",
         });
       } else {
@@ -113,17 +112,15 @@ const SecureAuth = () => {
     setIsLoading(true);
 
     try {
-      const result = await enhancedSecureStudentLogin(
-        studentSignInData.fullName,
-        studentSignInData.school,
-        studentSignInData.grade,
-        studentSignInData.password
-      );
+      // For student login, we'll use the school+grade+name as a unique identifier
+      const studentEmail = `${studentSignInData.fullName.toLowerCase().replace(/\s+/g, '.')}@${studentSignInData.school.toLowerCase().replace(/\s+/g, '')}.student`;
       
-      if (result.error) {
+      const { error } = await signIn(studentEmail, studentSignInData.password);
+      
+      if (error) {
         toast({
           title: "Sign In Failed",
-          description: result.error,
+          description: error.message,
           variant: "destructive",
         });
       } else {
@@ -168,18 +165,17 @@ const SecureAuth = () => {
     setIsLoading(true);
 
     try {
-      const result = await enhancedSecureTeacherSignup(
-        teacherData.name,
-        teacherData.email,
-        teacherData.school,
-        teacherData.password,
-        teacherData.role
-      );
+      const { error } = await signUp(teacherData.email, teacherData.password, {
+        user_type: 'teacher',
+        name: teacherData.name,
+        school: teacherData.school,
+        role: teacherData.role
+      });
       
-      if (result.error) {
+      if (error) {
         toast({
           title: "Signup Failed",
-          description: result.error,
+          description: error.message,
           variant: "destructive",
         });
       } else {
@@ -224,17 +220,20 @@ const SecureAuth = () => {
     setIsLoading(true);
 
     try {
-      const result = await enhancedSecureStudentSignup(
-        studentData.fullName,
-        studentData.school,
-        studentData.grade,
-        studentData.password
-      );
+      // Generate a unique email for the student
+      const studentEmail = `${studentData.fullName.toLowerCase().replace(/\s+/g, '.')}@${studentData.school.toLowerCase().replace(/\s+/g, '')}.student`;
       
-      if (result.error) {
+      const { error } = await signUp(studentEmail, studentData.password, {
+        user_type: 'student',
+        full_name: studentData.fullName,
+        school: studentData.school,
+        grade: studentData.grade
+      });
+      
+      if (error) {
         toast({
           title: "Signup Failed",
-          description: result.error,
+          description: error.message,
           variant: "destructive",
         });
       } else {
