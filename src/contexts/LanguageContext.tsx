@@ -45,6 +45,12 @@ export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }
 
   const t = (key: string, params?: Record<string, string>): string => {
     try {
+      // Ensure translations exist for the current language
+      if (!translations[language]) {
+        console.warn(`Translations not found for language: ${language}`);
+        return key;
+      }
+
       let translation = translations[language][key] || key;
       
       if (params) {
