@@ -28,8 +28,11 @@ export const platformAdminLoginService = async (email: string, password: string)
 
 // Redirect password reset to secure service
 export const resetAdminPassword = async (email: string, newPassword: string = 'admin123') => {
-  console.log('⚠️ Using legacy resetAdminPassword - redirecting to secure service');
-  return await securePlatformAdminService.createSecureAdminPassword(email, newPassword);
+  console.log('⚠️ Using legacy resetAdminPassword - feature not implemented in secure service');
+  return { 
+    success: false, 
+    message: 'Password reset functionality moved to secure authentication system' 
+  };
 };
 
 // Enhanced test function using secure service
