@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { securityValidationService } from './securityValidationService';
 import bcrypt from 'bcryptjs';
@@ -23,20 +24,12 @@ class SecurePlatformAdminService {
     try {
       console.log('🔧 Setting robust admin context for:', adminEmail);
       
-      // Multiple attempts with different strategies
-      const strategies = [
-        () => supabase.rpc('set_platform_admin_context', { admin_email: adminEmail }),
-        () => supabase.from('teachers').select('id').eq('email', adminEmail).limit(1)
-      ];
-
-      for (const strategy of strategies) {
-        try {
-          await strategy();
-          console.log('✅ Admin context strategy succeeded');
-          break;
-        } catch (error) {
-          console.warn('⚠️ Strategy failed, trying next:', error);
-        }
+      // Set the context using the RPC function
+      try {
+        await supabase.rpc('set_platform_admin_context', { admin_email: adminEmail });
+        console.log('✅ Admin context set via RPC');
+      } catch (error) {
+        console.warn('⚠️ RPC context setting failed, continuing...', error);
       }
       
       // Give context time to propagate
@@ -79,14 +72,14 @@ class SecurePlatformAdminService {
 
       // Try database authentication with bypassed queries
       try {
-        // Use a direct query approach
+        // Use a direct query approach with error handling
         const { data, error } = await supabase
           .from('teachers')
           .select('id, email, name, role, school, password_hash')
           .eq('email', adminEmail)
           .eq('role', 'admin')
           .limit(1)
-          .single();
+          .maybeSingle();
             
         if (!error && data) {
           console.log('📊 Found admin in database:', data.email);
@@ -106,6 +99,8 @@ class SecurePlatformAdminService {
               }
             };
           }
+        } else if (error) {
+          console.warn('⚠️ Database query failed:', error);
         }
       } catch (dbError) {
         console.warn('⚠️ Database query failed:', dbError);
@@ -174,19 +169,24 @@ class SecurePlatformAdminService {
       const passwordHash = await bcrypt.hash(newPassword, saltRounds);
 
       return await this.executeWithAdminContext(email, async () => {
-        const { error } = await supabase
-          .from('teachers')
-          .update({ password_hash: passwordHash })
-          .eq('email', emailValidation.sanitizedValue)
-          .eq('role', 'admin');
+        try {
+          const { error } = await supabase
+            .from('teachers')
+            .update({ password_hash: passwordHash })
+            .eq('email', emailValidation.sanitizedValue)
+            .eq('role', 'admin');
 
-        if (error) {
-          console.error('❌ Error updating admin password:', error);
-          return { success: false, error: 'Failed to update password' };
+          if (error) {
+            console.error('❌ Error updating admin password:', error);
+            return { success: false, error: 'Failed to update password' };
+          }
+
+          console.log('✅ Admin password updated successfully');
+          return { success: true };
+        } catch (error) {
+          console.error('❌ Database update failed:', error);
+          return { success: false, error: 'Database update failed' };
         }
-
-        console.log('✅ Admin password updated successfully');
-        return { success: true };
       });
 
     } catch (error) {
@@ -219,7 +219,7 @@ class SecurePlatformAdminService {
         };
       }
 
-      // Try database validation for other admins
+      // Try database validation for other admins with error handling
       try {
         const { data: adminUser, error } = await supabase
           .from('teachers')
@@ -227,7 +227,7 @@ class SecurePlatformAdminService {
           .eq('email', emailValidation.sanitizedValue)
           .eq('role', 'admin')
           .limit(1)
-          .single();
+          .maybeSingle();
 
         if (!error && adminUser) {
           return {

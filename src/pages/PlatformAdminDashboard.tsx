@@ -79,20 +79,56 @@ const PlatformAdminDashboard = () => {
           await securePlatformAdminService.setAdminContext(admin.email);
         }
 
-        // Try multiple query strategies
+        // Try multiple query strategies with better error handling
         const queries = [
-          () => supabase.from('students').select('*', { count: 'exact', head: true }),
-          () => supabase.from('teachers').select('*', { count: 'exact', head: true }),
-          () => supabase.from('feedback').select('*', { count: 'exact', head: true }),
-          () => supabase.from('subscriptions').select('*', { count: 'exact', head: true })
+          async () => {
+            try {
+              const { count, error } = await supabase.from('students').select('*', { count: 'exact', head: true });
+              if (error) throw error;
+              return count || 0;
+            } catch (error) {
+              console.warn('Students count failed:', error);
+              return 0;
+            }
+          },
+          async () => {
+            try {
+              const { count, error } = await supabase.from('teachers').select('*', { count: 'exact', head: true });
+              if (error) throw error;
+              return count || 0;
+            } catch (error) {
+              console.warn('Teachers count failed:', error);
+              return 0;
+            }
+          },
+          async () => {
+            try {
+              const { count, error } = await supabase.from('feedback').select('*', { count: 'exact', head: true });
+              if (error) throw error;
+              return count || 0;
+            } catch (error) {
+              console.warn('Feedback count failed:', error);
+              return 0;
+            }
+          },
+          async () => {
+            try {
+              const { count, error } = await supabase.from('subscriptions').select('*', { count: 'exact', head: true });
+              if (error) throw error;
+              return count || 0;
+            } catch (error) {
+              console.warn('Subscriptions count failed:', error);
+              return 0;
+            }
+          }
         ];
 
         const results = await Promise.allSettled(queries.map(q => q()));
         
-        const studentsCount = results[0].status === 'fulfilled' ? results[0].value.count || 0 : 0;
-        const teachersCount = results[1].status === 'fulfilled' ? results[1].value.count || 0 : 0;
-        const responsesCount = results[2].status === 'fulfilled' ? results[2].value.count || 0 : 0;
-        const subscriptionsCount = results[3].status === 'fulfilled' ? results[3].value.count || 0 : 0;
+        const studentsCount = results[0].status === 'fulfilled' ? results[0].value : 0;
+        const teachersCount = results[1].status === 'fulfilled' ? results[1].value : 0;
+        const responsesCount = results[2].status === 'fulfilled' ? results[2].value : 0;
+        const subscriptionsCount = results[3].status === 'fulfilled' ? results[3].value : 0;
 
         console.log('📊 DASHBOARD: Query results:', {
           students: studentsCount,
@@ -128,15 +164,15 @@ const PlatformAdminDashboard = () => {
       const queryResults = await fetchStatsWithRetry();
       const { studentsCount, teachersCount, responsesCount, subscriptionsCount } = queryResults;
 
-      // Calculate monthly revenue
+      // Calculate monthly revenue with error handling
       let monthlyRevenue = 0;
       try {
-        const { data: subscriptionData } = await supabase
+        const { data: subscriptionData, error } = await supabase
           .from('subscriptions')
           .select('amount, plan_type, status')
           .eq('status', 'active');
 
-        if (subscriptionData) {
+        if (!error && subscriptionData) {
           monthlyRevenue = subscriptionData.reduce((total, sub) => {
             const monthlyAmount = sub.plan_type === 'yearly' ? sub.amount / 12 : sub.amount;
             return total + (monthlyAmount / 100);
@@ -146,7 +182,7 @@ const PlatformAdminDashboard = () => {
         console.warn('Could not calculate revenue:', error);
       }
 
-      // Get schools data
+      // Get schools data with error handling
       let schoolStatsProcessed: SchoolStats[] = [];
       let totalSchools = 0;
       
@@ -199,11 +235,11 @@ const PlatformAdminDashboard = () => {
         console.warn('Could not fetch school data:', error);
       }
 
-      // Feedback analytics
+      // Feedback analytics with error handling
       let feedbackAnalyticsData: FeedbackStats[] = [];
       try {
-        const { data } = await supabase.from('feedback_analytics').select('*');
-        if (data) {
+        const { data, error } = await supabase.from('feedback_analytics').select('*');
+        if (!error && data) {
           feedbackAnalyticsData = data;
         }
       } catch (error) {

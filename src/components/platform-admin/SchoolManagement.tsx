@@ -157,7 +157,7 @@ const SchoolManagement: React.FC<SchoolManagementProps> = ({ onDataChange }) => 
         .from('teachers')
         .insert(schoolData)
         .select()
-        .single();
+        .maybeSingle();
 
       if (error) {
         console.error('❌ Error creating school admin:', error);
