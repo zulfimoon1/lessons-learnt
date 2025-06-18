@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { securityValidationService } from './securityValidationService';
 import bcrypt from 'bcryptjs';
@@ -27,7 +26,6 @@ class SecurePlatformAdminService {
       // Multiple attempts with different strategies
       const strategies = [
         () => supabase.rpc('set_platform_admin_context', { admin_email: adminEmail }),
-        () => supabase.rpc('set_platform_admin_context', { admin_email_param: adminEmail }),
         () => supabase.from('teachers').select('id').eq('email', adminEmail).limit(1)
       ];
 
