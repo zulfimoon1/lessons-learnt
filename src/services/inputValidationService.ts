@@ -1,3 +1,4 @@
+
 class InputValidationService {
   // XSS Protection
   sanitizeInput(input: string): string {
@@ -16,7 +17,7 @@ class InputValidationService {
     if (!query) return '';
     
     return query
-      .replace(/[';--]/g, '') // Remove SQL injection patterns
+      .replace(/[';-]/g, '') // Remove SQL injection patterns - fixed hyphen escaping
       .replace(/\b(union|select|insert|update|delete|drop|create|alter)\b/gi, '') // Remove SQL keywords
       .trim()
       .slice(0, 100); // Limit length
