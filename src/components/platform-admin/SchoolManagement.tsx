@@ -40,7 +40,7 @@ const SchoolManagement: React.FC<SchoolManagementProps> = ({ onDataChange }) => 
         async () => {
           console.log('📊 Getting teacher and student data...');
           
-          // Get all teachers and students directly
+          // Get all teachers and students directly with better error handling
           const [teachersQuery, studentsQuery] = await Promise.allSettled([
             supabase.from('teachers').select('school'),
             supabase.from('students').select('school')
@@ -51,10 +51,14 @@ const SchoolManagement: React.FC<SchoolManagementProps> = ({ onDataChange }) => 
 
           if (teachersQuery.status === 'fulfilled' && teachersQuery.value.data) {
             teachers = teachersQuery.value.data;
+          } else {
+            console.warn('Teachers query failed:', teachersQuery.status === 'rejected' ? teachersQuery.reason : 'No data');
           }
 
           if (studentsQuery.status === 'fulfilled' && studentsQuery.value.data) {
             students = studentsQuery.value.data;
+          } else {
+            console.warn('Students query failed:', studentsQuery.status === 'rejected' ? studentsQuery.reason : 'No data');
           }
 
           console.log('📊 Raw data:', { teachers: teachers.length, students: students.length });
@@ -108,7 +112,7 @@ const SchoolManagement: React.FC<SchoolManagementProps> = ({ onDataChange }) => 
       
     } catch (error) {
       console.error('❌ Error fetching schools:', error);
-      toast.error('Failed to load schools');
+      toast.error(`Failed to load schools: ${error instanceof Error ? error.message : 'Unknown error'}`);
       setSchools([]);
     }
   };
@@ -128,20 +132,8 @@ const SchoolManagement: React.FC<SchoolManagementProps> = ({ onDataChange }) => 
     try {
       console.log('➕ Adding school:', newSchoolName.trim());
       
-      const adminEmail = `admin@${newSchoolName.toLowerCase().replace(/\s+/g, '')}.edu`;
-      
-      await securePlatformAdminService.executeDirectQuery(
-        admin.email,
-        'teachers',
-        'insert',
-        supabase.from('teachers').insert({
-          name: `${newSchoolName} Administrator`,
-          email: adminEmail,
-          school: newSchoolName.trim(),
-          role: 'admin',
-          password_hash: '$2b$12$LQv3c1yX1/Y6GdE9e5Q8M.QmK5J5Q5Q5Q5Q5Q5Q5Q5Q5Q5Q5Q5Q5Qu'
-        }).select().single()
-      );
+      // Use the new createSchool method with better error handling
+      await securePlatformAdminService.createSchool(admin.email, newSchoolName.trim());
 
       console.log('✅ School created successfully');
       toast.success(`School "${newSchoolName}" added successfully`);
@@ -154,11 +146,19 @@ const SchoolManagement: React.FC<SchoolManagementProps> = ({ onDataChange }) => 
     } catch (error: any) {
       console.error('❌ Error adding school:', error);
       
-      if (error.code === '23505') {
-        toast.error('School administrator already exists');
-      } else {
-        toast.error(`Failed to add school: ${error.message || 'Unknown error'}`);
+      let errorMessage = 'Failed to add school';
+      
+      if (error.message?.includes('already exists')) {
+        errorMessage = 'School administrator already exists';
+      } else if (error.message?.includes('permission denied')) {
+        errorMessage = 'Database access denied - please check permissions';
+      } else if (error.message?.includes('RLS')) {
+        errorMessage = 'Security policy blocking access - contact administrator';
+      } else if (error.message) {
+        errorMessage = error.message;
       }
+      
+      toast.error(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -208,7 +208,15 @@ const SchoolManagement: React.FC<SchoolManagementProps> = ({ onDataChange }) => 
       
     } catch (error: any) {
       console.error('❌ Error deleting school:', error);
-      toast.error(`Failed to delete school: ${error.message}`);
+      
+      let errorMessage = 'Failed to delete school';
+      if (error.message?.includes('permission denied')) {
+        errorMessage = 'Database access denied - please check permissions';
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      toast.error(errorMessage);
     } finally {
       setIsLoading(false);
     }
