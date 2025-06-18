@@ -1,5 +1,3 @@
-
-
 class InputValidationService {
   // XSS Protection
   sanitizeInput(input: string): string {
@@ -117,4 +115,3 @@ class InputValidationService {
 }
 
 export const inputValidationService = new InputValidationService();
-
