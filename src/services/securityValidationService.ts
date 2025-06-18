@@ -2,7 +2,7 @@
 export class SecurityValidationService {
   private rateLimitMap = new Map<string, { count: number; lastReset: number }>();
 
-  validateInput(input: string, type: 'email' | 'name' | 'school' | 'grade' | 'password', options: { 
+  validateInput(input: string, type: string, options: { 
     maxLength?: number; 
     allowHtml?: boolean; 
     requireAlphanumeric?: boolean 
@@ -16,7 +16,10 @@ export class SecurityValidationService {
     let sanitizedValue = input?.trim() || '';
     let riskLevel: 'low' | 'medium' | 'high' = 'low';
 
-    switch (type) {
+    // Convert dynamic type to known types for validation
+    const validationType = this.mapToValidationType(type);
+
+    switch (validationType) {
       case 'email':
         if (!sanitizedValue) {
           errors.push('Email is required');
@@ -56,6 +59,13 @@ export class SecurityValidationService {
           errors.push('Password must be at least 8 characters');
         }
         break;
+
+      default:
+        // Generic text validation
+        if (options.maxLength && sanitizedValue.length > options.maxLength) {
+          errors.push(`Input must be less than ${options.maxLength} characters`);
+        }
+        break;
     }
 
     return {
@@ -64,6 +74,25 @@ export class SecurityValidationService {
       errors,
       riskLevel
     };
+  }
+
+  private mapToValidationType(type: string): 'email' | 'name' | 'school' | 'grade' | 'password' | 'text' {
+    switch (type.toLowerCase()) {
+      case 'email':
+        return 'email';
+      case 'name':
+      case 'full_name':
+      case 'fullname':
+        return 'name';
+      case 'school':
+        return 'school';
+      case 'grade':
+        return 'grade';
+      case 'password':
+        return 'password';
+      default:
+        return 'text';
+    }
   }
 
   checkRateLimit(key: string, maxRequests: number = 5, windowMs: number = 60000): boolean {
