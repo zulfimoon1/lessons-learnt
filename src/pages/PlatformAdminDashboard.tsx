@@ -19,6 +19,7 @@ import StudentManagement from "@/components/platform-admin/StudentManagement";
 import DoctorManagement from "@/components/platform-admin/DoctorManagement";
 import SecurityMonitoring from "@/components/platform-admin/SecurityMonitoring";
 import DiscountNotifications from "@/components/platform-admin/DiscountNotifications";
+import { securePlatformAdminService } from "@/services/securePlatformAdminService";
 
 interface DashboardStats {
   totalStudents: number;
@@ -71,13 +72,50 @@ const PlatformAdminDashboard = () => {
     adminEmail: admin?.email 
   });
 
-  const setAdminContext = async () => {
-    if (admin?.email) {
+  const fetchStatsWithRetry = async (retries = 3): Promise<any> => {
+    for (let attempt = 1; attempt <= retries; attempt++) {
       try {
-        console.log('📊 DASHBOARD: Setting admin context for', admin.email);
-        await supabase.rpc('set_platform_admin_context', { admin_email: admin.email });
+        if (admin?.email) {
+          await securePlatformAdminService.setAdminContext(admin.email);
+        }
+
+        // Try multiple query strategies
+        const queries = [
+          () => supabase.from('students').select('*', { count: 'exact', head: true }),
+          () => supabase.from('teachers').select('*', { count: 'exact', head: true }),
+          () => supabase.from('feedback').select('*', { count: 'exact', head: true }),
+          () => supabase.from('subscriptions').select('*', { count: 'exact', head: true })
+        ];
+
+        const results = await Promise.allSettled(queries.map(q => q()));
+        
+        const studentsCount = results[0].status === 'fulfilled' ? results[0].value.count || 0 : 0;
+        const teachersCount = results[1].status === 'fulfilled' ? results[1].value.count || 0 : 0;
+        const responsesCount = results[2].status === 'fulfilled' ? results[2].value.count || 0 : 0;
+        const subscriptionsCount = results[3].status === 'fulfilled' ? results[3].value.count || 0 : 0;
+
+        console.log('📊 DASHBOARD: Query results:', {
+          students: studentsCount,
+          teachers: teachersCount,
+          responses: responsesCount,
+          subscriptions: subscriptionsCount,
+          attempt
+        });
+
+        return {
+          studentsCount,
+          teachersCount,
+          responsesCount,
+          subscriptionsCount
+        };
+
       } catch (error) {
-        console.error('Error setting admin context:', error);
+        console.warn(`📊 DASHBOARD: Attempt ${attempt} failed:`, error);
+        if (attempt === retries) {
+          throw error;
+        }
+        // Wait before retry
+        await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
       }
     }
   };
@@ -87,113 +125,84 @@ const PlatformAdminDashboard = () => {
     setIsRefreshing(true);
     
     try {
-      await setAdminContext();
+      const queryResults = await fetchStatsWithRetry();
+      const { studentsCount, teachersCount, responsesCount, subscriptionsCount } = queryResults;
 
-      // Force refresh with no-cache headers
-      const { count: studentsCount } = await supabase
-        .from('students')
-        .select('*', { count: 'exact', head: true });
-
-      const { count: teachersCount } = await supabase
-        .from('teachers')
-        .select('*', { count: 'exact', head: true });
-
-      const { count: responsesCount } = await supabase
-        .from('feedback')
-        .select('*', { count: 'exact', head: true });
-
-      const { count: subscriptionsCount } = await supabase
-        .from('subscriptions')
-        .select('*', { count: 'exact', head: true });
-
-      console.log('📊 DASHBOARD: Fresh counts:', {
-        students: studentsCount,
-        teachers: teachersCount,
-        responses: responsesCount,
-        subscriptions: subscriptionsCount
-      });
-
-      // Calculate monthly revenue from active subscriptions
-      const { data: subscriptionData } = await supabase
-        .from('subscriptions')
-        .select('amount, plan_type, status')
-        .eq('status', 'active');
-
+      // Calculate monthly revenue
       let monthlyRevenue = 0;
-      if (subscriptionData) {
-        monthlyRevenue = subscriptionData.reduce((total, sub) => {
-          const monthlyAmount = sub.plan_type === 'yearly' ? sub.amount / 12 : sub.amount;
-          return total + (monthlyAmount / 100);
-        }, 0);
+      try {
+        const { data: subscriptionData } = await supabase
+          .from('subscriptions')
+          .select('amount, plan_type, status')
+          .eq('status', 'active');
+
+        if (subscriptionData) {
+          monthlyRevenue = subscriptionData.reduce((total, sub) => {
+            const monthlyAmount = sub.plan_type === 'yearly' ? sub.amount / 12 : sub.amount;
+            return total + (monthlyAmount / 100);
+          }, 0);
+        }
+      } catch (error) {
+        console.warn('Could not calculate revenue:', error);
       }
 
-      // Get unique schools - EXCLUDE platform administration entries
-      const { data: allStudents } = await supabase
-        .from('students')
-        .select('school')
-        .not('school', 'is', null);
-
-      const { data: allTeachers } = await supabase
-        .from('teachers')
-        .select('school')
-        .not('school', 'is', null);
-
-      const allSchoolNames = new Set<string>();
-      
-      // Filter out platform administration entries
-      const excludedSchools = ['Platform Administration', 'platform administration', 'admin'];
-      
-      if (allStudents) {
-        allStudents.forEach(item => {
-          if (item?.school && !excludedSchools.some(excluded => 
-            item.school.toLowerCase().includes(excluded.toLowerCase())
-          )) {
-            allSchoolNames.add(item.school);
-          }
-        });
-      }
-      
-      if (allTeachers) {
-        allTeachers.forEach(item => {
-          if (item?.school && !excludedSchools.some(excluded => 
-            item.school.toLowerCase().includes(excluded.toLowerCase())
-          )) {
-            allSchoolNames.add(item.school);
-          }
-        });
-      }
-
-      console.log('📊 DASHBOARD: Filtered schools:', Array.from(allSchoolNames));
-
-      // School stats - also filter out platform administration
-      const { data: schoolStatsData } = await supabase
-        .from('teachers')
-        .select('school')
-        .not('school', 'is', null);
-
+      // Get schools data
       let schoolStatsProcessed: SchoolStats[] = [];
-      if (schoolStatsData) {
-        const filteredSchoolStats = schoolStatsData.filter(teacher => 
-          teacher.school && !excludedSchools.some(excluded => 
-            teacher.school.toLowerCase().includes(excluded.toLowerCase())
-          )
-        );
+      let totalSchools = 0;
+      
+      try {
+        const [studentsResult, teachersResult] = await Promise.allSettled([
+          supabase.from('students').select('school').not('school', 'is', null),
+          supabase.from('teachers').select('school').not('school', 'is', null)
+        ]);
+
+        const allSchools = new Set<string>();
+        const excludedSchools = ['Platform Administration', 'platform administration', 'admin'];
         
-        schoolStatsProcessed = Object.entries(
-          filteredSchoolStats.reduce((acc, teacher) => {
-            acc[teacher.school] = (acc[teacher.school] || 0) + 1;
-            return acc;
-          }, {} as Record<string, number>)
-        ).map(([school, total_teachers]) => ({ school, total_teachers }));
+        // Process students
+        if (studentsResult.status === 'fulfilled' && studentsResult.value.data) {
+          studentsResult.value.data.forEach(item => {
+            if (item?.school && !excludedSchools.some(excluded => 
+              item.school.toLowerCase().includes(excluded.toLowerCase())
+            )) {
+              allSchools.add(item.school);
+            }
+          });
+        }
+        
+        // Process teachers
+        if (teachersResult.status === 'fulfilled' && teachersResult.value.data) {
+          teachersResult.value.data.forEach(item => {
+            if (item?.school && !excludedSchools.some(excluded => 
+              item.school.toLowerCase().includes(excluded.toLowerCase())
+            )) {
+              allSchools.add(item.school);
+            }
+          });
+          
+          // Calculate teacher counts per school
+          const teacherCounts = teachersResult.value.data
+            .filter(teacher => teacher.school && !excludedSchools.some(excluded => 
+              teacher.school.toLowerCase().includes(excluded.toLowerCase())
+            ))
+            .reduce((acc, teacher) => {
+              acc[teacher.school] = (acc[teacher.school] || 0) + 1;
+              return acc;
+            }, {} as Record<string, number>);
+          
+          schoolStatsProcessed = Object.entries(teacherCounts)
+            .map(([school, total_teachers]) => ({ school, total_teachers }));
+        }
+        
+        totalSchools = allSchools.size;
+      } catch (error) {
+        console.warn('Could not fetch school data:', error);
       }
 
-      // Feedback analytics - force refresh
+      // Feedback analytics
       let feedbackAnalyticsData: FeedbackStats[] = [];
       try {
-        const { data } = await supabase
-          .from('feedback_analytics')
-          .select('*');
-
+        const { data } = await supabase.from('feedback_analytics').select('*');
         if (data) {
           feedbackAnalyticsData = data;
         }
@@ -202,11 +211,11 @@ const PlatformAdminDashboard = () => {
       }
       
       const newStats = {
-        totalStudents: studentsCount || 0,
-        totalTeachers: teachersCount || 0,
-        totalSchools: allSchoolNames.size,
-        totalResponses: responsesCount || 0,
-        totalSubscriptions: subscriptionsCount || 0,
+        totalStudents: studentsCount,
+        totalTeachers: teachersCount,
+        totalSchools: totalSchools,
+        totalResponses: responsesCount,
+        totalSubscriptions: subscriptionsCount,
         monthlyRevenue: monthlyRevenue,
       };
 
@@ -222,7 +231,17 @@ const PlatformAdminDashboard = () => {
       
     } catch (error) {
       console.error('❌ DASHBOARD: Failed to fetch stats:', error);
-      toast.error('Failed to refresh data');
+      toast.error('Failed to refresh data - some permissions may be limited');
+      
+      // Set default stats to prevent UI issues
+      setStats({
+        totalStudents: 0,
+        totalTeachers: 0,
+        totalSchools: 0,
+        totalResponses: 0,
+        totalSubscriptions: 0,
+        monthlyRevenue: 0,
+      });
     } finally {
       setIsRefreshing(false);
     }
@@ -234,7 +253,6 @@ const PlatformAdminDashboard = () => {
 
   const handleDataChange = () => {
     console.log('📊 DASHBOARD: Data changed, refreshing...');
-    // Immediate refresh for better user experience
     setTimeout(() => {
       fetchStats();
     }, 500);
