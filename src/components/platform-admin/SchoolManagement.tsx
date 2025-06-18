@@ -74,13 +74,13 @@ const SchoolManagement: React.FC<SchoolManagementProps> = ({ onDataChange }) => 
       toast.success(`School "${newSchoolName}" added successfully`);
       setNewSchoolName('');
       
-      // Wait a bit longer before refreshing to ensure data consistency
+      // Refresh data
       setTimeout(async () => {
         await fetchSchools();
         if (onDataChange) {
           onDataChange();
         }
-      }, 1000);
+      }, 500);
       
     } catch (error: any) {
       console.error('❌ Error adding school:', error);
@@ -121,13 +121,13 @@ const SchoolManagement: React.FC<SchoolManagementProps> = ({ onDataChange }) => 
       console.log('✅ School deleted successfully');
       toast.success(`School "${schoolName}" deleted successfully`);
       
-      // Wait a bit longer before refreshing to ensure data consistency
+      // Refresh data
       setTimeout(async () => {
         await fetchSchools();
         if (onDataChange) {
           onDataChange();
         }
-      }, 1500);
+      }, 500);
       
     } catch (error: any) {
       console.error('❌ Error deleting school:', error);
@@ -147,10 +147,10 @@ const SchoolManagement: React.FC<SchoolManagementProps> = ({ onDataChange }) => 
   };
 
   useEffect(() => {
-    // Add longer initial delay to ensure admin context is properly set
+    // Shorter delay since we've improved the service
     setTimeout(() => {
       fetchSchools();
-    }, 1500);
+    }, 500);
   }, []);
 
   return (
