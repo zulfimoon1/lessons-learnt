@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { inputValidationService } from './inputValidationService';
 
@@ -19,6 +18,10 @@ interface SecurityViolation {
 }
 
 interface SecurityDashboardData {
+  totalEvents: number;
+  highSeverityEvents: number;
+  mediumSeverityEvents: number;
+  lowSeverityEvents: number;
   recentViolations: number;
   activeSessions: number;
   failedLogins: number;
@@ -165,16 +168,43 @@ class EnhancedSecurityService {
         event.operation?.includes('suspicious')
       ).length || 0;
 
+      const failedLogins = recentEvents?.filter(event => event.operation === 'login_failed').length || 0;
+      const suspiciousActivities = recentEvents?.filter(event => event.operation?.includes('suspicious')).length || 0;
+      
+      // Calculate severity breakdown
+      const highSeverityEvents = recentEvents?.filter(event => 
+        event.new_data && typeof event.new_data === 'object' && 
+        'severity' in event.new_data && event.new_data.severity === 'high'
+      ).length || 0;
+      
+      const mediumSeverityEvents = recentEvents?.filter(event => 
+        event.new_data && typeof event.new_data === 'object' && 
+        'severity' in event.new_data && event.new_data.severity === 'medium'
+      ).length || 0;
+      
+      const lowSeverityEvents = recentEvents?.filter(event => 
+        event.new_data && typeof event.new_data === 'object' && 
+        'severity' in event.new_data && event.new_data.severity === 'low'
+      ).length || 0;
+
       return {
+        totalEvents: recentEvents?.length || 0,
+        highSeverityEvents,
+        mediumSeverityEvents,
+        lowSeverityEvents,
         recentViolations: violations,
         activeSessions: 0, // Would need session tracking
-        failedLogins: recentEvents?.filter(event => event.operation === 'login_failed').length || 0,
-        suspiciousActivities: recentEvents?.filter(event => event.operation?.includes('suspicious')).length || 0,
+        failedLogins,
+        suspiciousActivities,
         lastSecurityScan: new Date().toISOString()
       };
     } catch (error) {
       console.error('Error getting security dashboard data:', error);
       return {
+        totalEvents: 0,
+        highSeverityEvents: 0,
+        mediumSeverityEvents: 0,
+        lowSeverityEvents: 0,
         recentViolations: 0,
         activeSessions: 0,
         failedLogins: 0,
