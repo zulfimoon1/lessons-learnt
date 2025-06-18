@@ -908,6 +908,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: boolean
       }
+      is_platform_admin_access: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
       is_platform_admin_context: {
         Args: Record<PropertyKey, never>
         Returns: boolean
