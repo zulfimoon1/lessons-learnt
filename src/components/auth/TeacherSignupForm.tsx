@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { UserIcon, Mail, School, ShieldIcon } from "lucide-react";
+import { UserPlusIcon, Mail, User, School, Shield } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 interface TeacherSignupFormProps {
@@ -20,12 +20,12 @@ interface TeacherSignupFormProps {
 }
 
 const TeacherSignupForm: React.FC<TeacherSignupFormProps> = ({ onSignup, isLoading }) => {
-  const { t, language } = useLanguage();
+  const { t } = useLanguage();
   const [signupData, setSignupData] = useState({
     name: "",
     email: "",
     school: "",
-    role: "teacher" as "teacher" | "admin" | "doctor",
+    role: "teacher" as 'teacher' | 'admin' | 'doctor',
     password: "",
     confirmPassword: ""
   });
@@ -39,13 +39,13 @@ const TeacherSignupForm: React.FC<TeacherSignupFormProps> = ({ onSignup, isLoadi
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="space-y-2">
         <Label htmlFor="signupName" className="flex items-center gap-2">
-          <UserIcon className="w-4 h-4" />
+          <User className="w-4 h-4" />
           {t('auth.fullName')}
         </Label>
         <Input
           id="signupName"
           type="text"
-          placeholder={language === 'lt' ? 'Įveskite vardą ir pavardę' : 'Enter your full name'}
+          placeholder="Enter your full name"
           value={signupData.name}
           onChange={(e) => setSignupData(prev => ({ ...prev, name: e.target.value }))}
           required
@@ -60,7 +60,7 @@ const TeacherSignupForm: React.FC<TeacherSignupFormProps> = ({ onSignup, isLoadi
         <Input
           id="signupEmail"
           type="email"
-          placeholder={language === 'lt' ? 'mokytojas@mokykla.lt' : 'teacher@school.com'}
+          placeholder="teacher@school.com"
           value={signupData.email}
           onChange={(e) => setSignupData(prev => ({ ...prev, email: e.target.value }))}
           required
@@ -70,12 +70,12 @@ const TeacherSignupForm: React.FC<TeacherSignupFormProps> = ({ onSignup, isLoadi
       <div className="space-y-2">
         <Label htmlFor="signupSchool" className="flex items-center gap-2">
           <School className="w-4 h-4" />
-          {t('auth.school')}
+          School
         </Label>
         <Input
           id="signupSchool"
           type="text"
-          placeholder={language === 'lt' ? 'Įveskite mokyklos pavadinimą' : 'Enter school name'}
+          placeholder="School name"
           value={signupData.school}
           onChange={(e) => setSignupData(prev => ({ ...prev, school: e.target.value }))}
           required
@@ -83,25 +83,23 @@ const TeacherSignupForm: React.FC<TeacherSignupFormProps> = ({ onSignup, isLoadi
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="role" className="flex items-center gap-2">
-          <ShieldIcon className="w-4 h-4" />
-          {t('login.teacher.role')}
+        <Label htmlFor="signupRole" className="flex items-center gap-2">
+          <Shield className="w-4 h-4" />
+          Role
         </Label>
-        <Select 
-          value={signupData.role} 
-          onValueChange={(value: "teacher" | "admin" | "doctor") => 
+        <Select
+          value={signupData.role}
+          onValueChange={(value: 'teacher' | 'admin' | 'doctor') => 
             setSignupData(prev => ({ ...prev, role: value }))
           }
         >
           <SelectTrigger>
-            <SelectValue placeholder={language === 'lt' ? 'Pasirinkite vaidmenį' : 'Select role'} />
+            <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="teacher">{t('login.teacher.roleTeacher')}</SelectItem>
-            <SelectItem value="admin">{t('login.teacher.roleAdmin')}</SelectItem>
-            <SelectItem value="doctor">
-              {language === 'lt' ? 'Psichinės sveikatos specialistas' : 'Mental Health Professional'}
-            </SelectItem>
+            <SelectItem value="teacher">Teacher</SelectItem>
+            <SelectItem value="admin">Administrator</SelectItem>
+            <SelectItem value="doctor">Mental Health Professional</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -111,7 +109,7 @@ const TeacherSignupForm: React.FC<TeacherSignupFormProps> = ({ onSignup, isLoadi
         <Input
           id="signupPassword"
           type="password"
-          placeholder={language === 'lt' ? 'Sukurkite slaptažodį' : 'Create a password'}
+          placeholder="Create a password"
           value={signupData.password}
           onChange={(e) => setSignupData(prev => ({ ...prev, password: e.target.value }))}
           required
@@ -119,11 +117,11 @@ const TeacherSignupForm: React.FC<TeacherSignupFormProps> = ({ onSignup, isLoadi
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="confirmPassword">{t('auth.confirmPassword')}</Label>
+        <Label htmlFor="confirmPassword">Confirm Password</Label>
         <Input
           id="confirmPassword"
           type="password"
-          placeholder={language === 'lt' ? 'Patvirtinkite slaptažodį' : 'Confirm your password'}
+          placeholder="Confirm your password"
           value={signupData.confirmPassword}
           onChange={(e) => setSignupData(prev => ({ ...prev, confirmPassword: e.target.value }))}
           required
@@ -135,7 +133,12 @@ const TeacherSignupForm: React.FC<TeacherSignupFormProps> = ({ onSignup, isLoadi
         className="w-full bg-emerald-600 hover:bg-emerald-700"
         disabled={isLoading}
       >
-        {isLoading ? t('auth.creatingAccount') : t('auth.createAccount')}
+        {isLoading ? "Creating Account..." : (
+          <>
+            <UserPlusIcon className="w-4 h-4 mr-2" />
+            {t('auth.signUp')}
+          </>
+        )}
       </Button>
     </form>
   );

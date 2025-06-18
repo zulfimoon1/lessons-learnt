@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { UserIcon, School, GraduationCap } from "lucide-react";
+import { UserPlusIcon, UserIcon, SchoolIcon, GraduationCapIcon } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 interface StudentSignupFormProps {
@@ -23,13 +23,7 @@ const StudentSignupForm: React.FC<StudentSignupFormProps> = ({ onSignup, isLoadi
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await onSignup(
-      signupData.fullName,
-      signupData.school,
-      signupData.grade,
-      signupData.password,
-      signupData.confirmPassword
-    );
+    await onSignup(signupData.fullName, signupData.school, signupData.grade, signupData.password, signupData.confirmPassword);
   };
 
   return (
@@ -42,7 +36,7 @@ const StudentSignupForm: React.FC<StudentSignupFormProps> = ({ onSignup, isLoadi
         <Input
           id="signupFullName"
           type="text"
-          placeholder={t('student.fullNameSignupPlaceholder') || "Enter your full name"}
+          placeholder="Enter your full name"
           value={signupData.fullName}
           onChange={(e) => setSignupData(prev => ({ ...prev, fullName: e.target.value }))}
           required
@@ -51,13 +45,13 @@ const StudentSignupForm: React.FC<StudentSignupFormProps> = ({ onSignup, isLoadi
 
       <div className="space-y-2">
         <Label htmlFor="signupSchool" className="flex items-center gap-2">
-          <School className="w-4 h-4" />
-          {t('auth.school')}
+          <SchoolIcon className="w-4 h-4" />
+          School
         </Label>
         <Input
           id="signupSchool"
           type="text"
-          placeholder={t('student.schoolPlaceholder') || "Enter your school name"}
+          placeholder="Enter your school name"
           value={signupData.school}
           onChange={(e) => setSignupData(prev => ({ ...prev, school: e.target.value }))}
           required
@@ -66,13 +60,13 @@ const StudentSignupForm: React.FC<StudentSignupFormProps> = ({ onSignup, isLoadi
 
       <div className="space-y-2">
         <Label htmlFor="signupGrade" className="flex items-center gap-2">
-          <GraduationCap className="w-4 h-4" />
-          {t('student.classGrade') || "Class/Grade"}
+          <GraduationCapIcon className="w-4 h-4" />
+          Grade/Class
         </Label>
         <Input
           id="signupGrade"
           type="text"
-          placeholder={t('student.gradePlaceholder') || "e.g., Grade 5, Year 7"}
+          placeholder="e.g., Grade 5, 10A, Year 9"
           value={signupData.grade}
           onChange={(e) => setSignupData(prev => ({ ...prev, grade: e.target.value }))}
           required
@@ -84,7 +78,7 @@ const StudentSignupForm: React.FC<StudentSignupFormProps> = ({ onSignup, isLoadi
         <Input
           id="signupPassword"
           type="password"
-          placeholder={t('student.createPassword') || "Create a password"}
+          placeholder="Create a password"
           value={signupData.password}
           onChange={(e) => setSignupData(prev => ({ ...prev, password: e.target.value }))}
           required
@@ -92,11 +86,11 @@ const StudentSignupForm: React.FC<StudentSignupFormProps> = ({ onSignup, isLoadi
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="confirmPassword">{t('auth.confirmPassword')}</Label>
+        <Label htmlFor="signupConfirmPassword">Confirm Password</Label>
         <Input
-          id="confirmPassword"
+          id="signupConfirmPassword"
           type="password"
-          placeholder={t('student.confirmPasswordPlaceholder') || "Confirm your password"}
+          placeholder="Confirm your password"
           value={signupData.confirmPassword}
           onChange={(e) => setSignupData(prev => ({ ...prev, confirmPassword: e.target.value }))}
           required
@@ -108,7 +102,12 @@ const StudentSignupForm: React.FC<StudentSignupFormProps> = ({ onSignup, isLoadi
         className="w-full"
         disabled={isLoading}
       >
-        {isLoading ? t('auth.creatingAccount') : t('auth.createAccount')}
+        {isLoading ? "Creating Account..." : (
+          <>
+            <UserPlusIcon className="w-4 h-4 mr-2" />
+            {t('auth.signUp')}
+          </>
+        )}
       </Button>
     </form>
   );
