@@ -22,7 +22,7 @@ serve(async (req) => {
   }
 
   try {
-    // Create admin service role client that bypasses all RLS with explicit config
+    // Create service role client with maximum permissions
     const supabaseAdmin = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
@@ -30,14 +30,6 @@ serve(async (req) => {
         auth: {
           autoRefreshToken: false,
           persistSession: false
-        },
-        db: {
-          schema: 'public'
-        },
-        global: {
-          headers: {
-            'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`
-          }
         }
       }
     )
@@ -183,7 +175,7 @@ serve(async (req) => {
 
       case 'deleteStudent':
         const { studentId } = params;
-        const { error: deleteStudentError } = await supabaseAdmin
+        const { error: deleteStudent } = await supabaseAdmin
           .from('students')
           .delete()
           .eq('id', studentId);
@@ -391,33 +383,25 @@ serve(async (req) => {
         break;
 
       case 'getTransactions':
-        console.log('💳 Fetching transactions with service role access...');
+        console.log('💳 Fetching transactions with service role...');
         
-        // Use raw SQL query to bypass RLS completely
-        const { data: transactionsData, error: transactionsError } = await supabaseAdmin.rpc('get_all_transactions_admin');
+        // Direct table access with service role permissions
+        const { data: transactionsData, error: transactionsError } = await supabaseAdmin
+          .from('transactions')
+          .select('*')
+          .order('created_at', { ascending: false });
         
         if (transactionsError) {
           console.error('Transaction query failed:', transactionsError);
-          // Fallback to direct table access with service role
-          const { data: fallbackData, error: fallbackError } = await supabaseAdmin
-            .from('transactions')
-            .select('*')
-            .order('created_at', { ascending: false });
-          
-          if (fallbackError) {
-            throw new Error(`Failed to fetch transactions: ${fallbackError.message}`);
-          }
-          
-          result = fallbackData || [];
-        } else {
-          result = transactionsData || [];
+          throw new Error(`Failed to fetch transactions: ${transactionsError.message}`);
         }
         
+        result = transactionsData || [];
         console.log(`✅ Transactions fetched successfully: ${result.length} records`);
         break;
 
       case 'createTransaction':
-        console.log('💳 Creating transaction with service role access...');
+        console.log('💳 Creating transaction with service role...');
         const { transactionData } = params;
         
         const insertData = {
@@ -427,12 +411,11 @@ serve(async (req) => {
           transaction_type: transactionData.transaction_type || 'payment',
           status: transactionData.status || 'completed',
           description: transactionData.description,
-          created_by: null
+          created_by: null // Service role doesn't have a user ID
         };
 
         console.log('Inserting transaction data:', insertData);
 
-        // Use service role to insert directly
         const { data: newTransaction, error: createTransactionError } = await supabaseAdmin
           .from('transactions')
           .insert(insertData)

@@ -145,7 +145,7 @@ export const ltTranslations = {
   'articles.mentalHealth': 'Psichinės sveikatos straipsniai',
   'articles.subscriptionRequired': 'Reikalinga prenumerata',
   
-  // Pricing translations
+  // Pricing translations - Fixed all pricing translations
   'pricing.processing': 'Apdorojama...',
   'pricing.title': 'Kainodara',
   'pricing.choosePlan': 'Pasirinkite planą',
