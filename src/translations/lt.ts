@@ -157,7 +157,7 @@ export const ltTranslations = {
   'pricing.numberOfTeachers': 'Mokytojų skaičius',
   'pricing.teacherDesc': 'Kiekvienas mokytojas gaus prieigą prie visų funkcijų',
   'pricing.discountCode': 'Nuolaidos kodas (neprivaloma)',
-  'pricing.enterDiscount': 'Įveskite nuolaidos kodą',
+  'pricing.enterDiscount':'/enuk nuolaidos kodą',
   'pricing.validating': 'Tikrinama...',
   'pricing.apply': 'Taikyti',
   'pricing.discountAppliedShort': 'nuolaida pritaikyta',

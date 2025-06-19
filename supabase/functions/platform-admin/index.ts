@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
@@ -21,7 +22,8 @@ serve(async (req) => {
   }
 
   try {
-    const supabaseAdmin = createClient(
+    // Create service role client with bypassed RLS for all operations
+    const supabaseServiceRole = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
       {
@@ -31,6 +33,11 @@ serve(async (req) => {
         },
         db: {
           schema: 'public'
+        },
+        global: {
+          headers: {
+            'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`,
+          }
         }
       }
     )
@@ -42,10 +49,9 @@ serve(async (req) => {
       throw new Error('Unauthorized: Not a platform admin')
     }
 
-    // Set admin context for all operations with enhanced approach
+    // Set admin context for all operations
     try {
-      // Set multiple context variables for maximum compatibility
-      await supabaseAdmin.rpc('set_platform_admin_context', { admin_email: adminEmail });
+      await supabaseServiceRole.rpc('set_platform_admin_context', { admin_email: adminEmail });
       console.log('✅ Platform admin context set successfully');
     } catch (error) {
       console.warn('Failed to set platform admin context via RPC, continuing with service role access');
@@ -56,10 +62,10 @@ serve(async (req) => {
     switch (operation) {
       case 'getPlatformStats':
         const [studentsResult, teachersResult, feedbackResult, subscriptionsResult] = await Promise.all([
-          supabaseAdmin.from('students').select('*', { count: 'exact', head: true }),
-          supabaseAdmin.from('teachers').select('*', { count: 'exact', head: true }),
-          supabaseAdmin.from('feedback').select('*', { count: 'exact', head: true }),
-          supabaseAdmin.from('subscriptions').select('*', { count: 'exact', head: true })
+          supabaseServiceRole.from('students').select('*', { count: 'exact', head: true }),
+          supabaseServiceRole.from('teachers').select('*', { count: 'exact', head: true }),
+          supabaseServiceRole.from('feedback').select('*', { count: 'exact', head: true }),
+          supabaseServiceRole.from('subscriptions').select('*', { count: 'exact', head: true })
         ])
 
         result = {
@@ -72,7 +78,7 @@ serve(async (req) => {
 
       case 'getMentalHealthAlerts':
         console.log('🧠 Fetching mental health alerts...');
-        const { data: alertsData, error: alertsError } = await supabaseAdmin
+        const { data: alertsData, error: alertsError } = await supabaseServiceRole
           .from('mental_health_alerts')
           .select('*')
           .order('created_at', { ascending: false });
@@ -89,7 +95,7 @@ serve(async (req) => {
       case 'markAlertAsReviewed':
         console.log('✅ Marking alert as reviewed...');
         const { alertId } = params;
-        const { error: reviewError } = await supabaseAdmin
+        const { error: reviewError } = await supabaseServiceRole
           .from('mental_health_alerts')
           .update({
             is_reviewed: true,
@@ -103,7 +109,7 @@ serve(async (req) => {
         break;
 
       case 'getTeachers':
-        const { data: teachersData, error: teachersError } = await supabaseAdmin
+        const { data: teachersData, error: teachersError } = await supabaseServiceRole
           .from('teachers')
           .select('*')
           .order('name');
@@ -125,7 +131,7 @@ serve(async (req) => {
         };
         delete teacherDataWithHash.password; // Remove plain password
 
-        const { data: newTeacher, error: createTeacherError } = await supabaseAdmin
+        const { data: newTeacher, error: createTeacherError } = await supabaseServiceRole
           .from('teachers')
           .insert(teacherDataWithHash)
           .select()
@@ -137,7 +143,7 @@ serve(async (req) => {
 
       case 'deleteTeacher':
         const { teacherId } = params;
-        const { error: deleteTeacherError } = await supabaseAdmin
+        const { error: deleteTeacherError } = await supabaseServiceRole
           .from('teachers')
           .delete()
           .eq('id', teacherId);
@@ -147,7 +153,7 @@ serve(async (req) => {
         break;
 
       case 'getStudents':
-        const { data: studentsData, error: studentsError } = await supabaseAdmin
+        const { data: studentsData, error: studentsError } = await supabaseServiceRole
           .from('students')
           .select('*')
           .order('full_name');
@@ -170,7 +176,7 @@ serve(async (req) => {
           password_hash: hashedStudentPassword
         };
 
-        const { data: newStudent, error: createStudentError } = await supabaseAdmin
+        const { data: newStudent, error: createStudentError } = await supabaseServiceRole
           .from('students')
           .insert(studentDataWithHash)
           .select()
@@ -182,7 +188,7 @@ serve(async (req) => {
 
       case 'deleteStudent':
         const { studentId } = params;
-        const { error: deleteStudentError } = await supabaseAdmin
+        const { error: deleteStudentError } = await supabaseServiceRole
           .from('students')
           .delete()
           .eq('id', studentId);
@@ -192,7 +198,7 @@ serve(async (req) => {
         break;
 
       case 'getDoctors':
-        const { data: doctorsData, error: doctorsError } = await supabaseAdmin
+        const { data: doctorsData, error: doctorsError } = await supabaseServiceRole
           .from('teachers')
           .select('*')
           .eq('role', 'doctor')
@@ -220,7 +226,7 @@ serve(async (req) => {
           is_available: true
         };
 
-        const { data: newDoctor, error: createDoctorError } = await supabaseAdmin
+        const { data: newDoctor, error: createDoctorError } = await supabaseServiceRole
           .from('teachers')
           .insert(doctorDataWithHash)
           .select()
@@ -232,7 +238,7 @@ serve(async (req) => {
 
       case 'deleteDoctor':
         const { doctorId } = params;
-        const { error: deleteDoctorError } = await supabaseAdmin
+        const { error: deleteDoctorError } = await supabaseServiceRole
           .from('teachers')
           .delete()
           .eq('id', doctorId);
@@ -242,7 +248,7 @@ serve(async (req) => {
         break;
 
       case 'getSchoolData':
-        const { data: teachersSchoolData } = await supabaseAdmin
+        const { data: teachersSchoolData } = await supabaseServiceRole
           .from('teachers')
           .select('school');
 
@@ -255,8 +261,8 @@ serve(async (req) => {
         const schoolStats = [];
         for (const school of uniqueSchools) {
           const [teacherResult, studentResult] = await Promise.all([
-            supabaseAdmin.from('teachers').select('id', { count: 'exact', head: true }).eq('school', school),
-            supabaseAdmin.from('students').select('id', { count: 'exact', head: true }).eq('school', school)
+            supabaseServiceRole.from('teachers').select('id', { count: 'exact', head: true }).eq('school', school),
+            supabaseServiceRole.from('students').select('id', { count: 'exact', head: true }).eq('school', school)
           ]);
 
           schoolStats.push({
@@ -273,7 +279,7 @@ serve(async (req) => {
         const { schoolName } = params;
         const adminPassword = await hashPassword('admin123'); // Default password
         
-        const { data: newSchool, error: createError } = await supabaseAdmin
+        const { data: newSchool, error: createError } = await supabaseServiceRole
           .from('teachers')
           .insert({
             name: `${schoolName} Admin`,
@@ -291,7 +297,7 @@ serve(async (req) => {
 
       case 'deleteSchool':
         const { schoolName: deleteSchoolName } = params;
-        const { data: deleteResult, error: deleteError } = await supabaseAdmin.rpc('platform_admin_delete_school', {
+        const { data: deleteResult, error: deleteError } = await supabaseServiceRole.rpc('platform_admin_delete_school', {
           school_name_param: deleteSchoolName,
           admin_email_param: adminEmail
         });
@@ -307,36 +313,25 @@ serve(async (req) => {
         break;
 
       case 'getDiscountCodes':
-        console.log('💰 Fetching discount codes via admin function...');
-        const { data: discountCodesData, error: discountCodesError } = await supabaseAdmin
+        console.log('💰 Fetching discount codes...');
+        const { data: discountCodesData, error: discountCodesError } = await supabaseServiceRole
           .from('discount_codes')
           .select('*')
           .order('created_at', { ascending: false });
 
         if (discountCodesError) {
-          console.error('Direct query failed, trying RPC function:', discountCodesError);
-          // Fallback to RPC function
-          try {
-            const { data: rpcData, error: rpcError } = await supabaseAdmin
-              .rpc('platform_admin_get_discount_codes', { admin_email_param: adminEmail });
-            
-            if (rpcError) throw rpcError;
-            result = rpcData || [];
-          } catch (rpcErr) {
-            console.error('RPC function also failed:', rpcErr);
-            throw discountCodesError;
-          }
-        } else {
-          result = discountCodesData || [];
+          console.error('Error fetching discount codes:', discountCodesError);
+          throw discountCodesError;
         }
+
+        result = discountCodesData || [];
         console.log(`✅ Discount codes fetched: ${result.length}`);
         break;
 
       case 'createDiscountCode':
-        console.log('🔨 Creating discount code via admin function...');
+        console.log('🔨 Creating discount code...');
         const { discountCodeData } = params;
         
-        // Fix: Don't pass created_by if it's not a valid UUID
         const discountCodeInsert = {
           code: discountCodeData.code,
           discount_percent: discountCodeData.discount_percent,
@@ -354,7 +349,7 @@ serve(async (req) => {
           discountCodeInsert.created_by = discountCodeData.created_by;
         }
 
-        const { data: directData, error: directError } = await supabaseAdmin
+        const { data: directData, error: directError } = await supabaseServiceRole
           .from('discount_codes')
           .insert(discountCodeInsert)
           .select()
@@ -370,7 +365,7 @@ serve(async (req) => {
         console.log('🔄 Updating discount code...');
         const { discountCodeId, discountCodeUpdates } = params;
         
-        const { data: directUpdateData, error: directUpdateError } = await supabaseAdmin
+        const { data: directUpdateData, error: directUpdateError } = await supabaseServiceRole
           .from('discount_codes')
           .update({
             ...discountCodeUpdates,
@@ -390,7 +385,7 @@ serve(async (req) => {
         console.log('🗑️ Deleting discount code...');
         const { discountCodeId: deleteDiscountCodeId } = params;
         
-        const { error: directDeleteError } = await supabaseAdmin
+        const { error: directDeleteError } = await supabaseServiceRole
           .from('discount_codes')
           .delete()
           .eq('id', deleteDiscountCodeId);
@@ -402,46 +397,26 @@ serve(async (req) => {
         break;
 
       case 'getTransactions':
-        console.log('💳 Fetching transactions with full service role access...');
+        console.log('💳 Fetching transactions with service role access...');
         
-        // Use service role client with bypassed RLS
-        const serviceRoleClient = createClient(
-          Deno.env.get('SUPABASE_URL') ?? '',
-          Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
-          {
-            auth: { persistSession: false },
-            db: { schema: 'public' }
-          }
-        );
-
-        const { data: transactionsData, error: transactionsError } = await serviceRoleClient
+        const { data: transactionsData, error: transactionsError } = await supabaseServiceRole
           .from('transactions')
           .select('*')
           .order('created_at', { ascending: false });
 
         if (transactionsError) {
-          console.error('Service role transaction query failed:', transactionsError);
-          result = [];
-        } else {
-          console.log(`✅ Transactions fetched successfully: ${transactionsData?.length || 0} records`);
-          result = transactionsData || [];
+          console.error('Transaction query failed:', transactionsError);
+          throw new Error(`Failed to fetch transactions: ${transactionsError.message}`);
         }
+
+        console.log(`✅ Transactions fetched successfully: ${transactionsData?.length || 0} records`);
+        result = transactionsData || [];
         break;
 
       case 'createTransaction':
-        console.log('💳 Creating transaction with full service role access...');
+        console.log('💳 Creating transaction with service role access...');
         const { transactionData } = params;
         
-        // Use service role client with bypassed RLS
-        const serviceRoleClientCreate = createClient(
-          Deno.env.get('SUPABASE_URL') ?? '',
-          Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
-          {
-            auth: { persistSession: false },
-            db: { schema: 'public' }
-          }
-        );
-
         const insertData = {
           school_name: transactionData.school_name,
           amount: transactionData.amount,
@@ -449,12 +424,12 @@ serve(async (req) => {
           transaction_type: transactionData.transaction_type || 'payment',
           status: transactionData.status || 'completed',
           description: transactionData.description,
-          created_by: null // Service role transactions don't need user ID
+          created_by: null
         };
 
         console.log('Inserting transaction data:', insertData);
 
-        const { data: newTransaction, error: createTransactionError } = await serviceRoleClientCreate
+        const { data: newTransaction, error: createTransactionError } = await supabaseServiceRole
           .from('transactions')
           .insert(insertData)
           .select()
@@ -471,7 +446,7 @@ serve(async (req) => {
 
       case 'testConnection':
         // Test database connection
-        const { data: testData, error: testError } = await supabaseAdmin
+        const { data: testData, error: testError } = await supabaseServiceRole
           .from('discount_codes')
           .select('id', { count: 'exact', head: true });
 
