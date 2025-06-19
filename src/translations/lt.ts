@@ -222,7 +222,7 @@ export const ltTranslations = {
   'pricing.signUpEducator': 'Registruotis kaip mokytojas',
   'pricing.questionsContact': 'Klausimai? Susisiekite su mūsų komanda dėl asmeninio demonstracinio ir kainodaros konsultacijos.',
 
-  // Custom Pricing Section translations - FIXED
+  // Custom Pricing Section translations - PROPERLY TRANSLATED
   'pricing.customPricing': 'Individuali kainodara',
   'pricing.customPricingAvailable': 'Galima individuali kainodara',
   'pricing.needCustomSolution': 'Reikia individualaus sprendimo jūsų organizacijai?',

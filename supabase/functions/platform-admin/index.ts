@@ -62,6 +62,82 @@ serve(async (req) => {
         }
         break;
 
+      case 'getTransactions':
+        console.log('💳 Fetching transactions with service role privileges...');
+        
+        try {
+          // Use service role to directly access transactions table
+          const { data: transactionsData, error: transactionsError } = await supabaseAdmin
+            .from('transactions')
+            .select('*')
+            .order('created_at', { ascending: false });
+          
+          if (transactionsError) {
+            console.error('Direct query failed:', transactionsError);
+            // Try using RPC function as fallback
+            const { data: rpcData, error: rpcError } = await supabaseAdmin
+              .rpc('get_all_transactions_admin');
+            
+            if (rpcError) {
+              console.error('RPC fallback failed:', rpcError);
+              result = [];
+            } else {
+              result = rpcData || [];
+              console.log(`✅ Transactions fetched via RPC: ${result.length} records`);
+            }
+          } else {
+            result = transactionsData || [];
+            console.log(`✅ Transactions fetched directly: ${result.length} records`);
+          }
+        } catch (error) {
+          console.error('Error in getTransactions:', error);
+          result = [];
+        }
+        break;
+
+      case 'createTransaction':
+        console.log('💳 Creating transaction with service role privileges...');
+        const { transactionData } = params;
+        
+        try {
+          // Validate required fields
+          if (!transactionData.school_name || !transactionData.amount) {
+            throw new Error('School name and amount are required');
+          }
+
+          // Prepare transaction data
+          const insertData = {
+            school_name: transactionData.school_name.trim(),
+            amount: Math.round(parseFloat(transactionData.amount) * 100), // Convert to cents
+            currency: transactionData.currency || 'eur',
+            transaction_type: transactionData.transaction_type || 'payment',
+            status: transactionData.status || 'completed',
+            description: transactionData.description || '',
+            created_by: null // Platform admin creation
+          };
+
+          console.log('📝 Inserting transaction data:', insertData);
+
+          // Use service role to insert transaction
+          const { data: newTransaction, error: createTransactionError } = await supabaseAdmin
+            .from('transactions')
+            .insert(insertData)
+            .select()
+            .single();
+
+          if (createTransactionError) {
+            console.error('Direct insert failed:', createTransactionError);
+            throw new Error(`Failed to create transaction: ${createTransactionError.message}`);
+          }
+
+          result = newTransaction;
+          console.log('✅ Transaction created successfully:', result.id);
+        } catch (error) {
+          console.error('Error in createTransaction:', error);
+          throw error;
+        }
+        break;
+
       case 'getMentalHealthAlerts':
         console.log('🧠 Fetching mental health alerts...');
         const { data: alertsData, error: alertsError } = await supabaseAdmin
@@ -379,55 +455,6 @@ serve(async (req) => {
         result = { success: true, message: 'Discount code deleted successfully' };
         
         console.log('✅ Discount code deleted successfully');
-        break;
-
-      case 'getTransactions':
-        console.log('💳 Fetching transactions with elevated privileges...');
-        
-        // Use service role to bypass RLS completely
-        const { data: transactionsData, error: transactionsError } = await supabaseAdmin
-          .from('transactions')
-          .select('*')
-          .order('created_at', { ascending: false });
-        
-        if (transactionsError) {
-          console.error('Error fetching transactions:', transactionsError);
-          // Return empty array instead of mock data to show the real state
-          result = [];
-        } else {
-          result = transactionsData || [];
-          console.log(`✅ Transactions fetched successfully: ${result.length} records`);
-        }
-        break;
-
-      case 'createTransaction':
-        console.log('💳 Creating transaction with elevated privileges...');
-        const { transactionData } = params;
-        
-        const insertData = {
-          school_name: transactionData.school_name,
-          amount: Math.round(parseFloat(transactionData.amount) * 100), // Convert to cents
-          currency: transactionData.currency || 'eur',
-          transaction_type: transactionData.transaction_type || 'payment',
-          status: transactionData.status || 'completed',
-          description: transactionData.description || '',
-          created_by: null // Platform admin creation
-        };
-
-        // Use service role to bypass RLS completely
-        const { data: newTransaction, error: createTransactionError } = await supabaseAdmin
-          .from('transactions')
-          .insert(insertData)
-          .select()
-          .single();
-
-        if (createTransactionError) {
-          console.error('Transaction creation error:', createTransactionError);
-          throw new Error(`Failed to create transaction: ${createTransactionError.message}`);
-        }
-
-        result = newTransaction;
-        console.log('✅ Transaction created successfully:', newTransaction.id);
         break;
 
       case 'testConnection':
