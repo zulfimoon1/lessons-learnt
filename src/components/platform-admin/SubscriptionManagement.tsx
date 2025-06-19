@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -7,7 +6,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { usePlatformAdmin } from "@/contexts/PlatformAdminContext";
-import { supabase } from "@/integrations/supabase/client";
+import { securePlatformAdminService } from "@/services/securePlatformAdminService";
 import { 
   TrendingUpIcon,
   FilterIcon,
@@ -34,10 +33,22 @@ interface Subscription {
   updated_at: string;
 }
 
+interface PaymentNotification {
+  id: string;
+  subscription_id: string;
+  school_name: string;
+  admin_email: string;
+  notification_type: string;
+  scheduled_for: string;
+  sent_at: string | null;
+  created_at: string;
+}
+
 const SubscriptionManagement = () => {
   const { toast } = useToast();
   const { isAuthenticated, admin } = usePlatformAdmin();
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
+  const [paymentNotifications, setPaymentNotifications] = useState<PaymentNotification[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedSchool, setSelectedSchool] = useState<string>("all");
   const [renewalWarnings, setRenewalWarnings] = useState<Subscription[]>([]);
@@ -53,22 +64,14 @@ const SubscriptionManagement = () => {
       console.log('=== LOADING SUBSCRIPTION DATA ===');
       console.log('Platform admin:', admin);
 
-      const { data: subscriptionsData, error: subscriptionsError } = await supabase
-        .from('subscriptions')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (subscriptionsError) {
-        console.error('Error fetching subscriptions:', subscriptionsError);
-        toast({
-          title: "Error",
-          description: `Failed to load subscription data: ${subscriptionsError.message}`,
-          variant: "destructive",
-        });
-        return;
-      }
+      // Load subscriptions via edge function
+      const subscriptionsData = await securePlatformAdminService.callAdminFunction('getSubscriptions');
+      
+      // Load payment notifications via edge function
+      const notificationsData = await securePlatformAdminService.callAdminFunction('getPaymentNotifications');
 
       setSubscriptions(subscriptionsData || []);
+      setPaymentNotifications(notificationsData || []);
 
       // Check for renewal warnings (subscriptions ending in next 30 days)
       const thirtyDaysFromNow = new Date();
@@ -83,6 +86,7 @@ const SubscriptionManagement = () => {
       setRenewalWarnings(warnings);
       
       console.log('Subscriptions loaded successfully:', subscriptionsData?.length || 0);
+      console.log('Payment notifications loaded successfully:', notificationsData?.length || 0);
       
     } catch (error) {
       console.error('Error loading subscription data:', error);
@@ -210,6 +214,23 @@ const SubscriptionManagement = () => {
       </CardHeader>
       
       <CardContent>
+        {/* Payment Notifications Section */}
+        {paymentNotifications.length > 0 && (
+          <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+            <h4 className="font-medium text-blue-800 mb-2 flex items-center gap-2">
+              🔔 Recent Payment Notifications
+            </h4>
+            <div className="space-y-2">
+              {paymentNotifications.slice(0, 5).map((notification) => (
+                <div key={notification.id} className="text-sm text-blue-700">
+                  <strong>{notification.school_name}</strong> - {notification.notification_type} 
+                  {notification.sent_at ? ' (Sent)' : ' (Pending)'}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Filters */}
         <div className="flex flex-wrap gap-4 mb-6 p-4 bg-gray-50 rounded-lg">
           <div className="flex items-center gap-2">

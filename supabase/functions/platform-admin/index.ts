@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
@@ -60,6 +61,22 @@ serve(async (req) => {
           responsesCount: feedbackResult.count || 0,
           subscriptionsCount: subscriptionsResult.count || 0,
         }
+        break;
+
+      case 'getPaymentNotifications':
+        console.log('🔔 Fetching payment notifications...');
+        const { data: notificationsData, error: notificationsError } = await supabaseAdmin
+          .from('payment_notifications')
+          .select('*')
+          .order('created_at', { ascending: false });
+
+        if (notificationsError) {
+          console.error('Error fetching payment notifications:', notificationsError);
+          throw notificationsError;
+        }
+
+        result = notificationsData || [];
+        console.log(`✅ Payment notifications fetched: ${result.length}`);
         break;
 
       case 'getTransactions':

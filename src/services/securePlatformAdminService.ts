@@ -47,7 +47,7 @@ class SecurePlatformAdminService {
     }
   }
 
-  private async callAdminFunction(operation: string, params: any = {}) {
+  async callAdminFunction(operation: string, params: any = {}) {
     console.log(`🔧 Calling admin function: ${operation}`);
     
     try {
@@ -98,6 +98,11 @@ class SecurePlatformAdminService {
   async getTransactions(adminEmail: string): Promise<any[]> {
     console.log('💳 Getting transactions via edge function...');
     return await this.callAdminFunction('getTransactions');
+  }
+
+  async getPaymentNotifications(adminEmail: string): Promise<any[]> {
+    console.log('🔔 Getting payment notifications via edge function...');
+    return await this.callAdminFunction('getPaymentNotifications');
   }
 
   async createTransaction(adminEmail: string, transactionData: any): Promise<any> {
