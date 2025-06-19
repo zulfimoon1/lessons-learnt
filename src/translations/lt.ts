@@ -1,4 +1,3 @@
-
 import { ltDemoTranslations } from './lt/demo';
 import { ltAuthTranslations } from './lt/auth';
 import { ltChatTranslations } from './lt/chat';
@@ -222,7 +221,7 @@ export const ltTranslations = {
   'pricing.signUpEducator': 'Registruotis kaip mokytojas',
   'pricing.questionsContact': 'Klausimai? Susisiekite su mūsų komanda dėl asmeninio demonstracinio ir kainodaros konsultacijos.',
 
-  // Custom Pricing Section translations - PROPERLY TRANSLATED
+  // Custom Pricing Section translations
   'pricing.customPricing': 'Individuali kainodara',
   'pricing.customPricingAvailable': 'Galima individuali kainodara',
   'pricing.needCustomSolution': 'Reikia individualaus sprendimo jūsų organizacijai?',
