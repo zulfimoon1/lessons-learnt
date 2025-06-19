@@ -87,7 +87,7 @@ const PlatformAdminDashboard = () => {
       console.log('📊 Getting platform stats for admin:', admin.email);
       
       const timeout = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Request timeout')), 10000)
+        setTimeout(() => reject(new Error('Dashboard data fetch timeout')), 15000)
       );
       
       const [platformStats, schoolData] = await Promise.race([
@@ -130,8 +130,9 @@ const PlatformAdminDashboard = () => {
       
     } catch (error) {
       console.error('❌ Failed to fetch dashboard stats:', error);
-      setDataError(error.message || 'Failed to load dashboard data');
-      toast.error(`Failed to load data: ${error.message || 'Unknown error'}`);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      setDataError(`Failed to load dashboard data: ${errorMessage}`);
+      toast.error(`Failed to load data: ${errorMessage}`);
     } finally {
       setIsRefreshing(false);
     }
@@ -139,6 +140,7 @@ const PlatformAdminDashboard = () => {
 
   const handleRefresh = () => {
     setHasDataLoaded(false);
+    setDataError(null);
     fetchStats();
   };
 
@@ -158,7 +160,6 @@ const PlatformAdminDashboard = () => {
     console.log('📊 Dashboard useEffect triggered', { isAuthenticated, admin: !!admin });
     if (isAuthenticated && admin?.email && !hasDataLoaded) {
       console.log('Loading dashboard data for admin:', admin.email);
-      // Load data immediately without delay
       fetchStats();
     }
   }, [isAuthenticated, admin, hasDataLoaded]);
@@ -225,8 +226,15 @@ const PlatformAdminDashboard = () => {
             <h3 className="font-medium text-red-800">Data Loading Error</h3>
             <p className="text-red-600 text-sm mt-1">{dataError}</p>
             <p className="text-red-600 text-sm mt-2">
-              This may be due to database permission issues. Check the console for more details.
+              Database permission policies have been updated. Try refreshing the dashboard.
             </p>
+            <Button 
+              onClick={handleRefresh} 
+              className="mt-3 bg-red-600 hover:bg-red-700 text-white"
+              size="sm"
+            >
+              Retry Loading Data
+            </Button>
           </div>
         )}
 
@@ -238,8 +246,8 @@ const PlatformAdminDashboard = () => {
           </div>
         )}
 
-        {/* Stats Grid - Only show when data is loaded */}
-        {hasDataLoaded && !dataError && (
+        {/* Stats Grid - Show when data is loaded OR when there's no error */}
+        {(hasDataLoaded || !dataError) && (
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
             <StatsCard 
               title="Total Students" 
@@ -323,14 +331,16 @@ const PlatformAdminDashboard = () => {
           </TabsContent>
         </Tabs>
 
-        {/* Dashboard Footer with Status - Only show when data is loaded */}
-        {hasDataLoaded && !dataError && (
+        {/* Dashboard Footer with Status */}
+        {(hasDataLoaded || !dataError) && (
           <div className="mt-8">
             <Card>
               <CardContent className="pt-6">
                 <p className="text-sm text-gray-600">
-                  Last updated: {lastUpdated} 
-                  <span className="text-green-600 ml-2">✓ Real data loaded</span>
+                  Last updated: {lastUpdated || 'Never'} 
+                  <span className={`ml-2 ${hasDataLoaded ? 'text-green-600' : 'text-yellow-600'}`}>
+                    {hasDataLoaded ? '✓ Data loaded' : '⏳ Loading...'}
+                  </span>
                 </p>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm mt-4">
                   <div>
@@ -347,7 +357,9 @@ const PlatformAdminDashboard = () => {
                   </div>
                   <div>
                     <span className="font-medium text-gray-700">System Status:</span>
-                    <span className="ml-2 text-green-600">✅ Online</span>
+                    <span className={`ml-2 ${dataError ? 'text-red-600' : 'text-green-600'}`}>
+                      {dataError ? '⚠️ Issues detected' : '✅ Online'}
+                    </span>
                   </div>
                 </div>
               </CardContent>

@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { securityValidationService } from './securityValidationService';
 
@@ -53,7 +52,7 @@ class SecurePlatformAdminService {
 
   async ensureAdminContext(adminEmail: string): Promise<void> {
     try {
-      console.log('🔧 Setting platform admin context for:', adminEmail);
+      console.log('🔧 Setting enhanced platform admin context for:', adminEmail);
       
       const { error: rpcError } = await supabase.rpc('set_platform_admin_context', { 
         admin_email: adminEmail 
@@ -65,8 +64,8 @@ class SecurePlatformAdminService {
         console.log('✅ Platform admin context set via RPC successfully');
       }
       
-      // Short wait for context to be applied
-      await new Promise(resolve => setTimeout(resolve, 200));
+      // Minimal wait for context to be applied
+      await new Promise(resolve => setTimeout(resolve, 100));
       
     } catch (error) {
       console.warn('⚠️ Failed to set admin context:', error);
@@ -85,10 +84,10 @@ class SecurePlatformAdminService {
       await this.ensureAdminContext(adminEmail);
       
       const results = await Promise.allSettled([
-        this.getCountWithFallback('students'),
-        this.getCountWithFallback('teachers'),
-        this.getCountWithFallback('feedback'),
-        this.getCountWithFallback('subscriptions')
+        this.getCountWithTimeout('students'),
+        this.getCountWithTimeout('teachers'),
+        this.getCountWithTimeout('feedback'),
+        this.getCountWithTimeout('subscriptions')
       ]);
 
       const studentsCount = results[0].status === 'fulfilled' ? results[0].value : 0;
@@ -106,11 +105,15 @@ class SecurePlatformAdminService {
       };
     } catch (error) {
       console.error('❌ Failed to get platform stats:', error);
-      throw error; // Don't return mock data, let the error propagate
+      throw error;
     }
   }
 
-  private async getCountWithFallback(tableName: string): Promise<number> {
+  private async getCountWithTimeout(tableName: string): Promise<number> {
+    const timeout = new Promise<never>((_, reject) => 
+      setTimeout(() => reject(new Error(`Timeout getting count for ${tableName}`)), 5000)
+    );
+
     try {
       console.log(`📊 Getting count for ${tableName}`);
       
@@ -119,49 +122,57 @@ class SecurePlatformAdminService {
       let count = 0;
       let error = null;
       
-      switch (tableName) {
-        case 'students':
-          const studentsResult = await supabase
-            .from('students')
-            .select('*', { count: 'exact', head: true });
-          count = studentsResult.count || 0;
-          error = studentsResult.error;
-          break;
-        case 'teachers':
-          const teachersResult = await supabase
-            .from('teachers')
-            .select('*', { count: 'exact', head: true });
-          count = teachersResult.count || 0;
-          error = teachersResult.error;
-          break;
-        case 'feedback':
-          const feedbackResult = await supabase
-            .from('feedback')
-            .select('*', { count: 'exact', head: true });
-          count = feedbackResult.count || 0;
-          error = feedbackResult.error;
-          break;
-        case 'subscriptions':
-          const subscriptionsResult = await supabase
-            .from('subscriptions')
-            .select('*', { count: 'exact', head: true });
-          count = subscriptionsResult.count || 0;
-          error = subscriptionsResult.error;
-          break;
-        default:
-          return 0;
-      }
+      const queryPromise = (async () => {
+        switch (tableName) {
+          case 'students': {
+            const result = await supabase
+              .from('students')
+              .select('*', { count: 'exact', head: true });
+            count = result.count || 0;
+            error = result.error;
+            break;
+          }
+          case 'teachers': {
+            const result = await supabase
+              .from('teachers')
+              .select('*', { count: 'exact', head: true });
+            count = result.count || 0;
+            error = result.error;
+            break;
+          }
+          case 'feedback': {
+            const result = await supabase
+              .from('feedback')
+              .select('*', { count: 'exact', head: true });
+            count = result.count || 0;
+            error = result.error;
+            break;
+          }
+          case 'subscriptions': {
+            const result = await supabase
+              .from('subscriptions')
+              .select('*', { count: 'exact', head: true });
+            count = result.count || 0;
+            error = result.error;
+            break;
+          }
+          default:
+            return 0;
+        }
         
-      if (error) {
-        console.warn(`⚠️ Error querying ${tableName}:`, error);
-        throw error; // Don't return fallback, throw the error
-      }
-      
-      console.log(`✅ Successfully got count for ${tableName}: ${count}`);
-      return count;
+        if (error) {
+          console.warn(`⚠️ Error querying ${tableName}:`, error);
+          throw error;
+        }
+        
+        console.log(`✅ Successfully got count for ${tableName}: ${count}`);
+        return count;
+      })();
+
+      return await Promise.race([queryPromise, timeout]);
     } catch (error) {
       console.error(`❌ Error getting count for ${tableName}:`, error);
-      throw error; // Don't return fallback data
+      throw error;
     }
   }
 
@@ -175,23 +186,26 @@ class SecurePlatformAdminService {
     try {
       await this.ensureAdminContext(adminEmail);
 
-      const schoolStats = await this.getSchoolsWithFallback();
+      const schoolStats = await this.getSchoolsWithTimeout();
       
       console.log('🏫 School data retrieved:', schoolStats);
       return schoolStats;
     } catch (error) {
       console.error('❌ Failed to get school data:', error);
-      throw error; // Don't return mock data
+      throw error;
     }
   }
 
-  private async getSchoolsWithFallback(): Promise<Array<{
+  private async getSchoolsWithTimeout(): Promise<Array<{
     name: string;
     teacher_count: number;
     student_count: number;
   }>> {
-    
-    try {
+    const timeout = new Promise<never>((_, reject) => 
+      setTimeout(() => reject(new Error('Timeout getting school data')), 8000)
+    );
+
+    const schoolQuery = async () => {
       console.log('🔄 Getting school data');
       
       await this.ensureAdminContext(this.KNOWN_ADMIN);
@@ -202,7 +216,7 @@ class SecurePlatformAdminService {
 
       if (teachersError) {
         console.warn('⚠️ Error fetching schools:', teachersError);
-        throw teachersError; // Don't return fallback data
+        throw teachersError;
       }
 
       const uniqueSchools = [...new Set(teachersData?.map(t => t.school).filter(Boolean) || [])];
@@ -236,9 +250,13 @@ class SecurePlatformAdminService {
       }
 
       return schoolStats;
+    };
+
+    try {
+      return await Promise.race([schoolQuery(), timeout]);
     } catch (error) {
-      console.error(`❌ Error in getSchoolsWithFallback:`, error);
-      throw error; // Don't return fallback data
+      console.error(`❌ Error in getSchoolsWithTimeout:`, error);
+      throw error;
     }
   }
 
