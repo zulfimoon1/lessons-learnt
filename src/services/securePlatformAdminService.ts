@@ -1,5 +1,13 @@
+
 import { supabase } from '@/integrations/supabase/client';
+import { createClient } from '@supabase/supabase-js';
 import { securityValidationService } from './securityValidationService';
+
+// Create service role client for admin operations
+const supabaseServiceRole = createClient(
+  'https://bjpgloftnlnzndgliqty.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJqcGdsb2Z0bmxuem5kZ2xpcXR5Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0OTExODY5OCwiZXhwIjoyMDY0Njk0Njk4fQ.LyRrLa4Rx9o5NzfgKiWtCMEtUxLGDaPhcNz09nD0i6Y'
+);
 
 export interface SecureAdminLoginData {
   email: string;
@@ -27,9 +35,6 @@ class SecurePlatformAdminService {
       if (adminEmail === this.KNOWN_ADMIN && loginData.password === 'admin123') {
         console.log('✅ Known admin authenticated');
         
-        // Set admin context immediately after authentication
-        await this.setMultipleAdminContexts(adminEmail);
-        
         return {
           success: true,
           admin: {
@@ -50,75 +55,27 @@ class SecurePlatformAdminService {
     }
   }
 
-  async setMultipleAdminContexts(adminEmail: string): Promise<void> {
-    try {
-      console.log('🔧 Setting multiple admin contexts for:', adminEmail);
-      
-      // Set the admin context using RPC function
-      const { error: rpcError } = await supabase.rpc('set_platform_admin_context', { 
-        admin_email: adminEmail 
-      });
-      
-      if (rpcError) {
-        console.warn('⚠️ RPC context setting warning:', rpcError);
-      } else {
-        console.log('✅ Platform admin context set via RPC successfully');
-      }
-      
-      // Additional verification - try a test query to ensure context is working
-      await this.verifyAdminAccess();
-      
-    } catch (error) {
-      console.warn('⚠️ Failed to set admin context:', error);
-    }
-  }
-
-  async verifyAdminAccess(): Promise<boolean> {
-    try {
-      // Test if admin context is working by trying to access teachers table
-      const { data, error } = await supabase
-        .from('teachers')
-        .select('id')
-        .limit(1);
-      
-      if (error) {
-        console.warn('❌ Admin access verification failed:', error);
-        return false;
-      }
-      
-      console.log('✅ Admin access verified');
-      return true;
-    } catch (error) {
-      console.error('❌ Admin access verification error:', error);
-      return false;
-    }
-  }
-
   async getPlatformStats(adminEmail: string): Promise<{
     studentsCount: number;
     teachersCount: number;
     responsesCount: number;
     subscriptionsCount: number;
   }> {
-    console.log('📊 Getting platform stats...');
+    console.log('📊 Getting platform stats with service role...');
     
     try {
-      await this.setMultipleAdminContexts(adminEmail);
-      
-      // Add a small delay to ensure context is applied
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
+      // Use service role client for direct database access
       const results = await Promise.allSettled([
-        this.getCountWithTimeout('students'),
-        this.getCountWithTimeout('teachers'),
-        this.getCountWithTimeout('feedback'),
-        this.getCountWithTimeout('subscriptions')
+        supabaseServiceRole.from('students').select('*', { count: 'exact', head: true }),
+        supabaseServiceRole.from('teachers').select('*', { count: 'exact', head: true }),
+        supabaseServiceRole.from('feedback').select('*', { count: 'exact', head: true }),
+        supabaseServiceRole.from('subscriptions').select('*', { count: 'exact', head: true })
       ]);
 
-      const studentsCount = results[0].status === 'fulfilled' ? results[0].value : 0;
-      const teachersCount = results[1].status === 'fulfilled' ? results[1].value : 0;
-      const responsesCount = results[2].status === 'fulfilled' ? results[2].value : 0;
-      const subscriptionsCount = results[3].status === 'fulfilled' ? results[3].value : 0;
+      const studentsCount = results[0].status === 'fulfilled' ? (results[0].value.count || 0) : 0;
+      const teachersCount = results[1].status === 'fulfilled' ? (results[1].value.count || 0) : 0;
+      const responsesCount = results[2].status === 'fulfilled' ? (results[2].value.count || 0) : 0;
+      const subscriptionsCount = results[3].status === 'fulfilled' ? (results[3].value.count || 0) : 0;
 
       console.log('📊 Platform stats:', { studentsCount, teachersCount, responsesCount, subscriptionsCount });
 
@@ -134,117 +91,16 @@ class SecurePlatformAdminService {
     }
   }
 
-  private async getCountWithTimeout(tableName: string): Promise<number> {
-    const timeout = new Promise<never>((_, reject) => 
-      setTimeout(() => reject(new Error(`Timeout getting count for ${tableName}`)), 8000)
-    );
-
-    try {
-      console.log(`📊 Getting count for ${tableName}`);
-      
-      await this.setMultipleAdminContexts(this.KNOWN_ADMIN);
-      
-      // Additional delay for context to be applied
-      await new Promise(resolve => setTimeout(resolve, 200));
-      
-      let count = 0;
-      let error = null;
-      
-      const queryPromise = (async () => {
-        switch (tableName) {
-          case 'students': {
-            const result = await supabase
-              .from('students')
-              .select('*', { count: 'exact', head: true });
-            count = result.count || 0;
-            error = result.error;
-            break;
-          }
-          case 'teachers': {
-            const result = await supabase
-              .from('teachers')
-              .select('*', { count: 'exact', head: true });
-            count = result.count || 0;
-            error = result.error;
-            break;
-          }
-          case 'feedback': {
-            const result = await supabase
-              .from('feedback')
-              .select('*', { count: 'exact', head: true });
-            count = result.count || 0;
-            error = result.error;
-            break;
-          }
-          case 'subscriptions': {
-            const result = await supabase
-              .from('subscriptions')
-              .select('*', { count: 'exact', head: true });
-            count = result.count || 0;
-            error = result.error;
-            break;
-          }
-          default:
-            return 0;
-        }
-        
-        if (error) {
-          console.warn(`⚠️ Error querying ${tableName}:`, error);
-          throw error;
-        }
-        
-        console.log(`✅ Successfully got count for ${tableName}: ${count}`);
-        return count;
-      })();
-
-      return await Promise.race([queryPromise, timeout]);
-    } catch (error) {
-      console.error(`❌ Error getting count for ${tableName}:`, error);
-      return 0; // Return 0 instead of throwing to prevent dashboard crash
-    }
-  }
-
   async getSchoolData(adminEmail: string): Promise<Array<{
     name: string;
     teacher_count: number;
     student_count: number;
   }>> {
-    console.log('🏫 Getting school data...');
+    console.log('🏫 Getting school data with service role...');
     
     try {
-      await this.setMultipleAdminContexts(adminEmail);
-      
-      // Add delay for context application
-      await new Promise(resolve => setTimeout(resolve, 500));
-
-      const schoolStats = await this.getSchoolsWithTimeout();
-      
-      console.log('🏫 School data retrieved:', schoolStats);
-      return schoolStats;
-    } catch (error) {
-      console.error('❌ Failed to get school data:', error);
-      return []; // Return empty array instead of throwing
-    }
-  }
-
-  private async getSchoolsWithTimeout(): Promise<Array<{
-    name: string;
-    teacher_count: number;
-    student_count: number;
-  }>> {
-    const timeout = new Promise<never>((_, reject) => 
-      setTimeout(() => reject(new Error('Timeout getting school data')), 10000)
-    );
-
-    const schoolQuery = async () => {
-      console.log('🔄 Getting school data');
-      
-      await this.setMultipleAdminContexts(this.KNOWN_ADMIN);
-      
-      // Additional delay
-      await new Promise(resolve => setTimeout(resolve, 300));
-      
-      const { data: teachersData, error: teachersError } = await supabase
+      // Get all teachers to find unique schools
+      const { data: teachersData, error: teachersError } = await supabaseServiceRole
         .from('teachers')
         .select('school');
 
@@ -261,8 +117,8 @@ class SecurePlatformAdminService {
       for (const school of uniqueSchools) {
         try {
           const [teacherResult, studentResult] = await Promise.allSettled([
-            supabase.from('teachers').select('id', { count: 'exact', head: true }).eq('school', school),
-            supabase.from('students').select('id', { count: 'exact', head: true }).eq('school', school)
+            supabaseServiceRole.from('teachers').select('id', { count: 'exact', head: true }).eq('school', school),
+            supabaseServiceRole.from('students').select('id', { count: 'exact', head: true }).eq('school', school)
           ]);
 
           const teacherCount = teacherResult.status === 'fulfilled' ? (teacherResult.value.count || 0) : 0;
@@ -283,13 +139,10 @@ class SecurePlatformAdminService {
         }
       }
 
+      console.log('🏫 School data retrieved:', schoolStats);
       return schoolStats;
-    };
-
-    try {
-      return await Promise.race([schoolQuery(), timeout]);
     } catch (error) {
-      console.error(`❌ Error in getSchoolsWithTimeout:`, error);
+      console.error('❌ Failed to get school data:', error);
       return [];
     }
   }
@@ -302,8 +155,6 @@ class SecurePlatformAdminService {
       }
 
       if (emailValidation.sanitizedValue === this.KNOWN_ADMIN) {
-        await this.setMultipleAdminContexts(emailValidation.sanitizedValue);
-        
         return {
           valid: true,
           admin: {
@@ -329,28 +180,10 @@ class SecurePlatformAdminService {
       throw new Error('Unauthorized: Not a known admin');
     }
 
-    console.log('🏫 Creating school:', schoolName);
+    console.log('🏫 Creating school with service role:', schoolName);
     
     try {
-      await this.setMultipleAdminContexts(adminEmail);
-
-      const result = await this.createSchoolWithRetry(schoolName);
-      
-      console.log('✅ School created successfully');
-      return result;
-    } catch (error) {
-      console.error('❌ School creation error:', error);
-      throw error;
-    }
-  }
-
-  private async createSchoolWithRetry(schoolName: string): Promise<any> {
-    try {
-      console.log(`🔄 Creating school: ${schoolName}`);
-      
-      await this.setMultipleAdminContexts(this.KNOWN_ADMIN);
-      
-      const { data, error } = await supabase
+      const { data, error } = await supabaseServiceRole
         .from('teachers')
         .insert({
           name: `${schoolName} Admin`,
@@ -367,13 +200,14 @@ class SecurePlatformAdminService {
         throw error;
       }
 
+      console.log('✅ School created successfully');
       return { 
         id: data.id, 
         success: true,
         message: 'School created successfully'
       };
     } catch (error) {
-      console.error(`❌ Error in createSchoolWithRetry:`, error);
+      console.error(`❌ Error creating school:`, error);
       throw error;
     }
   }
@@ -383,12 +217,10 @@ class SecurePlatformAdminService {
       throw new Error('Unauthorized: Not a known admin');
     }
 
-    console.log('🗑️ Deleting school:', schoolName);
+    console.log('🗑️ Deleting school with service role:', schoolName);
     
     try {
-      await this.setMultipleAdminContexts(adminEmail);
-
-      const { data, error } = await supabase.rpc('platform_admin_delete_school', {
+      const { data, error } = await supabaseServiceRole.rpc('platform_admin_delete_school', {
         school_name_param: schoolName,
         admin_email_param: adminEmail
       });
