@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -19,7 +18,8 @@ import {
   FilterIcon,
   InfoIcon,
   UsersIcon,
-  CalculatorIcon
+  CalculatorIcon,
+  TrashIcon
 } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
 import { calculatePricing } from "@/services/pricingService";
@@ -177,6 +177,37 @@ const TransactionManagement = () => {
       subscription_type: 'monthly',
       tier_type: 'teacher'
     });
+  };
+
+  const handleDelete = async (transactionId: string) => {
+    if (!admin?.email) {
+      toast({
+        title: "Error",
+        description: "You must be logged in as an admin",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!confirm("Are you sure you want to delete this transaction? This action cannot be undone.")) {
+      return;
+    }
+
+    try {
+      await securePlatformAdminService.deleteTransaction(admin.email, transactionId);
+      toast({
+        title: "Success",
+        description: "Transaction deleted successfully",
+      });
+      loadTransactions(); // Reload the transactions list
+    } catch (error) {
+      console.error('Error deleting transaction:', error);
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to delete transaction",
+        variant: "destructive",
+      });
+    }
   };
 
   const filteredTransactions = transactions.filter(transaction => {
@@ -439,6 +470,7 @@ const TransactionManagement = () => {
               <TableHead>Status</TableHead>
               <TableHead>Description</TableHead>
               <TableHead>Date</TableHead>
+              <TableHead>Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -475,6 +507,16 @@ const TransactionManagement = () => {
                     <CalendarIcon className="w-3 h-3" />
                     {formatDate(transaction.created_at)}
                   </div>
+                </TableCell>
+                <TableCell>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleDelete(transaction.id)}
+                    className="text-red-600 hover:text-red-800 hover:bg-red-50"
+                  >
+                    <TrashIcon className="w-4 h-4" />
+                  </Button>
                 </TableCell>
               </TableRow>
             ))}

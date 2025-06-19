@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { securityValidationService } from './securityValidationService';
 
@@ -150,6 +149,11 @@ class SecurePlatformAdminService {
 
     console.log('🗑️ Deleting school via edge function:', schoolName);
     return await this.callAdminFunction('deleteSchool', { schoolName });
+  }
+
+  async deleteTransaction(adminEmail: string, transactionId: string): Promise<any> {
+    console.log('🗑️ Deleting transaction via edge function:', transactionId);
+    return await this.callAdminFunction('deleteTransaction', { transactionId });
   }
 }
 

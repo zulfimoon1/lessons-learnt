@@ -138,6 +138,29 @@ serve(async (req) => {
         }
         break;
 
+      case 'deleteTransaction':
+        console.log('🗑️ Deleting transaction with service role privileges...');
+        const { transactionId } = params;
+        
+        try {
+          const { error: deleteTransactionError } = await supabaseAdmin
+            .from('transactions')
+            .delete()
+            .eq('id', transactionId);
+
+          if (deleteTransactionError) {
+            console.error('Delete transaction failed:', deleteTransactionError);
+            throw new Error(`Failed to delete transaction: ${deleteTransactionError.message}`);
+          }
+
+          result = { success: true, message: 'Transaction deleted successfully' };
+          console.log('✅ Transaction deleted successfully:', transactionId);
+        } catch (error) {
+          console.error('Error in deleteTransaction:', error);
+          throw error;
+        }
+        break;
+
       case 'getMentalHealthAlerts':
         console.log('🧠 Fetching mental health alerts...');
         const { data: alertsData, error: alertsError } = await supabaseAdmin
