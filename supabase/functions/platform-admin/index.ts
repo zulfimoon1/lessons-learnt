@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
@@ -194,25 +195,25 @@ serve(async (req) => {
         break;
 
       case 'getPaymentNotifications':
-        console.log('🔔 Fetching payment notifications with service role...');
+        console.log('🔔 Fetching payment notifications directly...');
         try {
-          // Use service role directly without RLS context for payment notifications
+          // Try direct query first
           const { data: notificationsData, error: notificationsError } = await supabaseAdmin
             .from('payment_notifications')
             .select('*')
             .order('created_at', { ascending: false });
 
           if (notificationsError) {
-            console.error('Error fetching payment notifications:', notificationsError);
-            // Return empty array instead of throwing error
+            console.error('Direct query failed for payment notifications:', notificationsError);
+            // Return empty array instead of throwing error for notifications
             result = [];
           } else {
             result = notificationsData || [];
             console.log(`✅ Payment notifications fetched: ${result.length}`);
           }
         } catch (error) {
-          console.error('Payment notifications fetch failed:', error);
-          // Return empty array on any error
+          console.error('Payment notifications fetch completely failed:', error);
+          // Return empty array on any error for notifications
           result = [];
         }
         break;
@@ -317,25 +318,25 @@ serve(async (req) => {
         break;
 
       case 'getMentalHealthAlerts':
-        console.log('🧠 Fetching mental health alerts with service role...');
+        console.log('🧠 Fetching mental health alerts directly...');
         try {
-          // Use service role directly without RLS context for mental health alerts
+          // Try direct query with service role
           const { data: alertsData, error: alertsError } = await supabaseAdmin
             .from('mental_health_alerts')
             .select('*')
             .order('created_at', { ascending: false });
 
           if (alertsError) {
-            console.error('Error fetching mental health alerts:', alertsError);
-            // Return empty array instead of throwing error
+            console.error('Direct query failed for mental health alerts:', alertsError);
+            // Return empty array instead of throwing error for alerts
             result = [];
           } else {
             console.log(`✅ Mental health alerts fetched: ${alertsData?.length || 0}`);
             result = alertsData || [];
           }
         } catch (error) {
-          console.error('Mental health alerts fetch failed:', error);
-          // Return empty array on any error
+          console.error('Mental health alerts fetch completely failed:', error);
+          // Return empty array on any error for alerts
           result = [];
         }
         break;
