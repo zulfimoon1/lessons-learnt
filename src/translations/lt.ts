@@ -181,8 +181,6 @@ export const ltTranslations = {
   'pricing.backToDashboard': 'Grįžti į skydelį',
   'pricing.paymentError': 'Mokėjimo klaida',
   'pricing.paymentErrorDesc': 'Nepavyko sukurti mokėjimo. Bandykite dar kartą.',
-  
-  // Pricing Showcase specific translations
   'pricing.amazingPricing': 'Nuostabi kainodara',
   'pricing.transformSchoolLess': 'Transformuokite savo mokyklą už mažiau nei',
   'pricing.perTeacherMonth': 'Per mokytoją/mėnesį',
