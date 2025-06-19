@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { usePlatformAdmin } from "@/contexts/PlatformAdminContext";
-import { supabase } from "@/integrations/supabase/client";
+import { securePlatformAdminService } from "@/services/securePlatformAdminService";
 import { 
   PlusIcon, 
   CreditCardIcon,
@@ -37,7 +37,7 @@ const TransactionManagement = () => {
   const [formData, setFormData] = useState({
     school_name: '',
     amount: '',
-    currency: 'eur', // Changed default to EUR
+    currency: 'eur',
     transaction_type: 'payment',
     status: 'completed',
     description: '',
@@ -54,24 +54,26 @@ const TransactionManagement = () => {
 
   const loadTransactions = async () => {
     try {
-      console.log('=== LOADING TRANSACTIONS ===');
+      console.log('=== LOADING TRANSACTIONS VIA ADMIN SERVICE ===');
 
-      const { data: transactionsData, error } = await supabase
-        .from('transactions')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (error) {
-        console.error('Error fetching transactions:', error);
+      if (!admin?.email) {
+        console.error('No admin email available');
         setTransactions([]);
         return;
       }
 
-      setTransactions(transactionsData || []);
-      console.log('Transactions loaded successfully:', transactionsData?.length || 0);
+      // Use the secure admin service instead of direct Supabase calls
+      const result = await securePlatformAdminService.getTransactions(admin.email);
+      setTransactions(result || []);
+      console.log('Transactions loaded successfully:', result?.length || 0);
       
     } catch (error) {
       console.error('Error loading transactions:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load transactions",
+        variant: "destructive",
+      });
       setTransactions([]);
     } finally {
       setIsLoading(false);
@@ -131,43 +133,31 @@ const TransactionManagement = () => {
         description = description ? `${description} (${subscriptionDetails})` : subscriptionDetails;
       }
 
-      const { data, error } = await supabase
-        .from('transactions')
-        .insert([{
-          school_name: formData.school_name.trim(),
-          amount: Math.round(parseFloat(formData.amount) * 100), // Convert to cents
-          currency: formData.currency,
-          transaction_type: formData.transaction_type,
-          status: formData.status,
-          description: description,
-          created_by: admin.id
-        }])
-        .select()
-        .single();
-
-      if (error) {
-        console.error('Error creating transaction:', error);
-        toast({
-          title: "Error",
-          description: error.message || "Failed to create transaction",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      toast({
-        title: "Success",
-        description: "Manual transaction created successfully. School admins can view this in their subscription management section.",
+      // Use the secure admin service to create transaction
+      const result = await securePlatformAdminService.createTransaction(admin.email, {
+        school_name: formData.school_name.trim(),
+        amount: formData.amount,
+        currency: formData.currency,
+        transaction_type: formData.transaction_type,
+        status: formData.status,
+        description: description
       });
 
-      resetForm();
-      setIsCreateDialogOpen(false);
-      loadTransactions();
+      if (result) {
+        toast({
+          title: "Success",
+          description: "Manual transaction created successfully. School admins can view this in their subscription management section.",
+        });
+
+        resetForm();
+        setIsCreateDialogOpen(false);
+        loadTransactions();
+      }
     } catch (error) {
       console.error('Error creating transaction:', error);
       toast({
         title: "Error",
-        description: "Failed to create transaction",
+        description: error instanceof Error ? error.message : "Failed to create transaction",
         variant: "destructive",
       });
     } finally {
@@ -179,7 +169,7 @@ const TransactionManagement = () => {
     setFormData({
       school_name: '',
       amount: '',
-      currency: 'eur', // Reset to EUR default
+      currency: 'eur',
       transaction_type: 'payment',
       status: 'completed',
       description: '',

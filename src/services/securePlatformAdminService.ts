@@ -96,6 +96,16 @@ class SecurePlatformAdminService {
     return await this.callAdminFunction('getSchoolData');
   }
 
+  async getTransactions(adminEmail: string): Promise<any[]> {
+    console.log('💳 Getting transactions via edge function...');
+    return await this.callAdminFunction('getTransactions');
+  }
+
+  async createTransaction(adminEmail: string, transactionData: any): Promise<any> {
+    console.log('💳 Creating transaction via edge function...');
+    return await this.callAdminFunction('createTransaction', { transactionData });
+  }
+
   async validateAdminSession(email: string): Promise<{ valid: boolean; admin?: AdminUser }> {
     try {
       const emailValidation = securityValidationService.validateInput(email, 'email');
