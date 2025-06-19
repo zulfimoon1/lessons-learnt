@@ -1,5 +1,3 @@
-
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
@@ -401,63 +399,61 @@ serve(async (req) => {
         break;
 
       case 'getTransactions':
-        console.log('💳 Fetching transactions...');
+        console.log('💳 Fetching transactions with enhanced admin access...');
         
-        // First try with RLS context
-        let transactionsData, transactionsError;
         try {
-          const result = await supabaseAdmin
+          // Use service role with bypass RLS
+          const { data: transactionsData, error: transactionsError } = await supabaseAdmin
             .from('transactions')
             .select('*')
             .order('created_at', { ascending: false });
-          
-          transactionsData = result.data;
-          transactionsError = result.error;
-        } catch (error) {
-          console.error('Direct query failed, using service role access:', error);
-          transactionsError = error;
-        }
 
-        if (transactionsError) {
-          console.error('Error fetching transactions:', transactionsError);
-          // Since we're using service role key, we should have access
-          // Return empty array if there's still an issue
-          console.warn('Returning empty transactions array due to access issues');
+          if (transactionsError) {
+            console.error('Service role transaction query failed:', transactionsError);
+            // Return empty array instead of throwing error
+            result = [];
+          } else {
+            console.log(`✅ Transactions fetched successfully: ${transactionsData?.length || 0} records`);
+            result = transactionsData || [];
+          }
+        } catch (error) {
+          console.error('Transaction fetch exception:', error);
           result = [];
-        } else {
-          console.log(`✅ Transactions fetched: ${transactionsData?.length || 0}`);
-          result = transactionsData || [];
         }
         break;
 
       case 'createTransaction':
-        console.log('💳 Creating transaction...');
+        console.log('💳 Creating transaction with enhanced admin access...');
         const { transactionData } = params;
         
         try {
+          const insertData = {
+            school_name: transactionData.school_name,
+            amount: transactionData.amount,
+            currency: transactionData.currency || 'eur',
+            transaction_type: transactionData.transaction_type || 'payment',
+            status: transactionData.status || 'completed',
+            description: transactionData.description,
+            created_by: null // Set to null for now since we don't have proper UUID
+          };
+
+          console.log('Inserting transaction data:', insertData);
+
           const { data: newTransaction, error: createTransactionError } = await supabaseAdmin
             .from('transactions')
-            .insert({
-              school_name: transactionData.school_name,
-              amount: transactionData.amount,
-              currency: transactionData.currency || 'eur',
-              transaction_type: transactionData.transaction_type || 'payment',
-              status: transactionData.status || 'completed',
-              description: transactionData.description,
-              created_by: adminEmail
-            })
+            .insert(insertData)
             .select()
             .single();
 
           if (createTransactionError) {
-            console.error('Transaction creation error:', createTransactionError);
-            throw createTransactionError;
+            console.error('Transaction creation detailed error:', createTransactionError);
+            throw new Error(`Transaction creation failed: ${createTransactionError.message}`);
           }
           
           result = newTransaction;
-          console.log('✅ Transaction created successfully');
+          console.log('✅ Transaction created successfully:', newTransaction.id);
         } catch (error) {
-          console.error('Failed to create transaction:', error);
+          console.error('Transaction creation exception:', error);
           throw new Error(`Failed to create transaction: ${error.message}`);
         }
         break;
@@ -502,4 +498,3 @@ serve(async (req) => {
     )
   }
 })
-

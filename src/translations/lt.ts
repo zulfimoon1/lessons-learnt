@@ -1,3 +1,4 @@
+
 import { ltDemoTranslations } from './lt/demo';
 import { ltAuthTranslations } from './lt/auth';
 import { ltChatTranslations } from './lt/chat';
@@ -224,6 +225,15 @@ export const ltTranslations = {
   'pricing.questionsContact': 'Klausimai? Susisiekite su mūsų komanda dėl asmeninio demonstracinio ir kainodaros konsultacijos.',
 
   // NEW CUSTOM PRICING TRANSLATIONS - ADDED
+  'pricing.customPricingAvailable': 'Prieinami individualūs kainodaros sprendimai',
+  'pricing.customSolutionTitle': 'Reikia individualaus sprendimo jūsų organizacijai?',
+  'pricing.customSolutionDescription': 'Siūlome pritaikytą kaindarą ir funkcijas mokyklų rajonams, didelėms organizacijoms ir įmonės klientams. Gaukite didmenų nuolaidas, individuales integracijas ir atskirą palaikymą.',
+  'pricing.requestCustomPricing': 'Prašyti individualios kainodaros',
+  'pricing.perfectForLargeOrgs': 'Puikus pasirinkimas 50+ mokytojų ar rajono masto diegimui',
+  'pricing.comingSoonCustom': 'Netrukus bus prieinama',
+  'pricing.customPricingFormSoon': 'Individualios kainodaros forma bus prieinama netrukus. Kol kas susisiekite su palaikymu.',
+
+  // MISSING CUSTOM PRICING TRANSLATIONS FOR PRICING SHOWCASE PAGE
   'pricing.customPricingAvailable': 'Prieinami individualūs kainodaros sprendimai',
   'pricing.customSolutionTitle': 'Reikia individualaus sprendimo jūsų organizacijai?',
   'pricing.customSolutionDescription': 'Siūlome pritaikytą kaindarą ir funkcijas mokyklų rajonams, didelėms organizacijoms ir įmonės klientams. Gaukite didmenų nuolaidas, individuales integracijas ir atskirą palaikymą.',
