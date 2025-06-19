@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
@@ -39,10 +40,11 @@ serve(async (req) => {
       throw new Error('Unauthorized: Not a platform admin')
     }
 
-    // Set admin context for all operations with multiple approaches
+    // Set admin context for all operations with enhanced approach
     try {
       // Set multiple context variables for maximum compatibility
       await supabaseAdmin.rpc('set_platform_admin_context', { admin_email: adminEmail });
+      console.log('✅ Platform admin context set successfully');
     } catch (error) {
       console.warn('Failed to set platform admin context via RPC, continuing with service role access');
     }
@@ -395,6 +397,46 @@ serve(async (req) => {
         result = { success: true, message: 'Discount code deleted successfully' };
         
         console.log('✅ Discount code deleted successfully');
+        break;
+
+      case 'getTransactions':
+        console.log('💳 Fetching transactions...');
+        const { data: transactionsData, error: transactionsError } = await supabaseAdmin
+          .from('transactions')
+          .select('*')
+          .order('created_at', { ascending: false });
+
+        if (transactionsError) {
+          console.error('Error fetching transactions:', transactionsError);
+          throw transactionsError;
+        }
+
+        console.log(`✅ Transactions fetched: ${transactionsData?.length || 0}`);
+        result = transactionsData || [];
+        break;
+
+      case 'createTransaction':
+        console.log('💳 Creating transaction...');
+        const { transactionData } = params;
+        
+        const { data: newTransaction, error: createTransactionError } = await supabaseAdmin
+          .from('transactions')
+          .insert({
+            school_name: transactionData.school_name,
+            amount: transactionData.amount,
+            currency: transactionData.currency || 'eur',
+            transaction_type: transactionData.transaction_type || 'payment',
+            status: transactionData.status || 'completed',
+            description: transactionData.description,
+            created_by: adminEmail
+          })
+          .select()
+          .single();
+
+        if (createTransactionError) throw createTransactionError;
+        result = newTransaction;
+        
+        console.log('✅ Transaction created successfully');
         break;
 
       case 'testConnection':
