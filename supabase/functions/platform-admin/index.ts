@@ -382,76 +382,39 @@ serve(async (req) => {
         break;
 
       case 'getTransactions':
-        console.log('💳 Fetching transactions with service role...');
+        console.log('💳 Fetching transactions with elevated privileges...');
         
-        try {
-          // Try using the RPC function first
-          const { data: rpcData, error: rpcError } = await supabaseAdmin.rpc('get_all_transactions_admin');
-          
-          if (rpcData && !rpcError) {
-            result = rpcData;
-            console.log(`✅ Transactions fetched via RPC: ${result.length} records`);
-          } else {
-            console.log('RPC failed, trying direct access...');
-            throw new Error('RPC method failed');
-          }
-        } catch (error) {
-          console.log('Trying direct table access with service role...');
-          // Direct access with service role should work now
-          const { data: transactionsData, error: transactionsError } = await supabaseAdmin
-            .from('transactions')
-            .select('*')
-            .order('created_at', { ascending: false });
-          
-          if (transactionsError) {
-            console.error('Direct transaction query failed:', transactionsError);
-            // Create some sample data for demonstration
-            result = [
-              {
-                id: 'sample-1',
-                school_name: 'Demo School A',
-                amount: 999,
-                currency: 'eur',
-                transaction_type: 'payment',
-                status: 'completed',
-                description: 'Monthly subscription',
-                created_at: new Date().toISOString(),
-                created_by: null
-              },
-              {
-                id: 'sample-2',
-                school_name: 'Demo School B',
-                amount: 1999,
-                currency: 'eur',
-                transaction_type: 'payment',
-                status: 'completed',
-                description: 'Annual subscription',
-                created_at: new Date(Date.now() - 86400000).toISOString(),
-                created_by: null
-              }
-            ];
-            console.log('⚠️ Using sample transaction data due to access restrictions');
-          } else {
-            result = transactionsData || [];
-            console.log(`✅ Transactions fetched directly: ${result.length} records`);
-          }
+        // Use service role to bypass RLS completely
+        const { data: transactionsData, error: transactionsError } = await supabaseAdmin
+          .from('transactions')
+          .select('*')
+          .order('created_at', { ascending: false });
+        
+        if (transactionsError) {
+          console.error('Error fetching transactions:', transactionsError);
+          // Return empty array instead of mock data to show the real state
+          result = [];
+        } else {
+          result = transactionsData || [];
+          console.log(`✅ Transactions fetched successfully: ${result.length} records`);
         }
         break;
 
       case 'createTransaction':
-        console.log('💳 Creating transaction...');
+        console.log('💳 Creating transaction with elevated privileges...');
         const { transactionData } = params;
         
         const insertData = {
           school_name: transactionData.school_name,
-          amount: transactionData.amount,
+          amount: Math.round(parseFloat(transactionData.amount) * 100), // Convert to cents
           currency: transactionData.currency || 'eur',
           transaction_type: transactionData.transaction_type || 'payment',
           status: transactionData.status || 'completed',
-          description: transactionData.description,
-          created_by: null
+          description: transactionData.description || '',
+          created_by: null // Platform admin creation
         };
 
+        // Use service role to bypass RLS completely
         const { data: newTransaction, error: createTransactionError } = await supabaseAdmin
           .from('transactions')
           .insert(insertData)
@@ -460,17 +423,11 @@ serve(async (req) => {
 
         if (createTransactionError) {
           console.error('Transaction creation error:', createTransactionError);
-          // Return mock success if creation fails due to permissions
-          result = {
-            id: 'mock-' + Date.now(),
-            ...insertData,
-            created_at: new Date().toISOString()
-          };
-          console.log('⚠️ Returning mock transaction due to creation restrictions');
-        } else {
-          result = newTransaction;
-          console.log('✅ Transaction created successfully:', newTransaction.id);
+          throw new Error(`Failed to create transaction: ${createTransactionError.message}`);
         }
+
+        result = newTransaction;
+        console.log('✅ Transaction created successfully:', newTransaction.id);
         break;
 
       case 'testConnection':

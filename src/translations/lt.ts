@@ -222,6 +222,17 @@ export const ltTranslations = {
   'pricing.signUpEducator': 'Registruotis kaip mokytojas',
   'pricing.questionsContact': 'Klausimai? Susisiekite su mūsų komanda dėl asmeninio demonstracinio ir kainodaros konsultacijos.',
 
+  // Custom Pricing Section translations
+  'pricing.customPricing': 'Individualus kainodaros sprendimas',
+  'pricing.customPricingAvailable': 'Galima individuali kainodara',
+  'pricing.needCustomSolution': 'Reikia individualaus sprendimo jūsų organizacijai?',
+  'pricing.customPricingDescription': 'Siūlome individualų kainodaros ir funkcijų paketą mokyklų rajonams, didelėms organizacijoms ir įmonės klientams. Gaukite didmenų nuolaidas, individualius integravimus ir specialų palaikymą.',
+  'pricing.requestCustomPricing': 'Prašyti individualios kainodaros',
+  'pricing.perfectForLargeOrgs': 'Puikus 50+ mokytojų arba rajono masto diegimui',
+  'pricing.comingSoon': 'Netrukus',
+  'pricing.customPricingFormSoon': 'Individualios kainodaros forma netrukus bus prieinama. Kol kas susisiekite su palaikymu.',
+  'pricing.contactSupport': 'Susisiekite su palaikymu',
+
   // Dashboard translations - Platform Admin specific
   'dashboard.platformAdmin': 'Platformos administratoriaus skydelis',
   'dashboard.systemInformation': 'Sistemos informacija',
