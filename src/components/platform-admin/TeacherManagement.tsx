@@ -49,17 +49,8 @@ const TeacherManagement: React.FC = () => {
       if (error) throw error;
       
       if (data?.success) {
-        // Filter out administrative entries and mock data
-        const realTeachers = (data.data || []).filter((teacher: Teacher) => 
-          teacher.school !== 'Platform Administration' && 
-          !teacher.school?.toLowerCase().includes('admin') &&
-          !teacher.school?.toLowerCase().includes('mock') &&
-          !teacher.school?.toLowerCase().includes('test') &&
-          !teacher.name?.toLowerCase().includes('mock') &&
-          !teacher.name?.toLowerCase().includes('test')
-        );
-        console.log('✅ Real teachers fetched:', realTeachers.length);
-        setTeachers(realTeachers);
+        console.log('✅ Teachers fetched:', data.data?.length || 0);
+        setTeachers(data.data || []);
       } else {
         throw new Error(data?.error || 'Failed to fetch teachers');
       }
@@ -83,16 +74,8 @@ const TeacherManagement: React.FC = () => {
       if (error) throw error;
       
       if (data?.success) {
-        // Filter out administrative entries and mock data
-        const schoolNames = (data.data || [])
-          .map((school: any) => school.name)
-          .filter((name: string) => name && 
-            name !== 'Platform Administration' && 
-            !name.toLowerCase().includes('admin') &&
-            !name.toLowerCase().includes('mock') &&
-            !name.toLowerCase().includes('test')
-          );
-        console.log('✅ Real schools fetched:', schoolNames.length);
+        const schoolNames = (data.data || []).map((school: any) => school.name);
+        console.log('✅ Schools fetched:', schoolNames.length);
         setSchools(schoolNames);
       } else {
         throw new Error(data?.error || 'Failed to fetch schools');
@@ -267,7 +250,7 @@ const TeacherManagement: React.FC = () => {
                       </SelectItem>
                     ))
                   ) : (
-                    <SelectItem value="no-schools-available" disabled>
+                    <SelectItem value="__no_schools__" disabled>
                       No schools available
                     </SelectItem>
                   )}

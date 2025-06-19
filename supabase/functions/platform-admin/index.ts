@@ -67,37 +67,9 @@ serve(async (req) => {
 
         if (teachersError) throw teachersError;
 
-        // Enhanced filtering to remove ALL hardcoded/test/mock entries
-        const realTeachers = (teachersData || []).filter(teacher => {
-          const schoolLower = teacher.school?.toLowerCase() || '';
-          const nameLower = teacher.name?.toLowerCase() || '';
-          const emailLower = teacher.email?.toLowerCase() || '';
-          
-          // Filter out any administrative, mock, test, or hardcoded entries
-          return teacher.school !== 'Platform Administration' && 
-            !schoolLower.includes('admin') &&
-            !schoolLower.includes('mock') &&
-            !schoolLower.includes('test') &&
-            !schoolLower.includes('demo') &&
-            !schoolLower.includes('sample') &&
-            !nameLower.includes('mock') &&
-            !nameLower.includes('test') &&
-            !nameLower.includes('demo') &&
-            !nameLower.includes('sample') &&
-            !emailLower.includes('mock') &&
-            !emailLower.includes('test') &&
-            !emailLower.includes('demo') &&
-            !emailLower.includes('sample') &&
-            !emailLower.includes('example') &&
-            teacher.email !== 'test@example.com' &&
-            teacher.email !== 'testteacher@test.com' &&
-            teacher.name !== 'Test Teacher' &&
-            teacher.name !== 'Mock Teacher' &&
-            teacher.name !== 'Demo Teacher';
-        });
-
-        console.log(`Filtered ${teachersData?.length || 0} teachers down to ${realTeachers.length} real teachers`);
-        result = realTeachers;
+        // Since we've removed hardcoded teachers from DB, we can return all results
+        console.log(`Retrieved ${teachersData?.length || 0} teachers from database`);
+        result = teachersData || [];
         break;
 
       case 'createTeacher':
@@ -137,19 +109,10 @@ serve(async (req) => {
           .from('teachers')
           .select('school');
 
-        // Enhanced filtering for schools - remove all mock/test/demo entries
+        // Get unique schools (hardcoded ones already removed from DB)
         const uniqueSchools = [...new Set(
           teachersSchoolData?.map(t => t.school)
-            .filter(school => {
-              if (!school) return false;
-              const schoolLower = school.toLowerCase();
-              return school !== 'Platform Administration' && 
-                !schoolLower.includes('admin') &&
-                !schoolLower.includes('mock') &&
-                !schoolLower.includes('test') &&
-                !schoolLower.includes('demo') &&
-                !schoolLower.includes('sample');
-            }) || []
+            .filter(school => school) || []
         )];
         
         const schoolStats = [];
