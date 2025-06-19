@@ -115,27 +115,55 @@ serve(async (req) => {
         break;
 
       case 'cleanupDemoData':
-        console.log('🧹 Cleaning up demo data...');
+        console.log('🧹 Starting comprehensive demo data cleanup...');
         
-        // Delete demo/test subscriptions
-        const { error: cleanupError } = await supabaseAdmin
-          .from('subscriptions')
-          .delete()
-          .or('school_name.eq.demo school,school_name.eq.Default School');
+        try {
+          // Delete subscriptions with demo-related school names (case insensitive)
+          const { data: demoSubscriptions, error: fetchError } = await supabaseAdmin
+            .from('subscriptions')
+            .select('*')
+            .or('school_name.ilike.%demo%,school_name.ilike.%default%,school_name.ilike.%test%');
 
-        if (cleanupError) {
-          console.error('Error cleaning up demo data:', cleanupError);
-          throw cleanupError;
+          if (fetchError) {
+            console.error('Error fetching demo subscriptions:', fetchError);
+            throw fetchError;
+          }
+
+          console.log(`Found ${demoSubscriptions?.length || 0} demo subscriptions to delete`);
+          
+          if (demoSubscriptions && demoSubscriptions.length > 0) {
+            const subscriptionIds = demoSubscriptions.map(sub => sub.id);
+            
+            const { error: deleteError } = await supabaseAdmin
+              .from('subscriptions')
+              .delete()
+              .in('id', subscriptionIds);
+
+            if (deleteError) {
+              console.error('Error deleting demo subscriptions:', deleteError);
+              throw deleteError;
+            }
+            
+            console.log(`✅ Deleted ${demoSubscriptions.length} demo subscriptions`);
+          }
+
+          result = { 
+            success: true, 
+            message: `Demo data cleanup completed. Deleted ${demoSubscriptions?.length || 0} demo subscriptions.`,
+            deletedCount: demoSubscriptions?.length || 0
+          };
+        } catch (error) {
+          console.error('Demo cleanup failed:', error);
+          throw new Error(`Demo cleanup failed: ${error.message}`);
         }
-
-        result = { success: true, message: 'Demo data cleaned up successfully' };
-        console.log('✅ Demo data cleanup completed');
         break;
 
       case 'getPaymentNotifications':
-        console.log('🔔 Fetching payment notifications...');
+        console.log('🔔 Fetching payment notifications with admin privileges...');
         try {
-          // Use service role to bypass RLS completely
+          // Set admin context before querying
+          await supabaseAdmin.rpc('set_platform_admin_context', { admin_email: adminEmail });
+          
           const { data: notificationsData, error: notificationsError } = await supabaseAdmin
             .from('payment_notifications')
             .select('*')
@@ -143,7 +171,6 @@ serve(async (req) => {
 
           if (notificationsError) {
             console.error('Error fetching payment notifications:', notificationsError);
-            // Return empty array instead of throwing to prevent dashboard breaking
             result = [];
           } else {
             result = notificationsData || [];
@@ -151,7 +178,7 @@ serve(async (req) => {
           }
         } catch (error) {
           console.error('Payment notifications fetch failed:', error);
-          result = []; // Return empty array to prevent breaking
+          result = [];
         }
         break;
 
