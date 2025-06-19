@@ -55,7 +55,14 @@ serve(async (req) => {
           .from('teachers')
           .select('school');
 
-        const uniqueSchools = [...new Set(teachersData?.map(t => t.school).filter(Boolean) || [])];
+        // Filter out administrative entries and get unique schools
+        const uniqueSchools = [...new Set(
+          teachersData?.map(t => t.school)
+            .filter(school => school && 
+              school !== 'Platform Administration' && 
+              !school.toLowerCase().includes('admin')
+            ) || []
+        )];
         
         const schoolStats = [];
         for (const school of uniqueSchools) {

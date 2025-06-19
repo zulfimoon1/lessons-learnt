@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { usePlatformAdmin } from "@/contexts/PlatformAdminContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -93,20 +92,26 @@ const PlatformAdminDashboard = () => {
       console.log('📊 Platform stats received:', platformStats);
       console.log('📊 School data received:', schoolData);
 
-      const schoolStatsProcessed = schoolData.map((school: any) => ({
+      // Filter out administrative/non-school entries
+      const realSchools = schoolData.filter((school: any) => 
+        school.name && 
+        school.name !== 'Platform Administration' &&
+        !school.name.toLowerCase().includes('admin')
+      );
+
+      const schoolStatsProcessed = realSchools.map((school: any) => ({
         school: school.name,
         total_teachers: school.teacher_count
       }));
 
-      const monthlyRevenue = platformStats.subscriptionsCount * 49.99;
-      
+      // Don't calculate revenue - get it from actual data
       const newStats = {
         totalStudents: platformStats.studentsCount,
         totalTeachers: platformStats.teachersCount,
-        totalSchools: schoolData.length,
+        totalSchools: realSchools.length,
         totalResponses: platformStats.responsesCount,
         totalSubscriptions: platformStats.subscriptionsCount,
-        monthlyRevenue: monthlyRevenue,
+        monthlyRevenue: 0, // Set to 0 until we have real revenue data
       };
 
       console.log('📊 Final stats assembled:', newStats);
