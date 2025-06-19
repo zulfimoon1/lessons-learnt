@@ -61,12 +61,18 @@ class SecurePlatformAdminService {
       });
 
       if (error) {
-        console.error(`❌ Admin function error:`, error);
-        throw error;
+        console.error(`❌ Admin function error for ${operation}:`, error);
+        throw new Error(`Function call failed: ${error.message || 'Unknown error'}`);
+      }
+
+      if (!data) {
+        console.error(`❌ No data returned from ${operation}`);
+        throw new Error(`No data returned from ${operation}`);
       }
 
       if (!data.success) {
-        throw new Error(data.error || 'Operation failed');
+        console.error(`❌ Function returned error for ${operation}:`, data.error);
+        throw new Error(data.error || `Operation ${operation} failed`);
       }
 
       console.log(`✅ Admin function success: ${operation}`);
@@ -98,12 +104,26 @@ class SecurePlatformAdminService {
 
   async getTransactions(adminEmail: string): Promise<any[]> {
     console.log('💳 Getting transactions via edge function...');
-    return await this.callAdminFunction('getTransactions');
+    try {
+      const transactions = await this.callAdminFunction('getTransactions');
+      console.log('💳 Transactions received:', transactions?.length || 0, 'records');
+      return transactions || [];
+    } catch (error) {
+      console.error('💳 Failed to get transactions:', error);
+      return [];
+    }
   }
 
   async getPaymentNotifications(adminEmail: string): Promise<any[]> {
     console.log('🔔 Getting payment notifications via edge function...');
-    return await this.callAdminFunction('getPaymentNotifications');
+    try {
+      const notifications = await this.callAdminFunction('getPaymentNotifications');
+      console.log('🔔 Payment notifications received:', notifications?.length || 0, 'records');
+      return notifications || [];
+    } catch (error) {
+      console.error('🔔 Failed to get payment notifications:', error);
+      return [];
+    }
   }
 
   async createTransaction(adminEmail: string, transactionData: any): Promise<any> {
@@ -165,6 +185,48 @@ class SecurePlatformAdminService {
   async deleteTransaction(adminEmail: string, transactionId: string): Promise<any> {
     console.log('🗑️ Deleting transaction via edge function:', transactionId);
     return await this.callAdminFunction('deleteTransaction', { transactionId });
+  }
+
+  calculateMonthlyRevenue(transactions: any[]): number {
+    if (!transactions || transactions.length === 0) {
+      console.log('💰 No transactions found for revenue calculation');
+      return 0;
+    }
+
+    console.log('💰 Calculating revenue from', transactions.length, 'transactions');
+
+    const currentMonth = new Date().getMonth();
+    const currentYear = new Date().getFullYear();
+
+    const monthlyRevenue = transactions
+      .filter(transaction => {
+        if (!transaction.created_at) return false;
+        
+        const transactionDate = new Date(transaction.created_at);
+        const isCurrentMonth = transactionDate.getMonth() === currentMonth && 
+                              transactionDate.getFullYear() === currentYear;
+        const isCompleted = transaction.status === 'completed';
+        const isPayment = transaction.transaction_type === 'payment';
+        
+        console.log('💰 Checking transaction:', {
+          id: transaction.id,
+          amount: transaction.amount,
+          date: transaction.created_at,
+          isCurrentMonth,
+          isCompleted,
+          isPayment
+        });
+        
+        return isCurrentMonth && isCompleted && isPayment;
+      })
+      .reduce((total, transaction) => {
+        const amount = transaction.amount || 0;
+        console.log('💰 Adding to revenue:', amount / 100, 'EUR');
+        return total + amount;
+      }, 0);
+
+    console.log('💰 Total monthly revenue:', monthlyRevenue / 100, 'EUR');
+    return monthlyRevenue / 100; // Convert from cents to euros
   }
 }
 

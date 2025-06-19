@@ -66,6 +66,7 @@ const PlatformAdminDashboard = () => {
   const [lastUpdated, setLastUpdated] = useState<string>("");
   const [refreshKey, setRefreshKey] = useState(0);
   const [hasDataLoaded, setHasDataLoaded] = useState(false);
+  const [fetchError, setFetchError] = useState<string>("");
 
   console.log('📊 DASHBOARD: State check', { 
     admin: !!admin, 
@@ -82,17 +83,29 @@ const PlatformAdminDashboard = () => {
     }
 
     setIsRefreshing(true);
+    setFetchError("");
     
     try {
       console.log('📊 Getting platform stats for admin:', admin.email);
       
-      const [platformStats, schoolData] = await Promise.all([
-        securePlatformAdminService.getPlatformStats(admin.email),
-        securePlatformAdminService.getSchoolData(admin.email)
+      const [platformStats, schoolData, transactions] = await Promise.all([
+        securePlatformAdminService.getPlatformStats(admin.email).catch(error => {
+          console.error('Failed to get platform stats:', error);
+          return { studentsCount: 0, teachersCount: 0, responsesCount: 0, subscriptionsCount: 0 };
+        }),
+        securePlatformAdminService.getSchoolData(admin.email).catch(error => {
+          console.error('Failed to get school data:', error);
+          return [];
+        }),
+        securePlatformAdminService.getTransactions(admin.email).catch(error => {
+          console.error('Failed to get transactions:', error);
+          return [];
+        })
       ]);
 
       console.log('📊 Platform stats received:', platformStats);
       console.log('📊 School data received:', schoolData);
+      console.log('📊 Transactions received:', transactions);
 
       // Filter out administrative/non-school entries
       const realSchools = schoolData.filter((school: any) => 
@@ -106,14 +119,16 @@ const PlatformAdminDashboard = () => {
         total_teachers: school.teacher_count
       }));
 
-      // Don't calculate revenue - get it from actual data
+      // Calculate monthly revenue from transactions
+      const monthlyRevenue = securePlatformAdminService.calculateMonthlyRevenue(transactions);
+
       const newStats = {
         totalStudents: platformStats.studentsCount,
         totalTeachers: platformStats.teachersCount,
         totalSchools: realSchools.length,
         totalResponses: platformStats.responsesCount,
         totalSubscriptions: platformStats.subscriptionsCount,
-        monthlyRevenue: 0, // Set to 0 until we have real revenue data
+        monthlyRevenue: monthlyRevenue,
       };
 
       console.log('📊 Final stats assembled:', newStats);
@@ -129,7 +144,9 @@ const PlatformAdminDashboard = () => {
       
     } catch (error) {
       console.error('❌ Failed to fetch dashboard stats:', error);
-      toast.error(`Failed to load data: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      setFetchError(errorMessage);
+      toast.error(`Failed to load data: ${errorMessage}`);
     } finally {
       setIsRefreshing(false);
     }
@@ -246,6 +263,14 @@ const PlatformAdminDashboard = () => {
       </header>
 
       <div className="max-w-7xl mx-auto px-6 py-8">
+        {/* Error Display */}
+        {fetchError && (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+            <div className="text-red-800 font-medium">Error loading data:</div>
+            <div className="text-red-600 text-sm mt-1">{fetchError}</div>
+          </div>
+        )}
+
         {/* Loading State */}
         {isRefreshing && !hasDataLoaded && (
           <div className="text-center py-8">
@@ -350,7 +375,7 @@ const PlatformAdminDashboard = () => {
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm mt-4">
                 <div>
                   <span className="font-medium text-gray-700">Monthly Revenue:</span>
-                  <span className="ml-2 text-green-600">${stats.monthlyRevenue.toFixed(2)}</span>
+                  <span className="ml-2 text-green-600">€{stats.monthlyRevenue.toFixed(2)}</span>
                 </div>
                 <div>
                   <span className="font-medium text-gray-700">Active Subscriptions:</span>
