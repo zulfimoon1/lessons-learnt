@@ -55,19 +55,19 @@ class SecurePlatformAdminService {
     try {
       console.log('🔧 Setting admin context for:', adminEmail);
       
-      // Set multiple context variables for redundancy
-      const { error } = await supabase.rpc('set_platform_admin_context', { 
+      // Set admin context using the RPC function
+      const { error: rpcError } = await supabase.rpc('set_platform_admin_context', { 
         admin_email: adminEmail 
       });
       
-      if (error) {
-        console.warn('⚠️ Context setting warning:', error);
+      if (rpcError) {
+        console.warn('⚠️ RPC context setting warning:', rpcError);
       } else {
-        console.log('✅ Admin context set successfully');
+        console.log('✅ Admin context set via RPC successfully');
       }
       
-      // Wait a bit for context to propagate
-      await new Promise(resolve => setTimeout(resolve, 200));
+      // Wait longer for context to propagate
+      await new Promise(resolve => setTimeout(resolve, 500));
       
     } catch (error) {
       console.warn('⚠️ Failed to set admin context:', error);
@@ -85,12 +85,12 @@ class SecurePlatformAdminService {
     try {
       await this.ensureAdminContext(adminEmail);
       
-      // Use the platform admin stats function which has elevated privileges
+      // Use direct queries with retry logic for better reliability
       const results = await Promise.allSettled([
-        supabase.rpc('get_platform_stats', { stat_type: 'students' }),
-        supabase.rpc('get_platform_stats', { stat_type: 'teachers' }),
-        supabase.rpc('get_platform_stats', { stat_type: 'feedback' }),
-        supabase.from('subscriptions').select('id', { count: 'exact', head: true })
+        this.getCountWithRetry('students'),
+        this.getCountWithRetry('teachers'),
+        this.getCountWithRetry('feedback'),
+        this.getCountWithRetry('subscriptions')
       ]);
 
       let studentsCount = 0;
@@ -98,17 +98,17 @@ class SecurePlatformAdminService {
       let responsesCount = 0;
       let subscriptionsCount = 0;
 
-      if (results[0].status === 'fulfilled' && results[0].value.data?.[0]?.count) {
-        studentsCount = Number(results[0].value.data[0].count);
+      if (results[0].status === 'fulfilled') {
+        studentsCount = results[0].value;
       }
-      if (results[1].status === 'fulfilled' && results[1].value.data?.[0]?.count) {
-        teachersCount = Number(results[1].value.data[0].count);
+      if (results[1].status === 'fulfilled') {
+        teachersCount = results[1].value;
       }
-      if (results[2].status === 'fulfilled' && results[2].value.data?.[0]?.count) {
-        responsesCount = Number(results[2].value.data[0].count);
+      if (results[2].status === 'fulfilled') {
+        responsesCount = results[2].value;
       }
       if (results[3].status === 'fulfilled') {
-        subscriptionsCount = results[3].value.count || 0;
+        subscriptionsCount = results[3].value;
       }
 
       console.log('📊 Platform stats:', { studentsCount, teachersCount, responsesCount, subscriptionsCount });
@@ -130,6 +130,47 @@ class SecurePlatformAdminService {
     }
   }
 
+  private async getCountWithRetry(tableName: string, maxRetries: number = 3): Promise<number> {
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        console.log(`🔄 Attempt ${attempt} to get count for ${tableName}`);
+        
+        // First try using the secure RPC function
+        if (tableName !== 'subscriptions') {
+          const { data, error } = await supabase.rpc('get_platform_stats', { 
+            stat_type: tableName === 'feedback' ? 'feedback' : tableName
+          });
+          
+          if (!error && data && data[0]) {
+            return Number(data[0].count) || 0;
+          }
+        }
+        
+        // Fallback to direct query
+        const { count, error } = await supabase
+          .from(tableName)
+          .select('*', { count: 'exact', head: true });
+          
+        if (error) {
+          console.warn(`⚠️ Error querying ${tableName} (attempt ${attempt}):`, error);
+          if (attempt < maxRetries) {
+            await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+            continue;
+          }
+        }
+        
+        return count || 0;
+      } catch (error) {
+        console.error(`❌ Error getting count for ${tableName} (attempt ${attempt}):`, error);
+        if (attempt < maxRetries) {
+          await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+        }
+      }
+    }
+    
+    return 0;
+  }
+
   async getSchoolData(adminEmail: string): Promise<Array<{
     name: string;
     teacher_count: number;
@@ -140,59 +181,82 @@ class SecurePlatformAdminService {
     try {
       await this.ensureAdminContext(adminEmail);
 
-      // First get all unique schools from teachers table
-      const { data: teachersData, error: teachersError } = await supabase
-        .from('teachers')
-        .select('school');
-
-      if (teachersError) {
-        console.error('❌ Error fetching schools from teachers:', teachersError);
-        return [];
-      }
-
-      const uniqueSchools = [...new Set(teachersData?.map(t => t.school).filter(Boolean) || [])];
-      console.log('🏫 Found schools:', uniqueSchools);
+      // Use a more robust approach to get schools
+      const schoolStats = await this.getSchoolsWithRetry();
       
-      const schoolStats = [];
-
-      for (const school of uniqueSchools) {
-        try {
-          // Get teacher count using the secure function
-          const teacherCountResult = await supabase.rpc('get_platform_stats', { stat_type: 'teachers' });
-          const studentCountResult = await supabase.rpc('get_platform_stats', { stat_type: 'students' });
-          
-          // For now, we'll distribute counts proportionally or use direct queries
-          const { data: schoolTeachers } = await supabase
-            .from('teachers')
-            .select('id', { count: 'exact', head: true })
-            .eq('school', school);
-            
-          const { data: schoolStudents } = await supabase
-            .from('students')
-            .select('id', { count: 'exact', head: true })
-            .eq('school', school);
-
-          schoolStats.push({
-            name: school,
-            teacher_count: schoolTeachers?.length || 0,
-            student_count: schoolStudents?.length || 0
-          });
-        } catch (error) {
-          console.warn(`⚠️ Error getting stats for school ${school}:`, error);
-          schoolStats.push({
-            name: school,
-            teacher_count: 0,
-            student_count: 0
-          });
-        }
-      }
-
       console.log('🏫 School data retrieved:', schoolStats);
       return schoolStats;
     } catch (error) {
       console.error('❌ Failed to get school data:', error);
       return [];
     }
+  }
+
+  private async getSchoolsWithRetry(maxRetries: number = 3): Promise<Array<{
+    name: string;
+    teacher_count: number;
+    student_count: number;
+  }>> {
+    
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        console.log(`🔄 Attempt ${attempt} to get school data`);
+        
+        // Try to get all schools from teachers table
+        const { data: teachersData, error: teachersError } = await supabase
+          .from('teachers')
+          .select('school');
+
+        if (teachersError) {
+          console.warn(`⚠️ Error fetching schools (attempt ${attempt}):`, teachersError);
+          if (attempt < maxRetries) {
+            await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+            continue;
+          }
+          return [];
+        }
+
+        const uniqueSchools = [...new Set(teachersData?.map(t => t.school).filter(Boolean) || [])];
+        console.log('🏫 Found schools:', uniqueSchools);
+        
+        const schoolStats = [];
+
+        for (const school of uniqueSchools) {
+          try {
+            // Get counts for each school
+            const [teacherResult, studentResult] = await Promise.allSettled([
+              supabase.from('teachers').select('id', { count: 'exact', head: true }).eq('school', school),
+              supabase.from('students').select('id', { count: 'exact', head: true }).eq('school', school)
+            ]);
+
+            const teacherCount = teacherResult.status === 'fulfilled' ? (teacherResult.value.count || 0) : 0;
+            const studentCount = studentResult.status === 'fulfilled' ? (studentResult.value.count || 0) : 0;
+
+            schoolStats.push({
+              name: school,
+              teacher_count: teacherCount,
+              student_count: studentCount
+            });
+          } catch (error) {
+            console.warn(`⚠️ Error getting stats for school ${school}:`, error);
+            schoolStats.push({
+              name: school,
+              teacher_count: 0,
+              student_count: 0
+            });
+          }
+        }
+
+        return schoolStats;
+      } catch (error) {
+        console.error(`❌ Error in getSchoolsWithRetry (attempt ${attempt}):`, error);
+        if (attempt < maxRetries) {
+          await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+        }
+      }
+    }
+    
+    return [];
   }
 
   async validateAdminSession(email: string): Promise<{ valid: boolean; admin?: AdminUser }> {
@@ -235,32 +299,56 @@ class SecurePlatformAdminService {
     try {
       await this.ensureAdminContext(adminEmail);
 
-      // Create a teacher entry for the new school to establish it in the system
-      const { data, error } = await supabase
-        .from('teachers')
-        .insert({
-          name: `${schoolName} Admin`,
-          email: `admin@${schoolName.toLowerCase().replace(/\s+/g, '')}.edu`,
-          school: schoolName,
-          role: 'admin',
-          password_hash: 'placeholder'
-        })
-        .select()
-        .single();
-
-      if (error) {
-        throw error;
-      }
-
+      // Create a teacher entry for the new school with retry logic
+      const result = await this.createSchoolWithRetry(schoolName);
+      
       console.log('✅ School created successfully');
-      return { 
-        id: data.id, 
-        success: true,
-        message: 'School created successfully'
-      };
+      return result;
     } catch (error) {
       console.error('❌ School creation error:', error);
       throw error;
+    }
+  }
+
+  private async createSchoolWithRetry(schoolName: string, maxRetries: number = 3): Promise<any> {
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        console.log(`🔄 Attempt ${attempt} to create school: ${schoolName}`);
+        
+        const { data, error } = await supabase
+          .from('teachers')
+          .insert({
+            name: `${schoolName} Admin`,
+            email: `admin@${schoolName.toLowerCase().replace(/\s+/g, '')}.edu`,
+            school: schoolName,
+            role: 'admin',
+            password_hash: 'placeholder'
+          })
+          .select()
+          .single();
+
+        if (error) {
+          console.warn(`⚠️ Error creating school (attempt ${attempt}):`, error);
+          if (attempt < maxRetries) {
+            await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+            continue;
+          }
+          throw error;
+        }
+
+        return { 
+          id: data.id, 
+          success: true,
+          message: 'School created successfully'
+        };
+      } catch (error) {
+        console.error(`❌ Error in createSchoolWithRetry (attempt ${attempt}):`, error);
+        if (attempt < maxRetries) {
+          await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+        } else {
+          throw error;
+        }
+      }
     }
   }
 

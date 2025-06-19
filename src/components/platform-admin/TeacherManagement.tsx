@@ -43,56 +43,83 @@ const TeacherManagement: React.FC = () => {
         console.log('🔧 Setting admin context for teacher management:', admin.email);
         await supabase.rpc('set_platform_admin_context', { admin_email: admin.email });
         console.log('✅ Admin context set successfully');
+        // Wait for context to propagate
+        await new Promise(resolve => setTimeout(resolve, 500));
       } catch (error) {
         console.error('❌ Error setting admin context:', error);
       }
     }
   };
 
-  const fetchTeachers = async () => {
-    try {
-      await setAdminContext();
-      console.log('📊 Fetching teachers...');
-      
-      const { data, error } = await supabase
-        .from('teachers')
-        .select('*')
-        .order('name');
+  const fetchTeachersWithRetry = async (maxRetries: number = 3) => {
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        console.log(`🔄 Attempt ${attempt} to fetch teachers`);
+        await setAdminContext();
+        
+        const { data, error } = await supabase
+          .from('teachers')
+          .select('*')
+          .order('name');
 
-      if (error) {
-        console.error('❌ Error fetching teachers:', error);
-        throw error;
+        if (error) {
+          console.error(`❌ Error fetching teachers (attempt ${attempt}):`, error);
+          if (attempt < maxRetries) {
+            await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+            continue;
+          }
+          throw error;
+        }
+        
+        console.log('✅ Teachers fetched:', data?.length || 0);
+        setTeachers(data || []);
+        return;
+      } catch (error) {
+        console.error(`💥 Error fetching teachers (attempt ${attempt}):`, error);
+        if (attempt < maxRetries) {
+          await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+        }
       }
-      
-      console.log('✅ Teachers fetched:', data?.length || 0);
-      setTeachers(data || []);
-    } catch (error) {
-      console.error('💥 Error fetching teachers:', error);
-      toast.error('Failed to fetch teachers');
     }
+    
+    toast.error('Failed to fetch teachers after multiple attempts');
+    setTeachers([]);
   };
 
-  const fetchSchools = async () => {
-    try {
-      await setAdminContext();
-      console.log('📊 Fetching schools for dropdown...');
-      
-      const { data, error } = await supabase
-        .from('teachers')
-        .select('school')
-        .not('school', 'is', null);
+  const fetchSchoolsWithRetry = async (maxRetries: number = 3) => {
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        console.log(`🔄 Attempt ${attempt} to fetch schools`);
+        await setAdminContext();
+        
+        const { data, error } = await supabase
+          .from('teachers')
+          .select('school')
+          .not('school', 'is', null);
 
-      if (error) {
-        console.error('❌ Error fetching schools:', error);
-        throw error;
+        if (error) {
+          console.error(`❌ Error fetching schools (attempt ${attempt}):`, error);
+          if (attempt < maxRetries) {
+            await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+            continue;
+          }
+          throw error;
+        }
+        
+        const uniqueSchools = [...new Set(data?.map(item => item.school) || [])];
+        console.log('✅ Schools fetched:', uniqueSchools.length);
+        setSchools(uniqueSchools);
+        return;
+      } catch (error) {
+        console.error(`💥 Error fetching schools (attempt ${attempt}):`, error);
+        if (attempt < maxRetries) {
+          await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+        }
       }
-      
-      const uniqueSchools = [...new Set(data?.map(item => item.school) || [])];
-      console.log('✅ Schools fetched:', uniqueSchools.length);
-      setSchools(uniqueSchools);
-    } catch (error) {
-      console.error('💥 Error fetching schools:', error);
     }
+    
+    console.warn('Failed to fetch schools after multiple attempts');
+    setSchools([]);
   };
 
   const addTeacher = async () => {
@@ -150,7 +177,7 @@ const TeacherManagement: React.FC = () => {
         password: ''
       });
       
-      fetchTeachers();
+      fetchTeachersWithRetry();
     } catch (error) {
       console.error('💥 Error adding teacher:', error);
       if (error.message?.includes('permission denied')) {
@@ -192,7 +219,7 @@ const TeacherManagement: React.FC = () => {
 
       console.log('✅ Teacher deleted successfully');
       toast.success('Teacher deleted successfully');
-      fetchTeachers();
+      fetchTeachersWithRetry();
     } catch (error) {
       console.error('💥 Error deleting teacher:', error);
       if (error.message?.includes('permission denied')) {
@@ -206,9 +233,11 @@ const TeacherManagement: React.FC = () => {
   };
 
   useEffect(() => {
-    fetchTeachers();
-    fetchSchools();
-  }, []);
+    if (admin?.email) {
+      fetchTeachersWithRetry();
+      fetchSchoolsWithRetry();
+    }
+  }, [admin?.email]);
 
   return (
     <Card>
