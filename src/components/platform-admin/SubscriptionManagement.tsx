@@ -102,12 +102,7 @@ const SubscriptionManagement = () => {
 
   const handlePauseSubscription = async (subscriptionId: string) => {
     try {
-      const { error } = await supabase
-        .from('subscriptions')
-        .update({ status: 'paused' })
-        .eq('id', subscriptionId);
-
-      if (error) throw error;
+      await securePlatformAdminService.callAdminFunction('pauseSubscription', { subscriptionId });
 
       toast({
         title: "Success",
@@ -127,12 +122,7 @@ const SubscriptionManagement = () => {
 
   const handleResumeSubscription = async (subscriptionId: string) => {
     try {
-      const { error } = await supabase
-        .from('subscriptions')
-        .update({ status: 'active' })
-        .eq('id', subscriptionId);
-
-      if (error) throw error;
+      await securePlatformAdminService.callAdminFunction('resumeSubscription', { subscriptionId });
 
       toast({
         title: "Success",
