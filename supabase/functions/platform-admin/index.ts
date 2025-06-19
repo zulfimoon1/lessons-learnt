@@ -22,7 +22,7 @@ serve(async (req) => {
   }
 
   try {
-    // Create admin service role client that bypasses all RLS
+    // Create admin service role client that bypasses all RLS with explicit config
     const supabaseAdmin = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
@@ -30,6 +30,14 @@ serve(async (req) => {
         auth: {
           autoRefreshToken: false,
           persistSession: false
+        },
+        db: {
+          schema: 'public'
+        },
+        global: {
+          headers: {
+            'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`
+          }
         }
       }
     )
@@ -383,24 +391,33 @@ serve(async (req) => {
         break;
 
       case 'getTransactions':
-        console.log('💳 Fetching transactions with full admin access...');
+        console.log('💳 Fetching transactions with service role access...');
         
-        const { data: transactionsData, error: transactionsError } = await supabaseAdmin
-          .from('transactions')
-          .select('*')
-          .order('created_at', { ascending: false });
-
+        // Use raw SQL query to bypass RLS completely
+        const { data: transactionsData, error: transactionsError } = await supabaseAdmin.rpc('get_all_transactions_admin');
+        
         if (transactionsError) {
           console.error('Transaction query failed:', transactionsError);
-          throw new Error(`Failed to fetch transactions: ${transactionsError.message}`);
+          // Fallback to direct table access with service role
+          const { data: fallbackData, error: fallbackError } = await supabaseAdmin
+            .from('transactions')
+            .select('*')
+            .order('created_at', { ascending: false });
+          
+          if (fallbackError) {
+            throw new Error(`Failed to fetch transactions: ${fallbackError.message}`);
+          }
+          
+          result = fallbackData || [];
+        } else {
+          result = transactionsData || [];
         }
-
-        console.log(`✅ Transactions fetched successfully: ${transactionsData?.length || 0} records`);
-        result = transactionsData || [];
+        
+        console.log(`✅ Transactions fetched successfully: ${result.length} records`);
         break;
 
       case 'createTransaction':
-        console.log('💳 Creating transaction with admin access...');
+        console.log('💳 Creating transaction with service role access...');
         const { transactionData } = params;
         
         const insertData = {
@@ -415,6 +432,7 @@ serve(async (req) => {
 
         console.log('Inserting transaction data:', insertData);
 
+        // Use service role to insert directly
         const { data: newTransaction, error: createTransactionError } = await supabaseAdmin
           .from('transactions')
           .insert(insertData)

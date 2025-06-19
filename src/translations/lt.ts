@@ -163,7 +163,7 @@ export const ltTranslations = {
   'pricing.discountAppliedShort': 'nuolaida pritaikyta',
   'pricing.whatsIncluded': 'Kas įtraukta',
   'pricing.unlimitedClasses': 'Neriboti klasių skaičiai',
-  'pricing.feedbackCollection': 'Atsiliep  ų rinkimas',
+  'pricing.feedbackCollection': 'Atsiliepimų rinkimas',
   'pricing.analytics': 'Analizė',
   'pricing.mentalHealth': 'Psichinės sveikatos stebėjimas',
   'pricing.multiLanguage': 'Daugiakalbis palaikymas',
