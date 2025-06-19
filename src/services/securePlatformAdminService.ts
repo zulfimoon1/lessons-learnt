@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { securityValidationService } from './securityValidationService';
 
@@ -53,17 +52,17 @@ class SecurePlatformAdminService {
 
   async ensureAdminContext(adminEmail: string): Promise<void> {
     try {
-      console.log('🔧 Setting Zulfimoon admin context for:', adminEmail);
+      console.log('🔧 Setting platform admin context for:', adminEmail);
       
-      // Use the correct function name from our SQL migration
-      const { error: rpcError } = await supabase.rpc('set_zulfimoon_admin_context', { 
+      // Use the correct function name that exists in the database
+      const { error: rpcError } = await supabase.rpc('set_platform_admin_context', { 
         admin_email: adminEmail 
       });
       
       if (rpcError) {
         console.warn('⚠️ RPC context setting warning:', rpcError);
       } else {
-        console.log('✅ Zulfimoon admin context set via RPC successfully');
+        console.log('✅ Platform admin context set via RPC successfully');
       }
       
       // Wait longer for context to propagate - increased to 5000ms for maximum reliability

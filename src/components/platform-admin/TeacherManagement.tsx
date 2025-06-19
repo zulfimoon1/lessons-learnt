@@ -39,10 +39,10 @@ const TeacherManagement: React.FC = () => {
   const setAdminContext = async () => {
     if (admin?.email) {
       try {
-        console.log('🔧 Setting Zulfimoon admin context for teacher management:', admin.email);
-        // Use the correct function name from our SQL migration
-        await supabase.rpc('set_zulfimoon_admin_context', { admin_email: admin.email });
-        console.log('✅ Zulfimoon admin context set successfully');
+        console.log('🔧 Setting platform admin context for teacher management:', admin.email);
+        // Use the correct function name that exists in the database
+        await supabase.rpc('set_platform_admin_context', { admin_email: admin.email });
+        console.log('✅ Platform admin context set successfully');
         // Wait longer for context to propagate - increased for maximum reliability
         await new Promise(resolve => setTimeout(resolve, 5000));
       } catch (error) {
