@@ -1,5 +1,4 @@
 
-
 import { ltDemoTranslations } from './lt/demo';
 import { ltAuthTranslations } from './lt/auth';
 import { ltChatTranslations } from './lt/chat';
@@ -146,7 +145,7 @@ export const ltTranslations = {
   'articles.mentalHealth': 'Psichinės sveikatos straipsniai',
   'articles.subscriptionRequired': 'Reikalinga prenumerata',
   
-  // Pricing translations - COMPREHENSIVE LITHUANIAN TRANSLATIONS
+  // Pricing translations
   'pricing.processing': 'Apdorojama...',
   'pricing.title': 'Kainodara',
   'pricing.choosePlan': 'Pasirinkite planą',
@@ -183,7 +182,7 @@ export const ltTranslations = {
   'pricing.paymentError': 'Mokėjimo klaida',
   'pricing.paymentErrorDesc': 'Nepavyko sukurti mokėjimo. Bandykite dar kartą.',
   
-  // NEW Pricing Showcase specific translations
+  // Pricing Showcase specific translations
   'pricing.amazingPricing': 'Nuostabi kainodara',
   'pricing.transformSchoolLess': 'Transformuokite savo mokyklą už mažiau nei',
   'pricing.perTeacherMonth': 'Per mokytoją/mėnesį',
@@ -224,15 +223,6 @@ export const ltTranslations = {
   'pricing.startFreeTrialNow': 'Pradėti nemokamą bandomąjį laikotarpį dabar',
   'pricing.signUpEducator': 'Registruotis kaip mokytojas',
   'pricing.questionsContact': 'Klausimai? Susisiekite su mūsų komanda dėl asmeninio demonstracinio ir kainodaros konsultacijos.',
-
-  // CUSTOM PRICING TRANSLATIONS - Single set without duplicates
-  'pricing.customPricingAvailable': 'Prieinami individualūs kainodaros sprendimai',
-  'pricing.customSolutionTitle': 'Reikia individualaus sprendimo jūsų organizacijai?',
-  'pricing.customSolutionDescription': 'Siūlome pritaikytą kaindarą ir funkcijas mokyklų rajonams, didelėms organizacijoms ir įmonės klientams. Gaukite didmenų nuolaidas, individuales integracijas ir atskirą palaikymą.',
-  'pricing.requestCustomPricing': 'Prašyti individualios kainodaros',
-  'pricing.perfectForLargeOrgs': 'Puikus pasirinkimas 50+ mokytojų ar rajono masto diegimui',
-  'pricing.comingSoonCustom': 'Netrukus bus prieinama',
-  'pricing.customPricingFormSoon': 'Individualios kainodaros forma bus prieinama netrukus. Kol kas susisiekite su palaikymu.',
 
   // Include all modular translations
   ...ltDemoTranslations,
