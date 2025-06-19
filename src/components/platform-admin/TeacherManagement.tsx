@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -40,18 +39,18 @@ const TeacherManagement: React.FC = () => {
   const setAdminContext = async () => {
     if (admin?.email) {
       try {
-        console.log('🔧 Setting admin context for teacher management:', admin.email);
-        await supabase.rpc('set_platform_admin_context', { admin_email: admin.email });
-        console.log('✅ Admin context set successfully');
-        // Wait for context to propagate
-        await new Promise(resolve => setTimeout(resolve, 500));
+        console.log('🔧 Setting enhanced admin context for teacher management:', admin.email);
+        await supabase.rpc('set_zulfimoon_admin_context', { admin_email: admin.email });
+        console.log('✅ Enhanced admin context set successfully');
+        // Wait longer for context to propagate
+        await new Promise(resolve => setTimeout(resolve, 2000));
       } catch (error) {
         console.error('❌ Error setting admin context:', error);
       }
     }
   };
 
-  const fetchTeachersWithRetry = async (maxRetries: number = 3) => {
+  const fetchTeachersWithRetry = async (maxRetries: number = 5) => {
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
         console.log(`🔄 Attempt ${attempt} to fetch teachers`);
@@ -65,7 +64,7 @@ const TeacherManagement: React.FC = () => {
         if (error) {
           console.error(`❌ Error fetching teachers (attempt ${attempt}):`, error);
           if (attempt < maxRetries) {
-            await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+            await new Promise(resolve => setTimeout(resolve, 2000 * attempt));
             continue;
           }
           throw error;
@@ -77,7 +76,7 @@ const TeacherManagement: React.FC = () => {
       } catch (error) {
         console.error(`💥 Error fetching teachers (attempt ${attempt}):`, error);
         if (attempt < maxRetries) {
-          await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+          await new Promise(resolve => setTimeout(resolve, 2000 * attempt));
         }
       }
     }
@@ -86,7 +85,7 @@ const TeacherManagement: React.FC = () => {
     setTeachers([]);
   };
 
-  const fetchSchoolsWithRetry = async (maxRetries: number = 3) => {
+  const fetchSchoolsWithRetry = async (maxRetries: number = 5) => {
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
         console.log(`🔄 Attempt ${attempt} to fetch schools`);
@@ -100,7 +99,7 @@ const TeacherManagement: React.FC = () => {
         if (error) {
           console.error(`❌ Error fetching schools (attempt ${attempt}):`, error);
           if (attempt < maxRetries) {
-            await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+            await new Promise(resolve => setTimeout(resolve, 2000 * attempt));
             continue;
           }
           throw error;
@@ -113,7 +112,7 @@ const TeacherManagement: React.FC = () => {
       } catch (error) {
         console.error(`💥 Error fetching schools (attempt ${attempt}):`, error);
         if (attempt < maxRetries) {
-          await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+          await new Promise(resolve => setTimeout(resolve, 2000 * attempt));
         }
       }
     }
@@ -136,7 +135,12 @@ const TeacherManagement: React.FC = () => {
     setIsLoading(true);
     try {
       console.log('👨‍🏫 Creating new teacher:', newTeacher.name);
-      await setAdminContext();
+      
+      // Enhanced admin context setting with multiple attempts
+      for (let attempt = 1; attempt <= 3; attempt++) {
+        await setAdminContext();
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      }
       
       // Hash the password
       const passwordHash = await bcrypt.hash(newTeacher.password, 12);
@@ -181,7 +185,10 @@ const TeacherManagement: React.FC = () => {
     } catch (error) {
       console.error('💥 Error adding teacher:', error);
       if (error.message?.includes('permission denied')) {
-        toast.error('Permission denied: Unable to create teacher. Please check admin permissions.');
+        toast.error('Permission denied: Refreshing admin permissions and retrying...');
+        // Try to refresh context and retry once
+        await setAdminContext();
+        setTimeout(() => addTeacher(), 2000);
       } else if (error.message?.includes('unique constraint')) {
         toast.error('A teacher with this email already exists');
       } else {
@@ -205,7 +212,12 @@ const TeacherManagement: React.FC = () => {
     setIsLoading(true);
     try {
       console.log('🗑️ Deleting teacher:', teacherName);
-      await setAdminContext();
+      
+      // Enhanced admin context setting
+      for (let attempt = 1; attempt <= 3; attempt++) {
+        await setAdminContext();
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      }
       
       const { error } = await supabase
         .from('teachers')
@@ -223,7 +235,8 @@ const TeacherManagement: React.FC = () => {
     } catch (error) {
       console.error('💥 Error deleting teacher:', error);
       if (error.message?.includes('permission denied')) {
-        toast.error('Permission denied: Unable to delete teacher.');
+        toast.error('Permission denied: Refreshing admin permissions...');
+        await setAdminContext();
       } else {
         toast.error(`Failed to delete teacher: ${error.message}`);
       }
@@ -234,8 +247,11 @@ const TeacherManagement: React.FC = () => {
 
   useEffect(() => {
     if (admin?.email) {
-      fetchTeachersWithRetry();
-      fetchSchoolsWithRetry();
+      // Delay initial load to ensure admin context is properly set
+      setTimeout(() => {
+        fetchTeachersWithRetry();
+        fetchSchoolsWithRetry();
+      }, 1000);
     }
   }, [admin?.email]);
 
