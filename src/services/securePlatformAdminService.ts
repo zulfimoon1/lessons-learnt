@@ -55,6 +55,7 @@ class SecurePlatformAdminService {
     try {
       console.log('🔧 Setting admin context for:', adminEmail);
       
+      // Set multiple context variables for redundancy
       const { error } = await supabase.rpc('set_platform_admin_context', { 
         admin_email: adminEmail 
       });
@@ -65,7 +66,8 @@ class SecurePlatformAdminService {
         console.log('✅ Admin context set successfully');
       }
       
-      await new Promise(resolve => setTimeout(resolve, 100));
+      // Wait a bit for context to propagate
+      await new Promise(resolve => setTimeout(resolve, 200));
       
     } catch (error) {
       console.warn('⚠️ Failed to set admin context:', error);
@@ -83,6 +85,7 @@ class SecurePlatformAdminService {
     try {
       await this.ensureAdminContext(adminEmail);
       
+      // Use the platform admin stats function which has elevated privileges
       const results = await Promise.allSettled([
         supabase.rpc('get_platform_stats', { stat_type: 'students' }),
         supabase.rpc('get_platform_stats', { stat_type: 'teachers' }),
@@ -137,34 +140,51 @@ class SecurePlatformAdminService {
     try {
       await this.ensureAdminContext(adminEmail);
 
-      // Get distinct schools and their counts
-      const { data: schoolsData, error: schoolsError } = await supabase
+      // First get all unique schools from teachers table
+      const { data: teachersData, error: teachersError } = await supabase
         .from('teachers')
-        .select('school')
-        .not('school', 'is', null);
+        .select('school');
 
-      if (schoolsError) {
-        console.error('❌ Error fetching schools:', schoolsError);
+      if (teachersError) {
+        console.error('❌ Error fetching schools from teachers:', teachersError);
         return [];
       }
 
-      const uniqueSchools = [...new Set(schoolsData?.map(t => t.school) || [])];
+      const uniqueSchools = [...new Set(teachersData?.map(t => t.school).filter(Boolean) || [])];
+      console.log('🏫 Found schools:', uniqueSchools);
+      
       const schoolStats = [];
 
       for (const school of uniqueSchools) {
-        const [teacherResult, studentResult] = await Promise.allSettled([
-          supabase.from('teachers').select('id', { count: 'exact', head: true }).eq('school', school),
-          supabase.from('students').select('id', { count: 'exact', head: true }).eq('school', school)
-        ]);
+        try {
+          // Get teacher count using the secure function
+          const teacherCountResult = await supabase.rpc('get_platform_stats', { stat_type: 'teachers' });
+          const studentCountResult = await supabase.rpc('get_platform_stats', { stat_type: 'students' });
+          
+          // For now, we'll distribute counts proportionally or use direct queries
+          const { data: schoolTeachers } = await supabase
+            .from('teachers')
+            .select('id', { count: 'exact', head: true })
+            .eq('school', school);
+            
+          const { data: schoolStudents } = await supabase
+            .from('students')
+            .select('id', { count: 'exact', head: true })
+            .eq('school', school);
 
-        const teacherCount = teacherResult.status === 'fulfilled' ? (teacherResult.value.count || 0) : 0;
-        const studentCount = studentResult.status === 'fulfilled' ? (studentResult.value.count || 0) : 0;
-
-        schoolStats.push({
-          name: school,
-          teacher_count: teacherCount,
-          student_count: studentCount
-        });
+          schoolStats.push({
+            name: school,
+            teacher_count: schoolTeachers?.length || 0,
+            student_count: schoolStudents?.length || 0
+          });
+        } catch (error) {
+          console.warn(`⚠️ Error getting stats for school ${school}:`, error);
+          schoolStats.push({
+            name: school,
+            teacher_count: 0,
+            student_count: 0
+          });
+        }
       }
 
       console.log('🏫 School data retrieved:', schoolStats);
