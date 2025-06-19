@@ -1,3 +1,4 @@
+
 import { ltDemoTranslations } from './lt/demo';
 import { ltAuthTranslations } from './lt/auth';
 import { ltChatTranslations } from './lt/chat';
@@ -221,8 +222,7 @@ export const ltTranslations = {
   'pricing.signUpEducator': 'Registruotis kaip mokytojas',
   'pricing.questionsContact': 'Klausimai? Susisiekite su mūsų komanda dėl asmeninio demonstracinio ir kainodaros konsultacijos.',
 
-  // Custom Pricing Section translations
-  'pricing.customPricing': 'Individuali kainodara',
+  // Custom Pricing Section translations - FIXED
   'pricing.customPricingAvailable': 'Galima individuali kainodara',
   'pricing.needCustomSolution': 'Reikia individualaus sprendimo jūsų organizacijai?',
   'pricing.customPricingDescription': 'Siūlome individualų kainodaros ir funkcijų paketą mokyklų rajonams, didelėms organizacijoms ir įmonės klientams. Gaukite didmenų nuolaidas, individualius integravimus ir specialų palaikymą.',
