@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { usePlatformAdmin } from "@/contexts/PlatformAdminContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -65,6 +66,7 @@ const PlatformAdminDashboard = () => {
   const [refreshKey, setRefreshKey] = useState(0);
   const [hasDataLoaded, setHasDataLoaded] = useState(false);
   const [dataError, setDataError] = useState<string | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
 
   console.log('📊 DASHBOARD: State check', { 
     admin: !!admin, 
@@ -73,21 +75,24 @@ const PlatformAdminDashboard = () => {
     adminEmail: admin?.email 
   });
 
-  const fetchStats = async () => {
-    console.log('📊 DASHBOARD: Fetching stats...');
+  const fetchStats = async (isRetry: boolean = false) => {
+    console.log('📊 DASHBOARD: Fetching stats...', { isRetry, retryCount });
     if (!admin?.email) {
       console.warn('No admin email available for stats fetch');
       return;
     }
 
     setIsRefreshing(true);
-    setDataError(null);
+    if (!isRetry) {
+      setDataError(null);
+      setRetryCount(0);
+    }
     
     try {
       console.log('📊 Getting platform stats for admin:', admin.email);
       
       const timeout = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Dashboard data fetch timeout')), 15000)
+        setTimeout(() => reject(new Error('Dashboard data fetch timeout')), 20000)
       );
       
       const [platformStats, schoolData] = await Promise.race([
@@ -125,14 +130,35 @@ const PlatformAdminDashboard = () => {
       setLastUpdated(new Date().toLocaleString());
       setRefreshKey(Date.now());
       setHasDataLoaded(true);
+      setDataError(null);
+      setRetryCount(0);
       
       toast.success('Dashboard data loaded successfully');
       
     } catch (error) {
       console.error('❌ Failed to fetch dashboard stats:', error);
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      
+      // Handle specific permission errors with retry logic
+      if (errorMessage.includes('permission denied') && retryCount < 3) {
+        console.log(`🔄 Retrying fetch due to permission error (attempt ${retryCount + 1})`);
+        setRetryCount(prev => prev + 1);
+        
+        // Wait a bit longer before retry
+        setTimeout(() => {
+          fetchStats(true);
+        }, 2000 * (retryCount + 1));
+        
+        return;
+      }
+      
       setDataError(`Failed to load dashboard data: ${errorMessage}`);
-      toast.error(`Failed to load data: ${errorMessage}`);
+      
+      if (retryCount >= 3) {
+        toast.error('Multiple attempts failed. Please check database permissions.');
+      } else {
+        toast.error(`Failed to load data: ${errorMessage}`);
+      }
     } finally {
       setIsRefreshing(false);
     }
@@ -141,6 +167,7 @@ const PlatformAdminDashboard = () => {
   const handleRefresh = () => {
     setHasDataLoaded(false);
     setDataError(null);
+    setRetryCount(0);
     fetchStats();
   };
 
@@ -160,7 +187,10 @@ const PlatformAdminDashboard = () => {
     console.log('📊 Dashboard useEffect triggered', { isAuthenticated, admin: !!admin });
     if (isAuthenticated && admin?.email && !hasDataLoaded) {
       console.log('Loading dashboard data for admin:', admin.email);
-      fetchStats();
+      // Add a small delay to ensure admin context is fully set
+      setTimeout(() => {
+        fetchStats();
+      }, 1000);
     }
   }, [isAuthenticated, admin, hasDataLoaded]);
 
@@ -208,6 +238,11 @@ const PlatformAdminDashboard = () => {
               <RefreshCwIcon className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
               {isRefreshing ? 'Loading...' : 'Refresh'}
             </Button>
+            {retryCount > 0 && (
+              <span className="text-sm text-orange-600">
+                Retry attempt: {retryCount}/3
+              </span>
+            )}
           </div>
           <div className="flex items-center gap-4">
             <span className="text-sm text-gray-600">Welcome, {admin?.email}</span>
@@ -226,15 +261,27 @@ const PlatformAdminDashboard = () => {
             <h3 className="font-medium text-red-800">Data Loading Error</h3>
             <p className="text-red-600 text-sm mt-1">{dataError}</p>
             <p className="text-red-600 text-sm mt-2">
-              Database permission policies have been updated. Try refreshing the dashboard.
+              Database permission policies are being applied. This may take a moment.
             </p>
-            <Button 
-              onClick={handleRefresh} 
-              className="mt-3 bg-red-600 hover:bg-red-700 text-white"
-              size="sm"
-            >
-              Retry Loading Data
-            </Button>
+            <div className="flex gap-2 mt-3">
+              <Button 
+                onClick={handleRefresh} 
+                className="bg-red-600 hover:bg-red-700 text-white"
+                size="sm"
+                disabled={isRefreshing}
+              >
+                {isRefreshing ? 'Retrying...' : 'Retry Loading Data'}
+              </Button>
+              {retryCount >= 3 && (
+                <Button 
+                  onClick={() => window.location.reload()} 
+                  variant="outline"
+                  size="sm"
+                >
+                  Refresh Page
+                </Button>
+              )}
+            </div>
           </div>
         )}
 
@@ -242,7 +289,10 @@ const PlatformAdminDashboard = () => {
         {isRefreshing && !hasDataLoaded && (
           <div className="text-center py-8">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-            <p className="text-gray-600">Loading dashboard data...</p>
+            <p className="text-gray-600">
+              Loading dashboard data...
+              {retryCount > 0 && ` (attempt ${retryCount + 1})`}
+            </p>
           </div>
         )}
 
@@ -341,6 +391,11 @@ const PlatformAdminDashboard = () => {
                   <span className={`ml-2 ${hasDataLoaded ? 'text-green-600' : 'text-yellow-600'}`}>
                     {hasDataLoaded ? '✓ Data loaded' : '⏳ Loading...'}
                   </span>
+                  {retryCount > 0 && (
+                    <span className="ml-2 text-orange-600">
+                      (After {retryCount} retries)
+                    </span>
+                  )}
                 </p>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm mt-4">
                   <div>
