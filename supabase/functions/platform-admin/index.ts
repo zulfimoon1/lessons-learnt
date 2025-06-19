@@ -114,20 +114,45 @@ serve(async (req) => {
         console.log(`✅ Subscription resumed: ${resumeSubscriptionId}`);
         break;
 
-      case 'getPaymentNotifications':
-        console.log('🔔 Fetching payment notifications...');
-        const { data: notificationsData, error: notificationsError } = await supabaseAdmin
-          .from('payment_notifications')
-          .select('*')
-          .order('created_at', { ascending: false });
+      case 'cleanupDemoData':
+        console.log('🧹 Cleaning up demo data...');
+        
+        // Delete demo/test subscriptions
+        const { error: cleanupError } = await supabaseAdmin
+          .from('subscriptions')
+          .delete()
+          .or('school_name.eq.demo school,school_name.eq.Default School');
 
-        if (notificationsError) {
-          console.error('Error fetching payment notifications:', notificationsError);
-          throw notificationsError;
+        if (cleanupError) {
+          console.error('Error cleaning up demo data:', cleanupError);
+          throw cleanupError;
         }
 
-        result = notificationsData || [];
-        console.log(`✅ Payment notifications fetched: ${result.length}`);
+        result = { success: true, message: 'Demo data cleaned up successfully' };
+        console.log('✅ Demo data cleanup completed');
+        break;
+
+      case 'getPaymentNotifications':
+        console.log('🔔 Fetching payment notifications...');
+        try {
+          // Use service role to bypass RLS completely
+          const { data: notificationsData, error: notificationsError } = await supabaseAdmin
+            .from('payment_notifications')
+            .select('*')
+            .order('created_at', { ascending: false });
+
+          if (notificationsError) {
+            console.error('Error fetching payment notifications:', notificationsError);
+            // Return empty array instead of throwing to prevent dashboard breaking
+            result = [];
+          } else {
+            result = notificationsData || [];
+            console.log(`✅ Payment notifications fetched: ${result.length}`);
+          }
+        } catch (error) {
+          console.error('Payment notifications fetch failed:', error);
+          result = []; // Return empty array to prevent breaking
+        }
         break;
 
       case 'getTransactions':

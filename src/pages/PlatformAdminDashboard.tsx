@@ -1,9 +1,10 @@
+
 import { useEffect, useState } from "react";
 import { usePlatformAdmin } from "@/contexts/PlatformAdminContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { SchoolIcon, LogOutIcon, RefreshCwIcon, UsersIcon, MessageSquareIcon, Settings, Users, School, Shield } from "lucide-react";
+import { SchoolIcon, LogOutIcon, RefreshCwIcon, UsersIcon, MessageSquareIcon, Settings, Users, School, Shield, TrashIcon } from "lucide-react";
 import { toast } from "sonner";
 import StatsCard from "@/components/dashboard/StatsCard";
 import SchoolOverview from "@/components/platform-admin/SchoolOverview";
@@ -61,6 +62,7 @@ const PlatformAdminDashboard = () => {
   const [schoolStats, setSchoolStats] = useState<SchoolStats[]>([]);
   const [feedbackStats, setFeedbackStats] = useState<FeedbackStats[]>([]);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isCleaningUp, setIsCleaningUp] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<string>("");
   const [refreshKey, setRefreshKey] = useState(0);
   const [hasDataLoaded, setHasDataLoaded] = useState(false);
@@ -133,6 +135,26 @@ const PlatformAdminDashboard = () => {
     }
   };
 
+  const handleCleanupDemoData = async () => {
+    if (!admin?.email) return;
+    
+    setIsCleaningUp(true);
+    try {
+      await securePlatformAdminService.cleanupDemoData(admin.email);
+      toast.success('Demo data cleaned up successfully');
+      
+      // Refresh the dashboard data
+      setTimeout(() => {
+        fetchStats();
+      }, 1000);
+    } catch (error) {
+      console.error('Failed to cleanup demo data:', error);
+      toast.error('Failed to cleanup demo data');
+    } finally {
+      setIsCleaningUp(false);
+    }
+  };
+
   const handleRefresh = () => {
     setHasDataLoaded(false);
     fetchStats();
@@ -201,6 +223,16 @@ const PlatformAdminDashboard = () => {
             >
               <RefreshCwIcon className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
               {isRefreshing ? 'Loading...' : 'Refresh'}
+            </Button>
+            <Button
+              onClick={handleCleanupDemoData}
+              disabled={isCleaningUp}
+              variant="outline"
+              size="sm"
+              className="flex items-center gap-2 text-red-600 hover:text-red-700"
+            >
+              <TrashIcon className="w-4 h-4" />
+              {isCleaningUp ? 'Cleaning...' : 'Cleanup Demo Data'}
             </Button>
           </div>
           <div className="flex items-center gap-4">

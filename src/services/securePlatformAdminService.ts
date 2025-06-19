@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { securityValidationService } from './securityValidationService';
 
@@ -108,6 +109,11 @@ class SecurePlatformAdminService {
   async createTransaction(adminEmail: string, transactionData: any): Promise<any> {
     console.log('💳 Creating transaction via edge function...');
     return await this.callAdminFunction('createTransaction', { transactionData });
+  }
+
+  async cleanupDemoData(adminEmail: string): Promise<any> {
+    console.log('🧹 Cleaning up demo data via edge function...');
+    return await this.callAdminFunction('cleanupDemoData');
   }
 
   async validateAdminSession(email: string): Promise<{ valid: boolean; admin?: AdminUser }> {
