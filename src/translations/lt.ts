@@ -225,7 +225,7 @@ export const ltTranslations = {
   'pricing.signUpEducator': 'Registruotis kaip mokytojas',
   'pricing.questionsContact': 'Klausimai? Susisiekite su mūsų komanda dėl asmeninio demonstracinio ir kainodaros konsultacijos.',
 
-  // CUSTOM PRICING TRANSLATIONS - Removed duplicates and kept single set
+  // CUSTOM PRICING TRANSLATIONS - Single set without duplicates
   'pricing.customPricingAvailable': 'Prieinami individualūs kainodaros sprendimai',
   'pricing.customSolutionTitle': 'Reikia individualaus sprendimo jūsų organizacijai?',
   'pricing.customSolutionDescription': 'Siūlome pritaikytą kaindarą ir funkcijas mokyklų rajonams, didelėms organizacijoms ir įmonės klientams. Gaukite didmenų nuolaidas, individuales integracijas ir atskirą palaikymą.',
@@ -279,4 +279,3 @@ export const ltTranslations = {
   'demo.mentalHealth.moodTracking': 'Nuotaikos sekimas',
   'demo.mentalHealth.crisisSupport': 'Krizių palaikymas: 116 123 Vilties Linija',
 };
-
