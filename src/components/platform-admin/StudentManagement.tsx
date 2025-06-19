@@ -30,8 +30,6 @@ const StudentManagement: React.FC = () => {
   });
   const [isLoading, setIsLoading] = useState(false);
 
-  const grades = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12'];
-
   const fetchStudentsViaEdgeFunction = async () => {
     try {
       console.log('🔄 Fetching students via edge function...');
@@ -231,22 +229,13 @@ const StudentManagement: React.FC = () => {
             </div>
             <div>
               <Label htmlFor="studentGrade">Grade *</Label>
-              <Select
+              <Input
+                id="studentGrade"
                 value={newStudent.grade}
-                onValueChange={(value) => setNewStudent(prev => ({ ...prev, grade: value }))}
+                onChange={(e) => setNewStudent(prev => ({ ...prev, grade: e.target.value }))}
+                placeholder="Enter grade (e.g., 5, 10, 12)"
                 disabled={isLoading}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select grade" />
-                </SelectTrigger>
-                <SelectContent>
-                  {grades.map((grade) => (
-                    <SelectItem key={grade} value={grade}>
-                      Grade {grade}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              />
             </div>
             <div>
               <Label htmlFor="studentPassword">Password *</Label>

@@ -270,6 +270,83 @@ serve(async (req) => {
         };
         break;
 
+      case 'getDiscountCodes':
+        const { data: discountCodesData, error: discountCodesError } = await supabaseAdmin
+          .from('discount_codes')
+          .select('*')
+          .order('created_at', { ascending: false });
+
+        if (discountCodesError) throw discountCodesError;
+        result = discountCodesData || [];
+        break;
+
+      case 'createDiscountCode':
+        const { discountCodeData } = params;
+        
+        const { data: newDiscountCode, error: createDiscountError } = await supabaseAdmin
+          .from('discount_codes')
+          .insert({
+            code: discountCodeData.code,
+            discount_percent: discountCodeData.discount_percent,
+            description: discountCodeData.description,
+            max_uses: discountCodeData.max_uses,
+            expires_at: discountCodeData.expires_at,
+            is_active: discountCodeData.is_active,
+            school_name: discountCodeData.school_name,
+            duration_months: discountCodeData.duration_months,
+            created_by: discountCodeData.created_by,
+            current_uses: 0
+          })
+          .select()
+          .single();
+
+        if (createDiscountError) throw createDiscountError;
+        result = newDiscountCode;
+        break;
+
+      case 'updateDiscountCode':
+        const { discountCodeId, discountCodeUpdates } = params;
+        
+        const { data: updatedDiscountCode, error: updateDiscountError } = await supabaseAdmin
+          .from('discount_codes')
+          .update({
+            ...discountCodeUpdates,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', discountCodeId)
+          .select()
+          .single();
+
+        if (updateDiscountError) throw updateDiscountError;
+        result = updatedDiscountCode;
+        break;
+
+      case 'deleteDiscountCode':
+        const { discountCodeId: deleteDiscountCodeId } = params;
+        
+        const { error: deleteDiscountCodeError } = await supabaseAdmin
+          .from('discount_codes')
+          .delete()
+          .eq('id', deleteDiscountCodeId);
+
+        if (deleteDiscountCodeError) throw deleteDiscountCodeError;
+        result = { success: true, message: 'Discount code deleted successfully' };
+        break;
+
+      case 'testConnection':
+        // Test database connection
+        const { data: testData, error: testError } = await supabaseAdmin
+          .from('discount_codes')
+          .select('id', { count: 'exact', head: true });
+
+        if (testError) throw testError;
+        result = { 
+          success: true, 
+          message: 'Connection successful', 
+          readCount: testData?.length || 0 
+        };
+        break;
+
       default:
         throw new Error(`Unknown operation: ${operation}`)
     }

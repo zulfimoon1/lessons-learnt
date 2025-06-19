@@ -7,9 +7,25 @@ import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
 import { usePlatformAdmin } from '@/contexts/PlatformAdminContext';
-import { secureDiscountCodeService, DiscountCode } from '@/services/secureDiscountCodeService';
+import { supabase } from '@/integrations/supabase/client';
 import { Plus, Edit, Trash2, TestTube, Shield } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+
+interface DiscountCode {
+  id: string;
+  code: string;
+  discount_percent: number;
+  description: string | null;
+  max_uses: number | null;
+  current_uses: number;
+  expires_at: string | null;
+  is_active: boolean;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+  school_name: string | null;
+  duration_months: number | null;
+}
 
 const DiscountCodeManagement = () => {
   const { admin } = usePlatformAdmin();
@@ -45,30 +61,39 @@ const DiscountCodeManagement = () => {
 
     setIsLoading(true);
     try {
-      console.log('🔨 Creating discount code with secure service...');
-      const newCode = await secureDiscountCodeService.createDiscountCode(
-        {
-          code,
-          discount_percent: discountPercent,
-          description,
-          max_uses: maxUses,
-          expires_at: expiresAt,
-          is_active: isActive,
-          school_name: schoolName,
-          duration_months: durationMonths
-        },
-        admin.id,
-        admin.email
-      );
-
-      setDiscountCodes([...discountCodes, newCode]);
-      setIsCreateDialogOpen(false);
-      resetForm();
-
-      toast({
-        title: 'Success',
-        description: 'Discount code created successfully',
+      console.log('🔨 Creating discount code via edge function...');
+      const { data, error } = await supabase.functions.invoke('platform-admin', {
+        body: {
+          operation: 'createDiscountCode',
+          adminEmail: admin.email,
+          discountCodeData: {
+            code,
+            discount_percent: discountPercent,
+            description,
+            max_uses: maxUses,
+            expires_at: expiresAt,
+            is_active: isActive,
+            school_name: schoolName,
+            duration_months: durationMonths,
+            created_by: admin.id
+          }
+        }
       });
+
+      if (error) throw error;
+      
+      if (data?.success) {
+        setDiscountCodes([...discountCodes, data.data]);
+        setIsCreateDialogOpen(false);
+        resetForm();
+
+        toast({
+          title: 'Success',
+          description: 'Discount code created successfully',
+        });
+      } else {
+        throw new Error(data?.error || 'Failed to create discount code');
+      }
     } catch (error: any) {
       console.error('❌ Error creating discount code:', error);
       toast({
@@ -86,32 +111,41 @@ const DiscountCodeManagement = () => {
 
     setIsLoading(true);
     try {
-      console.log('🔄 Updating discount code with secure service...');
-      const updatedCode = await secureDiscountCodeService.updateDiscountCode(
-        editingCode.id,
-        {
-          code,
-          discount_percent: discountPercent,
-          description,
-          max_uses: maxUses,
-          expires_at: expiresAt,
-          is_active: isActive,
-          school_name: schoolName,
-          duration_months: durationMonths
-        },
-        admin.email
-      );
-
-      setDiscountCodes(
-        discountCodes.map((code) => (code.id === editingCode.id ? updatedCode : code))
-      );
-      setEditingCode(null);
-      resetForm();
-
-      toast({
-        title: 'Success',
-        description: 'Discount code updated successfully',
+      console.log('🔄 Updating discount code via edge function...');
+      const { data, error } = await supabase.functions.invoke('platform-admin', {
+        body: {
+          operation: 'updateDiscountCode',
+          adminEmail: admin.email,
+          discountCodeId: editingCode.id,
+          discountCodeUpdates: {
+            code,
+            discount_percent: discountPercent,
+            description,
+            max_uses: maxUses,
+            expires_at: expiresAt,
+            is_active: isActive,
+            school_name: schoolName,
+            duration_months: durationMonths
+          }
+        }
       });
+
+      if (error) throw error;
+      
+      if (data?.success) {
+        setDiscountCodes(
+          discountCodes.map((code) => (code.id === editingCode.id ? data.data : code))
+        );
+        setEditingCode(null);
+        resetForm();
+
+        toast({
+          title: 'Success',
+          description: 'Discount code updated successfully',
+        });
+      } else {
+        throw new Error(data?.error || 'Failed to update discount code');
+      }
     } catch (error: any) {
       console.error('❌ Error updating discount code:', error);
       toast({
@@ -129,19 +163,32 @@ const DiscountCodeManagement = () => {
 
     setIsLoading(true);
     try {
-      console.log('🔥 Deleting discount code with secure service...');
-      await secureDiscountCodeService.deleteDiscountCode(id, admin.email);
-      setDiscountCodes(discountCodes.filter((code) => code.id !== id));
-
-      toast({
-        title: 'Success',
-        description: 'Discount code deleted successfully',
+      console.log('🔥 Deleting discount code via edge function...');
+      const { data, error } = await supabase.functions.invoke('platform-admin', {
+        body: {
+          operation: 'deleteDiscountCode',
+          adminEmail: admin.email,
+          discountCodeId: id
+        }
       });
-    } catch (error) {
+
+      if (error) throw error;
+      
+      if (data?.success) {
+        setDiscountCodes(discountCodes.filter((code) => code.id !== id));
+
+        toast({
+          title: 'Success',
+          description: 'Discount code deleted successfully',
+        });
+      } else {
+        throw new Error(data?.error || 'Failed to delete discount code');
+      }
+    } catch (error: any) {
       console.error('❌ Error deleting discount code:', error);
       toast({
         title: 'Error',
-        description: 'Failed to delete discount code',
+        description: error.message || 'Failed to delete discount code',
         variant: 'destructive',
       });
     } finally {
@@ -154,15 +201,27 @@ const DiscountCodeManagement = () => {
     
     setIsLoading(true);
     try {
-      console.log('📋 Loading discount codes with secure service...');
-      const codes = await secureDiscountCodeService.getAllDiscountCodes(admin.email);
-      setDiscountCodes(codes);
-      console.log('✅ Loaded', codes.length, 'discount codes');
-    } catch (error) {
+      console.log('📋 Loading discount codes via edge function...');
+      const { data, error } = await supabase.functions.invoke('platform-admin', {
+        body: {
+          operation: 'getDiscountCodes',
+          adminEmail: admin.email
+        }
+      });
+
+      if (error) throw error;
+      
+      if (data?.success) {
+        setDiscountCodes(data.data || []);
+        console.log('✅ Loaded', data.data?.length || 0, 'discount codes');
+      } else {
+        throw new Error(data?.error || 'Failed to load discount codes');
+      }
+    } catch (error: any) {
       console.error('❌ Error loading discount codes:', error);
       toast({
         title: 'Error',
-        description: 'Failed to load discount codes',
+        description: error.message || 'Failed to load discount codes',
         variant: 'destructive',
       });
     } finally {
@@ -175,26 +234,33 @@ const DiscountCodeManagement = () => {
     
     setIsLoading(true);
     try {
-      console.log('🧪 Testing secure discount code connection...');
-      const result = await secureDiscountCodeService.testConnection(admin.email);
+      console.log('🧪 Testing connection via edge function...');
+      const { data, error } = await supabase.functions.invoke('platform-admin', {
+        body: {
+          operation: 'testConnection',
+          adminEmail: admin.email
+        }
+      });
+
+      if (error) throw error;
       
-      if (result.success) {
+      if (data?.success) {
         toast({
           title: 'Connection Test Successful',
-          description: `${result.message} Found ${result.readCount} codes.`,
+          description: `${data.data.message} Found ${data.data.readCount} codes.`,
         });
       } else {
         toast({
           title: 'Connection Test Failed',
-          description: result.error,
+          description: data?.error || 'Connection test failed',
           variant: 'destructive',
         });
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('❌ Connection test error:', error);
       toast({
         title: 'Test Failed',
-        description: 'Connection test failed',
+        description: error.message || 'Connection test failed',
         variant: 'destructive',
       });
     } finally {
@@ -327,7 +393,9 @@ const DiscountCodeManagement = () => {
                   />
                 </div>
               </div>
-              <Button onClick={handleCreate}>Create Discount Code</Button>
+              <Button onClick={handleCreate} disabled={isLoading}>
+                {isLoading ? 'Creating...' : 'Create Discount Code'}
+              </Button>
             </DialogContent>
           </Dialog>
           
