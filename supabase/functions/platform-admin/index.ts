@@ -7,6 +7,15 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
+// Simple password hashing using Deno's built-in crypto API
+async function hashPassword(password: string): Promise<string> {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(password + 'simple_salt_2024');
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
@@ -69,9 +78,18 @@ serve(async (req) => {
 
       case 'createTeacher':
         const { teacherData } = params;
+        
+        // Hash password server-side
+        const hashedPassword = await hashPassword(teacherData.password);
+        const teacherDataWithHash = {
+          ...teacherData,
+          password_hash: hashedPassword
+        };
+        delete teacherDataWithHash.password; // Remove plain password
+
         const { data: newTeacher, error: createTeacherError } = await supabaseAdmin
           .from('teachers')
-          .insert(teacherData)
+          .insert(teacherDataWithHash)
           .select()
           .single();
 
@@ -123,6 +141,8 @@ serve(async (req) => {
 
       case 'createSchool':
         const { schoolName } = params;
+        const adminPassword = await hashPassword('admin123'); // Default password
+        
         const { data: newSchool, error: createError } = await supabaseAdmin
           .from('teachers')
           .insert({
@@ -130,7 +150,7 @@ serve(async (req) => {
             email: `admin@${schoolName.toLowerCase().replace(/\s+/g, '')}.edu`,
             school: schoolName,
             role: 'admin',
-            password_hash: 'placeholder'
+            password_hash: adminPassword
           })
           .select()
           .single();

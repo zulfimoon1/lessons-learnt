@@ -9,7 +9,6 @@ import { Trash2, Plus, Users } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { usePlatformAdmin } from '@/contexts/PlatformAdminContext';
-import bcrypt from 'bcryptjs';
 
 interface Teacher {
   id: string;
@@ -54,13 +53,13 @@ const TeacherManagement: React.FC = () => {
           teacher.school !== 'Platform Administration' && 
           !teacher.school?.toLowerCase().includes('admin')
         );
-        console.log('✅ Teachers fetched via edge function:', realTeachers.length);
+        console.log('✅ Teachers fetched:', realTeachers.length);
         setTeachers(realTeachers);
       } else {
         throw new Error(data?.error || 'Failed to fetch teachers');
       }
     } catch (error) {
-      console.error('❌ Error fetching teachers via edge function:', error);
+      console.error('❌ Error fetching teachers:', error);
       toast.error('Failed to fetch teachers');
       setTeachers([]);
     }
@@ -85,13 +84,13 @@ const TeacherManagement: React.FC = () => {
             name !== 'Platform Administration' && 
             !name.toLowerCase().includes('admin')
           );
-        console.log('✅ Schools fetched via edge function:', schoolNames.length);
+        console.log('✅ Schools fetched:', schoolNames.length);
         setSchools(schoolNames);
       } else {
         throw new Error(data?.error || 'Failed to fetch schools');
       }
     } catch (error) {
-      console.error('❌ Error fetching schools via edge function:', error);
+      console.error('❌ Error fetching schools:', error);
       setSchools([]);
     }
   };
@@ -110,9 +109,6 @@ const TeacherManagement: React.FC = () => {
     setIsLoading(true);
     try {
       console.log('👨‍🏫 Creating new teacher:', newTeacher.name);
-      
-      const passwordHash = await bcrypt.hash(newTeacher.password, 12);
-      console.log('🔐 Password hashed successfully');
 
       const teacherData = {
         name: newTeacher.name,
@@ -121,7 +117,7 @@ const TeacherManagement: React.FC = () => {
         role: newTeacher.role,
         specialization: newTeacher.specialization || null,
         license_number: newTeacher.license_number || null,
-        password_hash: passwordHash
+        password: newTeacher.password // Send plain password - edge function will hash it
       };
 
       console.log('📝 Inserting teacher data via edge function...');
@@ -263,7 +259,7 @@ const TeacherManagement: React.FC = () => {
                       </SelectItem>
                     ))
                   ) : (
-                    <SelectItem value="no-schools" disabled>
+                    <SelectItem value="" disabled>
                       No schools available
                     </SelectItem>
                   )}
