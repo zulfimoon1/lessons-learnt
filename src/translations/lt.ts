@@ -157,13 +157,13 @@ export const ltTranslations = {
   'pricing.numberOfTeachers': 'Mokytojų skaičius',
   'pricing.teacherDesc': 'Kiekvienas mokytojas gaus prieigą prie visų funkcijų',
   'pricing.discountCode': 'Nuolaidos kodas (neprivaloma)',
-  'pricing.enterDiscount':'/enuk nuolaidos kodą',
+  'pricing.enterDiscount': 'Įveskite nuolaidos kodą',
   'pricing.validating': 'Tikrinama...',
   'pricing.apply': 'Taikyti',
   'pricing.discountAppliedShort': 'nuolaida pritaikyta',
   'pricing.whatsIncluded': 'Kas įtraukta',
   'pricing.unlimitedClasses': 'Neriboti klasių skaičiai',
-  'pricing.feedbackCollection': 'Atsiliepimų rinkimas',
+  'pricing.feedbackCollection': 'Atsiliep  ų rinkimas',
   'pricing.analytics': 'Analizė',
   'pricing.mentalHealth': 'Psichinės sveikatos stebėjimas',
   'pricing.multiLanguage': 'Daugiakalbis palaikymas',
@@ -222,13 +222,6 @@ export const ltTranslations = {
   'pricing.signUpEducator': 'Registruotis kaip mokytojas',
   'pricing.questionsContact': 'Klausimai? Susisiekite su mūsų komanda dėl asmeninio demonstracinio ir kainodaros konsultacijos.',
 
-  // Include all modular translations
-  ...ltDemoTranslations,
-  ...ltAuthTranslations,
-  ...ltChatTranslations,
-  ...ltTeacherTranslations,
-  ...ltWeeklyTranslations,
-  
   // Dashboard translations - Platform Admin specific
   'dashboard.platformAdmin': 'Platformos administratoriaus skydelis',
   'dashboard.systemInformation': 'Sistemos informacija',
@@ -266,4 +259,11 @@ export const ltTranslations = {
   'demo.mentalHealth.selfHelpResources': 'Savarankiškos pagalbos ištekliai',
   'demo.mentalHealth.moodTracking': 'Nuotaikos sekimas',
   'demo.mentalHealth.crisisSupport': 'Krizių palaikymas: 116 123 Vilties Linija',
+
+  // Include all modular translations
+  ...ltDemoTranslations,
+  ...ltAuthTranslations,
+  ...ltChatTranslations,
+  ...ltTeacherTranslations,
+  ...ltWeeklyTranslations,
 };
