@@ -194,11 +194,9 @@ serve(async (req) => {
         break;
 
       case 'getPaymentNotifications':
-        console.log('🔔 Fetching payment notifications with admin privileges...');
+        console.log('🔔 Fetching payment notifications with service role...');
         try {
-          // Set admin context for this operation
-          await supabaseAdmin.rpc('set_platform_admin_context', { admin_email: adminEmail });
-          
+          // Use service role directly without RLS context for payment notifications
           const { data: notificationsData, error: notificationsError } = await supabaseAdmin
             .from('payment_notifications')
             .select('*')
@@ -319,11 +317,9 @@ serve(async (req) => {
         break;
 
       case 'getMentalHealthAlerts':
-        console.log('🧠 Fetching mental health alerts with admin privileges...');
+        console.log('🧠 Fetching mental health alerts with service role...');
         try {
-          // Set admin context for this operation
-          await supabaseAdmin.rpc('set_platform_admin_context', { admin_email: adminEmail });
-          
+          // Use service role directly without RLS context for mental health alerts
           const { data: alertsData, error: alertsError } = await supabaseAdmin
             .from('mental_health_alerts')
             .select('*')
@@ -349,9 +345,6 @@ serve(async (req) => {
         const { alertId } = params;
         
         try {
-          // Set admin context for this operation
-          await supabaseAdmin.rpc('set_platform_admin_context', { admin_email: adminEmail });
-          
           const { error: reviewError } = await supabaseAdmin
             .from('mental_health_alerts')
             .update({
