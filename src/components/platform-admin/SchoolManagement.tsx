@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Trash2, Plus, School, CheckCircle } from 'lucide-react';
+import { Trash2, Plus, School } from 'lucide-react';
 import { toast } from 'sonner';
 import { usePlatformAdmin } from '@/contexts/PlatformAdminContext';
 import { securePlatformAdminService } from '@/services/securePlatformAdminService';
@@ -63,16 +63,11 @@ const SchoolManagement: React.FC<SchoolManagementProps> = ({ onDataChange }) => 
       const result = await securePlatformAdminService.createSchool(admin.email, newSchoolName.trim());
 
       console.log('✅ School created successfully');
-      toast.success(`School "${newSchoolName}" added successfully (simulated)`);
+      toast.success(`School "${newSchoolName}" added successfully`);
       setNewSchoolName('');
       
-      // Add to local state for demo
-      const newSchool: School = {
-        name: newSchoolName.trim(),
-        teacher_count: Math.floor(Math.random() * 10) + 1,
-        student_count: Math.floor(Math.random() * 200) + 50
-      };
-      setSchools(prev => [...prev, newSchool]);
+      // Refresh schools list
+      await fetchSchools();
       
       if (onDataChange) {
         onDataChange();
@@ -109,10 +104,10 @@ const SchoolManagement: React.FC<SchoolManagementProps> = ({ onDataChange }) => 
       await securePlatformAdminService.deleteSchool(admin.email, schoolName);
 
       console.log('✅ School deleted successfully');
-      toast.success(`School "${schoolName}" deleted successfully (simulated)`);
+      toast.success(`School "${schoolName}" deleted successfully`);
       
-      // Remove from local state for demo
-      setSchools(prev => prev.filter(school => school.name !== schoolName));
+      // Refresh schools list
+      await fetchSchools();
       
       if (onDataChange) {
         onDataChange();
@@ -144,24 +139,10 @@ const SchoolManagement: React.FC<SchoolManagementProps> = ({ onDataChange }) => 
         <CardTitle className="flex items-center gap-2">
           <School className="w-5 h-5" />
           School Management
-          <div className="flex items-center gap-1 text-blue-600">
-            <CheckCircle className="w-4 h-4" />
-            <span className="text-xs">Mock Mode</span>
-          </div>
         </CardTitle>
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-            <div className="flex items-center gap-2 text-blue-800">
-              <CheckCircle className="w-4 h-4" />
-              <span className="text-sm font-medium">Working with Mock Data</span>
-            </div>
-            <p className="text-xs text-blue-700 mt-1">
-              School operations are simulated while database permissions are being resolved.
-            </p>
-          </div>
-
           {/* Add new school */}
           <div className="flex gap-2">
             <div className="flex-1">

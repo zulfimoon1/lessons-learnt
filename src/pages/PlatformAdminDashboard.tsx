@@ -1,6 +1,6 @@
+
 import { useEffect, useState } from "react";
 import { usePlatformAdmin } from "@/contexts/PlatformAdminContext";
-import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -98,8 +98,8 @@ const PlatformAdminDashboard = () => {
         total_teachers: school.teacher_count
       }));
 
-      // Mock monthly revenue for now
-      const monthlyRevenue = 2450.00;
+      // Calculate monthly revenue based on subscriptions
+      const monthlyRevenue = platformStats.subscriptionsCount * 49.99;
       
       const newStats = {
         totalStudents: platformStats.studentsCount,
@@ -221,58 +221,6 @@ const PlatformAdminDashboard = () => {
       </header>
 
       <div className="max-w-7xl mx-auto px-6 py-8">
-        {/* System Information */}
-        <Card className="mb-8 bg-blue-50 border-blue-200">
-          <CardHeader>
-            <CardTitle className="text-blue-800">System Status - Working with Mock Data</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="bg-blue-100 border border-blue-300 rounded-lg p-4 mb-4">
-              <div className="text-blue-800 text-sm font-medium">
-                🔧 Temporary Mode: Using mock data while resolving database permissions
-              </div>
-              <p className="text-xs text-blue-700 mt-1">
-                The admin system is authenticated and working. Database access is being restored progressively.
-              </p>
-            </div>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-              <div>
-                <span className="font-medium text-blue-700">Schools:</span>
-                <span className="ml-2 text-blue-600">{stats.totalSchools}</span>
-              </div>
-              <div>
-                <span className="font-medium text-blue-700">Students:</span>
-                <span className="ml-2 text-blue-600">{stats.totalStudents}</span>
-              </div>
-              <div>
-                <span className="font-medium text-blue-700">Teachers:</span>
-                <span className="ml-2 text-blue-600">{stats.totalTeachers}</span>
-              </div>
-              <div>
-                <span className="font-medium text-blue-700">Responses:</span>
-                <span className="ml-2 text-blue-600">{stats.totalResponses}</span>
-              </div>
-            </div>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm mt-4">
-              <div>
-                <span className="font-medium text-blue-700">Subscriptions:</span>
-                <span className="ml-2 text-blue-600">{stats.totalSubscriptions}</span>
-              </div>
-              <div>
-                <span className="font-medium text-blue-700">Revenue:</span>
-                <span className="ml-2 text-blue-600">${stats.monthlyRevenue.toFixed(2)}/month</span>
-              </div>
-              <div>
-                <span className="font-medium text-blue-700">Status:</span>
-                <span className="ml-2 text-blue-600">🔧 Mock Mode</span>
-              </div>
-            </div>
-            {lastUpdated && (
-              <p className="text-xs text-blue-600 mt-4">Last updated: {lastUpdated}</p>
-            )}
-          </CardContent>
-        </Card>
-
         {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <StatsCard 
@@ -355,6 +303,34 @@ const PlatformAdminDashboard = () => {
             <SecurityMonitoring />
           </TabsContent>
         </Tabs>
+
+        {lastUpdated && (
+          <div className="mt-8">
+            <Card>
+              <CardContent className="pt-6">
+                <p className="text-sm text-gray-600">Last updated: {lastUpdated}</p>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm mt-4">
+                  <div>
+                    <span className="font-medium text-gray-700">Monthly Revenue:</span>
+                    <span className="ml-2 text-green-600">${stats.monthlyRevenue.toFixed(2)}</span>
+                  </div>
+                  <div>
+                    <span className="font-medium text-gray-700">Active Subscriptions:</span>
+                    <span className="ml-2 text-blue-600">{stats.totalSubscriptions}</span>
+                  </div>
+                  <div>
+                    <span className="font-medium text-gray-700">Total Users:</span>
+                    <span className="ml-2 text-purple-600">{stats.totalStudents + stats.totalTeachers}</span>
+                  </div>
+                  <div>
+                    <span className="font-medium text-gray-700">System Status:</span>
+                    <span className="ml-2 text-green-600">✅ Online</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
       </div>
     </div>
   );
