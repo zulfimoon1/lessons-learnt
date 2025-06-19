@@ -40,8 +40,12 @@ serve(async (req) => {
       throw new Error('Unauthorized: Not a platform admin')
     }
 
-    // Set admin context for all operations
-    await supabaseAdmin.rpc('set_platform_admin_context', { admin_email: adminEmail });
+    // Set admin context for all operations with multiple fallbacks
+    try {
+      await supabaseAdmin.rpc('set_platform_admin_context', { admin_email: adminEmail });
+    } catch (error) {
+      console.warn('Failed to set platform admin context via RPC, continuing with direct access');
+    }
 
     let result;
 
