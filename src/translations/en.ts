@@ -223,6 +223,16 @@ export const enTranslations = {
   'pricing.signUpEducator': 'Sign Up as Educator',
   'pricing.questionsContact': 'Questions? Contact our team for a personalized demo and pricing consultation.',
 
+  // Custom Pricing Section translations
+  'pricing.customPricingAvailable': 'Custom Pricing Available',
+  'pricing.needCustomSolution': 'Need a custom solution for your organization?',
+  'pricing.customPricingDescription': 'We offer tailored pricing and features for school districts, large organizations, and enterprise customers. Get volume discounts, custom integrations, and dedicated support.',
+  'pricing.requestCustomPricing': 'Request Custom Pricing',
+  'pricing.perfectForLargeOrgs': 'Perfect for 50+ teachers or district-wide implementation',
+  'pricing.comingSoon': 'Coming Soon',
+  'pricing.customPricingFormSoon': 'Custom pricing form will be available soon. Please contact support for now.',
+  'pricing.contactSupport': 'Contact Support',
+
   // Include all modular translations
   ...enDemoTranslations,
   ...enAuthTranslations,
