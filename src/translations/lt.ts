@@ -1,4 +1,5 @@
 
+
 import { ltDemoTranslations } from './lt/demo';
 import { ltAuthTranslations } from './lt/auth';
 import { ltChatTranslations } from './lt/chat';
@@ -104,7 +105,7 @@ export const ltTranslations = {
   'admin.teachers.description': 'Valdykite mokyklos mokytojus',
   'admin.teachers.empty': 'Mokytojų nėra',
   
-  // Student specific translations - FIXED MISSING TRANSLATIONS
+  // Student specific translations
   'student.portal': 'Studentų portalas',
   'student.loginDescription': 'Prisijunkite prie savo mokymosi skydelio',
   'student.fullName': 'Vardas ir pavardė',
@@ -224,16 +225,7 @@ export const ltTranslations = {
   'pricing.signUpEducator': 'Registruotis kaip mokytojas',
   'pricing.questionsContact': 'Klausimai? Susisiekite su mūsų komanda dėl asmeninio demonstracinio ir kainodaros konsultacijos.',
 
-  // NEW CUSTOM PRICING TRANSLATIONS - ADDED
-  'pricing.customPricingAvailable': 'Prieinami individualūs kainodaros sprendimai',
-  'pricing.customSolutionTitle': 'Reikia individualaus sprendimo jūsų organizacijai?',
-  'pricing.customSolutionDescription': 'Siūlome pritaikytą kaindarą ir funkcijas mokyklų rajonams, didelėms organizacijoms ir įmonės klientams. Gaukite didmenų nuolaidas, individuales integracijas ir atskirą palaikymą.',
-  'pricing.requestCustomPricing': 'Prašyti individualios kainodaros',
-  'pricing.perfectForLargeOrgs': 'Puikus pasirinkimas 50+ mokytojų ar rajono masto diegimui',
-  'pricing.comingSoonCustom': 'Netrukus bus prieinama',
-  'pricing.customPricingFormSoon': 'Individualios kainodaros forma bus prieinama netrukus. Kol kas susisiekite su palaikymu.',
-
-  // MISSING CUSTOM PRICING TRANSLATIONS FOR PRICING SHOWCASE PAGE
+  // CUSTOM PRICING TRANSLATIONS - Removed duplicates and kept single set
   'pricing.customPricingAvailable': 'Prieinami individualūs kainodaros sprendimai',
   'pricing.customSolutionTitle': 'Reikia individualaus sprendimo jūsų organizacijai?',
   'pricing.customSolutionDescription': 'Siūlome pritaikytą kaindarą ir funkcijas mokyklų rajonams, didelėms organizacijoms ir įmonės klientams. Gaukite didmenų nuolaidas, individuales integracijas ir atskirą palaikymą.',
@@ -269,10 +261,10 @@ export const ltTranslations = {
   'dashboard.mentalHealth': 'Psichinė sveikata',
   'dashboard.discountCodes': 'Nuolaidos kodai',
   
-  // Teacher translations - ADDED MISSING ONES
+  // Teacher translations
   'teacher.missingInfo': 'Trūksta informacijos',
 
-  // NEW Demo page specific translations - ADDED MISSING LITHUANIAN TRANSLATIONS
+  // Demo page specific translations
   'demo.keyFeaturesShown': 'Pagrindinės rodomos funkcijos',
   'demo.interactiveSimulation': 'Interaktyvus modeliavimas',
   'demo.teacherWorkflow': 'Mokytojo darbo eiga',
@@ -287,3 +279,4 @@ export const ltTranslations = {
   'demo.mentalHealth.moodTracking': 'Nuotaikos sekimas',
   'demo.mentalHealth.crisisSupport': 'Krizių palaikymas: 116 123 Vilties Linija',
 };
+
