@@ -236,15 +236,14 @@ const PricingShowcase = () => {
                 <div className="flex items-center justify-center mb-4">
                   <Badge className="bg-purple-600 text-white px-4 py-2 text-sm font-semibold">
                     <StarIcon className="w-4 h-4 mr-2" />
-                    Custom Pricing Available
+                    {t('pricing.customPricingAvailable')}
                   </Badge>
                 </div>
                 <h3 className="text-2xl font-bold text-gray-900 mb-4">
-                  Need a custom solution for your organization?
+                  {t('pricing.needCustomSolution')}
                 </h3>
                 <p className="text-gray-600 mb-6 max-w-2xl mx-auto">
-                  We offer tailored pricing and features for school districts, large organizations, 
-                  and enterprise customers. Get volume discounts, custom integrations, and dedicated support.
+                  {t('pricing.customPricingDescription')}
                 </p>
                 <div className="flex items-center justify-center gap-4 flex-wrap">
                   <Button
@@ -252,16 +251,16 @@ const PricingShowcase = () => {
                     className="text-lg px-8 py-3 border-2 border-purple-600 text-purple-600 hover:bg-purple-50"
                     onClick={() => {
                       toast({
-                        title: "Coming Soon",
-                        description: "Custom pricing form will be available soon. Please contact support for now.",
+                        title: t('pricing.comingSoon'),
+                        description: t('pricing.customPricingFormSoon'),
                       });
                     }}
                   >
                     <PhoneIcon className="w-5 h-5 mr-2" />
-                    Request Custom Pricing
+                    {t('pricing.requestCustomPricing')}
                   </Button>
                   <div className="text-sm text-gray-500">
-                    Perfect for 50+ teachers or district-wide implementation
+                    {t('pricing.perfectForLargeOrgs')}
                   </div>
                 </div>
               </div>
