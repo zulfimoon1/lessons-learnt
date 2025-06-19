@@ -74,8 +74,8 @@ const DiscountCodeManagement = () => {
             expires_at: expiresAt,
             is_active: isActive,
             school_name: schoolName,
-            duration_months: durationMonths,
-            created_by: admin.id
+            duration_months: durationMonths
+            // Don't pass created_by anymore since admin.id is not a real UUID
           }
         }
       });

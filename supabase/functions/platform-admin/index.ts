@@ -332,51 +332,32 @@ serve(async (req) => {
         console.log('🔨 Creating discount code via admin function...');
         const { discountCodeData } = params;
         
-        try {
-          // Try RPC function first
-          const { data: rpcData, error: rpcError } = await supabaseAdmin
-            .rpc('platform_admin_create_discount_code', {
-              admin_email_param: adminEmail,
-              code_param: discountCodeData.code,
-              discount_percent_param: discountCodeData.discount_percent,
-              description_param: discountCodeData.description,
-              max_uses_param: discountCodeData.max_uses,
-              expires_at_param: discountCodeData.expires_at,
-              is_active_param: discountCodeData.is_active,
-              school_name_param: discountCodeData.school_name,
-              created_by_param: discountCodeData.created_by,
-              duration_months_param: discountCodeData.duration_months
-            });
+        // Fix: Don't pass created_by if it's not a valid UUID
+        const discountCodeInsert = {
+          code: discountCodeData.code,
+          discount_percent: discountCodeData.discount_percent,
+          description: discountCodeData.description,
+          max_uses: discountCodeData.max_uses,
+          expires_at: discountCodeData.expires_at,
+          is_active: discountCodeData.is_active,
+          school_name: discountCodeData.school_name,
+          duration_months: discountCodeData.duration_months,
+          current_uses: 0
+        };
 
-          if (rpcError) {
-            console.error('RPC function failed, trying direct insert:', rpcError);
-            // Fallback to direct insert
-            const { data: directData, error: directError } = await supabaseAdmin
-              .from('discount_codes')
-              .insert({
-                code: discountCodeData.code,
-                discount_percent: discountCodeData.discount_percent,
-                description: discountCodeData.description,
-                max_uses: discountCodeData.max_uses,
-                expires_at: discountCodeData.expires_at,
-                is_active: discountCodeData.is_active,
-                school_name: discountCodeData.school_name,
-                created_by: discountCodeData.created_by,
-                duration_months: discountCodeData.duration_months,
-                current_uses: 0
-              })
-              .select()
-              .single();
-
-            if (directError) throw directError;
-            result = directData;
-          } else {
-            result = rpcData;
-          }
-        } catch (error) {
-          console.error('Both RPC and direct insert failed:', error);
-          throw error;
+        // Only add created_by if it's a valid UUID
+        if (discountCodeData.created_by && discountCodeData.created_by.length === 36 && discountCodeData.created_by.includes('-')) {
+          discountCodeInsert.created_by = discountCodeData.created_by;
         }
+
+        const { data: directData, error: directError } = await supabaseAdmin
+          .from('discount_codes')
+          .insert(discountCodeInsert)
+          .select()
+          .single();
+
+        if (directError) throw directError;
+        result = directData;
         
         console.log('✅ Discount code created successfully');
         break;
@@ -385,43 +366,18 @@ serve(async (req) => {
         console.log('🔄 Updating discount code...');
         const { discountCodeId, discountCodeUpdates } = params;
         
-        try {
-          // Try RPC function first
-          const { data: rpcUpdateData, error: rpcUpdateError } = await supabaseAdmin
-            .rpc('platform_admin_update_discount_code', {
-              admin_email_param: adminEmail,
-              code_id_param: discountCodeId,
-              code_param: discountCodeUpdates.code,
-              discount_percent_param: discountCodeUpdates.discount_percent,
-              description_param: discountCodeUpdates.description,
-              max_uses_param: discountCodeUpdates.max_uses,
-              expires_at_param: discountCodeUpdates.expires_at,
-              is_active_param: discountCodeUpdates.is_active,
-              school_name_param: discountCodeUpdates.school_name
-            });
+        const { data: directUpdateData, error: directUpdateError } = await supabaseAdmin
+          .from('discount_codes')
+          .update({
+            ...discountCodeUpdates,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', discountCodeId)
+          .select()
+          .single();
 
-          if (rpcUpdateError) {
-            console.error('RPC update failed, trying direct update:', rpcUpdateError);
-            // Fallback to direct update
-            const { data: directUpdateData, error: directUpdateError } = await supabaseAdmin
-              .from('discount_codes')
-              .update({
-                ...discountCodeUpdates,
-                updated_at: new Date().toISOString()
-              })
-              .eq('id', discountCodeId)
-              .select()
-              .single();
-
-            if (directUpdateError) throw directUpdateError;
-            result = directUpdateData;
-          } else {
-            result = rpcUpdateData;
-          }
-        } catch (error) {
-          console.error('Both RPC and direct update failed:', error);
-          throw error;
-        }
+        if (directUpdateError) throw directUpdateError;
+        result = directUpdateData;
         
         console.log('✅ Discount code updated successfully');
         break;
@@ -430,31 +386,13 @@ serve(async (req) => {
         console.log('🗑️ Deleting discount code...');
         const { discountCodeId: deleteDiscountCodeId } = params;
         
-        try {
-          // Try RPC function first
-          const { data: rpcDeleteData, error: rpcDeleteError } = await supabaseAdmin
-            .rpc('platform_admin_delete_discount_code', {
-              admin_email_param: adminEmail,
-              code_id_param: deleteDiscountCodeId
-            });
+        const { error: directDeleteError } = await supabaseAdmin
+          .from('discount_codes')
+          .delete()
+          .eq('id', deleteDiscountCodeId);
 
-          if (rpcDeleteError) {
-            console.error('RPC delete failed, trying direct delete:', rpcDeleteError);
-            // Fallback to direct delete
-            const { error: directDeleteError } = await supabaseAdmin
-              .from('discount_codes')
-              .delete()
-              .eq('id', deleteDiscountCodeId);
-
-            if (directDeleteError) throw directDeleteError;
-            result = { success: true, message: 'Discount code deleted successfully' };
-          } else {
-            result = { success: true, message: 'Discount code deleted successfully' };
-          }
-        } catch (error) {
-          console.error('Both RPC and direct delete failed:', error);
-          throw error;
-        }
+        if (directDeleteError) throw directDeleteError;
+        result = { success: true, message: 'Discount code deleted successfully' };
         
         console.log('✅ Discount code deleted successfully');
         break;
