@@ -54,7 +54,7 @@ class SecurePlatformAdminService {
     try {
       console.log('🔧 Setting platform admin context for:', adminEmail);
       
-      // Use the correct function name that exists in the database
+      // Use the updated context function with enhanced security flags
       const { error: rpcError } = await supabase.rpc('set_platform_admin_context', { 
         admin_email: adminEmail 
       });
@@ -65,8 +65,8 @@ class SecurePlatformAdminService {
         console.log('✅ Platform admin context set via RPC successfully');
       }
       
-      // Wait longer for context to propagate - increased to 5000ms for maximum reliability
-      await new Promise(resolve => setTimeout(resolve, 5000));
+      // Reduced wait time since new policies should work more reliably
+      await new Promise(resolve => setTimeout(resolve, 2000));
       
     } catch (error) {
       console.warn('⚠️ Failed to set admin context:', error);
@@ -84,7 +84,7 @@ class SecurePlatformAdminService {
     try {
       await this.ensureAdminContext(adminEmail);
       
-      // Use direct queries with enhanced retry logic
+      // Use direct queries with simplified retry logic
       const results = await Promise.allSettled([
         this.getCountWithRetry('students'),
         this.getCountWithRetry('teachers'),
@@ -129,16 +129,13 @@ class SecurePlatformAdminService {
     }
   }
 
-  private async getCountWithRetry(tableName: string, maxRetries: number = 10): Promise<number> {
+  private async getCountWithRetry(tableName: string, maxRetries: number = 3): Promise<number> {
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
         console.log(`🔄 Attempt ${attempt} to get count for ${tableName}`);
         
-        // Enhanced admin context setting before each query with multiple calls and longer waits
-        for (let contextAttempt = 1; contextAttempt <= 5; contextAttempt++) {
-          await this.ensureAdminContext(this.KNOWN_ADMIN);
-          await new Promise(resolve => setTimeout(resolve, 2000));
-        }
+        // Set admin context before query
+        await this.ensureAdminContext(this.KNOWN_ADMIN);
         
         // Direct query with proper type handling
         let count = 0;
@@ -180,7 +177,7 @@ class SecurePlatformAdminService {
         if (error) {
           console.warn(`⚠️ Error querying ${tableName} (attempt ${attempt}):`, error);
           if (attempt < maxRetries) {
-            await new Promise(resolve => setTimeout(resolve, 5000 * attempt));
+            await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
             continue;
           }
         }
@@ -190,7 +187,7 @@ class SecurePlatformAdminService {
       } catch (error) {
         console.error(`❌ Error getting count for ${tableName} (attempt ${attempt}):`, error);
         if (attempt < maxRetries) {
-          await new Promise(resolve => setTimeout(resolve, 5000 * attempt));
+          await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
         }
       }
     }
