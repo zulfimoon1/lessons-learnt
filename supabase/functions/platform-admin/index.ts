@@ -118,20 +118,32 @@ serve(async (req) => {
         console.log('🧹 Starting comprehensive demo data cleanup...');
         
         try {
-          // Delete subscriptions with demo-related school names (case insensitive)
-          const { data: demoSubscriptions, error: fetchError } = await supabaseAdmin
+          // Delete subscriptions with demo-related school names (case insensitive and broader matching)
+          const { data: allSubscriptions, error: fetchError } = await supabaseAdmin
             .from('subscriptions')
-            .select('*')
-            .or('school_name.ilike.%demo%,school_name.ilike.%default%,school_name.ilike.%test%');
+            .select('*');
 
           if (fetchError) {
-            console.error('Error fetching demo subscriptions:', fetchError);
+            console.error('Error fetching subscriptions:', fetchError);
             throw fetchError;
           }
 
-          console.log(`Found ${demoSubscriptions?.length || 0} demo subscriptions to delete`);
+          // Filter demo subscriptions with more comprehensive criteria
+          const demoSubscriptions = allSubscriptions?.filter(sub => {
+            const schoolName = (sub.school_name || '').toLowerCase();
+            return schoolName.includes('demo') || 
+                   schoolName.includes('default') || 
+                   schoolName.includes('test') ||
+                   schoolName === 'demo school' ||
+                   schoolName === 'default school' ||
+                   schoolName.startsWith('demo') ||
+                   schoolName.startsWith('default');
+          }) || [];
+
+          console.log(`Found ${demoSubscriptions.length} demo subscriptions to delete:`, 
+                     demoSubscriptions.map(s => s.school_name));
           
-          if (demoSubscriptions && demoSubscriptions.length > 0) {
+          if (demoSubscriptions.length > 0) {
             const subscriptionIds = demoSubscriptions.map(sub => sub.id);
             
             const { error: deleteError } = await supabaseAdmin
@@ -149,8 +161,9 @@ serve(async (req) => {
 
           result = { 
             success: true, 
-            message: `Demo data cleanup completed. Deleted ${demoSubscriptions?.length || 0} demo subscriptions.`,
-            deletedCount: demoSubscriptions?.length || 0
+            message: `Demo data cleanup completed. Deleted ${demoSubscriptions.length} demo subscriptions.`,
+            deletedCount: demoSubscriptions.length,
+            deletedSchools: demoSubscriptions.map(s => s.school_name)
           };
         } catch (error) {
           console.error('Demo cleanup failed:', error);
@@ -159,11 +172,9 @@ serve(async (req) => {
         break;
 
       case 'getPaymentNotifications':
-        console.log('🔔 Fetching payment notifications with admin privileges...');
+        console.log('🔔 Fetching payment notifications with service role...');
         try {
-          // Set admin context before querying
-          await supabaseAdmin.rpc('set_platform_admin_context', { admin_email: adminEmail });
-          
+          // Use service role directly - it should bypass RLS with the new policies
           const { data: notificationsData, error: notificationsError } = await supabaseAdmin
             .from('payment_notifications')
             .select('*')
