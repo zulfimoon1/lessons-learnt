@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -42,8 +43,7 @@ const TeacherManagement: React.FC = () => {
         console.log('🔧 Setting platform admin context for teacher management:', admin.email);
         await supabase.rpc('set_platform_admin_context', { admin_email: admin.email });
         console.log('✅ Platform admin context set successfully');
-        // Reduced wait time since policies are now more reliable
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        await new Promise(resolve => setTimeout(resolve, 500));
       } catch (error) {
         console.error('❌ Error setting admin context:', error);
       }
@@ -55,7 +55,6 @@ const TeacherManagement: React.FC = () => {
       try {
         console.log(`🔄 Attempt ${attempt} to fetch teachers`);
         
-        // Set context before query
         await setAdminContext();
         
         const { data, error } = await supabase
@@ -72,8 +71,14 @@ const TeacherManagement: React.FC = () => {
           throw error;
         }
         
-        console.log('✅ Teachers fetched:', data?.length || 0);
-        setTeachers(data || []);
+        // Filter out administrative entries
+        const realTeachers = (data || []).filter(teacher => 
+          teacher.school !== 'Platform Administration' && 
+          !teacher.school?.toLowerCase().includes('admin')
+        );
+        
+        console.log('✅ Teachers fetched:', realTeachers.length);
+        setTeachers(realTeachers);
         return;
       } catch (error) {
         console.error(`💥 Error fetching teachers (attempt ${attempt}):`, error);
@@ -108,7 +113,16 @@ const TeacherManagement: React.FC = () => {
           throw error;
         }
         
-        const uniqueSchools = [...new Set(data?.map(item => item.school) || [])];
+        // Filter out administrative entries and get unique schools
+        const uniqueSchools = [...new Set(
+          (data || [])
+            .map(item => item.school)
+            .filter(school => school && 
+              school !== 'Platform Administration' && 
+              !school.toLowerCase().includes('admin')
+            )
+        )];
+        
         console.log('✅ Schools fetched:', uniqueSchools.length);
         setSchools(uniqueSchools);
         return;
@@ -139,10 +153,8 @@ const TeacherManagement: React.FC = () => {
     try {
       console.log('👨‍🏫 Creating new teacher:', newTeacher.name);
       
-      // Set context before operation
       await setAdminContext();
       
-      // Hash the password
       const passwordHash = await bcrypt.hash(newTeacher.password, 12);
       console.log('🔐 Password hashed successfully');
 
@@ -233,7 +245,6 @@ const TeacherManagement: React.FC = () => {
 
   useEffect(() => {
     if (admin?.email) {
-      // Start fetching data immediately
       fetchTeachersWithRetry();
       fetchSchoolsWithRetry();
     }
@@ -283,11 +294,17 @@ const TeacherManagement: React.FC = () => {
                   <SelectValue placeholder="Select school" />
                 </SelectTrigger>
                 <SelectContent>
-                  {schools.map((school) => (
-                    <SelectItem key={school} value={school}>
-                      {school}
+                  {schools.length > 0 ? (
+                    schools.map((school) => (
+                      <SelectItem key={school} value={school}>
+                        {school}
+                      </SelectItem>
+                    ))
+                  ) : (
+                    <SelectItem value="" disabled>
+                      No schools available
                     </SelectItem>
-                  ))}
+                  )}
                 </SelectContent>
               </Select>
             </div>
