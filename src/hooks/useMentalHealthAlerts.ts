@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { useAuth } from "@/contexts/AuthContext";
+import { usePlatformAdmin } from "@/contexts/PlatformAdminContext";
 
 export interface MentalHealthAlert {
   id: string;
@@ -25,37 +25,44 @@ export const useMentalHealthAlerts = () => {
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
   const { t } = useLanguage();
-  const { teacher } = useAuth();
+  const { admin } = usePlatformAdmin();
 
   const fetchAlerts = async () => {
     try {
-      // Check if user is authorized (teacher with doctor or admin role)
-      if (!teacher || !['doctor', 'admin'].includes(teacher.role)) {
-        console.log('User not authorized to view mental health alerts');
+      if (!admin?.email) {
+        console.log('No admin context available');
         setAlerts([]);
         setIsLoading(false);
         return;
       }
 
-      const { data, error } = await supabase
-        .from('mental_health_alerts')
-        .select('*')
-        .eq('school', teacher.school)
-        .order('created_at', { ascending: false });
+      console.log('🧠 Fetching mental health alerts via edge function...');
+      const { data, error } = await supabase.functions.invoke('platform-admin', {
+        body: {
+          operation: 'getMentalHealthAlerts',
+          adminEmail: admin.email
+        }
+      });
 
       if (error) {
         console.error('Error fetching mental health alerts:', error);
         throw error;
       }
       
-      setAlerts(data || []);
+      if (data?.success) {
+        console.log('✅ Mental health alerts fetched:', data.data?.length || 0);
+        setAlerts(data.data || []);
+      } else {
+        throw new Error(data?.error || 'Failed to fetch mental health alerts');
+      }
     } catch (error) {
       console.error('Error in fetchAlerts:', error);
       toast({
         title: t('common.error'),
-        description: t('teacher.failedToLoadSummaries'),
+        description: 'Failed to load mental health alerts',
         variant: "destructive",
       });
+      setAlerts([]);
     } finally {
       setIsLoading(false);
     }
@@ -63,33 +70,35 @@ export const useMentalHealthAlerts = () => {
 
   const markAsReviewed = async (alertId: string) => {
     try {
-      if (!teacher || !['doctor', 'admin'].includes(teacher.role)) {
+      if (!admin?.email) {
         toast({
           title: t('common.error'),
-          description: "You are not authorized to review alerts",
+          description: "Admin authentication required",
           variant: "destructive",
         });
         return;
       }
 
-      const { error } = await supabase
-        .from('mental_health_alerts')
-        .update({
-          is_reviewed: true,
-          reviewed_by: teacher.name,
-          reviewed_at: new Date().toISOString()
-        })
-        .eq('id', alertId)
-        .eq('school', teacher.school);
+      console.log('✅ Marking alert as reviewed via edge function...');
+      const { data, error } = await supabase.functions.invoke('platform-admin', {
+        body: {
+          operation: 'markAlertAsReviewed',
+          adminEmail: admin.email,
+          alertId: alertId
+        }
+      });
 
       if (error) throw error;
 
-      toast({
-        title: t('common.success'),
-        description: "The alert has been marked as reviewed",
-      });
-
-      fetchAlerts();
+      if (data?.success) {
+        toast({
+          title: t('common.success'),
+          description: "The alert has been marked as reviewed",
+        });
+        fetchAlerts();
+      } else {
+        throw new Error(data?.error || 'Failed to mark alert as reviewed');
+      }
     } catch (error) {
       console.error('Error marking alert as reviewed:', error);
       toast({
@@ -101,8 +110,10 @@ export const useMentalHealthAlerts = () => {
   };
 
   useEffect(() => {
-    fetchAlerts();
-  }, [teacher]);
+    if (admin?.email) {
+      fetchAlerts();
+    }
+  }, [admin]);
 
   const unreviewed = alerts.filter(alert => !alert.is_reviewed);
   const critical = alerts.filter(alert => alert.severity_level >= 5);
