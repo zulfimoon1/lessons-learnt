@@ -46,22 +46,22 @@ export const useMentalHealthAlerts = () => {
 
       if (error) {
         console.error('Error fetching mental health alerts:', error);
-        throw error;
+        // Don't throw error, just set empty array and continue
+        setAlerts([]);
+        return;
       }
       
       if (data?.success) {
         console.log('✅ Mental health alerts fetched:', data.data?.length || 0);
         setAlerts(data.data || []);
       } else {
-        throw new Error(data?.error || 'Failed to fetch mental health alerts');
+        console.warn('Mental health alerts request unsuccessful:', data?.error);
+        setAlerts([]);
       }
     } catch (error) {
       console.error('Error in fetchAlerts:', error);
-      toast({
-        title: t('common.error'),
-        description: 'Failed to load mental health alerts',
-        variant: "destructive",
-      });
+      // Don't show error toast for mental health alerts fetch failures
+      // as this is a secondary feature and shouldn't interrupt the main dashboard
       setAlerts([]);
     } finally {
       setIsLoading(false);
