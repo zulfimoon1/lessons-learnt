@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { securityValidationService } from './securityValidationService';
 
@@ -52,21 +53,21 @@ class SecurePlatformAdminService {
 
   async ensureAdminContext(adminEmail: string): Promise<void> {
     try {
-      console.log('🔧 Setting enhanced admin context for:', adminEmail);
+      console.log('🔧 Setting Zulfimoon admin context for:', adminEmail);
       
-      // Use the platform admin context function
-      const { error: rpcError } = await supabase.rpc('set_platform_admin_context', { 
+      // Use the correct function name from our SQL migration
+      const { error: rpcError } = await supabase.rpc('set_zulfimoon_admin_context', { 
         admin_email: adminEmail 
       });
       
       if (rpcError) {
         console.warn('⚠️ RPC context setting warning:', rpcError);
       } else {
-        console.log('✅ Enhanced admin context set via RPC successfully');
+        console.log('✅ Zulfimoon admin context set via RPC successfully');
       }
       
-      // Wait longer for context to propagate - increased to 3000ms for maximum reliability
-      await new Promise(resolve => setTimeout(resolve, 3000));
+      // Wait longer for context to propagate - increased to 5000ms for maximum reliability
+      await new Promise(resolve => setTimeout(resolve, 5000));
       
     } catch (error) {
       console.warn('⚠️ Failed to set admin context:', error);
@@ -129,15 +130,15 @@ class SecurePlatformAdminService {
     }
   }
 
-  private async getCountWithRetry(tableName: string, maxRetries: number = 7): Promise<number> {
+  private async getCountWithRetry(tableName: string, maxRetries: number = 10): Promise<number> {
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
         console.log(`🔄 Attempt ${attempt} to get count for ${tableName}`);
         
-        // Enhanced admin context setting before each query with multiple calls
-        for (let contextAttempt = 1; contextAttempt <= 3; contextAttempt++) {
+        // Enhanced admin context setting before each query with multiple calls and longer waits
+        for (let contextAttempt = 1; contextAttempt <= 5; contextAttempt++) {
           await this.ensureAdminContext(this.KNOWN_ADMIN);
-          await new Promise(resolve => setTimeout(resolve, 1000));
+          await new Promise(resolve => setTimeout(resolve, 2000));
         }
         
         // Direct query with proper type handling
@@ -180,7 +181,7 @@ class SecurePlatformAdminService {
         if (error) {
           console.warn(`⚠️ Error querying ${tableName} (attempt ${attempt}):`, error);
           if (attempt < maxRetries) {
-            await new Promise(resolve => setTimeout(resolve, 3000 * attempt));
+            await new Promise(resolve => setTimeout(resolve, 5000 * attempt));
             continue;
           }
         }
@@ -190,7 +191,7 @@ class SecurePlatformAdminService {
       } catch (error) {
         console.error(`❌ Error getting count for ${tableName} (attempt ${attempt}):`, error);
         if (attempt < maxRetries) {
-          await new Promise(resolve => setTimeout(resolve, 3000 * attempt));
+          await new Promise(resolve => setTimeout(resolve, 5000 * attempt));
         }
       }
     }
@@ -219,7 +220,7 @@ class SecurePlatformAdminService {
     }
   }
 
-  private async getSchoolsWithRetry(maxRetries: number = 7): Promise<Array<{
+  private async getSchoolsWithRetry(maxRetries: number = 10): Promise<Array<{
     name: string;
     teacher_count: number;
     student_count: number;
@@ -229,10 +230,10 @@ class SecurePlatformAdminService {
       try {
         console.log(`🔄 Attempt ${attempt} to get school data`);
         
-        // Enhanced admin context setting with multiple calls
-        for (let contextAttempt = 1; contextAttempt <= 3; contextAttempt++) {
+        // Enhanced admin context setting with multiple calls and longer waits
+        for (let contextAttempt = 1; contextAttempt <= 5; contextAttempt++) {
           await this.ensureAdminContext(this.KNOWN_ADMIN);
-          await new Promise(resolve => setTimeout(resolve, 1000));
+          await new Promise(resolve => setTimeout(resolve, 2000));
         }
         
         // Try to get all schools from teachers table
@@ -243,7 +244,7 @@ class SecurePlatformAdminService {
         if (teachersError) {
           console.warn(`⚠️ Error fetching schools (attempt ${attempt}):`, teachersError);
           if (attempt < maxRetries) {
-            await new Promise(resolve => setTimeout(resolve, 3000 * attempt));
+            await new Promise(resolve => setTimeout(resolve, 5000 * attempt));
             continue;
           }
           return [];
@@ -287,7 +288,7 @@ class SecurePlatformAdminService {
       } catch (error) {
         console.error(`❌ Error in getSchoolsWithRetry (attempt ${attempt}):`, error);
         if (attempt < maxRetries) {
-          await new Promise(resolve => setTimeout(resolve, 3000 * attempt));
+          await new Promise(resolve => setTimeout(resolve, 5000 * attempt));
         }
       }
     }
@@ -346,15 +347,15 @@ class SecurePlatformAdminService {
     }
   }
 
-  private async createSchoolWithRetry(schoolName: string, maxRetries: number = 7): Promise<any> {
+  private async createSchoolWithRetry(schoolName: string, maxRetries: number = 10): Promise<any> {
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
         console.log(`🔄 Attempt ${attempt} to create school: ${schoolName}`);
         
-        // Enhanced admin context setting before creation with multiple calls
-        for (let contextAttempt = 1; contextAttempt <= 3; contextAttempt++) {
+        // Enhanced admin context setting before creation with multiple calls and longer waits
+        for (let contextAttempt = 1; contextAttempt <= 5; contextAttempt++) {
           await this.ensureAdminContext(this.KNOWN_ADMIN);
-          await new Promise(resolve => setTimeout(resolve, 1000));
+          await new Promise(resolve => setTimeout(resolve, 2000));
         }
         
         const { data, error } = await supabase
@@ -372,7 +373,7 @@ class SecurePlatformAdminService {
         if (error) {
           console.warn(`⚠️ Error creating school (attempt ${attempt}):`, error);
           if (attempt < maxRetries) {
-            await new Promise(resolve => setTimeout(resolve, 3000 * attempt));
+            await new Promise(resolve => setTimeout(resolve, 5000 * attempt));
             continue;
           }
           throw error;
@@ -386,7 +387,7 @@ class SecurePlatformAdminService {
       } catch (error) {
         console.error(`❌ Error in createSchoolWithRetry (attempt ${attempt}):`, error);
         if (attempt < maxRetries) {
-          await new Promise(resolve => setTimeout(resolve, 3000 * attempt));
+          await new Promise(resolve => setTimeout(resolve, 5000 * attempt));
         } else {
           throw error;
         }
