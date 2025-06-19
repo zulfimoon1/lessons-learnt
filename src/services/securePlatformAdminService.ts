@@ -66,8 +66,8 @@ class SecurePlatformAdminService {
         console.log('✅ Admin context set via RPC successfully');
       }
       
-      // Wait longer for context to propagate
-      await new Promise(resolve => setTimeout(resolve, 500));
+      // Wait longer for context to propagate - increased from 500ms to 1000ms
+      await new Promise(resolve => setTimeout(resolve, 1000));
       
     } catch (error) {
       console.warn('⚠️ Failed to set admin context:', error);
@@ -146,10 +146,42 @@ class SecurePlatformAdminService {
           }
         }
         
-        // Fallback to direct query
-        const { count, error } = await supabase
-          .from(tableName)
-          .select('*', { count: 'exact', head: true });
+        // Fallback to direct query with proper type handling
+        let count = 0;
+        let error = null;
+        
+        switch (tableName) {
+          case 'students':
+            const studentsResult = await supabase
+              .from('students')
+              .select('*', { count: 'exact', head: true });
+            count = studentsResult.count || 0;
+            error = studentsResult.error;
+            break;
+          case 'teachers':
+            const teachersResult = await supabase
+              .from('teachers')
+              .select('*', { count: 'exact', head: true });
+            count = teachersResult.count || 0;
+            error = teachersResult.error;
+            break;
+          case 'feedback':
+            const feedbackResult = await supabase
+              .from('feedback')
+              .select('*', { count: 'exact', head: true });
+            count = feedbackResult.count || 0;
+            error = feedbackResult.error;
+            break;
+          case 'subscriptions':
+            const subscriptionsResult = await supabase
+              .from('subscriptions')
+              .select('*', { count: 'exact', head: true });
+            count = subscriptionsResult.count || 0;
+            error = subscriptionsResult.error;
+            break;
+          default:
+            return 0;
+        }
           
         if (error) {
           console.warn(`⚠️ Error querying ${tableName} (attempt ${attempt}):`, error);
@@ -159,7 +191,7 @@ class SecurePlatformAdminService {
           }
         }
         
-        return count || 0;
+        return count;
       } catch (error) {
         console.error(`❌ Error getting count for ${tableName} (attempt ${attempt}):`, error);
         if (attempt < maxRetries) {
