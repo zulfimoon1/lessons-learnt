@@ -41,7 +41,21 @@ const TeacherManagement: React.FC = () => {
     if (admin?.email) {
       try {
         console.log('🔧 Setting platform admin context for teacher management:', admin.email);
+        
+        // Set multiple context variables for better reliability
         await supabase.rpc('set_platform_admin_context', { admin_email: admin.email });
+        
+        // Also set session-level config for immediate queries
+        const { error: configError } = await supabase.rpc('set_config', {
+          setting_name: 'app.current_user_email',
+          new_value: admin.email,
+          is_local: true
+        });
+        
+        if (configError) {
+          console.warn('Config setting warning:', configError);
+        }
+        
         console.log('✅ Platform admin context set successfully');
         await new Promise(resolve => setTimeout(resolve, 500));
       } catch (error) {
@@ -57,6 +71,7 @@ const TeacherManagement: React.FC = () => {
         
         await setAdminContext();
         
+        // Try direct query with admin context
         const { data, error } = await supabase
           .from('teachers')
           .select('*')
@@ -64,6 +79,27 @@ const TeacherManagement: React.FC = () => {
 
         if (error) {
           console.error(`❌ Error fetching teachers (attempt ${attempt}):`, error);
+          
+          // If RLS is still blocking, try via edge function
+          if (error.message?.includes('permission denied') && attempt === maxRetries) {
+            console.log('🔄 Trying via edge function...');
+            const { data: edgeData, error: edgeError } = await supabase.functions.invoke('platform-admin', {
+              body: {
+                operation: 'getTeachers',
+                adminEmail: admin?.email
+              }
+            });
+            
+            if (!edgeError && edgeData?.success) {
+              const realTeachers = (edgeData.data || []).filter((teacher: Teacher) => 
+                teacher.school !== 'Platform Administration' && 
+                !teacher.school?.toLowerCase().includes('admin')
+              );
+              setTeachers(realTeachers);
+              return;
+            }
+          }
+          
           if (attempt < maxRetries) {
             await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
             continue;
@@ -88,7 +124,8 @@ const TeacherManagement: React.FC = () => {
       }
     }
     
-    toast.error('Failed to fetch teachers after multiple attempts');
+    console.error('Failed to fetch teachers after all attempts');
+    toast.error('Failed to fetch teachers. Please check your permissions.');
     setTeachers([]);
   };
 
@@ -245,6 +282,7 @@ const TeacherManagement: React.FC = () => {
 
   useEffect(() => {
     if (admin?.email) {
+      console.log('🚀 Starting teacher management data fetch...');
       fetchTeachersWithRetry();
       fetchSchoolsWithRetry();
     }

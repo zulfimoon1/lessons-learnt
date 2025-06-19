@@ -50,14 +50,31 @@ serve(async (req) => {
         }
         break;
 
+      case 'getTeachers':
+        const { data: teachersData, error: teachersError } = await supabaseAdmin
+          .from('teachers')
+          .select('*')
+          .order('name');
+
+        if (teachersError) throw teachersError;
+
+        // Filter out administrative entries
+        const realTeachers = (teachersData || []).filter(teacher => 
+          teacher.school !== 'Platform Administration' && 
+          !teacher.school?.toLowerCase().includes('admin')
+        );
+
+        result = realTeachers;
+        break;
+
       case 'getSchoolData':
-        const { data: teachersData } = await supabaseAdmin
+        const { data: teachersSchoolData } = await supabaseAdmin
           .from('teachers')
           .select('school');
 
         // Filter out administrative entries and get unique schools
         const uniqueSchools = [...new Set(
-          teachersData?.map(t => t.school)
+          teachersSchoolData?.map(t => t.school)
             .filter(school => school && 
               school !== 'Platform Administration' && 
               !school.toLowerCase().includes('admin')
