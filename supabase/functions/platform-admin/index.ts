@@ -118,7 +118,7 @@ serve(async (req) => {
         console.log('🧹 Starting comprehensive demo data cleanup...');
         
         try {
-          // Delete subscriptions with demo-related school names (case insensitive and broader matching)
+          // Get all subscriptions first
           const { data: allSubscriptions, error: fetchError } = await supabaseAdmin
             .from('subscriptions')
             .select('*');
@@ -128,43 +128,65 @@ serve(async (req) => {
             throw fetchError;
           }
 
-          // Filter demo subscriptions with more comprehensive criteria
-          const demoSubscriptions = allSubscriptions?.filter(sub => {
-            const schoolName = (sub.school_name || '').toLowerCase();
-            return schoolName.includes('demo') || 
-                   schoolName.includes('default') || 
-                   schoolName.includes('test') ||
-                   schoolName === 'demo school' ||
-                   schoolName === 'default school' ||
-                   schoolName.startsWith('demo') ||
-                   schoolName.startsWith('default');
-          }) || [];
+          console.log(`Total subscriptions found: ${allSubscriptions?.length || 0}`);
 
-          console.log(`Found ${demoSubscriptions.length} demo subscriptions to delete:`, 
-                     demoSubscriptions.map(s => s.school_name));
-          
-          if (demoSubscriptions.length > 0) {
-            const subscriptionIds = demoSubscriptions.map(sub => sub.id);
+          // Filter demo subscriptions with comprehensive criteria
+          const demoSubscriptions = (allSubscriptions || []).filter(sub => {
+            const schoolName = (sub.school_name || '').toLowerCase().trim();
+            console.log(`Checking school: "${schoolName}"`);
             
-            const { error: deleteError } = await supabaseAdmin
-              .from('subscriptions')
-              .delete()
-              .in('id', subscriptionIds);
-
-            if (deleteError) {
-              console.error('Error deleting demo subscriptions:', deleteError);
-              throw deleteError;
+            const isDemoSchool = schoolName.includes('demo') || 
+                               schoolName.includes('default') || 
+                               schoolName.includes('test') ||
+                               schoolName === 'demo school' ||
+                               schoolName === 'default school' ||
+                               schoolName === 'test school' ||
+                               schoolName.startsWith('demo') ||
+                               schoolName.startsWith('default') ||
+                               schoolName.startsWith('test') ||
+                               schoolName.endsWith('demo') ||
+                               schoolName.endsWith('default') ||
+                               schoolName.endsWith('test');
+            
+            if (isDemoSchool) {
+              console.log(`✓ Identified demo school: "${schoolName}"`);
             }
             
-            console.log(`✅ Deleted ${demoSubscriptions.length} demo subscriptions`);
+            return isDemoSchool;
+          });
+
+          console.log(`Found ${demoSubscriptions.length} demo subscriptions to delete:`, 
+                     demoSubscriptions.map(s => `"${s.school_name}"`));
+          
+          let deletedCount = 0;
+          
+          if (demoSubscriptions.length > 0) {
+            for (const subscription of demoSubscriptions) {
+              console.log(`Deleting subscription for school: "${subscription.school_name}"`);
+              
+              const { error: deleteError } = await supabaseAdmin
+                .from('subscriptions')
+                .delete()
+                .eq('id', subscription.id);
+
+              if (deleteError) {
+                console.error(`Error deleting subscription ${subscription.id}:`, deleteError);
+              } else {
+                deletedCount++;
+                console.log(`✅ Deleted subscription for: "${subscription.school_name}"`);
+              }
+            }
           }
 
           result = { 
             success: true, 
-            message: `Demo data cleanup completed. Deleted ${demoSubscriptions.length} demo subscriptions.`,
-            deletedCount: demoSubscriptions.length,
-            deletedSchools: demoSubscriptions.map(s => s.school_name)
+            message: `Demo data cleanup completed. Deleted ${deletedCount} demo subscriptions.`,
+            deletedCount: deletedCount,
+            deletedSchools: demoSubscriptions.map(s => s.school_name),
+            totalChecked: allSubscriptions?.length || 0
           };
+          
+          console.log(`✅ Demo cleanup completed: ${deletedCount} subscriptions deleted`);
         } catch (error) {
           console.error('Demo cleanup failed:', error);
           throw new Error(`Demo cleanup failed: ${error.message}`);
@@ -174,7 +196,7 @@ serve(async (req) => {
       case 'getPaymentNotifications':
         console.log('🔔 Fetching payment notifications with service role...');
         try {
-          // Use service role directly - it should bypass RLS with the new policies
+          // Direct query with service role - should bypass RLS
           const { data: notificationsData, error: notificationsError } = await supabaseAdmin
             .from('payment_notifications')
             .select('*')
@@ -182,6 +204,7 @@ serve(async (req) => {
 
           if (notificationsError) {
             console.error('Error fetching payment notifications:', notificationsError);
+            // Return empty array instead of throwing error
             result = [];
           } else {
             result = notificationsData || [];
@@ -189,6 +212,7 @@ serve(async (req) => {
           }
         } catch (error) {
           console.error('Payment notifications fetch failed:', error);
+          // Return empty array on any error
           result = [];
         }
         break;
