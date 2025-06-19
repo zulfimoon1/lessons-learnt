@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
@@ -61,6 +60,58 @@ serve(async (req) => {
           responsesCount: feedbackResult.count || 0,
           subscriptionsCount: subscriptionsResult.count || 0,
         }
+        break;
+
+      case 'getSubscriptions':
+        console.log('💳 Fetching subscriptions...');
+        const { data: subscriptionsData, error: subscriptionsError } = await supabaseAdmin
+          .from('subscriptions')
+          .select('*')
+          .order('created_at', { ascending: false });
+
+        if (subscriptionsError) {
+          console.error('Error fetching subscriptions:', subscriptionsError);
+          throw subscriptionsError;
+        }
+
+        result = subscriptionsData || [];
+        console.log(`✅ Subscriptions fetched: ${result.length}`);
+        break;
+
+      case 'pauseSubscription':
+        console.log('⏸️ Pausing subscription...');
+        const { subscriptionId } = params;
+        
+        const { error: pauseError } = await supabaseAdmin
+          .from('subscriptions')
+          .update({ status: 'paused' })
+          .eq('id', subscriptionId);
+
+        if (pauseError) {
+          console.error('Error pausing subscription:', pauseError);
+          throw pauseError;
+        }
+
+        result = { success: true, message: 'Subscription paused successfully' };
+        console.log(`✅ Subscription paused: ${subscriptionId}`);
+        break;
+
+      case 'resumeSubscription':
+        console.log('▶️ Resuming subscription...');
+        const { subscriptionId: resumeSubscriptionId } = params;
+        
+        const { error: resumeError } = await supabaseAdmin
+          .from('subscriptions')
+          .update({ status: 'active' })
+          .eq('id', resumeSubscriptionId);
+
+        if (resumeError) {
+          console.error('Error resuming subscription:', resumeError);
+          throw resumeError;
+        }
+
+        result = { success: true, message: 'Subscription resumed successfully' };
+        console.log(`✅ Subscription resumed: ${resumeSubscriptionId}`);
         break;
 
       case 'getPaymentNotifications':
