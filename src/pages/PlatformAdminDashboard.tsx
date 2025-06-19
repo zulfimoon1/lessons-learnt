@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { usePlatformAdmin } from "@/contexts/PlatformAdminContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -74,7 +73,7 @@ const PlatformAdminDashboard = () => {
   });
 
   const fetchStats = async () => {
-    console.log('📊 DASHBOARD: Fetching stats with direct service role access...');
+    console.log('📊 DASHBOARD: Fetching stats via edge function...');
     if (!admin?.email) {
       console.warn('No admin email available for stats fetch');
       return;
