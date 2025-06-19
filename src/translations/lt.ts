@@ -71,7 +71,7 @@ export const ltTranslations = {
   'common.open': 'Atidaryti',
   'common.refresh': 'Atnaujinti',
   'common.preview': 'Peržiūra',
-  'common.days': 'Dienos',
+  'common.days': 'dienos',
   
   // Dashboard translations
   'dashboard.title': 'Studentų skydelis',
@@ -145,7 +145,7 @@ export const ltTranslations = {
   'articles.mentalHealth': 'Psichinės sveikatos straipsniai',
   'articles.subscriptionRequired': 'Reikalinga prenumerata',
   
-  // Pricing translations - Fixed all pricing translations
+  // Pricing translations
   'pricing.processing': 'Apdorojama...',
   'pricing.title': 'Kainodara',
   'pricing.choosePlan': 'Pasirinkite planą',
@@ -183,7 +183,7 @@ export const ltTranslations = {
   'pricing.paymentErrorDesc': 'Nepavyko sukurti mokėjimo. Bandykite dar kartą.',
   'pricing.amazingPricing': 'Nuostabi kainodara',
   'pricing.transformSchoolLess': 'Transformuokite savo mokyklą už mažiau nei',
-  'pricing.perTeacherMonth': 'Per mokytoją/mėnesį',
+  'pricing.perTeacherMonth': 'už mokytoją per mėnesį',
   'pricing.unbeatable': 'Neprilygstama',
   'pricing.value': 'vertė',
   'pricing.mostPopular': 'Populiariausias',
@@ -196,7 +196,7 @@ export const ltTranslations = {
   'pricing.moreTeachersMoreSave': 'Kuo daugiau mokytojų, tuo daugiau taupote!',
   'pricing.standardPrice': 'Standartinė kaina',
   'pricing.teacherPlan': 'Mokytojo planas',
-  'pricing.perfectIndividual': 'Puikus individualūs ugdytojai',
+  'pricing.perfectIndividual': 'Puikus individualiems ugdytojams',
   'pricing.bestValue': 'Geriausia vertė',
   'pricing.annual': 'Metinis',
   'pricing.saveExclamation': 'Sutaupykite €20!',

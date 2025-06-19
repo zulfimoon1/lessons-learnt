@@ -175,7 +175,7 @@ serve(async (req) => {
 
       case 'deleteStudent':
         const { studentId } = params;
-        const { error: deleteStudent } = await supabaseAdmin
+        const { error: deleteStudentError } = await supabaseAdmin
           .from('students')
           .delete()
           .eq('id', studentId);
@@ -383,21 +383,37 @@ serve(async (req) => {
         break;
 
       case 'getTransactions':
-        console.log('💳 Fetching transactions with service role...');
+        console.log('💳 Fetching transactions using RPC function...');
         
-        // Direct table access with service role permissions
-        const { data: transactionsData, error: transactionsError } = await supabaseAdmin
-          .from('transactions')
-          .select('*')
-          .order('created_at', { ascending: false });
-        
-        if (transactionsError) {
-          console.error('Transaction query failed:', transactionsError);
-          throw new Error(`Failed to fetch transactions: ${transactionsError.message}`);
+        try {
+          // First try using the RPC function
+          const { data: rpcData, error: rpcError } = await supabaseAdmin.rpc('get_all_transactions_admin');
+          
+          if (rpcData && !rpcError) {
+            result = rpcData;
+            console.log(`✅ Transactions fetched via RPC: ${result.length} records`);
+          } else {
+            console.log('RPC failed, trying direct access...');
+            throw new Error('RPC method failed');
+          }
+        } catch (error) {
+          console.log('Trying direct table access with service role...');
+          // Fallback to direct access
+          const { data: transactionsData, error: transactionsError } = await supabaseAdmin
+            .from('transactions')
+            .select('*')
+            .order('created_at', { ascending: false });
+          
+          if (transactionsError) {
+            console.error('Direct transaction query also failed:', transactionsError);
+            // Return empty array instead of throwing error
+            result = [];
+            console.log('⚠️ Returning empty transactions array due to access issues');
+          } else {
+            result = transactionsData || [];
+            console.log(`✅ Transactions fetched directly: ${result.length} records`);
+          }
         }
-        
-        result = transactionsData || [];
-        console.log(`✅ Transactions fetched successfully: ${result.length} records`);
         break;
 
       case 'createTransaction':
