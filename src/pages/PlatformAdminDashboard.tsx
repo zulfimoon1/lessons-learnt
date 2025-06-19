@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { usePlatformAdmin } from "@/contexts/PlatformAdminContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -65,6 +64,7 @@ const PlatformAdminDashboard = () => {
   const [lastUpdated, setLastUpdated] = useState<string>("");
   const [refreshKey, setRefreshKey] = useState(0);
   const [hasDataLoaded, setHasDataLoaded] = useState(false);
+  const [dataError, setDataError] = useState<string | null>(null);
 
   console.log('📊 DASHBOARD: State check', { 
     admin: !!admin, 
@@ -81,34 +81,31 @@ const PlatformAdminDashboard = () => {
     }
 
     setIsRefreshing(true);
+    setDataError(null);
     
     try {
       console.log('📊 Getting platform stats for admin:', admin.email);
       
-      // Set a timeout to prevent infinite loading
-      const statsPromise = securePlatformAdminService.getPlatformStats(admin.email);
-      const schoolDataPromise = securePlatformAdminService.getSchoolData(admin.email);
-      
-      // Use Promise.race with timeout to ensure we get data within 10 seconds
       const timeout = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Timeout')), 10000)
+        setTimeout(() => reject(new Error('Request timeout')), 10000)
       );
       
       const [platformStats, schoolData] = await Promise.race([
-        Promise.all([statsPromise, schoolDataPromise]),
+        Promise.all([
+          securePlatformAdminService.getPlatformStats(admin.email),
+          securePlatformAdminService.getSchoolData(admin.email)
+        ]),
         timeout
       ]) as [any, any];
 
       console.log('📊 Platform stats received:', platformStats);
       console.log('📊 School data received:', schoolData);
 
-      // Process school stats
       const schoolStatsProcessed = schoolData.map((school: any) => ({
         school: school.name,
         total_teachers: school.teacher_count
       }));
 
-      // Calculate monthly revenue based on subscriptions
       const monthlyRevenue = platformStats.subscriptionsCount * 49.99;
       
       const newStats = {
@@ -124,7 +121,7 @@ const PlatformAdminDashboard = () => {
       
       setStats(newStats);
       setSchoolStats(schoolStatsProcessed);
-      setFeedbackStats([]); // Empty for now
+      setFeedbackStats([]);
       setLastUpdated(new Date().toLocaleString());
       setRefreshKey(Date.now());
       setHasDataLoaded(true);
@@ -133,26 +130,8 @@ const PlatformAdminDashboard = () => {
       
     } catch (error) {
       console.error('❌ Failed to fetch dashboard stats:', error);
-      
-      // Set fallback stats so dashboard isn't stuck
-      const fallbackStats = {
-        totalStudents: 45,
-        totalTeachers: 12,
-        totalSchools: 3,
-        totalResponses: 234,
-        totalSubscriptions: 8,
-        monthlyRevenue: 399.92,
-      };
-      
-      setStats(fallbackStats);
-      setSchoolStats([
-        { school: 'Example High School', total_teachers: 8 },
-        { school: 'Demo Elementary', total_teachers: 4 }
-      ]);
-      setLastUpdated(new Date().toLocaleString());
-      setHasDataLoaded(true);
-      
-      toast.error('Using demo data - database connection issues');
+      setDataError(error.message || 'Failed to load dashboard data');
+      toast.error(`Failed to load data: ${error.message || 'Unknown error'}`);
     } finally {
       setIsRefreshing(false);
     }
@@ -240,6 +219,17 @@ const PlatformAdminDashboard = () => {
       </header>
 
       <div className="max-w-7xl mx-auto px-6 py-8">
+        {/* Error State */}
+        {dataError && (
+          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+            <h3 className="font-medium text-red-800">Data Loading Error</h3>
+            <p className="text-red-600 text-sm mt-1">{dataError}</p>
+            <p className="text-red-600 text-sm mt-2">
+              This may be due to database permission issues. Check the console for more details.
+            </p>
+          </div>
+        )}
+
         {/* Loading State */}
         {isRefreshing && !hasDataLoaded && (
           <div className="text-center py-8">
@@ -248,8 +238,8 @@ const PlatformAdminDashboard = () => {
           </div>
         )}
 
-        {/* Stats Grid - Show immediately when data is available */}
-        {(hasDataLoaded || !isRefreshing) && (
+        {/* Stats Grid - Only show when data is loaded */}
+        {hasDataLoaded && !dataError && (
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
             <StatsCard 
               title="Total Students" 
@@ -333,14 +323,14 @@ const PlatformAdminDashboard = () => {
           </TabsContent>
         </Tabs>
 
-        {/* Dashboard Footer with Status */}
-        {hasDataLoaded && (
+        {/* Dashboard Footer with Status - Only show when data is loaded */}
+        {hasDataLoaded && !dataError && (
           <div className="mt-8">
             <Card>
               <CardContent className="pt-6">
                 <p className="text-sm text-gray-600">
                   Last updated: {lastUpdated} 
-                  {!isRefreshing && <span className="text-green-600 ml-2">✓ Data loaded</span>}
+                  <span className="text-green-600 ml-2">✓ Real data loaded</span>
                 </p>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm mt-4">
                   <div>

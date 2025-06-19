@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { securityValidationService } from './securityValidationService';
 
@@ -54,7 +55,6 @@ class SecurePlatformAdminService {
     try {
       console.log('🔧 Setting platform admin context for:', adminEmail);
       
-      // Use the updated context function with enhanced security flags
       const { error: rpcError } = await supabase.rpc('set_platform_admin_context', { 
         admin_email: adminEmail 
       });
@@ -65,8 +65,8 @@ class SecurePlatformAdminService {
         console.log('✅ Platform admin context set via RPC successfully');
       }
       
-      // Much shorter wait time since policies should work immediately
-      await new Promise(resolve => setTimeout(resolve, 500));
+      // Short wait for context to be applied
+      await new Promise(resolve => setTimeout(resolve, 200));
       
     } catch (error) {
       console.warn('⚠️ Failed to set admin context:', error);
@@ -84,7 +84,6 @@ class SecurePlatformAdminService {
     try {
       await this.ensureAdminContext(adminEmail);
       
-      // Use direct queries with immediate fallback to mock data if RLS still blocks
       const results = await Promise.allSettled([
         this.getCountWithFallback('students'),
         this.getCountWithFallback('teachers'),
@@ -92,10 +91,10 @@ class SecurePlatformAdminService {
         this.getCountWithFallback('subscriptions')
       ]);
 
-      const studentsCount = results[0].status === 'fulfilled' ? results[0].value : 45;
-      const teachersCount = results[1].status === 'fulfilled' ? results[1].value : 12;
-      const responsesCount = results[2].status === 'fulfilled' ? results[2].value : 234;
-      const subscriptionsCount = results[3].status === 'fulfilled' ? results[3].value : 8;
+      const studentsCount = results[0].status === 'fulfilled' ? results[0].value : 0;
+      const teachersCount = results[1].status === 'fulfilled' ? results[1].value : 0;
+      const responsesCount = results[2].status === 'fulfilled' ? results[2].value : 0;
+      const subscriptionsCount = results[3].status === 'fulfilled' ? results[3].value : 0;
 
       console.log('📊 Platform stats:', { studentsCount, teachersCount, responsesCount, subscriptionsCount });
 
@@ -107,13 +106,7 @@ class SecurePlatformAdminService {
       };
     } catch (error) {
       console.error('❌ Failed to get platform stats:', error);
-      // Return mock data to keep dashboard functional
-      return {
-        studentsCount: 45,
-        teachersCount: 12,
-        responsesCount: 234,
-        subscriptionsCount: 8,
-      };
+      throw error; // Don't return mock data, let the error propagate
     }
   }
 
@@ -121,7 +114,6 @@ class SecurePlatformAdminService {
     try {
       console.log(`📊 Getting count for ${tableName}`);
       
-      // Set admin context before query
       await this.ensureAdminContext(this.KNOWN_ADMIN);
       
       let count = 0;
@@ -162,28 +154,14 @@ class SecurePlatformAdminService {
         
       if (error) {
         console.warn(`⚠️ Error querying ${tableName}:`, error);
-        // Return fallback data instead of failing
-        switch (tableName) {
-          case 'students': return 45;
-          case 'teachers': return 12;
-          case 'feedback': return 234;
-          case 'subscriptions': return 8;
-          default: return 0;
-        }
+        throw error; // Don't return fallback, throw the error
       }
       
       console.log(`✅ Successfully got count for ${tableName}: ${count}`);
       return count;
     } catch (error) {
       console.error(`❌ Error getting count for ${tableName}:`, error);
-      // Return fallback data
-      switch (tableName) {
-        case 'students': return 45;
-        case 'teachers': return 12;
-        case 'feedback': return 234;
-        case 'subscriptions': return 8;
-        default: return 0;
-      }
+      throw error; // Don't return fallback data
     }
   }
 
@@ -197,18 +175,13 @@ class SecurePlatformAdminService {
     try {
       await this.ensureAdminContext(adminEmail);
 
-      // Quick attempt to get schools with immediate fallback
       const schoolStats = await this.getSchoolsWithFallback();
       
       console.log('🏫 School data retrieved:', schoolStats);
       return schoolStats;
     } catch (error) {
       console.error('❌ Failed to get school data:', error);
-      // Return mock school data to keep dashboard functional
-      return [
-        { name: 'Example High School', teacher_count: 8, student_count: 150 },
-        { name: 'Demo Elementary', teacher_count: 4, student_count: 95 }
-      ];
+      throw error; // Don't return mock data
     }
   }
 
@@ -221,39 +194,24 @@ class SecurePlatformAdminService {
     try {
       console.log('🔄 Getting school data');
       
-      // Set admin context
       await this.ensureAdminContext(this.KNOWN_ADMIN);
       
-      // Try to get all schools from teachers table
       const { data: teachersData, error: teachersError } = await supabase
         .from('teachers')
         .select('school');
 
       if (teachersError) {
         console.warn('⚠️ Error fetching schools:', teachersError);
-        // Return fallback data
-        return [
-          { name: 'Example High School', teacher_count: 8, student_count: 150 },
-          { name: 'Demo Elementary', teacher_count: 4, student_count: 95 }
-        ];
+        throw teachersError; // Don't return fallback data
       }
 
       const uniqueSchools = [...new Set(teachersData?.map(t => t.school).filter(Boolean) || [])];
       console.log('🏫 Found schools:', uniqueSchools);
       
-      if (uniqueSchools.length === 0) {
-        // Return fallback data if no schools found
-        return [
-          { name: 'Example High School', teacher_count: 8, student_count: 150 },
-          { name: 'Demo Elementary', teacher_count: 4, student_count: 95 }
-        ];
-      }
-      
       const schoolStats = [];
 
       for (const school of uniqueSchools) {
         try {
-          // Get counts for each school with quick timeout
           const [teacherResult, studentResult] = await Promise.allSettled([
             supabase.from('teachers').select('id', { count: 'exact', head: true }).eq('school', school),
             supabase.from('students').select('id', { count: 'exact', head: true }).eq('school', school)
@@ -277,16 +235,10 @@ class SecurePlatformAdminService {
         }
       }
 
-      return schoolStats.length > 0 ? schoolStats : [
-        { name: 'Example High School', teacher_count: 8, student_count: 150 },
-        { name: 'Demo Elementary', teacher_count: 4, student_count: 95 }
-      ];
+      return schoolStats;
     } catch (error) {
       console.error(`❌ Error in getSchoolsWithFallback:`, error);
-      return [
-        { name: 'Example High School', teacher_count: 8, student_count: 150 },
-        { name: 'Demo Elementary', teacher_count: 4, student_count: 95 }
-      ];
+      throw error; // Don't return fallback data
     }
   }
 
@@ -330,7 +282,6 @@ class SecurePlatformAdminService {
     try {
       await this.ensureAdminContext(adminEmail);
 
-      // Create a teacher entry for the new school
       const result = await this.createSchoolWithRetry(schoolName);
       
       console.log('✅ School created successfully');
@@ -345,7 +296,6 @@ class SecurePlatformAdminService {
     try {
       console.log(`🔄 Creating school: ${schoolName}`);
       
-      // Set admin context before creation
       await this.ensureAdminContext(this.KNOWN_ADMIN);
       
       const { data, error } = await supabase
@@ -386,7 +336,6 @@ class SecurePlatformAdminService {
     try {
       await this.ensureAdminContext(adminEmail);
 
-      // Use the platform admin delete function
       const { data, error } = await supabase.rpc('platform_admin_delete_school', {
         school_name_param: schoolName,
         admin_email_param: adminEmail
