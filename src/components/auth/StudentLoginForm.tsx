@@ -35,7 +35,7 @@ const StudentLoginForm: React.FC<StudentLoginFormProps> = ({ onLogin, isLoading 
         <Input
           id="loginFullName"
           type="text"
-          placeholder={t('student.fullNamePlaceholder') || "Enter your full name"}
+          placeholder={t('student.fullNamePlaceholder')}
           value={loginData.fullName}
           onChange={(e) => setLoginData(prev => ({ ...prev, fullName: e.target.value }))}
           required
@@ -45,12 +45,12 @@ const StudentLoginForm: React.FC<StudentLoginFormProps> = ({ onLogin, isLoading 
       <div className="space-y-2">
         <Label htmlFor="loginSchool" className="flex items-center gap-2">
           <SchoolIcon className="w-4 h-4" />
-          School
+          {t('student.school')}
         </Label>
         <Input
           id="loginSchool"
           type="text"
-          placeholder="Enter your school name"
+          placeholder={t('student.schoolPlaceholder')}
           value={loginData.school}
           onChange={(e) => setLoginData(prev => ({ ...prev, school: e.target.value }))}
           required
@@ -60,12 +60,12 @@ const StudentLoginForm: React.FC<StudentLoginFormProps> = ({ onLogin, isLoading 
       <div className="space-y-2">
         <Label htmlFor="loginGrade" className="flex items-center gap-2">
           <GraduationCapIcon className="w-4 h-4" />
-          Grade/Class
+          {t('student.classGrade')}
         </Label>
         <Input
           id="loginGrade"
           type="text"
-          placeholder="e.g., Grade 5, 10A, Year 9"
+          placeholder={t('student.gradePlaceholder')}
           value={loginData.grade}
           onChange={(e) => setLoginData(prev => ({ ...prev, grade: e.target.value }))}
           required
@@ -77,7 +77,7 @@ const StudentLoginForm: React.FC<StudentLoginFormProps> = ({ onLogin, isLoading 
         <Input
           id="loginPassword"
           type="password"
-          placeholder="Enter your password"
+          placeholder={t('auth.password')}
           value={loginData.password}
           onChange={(e) => setLoginData(prev => ({ ...prev, password: e.target.value }))}
           required

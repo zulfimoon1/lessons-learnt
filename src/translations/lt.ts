@@ -110,6 +110,7 @@ export const ltTranslations = {
   'student.fullName': 'Vardas ir pavardė',
   'student.fullNamePlaceholder': 'Įveskite savo vardą ir pavardę',
   'student.fullNameSignupPlaceholder': 'Įveskite savo vardą ir pavardę',
+  'student.school': 'Mokykla',
   'student.schoolPlaceholder': 'Įveskite mokyklos pavadinimą',
   'student.classGrade': 'Klasė/Kursas',
   'student.gradePlaceholder': 'pvz., 5 klasė, 7 kursas',
