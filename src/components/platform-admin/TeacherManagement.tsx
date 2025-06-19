@@ -37,142 +37,63 @@ const TeacherManagement: React.FC = () => {
   });
   const [isLoading, setIsLoading] = useState(false);
 
-  const setAdminContext = async () => {
-    if (admin?.email) {
-      try {
-        console.log('🔧 Setting platform admin context for teacher management:', admin.email);
-        
-        // Set multiple context variables for better reliability
-        await supabase.rpc('set_platform_admin_context', { admin_email: admin.email });
-        
-        // Also set session-level config for immediate queries
-        const { error: configError } = await supabase.rpc('set_config', {
-          setting_name: 'app.current_user_email',
-          new_value: admin.email,
-          is_local: true
-        });
-        
-        if (configError) {
-          console.warn('Config setting warning:', configError);
+  const fetchTeachersViaEdgeFunction = async () => {
+    try {
+      console.log('🔄 Fetching teachers via edge function...');
+      const { data, error } = await supabase.functions.invoke('platform-admin', {
+        body: {
+          operation: 'getTeachers',
+          adminEmail: admin?.email
         }
-        
-        console.log('✅ Platform admin context set successfully');
-        await new Promise(resolve => setTimeout(resolve, 500));
-      } catch (error) {
-        console.error('❌ Error setting admin context:', error);
-      }
-    }
-  };
+      });
 
-  const fetchTeachersWithRetry = async (maxRetries: number = 3) => {
-    for (let attempt = 1; attempt <= maxRetries; attempt++) {
-      try {
-        console.log(`🔄 Attempt ${attempt} to fetch teachers`);
-        
-        await setAdminContext();
-        
-        // Try direct query with admin context
-        const { data, error } = await supabase
-          .from('teachers')
-          .select('*')
-          .order('name');
-
-        if (error) {
-          console.error(`❌ Error fetching teachers (attempt ${attempt}):`, error);
-          
-          // If RLS is still blocking, try via edge function
-          if (error.message?.includes('permission denied') && attempt === maxRetries) {
-            console.log('🔄 Trying via edge function...');
-            const { data: edgeData, error: edgeError } = await supabase.functions.invoke('platform-admin', {
-              body: {
-                operation: 'getTeachers',
-                adminEmail: admin?.email
-              }
-            });
-            
-            if (!edgeError && edgeData?.success) {
-              const realTeachers = (edgeData.data || []).filter((teacher: Teacher) => 
-                teacher.school !== 'Platform Administration' && 
-                !teacher.school?.toLowerCase().includes('admin')
-              );
-              setTeachers(realTeachers);
-              return;
-            }
-          }
-          
-          if (attempt < maxRetries) {
-            await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
-            continue;
-          }
-          throw error;
-        }
-        
-        // Filter out administrative entries
-        const realTeachers = (data || []).filter(teacher => 
+      if (error) throw error;
+      
+      if (data?.success) {
+        const realTeachers = (data.data || []).filter((teacher: Teacher) => 
           teacher.school !== 'Platform Administration' && 
           !teacher.school?.toLowerCase().includes('admin')
         );
-        
-        console.log('✅ Teachers fetched:', realTeachers.length);
+        console.log('✅ Teachers fetched via edge function:', realTeachers.length);
         setTeachers(realTeachers);
-        return;
-      } catch (error) {
-        console.error(`💥 Error fetching teachers (attempt ${attempt}):`, error);
-        if (attempt < maxRetries) {
-          await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
-        }
+      } else {
+        throw new Error(data?.error || 'Failed to fetch teachers');
       }
+    } catch (error) {
+      console.error('❌ Error fetching teachers via edge function:', error);
+      toast.error('Failed to fetch teachers');
+      setTeachers([]);
     }
-    
-    console.error('Failed to fetch teachers after all attempts');
-    toast.error('Failed to fetch teachers. Please check your permissions.');
-    setTeachers([]);
   };
 
-  const fetchSchoolsWithRetry = async (maxRetries: number = 3) => {
-    for (let attempt = 1; attempt <= maxRetries; attempt++) {
-      try {
-        console.log(`🔄 Attempt ${attempt} to fetch schools`);
-        
-        await setAdminContext();
-        
-        const { data, error } = await supabase
-          .from('teachers')
-          .select('school')
-          .not('school', 'is', null);
+  const fetchSchoolsViaEdgeFunction = async () => {
+    try {
+      console.log('🔄 Fetching schools via edge function...');
+      const { data, error } = await supabase.functions.invoke('platform-admin', {
+        body: {
+          operation: 'getSchoolData',
+          adminEmail: admin?.email
+        }
+      });
 
-        if (error) {
-          console.error(`❌ Error fetching schools (attempt ${attempt}):`, error);
-          if (attempt < maxRetries) {
-            await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
-            continue;
-          }
-          throw error;
-        }
-        
-        // Filter out administrative entries and get unique schools
-        const uniqueSchools = [...new Set(
-          (data || [])
-            .map(item => item.school)
-            .filter(school => school && 
-              school !== 'Platform Administration' && 
-              !school.toLowerCase().includes('admin')
-            )
-        )];
-        
-        console.log('✅ Schools fetched:', uniqueSchools.length);
-        setSchools(uniqueSchools);
-        return;
-      } catch (error) {
-        console.error(`💥 Error fetching schools (attempt ${attempt}):`, error);
-        if (attempt < maxRetries) {
-          await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
-        }
+      if (error) throw error;
+      
+      if (data?.success) {
+        const schoolNames = (data.data || [])
+          .map((school: any) => school.name)
+          .filter((name: string) => name && 
+            name !== 'Platform Administration' && 
+            !name.toLowerCase().includes('admin')
+          );
+        console.log('✅ Schools fetched via edge function:', schoolNames.length);
+        setSchools(schoolNames);
+      } else {
+        throw new Error(data?.error || 'Failed to fetch schools');
       }
+    } catch (error) {
+      console.error('❌ Error fetching schools via edge function:', error);
+      setSchools([]);
     }
-    
-    console.warn('Failed to fetch schools after multiple attempts');
-    setSchools([]);
   };
 
   const addTeacher = async () => {
@@ -190,8 +111,6 @@ const TeacherManagement: React.FC = () => {
     try {
       console.log('👨‍🏫 Creating new teacher:', newTeacher.name);
       
-      await setAdminContext();
-      
       const passwordHash = await bcrypt.hash(newTeacher.password, 12);
       console.log('🔐 Password hashed successfully');
 
@@ -205,32 +124,35 @@ const TeacherManagement: React.FC = () => {
         password_hash: passwordHash
       };
 
-      console.log('📝 Inserting teacher data...');
-      const { data: insertResult, error } = await supabase
-        .from('teachers')
-        .insert(teacherData)
-        .select()
-        .single();
-
-      if (error) {
-        console.error('❌ Error creating teacher:', error);
-        throw error;
-      }
-
-      console.log('✅ Teacher created successfully:', insertResult);
-      toast.success('Teacher added successfully');
-      
-      setNewTeacher({
-        name: '',
-        email: '',
-        school: '',
-        role: 'teacher',
-        specialization: '',
-        license_number: '',
-        password: ''
+      console.log('📝 Inserting teacher data via edge function...');
+      const { data, error } = await supabase.functions.invoke('platform-admin', {
+        body: {
+          operation: 'createTeacher',
+          adminEmail: admin.email,
+          teacherData: teacherData
+        }
       });
+
+      if (error) throw error;
       
-      fetchTeachersWithRetry();
+      if (data?.success) {
+        console.log('✅ Teacher created successfully');
+        toast.success('Teacher added successfully');
+        
+        setNewTeacher({
+          name: '',
+          email: '',
+          school: '',
+          role: 'teacher',
+          specialization: '',
+          license_number: '',
+          password: ''
+        });
+        
+        fetchTeachersViaEdgeFunction();
+      } else {
+        throw new Error(data?.error || 'Failed to create teacher');
+      }
     } catch (error) {
       console.error('💥 Error adding teacher:', error);
       if (error.message?.includes('unique constraint')) {
@@ -257,21 +179,23 @@ const TeacherManagement: React.FC = () => {
     try {
       console.log('🗑️ Deleting teacher:', teacherName);
       
-      await setAdminContext();
+      const { data, error } = await supabase.functions.invoke('platform-admin', {
+        body: {
+          operation: 'deleteTeacher',
+          adminEmail: admin.email,
+          teacherId: teacherId
+        }
+      });
+
+      if (error) throw error;
       
-      const { error } = await supabase
-        .from('teachers')
-        .delete()
-        .eq('id', teacherId);
-
-      if (error) {
-        console.error('❌ Error deleting teacher:', error);
-        throw error;
+      if (data?.success) {
+        console.log('✅ Teacher deleted successfully');
+        toast.success('Teacher deleted successfully');
+        fetchTeachersViaEdgeFunction();
+      } else {
+        throw new Error(data?.error || 'Failed to delete teacher');
       }
-
-      console.log('✅ Teacher deleted successfully');
-      toast.success('Teacher deleted successfully');
-      fetchTeachersWithRetry();
     } catch (error) {
       console.error('💥 Error deleting teacher:', error);
       toast.error(`Failed to delete teacher: ${error.message}`);
@@ -283,8 +207,8 @@ const TeacherManagement: React.FC = () => {
   useEffect(() => {
     if (admin?.email) {
       console.log('🚀 Starting teacher management data fetch...');
-      fetchTeachersWithRetry();
-      fetchSchoolsWithRetry();
+      fetchTeachersViaEdgeFunction();
+      fetchSchoolsViaEdgeFunction();
     }
   }, [admin?.email]);
 
@@ -339,7 +263,7 @@ const TeacherManagement: React.FC = () => {
                       </SelectItem>
                     ))
                   ) : (
-                    <SelectItem value="" disabled>
+                    <SelectItem value="no-schools" disabled>
                       No schools available
                     </SelectItem>
                   )}

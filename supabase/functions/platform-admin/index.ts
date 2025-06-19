@@ -67,6 +67,29 @@ serve(async (req) => {
         result = realTeachers;
         break;
 
+      case 'createTeacher':
+        const { teacherData } = params;
+        const { data: newTeacher, error: createTeacherError } = await supabaseAdmin
+          .from('teachers')
+          .insert(teacherData)
+          .select()
+          .single();
+
+        if (createTeacherError) throw createTeacherError;
+        result = { id: newTeacher.id, success: true, message: 'Teacher created successfully' };
+        break;
+
+      case 'deleteTeacher':
+        const { teacherId } = params;
+        const { error: deleteTeacherError } = await supabaseAdmin
+          .from('teachers')
+          .delete()
+          .eq('id', teacherId);
+
+        if (deleteTeacherError) throw deleteTeacherError;
+        result = { success: true, message: 'Teacher deleted successfully' };
+        break;
+
       case 'getSchoolData':
         const { data: teachersSchoolData } = await supabaseAdmin
           .from('teachers')
