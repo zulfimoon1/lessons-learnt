@@ -40,6 +40,9 @@ serve(async (req) => {
       throw new Error('Unauthorized: Not a platform admin')
     }
 
+    // Set admin context for all operations
+    await supabaseAdmin.rpc('set_platform_admin_context', { admin_email: adminEmail });
+
     let result;
 
     switch (operation) {
@@ -67,7 +70,6 @@ serve(async (req) => {
 
         if (teachersError) throw teachersError;
 
-        // Since we've removed hardcoded teachers from DB, we can return all results
         console.log(`Retrieved ${teachersData?.length || 0} teachers from database`);
         result = teachersData || [];
         break;
@@ -104,12 +106,107 @@ serve(async (req) => {
         result = { success: true, message: 'Teacher deleted successfully' };
         break;
 
+      case 'getStudents':
+        const { data: studentsData, error: studentsError } = await supabaseAdmin
+          .from('students')
+          .select('*')
+          .order('full_name');
+
+        if (studentsError) throw studentsError;
+
+        console.log(`Retrieved ${studentsData?.length || 0} students from database`);
+        result = studentsData || [];
+        break;
+
+      case 'createStudent':
+        const { studentData } = params;
+        
+        // Hash password server-side
+        const hashedStudentPassword = await hashPassword(studentData.password);
+        const studentDataWithHash = {
+          full_name: studentData.full_name,
+          school: studentData.school,
+          grade: studentData.grade,
+          password_hash: hashedStudentPassword
+        };
+
+        const { data: newStudent, error: createStudentError } = await supabaseAdmin
+          .from('students')
+          .insert(studentDataWithHash)
+          .select()
+          .single();
+
+        if (createStudentError) throw createStudentError;
+        result = { id: newStudent.id, success: true, message: 'Student created successfully' };
+        break;
+
+      case 'deleteStudent':
+        const { studentId } = params;
+        const { error: deleteStudentError } = await supabaseAdmin
+          .from('students')
+          .delete()
+          .eq('id', studentId);
+
+        if (deleteStudentError) throw deleteStudentError;
+        result = { success: true, message: 'Student deleted successfully' };
+        break;
+
+      case 'getDoctors':
+        const { data: doctorsData, error: doctorsError } = await supabaseAdmin
+          .from('teachers')
+          .select('*')
+          .eq('role', 'doctor')
+          .order('name');
+
+        if (doctorsError) throw doctorsError;
+
+        console.log(`Retrieved ${doctorsData?.length || 0} doctors from database`);
+        result = doctorsData || [];
+        break;
+
+      case 'createDoctor':
+        const { doctorData } = params;
+        
+        // Hash password server-side
+        const hashedDoctorPassword = await hashPassword(doctorData.password);
+        const doctorDataWithHash = {
+          name: doctorData.name,
+          email: doctorData.email,
+          school: doctorData.school,
+          role: 'doctor',
+          specialization: doctorData.specialization || null,
+          license_number: doctorData.license_number || null,
+          password_hash: hashedDoctorPassword,
+          is_available: true
+        };
+
+        const { data: newDoctor, error: createDoctorError } = await supabaseAdmin
+          .from('teachers')
+          .insert(doctorDataWithHash)
+          .select()
+          .single();
+
+        if (createDoctorError) throw createDoctorError;
+        result = { id: newDoctor.id, success: true, message: 'Doctor created successfully' };
+        break;
+
+      case 'deleteDoctor':
+        const { doctorId } = params;
+        const { error: deleteDoctorError } = await supabaseAdmin
+          .from('teachers')
+          .delete()
+          .eq('id', doctorId);
+
+        if (deleteDoctorError) throw deleteDoctorError;
+        result = { success: true, message: 'Doctor deleted successfully' };
+        break;
+
       case 'getSchoolData':
         const { data: teachersSchoolData } = await supabaseAdmin
           .from('teachers')
           .select('school');
 
-        // Get unique schools (hardcoded ones already removed from DB)
+        // Get unique schools
         const uniqueSchools = [...new Set(
           teachersSchoolData?.map(t => t.school)
             .filter(school => school) || []

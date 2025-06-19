@@ -8,9 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Trash2, Plus, Users, Shield } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { hashPassword } from '@/services/securePasswordService';
 import { usePlatformAdmin } from '@/contexts/PlatformAdminContext';
-import { securityValidationService } from '@/services/securityValidationService';
 
 interface Student {
   id: string;
@@ -34,208 +32,154 @@ const StudentManagement: React.FC = () => {
 
   const grades = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12'];
 
-  const setAdminContext = async () => {
-    if (admin?.email) {
-      try {
-        console.log('Setting admin context for:', admin.email);
-        await supabase.rpc('set_platform_admin_context', { admin_email: admin.email });
-        console.log('Admin context set successfully');
-      } catch (error) {
-        console.error('Error setting admin context:', error);
-        await securityValidationService.logSecurityEvent(
-          'suspicious_activity',
-          admin.id,
-          `Failed to set admin context: ${error}`,
-          'medium'
-        );
-      }
-    }
-  };
-
-  const fetchStudents = async () => {
+  const fetchStudentsViaEdgeFunction = async () => {
     try {
-      console.log('Fetching students...');
-      await setAdminContext();
-      
-      const { data, error } = await supabase
-        .from('students')
-        .select('*')
-        .order('full_name');
-
-      console.log('Students fetch result:', { data, error });
-      
-      if (error) {
-        console.error('Error fetching students:', error);
-        toast.error('Failed to fetch students: ' + error.message);
-        return;
-      }
-      
-      console.log('Setting students:', data?.length || 0, 'students found');
-      setStudents(data || []);
-    } catch (error) {
-      console.error('Error fetching students:', error);
-      toast.error('Failed to fetch students');
-      await securityValidationService.logSecurityEvent(
-        'suspicious_activity',
-        admin?.id,
-        `Error fetching students: ${error}`,
-        'medium'
-      );
-    }
-  };
-
-  const fetchSchools = async () => {
-    try {
-      await setAdminContext();
-      const { data, error } = await supabase
-        .from('teachers')
-        .select('school')
-        .not('school', 'is', null);
+      console.log('🔄 Fetching students via edge function...');
+      const { data, error } = await supabase.functions.invoke('platform-admin', {
+        body: {
+          operation: 'getStudents',
+          adminEmail: admin?.email
+        }
+      });
 
       if (error) throw error;
       
-      const uniqueSchools = [...new Set(data?.map(item => item.school) || [])];
-      setSchools(uniqueSchools);
+      if (data?.success) {
+        console.log('✅ Students fetched:', data.data?.length || 0);
+        setStudents(data.data || []);
+      } else {
+        throw new Error(data?.error || 'Failed to fetch students');
+      }
     } catch (error) {
-      console.error('Error fetching schools:', error);
+      console.error('❌ Error fetching students:', error);
+      toast.error('Failed to fetch students');
+      setStudents([]);
+    }
+  };
+
+  const fetchSchoolsViaEdgeFunction = async () => {
+    try {
+      console.log('🔄 Fetching schools via edge function...');
+      const { data, error } = await supabase.functions.invoke('platform-admin', {
+        body: {
+          operation: 'getSchoolData',
+          adminEmail: admin?.email
+        }
+      });
+
+      if (error) throw error;
+      
+      if (data?.success) {
+        const schoolNames = (data.data || []).map((school: any) => school.name);
+        console.log('✅ Schools fetched:', schoolNames.length);
+        setSchools(schoolNames);
+      } else {
+        throw new Error(data?.error || 'Failed to fetch schools');
+      }
+    } catch (error) {
+      console.error('❌ Error fetching schools:', error);
+      setSchools([]);
     }
   };
 
   const addStudent = async () => {
-    // Enhanced input validation using security service
-    const nameValidation = securityValidationService.validateInput(newStudent.full_name, 'name');
-    if (!nameValidation.isValid) {
-      toast.error(nameValidation.errors.join(', '));
+    if (!newStudent.full_name || !newStudent.school || !newStudent.grade || !newStudent.password) {
+      toast.error('Please fill in all required fields');
       return;
     }
 
-    const schoolValidation = securityValidationService.validateInput(newStudent.school, 'school');
-    if (!schoolValidation.isValid) {
-      toast.error(schoolValidation.errors.join(', '));
-      return;
-    }
-
-    const gradeValidation = securityValidationService.validateInput(newStudent.grade, 'grade');
-    if (!gradeValidation.isValid) {
-      toast.error(gradeValidation.errors.join(', '));
-      return;
-    }
-
-    const passwordValidation = securityValidationService.validateInput(newStudent.password, 'password');
-    if (!passwordValidation.isValid) {
-      toast.error(passwordValidation.errors.join(', '));
+    if (!admin?.email) {
+      toast.error('Admin authentication required');
       return;
     }
 
     setIsLoading(true);
     try {
-      await setAdminContext();
-      
-      // Check if student already exists
-      const { data: existingStudent } = await supabase
-        .from('students')
-        .select('id')
-        .eq('full_name', nameValidation.sanitizedValue)
-        .eq('school', schoolValidation.sanitizedValue)
-        .eq('grade', gradeValidation.sanitizedValue)
-        .single();
+      console.log('👨‍🎓 Creating new student:', newStudent.full_name);
 
-      if (existingStudent) {
-        toast.error('Student already exists with these details');
-        return;
-      }
-
-      const passwordHash = await hashPassword(passwordValidation.sanitizedValue);
-
-      const { error } = await supabase
-        .from('students')
-        .insert({
-          full_name: nameValidation.sanitizedValue,
-          school: schoolValidation.sanitizedValue,
-          grade: gradeValidation.sanitizedValue,
-          password_hash: passwordHash
-        });
+      const { data, error } = await supabase.functions.invoke('platform-admin', {
+        body: {
+          operation: 'createStudent',
+          adminEmail: admin.email,
+          studentData: newStudent
+        }
+      });
 
       if (error) throw error;
-
-      await securityValidationService.logSecurityEvent(
-        'unauthorized_access', // Using closest available type for admin action
-        admin?.id,
-        `Admin created new student: ${nameValidation.sanitizedValue}`,
-        'low'
-      );
-
-      toast.success('Student added successfully');
-      setNewStudent({
-        full_name: '',
-        school: '',
-        grade: '',
-        password: ''
-      });
-      fetchStudents();
+      
+      if (data?.success) {
+        console.log('✅ Student created successfully');
+        toast.success('Student added successfully');
+        
+        setNewStudent({
+          full_name: '',
+          school: '',
+          grade: '',
+          password: ''
+        });
+        
+        fetchStudentsViaEdgeFunction();
+      } else {
+        throw new Error(data?.error || 'Failed to create student');
+      }
     } catch (error) {
-      console.error('Error adding student:', error);
-      toast.error('Failed to add student');
-      await securityValidationService.logSecurityEvent(
-        'suspicious_activity',
-        admin?.id,
-        `Error adding student: ${error}`,
-        'medium'
-      );
+      console.error('💥 Error adding student:', error);
+      if (error.message?.includes('unique constraint')) {
+        toast.error('A student with this name already exists at this school');
+      } else {
+        toast.error(`Failed to add student: ${error.message}`);
+      }
     } finally {
       setIsLoading(false);
     }
   };
 
   const deleteStudent = async (studentId: string, studentName: string) => {
-    if (!confirm(`Are you sure you want to delete ${studentName}? This action cannot be undone.`)) {
+    if (!confirm(`Are you sure you want to delete ${studentName}?`)) {
+      return;
+    }
+
+    if (!admin?.email) {
+      toast.error('Admin authentication required');
       return;
     }
 
     setIsLoading(true);
     try {
-      console.log('Deleting student:', studentId, studentName);
-      await setAdminContext();
+      console.log('🗑️ Deleting student:', studentName);
       
-      const { error } = await supabase
-        .from('students')
-        .delete()
-        .eq('id', studentId);
+      const { data, error } = await supabase.functions.invoke('platform-admin', {
+        body: {
+          operation: 'deleteStudent',
+          adminEmail: admin.email,
+          studentId: studentId
+        }
+      });
 
-      if (error) {
-        console.error('Error deleting student:', error);
-        toast.error('Failed to delete student: ' + error.message);
-      } else {
-        console.log('Student deleted successfully, refetching list...');
-        
-        await securityValidationService.logSecurityEvent(
-          'unauthorized_access', // Using closest available type for admin action
-          admin?.id,
-          `Admin deleted student: ${studentName}`,
-          'medium'
-        );
-        
+      if (error) throw error;
+      
+      if (data?.success) {
+        console.log('✅ Student deleted successfully');
         toast.success('Student deleted successfully');
-        await fetchStudents();
+        fetchStudentsViaEdgeFunction();
+      } else {
+        throw new Error(data?.error || 'Failed to delete student');
       }
     } catch (error) {
-      console.error('Error deleting student:', error);
-      toast.error('Failed to delete student');
-      await securityValidationService.logSecurityEvent(
-        'suspicious_activity',
-        admin?.id,
-        `Error deleting student: ${error}`,
-        'high'
-      );
+      console.error('💥 Error deleting student:', error);
+      toast.error(`Failed to delete student: ${error.message}`);
     } finally {
       setIsLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchStudents();
-    fetchSchools();
-  }, []);
+    if (admin?.email) {
+      console.log('🚀 Starting student management data fetch...');
+      fetchStudentsViaEdgeFunction();
+      fetchSchoolsViaEdgeFunction();
+    }
+  }, [admin?.email]);
 
   return (
     <Card>
@@ -257,7 +201,7 @@ const StudentManagement: React.FC = () => {
                 value={newStudent.full_name}
                 onChange={(e) => setNewStudent(prev => ({ ...prev, full_name: e.target.value }))}
                 placeholder="Student full name"
-                maxLength={100}
+                disabled={isLoading}
               />
             </div>
             <div>
@@ -265,16 +209,23 @@ const StudentManagement: React.FC = () => {
               <Select
                 value={newStudent.school}
                 onValueChange={(value) => setNewStudent(prev => ({ ...prev, school: value }))}
+                disabled={isLoading}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select school" />
                 </SelectTrigger>
                 <SelectContent>
-                  {schools.map((school) => (
-                    <SelectItem key={school} value={school}>
-                      {school}
+                  {schools.length > 0 ? (
+                    schools.map((school) => (
+                      <SelectItem key={school} value={school}>
+                        {school}
+                      </SelectItem>
+                    ))
+                  ) : (
+                    <SelectItem value="__no_schools__" disabled>
+                      No schools available
                     </SelectItem>
-                  ))}
+                  )}
                 </SelectContent>
               </Select>
             </div>
@@ -283,6 +234,7 @@ const StudentManagement: React.FC = () => {
               <Select
                 value={newStudent.grade}
                 onValueChange={(value) => setNewStudent(prev => ({ ...prev, grade: value }))}
+                disabled={isLoading}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select grade" />
@@ -303,31 +255,21 @@ const StudentManagement: React.FC = () => {
                 type="password"
                 value={newStudent.password}
                 onChange={(e) => setNewStudent(prev => ({ ...prev, password: e.target.value }))}
-                placeholder="Minimum 8 characters, include uppercase, lowercase, number"
-                minLength={8}
+                placeholder="Password"
+                disabled={isLoading}
               />
             </div>
             <div className="md:col-span-2">
               <Button onClick={addStudent} disabled={isLoading} className="w-full">
                 <Plus className="w-4 h-4 mr-2" />
-                Add Student
+                {isLoading ? 'Adding...' : 'Add Student'}
               </Button>
             </div>
           </div>
 
           {/* Students list */}
           <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <h3 className="font-medium">Existing Students ({students.length})</h3>
-              <Button 
-                onClick={fetchStudents} 
-                variant="outline" 
-                size="sm"
-                disabled={isLoading}
-              >
-                Refresh List
-              </Button>
-            </div>
+            <h3 className="font-medium">Existing Students ({students.length})</h3>
             <div className="max-h-96 overflow-y-auto space-y-2">
               {students.length === 0 ? (
                 <p className="text-muted-foreground">No students found</p>

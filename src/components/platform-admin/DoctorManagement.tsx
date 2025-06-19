@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -7,7 +8,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Trash2, Plus, Users } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { hashPassword } from '@/services/securePasswordService';
 import { usePlatformAdmin } from '@/contexts/PlatformAdminContext';
 
 interface Doctor {
@@ -34,47 +34,53 @@ const DoctorManagement: React.FC = () => {
   });
   const [isLoading, setIsLoading] = useState(false);
 
-  const setAdminContext = async () => {
-    if (admin?.email) {
-      try {
-        await supabase.rpc('set_platform_admin_context', { admin_email: admin.email });
-      } catch (error) {
-        console.error('Error setting admin context:', error);
-      }
-    }
-  };
-
-  const fetchDoctors = async () => {
+  const fetchDoctorsViaEdgeFunction = async () => {
     try {
-      await setAdminContext();
-      const { data, error } = await supabase
-        .from('teachers')
-        .select('*')
-        .eq('role', 'doctor')
-        .order('name');
-
-      if (error) throw error;
-      setDoctors(data || []);
-    } catch (error) {
-      console.error('Error fetching doctors:', error);
-      toast.error('Failed to fetch doctors');
-    }
-  };
-
-  const fetchSchools = async () => {
-    try {
-      await setAdminContext();
-      const { data, error } = await supabase
-        .from('teachers')
-        .select('school')
-        .not('school', 'is', null);
+      console.log('🔄 Fetching doctors via edge function...');
+      const { data, error } = await supabase.functions.invoke('platform-admin', {
+        body: {
+          operation: 'getDoctors',
+          adminEmail: admin?.email
+        }
+      });
 
       if (error) throw error;
       
-      const uniqueSchools = [...new Set(data?.map(item => item.school) || [])];
-      setSchools(uniqueSchools);
+      if (data?.success) {
+        console.log('✅ Doctors fetched:', data.data?.length || 0);
+        setDoctors(data.data || []);
+      } else {
+        throw new Error(data?.error || 'Failed to fetch doctors');
+      }
     } catch (error) {
-      console.error('Error fetching schools:', error);
+      console.error('❌ Error fetching doctors:', error);
+      toast.error('Failed to fetch doctors');
+      setDoctors([]);
+    }
+  };
+
+  const fetchSchoolsViaEdgeFunction = async () => {
+    try {
+      console.log('🔄 Fetching schools via edge function...');
+      const { data, error } = await supabase.functions.invoke('platform-admin', {
+        body: {
+          operation: 'getSchoolData',
+          adminEmail: admin?.email
+        }
+      });
+
+      if (error) throw error;
+      
+      if (data?.success) {
+        const schoolNames = (data.data || []).map((school: any) => school.name);
+        console.log('✅ Schools fetched:', schoolNames.length);
+        setSchools(schoolNames);
+      } else {
+        throw new Error(data?.error || 'Failed to fetch schools');
+      }
+    } catch (error) {
+      console.error('❌ Error fetching schools:', error);
+      setSchools([]);
     }
   };
 
@@ -84,39 +90,49 @@ const DoctorManagement: React.FC = () => {
       return;
     }
 
+    if (!admin?.email) {
+      toast.error('Admin authentication required');
+      return;
+    }
+
     setIsLoading(true);
     try {
-      await setAdminContext();
-      const passwordHash = await hashPassword(newDoctor.password);
+      console.log('👩‍⚕️ Creating new doctor:', newDoctor.name);
 
-      const { error } = await supabase
-        .from('teachers')
-        .insert({
-          name: newDoctor.name,
-          email: newDoctor.email,
-          school: newDoctor.school,
-          role: 'doctor',
-          specialization: newDoctor.specialization || null,
-          license_number: newDoctor.license_number || null,
-          password_hash: passwordHash,
-          is_available: true
-        });
+      const { data, error } = await supabase.functions.invoke('platform-admin', {
+        body: {
+          operation: 'createDoctor',
+          adminEmail: admin.email,
+          doctorData: newDoctor
+        }
+      });
 
       if (error) throw error;
-
-      toast.success('Doctor added successfully');
-      setNewDoctor({
-        name: '',
-        email: '',
-        school: '',
-        specialization: '',
-        license_number: '',
-        password: ''
-      });
-      fetchDoctors();
+      
+      if (data?.success) {
+        console.log('✅ Doctor created successfully');
+        toast.success('Doctor added successfully');
+        
+        setNewDoctor({
+          name: '',
+          email: '',
+          school: '',
+          specialization: '',
+          license_number: '',
+          password: ''
+        });
+        
+        fetchDoctorsViaEdgeFunction();
+      } else {
+        throw new Error(data?.error || 'Failed to create doctor');
+      }
     } catch (error) {
-      console.error('Error adding doctor:', error);
-      toast.error('Failed to add doctor');
+      console.error('💥 Error adding doctor:', error);
+      if (error.message?.includes('unique constraint')) {
+        toast.error('A doctor with this email already exists');
+      } else {
+        toast.error(`Failed to add doctor: ${error.message}`);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -127,30 +143,47 @@ const DoctorManagement: React.FC = () => {
       return;
     }
 
+    if (!admin?.email) {
+      toast.error('Admin authentication required');
+      return;
+    }
+
     setIsLoading(true);
     try {
-      await setAdminContext();
-      const { error } = await supabase
-        .from('teachers')
-        .delete()
-        .eq('id', doctorId);
+      console.log('🗑️ Deleting doctor:', doctorName);
+      
+      const { data, error } = await supabase.functions.invoke('platform-admin', {
+        body: {
+          operation: 'deleteDoctor',
+          adminEmail: admin.email,
+          doctorId: doctorId
+        }
+      });
 
       if (error) throw error;
-
-      toast.success('Doctor deleted successfully');
-      fetchDoctors();
+      
+      if (data?.success) {
+        console.log('✅ Doctor deleted successfully');
+        toast.success('Doctor deleted successfully');
+        fetchDoctorsViaEdgeFunction();
+      } else {
+        throw new Error(data?.error || 'Failed to delete doctor');
+      }
     } catch (error) {
-      console.error('Error deleting doctor:', error);
-      toast.error('Failed to delete doctor');
+      console.error('💥 Error deleting doctor:', error);
+      toast.error(`Failed to delete doctor: ${error.message}`);
     } finally {
       setIsLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchDoctors();
-    fetchSchools();
-  }, []);
+    if (admin?.email) {
+      console.log('🚀 Starting doctor management data fetch...');
+      fetchDoctorsViaEdgeFunction();
+      fetchSchoolsViaEdgeFunction();
+    }
+  }, [admin?.email]);
 
   return (
     <Card>
@@ -171,6 +204,7 @@ const DoctorManagement: React.FC = () => {
                 value={newDoctor.name}
                 onChange={(e) => setNewDoctor(prev => ({ ...prev, name: e.target.value }))}
                 placeholder="Dr. John Smith"
+                disabled={isLoading}
               />
             </div>
             <div>
@@ -181,6 +215,7 @@ const DoctorManagement: React.FC = () => {
                 value={newDoctor.email}
                 onChange={(e) => setNewDoctor(prev => ({ ...prev, email: e.target.value }))}
                 placeholder="doctor@hospital.com"
+                disabled={isLoading}
               />
             </div>
             <div>
@@ -188,16 +223,23 @@ const DoctorManagement: React.FC = () => {
               <Select
                 value={newDoctor.school}
                 onValueChange={(value) => setNewDoctor(prev => ({ ...prev, school: value }))}
+                disabled={isLoading}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select school/hospital" />
                 </SelectTrigger>
                 <SelectContent>
-                  {schools.map((school) => (
-                    <SelectItem key={school} value={school}>
-                      {school}
+                  {schools.length > 0 ? (
+                    schools.map((school) => (
+                      <SelectItem key={school} value={school}>
+                        {school}
+                      </SelectItem>
+                    ))
+                  ) : (
+                    <SelectItem value="__no_schools__" disabled>
+                      No schools available
                     </SelectItem>
-                  ))}
+                  )}
                 </SelectContent>
               </Select>
             </div>
@@ -208,6 +250,7 @@ const DoctorManagement: React.FC = () => {
                 value={newDoctor.specialization}
                 onChange={(e) => setNewDoctor(prev => ({ ...prev, specialization: e.target.value }))}
                 placeholder="Psychology, Psychiatry, etc."
+                disabled={isLoading}
               />
             </div>
             <div>
@@ -217,6 +260,7 @@ const DoctorManagement: React.FC = () => {
                 value={newDoctor.license_number}
                 onChange={(e) => setNewDoctor(prev => ({ ...prev, license_number: e.target.value }))}
                 placeholder="Medical license number"
+                disabled={isLoading}
               />
             </div>
             <div>
@@ -227,12 +271,13 @@ const DoctorManagement: React.FC = () => {
                 value={newDoctor.password}
                 onChange={(e) => setNewDoctor(prev => ({ ...prev, password: e.target.value }))}
                 placeholder="Password"
+                disabled={isLoading}
               />
             </div>
             <div className="md:col-span-2">
               <Button onClick={addDoctor} disabled={isLoading} className="w-full">
                 <Plus className="w-4 h-4 mr-2" />
-                Add Doctor
+                {isLoading ? 'Adding...' : 'Add Doctor'}
               </Button>
             </div>
           </div>
