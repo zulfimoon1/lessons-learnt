@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { Teacher, Student, AuthContextType, SecurityEvent } from '@/types/auth';
 import { supabase } from '@/integrations/supabase/client';
@@ -425,7 +424,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     studentLogin,
     studentSignup,
     logout,
-    csrfToken
+    csrfToken,
+    setTeacher,
+    setStudent
   };
 
   return (

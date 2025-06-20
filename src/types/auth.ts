@@ -1,4 +1,3 @@
-
 export interface Teacher {
   id: string;
   name: string;
@@ -46,6 +45,8 @@ export interface AuthContextType {
   studentSignup: (fullName: string, school: string, grade: string, password: string) => Promise<{ student?: Student; error?: string }>;
   logout: () => void;
   csrfToken?: string;
+  setTeacher: (teacher: Teacher | null) => void;
+  setStudent: (student: Student | null) => void;
 }
 
 export interface AuthResult {
