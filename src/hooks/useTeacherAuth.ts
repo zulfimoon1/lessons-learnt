@@ -2,7 +2,6 @@
 import { useState } from 'react';
 import { Teacher } from '@/types/auth';
 import { teacherEmailLoginService, teacherSignupService } from '@/services/authService';
-import { secureSessionService } from '@/services/secureSessionService';
 
 export const useTeacherAuth = () => {
   const [teacher, setTeacher] = useState<Teacher | null>(null);
@@ -36,9 +35,10 @@ export const useTeacherAuth = () => {
         };
         
         setTeacher(teacherData);
-        // Securely store teacher data
+        
+        // Store teacher data in localStorage
         try {
-          secureSessionService.securelyStoreUserData('teacher', teacherData);
+          localStorage.setItem('teacher', JSON.stringify(teacherData));
           localStorage.removeItem('student');
           localStorage.removeItem('platformAdmin');
           console.log('useTeacherAuth: Teacher data saved successfully');
@@ -90,9 +90,10 @@ export const useTeacherAuth = () => {
         };
         
         setTeacher(teacherData);
-        // Securely store teacher data
+        
+        // Store teacher data in localStorage
         try {
-          secureSessionService.securelyStoreUserData('teacher', teacherData);
+          localStorage.setItem('teacher', JSON.stringify(teacherData));
           localStorage.removeItem('student');
           localStorage.removeItem('platformAdmin');
           console.log('useTeacherAuth: Teacher signup data saved successfully');
@@ -114,7 +115,6 @@ export const useTeacherAuth = () => {
     setTeacher(null);
     try {
       localStorage.removeItem('teacher');
-      secureSessionService.clearSession('teacher');
     } catch (error) {
       console.error('useTeacherAuth: Error clearing teacher data:', error);
     }
@@ -122,22 +122,11 @@ export const useTeacherAuth = () => {
 
   const restoreFromStorage = () => {
     try {
-      // Try secure storage first
-      const savedTeacher = secureSessionService.securelyRetrieveUserData('teacher');
-      if (savedTeacher && savedTeacher.id && savedTeacher.name) {
-        setTeacher(savedTeacher);
-        return true;
-      }
-      
-      // Fallback to regular localStorage for backward compatibility
-      const legacyTeacher = localStorage.getItem('teacher');
-      if (legacyTeacher) {
-        const parsedTeacher = JSON.parse(legacyTeacher);
+      const savedTeacher = localStorage.getItem('teacher');
+      if (savedTeacher) {
+        const parsedTeacher = JSON.parse(savedTeacher);
         if (parsedTeacher && parsedTeacher.id && parsedTeacher.name) {
           setTeacher(parsedTeacher);
-          // Migrate to secure storage
-          secureSessionService.securelyStoreUserData('teacher', parsedTeacher);
-          localStorage.removeItem('teacher');
           return true;
         } else {
           localStorage.removeItem('teacher');
@@ -146,7 +135,6 @@ export const useTeacherAuth = () => {
     } catch (error) {
       console.error('useTeacherAuth: Error restoring teacher from storage:', error);
       localStorage.removeItem('teacher');
-      secureSessionService.clearSession('teacher');
     }
     return false;
   };
