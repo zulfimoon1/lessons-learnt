@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -15,6 +14,7 @@ interface Doctor {
   name: string;
   email: string;
   school: string;
+  role: string; // Should always be 'doctor'
   specialization?: string;
   license_number?: string;
   is_available: boolean;
@@ -39,7 +39,7 @@ const DoctorManagement: React.FC = () => {
       console.log('🔄 Fetching doctors via edge function...');
       const { data, error } = await supabase.functions.invoke('platform-admin', {
         body: {
-          operation: 'getDoctors',
+          operation: 'getDoctors', // This specifically gets only doctors (role = 'doctor')
           adminEmail: admin?.email
         }
       });
@@ -48,7 +48,9 @@ const DoctorManagement: React.FC = () => {
       
       if (data?.success) {
         console.log('✅ Doctors fetched:', data.data?.length || 0);
-        setDoctors(data.data || []);
+        // Ensure we only show doctors
+        const doctorsOnly = (data.data || []).filter((doc: Doctor) => doc.role === 'doctor');
+        setDoctors(doctorsOnly);
       } else {
         throw new Error(data?.error || 'Failed to fetch doctors');
       }
@@ -282,36 +284,38 @@ const DoctorManagement: React.FC = () => {
             </div>
           </div>
 
-          {/* Doctors list */}
+          {/* Doctors list - Only showing doctors */}
           <div className="space-y-2">
-            <h3 className="font-medium">Existing Doctors ({doctors.length})</h3>
+            <h3 className="font-medium">Doctors ({doctors.length})</h3>
             <div className="max-h-96 overflow-y-auto space-y-2">
               {doctors.length === 0 ? (
                 <p className="text-muted-foreground">No doctors found</p>
               ) : (
-                doctors.map((doctor) => (
-                  <div key={doctor.id} className="flex items-center justify-between p-3 border rounded">
-                    <div>
-                      <h4 className="font-medium">Dr. {doctor.name}</h4>
-                      <p className="text-sm text-muted-foreground">
-                        {doctor.email} • {doctor.school}
-                        {doctor.specialization && ` • ${doctor.specialization}`}
-                        {doctor.license_number && ` • License: ${doctor.license_number}`}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        Status: {doctor.is_available ? 'Available' : 'Unavailable'}
-                      </p>
+                doctors
+                  .filter(doctor => doctor.role === 'doctor') // Extra safety filter
+                  .map((doctor) => (
+                    <div key={doctor.id} className="flex items-center justify-between p-3 border rounded">
+                      <div>
+                        <h4 className="font-medium">Dr. {doctor.name}</h4>
+                        <p className="text-sm text-muted-foreground">
+                          {doctor.email} • {doctor.school}
+                          {doctor.specialization && ` • ${doctor.specialization}`}
+                          {doctor.license_number && ` • License: ${doctor.license_number}`}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          Status: {doctor.is_available ? 'Available' : 'Unavailable'} • Role: Doctor
+                        </p>
+                      </div>
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        onClick={() => deleteDoctor(doctor.id, doctor.name)}
+                        disabled={isLoading}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
                     </div>
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      onClick={() => deleteDoctor(doctor.id, doctor.name)}
-                      disabled={isLoading}
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  </div>
-                ))
+                  ))
               )}
             </div>
           </div>
