@@ -6,8 +6,8 @@ export const authenticateTeacher = async (email: string, password: string) => {
   try {
     console.log('🔐 Starting teacher authentication for:', email);
     
-    // Use the secure authentication function that bypasses RLS
-    const { data, error } = await supabase.rpc('authenticate_teacher_complete', {
+    // Use the existing working authentication function
+    const { data, error } = await supabase.rpc('authenticate_teacher_working', {
       email_param: email.toLowerCase().trim(),
       password_param: password
     });
@@ -19,14 +19,16 @@ export const authenticateTeacher = async (email: string, password: string) => {
       return { error: 'Authentication service error. Please try again.' };
     }
 
-    if (!data || data.length === 0) {
+    // Handle the response data properly - it should be an array of results
+    if (!data || !Array.isArray(data) || data.length === 0) {
       return { error: 'Invalid email or password' };
     }
 
     const result = data[0];
     
-    if (!result.success) {
-      return { error: result.error_message || 'Invalid email or password' };
+    // Check if teacher exists and password is valid
+    if (!result.teacher_id || !result.password_valid) {
+      return { error: 'Invalid email or password' };
     }
 
     console.log('✅ Teacher authentication successful');
@@ -51,8 +53,8 @@ export const authenticateStudent = async (fullName: string, school: string, grad
   try {
     console.log('🔐 Starting student authentication for:', { fullName, school, grade });
     
-    // Use the secure authentication function that bypasses RLS
-    const { data, error } = await supabase.rpc('authenticate_student_complete', {
+    // Use the existing working authentication function
+    const { data, error } = await supabase.rpc('authenticate_student_working', {
       name_param: fullName.trim(),
       school_param: school.trim(),
       grade_param: grade.trim(),
@@ -66,14 +68,16 @@ export const authenticateStudent = async (fullName: string, school: string, grad
       return { error: 'Authentication service error. Please try again.' };
     }
 
-    if (!data || data.length === 0) {
+    // Handle the response data properly - it should be an array of results
+    if (!data || !Array.isArray(data) || data.length === 0) {
       return { error: 'Invalid credentials' };
     }
 
     const result = data[0];
     
-    if (!result.success) {
-      return { error: result.error_message || 'Invalid credentials' };
+    // Check if student exists and password is valid
+    if (!result.student_id || !result.password_valid) {
+      return { error: 'Invalid credentials' };
     }
 
     console.log('✅ Student authentication successful');
