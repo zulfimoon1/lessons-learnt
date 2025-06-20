@@ -1,41 +1,39 @@
-
 import { supabase } from '@/integrations/supabase/client';
 
 export const authenticateTeacher = async (email: string, password: string) => {
   try {
     console.log('🔐 Starting teacher authentication for:', email);
     
-    // First try to find the teacher directly
-    const { data: teachers, error: selectError } = await supabase
-      .from('teachers')
-      .select('*')
-      .eq('email', email.toLowerCase().trim())
-      .limit(1);
+    // Use the authenticate_teacher RPC function that bypasses RLS
+    const { data, error } = await supabase.rpc('authenticate_teacher', {
+      email_param: email.toLowerCase().trim(),
+      password_param: password
+    });
 
-    console.log('Direct teacher query result:', { teachers, selectError });
+    console.log('Teacher authentication RPC result:', { data, error });
 
-    if (selectError) {
-      console.error('Teacher query error:', selectError);
+    if (error) {
+      console.error('Teacher authentication RPC error:', error);
       return { error: 'Authentication failed - database error' };
     }
 
-    if (!teachers || teachers.length === 0) {
+    if (!data || data.length === 0) {
       console.log('No teacher found with email:', email);
       return { error: 'Invalid email or password' };
     }
 
-    const teacher = teachers[0];
-    console.log('Teacher found:', { id: teacher.id, name: teacher.name, email: teacher.email });
+    const teacher = data[0];
+    console.log('Teacher found:', { id: teacher.teacher_id, name: teacher.teacher_name, email: teacher.teacher_email });
 
     // For now, just verify the teacher exists (password checking can be added later)
     console.log('✅ Teacher authentication successful');
     return {
       teacher: {
-        id: teacher.id,
-        name: teacher.name,
-        email: teacher.email,
-        school: teacher.school,
-        role: teacher.role as 'teacher' | 'admin' | 'doctor'
+        id: teacher.teacher_id,
+        name: teacher.teacher_name,
+        email: teacher.teacher_email,
+        school: teacher.teacher_school,
+        role: teacher.teacher_role as 'teacher' | 'admin' | 'doctor'
       }
     };
 
@@ -49,38 +47,37 @@ export const authenticateStudent = async (fullName: string, school: string, grad
   try {
     console.log('🔐 Starting student authentication for:', { fullName, school, grade });
     
-    // First try to find the student directly
-    const { data: students, error: selectError } = await supabase
-      .from('students')
-      .select('*')
-      .eq('full_name', fullName.trim())
-      .eq('school', school.trim())
-      .eq('grade', grade.trim())
-      .limit(1);
+    // Use the authenticate_student RPC function that bypasses RLS
+    const { data, error } = await supabase.rpc('authenticate_student', {
+      name_param: fullName.trim(),
+      school_param: school.trim(),
+      grade_param: grade.trim(),  
+      password_param: password
+    });
 
-    console.log('Direct student query result:', { students, selectError });
+    console.log('Student authentication RPC result:', { data, error });
 
-    if (selectError) {
-      console.error('Student query error:', selectError);
+    if (error) {
+      console.error('Student authentication RPC error:', error);
       return { error: 'Authentication failed - database error' };
     }
 
-    if (!students || students.length === 0) {
+    if (!data || data.length === 0) {
       console.log('No student found with credentials:', { fullName, school, grade });
       return { error: 'Invalid credentials' };
     }
 
-    const student = students[0];
-    console.log('Student found:', { id: student.id, name: student.full_name });
+    const student = data[0];
+    console.log('Student found:', { id: student.student_id, name: student.student_name });
 
     // For now, just verify the student exists (password checking can be added later)
     console.log('✅ Student authentication successful');
     return {
       student: {
-        id: student.id,
-        full_name: student.full_name,
-        school: student.school,
-        grade: student.grade
+        id: student.student_id,
+        full_name: student.student_name,
+        school: student.student_school,
+        grade: student.student_grade
       }
     };
 
