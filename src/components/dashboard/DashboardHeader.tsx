@@ -1,7 +1,7 @@
 
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { SchoolIcon, LogOutIcon } from "lucide-react";
+import { SchoolIcon, LogOut } from "lucide-react";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { useLanguage } from "@/contexts/LanguageContext";
 
@@ -29,7 +29,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({ title, userName, onLo
             variant="outline"
             className="flex items-center gap-2"
           >
-            <LogOutIcon className="w-4 h-4" />
+            <LogOut className="w-4 h-4" />
             {t('auth.logout')}
           </Button>
         </div>

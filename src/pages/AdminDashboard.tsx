@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -10,17 +9,17 @@ import {
   SchoolIcon, 
   UsersIcon, 
   MessageSquareIcon, 
-  LogOutIcon,
   HeartHandshakeIcon
 } from "lucide-react";
 import ClassScheduleForm from "@/components/ClassScheduleForm";
 import InviteTeacherForm from "@/components/InviteTeacherForm";
 import SchoolPsychologistForm from "@/components/SchoolPsychologistForm";
 import { useNavigate } from "react-router-dom";
-import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { useLanguage } from "@/contexts/LanguageContext";
 import ComplianceFooter from "@/components/ComplianceFooter";
 import CookieConsent from "@/components/CookieConsent";
+import DashboardHeader from "@/components/dashboard/DashboardHeader";
+import StatsCard from "@/components/dashboard/StatsCard";
 
 interface Teacher {
   id: string;
@@ -167,28 +166,11 @@ const AdminDashboard = () => {
   return (
     <div className="min-h-screen bg-background">
       <CookieConsent />
-      <header className="bg-card/80 backdrop-blur-sm border-b border-border p-4">
-        <div className="max-w-7xl mx-auto flex justify-between items-center">
-          <div className="flex items-center gap-4">
-            <SchoolIcon className="w-8 h-8 text-primary" />
-            <h1 className="text-2xl font-bold text-foreground">
-              {teacher?.school} - {t('admin.title') || 'Admin Dashboard'}
-            </h1>
-          </div>
-          <div className="flex items-center gap-4">
-            <LanguageSwitcher />
-            <span className="text-sm text-muted-foreground">{t('admin.welcome') || 'Welcome'}, {teacher?.name}</span>
-            <Button
-              onClick={handleLogout}
-              variant="outline"
-              className="flex items-center gap-2"
-            >
-              <LogOutIcon className="w-4 h-4" />
-              {t('admin.logout') || 'Logout'}
-            </Button>
-          </div>
-        </div>
-      </header>
+      <DashboardHeader 
+        title={`${teacher?.school} - ${t('admin.title') || 'Admin Dashboard'}`}
+        userName={teacher?.name || ""}
+        onLogout={handleLogout}
+      />
 
       <main className="max-w-7xl mx-auto p-6 space-y-6">
         {!subscription && (
@@ -211,47 +193,29 @@ const AdminDashboard = () => {
         )}
 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Teachers</CardTitle>
-              <UsersIcon className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{regularTeachers.length}</div>
-            </CardContent>
-          </Card>
+          <StatsCard
+            title="Teachers"
+            value={regularTeachers.length}
+            icon={UsersIcon}
+          />
           
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Mental Health Professionals</CardTitle>
-              <HeartHandshakeIcon className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{doctors.length}</div>
-            </CardContent>
-          </Card>
+          <StatsCard
+            title="Mental Health Professionals"
+            value={doctors.length}
+            icon={HeartHandshakeIcon}
+          />
 
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Student Feedback</CardTitle>
-              <MessageSquareIcon className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{feedback.length}</div>
-            </CardContent>
-          </Card>
+          <StatsCard
+            title="Student Feedback"
+            value={feedback.length}
+            icon={MessageSquareIcon}
+          />
 
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{t('admin.subscription') || 'Subscription'}</CardTitle>
-              <MessageSquareIcon className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {subscription ? 'Active' : 'Inactive'}
-              </div>
-            </CardContent>
-          </Card>
+          <StatsCard
+            title={t('admin.subscription') || 'Subscription'}
+            value={subscription ? 'Active' : 'Inactive'}
+            icon={SchoolIcon}
+          />
         </div>
 
         <Tabs defaultValue="schedule" className="space-y-6">
