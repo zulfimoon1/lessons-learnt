@@ -104,18 +104,11 @@ const TeacherLogin = () => {
     }
   };
 
-  const handleSignup = async (signupData: {
-    name: string;
-    email: string;
-    school: string;
-    role: 'teacher' | 'admin' | 'doctor';
-    password: string;
-    confirmPassword: string;
-  }) => {
-    console.log('TeacherLogin: Signup attempt for:', signupData.name);
+  const handleSignup = async (name: string, email: string, school: string, password: string, confirmPassword: string, role: string) => {
+    console.log('TeacherLogin: Signup attempt for:', name);
 
     // Validate input
-    if (!signupData.name.trim() || !signupData.email.trim() || !signupData.school.trim() || !signupData.password) {
+    if (!name.trim() || !email.trim() || !school.trim() || !password) {
       toast({
         title: "Missing information",
         description: "Please fill in all required fields",
@@ -124,7 +117,7 @@ const TeacherLogin = () => {
       return;
     }
 
-    if (signupData.password !== signupData.confirmPassword) {
+    if (password !== confirmPassword) {
       toast({
         title: "Password mismatch",
         description: "Passwords do not match",
@@ -133,7 +126,7 @@ const TeacherLogin = () => {
       return;
     }
 
-    if (signupData.password.length < 6) {
+    if (password.length < 6) {
       toast({
         title: "Password too short",
         description: "Password must be at least 6 characters long",
@@ -147,11 +140,11 @@ const TeacherLogin = () => {
     try {
       // Use teacherLogin with signup parameters
       const result = await teacherLogin(
-        signupData.email.trim(),
-        signupData.password,
-        signupData.name.trim(),
-        signupData.school.trim(),
-        signupData.role
+        email.trim(),
+        password,
+        name.trim(),
+        school.trim(),
+        role as 'teacher' | 'admin' | 'doctor'
       );
 
       console.log('TeacherLogin: Signup result received:', result);
