@@ -7,7 +7,7 @@ export const authenticateTeacher = async (email: string, password: string) => {
     console.log('🔐 Starting teacher authentication for:', email);
     
     // Use the complete authentication function that handles everything server-side
-    const { data: authResult, error: authError } = await supabase.rpc('authenticate_teacher_complete', {
+    const { data: authResult, error: authError } = await supabase.rpc('authenticate_teacher_complete' as any, {
       email_param: email.toLowerCase().trim(),
       password_param: password
     });
@@ -19,7 +19,7 @@ export const authenticateTeacher = async (email: string, password: string) => {
       return { error: 'Authentication failed. Please try again.' };
     }
 
-    if (!authResult || authResult.length === 0) {
+    if (!authResult || !Array.isArray(authResult) || authResult.length === 0) {
       console.log('No auth result returned');
       return { error: 'Authentication failed. Please check your credentials.' };
     }
@@ -53,7 +53,7 @@ export const authenticateStudent = async (fullName: string, school: string, grad
     console.log('🔐 Starting student authentication for:', { fullName, school, grade });
     
     // Use the complete authentication function that handles everything server-side
-    const { data: authResult, error: authError } = await supabase.rpc('authenticate_student_complete', {
+    const { data: authResult, error: authError } = await supabase.rpc('authenticate_student_complete' as any, {
       name_param: fullName.trim(),
       school_param: school.trim(),
       grade_param: grade.trim(),
@@ -67,7 +67,7 @@ export const authenticateStudent = async (fullName: string, school: string, grad
       return { error: 'Authentication failed. Please try again.' };
     }
 
-    if (!authResult || authResult.length === 0) {
+    if (!authResult || !Array.isArray(authResult) || authResult.length === 0) {
       console.log('No auth result returned');
       return { error: 'Authentication failed. Please check your credentials.' };
     }
