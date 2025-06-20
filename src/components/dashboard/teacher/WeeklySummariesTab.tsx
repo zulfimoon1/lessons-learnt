@@ -45,7 +45,7 @@ const WeeklySummariesTab: React.FC<WeeklySummariesTabProps> = ({
 
   return (
     <div className="space-y-6">
-      <WeeklySummaryReview school={school} />
+      <WeeklySummaryReview />
     </div>
   );
 };

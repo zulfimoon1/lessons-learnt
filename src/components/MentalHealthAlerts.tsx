@@ -146,7 +146,7 @@ const MentalHealthAlerts = () => {
                         Mark as Reviewed
                       </Button>
                     ) : (
-                      <Badge variant="ghost">Reviewed</Badge>
+                      <Badge variant="secondary">Reviewed</Badge>
                     )}
                   </div>
                 </div>
