@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { ChevronRightIcon, HomeIcon } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -12,10 +13,9 @@ interface BreadcrumbsProps {
   items: BreadcrumbItem[];
 }
 
-// This component is deprecated and should not be used in dashboards
-// Keeping for backward compatibility but not rendering
+// This component is disabled - breadcrumbs are not shown in dashboards
 const Breadcrumbs = ({ items }: BreadcrumbsProps) => {
-  return null; // Don't render breadcrumbs in dashboards
+  return null; // Don't render breadcrumbs anywhere
 };
 
 export default Breadcrumbs;

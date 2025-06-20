@@ -87,11 +87,12 @@ const AdminDashboard = () => {
 
       if (error) throw error;
       setTeachers(data || []);
+      console.log('Loaded teachers:', data);
     } catch (error) {
       console.error('Error loading teachers:', error);
       toast({
-        title: t('admin.error.title'),
-        description: t('admin.error.description'),
+        title: t('admin.error.title') || 'Error',
+        description: t('admin.error.description') || 'Failed to load teachers',
         variant: "destructive",
       });
     }
@@ -113,6 +114,7 @@ const AdminDashboard = () => {
 
       if (error) throw error;
       setFeedback(data || []);
+      console.log('Loaded feedback:', data);
     } catch (error) {
       console.error('Error loading feedback:', error);
     }
@@ -153,7 +155,7 @@ const AdminDashboard = () => {
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p>{t('admin.loading')}</p>
+          <p>{t('admin.loading') || 'Loading...'}</p>
         </div>
       </div>
     );
@@ -170,19 +172,19 @@ const AdminDashboard = () => {
           <div className="flex items-center gap-4">
             <SchoolIcon className="w-8 h-8 text-primary" />
             <h1 className="text-2xl font-bold text-foreground">
-              {teacher?.school} - {t('admin.title')}
+              {teacher?.school} - {t('admin.title') || 'Admin Dashboard'}
             </h1>
           </div>
           <div className="flex items-center gap-4">
             <LanguageSwitcher />
-            <span className="text-sm text-muted-foreground">{t('admin.welcome')}, {teacher?.name}</span>
+            <span className="text-sm text-muted-foreground">{t('admin.welcome') || 'Welcome'}, {teacher?.name}</span>
             <Button
               onClick={handleLogout}
               variant="outline"
               className="flex items-center gap-2"
             >
               <LogOutIcon className="w-4 h-4" />
-              {t('admin.logout')}
+              {t('admin.logout') || 'Logout'}
             </Button>
           </div>
         </div>
@@ -192,7 +194,7 @@ const AdminDashboard = () => {
         {!subscription && (
           <Card className="border-yellow-200 bg-yellow-50">
             <CardHeader>
-              <CardTitle className="text-yellow-800">{t('admin.subscription')}</CardTitle>
+              <CardTitle className="text-yellow-800">{t('admin.subscription') || 'Subscription Required'}</CardTitle>
               <CardDescription className="text-yellow-700">
                 You need an active subscription to access all admin features and invite teachers.
               </CardDescription>
@@ -202,7 +204,7 @@ const AdminDashboard = () => {
                 onClick={handleSubscribe}
                 className="bg-primary hover:bg-primary/90"
               >
-                {t('admin.subscribe')}
+                {t('admin.subscribe') || 'Subscribe Now'}
               </Button>
             </CardContent>
           </Card>
@@ -221,7 +223,7 @@ const AdminDashboard = () => {
           
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Doctors</CardTitle>
+              <CardTitle className="text-sm font-medium">Mental Health Professionals</CardTitle>
               <HeartHandshakeIcon className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
@@ -241,7 +243,7 @@ const AdminDashboard = () => {
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{t('admin.subscription')}</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('admin.subscription') || 'Subscription'}</CardTitle>
               <MessageSquareIcon className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
@@ -254,7 +256,7 @@ const AdminDashboard = () => {
 
         <Tabs defaultValue="schedule" className="space-y-6">
           <TabsList className="grid w-full grid-cols-5">
-            <TabsTrigger value="schedule">{t('class.schedule')}</TabsTrigger>
+            <TabsTrigger value="schedule">{t('class.schedule') || 'Schedule'}</TabsTrigger>
             <TabsTrigger value="teachers">Teachers</TabsTrigger>
             <TabsTrigger value="feedback">Student Feedback</TabsTrigger>
             <TabsTrigger value="psychologists">Psychologists</TabsTrigger>
@@ -268,7 +270,7 @@ const AdminDashboard = () => {
           <TabsContent value="teachers" className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>All Staff Members</CardTitle>
+                <CardTitle>All Staff Members ({teachers.length})</CardTitle>
                 <CardDescription>
                   View all teachers and mental health professionals in your school
                 </CardDescription>
@@ -300,7 +302,7 @@ const AdminDashboard = () => {
           <TabsContent value="feedback" className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>Student Feedback</CardTitle>
+                <CardTitle>Student Feedback ({feedback.length})</CardTitle>
                 <CardDescription>
                   All feedback submitted by students in your school
                 </CardDescription>

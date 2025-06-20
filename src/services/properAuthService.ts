@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { hashPassword, verifyPassword } from './securePasswordService';
 
@@ -52,32 +53,42 @@ export const authenticateStudent = async (fullName: string, school: string, grad
   try {
     console.log('🔐 Starting student authentication for:', { fullName, school, grade });
     
-    // First, let's try to find the student directly
-    const { data: studentData, error: studentError } = await supabase
-      .from('students')
-      .select('*')
-      .eq('full_name', fullName.trim())
-      .eq('school', school.trim())
-      .eq('grade', grade.trim())
-      .single();
+    // Use RPC function for student authentication
+    const { data, error } = await supabase.rpc('authenticate_student_working', {
+      name_param: fullName.trim(),
+      school_param: school.trim(),
+      grade_param: grade.trim(),
+      password_param: password
+    });
 
-    console.log('Direct student lookup result:', { studentData, studentError });
+    console.log('Student authentication RPC result:', { data, error });
 
-    if (studentError || !studentData) {
-      console.log('❌ Student not found in direct lookup');
+    if (error) {
+      console.error('Student authentication RPC error:', error);
+      return { error: 'Authentication service error. Please try again.' };
+    }
+
+    // Handle the response data properly
+    if (!data || !Array.isArray(data) || data.length === 0) {
       return { error: 'Invalid credentials' };
     }
 
-    // For now, we'll accept any password since we're in demo mode
-    // In production, you'd verify the password hash here
+    const result = data[0];
+    console.log('Student authentication result:', result);
+    
+    // Check if student exists and password is valid
+    if (!result.student_id || !result.password_valid) {
+      return { error: 'Invalid credentials' };
+    }
+
     console.log('✅ Student authentication successful');
     
     return {
       student: {
-        id: studentData.id,
-        full_name: studentData.full_name,
-        school: studentData.school,
-        grade: studentData.grade
+        id: result.student_id,
+        full_name: result.student_name,
+        school: result.student_school,
+        grade: result.student_grade
       }
     };
 
