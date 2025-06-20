@@ -1,7 +1,7 @@
 
 import { useState } from 'react';
 import { Student } from '@/types/auth';
-import { studentSimpleLoginService, studentSignupService } from '@/services/authService';
+import { studentSimpleLoginService, studentSignupService } from '@/services/secureAuthService';
 
 export const useStudentAuth = () => {
   const [student, setStudent] = useState<Student | null>(null);
@@ -41,7 +41,7 @@ export const useStudentAuth = () => {
         
         setStudent(studentData);
         
-        // Store student data in localStorage
+        // Store student data in localStorage - simplified storage
         try {
           localStorage.setItem('student', JSON.stringify(studentData));
           localStorage.removeItem('teacher');
@@ -71,8 +71,8 @@ export const useStudentAuth = () => {
       }
 
       // Basic password validation
-      if (password.length < 6) {
-        return { error: 'Password must be at least 6 characters long' };
+      if (password.length < 4) {
+        return { error: 'Password must be at least 4 characters long' };
       }
       
       const result = await studentSignupService(fullName.trim(), school.trim(), grade.trim(), password);
@@ -91,7 +91,7 @@ export const useStudentAuth = () => {
         
         setStudent(studentData);
         
-        // Store student data in localStorage
+        // Store student data in localStorage - simplified storage
         try {
           localStorage.setItem('student', JSON.stringify(studentData));
           localStorage.removeItem('teacher');
@@ -128,6 +128,7 @@ export const useStudentAuth = () => {
         const parsedStudent = JSON.parse(savedStudent);
         if (parsedStudent && parsedStudent.id && parsedStudent.full_name && parsedStudent.school && parsedStudent.grade) {
           setStudent(parsedStudent);
+          console.log('useStudentAuth: Student session restored successfully');
           return true;
         } else {
           localStorage.removeItem('student');
