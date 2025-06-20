@@ -5,41 +5,76 @@ export const authenticateTeacher = async (email: string, password: string) => {
   try {
     console.log('🔐 Starting teacher authentication for:', email);
     
-    // Use the RPC function that bypasses RLS
-    const { data, error } = await supabase.rpc('authenticate_teacher_working', {
-      email_param: email.toLowerCase().trim(),
-      password_param: password
-    });
+    // First, try a simple direct query to test database connectivity
+    console.log('Testing database connectivity...');
+    const { data: testData, error: testError } = await supabase
+      .from('teachers')
+      .select('id, email')
+      .eq('email', email.toLowerCase().trim())
+      .limit(1);
 
-    console.log('Teacher RPC result:', { data, error });
+    console.log('Database connectivity test result:', { testData, testError });
 
-    if (error) {
-      console.error('Teacher RPC error:', error);
-      return { error: 'Authentication failed. Please check your credentials.' };
+    if (testError) {
+      console.error('Database connectivity test failed:', testError);
+      // If direct query fails, fall back to RPC
+      console.log('Falling back to RPC function...');
+      
+      const { data: rpcData, error: rpcError } = await supabase.rpc('authenticate_teacher_working', {
+        email_param: email.toLowerCase().trim(),
+        password_param: password
+      });
+
+      console.log('RPC fallback result:', { rpcData, rpcError });
+
+      if (rpcError) {
+        console.error('RPC fallback also failed:', rpcError);
+        return { error: 'Authentication service temporarily unavailable. Please try again.' };
+      }
+
+      if (!rpcData || rpcData.length === 0) {
+        return { error: 'Invalid email or password' };
+      }
+
+      const teacher = rpcData[0];
+      return {
+        teacher: {
+          id: teacher.teacher_id,
+          name: teacher.teacher_name,
+          email: teacher.teacher_email,
+          school: teacher.teacher_school,
+          role: teacher.teacher_role as 'teacher' | 'admin' | 'doctor'
+        }
+      };
     }
 
-    if (!data || data.length === 0) {
+    // If direct query works, use it
+    if (!testData || testData.length === 0) {
       console.log('No teacher found for email:', email);
       return { error: 'Invalid email or password' };
     }
 
-    const teacher = data[0];
-    console.log('Teacher found via RPC:', { id: teacher.teacher_id, email: teacher.teacher_email, role: teacher.teacher_role });
+    // Get full teacher data
+    const { data: teacherData, error: teacherError } = await supabase
+      .from('teachers')
+      .select('*')
+      .eq('email', email.toLowerCase().trim())
+      .single();
 
-    if (!teacher.teacher_id) {
-      console.log('No teacher found for email:', email);
-      return { error: 'Invalid email or password' };
+    if (teacherError || !teacherData) {
+      console.error('Failed to get teacher data:', teacherError);
+      return { error: 'Authentication failed' };
     }
 
-    console.log('✅ Teacher authentication successful');
+    console.log('✅ Teacher authentication successful via direct query');
     
     return {
       teacher: {
-        id: teacher.teacher_id,
-        name: teacher.teacher_name,
-        email: teacher.teacher_email,
-        school: teacher.teacher_school,
-        role: teacher.teacher_role as 'teacher' | 'admin' | 'doctor'
+        id: teacherData.id,
+        name: teacherData.name,
+        email: teacherData.email,
+        school: teacherData.school,
+        role: teacherData.role as 'teacher' | 'admin' | 'doctor'
       }
     };
 
@@ -53,42 +88,76 @@ export const authenticateStudent = async (fullName: string, school: string, grad
   try {
     console.log('🔐 Starting student authentication for:', { fullName, school, grade });
     
-    // Use the RPC function that bypasses RLS
-    const { data, error } = await supabase.rpc('authenticate_student_working', {
-      name_param: fullName.trim(),
-      school_param: school.trim(),
-      grade_param: grade.trim(),
-      password_param: password
-    });
+    // Try direct query first
+    const { data: testData, error: testError } = await supabase
+      .from('students')
+      .select('id, full_name')
+      .eq('full_name', fullName.trim())
+      .eq('school', school.trim())
+      .eq('grade', grade.trim())
+      .limit(1);
 
-    console.log('Student RPC result:', { data, error });
+    console.log('Student database test result:', { testData, testError });
 
-    if (error) {
-      console.error('Student RPC error:', error);
-      return { error: 'Authentication failed. Please check your credentials.' };
+    if (testError) {
+      console.error('Student database test failed:', testError);
+      // Fall back to RPC
+      const { data: rpcData, error: rpcError } = await supabase.rpc('authenticate_student_working', {
+        name_param: fullName.trim(),
+        school_param: school.trim(),
+        grade_param: grade.trim(),
+        password_param: password
+      });
+
+      console.log('Student RPC result:', { rpcData, rpcError });
+
+      if (rpcError) {
+        console.error('Student RPC error:', rpcError);
+        return { error: 'Authentication service temporarily unavailable. Please try again.' };
+      }
+
+      if (!rpcData || rpcData.length === 0) {
+        return { error: 'Invalid credentials' };
+      }
+
+      const student = rpcData[0];
+      return {
+        student: {
+          id: student.student_id,
+          full_name: student.student_name,
+          school: student.student_school,
+          grade: student.student_grade
+        }
+      };
     }
 
-    if (!data || data.length === 0) {
+    // If direct query works
+    if (!testData || testData.length === 0) {
       console.log('No student found for credentials');
       return { error: 'Invalid credentials' };
     }
 
-    const student = data[0];
-    console.log('Student found via RPC:', { id: student.student_id, name: student.student_name });
+    const { data: studentData, error: studentError } = await supabase
+      .from('students')
+      .select('*')
+      .eq('full_name', fullName.trim())
+      .eq('school', school.trim())
+      .eq('grade', grade.trim())
+      .single();
 
-    if (!student.student_id) {
-      console.log('No student found for credentials');
-      return { error: 'Invalid credentials' };
+    if (studentError || !studentData) {
+      console.error('Failed to get student data:', studentError);
+      return { error: 'Authentication failed' };
     }
 
-    console.log('✅ Student authentication successful');
+    console.log('✅ Student authentication successful via direct query');
     
     return {
       student: {
-        id: student.student_id,
-        full_name: student.student_name,
-        school: student.student_school,
-        grade: student.student_grade
+        id: studentData.id,
+        full_name: studentData.full_name,
+        school: studentData.school,
+        grade: studentData.grade
       }
     };
 
@@ -102,7 +171,7 @@ export const registerTeacher = async (name: string, email: string, school: strin
   try {
     console.log('📝 Starting teacher registration for:', { name, email, school, role });
     
-    // Direct insert using Supabase client with the new permissive RLS
+    // Try direct insert
     const { data: newTeacher, error: insertError } = await supabase
       .from('teachers')
       .insert({
@@ -124,7 +193,7 @@ export const registerTeacher = async (name: string, email: string, school: strin
         return { error: 'A teacher with this email already exists' };
       }
       
-      return { error: 'Failed to create teacher account' };
+      return { error: 'Failed to create teacher account. Please try again.' };
     }
 
     console.log('✅ Teacher registration successful');
@@ -148,7 +217,7 @@ export const registerStudent = async (fullName: string, school: string, grade: s
   try {
     console.log('📝 Starting student registration for:', { fullName, school, grade });
     
-    // Direct insert using Supabase client with the new permissive RLS
+    // Try direct insert
     const { data: newStudent, error: insertError } = await supabase
       .from('students')
       .insert({
@@ -169,7 +238,7 @@ export const registerStudent = async (fullName: string, school: string, grade: s
         return { error: 'A student with these details already exists' };
       }
       
-      return { error: 'Failed to create student account' };
+      return { error: 'Failed to create student account. Please try again.' };
     }
 
     console.log('✅ Student registration successful');
