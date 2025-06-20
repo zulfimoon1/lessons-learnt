@@ -1,5 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
+import { hashPassword, verifyPassword } from './securePasswordService';
 
 export const authenticateTeacher = async (email: string, password: string) => {
   try {
@@ -26,8 +27,9 @@ export const authenticateTeacher = async (email: string, password: string) => {
 
     const teacher = teachers[0];
     
-    // Simple password check (in production, use proper hashing)
-    if (teacher.password_hash !== password) {
+    // Use bcrypt to verify password
+    const passwordMatch = await verifyPassword(password, teacher.password_hash);
+    if (!passwordMatch) {
       return { error: 'Invalid email or password' };
     }
 
@@ -75,8 +77,9 @@ export const authenticateStudent = async (fullName: string, school: string, grad
 
     const student = students[0];
     
-    // Simple password check (in production, use proper hashing)
-    if (student.password_hash !== password) {
+    // Use bcrypt to verify password
+    const passwordMatch = await verifyPassword(password, student.password_hash);
+    if (!passwordMatch) {
       return { error: 'Invalid credentials' };
     }
 
@@ -101,6 +104,9 @@ export const registerTeacher = async (name: string, email: string, school: strin
   try {
     console.log('📝 Starting teacher registration for:', { name, email, school, role });
     
+    // Hash the password before storing
+    const hashedPassword = await hashPassword(password);
+    
     // Direct insert to teachers table
     const { data: newTeacher, error: insertError } = await supabase
       .from('teachers')
@@ -109,7 +115,7 @@ export const registerTeacher = async (name: string, email: string, school: strin
         email: email.toLowerCase().trim(),
         school: school.trim(),
         role: role,
-        password_hash: password // Note: In production, hash this properly
+        password_hash: hashedPassword
       })
       .select()
       .single();
@@ -147,6 +153,9 @@ export const registerStudent = async (fullName: string, school: string, grade: s
   try {
     console.log('📝 Starting student registration for:', { fullName, school, grade });
     
+    // Hash the password before storing
+    const hashedPassword = await hashPassword(password);
+    
     // Direct insert to students table
     const { data: newStudent, error: insertError } = await supabase
       .from('students')
@@ -154,7 +163,7 @@ export const registerStudent = async (fullName: string, school: string, grade: s
         full_name: fullName.trim(),
         school: school.trim(),
         grade: grade.trim(),
-        password_hash: password // Note: In production, hash this properly
+        password_hash: hashedPassword
       })
       .select()
       .single();

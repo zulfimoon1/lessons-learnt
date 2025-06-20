@@ -11,7 +11,7 @@ import AuthHeader from "@/components/auth/AuthHeader";
 import SecureTeacherLoginForm from "@/components/auth/SecureTeacherLoginForm";
 import TeacherSignupForm from "@/components/auth/TeacherSignupForm";
 import SessionSecurityMonitor from "@/components/security/SessionSecurityMonitor";
-import { authenticateTeacher, registerTeacher } from "@/services/properAuthService";
+import { loginTeacher, signupTeacher } from "@/services/authIntegrationService";
 
 const SecureTeacherLogin = () => {
   const { t } = useLanguage();
@@ -52,7 +52,7 @@ const SecureTeacherLogin = () => {
     setIsLoading(true);
 
     try {
-      const result = await authenticateTeacher(email, password);
+      const result = await loginTeacher(email, password);
 
       if (result.error) {
         toast({
@@ -103,7 +103,7 @@ const SecureTeacherLogin = () => {
     setIsLoading(true);
 
     try {
-      const result = await registerTeacher(name.trim(), email.trim(), school.trim(), password, role);
+      const result = await signupTeacher(name.trim(), email.trim(), school.trim(), password, role);
 
       if (result.error) {
         toast({
