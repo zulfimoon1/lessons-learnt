@@ -12,7 +12,7 @@ export const authenticateTeacher = async (email: string, password: string) => {
       password_param: password
     });
 
-    console.log('Authentication function result:', { data, error });
+    console.log('Teacher authentication function result:', { data, error });
 
     if (error) {
       console.error('Authentication function error:', error);
@@ -70,13 +70,19 @@ export const authenticateStudent = async (fullName: string, school: string, grad
 
     // Handle the response data properly - it should be an array of results
     if (!data || !Array.isArray(data) || data.length === 0) {
+      console.log('❌ Student not found - no data returned');
       return { error: 'Invalid credentials' };
     }
 
     const result = data[0];
+    console.log('Student authentication result object:', result);
     
     // Check if student exists and password is valid
     if (!result.student_id || !result.password_valid) {
+      console.log('❌ Student authentication failed:', { 
+        student_id: result.student_id, 
+        password_valid: result.password_valid 
+      });
       return { error: 'Invalid credentials' };
     }
 
