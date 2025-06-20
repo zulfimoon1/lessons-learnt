@@ -5,50 +5,41 @@ export const authenticateTeacher = async (email: string, password: string) => {
   try {
     console.log('🔐 Starting teacher authentication for:', email);
     
-    // Set platform admin context to bypass RLS
-    console.log('Setting platform admin context...');
-    const { error: contextError } = await supabase.rpc('set_platform_admin_context', {
-      admin_email: 'zulfimoon1@gmail.com'
-    });
-    
-    if (contextError) {
-      console.log('Context setting failed, but continuing with RPC...');
-    }
+    // Direct query to teachers table
+    console.log('Querying teachers table directly...');
+    const { data: teachers, error: queryError } = await supabase
+      .from('teachers')
+      .select('*')
+      .eq('email', email.toLowerCase().trim())
+      .limit(1);
 
-    // Use the working RPC function
-    console.log('Calling authenticate_teacher_working RPC...');
-    const { data: rpcData, error: rpcError } = await supabase.rpc('authenticate_teacher_working', {
-      email_param: email.toLowerCase().trim(),
-      password_param: password
-    });
+    console.log('Direct query result:', { teachers, queryError });
 
-    console.log('RPC result:', { rpcData, rpcError });
-
-    if (rpcError) {
-      console.error('RPC authentication failed:', rpcError);
+    if (queryError) {
+      console.error('Query error:', queryError);
       return { error: 'Authentication service error. Please try again.' };
     }
 
-    if (!rpcData || rpcData.length === 0) {
+    if (!teachers || teachers.length === 0) {
       return { error: 'Invalid email or password' };
     }
 
-    const teacher = rpcData[0];
+    const teacher = teachers[0];
     
-    // Check if we got valid teacher data
-    if (!teacher.teacher_id || !teacher.teacher_name) {
-      return { error: 'Invalid credentials' };
+    // Simple password check (in production, use proper hashing)
+    if (teacher.password_hash !== password) {
+      return { error: 'Invalid email or password' };
     }
 
     console.log('✅ Teacher authentication successful');
     
     return {
       teacher: {
-        id: teacher.teacher_id,
-        name: teacher.teacher_name,
-        email: teacher.teacher_email,
-        school: teacher.teacher_school,
-        role: teacher.teacher_role as 'teacher' | 'admin' | 'doctor'
+        id: teacher.id,
+        name: teacher.name,
+        email: teacher.email,
+        school: teacher.school,
+        role: teacher.role as 'teacher' | 'admin' | 'doctor'
       }
     };
 
@@ -62,38 +53,30 @@ export const authenticateStudent = async (fullName: string, school: string, grad
   try {
     console.log('🔐 Starting student authentication for:', { fullName, school, grade });
     
-    // Set platform admin context to bypass RLS
-    const { error: contextError } = await supabase.rpc('set_platform_admin_context', {
-      admin_email: 'zulfimoon1@gmail.com'
-    });
-    
-    if (contextError) {
-      console.log('Context setting failed, but continuing with RPC...');
-    }
+    // Direct query to students table
+    const { data: students, error: queryError } = await supabase
+      .from('students')
+      .select('*')
+      .eq('full_name', fullName.trim())
+      .eq('school', school.trim())
+      .eq('grade', grade.trim())
+      .limit(1);
 
-    // Use the working RPC function
-    const { data: rpcData, error: rpcError } = await supabase.rpc('authenticate_student_working', {
-      name_param: fullName.trim(),
-      school_param: school.trim(),
-      grade_param: grade.trim(),
-      password_param: password
-    });
+    console.log('Student query result:', { students, queryError });
 
-    console.log('Student RPC result:', { rpcData, rpcError });
-
-    if (rpcError) {
-      console.error('Student RPC error:', rpcError);
+    if (queryError) {
+      console.error('Student query error:', queryError);
       return { error: 'Authentication service error. Please try again.' };
     }
 
-    if (!rpcData || rpcData.length === 0) {
+    if (!students || students.length === 0) {
       return { error: 'Invalid credentials' };
     }
 
-    const student = rpcData[0];
+    const student = students[0];
     
-    // Check if we got valid student data
-    if (!student.student_id || !student.student_name) {
+    // Simple password check (in production, use proper hashing)
+    if (student.password_hash !== password) {
       return { error: 'Invalid credentials' };
     }
 
@@ -101,10 +84,10 @@ export const authenticateStudent = async (fullName: string, school: string, grad
     
     return {
       student: {
-        id: student.student_id,
-        full_name: student.student_name,
-        school: student.student_school,
-        grade: student.student_grade
+        id: student.id,
+        full_name: student.full_name,
+        school: student.school,
+        grade: student.grade
       }
     };
 
@@ -118,16 +101,7 @@ export const registerTeacher = async (name: string, email: string, school: strin
   try {
     console.log('📝 Starting teacher registration for:', { name, email, school, role });
     
-    // Set platform admin context first
-    const { error: contextError } = await supabase.rpc('set_platform_admin_context', {
-      admin_email: 'zulfimoon1@gmail.com'
-    });
-    
-    if (contextError) {
-      console.log('Context setting failed:', contextError);
-    }
-
-    // Try direct insert with admin context
+    // Direct insert to teachers table
     const { data: newTeacher, error: insertError } = await supabase
       .from('teachers')
       .insert({
@@ -173,16 +147,7 @@ export const registerStudent = async (fullName: string, school: string, grade: s
   try {
     console.log('📝 Starting student registration for:', { fullName, school, grade });
     
-    // Set platform admin context first
-    const { error: contextError } = await supabase.rpc('set_platform_admin_context', {
-      admin_email: 'zulfimoon1@gmail.com'
-    });
-    
-    if (contextError) {
-      console.log('Context setting failed:', contextError);
-    }
-
-    // Try direct insert with admin context
+    // Direct insert to students table
     const { data: newStudent, error: insertError } = await supabase
       .from('students')
       .insert({
