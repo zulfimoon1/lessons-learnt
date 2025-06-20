@@ -15,7 +15,7 @@ export const useStudentAuth = () => {
         return { error: 'All fields are required' };
       }
 
-      // Try the simple login service
+      // Call the simple login service
       const result = await studentSimpleLoginService(fullName, password);
       
       if (result.student) {
@@ -45,26 +45,7 @@ export const useStudentAuth = () => {
       
     } catch (error) {
       console.error('useStudentAuth: Login error:', error);
-      
-      // Create emergency fallback session
-      const fallbackStudent: Student = {
-        id: 'student-emergency-' + Date.now(),
-        full_name: fullName.trim(),
-        school: school.trim(),
-        grade: grade.trim()
-      };
-      
-      setStudent(fallbackStudent);
-      
-      try {
-        localStorage.setItem('student', JSON.stringify(fallbackStudent));
-        localStorage.removeItem('teacher');
-        localStorage.removeItem('platformAdmin');
-      } catch (storageError) {
-        console.warn('Emergency storage failed:', storageError);
-      }
-      
-      return { student: fallbackStudent };
+      return { error: 'Login failed. Please check your connection and try again.' };
     }
   };
 
@@ -112,26 +93,7 @@ export const useStudentAuth = () => {
       return { error: result.error || 'Signup failed. Please try again.' };
     } catch (error) {
       console.error('useStudentAuth: Signup error:', error);
-      
-      // Create emergency fallback for signup
-      const fallbackStudent: Student = {
-        id: 'student-signup-' + Date.now(),
-        full_name: fullName.trim(),
-        school: school.trim(),
-        grade: grade.trim()
-      };
-      
-      setStudent(fallbackStudent);
-      
-      try {
-        localStorage.setItem('student', JSON.stringify(fallbackStudent));
-        localStorage.removeItem('teacher');
-        localStorage.removeItem('platformAdmin');
-      } catch (storageError) {
-        console.warn('Emergency signup storage failed:', storageError);
-      }
-      
-      return { student: fallbackStudent };
+      return { error: 'Signup failed. Please check your connection and try again.' };
     }
   };
 
