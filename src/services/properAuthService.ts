@@ -3,56 +3,39 @@ import { supabase } from '@/integrations/supabase/client';
 
 export const authenticateTeacher = async (email: string, password: string) => {
   try {
-    console.log('🔐 Starting teacher authentication for:', email);
+    console.log('🔐 Starting server-side teacher authentication for:', email);
     
-    // Set platform admin context to bypass RLS for authentication
-    await supabase.rpc('set_platform_admin_context', {
-      admin_email: 'zulfimoon1@gmail.com'
+    // Use the server-side authentication function that bypasses RLS
+    const { data, error } = await supabase.rpc('authenticate_teacher_complete', {
+      email_param: email.toLowerCase().trim(),
+      password_param: password
     });
 
-    // Get teacher data directly from the database
-    const { data: teachers, error: teacherError } = await supabase
-      .from('teachers')
-      .select('*')
-      .eq('email', email.toLowerCase().trim())
-      .limit(1);
-
-    if (teacherError) {
-      console.error('Teacher query error:', teacherError);
+    if (error) {
+      console.error('Server authentication error:', error);
       return { error: 'Authentication failed - server error' };
     }
 
-    if (!teachers || teachers.length === 0) {
-      console.log('Teacher not found');
+    if (!data || data.length === 0) {
+      console.log('No authentication result returned');
       return { error: 'Invalid email or password' };
     }
 
-    const teacher = teachers[0];
-
-    // For now, do simple password check (you should implement proper bcrypt later)
-    // This is a temporary fix to get authentication working
-    if (!teacher.password_hash) {
-      console.log('No password hash found');
-      return { error: 'Invalid email or password' };
-    }
-
-    // Simple password verification - replace with bcrypt.compare in production
-    const isValidPassword = teacher.password_hash === password || 
-                          teacher.password_hash.length > 50; // Assume bcrypt hash if long
-
-    if (!isValidPassword && teacher.password_hash !== password) {
-      console.log('Password verification failed');
-      return { error: 'Invalid email or password' };
+    const result = data[0];
+    
+    if (!result.success) {
+      console.log('Authentication failed:', result.error_message);
+      return { error: result.error_message || 'Invalid email or password' };
     }
 
     console.log('✅ Teacher authentication successful');
     return {
       teacher: {
-        id: teacher.id,
-        name: teacher.name,  
-        email: teacher.email,
-        school: teacher.school,
-        role: teacher.role as 'teacher' | 'admin' | 'doctor'
+        id: result.teacher_id,
+        name: result.teacher_name,
+        email: result.teacher_email,
+        school: result.teacher_school,
+        role: result.teacher_role as 'teacher' | 'admin' | 'doctor'
       }
     };
 
@@ -64,55 +47,40 @@ export const authenticateTeacher = async (email: string, password: string) => {
 
 export const authenticateStudent = async (fullName: string, school: string, grade: string, password: string) => {
   try {
-    console.log('🔐 Starting student authentication for:', { fullName, school, grade });
+    console.log('🔐 Starting server-side student authentication for:', { fullName, school, grade });
     
-    // Set platform admin context to bypass RLS for authentication
-    await supabase.rpc('set_platform_admin_context', {
-      admin_email: 'zulfimoon1@gmail.com'
+    // Use the server-side authentication function that bypasses RLS
+    const { data, error } = await supabase.rpc('authenticate_student_complete', {
+      name_param: fullName.trim(),
+      school_param: school.trim(),
+      grade_param: grade.trim(),
+      password_param: password
     });
 
-    // Get student data directly from the database
-    const { data: students, error: studentError } = await supabase
-      .from('students')
-      .select('*')
-      .eq('full_name', fullName.trim())
-      .eq('school', school.trim())
-      .eq('grade', grade.trim())
-      .limit(1);
-
-    if (studentError) {
-      console.error('Student query error:', studentError);
+    if (error) {
+      console.error('Server authentication error:', error);
       return { error: 'Authentication failed - server error' };
     }
 
-    if (!students || students.length === 0) {
-      console.log('Student not found');
+    if (!data || data.length === 0) {
+      console.log('No authentication result returned');
       return { error: 'Invalid credentials' };
     }
 
-    const student = students[0];
-
-    // Simple password verification - replace with bcrypt.compare in production
-    if (!student.password_hash) {
-      console.log('No password hash found');
-      return { error: 'Invalid credentials' };
-    }
-
-    const isValidPassword = student.password_hash === password || 
-                          student.password_hash.length > 50; // Assume bcrypt hash if long
-
-    if (!isValidPassword && student.password_hash !== password) {
-      console.log('Password verification failed');
-      return { error: 'Invalid credentials' };
+    const result = data[0];
+    
+    if (!result.success) {
+      console.log('Authentication failed:', result.error_message);
+      return { error: result.error_message || 'Invalid credentials' };
     }
 
     console.log('✅ Student authentication successful');
     return {
       student: {
-        id: student.id,
-        full_name: student.full_name,
-        school: student.school,
-        grade: student.grade
+        id: result.student_id,
+        full_name: result.student_name,
+        school: result.student_school,
+        grade: result.student_grade
       }
     };
 
@@ -126,12 +94,16 @@ export const registerTeacher = async (name: string, email: string, school: strin
   try {
     console.log('📝 Starting teacher registration for:', { name, email, school, role });
     
-    // Set platform admin context to bypass RLS for registration
+    // Hash the password before storing
+    const bcrypt = await import('bcryptjs');
+    const hashedPassword = await bcrypt.hash(password, 12);
+    
+    // Set platform admin context first
     await supabase.rpc('set_platform_admin_context', {
       admin_email: 'zulfimoon1@gmail.com'
     });
     
-    // Simple insert with plain password (implement bcrypt later)
+    // Insert directly into teachers table
     const { data: newTeacher, error: insertError } = await supabase
       .from('teachers')
       .insert({
@@ -139,7 +111,7 @@ export const registerTeacher = async (name: string, email: string, school: strin
         email: email.toLowerCase().trim(),
         school: school.trim(),
         role: role,
-        password_hash: password // Temporary - should be hashed
+        password_hash: hashedPassword
       })
       .select()
       .single();
@@ -173,19 +145,23 @@ export const registerStudent = async (fullName: string, school: string, grade: s
   try {
     console.log('📝 Starting student registration for:', { fullName, school, grade });
     
-    // Set platform admin context to bypass RLS for registration
+    // Hash the password before storing
+    const bcrypt = await import('bcryptjs');
+    const hashedPassword = await bcrypt.hash(password, 12);
+    
+    // Set platform admin context first
     await supabase.rpc('set_platform_admin_context', {
       admin_email: 'zulfimoon1@gmail.com'
     });
     
-    // Simple insert with plain password (implement bcrypt later)
+    // Insert directly into students table
     const { data: newStudent, error: insertError } = await supabase
       .from('students')
       .insert({
         full_name: fullName.trim(),
         school: school.trim(),
         grade: grade.trim(),
-        password_hash: password // Temporary - should be hashed
+        password_hash: hashedPassword
       })
       .select()
       .single();
