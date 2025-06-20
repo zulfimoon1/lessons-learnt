@@ -1,42 +1,43 @@
+
 import { supabase } from '@/integrations/supabase/client';
 
 export const authenticateTeacher = async (email: string, password: string) => {
   try {
     console.log('🔐 Starting teacher authentication for:', email);
     
-    // Direct query to teachers table instead of RPC
-    const { data: teachers, error: queryError } = await supabase
-      .from('teachers')
-      .select('*')
-      .eq('email', email.toLowerCase().trim())
-      .limit(1);
+    // Use the working RPC function that bypasses RLS
+    const { data, error } = await supabase.rpc('authenticate_teacher_working', {
+      email_param: email.toLowerCase().trim(),
+      password_param: password
+    });
 
-    console.log('Teacher query result:', { teachers, queryError });
+    console.log('Teacher RPC result:', { data, error });
 
-    if (queryError) {
-      console.error('Teacher query error:', queryError);
+    if (error) {
+      console.error('Teacher RPC error:', error);
       return { error: 'Authentication failed. Please check your credentials.' };
     }
 
-    if (!teachers || teachers.length === 0) {
+    if (!data || data.length === 0) {
       console.log('No teacher found for email:', email);
       return { error: 'Invalid email or password' };
     }
 
-    const teacher = teachers[0];
-    console.log('Teacher found:', { id: teacher.id, email: teacher.email, role: teacher.role });
+    const teacher = data[0];
+    console.log('Teacher found:', { id: teacher.teacher_id, email: teacher.teacher_email });
 
-    // For now, we'll skip password verification since we're having RPC issues
-    // In a real app, you'd verify the password hash here
-    console.log('✅ Teacher authentication successful (password check skipped for now)');
-    
+    if (!teacher.password_valid) {
+      console.log('Invalid password for teacher:', email);
+      return { error: 'Invalid email or password' };
+    }
+
     return {
       teacher: {
-        id: teacher.id,
-        name: teacher.name,
-        email: teacher.email,
-        school: teacher.school,
-        role: teacher.role as 'teacher' | 'admin' | 'doctor'
+        id: teacher.teacher_id,
+        name: teacher.teacher_name,
+        email: teacher.teacher_email,
+        school: teacher.teacher_school,
+        role: teacher.teacher_role as 'teacher' | 'admin' | 'doctor'
       }
     };
 
@@ -50,40 +51,40 @@ export const authenticateStudent = async (fullName: string, school: string, grad
   try {
     console.log('🔐 Starting student authentication for:', { fullName, school, grade });
     
-    // Direct query to students table instead of RPC
-    const { data: students, error: queryError } = await supabase
-      .from('students')
-      .select('*')
-      .eq('full_name', fullName.trim())
-      .eq('school', school.trim())
-      .eq('grade', grade.trim())
-      .limit(1);
+    // Use the working RPC function that bypasses RLS
+    const { data, error } = await supabase.rpc('authenticate_student_working', {
+      name_param: fullName.trim(),
+      school_param: school.trim(),
+      grade_param: grade.trim(),
+      password_param: password
+    });
 
-    console.log('Student query result:', { students, queryError });
+    console.log('Student RPC result:', { data, error });
 
-    if (queryError) {
-      console.error('Student query error:', queryError);
+    if (error) {
+      console.error('Student RPC error:', error);
       return { error: 'Authentication failed. Please check your credentials.' };
     }
 
-    if (!students || students.length === 0) {
+    if (!data || data.length === 0) {
       console.log('No student found for credentials');
       return { error: 'Invalid credentials' };
     }
 
-    const student = students[0];
-    console.log('Student found:', { id: student.id, full_name: student.full_name });
+    const student = data[0];
+    console.log('Student found:', { id: student.student_id, name: student.student_name });
 
-    // For now, we'll skip password verification since we're having RPC issues
-    // In a real app, you'd verify the password hash here
-    console.log('✅ Student authentication successful (password check skipped for now)');
-    
+    if (!student.password_valid) {
+      console.log('Invalid password for student');
+      return { error: 'Invalid credentials' };
+    }
+
     return {
       student: {
-        id: student.id,
-        full_name: student.full_name,
-        school: student.school,
-        grade: student.grade
+        id: student.student_id,
+        full_name: student.student_name,
+        school: student.student_school,
+        grade: student.student_grade
       }
     };
 
