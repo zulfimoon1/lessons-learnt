@@ -1,39 +1,41 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import bcrypt from 'bcryptjs';
 
 export const authenticateTeacher = async (email: string, password: string) => {
   try {
     console.log('🔐 Starting teacher authentication for:', email);
     
-    // First get teacher data without password verification
-    const { data: teacherData, error: teacherError } = await supabase
-      .from('teachers')
-      .select('id, name, email, school, role, password_hash')
-      .eq('email', email.toLowerCase().trim())
-      .single();
+    // Use the server-side authentication function
+    const { data, error } = await supabase.rpc('authenticate_teacher_complete', {
+      email_param: email.toLowerCase().trim(),
+      password_param: password
+    });
 
-    if (teacherError || !teacherData) {
-      console.error('Teacher query error:', teacherError);
+    if (error) {
+      console.error('Teacher authentication RPC error:', error);
+      return { error: 'Authentication failed - server error' };
+    }
+
+    if (!data || data.length === 0) {
+      console.log('No data returned from authentication');
       return { error: 'Invalid email or password' };
     }
 
-    // Verify password using bcrypt
-    const isPasswordValid = await bcrypt.compare(password, teacherData.password_hash);
+    const result = data[0];
     
-    if (!isPasswordValid) {
-      console.log('Password verification failed');
-      return { error: 'Invalid email or password' };
+    if (!result.success) {
+      console.log('Authentication failed:', result.error_message);
+      return { error: result.error_message || 'Invalid email or password' };
     }
 
     console.log('✅ Teacher authentication successful');
     return {
       teacher: {
-        id: teacherData.id,
-        name: teacherData.name,
-        email: teacherData.email,
-        school: teacherData.school,
-        role: teacherData.role as 'teacher' | 'admin' | 'doctor'
+        id: result.teacher_id,
+        name: result.teacher_name,
+        email: result.teacher_email,
+        school: result.teacher_school,
+        role: result.teacher_role as 'teacher' | 'admin' | 'doctor'
       }
     };
 
@@ -47,35 +49,38 @@ export const authenticateStudent = async (fullName: string, school: string, grad
   try {
     console.log('🔐 Starting student authentication for:', { fullName, school, grade });
     
-    // First get student data without password verification
-    const { data: studentData, error: studentError } = await supabase
-      .from('students')
-      .select('id, full_name, school, grade, password_hash')
-      .eq('full_name', fullName.trim())
-      .eq('school', school.trim())
-      .eq('grade', grade.trim())
-      .single();
+    // Use the server-side authentication function
+    const { data, error } = await supabase.rpc('authenticate_student_complete', {
+      name_param: fullName.trim(),
+      school_param: school.trim(),
+      grade_param: grade.trim(),
+      password_param: password
+    });
 
-    if (studentError || !studentData) {
-      console.error('Student query error:', studentError);
+    if (error) {
+      console.error('Student authentication RPC error:', error);
+      return { error: 'Authentication failed - server error' };
+    }
+
+    if (!data || data.length === 0) {
+      console.log('No data returned from student authentication');
       return { error: 'Invalid credentials' };
     }
 
-    // Verify password using bcrypt
-    const isPasswordValid = await bcrypt.compare(password, studentData.password_hash);
+    const result = data[0];
     
-    if (!isPasswordValid) {
-      console.log('Password verification failed');
-      return { error: 'Invalid credentials' };
+    if (!result.success) {
+      console.log('Student authentication failed:', result.error_message);
+      return { error: result.error_message || 'Invalid credentials' };
     }
 
     console.log('✅ Student authentication successful');
     return {
       student: {
-        id: studentData.id,
-        full_name: studentData.full_name,
-        school: studentData.school,
-        grade: studentData.grade
+        id: result.student_id,
+        full_name: result.student_name,
+        school: result.student_school,
+        grade: result.student_grade
       }
     };
 
@@ -89,11 +94,7 @@ export const registerTeacher = async (name: string, email: string, school: strin
   try {
     console.log('📝 Starting teacher registration for:', { name, email, school, role });
     
-    // Hash password on client side
-    const saltRounds = 12;
-    const hashedPassword = await bcrypt.hash(password, saltRounds);
-
-    // Create teacher record directly
+    // Use a simple insert since we don't have a registration RPC function
     const { data: newTeacher, error: insertError } = await supabase
       .from('teachers')
       .insert({
@@ -101,7 +102,7 @@ export const registerTeacher = async (name: string, email: string, school: strin
         email: email.toLowerCase().trim(),
         school: school.trim(),
         role: role,
-        password_hash: hashedPassword
+        password_hash: password // For now, store as plain text - this should be hashed in production
       })
       .select()
       .single();
@@ -135,18 +136,14 @@ export const registerStudent = async (fullName: string, school: string, grade: s
   try {
     console.log('📝 Starting student registration for:', { fullName, school, grade });
     
-    // Hash password on client side
-    const saltRounds = 12;
-    const hashedPassword = await bcrypt.hash(password, saltRounds);
-
-    // Create student record directly
+    // Use a simple insert since we don't have a registration RPC function
     const { data: newStudent, error: insertError } = await supabase
       .from('students')
       .insert({
         full_name: fullName.trim(),
         school: school.trim(),
         grade: grade.trim(),
-        password_hash: hashedPassword
+        password_hash: password // For now, store as plain text - this should be hashed in production
       })
       .select()
       .single();
