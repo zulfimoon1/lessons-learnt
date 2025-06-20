@@ -1,7 +1,7 @@
 
 import { useState } from 'react';
 import { Teacher } from '@/types/auth';
-import { teacherEmailLoginService, teacherSignupService } from '@/services/secureAuthService';
+import { authenticateTeacher, registerTeacher } from '@/services/realAuthService';
 
 export const useTeacherAuth = () => {
   const [teacher, setTeacher] = useState<Teacher | null>(null);
@@ -21,18 +21,17 @@ export const useTeacherAuth = () => {
         return { error: 'Please enter a valid email address' };
       }
       
-      // Call the authentication service
-      const result = await teacherEmailLoginService(email.trim(), password);
+      // Call the real authentication service
+      const result = await authenticateTeacher(email.trim(), password);
       console.log('useTeacherAuth: Authentication service result:', result);
       
       if (result.teacher) {
-        // Ensure role is properly typed
         const teacherData: Teacher = {
           id: result.teacher.id,
           name: result.teacher.name,
           email: result.teacher.email,
           school: result.teacher.school,
-          role: (result.teacher.role as 'teacher' | 'admin' | 'doctor') || 'teacher'
+          role: result.teacher.role
         };
         
         setTeacher(teacherData);
@@ -77,18 +76,17 @@ export const useTeacherAuth = () => {
         return { error: 'Password must be at least 4 characters long' };
       }
       
-      // Call the signup service
-      const result = await teacherSignupService(name.trim(), email.trim(), school.trim(), password, role);
-      console.log('useTeacherAuth: Signup service result:', result);
+      // Call the real registration service
+      const result = await registerTeacher(name.trim(), email.trim(), school.trim(), password, role);
+      console.log('useTeacherAuth: Registration service result:', result);
       
       if (result.teacher) {
-        // Ensure role is properly typed
         const teacherData: Teacher = {
           id: result.teacher.id,
           name: result.teacher.name,
           email: result.teacher.email,
           school: result.teacher.school,
-          role: (result.teacher.role as 'teacher' | 'admin' | 'doctor') || 'teacher'
+          role: result.teacher.role
         };
         
         setTeacher(teacherData);
