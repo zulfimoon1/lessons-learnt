@@ -10,7 +10,8 @@ import {
   SchoolIcon, 
   UsersIcon, 
   MessageSquareIcon, 
-  LogOutIcon
+  LogOutIcon,
+  HeartHandshakeIcon
 } from "lucide-react";
 import ClassScheduleForm from "@/components/ClassScheduleForm";
 import InviteTeacherForm from "@/components/InviteTeacherForm";
@@ -29,6 +30,19 @@ interface Teacher {
   created_at: string;
 }
 
+interface Feedback {
+  id: string;
+  student_name: string;
+  what_went_well: string;
+  suggestions: string;
+  emotional_state: string;
+  understanding: number;
+  interest: number;
+  educational_growth: number;
+  submitted_at: string;
+  class_schedule_id: string;
+}
+
 interface Subscription {
   id: string;
   school_name: string;
@@ -44,6 +58,7 @@ const AdminDashboard = () => {
   const navigate = useNavigate();
   const { t } = useLanguage();
   const [teachers, setTeachers] = useState<Teacher[]>([]);
+  const [feedback, setFeedback] = useState<Feedback[]>([]);
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -56,7 +71,7 @@ const AdminDashboard = () => {
   }, [teacher, navigate]);
 
   const loadData = async () => {
-    await Promise.all([loadTeachers(), loadSubscription()]);
+    await Promise.all([loadTeachers(), loadFeedback(), loadSubscription()]);
     setIsLoading(false);
   };
 
@@ -79,6 +94,27 @@ const AdminDashboard = () => {
         description: t('admin.error.description'),
         variant: "destructive",
       });
+    }
+  };
+
+  const loadFeedback = async () => {
+    if (!teacher?.school) return;
+    
+    try {
+      // Get feedback from class schedules for this school
+      const { data, error } = await supabase
+        .from('feedback')
+        .select(`
+          *,
+          class_schedules!inner(school)
+        `)
+        .eq('class_schedules.school', teacher.school)
+        .order('submitted_at', { ascending: false });
+
+      if (error) throw error;
+      setFeedback(data || []);
+    } catch (error) {
+      console.error('Error loading feedback:', error);
     }
   };
 
@@ -122,6 +158,9 @@ const AdminDashboard = () => {
       </div>
     );
   }
+
+  const regularTeachers = teachers.filter(t => t.role === 'teacher');
+  const doctors = teachers.filter(t => t.role === 'doctor');
 
   return (
     <div className="min-h-screen bg-background">
@@ -169,24 +208,34 @@ const AdminDashboard = () => {
           </Card>
         )}
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{t('admin.stats.teachers')}</CardTitle>
+              <CardTitle className="text-sm font-medium">Teachers</CardTitle>
               <UsersIcon className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{teachers.length}</div>
+              <div className="text-2xl font-bold">{regularTeachers.length}</div>
             </CardContent>
           </Card>
           
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Active Teachers</CardTitle>
-              <UsersIcon className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium">Doctors</CardTitle>
+              <HeartHandshakeIcon className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{teachers.filter(t => t.role === 'teacher').length}</div>
+              <div className="text-2xl font-bold">{doctors.length}</div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Student Feedback</CardTitle>
+              <MessageSquareIcon className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{feedback.length}</div>
             </CardContent>
           </Card>
 
@@ -204,9 +253,10 @@ const AdminDashboard = () => {
         </div>
 
         <Tabs defaultValue="schedule" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="schedule">{t('class.schedule')}</TabsTrigger>
-            <TabsTrigger value="teachers">{t('admin.teachers.title')}</TabsTrigger>
+            <TabsTrigger value="teachers">Teachers</TabsTrigger>
+            <TabsTrigger value="feedback">Student Feedback</TabsTrigger>
             <TabsTrigger value="psychologists">Psychologists</TabsTrigger>
             <TabsTrigger value="invite">Invite Teacher</TabsTrigger>
           </TabsList>
@@ -218,9 +268,9 @@ const AdminDashboard = () => {
           <TabsContent value="teachers" className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>{t('admin.teachers.title')}</CardTitle>
+                <CardTitle>All Staff Members</CardTitle>
                 <CardDescription>
-                  {t('admin.teachers.description')}
+                  View all teachers and mental health professionals in your school
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -230,7 +280,9 @@ const AdminDashboard = () => {
                       <div>
                         <h3 className="font-medium">{teacherItem.name}</h3>
                         <p className="text-sm text-muted-foreground">{teacherItem.email}</p>
-                        <p className="text-xs text-muted-foreground capitalize">{teacherItem.role}</p>
+                        <p className="text-xs text-muted-foreground capitalize">
+                          {teacherItem.role === 'doctor' ? 'Mental Health Professional' : teacherItem.role}
+                        </p>
                       </div>
                       <div className="text-sm text-muted-foreground">
                         Joined: {new Date(teacherItem.created_at).toLocaleDateString()}
@@ -238,7 +290,53 @@ const AdminDashboard = () => {
                     </div>
                   ))}
                   {teachers.length === 0 && (
-                    <p className="text-center text-muted-foreground py-8">{t('admin.teachers.empty')}</p>
+                    <p className="text-center text-muted-foreground py-8">No staff members found</p>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="feedback" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Student Feedback</CardTitle>
+                <CardDescription>
+                  All feedback submitted by students in your school
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4 max-h-96 overflow-y-auto">
+                  {feedback.map((item) => (
+                    <div key={item.id} className="p-4 border rounded-lg space-y-2">
+                      <div className="flex justify-between items-start">
+                        <h4 className="font-medium">{item.student_name || 'Anonymous'}</h4>
+                        <span className="text-xs text-muted-foreground">
+                          {new Date(item.submitted_at).toLocaleDateString()}
+                        </span>
+                      </div>
+                      <div className="grid grid-cols-3 gap-2 text-sm">
+                        <div>Understanding: {item.understanding}/5</div>
+                        <div>Interest: {item.interest}/5</div>
+                        <div>Growth: {item.educational_growth}/5</div>
+                      </div>
+                      <div className="text-sm">
+                        <span className="font-medium">Emotional State:</span> {item.emotional_state}
+                      </div>
+                      {item.what_went_well && (
+                        <div className="text-sm">
+                          <span className="font-medium">What went well:</span> {item.what_went_well}
+                        </div>
+                      )}
+                      {item.suggestions && (
+                        <div className="text-sm">
+                          <span className="font-medium">Suggestions:</span> {item.suggestions}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                  {feedback.length === 0 && (
+                    <p className="text-center text-muted-foreground py-8">No feedback submitted yet</p>
                   )}
                 </div>
               </CardContent>

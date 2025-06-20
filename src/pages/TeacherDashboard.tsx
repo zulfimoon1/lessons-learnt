@@ -24,6 +24,7 @@ const BulkUploadTab = lazy(() => import("@/components/dashboard/teacher/BulkUplo
 const WeeklySummariesTab = lazy(() => import("@/components/dashboard/teacher/WeeklySummariesTab"));
 const MentalHealthTab = lazy(() => import("@/components/dashboard/teacher/MentalHealthTab"));
 const ArticlesTab = lazy(() => import("@/components/dashboard/teacher/ArticlesTab"));
+const FeedbackTab = lazy(() => import("@/components/dashboard/FeedbackTab"));
 
 interface Subscription {
   id: string;
@@ -209,6 +210,7 @@ const TeacherDashboard = () => {
             ) : (
               <>
                 <TabsTrigger value="schedule">{t('class.schedule')}</TabsTrigger>
+                <TabsTrigger value="feedback">{t('dashboard.feedback')}</TabsTrigger>
                 <TabsTrigger value="bulk-upload">{t('upload.bulkUpload')}</TabsTrigger>
                 {teacher?.role === 'admin' && (
                   <TabsTrigger value="articles">{t('articles.mentalHealth')}</TabsTrigger>
@@ -246,6 +248,12 @@ const TeacherDashboard = () => {
               <TabsContent value="schedule" className="space-y-6">
                 <Suspense fallback={<TabContentSkeleton />}>
                   <ScheduleTab teacher={teacher} />
+                </Suspense>
+              </TabsContent>
+
+              <TabsContent value="feedback" className="space-y-6">
+                <Suspense fallback={<TabContentSkeleton />}>
+                  <FeedbackTab />
                 </Suspense>
               </TabsContent>
 
