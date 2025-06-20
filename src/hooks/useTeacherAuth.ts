@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Teacher } from '@/types/auth';
 import { teacherEmailLoginService, teacherSignupService } from '@/services/secureAuthService';
@@ -8,7 +7,7 @@ export const useTeacherAuth = () => {
 
   const login = async (email: string, password: string) => {
     try {
-      console.log('useTeacherAuth: Starting mock login process with email:', email);
+      console.log('useTeacherAuth: Starting teacher login process for:', email);
       
       // Enhanced input validation
       if (!email?.trim() || !password?.trim()) {
@@ -21,9 +20,9 @@ export const useTeacherAuth = () => {
         return { error: 'Please enter a valid email address' };
       }
       
-      // Call the mock service - this will always succeed
+      // Call the authentication service
       const result = await teacherEmailLoginService(email.trim(), password);
-      console.log('useTeacherAuth: Mock login service result:', result);
+      console.log('useTeacherAuth: Authentication service result:', result);
       
       if (result.teacher) {
         // Ensure role is properly typed
@@ -52,14 +51,14 @@ export const useTeacherAuth = () => {
       
       return { error: result.error || 'Login failed. Please check your credentials.' };
     } catch (error) {
-      console.error('useTeacherAuth: Mock login error:', error);
+      console.error('useTeacherAuth: Login error:', error);
       return { error: 'Login failed. Please check your connection and try again.' };
     }
   };
 
   const signup = async (name: string, email: string, school: string, password: string, role: 'teacher' | 'admin' | 'doctor' = 'teacher') => {
     try {
-      console.log('useTeacherAuth: Starting mock signup process for:', name);
+      console.log('useTeacherAuth: Starting teacher signup process for:', name);
       
       // Enhanced input validation
       if (!name?.trim() || !email?.trim() || !school?.trim() || !password?.trim()) {
@@ -77,9 +76,9 @@ export const useTeacherAuth = () => {
         return { error: 'Password must be at least 4 characters long' };
       }
       
-      // Call the mock service - this will always succeed
+      // Call the signup service
       const result = await teacherSignupService(name.trim(), email.trim(), school.trim(), password, role);
-      console.log('useTeacherAuth: Mock signup service result:', result);
+      console.log('useTeacherAuth: Signup service result:', result);
       
       if (result.teacher) {
         // Ensure role is properly typed
@@ -108,7 +107,7 @@ export const useTeacherAuth = () => {
       
       return { error: result.error || 'Signup failed. Please try again.' };
     } catch (error) {
-      console.error('useTeacherAuth: Mock signup error:', error);
+      console.error('useTeacherAuth: Signup error:', error);
       return { error: 'Signup failed. Please check your connection and try again.' };
     }
   };
