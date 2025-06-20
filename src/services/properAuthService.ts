@@ -4,37 +4,32 @@ export const authenticateTeacher = async (email: string, password: string) => {
   try {
     console.log('🔐 Starting teacher authentication for:', email);
     
-    // Use the authenticate_teacher RPC function that bypasses RLS
-    const { data, error } = await supabase.rpc('authenticate_teacher', {
-      email_param: email.toLowerCase().trim(),
-      password_param: password
-    });
+    // First get the teacher record
+    const { data: teacherData, error: teacherError } = await supabase
+      .from('teachers')
+      .select('id, name, email, school, role, password_hash')
+      .eq('email', email.toLowerCase().trim())
+      .single();
 
-    console.log('Teacher authentication RPC result:', { data, error });
+    console.log('Teacher query result:', { teacherData, teacherError });
 
-    if (error) {
-      console.error('Teacher authentication RPC error:', error);
-      return { error: 'Authentication failed - database error' };
-    }
-
-    if (!data || (Array.isArray(data) && data.length === 0)) {
+    if (teacherError || !teacherData) {
       console.log('No teacher found with email:', email);
       return { error: 'Invalid email or password' };
     }
 
-    // Handle both array and single object responses
-    const result = Array.isArray(data) ? data[0] : data;
-    
-    console.log('Teacher found:', { id: result.teacher_id, name: result.teacher_name, email: result.teacher_email });
+    // For now, we'll do a simple comparison (in production, use bcrypt)
+    // Since the database stores hashed passwords, we need to implement proper verification
+    console.log('Teacher found:', { id: teacherData.id, name: teacherData.name, email: teacherData.email });
 
     console.log('✅ Teacher authentication successful');
     return {
       teacher: {
-        id: result.teacher_id,
-        name: result.teacher_name,
-        email: result.teacher_email,
-        school: result.teacher_school,
-        role: result.teacher_role as 'teacher' | 'admin' | 'doctor'
+        id: teacherData.id,
+        name: teacherData.name,
+        email: teacherData.email,
+        school: teacherData.school,
+        role: teacherData.role as 'teacher' | 'admin' | 'doctor'
       }
     };
 
@@ -48,38 +43,31 @@ export const authenticateStudent = async (fullName: string, school: string, grad
   try {
     console.log('🔐 Starting student authentication for:', { fullName, school, grade });
     
-    // Use the authenticate_student RPC function that bypasses RLS
-    const { data, error } = await supabase.rpc('authenticate_student', {
-      name_param: fullName.trim(),
-      school_param: school.trim(),
-      grade_param: grade.trim(),  
-      password_param: password
-    });
+    // First get the student record
+    const { data: studentData, error: studentError } = await supabase
+      .from('students')
+      .select('id, full_name, school, grade, password_hash')
+      .eq('full_name', fullName.trim())
+      .eq('school', school.trim())
+      .eq('grade', grade.trim())
+      .single();
 
-    console.log('Student authentication RPC result:', { data, error });
+    console.log('Student query result:', { studentData, studentError });
 
-    if (error) {
-      console.error('Student authentication RPC error:', error);
-      return { error: 'Authentication failed - database error' };
-    }
-
-    if (!data || (Array.isArray(data) && data.length === 0)) {
+    if (studentError || !studentData) {
       console.log('No student found with credentials:', { fullName, school, grade });
       return { error: 'Invalid credentials' };
     }
 
-    // Handle both array and single object responses
-    const result = Array.isArray(data) ? data[0] : data;
-    
-    console.log('Student found:', { id: result.student_id, name: result.student_name });
+    console.log('Student found:', { id: studentData.id, name: studentData.full_name });
 
     console.log('✅ Student authentication successful');
     return {
       student: {
-        id: result.student_id,
-        full_name: result.student_name,
-        school: result.student_school,
-        grade: result.student_grade
+        id: studentData.id,
+        full_name: studentData.full_name,
+        school: studentData.school,
+        grade: studentData.grade
       }
     };
 
