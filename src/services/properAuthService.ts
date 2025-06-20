@@ -5,8 +5,8 @@ export const authenticateTeacher = async (email: string, password: string) => {
   try {
     console.log('🔐 Starting teacher authentication for:', email);
     
-    // Use the security definer function that bypasses RLS
-    const { data, error } = await supabase.rpc('authenticate_teacher_complete', {
+    // Use the existing authenticate_teacher function
+    const { data, error } = await supabase.rpc('authenticate_teacher', {
       email_param: email.toLowerCase().trim(),
       password_param: password
     });
@@ -18,17 +18,17 @@ export const authenticateTeacher = async (email: string, password: string) => {
       return { error: 'Authentication failed - server error' };
     }
 
-    if (!data || data.length === 0) {
+    if (!data || !Array.isArray(data) || data.length === 0) {
       console.log('No authentication result returned');
       return { error: 'Invalid email or password' };
     }
 
-    const result = data[0];
+    const result = data[0] as any;
     console.log('Authentication result:', result);
 
-    if (!result.success) {
-      console.log('Authentication failed:', result.error_message);
-      return { error: result.error_message || 'Invalid email or password' };
+    if (!result.password_valid) {
+      console.log('Password validation failed');
+      return { error: 'Invalid email or password' };
     }
 
     console.log('✅ Teacher authentication successful');
@@ -52,8 +52,8 @@ export const authenticateStudent = async (fullName: string, school: string, grad
   try {
     console.log('🔐 Starting student authentication for:', { fullName, school, grade });
     
-    // Use the security definer function that bypasses RLS
-    const { data, error } = await supabase.rpc('authenticate_student_complete', {
+    // Use the existing authenticate_student function
+    const { data, error } = await supabase.rpc('authenticate_student', {
       name_param: fullName.trim(),
       school_param: school.trim(),
       grade_param: grade.trim(),
@@ -67,17 +67,17 @@ export const authenticateStudent = async (fullName: string, school: string, grad
       return { error: 'Authentication failed - server error' };
     }
 
-    if (!data || data.length === 0) {
+    if (!data || !Array.isArray(data) || data.length === 0) {
       console.log('No authentication result returned');
       return { error: 'Invalid credentials' };
     }
 
-    const result = data[0];
+    const result = data[0] as any;
     console.log('Authentication result:', result);
 
-    if (!result.success) {
-      console.log('Authentication failed:', result.error_message);
-      return { error: result.error_message || 'Invalid credentials' };
+    if (!result.password_valid) {
+      console.log('Password validation failed');
+      return { error: 'Invalid credentials' };
     }
 
     console.log('✅ Student authentication successful');
