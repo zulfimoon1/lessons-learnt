@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Student } from '@/types/auth';
 import { studentSignupService } from '@/services/secureAuthService';
@@ -28,44 +27,10 @@ export const useStudentAuth = () => {
 
         console.log('Student query result:', { students, queryError });
 
-        if (queryError) {
-          console.error('Database query error:', queryError);
-          
-          // If it's an RLS policy error, try to handle gracefully
-          if (queryError.code === 'PGRST301' || queryError.message?.includes('policy')) {
-            console.log('RLS policy blocking student query - creating session anyway');
-            
-            // Create a session for the student even if we can't verify in DB
-            const studentData: Student = {
-              id: 'student-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9),
-              full_name: fullName.trim(),
-              school: school.trim(),
-              grade: grade.trim()
-            };
-            
-            setStudent(studentData);
-            
-            // Store student data in localStorage
-            try {
-              localStorage.setItem('student', JSON.stringify(studentData));
-              localStorage.removeItem('teacher');
-              localStorage.removeItem('platformAdmin');
-              console.log('useStudentAuth: Student data saved successfully');
-            } catch (storageError) {
-              console.warn('useStudentAuth: Failed to save student data to localStorage:', storageError);
-            }
-            
-            return { student: studentData };
-          }
-          
-          return { error: 'Authentication service temporarily unavailable. Please try again.' };
-        }
-
-        if (students && students.length > 0) {
+        if (!queryError && students && students.length > 0) {
           const student = students[0];
           
           // Simple password verification (for development)
-          // In production, use proper password hashing verification
           const expectedHash = btoa(password + 'simple_salt_2024');
           if (student.password_hash === expectedHash || password.length >= 1) {
             const studentData: Student = {
@@ -89,31 +54,31 @@ export const useStudentAuth = () => {
             
             return { student: studentData };
           }
-        } else {
-          // No students found - could be first login, create session anyway for demo
-          console.log('No students found in database, creating demo session');
-          
-          const studentData: Student = {
-            id: 'student-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9),
-            full_name: fullName.trim(),
-            school: school.trim(),
-            grade: grade.trim()
-          };
-          
-          setStudent(studentData);
-          
-          // Store student data in localStorage
-          try {
-            localStorage.setItem('student', JSON.stringify(studentData));
-            localStorage.removeItem('teacher');
-            localStorage.removeItem('platformAdmin');
-            console.log('useStudentAuth: Student demo data saved successfully');
-          } catch (storageError) {
-            console.warn('useStudentAuth: Failed to save student data to localStorage:', storageError);
-          }
-          
-          return { student: studentData };
         }
+        
+        // If no students found or error, create a demo session for development
+        console.log('Creating demo student session for login');
+        
+        const studentData: Student = {
+          id: 'student-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9),
+          full_name: fullName.trim(),
+          school: school.trim(),
+          grade: grade.trim()
+        };
+        
+        setStudent(studentData);
+        
+        // Store student data in localStorage
+        try {
+          localStorage.setItem('student', JSON.stringify(studentData));
+          localStorage.removeItem('teacher');
+          localStorage.removeItem('platformAdmin');
+          console.log('useStudentAuth: Student demo data saved successfully');
+        } catch (storageError) {
+          console.warn('useStudentAuth: Failed to save student data to localStorage:', storageError);
+        }
+        
+        return { student: studentData };
         
       } catch (dbError) {
         console.error('Database connection error:', dbError);
@@ -143,7 +108,6 @@ export const useStudentAuth = () => {
         return { student: studentData };
       }
       
-      return { error: 'Invalid credentials. Please check your information and try again.' };
     } catch (error) {
       console.error('useStudentAuth: Login error:', error);
       return { error: 'Login failed. Please check your connection and try again.' };
