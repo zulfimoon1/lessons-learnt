@@ -1,7 +1,7 @@
 
 import { useState } from 'react';
 import { Student } from '@/types/auth';
-import { authenticateStudent, registerStudent } from '@/services/realAuthService';
+import { authenticateStudent, registerStudent } from '@/services/properAuthService';
 
 export const useStudentAuth = () => {
   const [student, setStudent] = useState<Student | null>(null);
@@ -15,7 +15,7 @@ export const useStudentAuth = () => {
         return { error: 'All fields are required' };
       }
 
-      // Call the real authentication service
+      // Call the proper authentication service
       const result = await authenticateStudent(fullName, school, grade, password);
       
       if (result.student) {
@@ -63,7 +63,7 @@ export const useStudentAuth = () => {
         return { error: 'Password must be at least 4 characters long' };
       }
       
-      // Call the real registration service
+      // Call the proper registration service
       const result = await registerStudent(fullName.trim(), school.trim(), grade.trim(), password);
       console.log('useStudentAuth: Registration service result:', result);
       

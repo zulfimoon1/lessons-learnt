@@ -1,7 +1,7 @@
 
 import { useState } from 'react';
 import { Teacher } from '@/types/auth';
-import { authenticateTeacher, registerTeacher } from '@/services/realAuthService';
+import { authenticateTeacher, registerTeacher } from '@/services/properAuthService';
 
 export const useTeacherAuth = () => {
   const [teacher, setTeacher] = useState<Teacher | null>(null);
@@ -21,7 +21,7 @@ export const useTeacherAuth = () => {
         return { error: 'Please enter a valid email address' };
       }
       
-      // Call the real authentication service
+      // Call the proper authentication service
       const result = await authenticateTeacher(email.trim(), password);
       console.log('useTeacherAuth: Authentication service result:', result);
       
@@ -76,7 +76,7 @@ export const useTeacherAuth = () => {
         return { error: 'Password must be at least 4 characters long' };
       }
       
-      // Call the real registration service
+      // Call the proper registration service
       const result = await registerTeacher(name.trim(), email.trim(), school.trim(), password, role);
       console.log('useTeacherAuth: Registration service result:', result);
       
