@@ -15,32 +15,8 @@ export const useStudentAuth = () => {
         return { error: 'All fields are required' };
       }
 
-      // Try the simple login service first (for existing demo accounts)
-      let result = await studentSimpleLoginService(fullName, password);
-      
-      if (result.error) {
-        // If simple login fails, create a new session
-        const studentData: Student = {
-          id: 'student-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9),
-          full_name: fullName.trim(),
-          school: school.trim(),
-          grade: grade.trim()
-        };
-        
-        setStudent(studentData);
-        
-        // Store student data in localStorage
-        try {
-          localStorage.setItem('student', JSON.stringify(studentData));
-          localStorage.removeItem('teacher');
-          localStorage.removeItem('platformAdmin');
-          console.log('useStudentAuth: Student data saved successfully');
-        } catch (storageError) {
-          console.warn('useStudentAuth: Failed to save student data to localStorage:', storageError);
-        }
-        
-        return { student: studentData };
-      }
+      // Try the simple login service
+      const result = await studentSimpleLoginService(fullName, password);
       
       if (result.student) {
         const studentData: Student = {
@@ -65,7 +41,7 @@ export const useStudentAuth = () => {
         return { student: studentData };
       }
       
-      return { error: 'Login failed. Please try again.' };
+      return { error: result.error || 'Login failed. Please try again.' };
       
     } catch (error) {
       console.error('useStudentAuth: Login error:', error);
