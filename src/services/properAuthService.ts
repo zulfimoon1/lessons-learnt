@@ -5,8 +5,8 @@ export const authenticateTeacher = async (email: string, password: string) => {
   try {
     console.log('🔐 Starting teacher authentication for:', email);
     
-    // Use the database function that bypasses RLS
-    const { data, error } = await supabase.rpc('authenticate_teacher_complete', {
+    // Use the working database function
+    const { data, error } = await supabase.rpc('authenticate_teacher_working', {
       email_param: email.toLowerCase().trim(),
       password_param: password
     });
@@ -25,9 +25,10 @@ export const authenticateTeacher = async (email: string, password: string) => {
 
     const teacherData = Array.isArray(data) ? data[0] : data;
     
-    if (!teacherData.success) {
-      console.log('Authentication failed:', teacherData.error_message);
-      return { error: teacherData.error_message || 'Invalid email or password' };
+    // Check if teacher exists (teacher_id will be null if not found)
+    if (!teacherData.teacher_id) {
+      console.log('Teacher not found');
+      return { error: 'Invalid email or password' };
     }
 
     console.log('✅ Teacher authentication successful');
@@ -51,8 +52,8 @@ export const authenticateStudent = async (fullName: string, school: string, grad
   try {
     console.log('🔐 Starting student authentication for:', { fullName, school, grade });
     
-    // Use the database function that bypasses RLS
-    const { data, error } = await supabase.rpc('authenticate_student_complete', {
+    // Use the working database function
+    const { data, error } = await supabase.rpc('authenticate_student_working', {
       name_param: fullName.trim(),
       school_param: school.trim(),
       grade_param: grade.trim(),
@@ -73,9 +74,10 @@ export const authenticateStudent = async (fullName: string, school: string, grad
 
     const studentData = Array.isArray(data) ? data[0] : data;
     
-    if (!studentData.success) {
-      console.log('Student authentication failed:', studentData.error_message);
-      return { error: studentData.error_message || 'Invalid credentials' };
+    // Check if student exists (student_id will be null if not found)
+    if (!studentData.student_id) {
+      console.log('Student not found');
+      return { error: 'Invalid credentials' };
     }
 
     console.log('✅ Student authentication successful');
@@ -98,7 +100,7 @@ export const registerTeacher = async (name: string, email: string, school: strin
   try {
     console.log('📝 Starting teacher registration for:', { name, email, school, role });
     
-    // Direct insert using Supabase client - let RLS handle permissions
+    // Direct insert using Supabase client
     const { data: newTeacher, error: insertError } = await supabase
       .from('teachers')
       .insert({
@@ -118,10 +120,6 @@ export const registerTeacher = async (name: string, email: string, school: strin
       
       if (insertError.code === '23505') {
         return { error: 'A teacher with this email already exists' };
-      }
-      
-      if (insertError.message?.includes('permission denied')) {
-        return { error: 'Registration is currently unavailable. Please contact your administrator.' };
       }
       
       return { error: 'Failed to create teacher account' };
@@ -148,7 +146,7 @@ export const registerStudent = async (fullName: string, school: string, grade: s
   try {
     console.log('📝 Starting student registration for:', { fullName, school, grade });
     
-    // Direct insert using Supabase client - let RLS handle permissions
+    // Direct insert using Supabase client
     const { data: newStudent, error: insertError } = await supabase
       .from('students')
       .insert({
@@ -167,10 +165,6 @@ export const registerStudent = async (fullName: string, school: string, grade: s
       
       if (insertError.code === '23505') {
         return { error: 'A student with these details already exists' };
-      }
-      
-      if (insertError.message?.includes('permission denied')) {
-        return { error: 'Registration is currently unavailable. Please contact your administrator.' };
       }
       
       return { error: 'Failed to create student account' };
