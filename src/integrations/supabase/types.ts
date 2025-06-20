@@ -849,7 +849,7 @@ export type Database = {
       }
     }
     Functions: {
-      authenticate_student: {
+      authenticate_student_working: {
         Args: {
           name_param: string
           school_param: string
@@ -864,7 +864,7 @@ export type Database = {
           password_valid: boolean
         }[]
       }
-      authenticate_teacher: {
+      authenticate_teacher_working: {
         Args: { email_param: string; password_param: string }
         Returns: {
           teacher_id: string

@@ -5,8 +5,8 @@ export const authenticateTeacher = async (email: string, password: string) => {
   try {
     console.log('🔐 Starting teacher authentication for:', email);
     
-    // Use the authenticate_teacher function which is properly typed
-    const { data, error } = await supabase.rpc('authenticate_teacher', {
+    // Use the new authenticate_teacher_working function
+    const { data, error } = await supabase.rpc('authenticate_teacher_working', {
       email_param: email.toLowerCase().trim(),
       password_param: password
     });
@@ -21,7 +21,7 @@ export const authenticateTeacher = async (email: string, password: string) => {
     // Handle array response
     const teacherData = Array.isArray(data) ? data[0] : data;
     
-    if (!teacherData) {
+    if (!teacherData || !teacherData.teacher_id) {
       console.log('No teacher found or authentication failed');
       return { error: 'Invalid email or password' };
     }
@@ -53,8 +53,8 @@ export const authenticateStudent = async (fullName: string, school: string, grad
   try {
     console.log('🔐 Starting student authentication for:', { fullName, school, grade });
     
-    // Use the authenticate_student function which is properly typed
-    const { data, error } = await supabase.rpc('authenticate_student', {
+    // Use the new authenticate_student_working function
+    const { data, error } = await supabase.rpc('authenticate_student_working', {
       name_param: fullName.trim(),
       school_param: school.trim(),
       grade_param: grade.trim(),
@@ -71,7 +71,7 @@ export const authenticateStudent = async (fullName: string, school: string, grad
     // Handle array response
     const studentData = Array.isArray(data) ? data[0] : data;
     
-    if (!studentData) {
+    if (!studentData || !studentData.student_id) {
       console.log('No student found or authentication failed');
       return { error: 'Invalid credentials' };
     }
