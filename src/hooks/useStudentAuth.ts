@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Student } from '@/types/auth';
 import { studentSimpleLoginService, studentSignupService } from '@/services/secureAuthService';
@@ -19,7 +18,7 @@ export const useStudentAuth = () => {
       const result = await studentSimpleLoginService(fullName.trim(), password.trim());
       console.log('useStudentAuth: Login service result:', { 
         success: !!result.student, 
-        error: result.error 
+        hasError: 'error' in result 
       });
       
       if (result.student) {
@@ -54,7 +53,7 @@ export const useStudentAuth = () => {
         return { student: studentData };
       }
       
-      return { error: result.error || 'Login failed. Please check your credentials.' };
+      return { error: 'error' in result ? result.error : 'Login failed. Please check your credentials.' };
     } catch (error) {
       console.error('useStudentAuth: Unexpected error:', error);
       return { error: 'Login failed. Please check your connection and try again.' };
@@ -78,7 +77,7 @@ export const useStudentAuth = () => {
       const result = await studentSignupService(fullName.trim(), school.trim(), grade.trim(), password);
       console.log('useStudentAuth: Signup service result:', { 
         success: !!result.student, 
-        error: result.error 
+        hasError: 'error' in result 
       });
       
       if (result.student) {
@@ -104,7 +103,7 @@ export const useStudentAuth = () => {
         return { student: studentData };
       }
       
-      return { error: result.error || 'Signup failed. Please try again.' };
+      return { error: 'error' in result ? result.error : 'Signup failed. Please try again.' };
     } catch (error) {
       console.error('useStudentAuth: Unexpected signup error:', error);
       return { error: 'Signup failed. Please check your connection and try again.' };
