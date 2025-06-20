@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -141,8 +142,13 @@ const AdminDashboard = () => {
   };
 
   const handleLogout = () => {
-    clearAuth();
-    navigate('/teacher-login');
+    try {
+      clearAuth();
+      window.location.href = '/teacher-login';
+    } catch (error) {
+      console.error('Logout error:', error);
+      window.location.href = '/teacher-login';
+    }
   };
 
   const handleSubscribe = () => {
@@ -163,6 +169,10 @@ const AdminDashboard = () => {
   const regularTeachers = teachers.filter(t => t.role === 'teacher');
   const doctors = teachers.filter(t => t.role === 'doctor');
 
+  // For demo admin, always show subscription as active to allow invites
+  const isDemoAdmin = teacher?.school === 'demo school';
+  const effectiveSubscription = isDemoAdmin ? { id: 'demo-subscription', status: 'active' } : subscription;
+
   return (
     <div className="min-h-screen bg-background">
       <CookieConsent />
@@ -173,7 +183,7 @@ const AdminDashboard = () => {
       />
 
       <main className="max-w-7xl mx-auto p-6 space-y-6">
-        {!subscription && (
+        {!effectiveSubscription && (
           <Card className="border-yellow-200 bg-yellow-50">
             <CardHeader>
               <CardTitle className="text-yellow-800">{t('admin.subscription') || 'Subscription Required'}</CardTitle>
@@ -213,7 +223,7 @@ const AdminDashboard = () => {
 
           <StatsCard
             title={t('admin.subscription') || 'Subscription'}
-            value={subscription ? 'Active' : 'Inactive'}
+            value={effectiveSubscription ? 'Active' : 'Inactive'}
             icon={SchoolIcon}
           />
         </div>
@@ -316,8 +326,8 @@ const AdminDashboard = () => {
           <TabsContent value="invite" className="space-y-6">
             <InviteTeacherForm 
               school={teacher?.school || ''}
-              subscriptionId={subscription?.id}
-              hasActiveSubscription={!!subscription}
+              subscriptionId={effectiveSubscription?.id}
+              hasActiveSubscription={!!effectiveSubscription}
               onInviteSent={loadTeachers}
             />
           </TabsContent>

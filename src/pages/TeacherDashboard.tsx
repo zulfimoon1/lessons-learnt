@@ -75,8 +75,13 @@ const TeacherDashboard = () => {
   };
 
   const handleLogout = () => {
-    clearAuth();
-    navigate('/teacher-login');
+    try {
+      clearAuth();
+      window.location.href = '/teacher-login';
+    } catch (error) {
+      console.error('Logout error:', error);
+      window.location.href = '/teacher-login';
+    }
   };
 
   const handleCreateCheckout = async () => {
