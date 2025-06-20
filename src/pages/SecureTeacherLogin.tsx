@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { BookOpenIcon } from "lucide-react";
+import { GraduationCapIcon } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -10,24 +10,20 @@ import { useAuth } from "@/contexts/AuthContext";
 import AuthHeader from "@/components/auth/AuthHeader";
 import SecureTeacherLoginForm from "@/components/auth/SecureTeacherLoginForm";
 import TeacherSignupForm from "@/components/auth/TeacherSignupForm";
-import EnhancedSecurityMonitor from "@/components/security/EnhancedSecurityMonitor";
-import { enhancedSecurityService } from "@/services/enhancedSecurityService";
+import SessionSecurityMonitor from "@/components/security/SessionSecurityMonitor";
+import { authenticateTeacher, registerTeacher } from "@/services/properAuthService";
 
 const SecureTeacherLogin = () => {
   const { t } = useLanguage();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { teacher, teacherLogin, isLoading: authLoading } = useAuth();
+  const { teacher, isLoading: authLoading, setTeacher } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
 
   // Redirect if already logged in
   useEffect(() => {
     if (teacher && !authLoading) {
-      if (teacher.role === 'admin') {
-        navigate("/teacher-dashboard", { replace: true });
-      } else {
-        navigate("/teacher-dashboard", { replace: true });
-      }
+      navigate("/teacher-dashboard", { replace: true });
     }
   }, [teacher, authLoading, navigate]);
 
@@ -53,51 +49,20 @@ const SecureTeacherLogin = () => {
       return;
     }
 
-    // Enhanced security validation
-    const isSecureAccess = await enhancedSecurityService.validateSecureAccess('teachers', 'SELECT');
-    if (!isSecureAccess) {
-      toast({
-        title: "Security Alert",
-        description: "Suspicious activity detected. Please try again later.",
-        variant: "destructive",
-      });
-      return;
-    }
-
     setIsLoading(true);
 
     try {
-      // Log login attempt
-      await enhancedSecurityService.logSecurityViolation({
-        type: 'login_attempt',
-        details: `Teacher login attempt for email: ${email}`,
-        severity: 'low'
-      });
-
-      const result = await teacherLogin(email.trim(), password);
+      const result = await authenticateTeacher(email, password);
 
       if (result.error) {
-        // Log failed login
-        await enhancedSecurityService.logSecurityViolation({
-          type: 'login_failed',
-          details: `Failed login attempt for email: ${email} - ${result.error}`,
-          severity: 'medium'
-        });
-
         toast({
           title: "Login failed",
           description: result.error,
           variant: "destructive",
         });
       } else if (result.teacher) {
-        // Log successful login
-        await enhancedSecurityService.logSecurityViolation({
-          type: 'login_success',
-          userId: result.teacher.id,
-          details: `Successful teacher login for email: ${email}`,
-          severity: 'low'
-        });
-
+        // Set the teacher in auth context
+        setTeacher(result.teacher);
         toast({
           title: "Welcome back!",
           description: "Login successful",
@@ -105,13 +70,7 @@ const SecureTeacherLogin = () => {
         navigate("/teacher-dashboard", { replace: true });
       }
     } catch (err) {
-      // Log login error
-      await enhancedSecurityService.logSecurityViolation({
-        type: 'login_error',
-        details: `Login error for email: ${email} - ${err}`,
-        severity: 'medium'
-      });
-
+      console.error('Login error:', err);
       toast({
         title: "Login failed",
         description: "An unexpected error occurred. Please try again.",
@@ -122,16 +81,7 @@ const SecureTeacherLogin = () => {
     }
   };
 
-  const handleSignup = async (signupData: {
-    name: string;
-    email: string;
-    school: string;
-    role: 'teacher' | 'admin' | 'doctor';
-    password: string;
-    confirmPassword: string;
-  }) => {
-    const { name, email, school, password, confirmPassword, role } = signupData;
-    
+  const handleSignup = async (name: string, email: string, school: string, password: string, confirmPassword: string, role: string) => {
     if (!name.trim() || !email.trim() || !school.trim() || !password || !confirmPassword) {
       toast({
         title: t('teacher.missingInfo') || "Missing information",
@@ -150,51 +100,20 @@ const SecureTeacherLogin = () => {
       return;
     }
 
-    // Enhanced security validation for signup
-    const isSecureAccess = await enhancedSecurityService.validateSecureAccess('teachers', 'INSERT');
-    if (!isSecureAccess) {
-      toast({
-        title: "Security Alert",
-        description: "Suspicious activity detected. Please try again later.",
-        variant: "destructive",
-      });
-      return;
-    }
-
     setIsLoading(true);
 
     try {
-      // Log signup attempt
-      await enhancedSecurityService.logSecurityViolation({
-        type: 'signup_attempt',
-        details: `Teacher signup attempt for email: ${email}, school: ${school}`,
-        severity: 'low'
-      });
-
-      const result = await teacherLogin(email.trim(), password, name.trim(), school.trim(), role);
+      const result = await registerTeacher(name.trim(), email.trim(), school.trim(), password, role);
 
       if (result.error) {
-        // Log failed signup
-        await enhancedSecurityService.logSecurityViolation({
-          type: 'signup_failed',
-          details: `Failed signup attempt for email: ${email} - ${result.error}`,
-          severity: 'medium'
-        });
-
         toast({
           title: t('teacher.signupFailed') || "Signup failed",
           description: result.error,
           variant: "destructive",
         });
       } else if (result.teacher) {
-        // Log successful signup
-        await enhancedSecurityService.logSecurityViolation({
-          type: 'signup_success',
-          userId: result.teacher.id,
-          details: `Successful teacher signup for email: ${email}, school: ${school}`,
-          severity: 'low'
-        });
-
+        // Set the teacher in auth context
+        setTeacher(result.teacher);
         toast({
           title: t('teacher.accountCreated') || "Account created!",
           description: t('teacher.welcomeToApp') || "Welcome to Lesson Lens!",
@@ -202,13 +121,7 @@ const SecureTeacherLogin = () => {
         navigate("/teacher-dashboard", { replace: true });
       }
     } catch (err) {
-      // Log signup error
-      await enhancedSecurityService.logSecurityViolation({
-        type: 'signup_error',
-        details: `Signup error for email: ${email} - ${err}`,
-        severity: 'medium'
-      });
-
+      console.error('Signup error:', err);
       toast({
         title: t('teacher.signupFailed') || "Signup failed",
         description: "An unexpected error occurred. Please try again.",
@@ -222,13 +135,13 @@ const SecureTeacherLogin = () => {
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <AuthHeader />
-      <EnhancedSecurityMonitor />
       
       <div className="w-full max-w-md">
+        <SessionSecurityMonitor />
         <Card className="bg-card/80 backdrop-blur-sm border-border">
           <CardHeader className="text-center">
-            <div className="w-16 h-16 bg-primary rounded-full mx-auto flex items-center justify-center mb-4">
-              <BookOpenIcon className="w-8 h-8 text-primary-foreground" />
+            <div className="w-16 h-16 bg-emerald-600 rounded-full mx-auto flex items-center justify-center mb-4">
+              <GraduationCapIcon className="w-8 h-8 text-white" />
             </div>
             <CardTitle className="text-2xl text-foreground">{t('login.teacher.title')}</CardTitle>
             <CardDescription>

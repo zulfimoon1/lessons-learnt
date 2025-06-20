@@ -11,12 +11,13 @@ import AuthHeader from "@/components/auth/AuthHeader";
 import SecureStudentLoginForm from "@/components/auth/SecureStudentLoginForm";
 import StudentSignupForm from "@/components/auth/StudentSignupForm";
 import SessionSecurityMonitor from "@/components/security/SessionSecurityMonitor";
+import { authenticateStudent, registerStudent } from "@/services/properAuthService";
 
 const SecureStudentLogin = () => {
   const { t } = useLanguage();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { student, isLoading: authLoading, studentLogin, studentSignup } = useAuth();
+  const { student, isLoading: authLoading, setStudent } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
 
   // Redirect if already logged in
@@ -51,7 +52,7 @@ const SecureStudentLogin = () => {
     setIsLoading(true);
 
     try {
-      const result = await studentLogin(fullName.trim(), school.trim(), grade.trim(), password);
+      const result = await authenticateStudent(fullName.trim(), school.trim(), grade.trim(), password);
 
       if (result.error) {
         toast({
@@ -60,6 +61,8 @@ const SecureStudentLogin = () => {
           variant: "destructive",
         });
       } else if (result.student) {
+        // Set the student in auth context
+        setStudent(result.student);
         toast({
           title: "Welcome back!",
           description: "Login successful",
@@ -67,6 +70,7 @@ const SecureStudentLogin = () => {
         navigate("/student-dashboard", { replace: true });
       }
     } catch (err) {
+      console.error('Login error:', err);
       toast({
         title: "Login failed",
         description: "An unexpected error occurred. Please try again.",
@@ -99,7 +103,7 @@ const SecureStudentLogin = () => {
     setIsLoading(true);
 
     try {
-      const result = await studentSignup(fullName.trim(), school.trim(), grade.trim(), password);
+      const result = await registerStudent(fullName.trim(), school.trim(), grade.trim(), password);
 
       if (result.error) {
         toast({
@@ -108,6 +112,8 @@ const SecureStudentLogin = () => {
           variant: "destructive",
         });
       } else if (result.student) {
+        // Set the student in auth context
+        setStudent(result.student);
         toast({
           title: t('student.accountCreated') || "Account created!",
           description: t('student.welcomeToApp') || "Welcome to Lesson Lens!",
@@ -115,6 +121,7 @@ const SecureStudentLogin = () => {
         navigate("/student-dashboard", { replace: true });
       }
     } catch (err) {
+      console.error('Signup error:', err);
       toast({
         title: t('student.signupFailed') || "Signup failed",
         description: "An unexpected error occurred. Please try again.",

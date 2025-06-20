@@ -6,39 +6,34 @@ export const authenticateTeacher = async (email: string, password: string) => {
   try {
     console.log('🔐 Starting teacher authentication for:', email);
     
-    // Use the complete authentication function that handles everything server-side
-    const { data: authResult, error: authError } = await supabase.rpc('authenticate_teacher_complete' as any, {
-      email_param: email.toLowerCase().trim(),
-      password_param: password
-    });
+    // First get teacher data without password verification
+    const { data: teacherData, error: teacherError } = await supabase
+      .from('teachers')
+      .select('id, name, email, school, role, password_hash')
+      .eq('email', email.toLowerCase().trim())
+      .single();
 
-    console.log('Teacher auth result:', { authResult, authError });
-
-    if (authError) {
-      console.error('Teacher auth RPC error:', authError);
-      return { error: 'Authentication failed. Please try again.' };
+    if (teacherError || !teacherData) {
+      console.error('Teacher query error:', teacherError);
+      return { error: 'Invalid email or password' };
     }
 
-    if (!authResult || !Array.isArray(authResult) || authResult.length === 0) {
-      console.log('No auth result returned');
-      return { error: 'Authentication failed. Please check your credentials.' };
-    }
-
-    const result = authResult[0];
+    // Verify password using bcrypt
+    const isPasswordValid = await bcrypt.compare(password, teacherData.password_hash);
     
-    if (!result.success) {
-      console.log('Authentication failed:', result.error_message);
-      return { error: result.error_message || 'Invalid email or password' };
+    if (!isPasswordValid) {
+      console.log('Password verification failed');
+      return { error: 'Invalid email or password' };
     }
 
     console.log('✅ Teacher authentication successful');
     return {
       teacher: {
-        id: result.teacher_id,
-        name: result.teacher_name,
-        email: result.teacher_email,
-        school: result.teacher_school,
-        role: result.teacher_role as 'teacher' | 'admin' | 'doctor'
+        id: teacherData.id,
+        name: teacherData.name,
+        email: teacherData.email,
+        school: teacherData.school,
+        role: teacherData.role as 'teacher' | 'admin' | 'doctor'
       }
     };
 
@@ -52,40 +47,35 @@ export const authenticateStudent = async (fullName: string, school: string, grad
   try {
     console.log('🔐 Starting student authentication for:', { fullName, school, grade });
     
-    // Use the complete authentication function that handles everything server-side
-    const { data: authResult, error: authError } = await supabase.rpc('authenticate_student_complete' as any, {
-      name_param: fullName.trim(),
-      school_param: school.trim(),
-      grade_param: grade.trim(),
-      password_param: password
-    });
+    // First get student data without password verification
+    const { data: studentData, error: studentError } = await supabase
+      .from('students')
+      .select('id, full_name, school, grade, password_hash')
+      .eq('full_name', fullName.trim())
+      .eq('school', school.trim())
+      .eq('grade', grade.trim())
+      .single();
 
-    console.log('Student auth result:', { authResult, authError });
-
-    if (authError) {
-      console.error('Student auth RPC error:', authError);
-      return { error: 'Authentication failed. Please try again.' };
+    if (studentError || !studentData) {
+      console.error('Student query error:', studentError);
+      return { error: 'Invalid credentials' };
     }
 
-    if (!authResult || !Array.isArray(authResult) || authResult.length === 0) {
-      console.log('No auth result returned');
-      return { error: 'Authentication failed. Please check your credentials.' };
-    }
-
-    const result = authResult[0];
+    // Verify password using bcrypt
+    const isPasswordValid = await bcrypt.compare(password, studentData.password_hash);
     
-    if (!result.success) {
-      console.log('Authentication failed:', result.error_message);
-      return { error: result.error_message || 'Invalid credentials' };
+    if (!isPasswordValid) {
+      console.log('Password verification failed');
+      return { error: 'Invalid credentials' };
     }
 
     console.log('✅ Student authentication successful');
     return {
       student: {
-        id: result.student_id,
-        full_name: result.student_name,
-        school: result.student_school,
-        grade: result.student_grade
+        id: studentData.id,
+        full_name: studentData.full_name,
+        school: studentData.school,
+        grade: studentData.grade
       }
     };
 
@@ -103,7 +93,7 @@ export const registerTeacher = async (name: string, email: string, school: strin
     const saltRounds = 12;
     const hashedPassword = await bcrypt.hash(password, saltRounds);
 
-    // Create teacher record directly (this should work as it's an INSERT)
+    // Create teacher record directly
     const { data: newTeacher, error: insertError } = await supabase
       .from('teachers')
       .insert({
@@ -149,7 +139,7 @@ export const registerStudent = async (fullName: string, school: string, grade: s
     const saltRounds = 12;
     const hashedPassword = await bcrypt.hash(password, saltRounds);
 
-    // Create student record directly (this should work as it's an INSERT)
+    // Create student record directly
     const { data: newStudent, error: insertError } = await supabase
       .from('students')
       .insert({
