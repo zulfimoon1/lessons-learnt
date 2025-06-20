@@ -6,33 +6,17 @@ export const authenticateTeacher = async (email: string, password: string) => {
   try {
     console.log('🔐 Starting teacher authentication for:', email);
     
-    // Try to use RPC to test elevated access, then query teachers table
-    let teachers, queryError;
-    
-    try {
-      // Test if we have elevated access via RPC
-      await supabase.rpc('get_platform_stats', { stat_type: 'teachers' });
-      
-      // If RPC works, we have elevated access, now query directly
-      const result = await supabase
-        .from('teachers')
-        .select('*')
-        .eq('email', email.toLowerCase().trim())
-        .limit(1);
-      
-      teachers = result.data;
-      queryError = result.error;
-    } catch (rpcError) {
-      // If RPC fails, try direct query anyway
-      const result = await supabase
-        .from('teachers')
-        .select('*')
-        .eq('email', email.toLowerCase().trim())
-        .limit(1);
-      
-      teachers = result.data;
-      queryError = result.error;
-    }
+    // Set platform admin context to bypass RLS
+    await supabase.rpc('set_platform_admin_context', {
+      admin_email: email
+    });
+
+    // Query the teachers table with elevated access
+    const { data: teachers, error: queryError } = await supabase
+      .from('teachers')
+      .select('*')
+      .eq('email', email.toLowerCase().trim())
+      .maybeSingle();
 
     console.log('Teacher query result:', { teachers, queryError });
 
@@ -41,18 +25,17 @@ export const authenticateTeacher = async (email: string, password: string) => {
       return { error: 'Unable to authenticate. Please check your credentials.' };
     }
 
-    if (!teachers || teachers.length === 0) {
+    if (!teachers) {
       console.log('No teacher found for email:', email);
       return { error: 'Invalid email or password' };
     }
 
-    const teacher = teachers[0];
-    console.log('Teacher found:', { id: teacher.id, email: teacher.email, role: teacher.role });
+    console.log('Teacher found:', { id: teachers.id, email: teachers.email, role: teachers.role });
 
     // Verify password
     let isPasswordValid = false;
     try {
-      isPasswordValid = await bcrypt.compare(password, teacher.password_hash);
+      isPasswordValid = await bcrypt.compare(password, teachers.password_hash);
       console.log('Password verification:', isPasswordValid ? 'success' : 'failed');
     } catch (bcryptError) {
       console.error('Password verification error:', bcryptError);
@@ -67,11 +50,11 @@ export const authenticateTeacher = async (email: string, password: string) => {
     console.log('✅ Teacher authentication successful');
     return {
       teacher: {
-        id: teacher.id,
-        name: teacher.name,
-        email: teacher.email,
-        school: teacher.school,
-        role: teacher.role as 'teacher' | 'admin' | 'doctor'
+        id: teachers.id,
+        name: teachers.name,
+        email: teachers.email,
+        school: teachers.school,
+        role: teachers.role as 'teacher' | 'admin' | 'doctor'
       }
     };
 
@@ -85,14 +68,14 @@ export const authenticateStudent = async (fullName: string, school: string, grad
   try {
     console.log('🔐 Starting student authentication for:', { fullName, school, grade });
     
-    // Use a direct query with better error handling
+    // Query the students table directly
     const { data: students, error: queryError } = await supabase
       .from('students')
       .select('*')
       .eq('full_name', fullName.trim())
       .eq('school', school.trim())
       .eq('grade', grade.trim())
-      .limit(1);
+      .maybeSingle();
 
     console.log('Student query result:', { students, queryError });
 
@@ -101,18 +84,17 @@ export const authenticateStudent = async (fullName: string, school: string, grad
       return { error: 'Unable to authenticate. Please check your credentials.' };
     }
 
-    if (!students || students.length === 0) {
+    if (!students) {
       console.log('No student found for:', { fullName, school, grade });
       return { error: 'Invalid credentials' };
     }
 
-    const student = students[0];
-    console.log('Student found:', { id: student.id, full_name: student.full_name });
+    console.log('Student found:', { id: students.id, full_name: students.full_name });
 
     // Verify password
     let isPasswordValid = false;
     try {
-      isPasswordValid = await bcrypt.compare(password, student.password_hash);
+      isPasswordValid = await bcrypt.compare(password, students.password_hash);
       console.log('Password verification:', isPasswordValid ? 'success' : 'failed');
     } catch (bcryptError) {
       console.error('Password verification error:', bcryptError);
@@ -127,10 +109,10 @@ export const authenticateStudent = async (fullName: string, school: string, grad
     console.log('✅ Student authentication successful');
     return {
       student: {
-        id: student.id,
-        full_name: student.full_name,
-        school: student.school,
-        grade: student.grade
+        id: students.id,
+        full_name: students.full_name,
+        school: students.school,
+        grade: students.grade
       }
     };
 
@@ -144,19 +126,24 @@ export const registerTeacher = async (name: string, email: string, school: strin
   try {
     console.log('📝 Starting teacher registration for:', { name, email, school, role });
     
+    // Set platform admin context for registration
+    await supabase.rpc('set_platform_admin_context', {
+      admin_email: 'system@registration.temp'
+    });
+
     // Check if teacher already exists
-    const { data: existingTeachers, error: checkError } = await supabase
+    const { data: existingTeacher, error: checkError } = await supabase
       .from('teachers')
       .select('id')
       .eq('email', email.toLowerCase().trim())
-      .limit(1);
+      .maybeSingle();
 
-    if (checkError && checkError.code !== 'PGRST116') { // PGRST116 is "no rows returned"
+    if (checkError) {
       console.error('Error checking existing teacher:', checkError);
       return { error: 'Registration failed. Please try again.' };
     }
 
-    if (existingTeachers && existingTeachers.length > 0) {
+    if (existingTeacher) {
       return { error: 'A teacher with this email already exists' };
     }
 
@@ -204,20 +191,20 @@ export const registerStudent = async (fullName: string, school: string, grade: s
     console.log('📝 Starting student registration for:', { fullName, school, grade });
     
     // Check if student already exists
-    const { data: existingStudents, error: checkError } = await supabase
+    const { data: existingStudent, error: checkError } = await supabase
       .from('students')
       .select('id')
       .eq('full_name', fullName.trim())
       .eq('school', school.trim())
       .eq('grade', grade.trim())
-      .limit(1);
+      .maybeSingle();
 
-    if (checkError && checkError.code !== 'PGRST116') {
+    if (checkError) {
       console.error('Error checking existing student:', checkError);
       return { error: 'Registration failed. Please try again.' };
     }
 
-    if (existingStudents && existingStudents.length > 0) {
+    if (existingStudent) {
       return { error: 'A student with these details already exists' };
     }
 
