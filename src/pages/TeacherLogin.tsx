@@ -21,6 +21,7 @@ const TeacherLogin = () => {
   // Redirect if already logged in
   useEffect(() => {
     if (teacher && !authLoading) {
+      console.log('Teacher already logged in, redirecting to dashboard');
       navigate("/teacher-dashboard", { replace: true });
     }
   }, [teacher, authLoading, navigate]);
@@ -50,23 +51,29 @@ const TeacherLogin = () => {
     setIsLoading(true);
 
     try {
+      console.log('TeacherLogin: Attempting login for:', email);
       const result = await teacherLogin(email, password);
 
       if (result.error) {
+        console.log('TeacherLogin: Login failed with error:', result.error);
         toast({
           title: "Login failed",
           description: result.error,
           variant: "destructive",
         });
       } else if (result.teacher) {
+        console.log('TeacherLogin: Login successful, navigating to dashboard');
         toast({
           title: "Welcome back!",
           description: "Login successful",
         });
-        navigate("/teacher-dashboard", { replace: true });
+        // Force navigation after successful login
+        setTimeout(() => {
+          navigate("/teacher-dashboard", { replace: true });
+        }, 100);
       }
     } catch (err) {
-      console.error('Login error:', err);
+      console.error('TeacherLogin: Login error:', err);
       toast({
         title: "Login failed",
         description: "An unexpected error occurred. Please try again.",
@@ -99,7 +106,9 @@ const TeacherLogin = () => {
     setIsLoading(true);
 
     try {
-      const result = await teacherLogin(email, password, name, school, role as 'teacher' | 'admin' | 'doctor');
+      // For signup, we need to use the signup service
+      const { signupTeacher } = await import('@/services/authIntegrationService');
+      const result = await signupTeacher(name, email, school, password, role);
 
       if (result.error) {
         toast({
@@ -108,6 +117,11 @@ const TeacherLogin = () => {
           variant: "destructive",
         });
       } else if (result.teacher) {
+        // Set teacher in context
+        const { setTeacher } = useAuth();
+        setTeacher(result.teacher);
+        localStorage.setItem('teacher', JSON.stringify(result.teacher));
+        
         toast({
           title: "Account created!",
           description: "Welcome to Lesson Lens!",

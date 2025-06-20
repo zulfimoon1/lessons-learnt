@@ -50,13 +50,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, []);
 
-  const teacherLogin = async (
-    email: string,
-    password: string,
-    name?: string,
-    school?: string,
-    role?: 'teacher' | 'admin' | 'doctor'
-  ) => {
+  const teacherLogin = async (email: string, password: string) => {
     try {
       console.log('AuthContext: Teacher login attempt for:', email);
       const result = await loginTeacher(email, password);
@@ -67,9 +61,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         localStorage.setItem('teacher', JSON.stringify(result.teacher));
         localStorage.removeItem('student');
         console.log('AuthContext: Teacher login successful');
+        return { teacher: result.teacher };
       }
       
-      return result;
+      console.log('AuthContext: Teacher login failed:', result.error);
+      return { error: result.error };
     } catch (error) {
       console.error('AuthContext: Teacher authentication error:', error);
       return { error: 'Authentication failed. Please try again.' };
@@ -87,9 +83,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         localStorage.setItem('student', JSON.stringify(result.student));
         localStorage.removeItem('teacher');
         console.log('AuthContext: Student login successful');
+        return { student: result.student };
       }
       
-      return result;
+      console.log('AuthContext: Student login failed:', result.error);
+      return { error: result.error };
     } catch (error) {
       console.error('AuthContext: Student authentication error:', error);
       return { error: 'Authentication failed. Please try again.' };
@@ -107,9 +105,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         localStorage.setItem('student', JSON.stringify(result.student));
         localStorage.removeItem('teacher');
         console.log('AuthContext: Student signup successful');
+        return { student: result.student };
       }
       
-      return result;
+      return { error: result.error };
     } catch (error) {
       console.error('AuthContext: Student signup error:', error);
       return { error: 'Signup failed. Please try again.' };

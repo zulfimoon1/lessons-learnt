@@ -11,18 +11,18 @@ import AuthHeader from "@/components/auth/AuthHeader";
 import SecureStudentLoginForm from "@/components/auth/SecureStudentLoginForm";
 import StudentSignupForm from "@/components/auth/StudentSignupForm";
 import SessionSecurityMonitor from "@/components/security/SessionSecurityMonitor";
-import { loginStudent, signupStudent } from "@/services/authIntegrationService";
 
 const SecureStudentLogin = () => {
   const { t } = useLanguage();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { student, isLoading: authLoading, setStudent } = useAuth();
+  const { student, isLoading: authLoading, studentLogin, setStudent } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
 
   // Redirect if already logged in
   useEffect(() => {
     if (student && !authLoading) {
+      console.log('Student already logged in, redirecting to dashboard');
       navigate("/student-dashboard", { replace: true });
     }
   }, [student, authLoading, navigate]);
@@ -52,25 +52,29 @@ const SecureStudentLogin = () => {
     setIsLoading(true);
 
     try {
-      const result = await loginStudent(fullName, school, grade, password);
+      console.log('SecureStudentLogin: Attempting login for:', { fullName, school, grade });
+      const result = await studentLogin(fullName, school, grade, password);
 
       if (result.error) {
+        console.log('SecureStudentLogin: Login failed with error:', result.error);
         toast({
           title: "Login failed",
           description: result.error,
           variant: "destructive",
         });
       } else if (result.student) {
-        // Set the student in auth context
-        setStudent(result.student);
+        console.log('SecureStudentLogin: Login successful, navigating to dashboard');
         toast({
           title: "Welcome back!",
           description: "Login successful",
         });
-        navigate("/student-dashboard", { replace: true });
+        // Force navigation after successful login
+        setTimeout(() => {
+          navigate("/student-dashboard", { replace: true });
+        }, 100);
       }
     } catch (err) {
-      console.error('Login error:', err);
+      console.error('SecureStudentLogin: Login error:', err);
       toast({
         title: "Login failed",
         description: "An unexpected error occurred. Please try again.",
@@ -103,6 +107,7 @@ const SecureStudentLogin = () => {
     setIsLoading(true);
 
     try {
+      const { signupStudent } = await import('@/services/authIntegrationService');
       const result = await signupStudent(fullName.trim(), school.trim(), grade.trim(), password);
 
       if (result.error) {
@@ -114,6 +119,8 @@ const SecureStudentLogin = () => {
       } else if (result.student) {
         // Set the student in auth context
         setStudent(result.student);
+        localStorage.setItem('student', JSON.stringify(result.student));
+        
         toast({
           title: "Account created!",
           description: "Welcome to Lesson Lens!",
