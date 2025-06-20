@@ -13,41 +13,41 @@ interface TeacherLoginFormProps {
 
 const TeacherLoginForm: React.FC<TeacherLoginFormProps> = ({ onLogin, isLoading }) => {
   const { t, language } = useLanguage();
-  const [loginData, setLoginData] = useState({
+  const [formData, setFormData] = useState({
     email: "",
     password: ""
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await onLogin(loginData.email, loginData.password);
+    await onLogin(formData.email, formData.password);
   };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="space-y-2">
-        <Label htmlFor="loginEmail" className="flex items-center gap-2">
+        <Label htmlFor="email" className="flex items-center gap-2">
           <Mail className="w-4 h-4" />
           {t('auth.email')}
         </Label>
         <Input
-          id="loginEmail"
+          id="email"
           type="email"
           placeholder={language === 'lt' ? 'mokytojas@mokykla.lt' : 'teacher@school.com'}
-          value={loginData.email}
-          onChange={(e) => setLoginData(prev => ({ ...prev, email: e.target.value }))}
+          value={formData.email}
+          onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
           required
         />
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="loginPassword">{t('auth.password')}</Label>
+        <Label htmlFor="password">{t('auth.password')}</Label>
         <Input
-          id="loginPassword"
+          id="password"
           type="password"
           placeholder={language === 'lt' ? 'Įveskite slaptažodį' : 'Enter your password'}
-          value={loginData.password}
-          onChange={(e) => setLoginData(prev => ({ ...prev, password: e.target.value }))}
+          value={formData.password}
+          onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
           required
         />
       </div>
