@@ -1,11 +1,12 @@
+
 import { supabase } from '@/integrations/supabase/client';
 
 export const authenticateTeacher = async (email: string, password: string) => {
   try {
     console.log('🔐 Starting teacher authentication for:', email);
     
-    // Use the authenticate_teacher RPC function that bypasses RLS
-    const { data, error } = await supabase.rpc('authenticate_teacher', {
+    // Use the authenticate_teacher_complete RPC function that bypasses RLS
+    const { data, error } = await supabase.rpc('authenticate_teacher_complete', {
       email_param: email.toLowerCase().trim(),
       password_param: password
     });
@@ -22,18 +23,24 @@ export const authenticateTeacher = async (email: string, password: string) => {
       return { error: 'Invalid email or password' };
     }
 
-    const teacher = data[0];
-    console.log('Teacher found:', { id: teacher.teacher_id, name: teacher.teacher_name, email: teacher.teacher_email });
+    const result = data[0];
+    
+    // Check if authentication was successful
+    if (!result.success) {
+      console.log('Teacher authentication failed:', result.error_message);
+      return { error: result.error_message || 'Invalid email or password' };
+    }
 
-    // For now, just verify the teacher exists (password checking can be added later)
+    console.log('Teacher found:', { id: result.teacher_id, name: result.teacher_name, email: result.teacher_email });
+
     console.log('✅ Teacher authentication successful');
     return {
       teacher: {
-        id: teacher.teacher_id,
-        name: teacher.teacher_name,
-        email: teacher.teacher_email,
-        school: teacher.teacher_school,
-        role: teacher.teacher_role as 'teacher' | 'admin' | 'doctor'
+        id: result.teacher_id,
+        name: result.teacher_name,
+        email: result.teacher_email,
+        school: result.teacher_school,
+        role: result.teacher_role as 'teacher' | 'admin' | 'doctor'
       }
     };
 
@@ -47,8 +54,8 @@ export const authenticateStudent = async (fullName: string, school: string, grad
   try {
     console.log('🔐 Starting student authentication for:', { fullName, school, grade });
     
-    // Use the authenticate_student RPC function that bypasses RLS
-    const { data, error } = await supabase.rpc('authenticate_student', {
+    // Use the authenticate_student_complete RPC function that bypasses RLS
+    const { data, error } = await supabase.rpc('authenticate_student_complete', {
       name_param: fullName.trim(),
       school_param: school.trim(),
       grade_param: grade.trim(),  
@@ -67,17 +74,23 @@ export const authenticateStudent = async (fullName: string, school: string, grad
       return { error: 'Invalid credentials' };
     }
 
-    const student = data[0];
-    console.log('Student found:', { id: student.student_id, name: student.student_name });
+    const result = data[0];
+    
+    // Check if authentication was successful
+    if (!result.success) {
+      console.log('Student authentication failed:', result.error_message);
+      return { error: result.error_message || 'Invalid credentials' };
+    }
 
-    // For now, just verify the student exists (password checking can be added later)
+    console.log('Student found:', { id: result.student_id, name: result.student_name });
+
     console.log('✅ Student authentication successful');
     return {
       student: {
-        id: student.student_id,
-        full_name: student.student_name,
-        school: student.student_school,
-        grade: student.student_grade
+        id: result.student_id,
+        full_name: result.student_name,
+        school: result.student_school,
+        grade: result.student_grade
       }
     };
 
