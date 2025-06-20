@@ -8,7 +8,7 @@ export const useTeacherAuth = () => {
 
   const login = async (email: string, password: string) => {
     try {
-      console.log('useTeacherAuth: Starting login process with email:', email);
+      console.log('useTeacherAuth: Starting mock login process with email:', email);
       
       // Enhanced input validation
       if (!email?.trim() || !password?.trim()) {
@@ -21,11 +21,9 @@ export const useTeacherAuth = () => {
         return { error: 'Please enter a valid email address' };
       }
       
+      // Call the mock service - this will always succeed
       const result = await teacherEmailLoginService(email.trim(), password);
-      console.log('useTeacherAuth: Login service result', { 
-        success: !!result.teacher, 
-        error: result.error 
-      });
+      console.log('useTeacherAuth: Mock login service result:', result);
       
       if (result.teacher) {
         // Ensure role is properly typed
@@ -54,14 +52,14 @@ export const useTeacherAuth = () => {
       
       return { error: result.error || 'Login failed. Please check your credentials.' };
     } catch (error) {
-      console.error('useTeacherAuth: Unexpected error:', error);
+      console.error('useTeacherAuth: Mock login error:', error);
       return { error: 'Login failed. Please check your connection and try again.' };
     }
   };
 
   const signup = async (name: string, email: string, school: string, password: string, role: 'teacher' | 'admin' | 'doctor' = 'teacher') => {
     try {
-      console.log('useTeacherAuth: Starting signup process for:', name);
+      console.log('useTeacherAuth: Starting mock signup process for:', name);
       
       // Enhanced input validation
       if (!name?.trim() || !email?.trim() || !school?.trim() || !password?.trim()) {
@@ -79,11 +77,9 @@ export const useTeacherAuth = () => {
         return { error: 'Password must be at least 4 characters long' };
       }
       
+      // Call the mock service - this will always succeed
       const result = await teacherSignupService(name.trim(), email.trim(), school.trim(), password, role);
-      console.log('useTeacherAuth: Signup service result', { 
-        success: !!result.teacher, 
-        error: result.error 
-      });
+      console.log('useTeacherAuth: Mock signup service result:', result);
       
       if (result.teacher) {
         // Ensure role is properly typed
@@ -112,7 +108,7 @@ export const useTeacherAuth = () => {
       
       return { error: result.error || 'Signup failed. Please try again.' };
     } catch (error) {
-      console.error('useTeacherAuth: Unexpected signup error:', error);
+      console.error('useTeacherAuth: Mock signup error:', error);
       return { error: 'Signup failed. Please check your connection and try again.' };
     }
   };

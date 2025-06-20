@@ -8,25 +8,22 @@ export const useStudentAuth = () => {
 
   const login = async (fullName: string, school: string, grade: string, password: string) => {
     try {
-      console.log('useStudentAuth: Starting login process for:', { fullName, school, grade });
+      console.log('useStudentAuth: Starting mock login process for:', { fullName, school, grade });
       
       // Basic input validation
       if (!fullName?.trim() || !school?.trim() || !grade?.trim() || !password?.trim()) {
         return { error: 'All fields are required' };
       }
 
-      // Call the service with just fullName and password for mock login
+      // Call the mock service - this will always succeed
       const result = await studentSimpleLoginService(fullName.trim(), password.trim());
-      console.log('useStudentAuth: Login service result:', { 
-        success: !!result.student, 
-        hasError: 'error' in result 
-      });
+      console.log('useStudentAuth: Mock login service result:', result);
       
       if (result.student) {
-        // Use the provided school and grade since mock student has generic values
+        // Create student data using the provided form data (not mock data)
         const studentData: Student = {
           id: result.student.id,
-          full_name: result.student.full_name,
+          full_name: fullName.trim(),
           school: school.trim(),
           grade: grade.trim()
         };
@@ -46,16 +43,16 @@ export const useStudentAuth = () => {
         return { student: studentData };
       }
       
-      return { error: 'error' in result ? result.error : 'Login failed. Please check your credentials.' };
+      return { error: result.error || 'Login failed. Please check your credentials.' };
     } catch (error) {
-      console.error('useStudentAuth: Unexpected error:', error);
+      console.error('useStudentAuth: Mock login error:', error);
       return { error: 'Login failed. Please check your connection and try again.' };
     }
   };
 
   const signup = async (fullName: string, school: string, grade: string, password: string) => {
     try {
-      console.log('useStudentAuth: Starting signup process for:', { fullName, school, grade });
+      console.log('useStudentAuth: Starting mock signup process for:', { fullName, school, grade });
       
       // Basic input validation
       if (!fullName?.trim() || !school?.trim() || !grade?.trim() || !password?.trim()) {
@@ -67,11 +64,9 @@ export const useStudentAuth = () => {
         return { error: 'Password must be at least 4 characters long' };
       }
       
+      // Call the mock service - this will always succeed
       const result = await studentSignupService(fullName.trim(), school.trim(), grade.trim(), password);
-      console.log('useStudentAuth: Signup service result:', { 
-        success: !!result.student, 
-        hasError: 'error' in result 
-      });
+      console.log('useStudentAuth: Mock signup service result:', result);
       
       if (result.student) {
         const studentData: Student = {
@@ -96,9 +91,9 @@ export const useStudentAuth = () => {
         return { student: studentData };
       }
       
-      return { error: 'error' in result ? result.error : 'Signup failed. Please try again.' };
+      return { error: result.error || 'Signup failed. Please try again.' };
     } catch (error) {
-      console.error('useStudentAuth: Unexpected signup error:', error);
+      console.error('useStudentAuth: Mock signup error:', error);
       return { error: 'Signup failed. Please check your connection and try again.' };
     }
   };
