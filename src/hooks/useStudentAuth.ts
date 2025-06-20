@@ -41,7 +41,7 @@ export const useStudentAuth = () => {
         
         setStudent(studentData);
         
-        // Store student data in localStorage - simplified storage
+        // Store student data in localStorage
         try {
           localStorage.setItem('student', JSON.stringify(studentData));
           localStorage.removeItem('teacher');
@@ -91,7 +91,7 @@ export const useStudentAuth = () => {
         
         setStudent(studentData);
         
-        // Store student data in localStorage - simplified storage
+        // Store student data in localStorage
         try {
           localStorage.setItem('student', JSON.stringify(studentData));
           localStorage.removeItem('teacher');
