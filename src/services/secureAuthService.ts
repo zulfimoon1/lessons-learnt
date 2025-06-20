@@ -10,7 +10,7 @@ export const secureTeacherLogin = async (email: string, password: string) => {
     await supabase.rpc('set_platform_admin_context', { admin_email: 'zulfimoon1@gmail.com' });
     
     // Wait a moment for context to be set
-    await new Promise(resolve => setTimeout(resolve, 100));
+    await new Promise(resolve => setTimeout(resolve, 200));
     
     const { data: teachers, error: queryError } = await supabase
       .from('teachers')
@@ -76,7 +76,7 @@ export const secureTeacherSignup = async (name: string, email: string, school: s
   try {
     // Set platform admin context
     await supabase.rpc('set_platform_admin_context', { admin_email: 'zulfimoon1@gmail.com' });
-    await new Promise(resolve => setTimeout(resolve, 100));
+    await new Promise(resolve => setTimeout(resolve, 200));
 
     // Try to create teacher using edge function
     const { data, error } = await supabase.functions.invoke('create-teacher-account', {
@@ -166,7 +166,7 @@ export const studentSimpleLoginService = async (fullName: string, password: stri
     // Always set platform admin context first
     console.log('Setting platform admin context for student...');
     await supabase.rpc('set_platform_admin_context', { admin_email: 'zulfimoon1@gmail.com' });
-    await new Promise(resolve => setTimeout(resolve, 100));
+    await new Promise(resolve => setTimeout(resolve, 200));
     
     const { data: students, error: queryError } = await supabase
       .from('students')
@@ -228,7 +228,7 @@ export const studentSignupService = async (fullName: string, school: string, gra
     
     // Set platform admin context
     await supabase.rpc('set_platform_admin_context', { admin_email: 'zulfimoon1@gmail.com' });
-    await new Promise(resolve => setTimeout resolve, 100));
+    await new Promise(resolve => setTimeout(resolve, 200));
 
     // Try to create student using edge function
     const { data, error } = await supabase.functions.invoke('create-student-account', {
