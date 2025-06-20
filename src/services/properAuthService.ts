@@ -1,5 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
+import bcrypt from 'bcryptjs';
 
 export const authenticateTeacher = async (email: string, password: string) => {
   try {
@@ -23,7 +24,22 @@ export const authenticateTeacher = async (email: string, password: string) => {
 
     const result = data[0];
     
-    if (!result.password_valid) {
+    // Get the teacher data from the database directly
+    const { data: teacherData, error: teacherError } = await supabase
+      .from('teachers')
+      .select('*')
+      .eq('email', email.toLowerCase().trim())
+      .single();
+
+    if (teacherError || !teacherData) {
+      console.log('Teacher not found:', teacherError);
+      return { error: 'Invalid email or password' };
+    }
+
+    // Verify password using bcrypt
+    const isPasswordValid = await bcrypt.compare(password, teacherData.password_hash);
+    
+    if (!isPasswordValid) {
       console.log('Authentication failed: Invalid password');
       return { error: 'Invalid email or password' };
     }
@@ -31,11 +47,11 @@ export const authenticateTeacher = async (email: string, password: string) => {
     console.log('✅ Teacher authentication successful');
     return {
       teacher: {
-        id: result.teacher_id,
-        name: result.teacher_name,
-        email: result.teacher_email,
-        school: result.teacher_school,
-        role: result.teacher_role as 'teacher' | 'admin' | 'doctor'
+        id: teacherData.id,
+        name: teacherData.name,
+        email: teacherData.email,
+        school: teacherData.school,
+        role: teacherData.role as 'teacher' | 'admin' | 'doctor'
       }
     };
 
@@ -49,27 +65,24 @@ export const authenticateStudent = async (fullName: string, school: string, grad
   try {
     console.log('🔐 Starting student authentication for:', { fullName, school, grade });
     
-    // Use the existing authenticate_student function
-    const { data, error } = await supabase.rpc('authenticate_student', {
-      name_param: fullName.trim(),
-      school_param: school.trim(),
-      grade_param: grade.trim(),
-      password_param: password
-    });
+    // Get the student data from the database directly
+    const { data: studentData, error: studentError } = await supabase
+      .from('students')
+      .select('*')
+      .eq('full_name', fullName.trim())
+      .eq('school', school.trim())
+      .eq('grade', grade.trim())
+      .single();
 
-    if (error) {
-      console.error('Student authentication RPC error:', error);
-      return { error: 'Authentication failed - server error' };
-    }
-
-    if (!data || !Array.isArray(data) || data.length === 0) {
-      console.log('No data returned from student authentication');
+    if (studentError || !studentData) {
+      console.log('Student not found:', studentError);
       return { error: 'Invalid credentials' };
     }
 
-    const result = data[0];
+    // Verify password using bcrypt
+    const isPasswordValid = await bcrypt.compare(password, studentData.password_hash);
     
-    if (!result.password_valid) {
+    if (!isPasswordValid) {
       console.log('Student authentication failed: Invalid password');
       return { error: 'Invalid credentials' };
     }
@@ -77,10 +90,10 @@ export const authenticateStudent = async (fullName: string, school: string, grad
     console.log('✅ Student authentication successful');
     return {
       student: {
-        id: result.student_id,
-        full_name: result.student_name,
-        school: result.student_school,
-        grade: result.student_grade
+        id: studentData.id,
+        full_name: studentData.full_name,
+        school: studentData.school,
+        grade: studentData.grade
       }
     };
 
@@ -94,6 +107,10 @@ export const registerTeacher = async (name: string, email: string, school: strin
   try {
     console.log('📝 Starting teacher registration for:', { name, email, school, role });
     
+    // Hash the password
+    const saltRounds = 12;
+    const hashedPassword = await bcrypt.hash(password, saltRounds);
+    
     // Use a simple insert since we don't have a registration RPC function
     const { data: newTeacher, error: insertError } = await supabase
       .from('teachers')
@@ -102,7 +119,7 @@ export const registerTeacher = async (name: string, email: string, school: strin
         email: email.toLowerCase().trim(),
         school: school.trim(),
         role: role,
-        password_hash: password // For now, store as plain text - this should be hashed in production
+        password_hash: hashedPassword
       })
       .select()
       .single();
@@ -136,6 +153,10 @@ export const registerStudent = async (fullName: string, school: string, grade: s
   try {
     console.log('📝 Starting student registration for:', { fullName, school, grade });
     
+    // Hash the password
+    const saltRounds = 12;
+    const hashedPassword = await bcrypt.hash(password, saltRounds);
+    
     // Use a simple insert since we don't have a registration RPC function
     const { data: newStudent, error: insertError } = await supabase
       .from('students')
@@ -143,7 +164,7 @@ export const registerStudent = async (fullName: string, school: string, grade: s
         full_name: fullName.trim(),
         school: school.trim(),
         grade: grade.trim(),
-        password_hash: password // For now, store as plain text - this should be hashed in production
+        password_hash: hashedPassword
       })
       .select()
       .single();
