@@ -144,10 +144,10 @@ const AdminDashboard = () => {
   const handleLogout = () => {
     try {
       clearAuth();
-      window.location.href = '/teacher-login';
+      navigate('/teacher-login');
     } catch (error) {
       console.error('Logout error:', error);
-      window.location.href = '/teacher-login';
+      navigate('/teacher-login');
     }
   };
 
@@ -169,8 +169,11 @@ const AdminDashboard = () => {
   const regularTeachers = teachers.filter(t => t.role === 'teacher');
   const doctors = teachers.filter(t => t.role === 'doctor');
 
+  // Check if this is a demo admin - look for 'demo' in school name (case insensitive)
+  const isDemoAdmin = teacher?.school?.toLowerCase().includes('demo') || false;
+  console.log('Demo admin check:', { school: teacher?.school, isDemoAdmin });
+  
   // For demo admin, always show subscription as active to allow invites
-  const isDemoAdmin = teacher?.school === 'demo school';
   const effectiveSubscription = isDemoAdmin ? { id: 'demo-subscription', status: 'active' } : subscription;
 
   return (
@@ -183,7 +186,7 @@ const AdminDashboard = () => {
       />
 
       <main className="max-w-7xl mx-auto p-6 space-y-6">
-        {!effectiveSubscription && (
+        {!effectiveSubscription && !isDemoAdmin && (
           <Card className="border-yellow-200 bg-yellow-50">
             <CardHeader>
               <CardTitle className="text-yellow-800">{t('admin.subscription') || 'Subscription Required'}</CardTitle>

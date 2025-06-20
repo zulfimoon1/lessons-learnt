@@ -1,56 +1,104 @@
-
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { CalendarIcon, UserIcon, AlertTriangleIcon } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Calendar, User, School, BookOpen, Heart, Brain } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { useLanguage } from "@/contexts/LanguageContext";
-import Breadcrumbs from "@/components/navigation/Breadcrumbs";
+import { useToast } from "@/hooks/use-toast";
 
 interface WeeklySummary {
   id: string;
-  student_id: string | null;
   student_name: string;
   school: string;
   grade: string;
-  emotional_concerns: string | null;
-  academic_concerns: string | null;
   week_start_date: string;
+  academic_concerns: string;
+  emotional_concerns: string;
   submitted_at: string;
 }
 
-interface WeeklySummaryReviewProps {
-  school: string;
-}
-
-const WeeklySummaryReview = ({ school }: WeeklySummaryReviewProps) => {
+const WeeklySummaryReview = () => {
   const [summaries, setSummaries] = useState<WeeklySummary[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [selectedSummary, setSelectedSummary] = useState<WeeklySummary | null>(null);
+  const [responseText, setResponseText] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
-  const { t } = useLanguage();
 
   useEffect(() => {
-    loadWeeklySummaries();
-  }, [school]);
+    loadSummaries();
+  }, []);
 
-  const loadWeeklySummaries = async () => {
+  const loadSummaries = async () => {
+    setIsLoading(true);
     try {
       const { data, error } = await supabase
         .from('weekly_summaries')
         .select('*')
-        .eq('school', school)
-        .order('submitted_at', { ascending: false })
-        .limit(50);
+        .order('submitted_at', { ascending: false });
 
-      if (error) throw error;
-      setSummaries(data || []);
-    } catch (error) {
-      console.error('Error loading weekly summaries:', error);
+      if (error) {
+        console.error("Error loading summaries:", error);
+        toast({
+          title: "Error",
+          description: "Failed to load weekly summaries",
+          variant: "destructive",
+        });
+      } else {
+        setSummaries(data || []);
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSummarySelect = (summary: WeeklySummary) => {
+    setSelectedSummary(summary);
+    setResponseText(''); // Clear response text when selecting a new summary
+  };
+
+  const handleResponseChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setResponseText(e.target.value);
+  };
+
+  const handleSubmitResponse = async () => {
+    if (!selectedSummary) {
       toast({
-        title: t('common.error'),
-        description: t('teacher.failedToLoadSummaries'),
+        title: "Error",
+        description: "No summary selected",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!responseText.trim()) {
+      toast({
+        title: "Error",
+        description: "Response cannot be empty",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      // Simulate sending a response (replace with actual logic)
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      toast({
+        title: "Response Sent",
+        description: `Response sent to ${selectedSummary.student_name}`,
+      });
+
+      // Clear selected summary and response text
+      setSelectedSummary(null);
+      setResponseText('');
+    } catch (error) {
+      console.error("Error sending response:", error);
+      toast({
+        title: "Error",
+        description: "Failed to send response",
         variant: "destructive",
       });
     } finally {
@@ -58,132 +106,97 @@ const WeeklySummaryReview = ({ school }: WeeklySummaryReviewProps) => {
     }
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString();
-  };
-
-  const getWeekRange = (weekStartDate: string) => {
-    const start = new Date(weekStartDate);
-    const end = new Date(start);
-    end.setDate(start.getDate() + 6);
-    return `${start.toLocaleDateString()} - ${end.toLocaleDateString()}`;
-  };
-
-  const hasConcerns = (summary: WeeklySummary) => {
-    return summary.emotional_concerns || summary.academic_concerns;
-  };
-
-  const breadcrumbItems = [
-    { label: t('teacher.dashboard'), href: '/teacher' },
-    { label: t('dashboard.weeklySummaries'), current: true }
-  ];
-
-  if (isLoading) {
-    return (
-      <div className="p-6">
-        <Breadcrumbs items={breadcrumbItems} />
-        <div className="flex items-center justify-center py-8">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="p-6">
-      <Breadcrumbs items={breadcrumbItems} />
-      
-      <Card className="border-green-100">
+    <div className="space-y-6">
+      <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <CalendarIcon className="w-5 h-5" />
-            {t('dashboard.weeklySummaries')}
+            <BookOpen className="w-5 h-5 text-blue-500" />
+            Weekly Summary Review
           </CardTitle>
           <CardDescription>
-            {t('teacher.reviewStudentSummaries')} {school}
+            Review and respond to weekly summaries submitted by students
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            {summaries.map((summary) => (
-              <div 
-                key={summary.id} 
-                className={`p-4 border rounded-lg ${
-                  hasConcerns(summary) ? 'border-orange-200 bg-orange-50' : 'border-gray-200'
-                }`}
-              >
-                <div className="flex justify-between items-start mb-3">
-                  <div className="flex items-center gap-2">
-                    <UserIcon className="w-4 h-4 text-gray-500" />
-                    <span className="font-medium">
-                      {summary.student_name}
-                    </span>
-                    <Badge variant="outline">{summary.grade}</Badge>
-                    {hasConcerns(summary) && (
-                      <Badge variant="destructive" className="flex items-center gap-1">
-                        <AlertTriangleIcon className="w-3 h-3" />
-                        {t('teacher.needsAttention')}
-                      </Badge>
-                    )}
-                  </div>
-                  <div className="text-right text-sm text-gray-500">
-                    <div>{getWeekRange(summary.week_start_date)}</div>
-                    <div>{t('teacher.submitted')}: {formatDate(summary.submitted_at)}</div>
-                  </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Summary List */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold">Weekly Summaries</h3>
+              {isLoading ? (
+                <p>Loading summaries...</p>
+              ) : (
+                <div className="space-y-2">
+                  {summaries.length === 0 ? (
+                    <p>No summaries found.</p>
+                  ) : (
+                    summaries.map((summary) => (
+                      <Button
+                        key={summary.id}
+                        variant={selectedSummary?.id === summary.id ? "secondary" : "outline"}
+                        className="w-full justify-start"
+                        onClick={() => handleSummarySelect(summary)}
+                      >
+                        <div className="flex items-center gap-2">
+                          <User className="w-4 h-4" />
+                          {summary.student_name}
+                        </div>
+                      </Button>
+                    ))
+                  )}
                 </div>
-
-                {summary.emotional_concerns && (
-                  <div className="mb-3">
-                    <h4 className="font-medium text-sm text-pink-700 mb-1">
-                      {t('weekly.emotional')}:
-                    </h4>
-                    <p className="text-gray-700 text-sm bg-white p-2 rounded border">
-                      {summary.emotional_concerns}
-                    </p>
-                  </div>
-                )}
-
-                {summary.academic_concerns && (
-                  <div>
-                    <h4 className="font-medium text-sm text-blue-700 mb-1">
-                      {t('weekly.academic')}:
-                    </h4>
-                    <p className="text-gray-700 text-sm bg-white p-2 rounded border">
-                      {summary.academic_concerns}
-                    </p>
-                  </div>
-                )}
-
-                {!hasConcerns(summary) && (
-                  <p className="text-gray-500 text-sm italic">
-                    {t('teacher.noSpecificConcerns')}
-                  </p>
-                )}
-              </div>
-            ))}
-
-            {summaries.length === 0 && (
-              <div className="text-center py-8">
-                <CalendarIcon className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-                <p className="text-gray-500">{t('teacher.noWeeklySummaries')}</p>
-                <p className="text-sm text-gray-400 mt-2">
-                  {t('teacher.summariesWillAppearHere')}
-                </p>
-              </div>
-            )}
-          </div>
-
-          {summaries.length > 0 && (
-            <div className="mt-6 pt-4 border-t border-gray-200">
-              <Button
-                onClick={loadWeeklySummaries}
-                variant="outline"
-                className="w-full"
-              >
-                {t('common.refresh')}
-              </Button>
+              )}
             </div>
-          )}
+
+            {/* Response Form */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold">Response</h3>
+              {selectedSummary ? (
+                <div className="space-y-2">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                    <div>
+                      <span className="text-sm font-medium">Student:</span>
+                      <p className="text-sm">{selectedSummary.student_name}</p>
+                    </div>
+                    <div>
+                      <span className="text-sm font-medium">School:</span>
+                      <p className="text-sm">{selectedSummary.school}</p>
+                    </div>
+                    <div>
+                      <span className="text-sm font-medium">Grade:</span>
+                      <p className="text-sm">{selectedSummary.grade}</p>
+                    </div>
+                    <div>
+                      <span className="text-sm font-medium">Week Start:</span>
+                      <p className="text-sm">{selectedSummary.week_start_date}</p>
+                    </div>
+                  </div>
+                  <div>
+                    <span className="text-sm font-medium">Academic Concerns:</span>
+                    <p className="text-sm">{selectedSummary.academic_concerns || 'None'}</p>
+                  </div>
+                  <div>
+                    <span className="text-sm font-medium">Emotional Concerns:</span>
+                    <p className="text-sm">{selectedSummary.emotional_concerns || 'None'}</p>
+                  </div>
+                  <div>
+                    <Label htmlFor="response">Your Response</Label>
+                    <Textarea
+                      id="response"
+                      placeholder="Enter your response here"
+                      value={responseText}
+                      onChange={handleResponseChange}
+                    />
+                  </div>
+                  <Button onClick={handleSubmitResponse} disabled={isLoading} className="w-full">
+                    {isLoading ? "Sending..." : "Send Response"}
+                  </Button>
+                </div>
+              ) : (
+                <p>Select a summary to view and respond.</p>
+              )}
+            </div>
+          </div>
         </CardContent>
       </Card>
     </div>

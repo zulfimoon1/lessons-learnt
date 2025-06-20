@@ -15,7 +15,32 @@ export const useStudentAuth = () => {
         return { error: 'All fields are required' };
       }
 
-      // Call the proper authentication service
+      // Special handling for demo student
+      if (fullName.toLowerCase().includes('demo') && school.toLowerCase().includes('demo') && grade.toLowerCase().includes('5')) {
+        console.log('Demo student detected, creating/authenticating demo student');
+        const demoStudent: Student = {
+          id: 'demo-student-id',
+          full_name: 'demo student',
+          school: 'demo school',
+          grade: 'grade 5'
+        };
+        
+        setStudent(demoStudent);
+        
+        // Store student data in localStorage
+        try {
+          localStorage.setItem('student', JSON.stringify(demoStudent));
+          localStorage.removeItem('teacher');
+          localStorage.removeItem('platformAdmin');
+          console.log('useStudentAuth: Demo student data saved successfully');
+        } catch (storageError) {
+          console.warn('useStudentAuth: Failed to save demo student data to localStorage:', storageError);
+        }
+        
+        return { student: demoStudent };
+      }
+
+      // Call the proper authentication service for non-demo students
       const result = await authenticateStudent(fullName, school, grade, password);
       
       if (result.student) {

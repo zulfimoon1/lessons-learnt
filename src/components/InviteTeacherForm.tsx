@@ -22,10 +22,14 @@ const InviteTeacherForm = ({ school, subscriptionId, hasActiveSubscription, onIn
   const { toast } = useToast();
   const navigate = useNavigate();
 
+  // Check if this is a demo school
+  const isDemoSchool = school?.toLowerCase().includes('demo') || false;
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!hasActiveSubscription) {
+    // Allow demo schools to bypass subscription check
+    if (!hasActiveSubscription && !isDemoSchool) {
       toast({
         title: "Subscription Required",
         description: "You need an active subscription to invite teachers.",
@@ -45,9 +49,22 @@ const InviteTeacherForm = ({ school, subscriptionId, hasActiveSubscription, onIn
 
     setIsLoading(true);
     try {
-      console.log('Creating invitation for:', { email, school, subscriptionId });
+      console.log('Creating invitation for:', { email, school, subscriptionId, isDemoSchool });
 
-      // Create invitation record
+      // For demo schools, create a mock invitation
+      if (isDemoSchool) {
+        // Simulate successful invitation for demo
+        toast({
+          title: "Demo Invitation Created",
+          description: `Demo invitation sent to ${email}. In a real environment, this would send an actual email invitation.`,
+          variant: "default",
+        });
+        setEmail('');
+        onInviteSent?.();
+        return;
+      }
+
+      // Create invitation record for real schools
       const { data: invitation, error: inviteError } = await supabase
         .from('invitations')
         .insert({
@@ -104,7 +121,7 @@ const InviteTeacherForm = ({ school, subscriptionId, hasActiveSubscription, onIn
     }
   };
 
-  if (!hasActiveSubscription) {
+  if (!hasActiveSubscription && !isDemoSchool) {
     return (
       <Card>
         <CardHeader>
@@ -134,9 +151,11 @@ const InviteTeacherForm = ({ school, subscriptionId, hasActiveSubscription, onIn
         <CardTitle className="flex items-center gap-2">
           <UserPlusIcon className="w-5 h-5" />
           Invite Teacher
+          {isDemoSchool && <Badge variant="secondary">Demo Mode</Badge>}
         </CardTitle>
         <CardDescription>
           Send an invitation to a teacher to join {school}
+          {isDemoSchool && " (Demo mode - no actual emails will be sent)"}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -153,7 +172,7 @@ const InviteTeacherForm = ({ school, subscriptionId, hasActiveSubscription, onIn
             />
           </div>
           <Button type="submit" disabled={isLoading} className="w-full">
-            {isLoading ? 'Sending Invitation...' : 'Send Invitation'}
+            {isLoading ? 'Sending Invitation...' : isDemoSchool ? 'Send Demo Invitation' : 'Send Invitation'}
           </Button>
         </form>
       </CardContent>
