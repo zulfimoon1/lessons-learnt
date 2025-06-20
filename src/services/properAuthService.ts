@@ -6,25 +6,33 @@ export const authenticateTeacher = async (email: string, password: string) => {
   try {
     console.log('🔐 Starting teacher authentication for:', email);
     
-    // Use a direct query with service role privileges bypassing RLS
-    const { data: teachers, error: queryError } = await supabase
-      .rpc('get_platform_stats', { stat_type: 'teachers' })
-      .then(async () => {
-        // If the RPC works, we have elevated access, now query directly
-        return await supabase
-          .from('teachers')
-          .select('*')
-          .eq('email', email.toLowerCase().trim())
-          .limit(1);
-      })
-      .catch(async () => {
-        // If RPC fails, try direct query anyway
-        return await supabase
-          .from('teachers')
-          .select('*')
-          .eq('email', email.toLowerCase().trim())
-          .limit(1);
-      });
+    // Try to use RPC to test elevated access, then query teachers table
+    let teachers, queryError;
+    
+    try {
+      // Test if we have elevated access via RPC
+      await supabase.rpc('get_platform_stats', { stat_type: 'teachers' });
+      
+      // If RPC works, we have elevated access, now query directly
+      const result = await supabase
+        .from('teachers')
+        .select('*')
+        .eq('email', email.toLowerCase().trim())
+        .limit(1);
+      
+      teachers = result.data;
+      queryError = result.error;
+    } catch (rpcError) {
+      // If RPC fails, try direct query anyway
+      const result = await supabase
+        .from('teachers')
+        .select('*')
+        .eq('email', email.toLowerCase().trim())
+        .limit(1);
+      
+      teachers = result.data;
+      queryError = result.error;
+    }
 
     console.log('Teacher query result:', { teachers, queryError });
 
