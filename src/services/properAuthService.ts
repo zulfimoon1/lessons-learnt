@@ -5,8 +5,8 @@ export const authenticateTeacher = async (email: string, password: string) => {
   try {
     console.log('🔐 Starting teacher authentication for:', email);
     
-    // Use the authenticate_teacher_complete function which bypasses RLS
-    const { data, error } = await supabase.rpc('authenticate_teacher_complete', {
+    // Use the authenticate_teacher function which is properly typed
+    const { data, error } = await supabase.rpc('authenticate_teacher', {
       email_param: email.toLowerCase().trim(),
       password_param: password
     });
@@ -18,26 +18,28 @@ export const authenticateTeacher = async (email: string, password: string) => {
       return { error: 'Authentication failed - server error' };
     }
 
-    if (!data || data.length === 0) {
+    // Handle array response
+    const teacherData = Array.isArray(data) ? data[0] : data;
+    
+    if (!teacherData) {
       console.log('No teacher found or authentication failed');
       return { error: 'Invalid email or password' };
     }
 
-    const result = data[0];
-    
-    if (!result.success) {
-      console.log('Authentication failed:', result.error_message);
-      return { error: result.error_message || 'Invalid email or password' };
+    // Check if password is valid
+    if (!teacherData.password_valid) {
+      console.log('Invalid password for teacher:', email);
+      return { error: 'Invalid email or password' };
     }
 
     console.log('✅ Teacher authentication successful');
     return {
       teacher: {
-        id: result.teacher_id,
-        name: result.teacher_name,
-        email: result.teacher_email,
-        school: result.teacher_school,
-        role: result.teacher_role as 'teacher' | 'admin' | 'doctor'
+        id: teacherData.teacher_id,
+        name: teacherData.teacher_name,
+        email: teacherData.teacher_email,
+        school: teacherData.teacher_school,
+        role: teacherData.teacher_role as 'teacher' | 'admin' | 'doctor'
       }
     };
 
@@ -51,8 +53,8 @@ export const authenticateStudent = async (fullName: string, school: string, grad
   try {
     console.log('🔐 Starting student authentication for:', { fullName, school, grade });
     
-    // Use the authenticate_student_complete function which bypasses RLS
-    const { data, error } = await supabase.rpc('authenticate_student_complete', {
+    // Use the authenticate_student function which is properly typed
+    const { data, error } = await supabase.rpc('authenticate_student', {
       name_param: fullName.trim(),
       school_param: school.trim(),
       grade_param: grade.trim(),
@@ -66,25 +68,27 @@ export const authenticateStudent = async (fullName: string, school: string, grad
       return { error: 'Authentication failed - server error' };
     }
 
-    if (!data || data.length === 0) {
+    // Handle array response
+    const studentData = Array.isArray(data) ? data[0] : data;
+    
+    if (!studentData) {
       console.log('No student found or authentication failed');
       return { error: 'Invalid credentials' };
     }
 
-    const result = data[0];
-    
-    if (!result.success) {
-      console.log('Student authentication failed:', result.error_message);
-      return { error: result.error_message || 'Invalid credentials' };
+    // Check if password is valid
+    if (!studentData.password_valid) {
+      console.log('Invalid password for student:', fullName);
+      return { error: 'Invalid credentials' };
     }
 
     console.log('✅ Student authentication successful');
     return {
       student: {
-        id: result.student_id,
-        full_name: result.student_name,
-        school: result.student_school,
-        grade: result.student_grade
+        id: studentData.student_id,
+        full_name: studentData.student_name,
+        school: studentData.student_school,
+        grade: studentData.student_grade
       }
     };
 
