@@ -1,7 +1,106 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { secureTeacherLogin, secureTeacherSignup } from './secureAuthService';
-import { secureStudentLogin, secureStudentSignup } from './secureStudentAuthService';
+import bcrypt from 'bcryptjs';
+
+export const secureTeacherLogin = async (email: string, password: string) => {
+  console.log('🔐 SECURE TEACHER LOGIN:', email);
+  
+  try {
+    // Query teachers table for matching email
+    const { data: teachers, error: queryError } = await supabase
+      .from('teachers')
+      .select('*')
+      .eq('email', email.trim().toLowerCase());
+
+    if (queryError) {
+      console.error('Database query error:', queryError);
+      throw new Error('Authentication failed');
+    }
+
+    if (!teachers || teachers.length === 0) {
+      console.log('❌ Teacher not found');
+      throw new Error('Invalid credentials');
+    }
+
+    const teacher = teachers[0];
+    console.log('✅ Teacher found:', teacher.id);
+
+    // Verify password using bcrypt or simple hash comparison
+    let passwordValid = false;
+    try {
+      // Try bcrypt first
+      passwordValid = await bcrypt.compare(password, teacher.password_hash);
+    } catch (bcryptError) {
+      console.log('Bcrypt failed, trying simple hash comparison');
+      // Fallback to simple hash for existing passwords
+      const crypto = await import('crypto');
+      const simpleHash = crypto.createHash('sha256').update(password + 'simple_salt_2024').digest('hex');
+      passwordValid = simpleHash === teacher.password_hash;
+    }
+
+    if (!passwordValid) {
+      console.log('❌ Invalid password');
+      throw new Error('Invalid credentials');
+    }
+
+    console.log('✅ Teacher authentication successful');
+    return { teacher };
+
+  } catch (error) {
+    console.error('Teacher login error:', error);
+    throw error;
+  }
+};
+
+export const secureTeacherSignup = async (name: string, email: string, school: string, password: string, role: string = 'teacher') => {
+  console.log('📝 SECURE TEACHER SIGNUP:', { name, email, school, role });
+  
+  try {
+    // Check if teacher already exists
+    const { data: existingTeachers, error: checkError } = await supabase
+      .from('teachers')
+      .select('id')
+      .eq('email', email.trim().toLowerCase());
+
+    if (checkError) {
+      console.error('Database check error:', checkError);
+      throw new Error('Registration failed');
+    }
+
+    if (existingTeachers && existingTeachers.length > 0) {
+      throw new Error('Teacher already exists');
+    }
+
+    // Hash password with bcrypt
+    const saltRounds = 10;
+    const hashedPassword = await bcrypt.hash(password, saltRounds);
+
+    // Create new teacher
+    const { data: newTeacher, error: insertError } = await supabase
+      .from('teachers')
+      .insert({
+        name: name.trim(),
+        email: email.trim().toLowerCase(),
+        school: school.trim(),
+        password_hash: hashedPassword,
+        role: role
+      })
+      .select()
+      .single();
+
+    if (insertError) {
+      console.error('Teacher creation error:', insertError);
+      throw new Error('Registration failed');
+    }
+
+    console.log('✅ Teacher created successfully:', newTeacher.id);
+    return { teacher: newTeacher };
+
+  } catch (error) {
+    console.error('Teacher signup error:', error);
+    throw error;
+  }
+};
 
 export const teacherEmailLoginService = async (email: string, password: string) => {
   try {
@@ -65,6 +164,7 @@ export const studentSimpleLoginService = async (fullName: string, password: stri
     console.log('✅ Student found, attempting login');
 
     // Use the secure student login service
+    const { secureStudentLogin } = await import('./secureStudentAuthService');
     const result = await secureStudentLogin(student.full_name, student.school, student.grade, password);
     
     if (result.student) {
@@ -84,6 +184,7 @@ export const studentSignupService = async (fullName: string, school: string, gra
   try {
     console.log('📝 Student signup service called for:', fullName);
     
+    const { secureStudentSignup } = await import('./secureStudentAuthService');
     const result = await secureStudentSignup(fullName, school, grade, password);
     
     if (result.student) {
