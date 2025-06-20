@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 
 export const authenticateTeacher = async (email: string, password: string) => {
@@ -18,7 +17,7 @@ export const authenticateTeacher = async (email: string, password: string) => {
       return { error: 'Authentication failed. Please check your credentials.' };
     }
 
-    if (!data || data.length === 0) {
+    if (!data || (Array.isArray(data) && data.length === 0)) {
       console.log('No teacher data returned from RPC');
       return { error: 'Invalid email or password' };
     }
@@ -26,7 +25,7 @@ export const authenticateTeacher = async (email: string, password: string) => {
     const teacherData = Array.isArray(data) ? data[0] : data;
     
     // Check if teacher exists (teacher_id will be null if not found)
-    if (!teacherData.teacher_id) {
+    if (!teacherData || !teacherData.teacher_id) {
       console.log('Teacher not found');
       return { error: 'Invalid email or password' };
     }
@@ -67,7 +66,7 @@ export const authenticateStudent = async (fullName: string, school: string, grad
       return { error: 'Authentication failed. Please check your credentials.' };
     }
 
-    if (!data || data.length === 0) {
+    if (!data || (Array.isArray(data) && data.length === 0)) {
       console.log('No student data returned from RPC');
       return { error: 'Invalid credentials' };
     }
@@ -75,7 +74,7 @@ export const authenticateStudent = async (fullName: string, school: string, grad
     const studentData = Array.isArray(data) ? data[0] : data;
     
     // Check if student exists (student_id will be null if not found)
-    if (!studentData.student_id) {
+    if (!studentData || !studentData.student_id) {
       console.log('Student not found');
       return { error: 'Invalid credentials' };
     }
