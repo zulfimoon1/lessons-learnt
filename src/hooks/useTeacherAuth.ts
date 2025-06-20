@@ -31,7 +31,7 @@ export const useTeacherAuth = () => {
         // Ensure role is properly typed
         const teacherData: Teacher = {
           ...result.teacher,
-          role: result.teacher.role as 'teacher' | 'admin' | 'doctor'
+          role: (result.teacher.role as 'teacher' | 'admin' | 'doctor') || 'teacher'
         };
         
         setTeacher(teacherData);
@@ -86,7 +86,7 @@ export const useTeacherAuth = () => {
         // Ensure role is properly typed
         const teacherData: Teacher = {
           ...result.teacher,
-          role: result.teacher.role as 'teacher' | 'admin' | 'doctor'
+          role: (result.teacher.role as 'teacher' | 'admin' | 'doctor') || 'teacher'
         };
         
         setTeacher(teacherData);
