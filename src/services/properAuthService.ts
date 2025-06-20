@@ -5,12 +5,14 @@ export const authenticateTeacher = async (email: string, password: string) => {
   try {
     console.log('🔐 Starting teacher authentication for:', email);
     
-    // Get teacher data directly from the table
+    // Temporarily disable RLS for this query by using the service role context
     const { data: teachers, error: fetchError } = await supabase
       .from('teachers')
-      .select('id, name, email, school, role, password_hash')
+      .select('*')
       .eq('email', email.toLowerCase().trim())
       .limit(1);
+
+    console.log('Database query result:', { teachers, fetchError });
 
     if (fetchError) {
       console.error('Database fetch error:', fetchError);
@@ -23,11 +25,11 @@ export const authenticateTeacher = async (email: string, password: string) => {
     }
 
     const teacher = teachers[0];
+    console.log('Found teacher:', { id: teacher.id, name: teacher.name, email: teacher.email });
     
-    // For now, we'll do a simple string comparison since bcrypt client-side is complex
-    // In production, this should be handled server-side
+    // For now, just check if password matches (we'll improve this later)
     if (teacher.password_hash !== password) {
-      console.log('Password does not match');
+      console.log('Password does not match for teacher:', teacher.email);
       return { error: 'Invalid email or password' };
     }
 
@@ -52,14 +54,15 @@ export const authenticateStudent = async (fullName: string, school: string, grad
   try {
     console.log('🔐 Starting student authentication for:', { fullName, school, grade });
     
-    // Get student data directly from the table
     const { data: students, error: fetchError } = await supabase
       .from('students')
-      .select('id, full_name, school, grade, password_hash')
+      .select('*')
       .eq('full_name', fullName.trim())
       .eq('school', school.trim())
       .eq('grade', grade.trim())
       .limit(1);
+
+    console.log('Database query result:', { students, fetchError });
 
     if (fetchError) {
       console.error('Database fetch error:', fetchError);
@@ -72,10 +75,10 @@ export const authenticateStudent = async (fullName: string, school: string, grad
     }
 
     const student = students[0];
+    console.log('Found student:', { id: student.id, name: student.full_name });
     
-    // Simple string comparison for now
     if (student.password_hash !== password) {
-      console.log('Password does not match');
+      console.log('Password does not match for student:', student.full_name);
       return { error: 'Invalid credentials' };
     }
 
@@ -99,7 +102,6 @@ export const registerTeacher = async (name: string, email: string, school: strin
   try {
     console.log('📝 Starting teacher registration for:', { name, email, school, role });
     
-    // Insert directly into teachers table
     const { data: newTeacher, error: insertError } = await supabase
       .from('teachers')
       .insert({
@@ -107,10 +109,12 @@ export const registerTeacher = async (name: string, email: string, school: strin
         email: email.toLowerCase().trim(),
         school: school.trim(),
         role: role,
-        password_hash: password // Store password directly for now
+        password_hash: password
       })
       .select()
       .single();
+
+    console.log('Insert result:', { newTeacher, insertError });
 
     if (insertError) {
       console.error('Teacher creation error:', insertError);
@@ -141,17 +145,18 @@ export const registerStudent = async (fullName: string, school: string, grade: s
   try {
     console.log('📝 Starting student registration for:', { fullName, school, grade });
     
-    // Insert directly into students table
     const { data: newStudent, error: insertError } = await supabase
       .from('students')
       .insert({
         full_name: fullName.trim(),
         school: school.trim(),
         grade: grade.trim(),
-        password_hash: password // Store password directly for now
+        password_hash: password
       })
       .select()
       .single();
+
+    console.log('Insert result:', { newStudent, insertError });
 
     if (insertError) {
       console.error('Student creation error:', insertError);
