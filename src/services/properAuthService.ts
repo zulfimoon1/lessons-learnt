@@ -1,10 +1,11 @@
+
 import { supabase } from '@/integrations/supabase/client';
 
 export const authenticateTeacher = async (email: string, password: string) => {
   try {
     console.log('🔐 Starting teacher authentication for:', email);
     
-    // Use the working database function
+    // Use the working database function that exists
     const { data, error } = await supabase.rpc('authenticate_teacher_working', {
       email_param: email.toLowerCase().trim(),
       password_param: password
@@ -51,7 +52,7 @@ export const authenticateStudent = async (fullName: string, school: string, grad
   try {
     console.log('🔐 Starting student authentication for:', { fullName, school, grade });
     
-    // Use the working database function
+    // Use the working database function that exists
     const { data, error } = await supabase.rpc('authenticate_student_working', {
       name_param: fullName.trim(),
       school_param: school.trim(),
