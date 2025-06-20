@@ -29,9 +29,9 @@ export const secureTeacherLogin = async (email: string, password: string) => {
     
     let teachers, queryError;
     try {
-      const result = await Promise.race([queryPromise, timeoutPromise]);
-      teachers = result.data;
-      queryError = result.error;
+      const result = await Promise.race([queryPromise, timeoutPromise]) as any;
+      teachers = result?.data;
+      queryError = result?.error;
     } catch (error) {
       console.error('Database query failed or timed out:', error);
       queryError = error;
@@ -104,9 +104,9 @@ export const secureTeacherSignup = async (name: string, email: string, school: s
 
     let data, error;
     try {
-      const result = await Promise.race([createPromise, timeoutPromise]);
-      data = result.data;
-      error = result.error;
+      const result = await Promise.race([createPromise, timeoutPromise]) as any;
+      data = result?.data;
+      error = result?.error;
     } catch (timeoutError) {
       console.error('Teacher creation timed out:', timeoutError);
       error = timeoutError;
@@ -210,9 +210,9 @@ export const studentSimpleLoginService = async (fullName: string, password: stri
 
     let students, queryError;
     try {
-      const result = await Promise.race([queryPromise, timeoutPromise]);
-      students = result.data;
-      queryError = result.error;
+      const result = await Promise.race([queryPromise, timeoutPromise]) as any;
+      students = result?.data;
+      queryError = result?.error;
     } catch (error) {
       console.error('Student database query failed or timed out:', error);
       queryError = error;
@@ -282,9 +282,9 @@ export const studentSignupService = async (fullName: string, school: string, gra
 
     let data, error;
     try {
-      const result = await Promise.race([createPromise, timeoutPromise]);
-      data = result.data;
-      error = result.error;
+      const result = await Promise.race([createPromise, timeoutPromise]) as any;
+      data = result?.data;
+      error = result?.error;
     } catch (timeoutError) {
       console.error('Student creation timed out:', timeoutError);
       error = timeoutError;
