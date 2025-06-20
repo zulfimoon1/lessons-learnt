@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import bcrypt from 'bcryptjs';
 
@@ -5,66 +6,39 @@ export const authenticateTeacher = async (email: string, password: string) => {
   try {
     console.log('🔐 Starting teacher authentication for:', email);
     
-    // Use the database function to bypass RLS
-    const { data: teacherData, error: queryError } = await supabase.rpc('authenticate_teacher', {
+    // Use the complete authentication function that handles everything server-side
+    const { data: authResult, error: authError } = await supabase.rpc('authenticate_teacher_complete', {
       email_param: email.toLowerCase().trim(),
       password_param: password
     });
 
-    console.log('Teacher RPC result:', { teacherData, queryError });
+    console.log('Teacher auth result:', { authResult, authError });
 
-    if (queryError) {
-      console.error('Teacher RPC error:', queryError);
-      return { error: 'Unable to authenticate. Please check your credentials.' };
+    if (authError) {
+      console.error('Teacher auth RPC error:', authError);
+      return { error: 'Authentication failed. Please try again.' };
     }
 
-    if (!teacherData || teacherData.length === 0) {
-      console.log('No teacher found for email:', email);
-      return { error: 'Invalid email or password' };
+    if (!authResult || authResult.length === 0) {
+      console.log('No auth result returned');
+      return { error: 'Authentication failed. Please check your credentials.' };
     }
 
-    const teacher = teacherData[0];
-    console.log('Teacher found via RPC:', { id: teacher.teacher_id, email: teacher.teacher_email, role: teacher.teacher_role });
-
-    // Now get the password hash with a direct query using proper admin context
-    await supabase.rpc('set_platform_admin_context', {
-      admin_email: 'system@auth.bypass'
-    });
-
-    const { data: passwordData, error: passwordError } = await supabase
-      .from('teachers')
-      .select('password_hash')
-      .eq('id', teacher.teacher_id)
-      .single();
-
-    if (passwordError || !passwordData) {
-      console.error('Password fetch error:', passwordError);
-      return { error: 'Authentication failed' };
-    }
-
-    // Verify password
-    let isPasswordValid = false;
-    try {
-      isPasswordValid = await bcrypt.compare(password, passwordData.password_hash);
-      console.log('Password verification:', isPasswordValid ? 'success' : 'failed');
-    } catch (bcryptError) {
-      console.error('Password verification error:', bcryptError);
-      return { error: 'Authentication failed' };
-    }
-
-    if (!isPasswordValid) {
-      console.log('Invalid password for teacher:', email);
-      return { error: 'Invalid email or password' };
+    const result = authResult[0];
+    
+    if (!result.success) {
+      console.log('Authentication failed:', result.error_message);
+      return { error: result.error_message || 'Invalid email or password' };
     }
 
     console.log('✅ Teacher authentication successful');
     return {
       teacher: {
-        id: teacher.teacher_id,
-        name: teacher.teacher_name,
-        email: teacher.teacher_email,
-        school: teacher.teacher_school,
-        role: teacher.teacher_role as 'teacher' | 'admin' | 'doctor'
+        id: result.teacher_id,
+        name: result.teacher_name,
+        email: result.teacher_email,
+        school: result.teacher_school,
+        role: result.teacher_role as 'teacher' | 'admin' | 'doctor'
       }
     };
 
@@ -78,67 +52,40 @@ export const authenticateStudent = async (fullName: string, school: string, grad
   try {
     console.log('🔐 Starting student authentication for:', { fullName, school, grade });
     
-    // Use the database function to bypass RLS
-    const { data: studentData, error: queryError } = await supabase.rpc('authenticate_student', {
+    // Use the complete authentication function that handles everything server-side
+    const { data: authResult, error: authError } = await supabase.rpc('authenticate_student_complete', {
       name_param: fullName.trim(),
       school_param: school.trim(),
       grade_param: grade.trim(),
       password_param: password
     });
 
-    console.log('Student RPC result:', { studentData, queryError });
+    console.log('Student auth result:', { authResult, authError });
 
-    if (queryError) {
-      console.error('Student RPC error:', queryError);
-      return { error: 'Unable to authenticate. Please check your credentials.' };
+    if (authError) {
+      console.error('Student auth RPC error:', authError);
+      return { error: 'Authentication failed. Please try again.' };
     }
 
-    if (!studentData || studentData.length === 0) {
-      console.log('No student found for:', { fullName, school, grade });
-      return { error: 'Invalid credentials' };
+    if (!authResult || authResult.length === 0) {
+      console.log('No auth result returned');
+      return { error: 'Authentication failed. Please check your credentials.' };
     }
 
-    const student = studentData[0];
-    console.log('Student found via RPC:', { id: student.student_id, name: student.student_name });
-
-    // Now get the password hash with a direct query using proper admin context
-    await supabase.rpc('set_platform_admin_context', {
-      admin_email: 'system@auth.bypass'
-    });
-
-    const { data: passwordData, error: passwordError } = await supabase
-      .from('students')
-      .select('password_hash')
-      .eq('id', student.student_id)
-      .single();
-
-    if (passwordError || !passwordData) {
-      console.error('Password fetch error:', passwordError);
-      return { error: 'Authentication failed' };
-    }
-
-    // Verify password
-    let isPasswordValid = false;
-    try {
-      isPasswordValid = await bcrypt.compare(password, passwordData.password_hash);
-      console.log('Password verification:', isPasswordValid ? 'success' : 'failed');
-    } catch (bcryptError) {
-      console.error('Password verification error:', bcryptError);
-      return { error: 'Authentication failed' };
-    }
-
-    if (!isPasswordValid) {
-      console.log('Invalid password for student');
-      return { error: 'Invalid credentials' };
+    const result = authResult[0];
+    
+    if (!result.success) {
+      console.log('Authentication failed:', result.error_message);
+      return { error: result.error_message || 'Invalid credentials' };
     }
 
     console.log('✅ Student authentication successful');
     return {
       student: {
-        id: student.student_id,
-        full_name: student.student_name,
-        school: student.student_school,
-        grade: student.student_grade
+        id: result.student_id,
+        full_name: result.student_name,
+        school: result.student_school,
+        grade: result.student_grade
       }
     };
 
@@ -152,27 +99,11 @@ export const registerTeacher = async (name: string, email: string, school: strin
   try {
     console.log('📝 Starting teacher registration for:', { name, email, school, role });
     
-    // Set admin context for registration
-    await supabase.rpc('set_platform_admin_context', {
-      admin_email: 'system@auth.bypass'
-    });
-
-    // Check if teacher already exists
-    const { data: existingTeacher } = await supabase
-      .from('teachers')
-      .select('id')
-      .eq('email', email.toLowerCase().trim())
-      .maybeSingle();
-
-    if (existingTeacher) {
-      return { error: 'A teacher with this email already exists' };
-    }
-
-    // Hash password
+    // Hash password on client side
     const saltRounds = 12;
     const hashedPassword = await bcrypt.hash(password, saltRounds);
 
-    // Create teacher record
+    // Create teacher record directly (this should work as it's an INSERT)
     const { data: newTeacher, error: insertError } = await supabase
       .from('teachers')
       .insert({
@@ -187,6 +118,9 @@ export const registerTeacher = async (name: string, email: string, school: strin
 
     if (insertError) {
       console.error('Teacher creation error:', insertError);
+      if (insertError.code === '23505') {
+        return { error: 'A teacher with this email already exists' };
+      }
       return { error: 'Failed to create teacher account' };
     }
 
@@ -211,29 +145,11 @@ export const registerStudent = async (fullName: string, school: string, grade: s
   try {
     console.log('📝 Starting student registration for:', { fullName, school, grade });
     
-    // Set admin context for registration
-    await supabase.rpc('set_platform_admin_context', {
-      admin_email: 'system@auth.bypass'
-    });
-
-    // Check if student already exists
-    const { data: existingStudent } = await supabase
-      .from('students')
-      .select('id')
-      .eq('full_name', fullName.trim())
-      .eq('school', school.trim())
-      .eq('grade', grade.trim())
-      .maybeSingle();
-
-    if (existingStudent) {
-      return { error: 'A student with these details already exists' };
-    }
-
-    // Hash password
+    // Hash password on client side
     const saltRounds = 12;
     const hashedPassword = await bcrypt.hash(password, saltRounds);
 
-    // Create student record
+    // Create student record directly (this should work as it's an INSERT)
     const { data: newStudent, error: insertError } = await supabase
       .from('students')
       .insert({
@@ -247,6 +163,9 @@ export const registerStudent = async (fullName: string, school: string, grade: s
 
     if (insertError) {
       console.error('Student creation error:', insertError);
+      if (insertError.code === '23505') {
+        return { error: 'A student with these details already exists' };
+      }
       return { error: 'Failed to create student account' };
     }
 
