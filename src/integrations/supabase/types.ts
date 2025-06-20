@@ -849,6 +849,32 @@ export type Database = {
       }
     }
     Functions: {
+      authenticate_student: {
+        Args: {
+          name_param: string
+          school_param: string
+          grade_param: string
+          password_param: string
+        }
+        Returns: {
+          student_id: string
+          student_name: string
+          student_school: string
+          student_grade: string
+          password_valid: boolean
+        }[]
+      }
+      authenticate_teacher: {
+        Args: { email_param: string; password_param: string }
+        Returns: {
+          teacher_id: string
+          teacher_name: string
+          teacher_email: string
+          teacher_school: string
+          teacher_role: string
+          password_valid: boolean
+        }[]
+      }
       check_platform_admin_access: {
         Args: Record<PropertyKey, never>
         Returns: boolean
