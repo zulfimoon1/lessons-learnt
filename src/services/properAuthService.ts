@@ -5,42 +5,40 @@ export const authenticateTeacher = async (email: string, password: string) => {
   try {
     console.log('🔐 Starting teacher authentication for:', email);
     
-    // Temporarily disable RLS for this query by using the service role context
-    const { data: teachers, error: fetchError } = await supabase
-      .from('teachers')
-      .select('*')
-      .eq('email', email.toLowerCase().trim())
-      .limit(1);
+    // Use the security definer function that bypasses RLS
+    const { data, error } = await supabase.rpc('authenticate_teacher_complete', {
+      email_param: email.toLowerCase().trim(),
+      password_param: password
+    });
 
-    console.log('Database query result:', { teachers, fetchError });
+    console.log('RPC authentication result:', { data, error });
 
-    if (fetchError) {
-      console.error('Database fetch error:', fetchError);
-      return { error: 'Authentication failed - database error' };
+    if (error) {
+      console.error('RPC authentication error:', error);
+      return { error: 'Authentication failed - server error' };
     }
 
-    if (!teachers || teachers.length === 0) {
-      console.log('No teacher found with email:', email);
+    if (!data || data.length === 0) {
+      console.log('No authentication result returned');
       return { error: 'Invalid email or password' };
     }
 
-    const teacher = teachers[0];
-    console.log('Found teacher:', { id: teacher.id, name: teacher.name, email: teacher.email });
-    
-    // For now, just check if password matches (we'll improve this later)
-    if (teacher.password_hash !== password) {
-      console.log('Password does not match for teacher:', teacher.email);
-      return { error: 'Invalid email or password' };
+    const result = data[0];
+    console.log('Authentication result:', result);
+
+    if (!result.success) {
+      console.log('Authentication failed:', result.error_message);
+      return { error: result.error_message || 'Invalid email or password' };
     }
 
     console.log('✅ Teacher authentication successful');
     return {
       teacher: {
-        id: teacher.id,
-        name: teacher.name,
-        email: teacher.email,
-        school: teacher.school,
-        role: teacher.role as 'teacher' | 'admin' | 'doctor'
+        id: result.teacher_id,
+        name: result.teacher_name,
+        email: result.teacher_email,
+        school: result.teacher_school,
+        role: result.teacher_role as 'teacher' | 'admin' | 'doctor'
       }
     };
 
@@ -54,41 +52,41 @@ export const authenticateStudent = async (fullName: string, school: string, grad
   try {
     console.log('🔐 Starting student authentication for:', { fullName, school, grade });
     
-    const { data: students, error: fetchError } = await supabase
-      .from('students')
-      .select('*')
-      .eq('full_name', fullName.trim())
-      .eq('school', school.trim())
-      .eq('grade', grade.trim())
-      .limit(1);
+    // Use the security definer function that bypasses RLS
+    const { data, error } = await supabase.rpc('authenticate_student_complete', {
+      name_param: fullName.trim(),
+      school_param: school.trim(),
+      grade_param: grade.trim(),
+      password_param: password
+    });
 
-    console.log('Database query result:', { students, fetchError });
+    console.log('RPC authentication result:', { data, error });
 
-    if (fetchError) {
-      console.error('Database fetch error:', fetchError);
-      return { error: 'Authentication failed - database error' };
+    if (error) {
+      console.error('RPC authentication error:', error);
+      return { error: 'Authentication failed - server error' };
     }
 
-    if (!students || students.length === 0) {
-      console.log('No student found with provided credentials');
+    if (!data || data.length === 0) {
+      console.log('No authentication result returned');
       return { error: 'Invalid credentials' };
     }
 
-    const student = students[0];
-    console.log('Found student:', { id: student.id, name: student.full_name });
-    
-    if (student.password_hash !== password) {
-      console.log('Password does not match for student:', student.full_name);
-      return { error: 'Invalid credentials' };
+    const result = data[0];
+    console.log('Authentication result:', result);
+
+    if (!result.success) {
+      console.log('Authentication failed:', result.error_message);
+      return { error: result.error_message || 'Invalid credentials' };
     }
 
     console.log('✅ Student authentication successful');
     return {
       student: {
-        id: student.id,
-        full_name: student.full_name,
-        school: student.school,
-        grade: student.grade
+        id: result.student_id,
+        full_name: result.student_name,
+        school: result.student_school,
+        grade: result.student_grade
       }
     };
 
@@ -102,6 +100,7 @@ export const registerTeacher = async (name: string, email: string, school: strin
   try {
     console.log('📝 Starting teacher registration for:', { name, email, school, role });
     
+    // For registration, we can try direct insert since RLS should allow it
     const { data: newTeacher, error: insertError } = await supabase
       .from('teachers')
       .insert({
@@ -145,6 +144,7 @@ export const registerStudent = async (fullName: string, school: string, grade: s
   try {
     console.log('📝 Starting student registration for:', { fullName, school, grade });
     
+    // For registration, we can try direct insert since RLS should allow it
     const { data: newStudent, error: insertError } = await supabase
       .from('students')
       .insert({
