@@ -15,7 +15,7 @@ export const useStudentAuth = () => {
         return { error: 'All fields are required' };
       }
 
-      // Call the service with just fullName and password
+      // Call the service with just fullName and password for mock login
       const result = await studentSimpleLoginService(fullName.trim(), password.trim());
       console.log('useStudentAuth: Login service result:', { 
         success: !!result.student, 
@@ -23,7 +23,7 @@ export const useStudentAuth = () => {
       });
       
       if (result.student) {
-        // Use the provided school and grade since demo student has generic values
+        // Use the provided school and grade since mock student has generic values
         const studentData: Student = {
           id: result.student.id,
           full_name: result.student.full_name,

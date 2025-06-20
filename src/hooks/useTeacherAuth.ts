@@ -30,7 +30,10 @@ export const useTeacherAuth = () => {
       if (result.teacher) {
         // Ensure role is properly typed
         const teacherData: Teacher = {
-          ...result.teacher,
+          id: result.teacher.id,
+          name: result.teacher.name,
+          email: result.teacher.email,
+          school: result.teacher.school,
           role: (result.teacher.role as 'teacher' | 'admin' | 'doctor') || 'teacher'
         };
         
@@ -85,7 +88,10 @@ export const useTeacherAuth = () => {
       if (result.teacher) {
         // Ensure role is properly typed
         const teacherData: Teacher = {
-          ...result.teacher,
+          id: result.teacher.id,
+          name: result.teacher.name,
+          email: result.teacher.email,
+          school: result.teacher.school,
           role: (result.teacher.role as 'teacher' | 'admin' | 'doctor') || 'teacher'
         };
         
