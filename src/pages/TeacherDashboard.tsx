@@ -4,12 +4,13 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Navigate } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import ScheduleTab from "@/components/dashboard/teacher/ScheduleTab";
 import FeedbackDashboard from "@/components/dashboard/teacher/FeedbackDashboard";
 import DoctorDashboard from "@/components/dashboard/doctor/DoctorDashboard";
 import WeeklySummariesTab from "@/components/dashboard/teacher/WeeklySummariesTab";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
-import { LogOut, Calendar, MessageSquare, FileText, Heart } from "lucide-react";
+import { LogOut, Calendar, MessageSquare, FileText, Heart, School, GraduationCap } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -83,79 +84,130 @@ const TeacherDashboard = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-brand-teal/10 via-white to-brand-orange/10">
       <div className="container mx-auto px-4 py-6 max-w-6xl">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h1 className="text-3xl font-bold text-brand-dark mb-2">
-              {isAdmin ? t('dashboard.schoolAdmin') : t('teacher.dashboard.title')}
-            </h1>
-            <p className="text-brand-dark/70 text-lg">
-              {t('teacher.dashboard.welcome')}, {teacher.name} - {t('teacher.dashboard.teacherAt', { 
-                role: teacher.role.charAt(0).toUpperCase() + teacher.role.slice(1),
-                school: teacher.school
-              })}
-            </p>
-          </div>
-          <div className="flex gap-3">
-            <LanguageSwitcher />
-            {isAdmin && (
+        {/* Header - matching student dashboard style */}
+        <div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-lg border border-gray-200/50 mb-6 p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold text-brand-dark mb-2">
+                {isAdmin ? t('dashboard.schoolAdmin') : t('teacher.dashboard.title')}
+              </h1>
+              <p className="text-brand-dark/70 text-lg">
+                {t('teacher.dashboard.welcome')}, {teacher.name} - {t('teacher.dashboard.teacherAt', { 
+                  role: teacher.role.charAt(0).toUpperCase() + teacher.role.slice(1),
+                  school: teacher.school
+                })}
+              </p>
+            </div>
+            <div className="flex gap-3">
+              <LanguageSwitcher />
+              {isAdmin && (
+                <Button 
+                  variant="outline" 
+                  onClick={() => window.location.href = '/admin-dashboard'}
+                  className="border-brand-teal/30 hover:bg-brand-teal/10"
+                >
+                  {t('dashboard.adminPanel')}
+                </Button>
+              )}
               <Button 
                 variant="outline" 
-                onClick={() => window.location.href = '/admin-dashboard'}
-                className="border-brand-teal/30 hover:bg-brand-teal/10"
+                onClick={handleLogout}
+                className="border-brand-orange/30 hover:bg-brand-orange/10"
               >
-                {t('dashboard.adminPanel')}
+                <LogOut className="w-4 h-4 mr-2" />
+                {t('logout')}
               </Button>
-            )}
-            <Button 
-              variant="outline" 
-              onClick={handleLogout}
-              className="border-brand-orange/30 hover:bg-brand-orange/10"
-            >
-              <LogOut className="w-4 h-4 mr-2" />
-              {t('logout')}
-            </Button>
+            </div>
           </div>
         </div>
 
-        {/* Main Content with Tabs */}
-        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-brand-teal/20 overflow-hidden">
+        {/* Stats Cards - matching student dashboard */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+          <Card className="bg-white/90 backdrop-blur-sm border-gray-200/50 shadow-lg">
+            <CardContent className="p-6">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-brand-teal/10 rounded-lg flex items-center justify-center">
+                  <School className="w-6 h-6 text-brand-teal" />
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600">School</p>
+                  <p className="text-lg font-semibold text-brand-dark">{teacher.school}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-white/90 backdrop-blur-sm border-gray-200/50 shadow-lg">
+            <CardContent className="p-6">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-brand-orange/10 rounded-lg flex items-center justify-center">
+                  <GraduationCap className="w-6 h-6 text-brand-orange" />
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600">Role</p>
+                  <p className="text-lg font-semibold text-brand-dark">
+                    {teacher.role.charAt(0).toUpperCase() + teacher.role.slice(1)}
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-white/90 backdrop-blur-sm border-gray-200/50 shadow-lg">
+            <CardContent className="p-6">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-brand-teal/10 rounded-lg flex items-center justify-center">
+                  <Calendar className="w-6 h-6 text-brand-teal" />
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600">{t('dashboard.upcomingClasses')}</p>
+                  <p className="text-lg font-semibold text-brand-dark">0</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Main Content with Tabs - matching student dashboard style */}
+        <div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-lg border border-gray-200/50 overflow-hidden">
           <Tabs defaultValue="classes" className="w-full">
-            <div className="bg-gradient-to-r from-brand-teal to-brand-orange/20 px-6 py-4">
-              <TabsList className="bg-white/20 backdrop-blur-sm border-0 h-12 p-1 rounded-xl">
+            {/* Tab Navigation - clean white background */}
+            <div className="bg-white border-b border-gray-200">
+              <TabsList className="h-auto p-0 bg-transparent rounded-none w-full justify-start">
                 <TabsTrigger 
                   value="classes" 
-                  className="data-[state=active]:bg-white data-[state=active]:text-brand-dark data-[state=active]:shadow-lg text-white/90 hover:text-white transition-all duration-200 px-6 py-2 rounded-lg flex items-center gap-2 font-medium"
+                  className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-brand-orange data-[state=active]:to-brand-teal data-[state=active]:text-white data-[state=inactive]:text-gray-600 data-[state=inactive]:hover:text-brand-dark border-b-2 border-transparent data-[state=active]:border-brand-teal rounded-none px-6 py-4 font-medium transition-all duration-200"
                 >
-                  <Calendar className="w-4 h-4" />
+                  <Calendar className="w-4 h-4 mr-2" />
                   {t('dashboard.upcomingClasses')}
                 </TabsTrigger>
                 <TabsTrigger 
                   value="feedback" 
-                  className="data-[state=active]:bg-white data-[state=active]:text-brand-dark data-[state=active]:shadow-lg text-white/90 hover:text-white transition-all duration-200 px-6 py-2 rounded-lg flex items-center gap-2 font-medium"
+                  className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-brand-orange data-[state=active]:to-brand-teal data-[state=active]:text-white data-[state=inactive]:text-gray-600 data-[state=inactive]:hover:text-brand-dark border-b-2 border-transparent data-[state=active]:border-brand-teal rounded-none px-6 py-4 font-medium transition-all duration-200"
                 >
-                  <MessageSquare className="w-4 h-4" />
+                  <MessageSquare className="w-4 h-4 mr-2" />
                   {t('dashboard.feedback')}
                 </TabsTrigger>
                 <TabsTrigger 
                   value="weekly-summaries" 
-                  className="data-[state=active]:bg-white data-[state=active]:text-brand-dark data-[state=active]:shadow-lg text-white/90 hover:text-white transition-all duration-200 px-6 py-2 rounded-lg flex items-center gap-2 font-medium"
+                  className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-brand-orange data-[state=active]:to-brand-teal data-[state=active]:text-white data-[state=inactive]:text-gray-600 data-[state=inactive]:hover:text-brand-dark border-b-2 border-transparent data-[state=active]:border-brand-teal rounded-none px-6 py-4 font-medium transition-all duration-200"
                 >
-                  <FileText className="w-4 h-4" />
+                  <FileText className="w-4 h-4 mr-2" />
                   {t('dashboard.weeklySummaries')}
                 </TabsTrigger>
                 {isAdmin && (
                   <TabsTrigger 
                     value="analytics" 
-                    className="data-[state=active]:bg-white data-[state=active]:text-brand-dark data-[state=active]:shadow-lg text-white/90 hover:text-white transition-all duration-200 px-6 py-2 rounded-lg flex items-center gap-2 font-medium"
+                    className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-brand-orange data-[state=active]:to-brand-teal data-[state=active]:text-white data-[state=inactive]:text-gray-600 data-[state=inactive]:hover:text-brand-dark border-b-2 border-transparent data-[state=active]:border-brand-teal rounded-none px-6 py-4 font-medium transition-all duration-200"
                   >
-                    <Heart className="w-4 h-4" />
+                    <Heart className="w-4 h-4 mr-2" />
                     {t('dashboard.analytics')}
                   </TabsTrigger>
                 )}
               </TabsList>
             </div>
 
+            {/* Tab Content */}
             <div className="p-6">
               <TabsContent value="classes" className="mt-0">
                 <ScheduleTab teacher={teacher} />
