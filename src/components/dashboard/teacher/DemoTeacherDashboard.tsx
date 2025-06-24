@@ -7,8 +7,8 @@ import { LogOut, Calendar, MessageSquare, Info, Upload } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { useLanguage } from "@/contexts/LanguageContext";
-import ScheduleTab from "@/components/dashboard/teacher/ScheduleTab";
-import FeedbackTab from "@/components/dashboard/FeedbackTab";
+import DemoScheduleTab from "@/components/dashboard/teacher/DemoScheduleTab";
+import DemoFeedbackTab from "@/components/dashboard/teacher/DemoFeedbackTab";
 
 interface DemoTeacherDashboardProps {
   teacher: {
@@ -77,11 +77,11 @@ const DemoTeacherDashboard: React.FC<DemoTeacherDashboardProps> = ({ teacher }) 
           </TabsList>
 
           <TabsContent value="schedules" className="space-y-4">
-            <ScheduleTab teacher={teacher} />
+            <DemoScheduleTab teacher={teacher} />
           </TabsContent>
 
           <TabsContent value="feedback" className="space-y-4">
-            <FeedbackTab />
+            <DemoFeedbackTab teacher={teacher} />
           </TabsContent>
 
           <TabsContent value="demo-info" className="space-y-4">
