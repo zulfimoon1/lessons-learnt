@@ -42,6 +42,7 @@ export const enAuthTranslations = {
   'auth.loginSuccess': 'Login successful',
   'auth.loginFailed': 'Login failed',
   'auth.signUp': 'Sign Up',
+  'auth.logout': 'Logout',
   
   // Teacher login specific
   'login.teacher.title': 'Teacher Portal',

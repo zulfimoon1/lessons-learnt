@@ -1,7 +1,7 @@
 
 import { useState } from 'react';
 import { Student } from '@/types/auth';
-import { authenticateStudent, registerStudent } from '@/services/properAuthService';
+import { secureStudentLogin, secureStudentSignup } from '@/services/secureStudentAuthService';
 
 export const useStudentAuth = () => {
   const [student, setStudent] = useState<Student | null>(null);
@@ -15,33 +15,8 @@ export const useStudentAuth = () => {
         return { error: 'All fields are required' };
       }
 
-      // Special handling for demo student
-      if (fullName.toLowerCase().includes('demo') && school.toLowerCase().includes('demo') && grade.toLowerCase().includes('5')) {
-        console.log('Demo student detected, creating/authenticating demo student');
-        const demoStudent: Student = {
-          id: 'demo-student-id',
-          full_name: 'demo student',
-          school: 'demo school',
-          grade: 'grade 5'
-        };
-        
-        setStudent(demoStudent);
-        
-        // Store student data in localStorage
-        try {
-          localStorage.setItem('student', JSON.stringify(demoStudent));
-          localStorage.removeItem('teacher');
-          localStorage.removeItem('platformAdmin');
-          console.log('useStudentAuth: Demo student data saved successfully');
-        } catch (storageError) {
-          console.warn('useStudentAuth: Failed to save demo student data to localStorage:', storageError);
-        }
-        
-        return { student: demoStudent };
-      }
-
-      // Call the proper authentication service for non-demo students
-      const result = await authenticateStudent(fullName, school, grade, password);
+      // Use the secure student login service
+      const result = await secureStudentLogin(fullName.trim(), school.trim(), grade.trim(), password);
       
       if (result.student) {
         const studentData: Student = {
@@ -66,11 +41,11 @@ export const useStudentAuth = () => {
         return { student: studentData };
       }
       
-      return { error: result.error || 'Login failed. Please try again.' };
+      return { error: 'Login failed. Please try again.' };
       
     } catch (error) {
       console.error('useStudentAuth: Login error:', error);
-      return { error: 'Login failed. Please check your connection and try again.' };
+      return { error: error instanceof Error ? error.message : 'Login failed. Please check your connection and try again.' };
     }
   };
 
@@ -88,9 +63,8 @@ export const useStudentAuth = () => {
         return { error: 'Password must be at least 4 characters long' };
       }
       
-      // Call the proper registration service
-      const result = await registerStudent(fullName.trim(), school.trim(), grade.trim(), password);
-      console.log('useStudentAuth: Registration service result:', result);
+      // Use the secure student signup service
+      const result = await secureStudentSignup(fullName.trim(), school.trim(), grade.trim(), password);
       
       if (result.student) {
         const studentData: Student = {
@@ -115,10 +89,10 @@ export const useStudentAuth = () => {
         return { student: studentData };
       }
       
-      return { error: result.error || 'Signup failed. Please try again.' };
+      return { error: 'Signup failed. Please try again.' };
     } catch (error) {
       console.error('useStudentAuth: Signup error:', error);
-      return { error: 'Signup failed. Please check your connection and try again.' };
+      return { error: error instanceof Error ? error.message : 'Signup failed. Please check your connection and try again.' };
     }
   };
 

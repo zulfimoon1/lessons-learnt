@@ -6,6 +6,19 @@ export const secureStudentLogin = async (fullName: string, school: string, grade
   console.log('🔐 SECURE STUDENT LOGIN:', { fullName, school, grade });
   
   try {
+    // Handle demo student case first
+    if (fullName.toLowerCase().includes('demo') && school.toLowerCase().includes('demo')) {
+      console.log('✅ Demo student detected, allowing login');
+      return {
+        student: {
+          id: 'demo-student-id',
+          full_name: fullName,
+          school: school,
+          grade: grade
+        }
+      };
+    }
+
     // Query students table for matching student
     const { data: students, error: queryError } = await supabase
       .from('students')
@@ -58,6 +71,19 @@ export const secureStudentSignup = async (fullName: string, school: string, grad
   console.log('📝 SECURE STUDENT SIGNUP:', { fullName, school, grade });
   
   try {
+    // Handle demo student case
+    if (fullName.toLowerCase().includes('demo') && school.toLowerCase().includes('demo')) {
+      console.log('✅ Demo student signup, creating demo student');
+      return {
+        student: {
+          id: 'demo-student-id',
+          full_name: fullName,
+          school: school,
+          grade: grade
+        }
+      };
+    }
+
     // Check if student already exists
     const { data: existingStudents, error: checkError } = await supabase
       .from('students')
