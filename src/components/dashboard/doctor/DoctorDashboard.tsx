@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -157,8 +156,8 @@ const DoctorDashboard: React.FC<DoctorDashboardProps> = ({ teacher }) => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-brand-teal/10 via-white to-brand-orange/10">
       <DashboardHeader 
-        title={t('dashboard.doctorOverview') || 'Doctor Overview'}
-        userName={`${teacher.name} - ${t('dashboard.doctorAt') || 'Doctor at'} ${teacher.school}`}
+        title="Doctor Overview"
+        userName={`${teacher.name} - Doctor at ${teacher.school}`}
         onLogout={handleLogout}
       />
 
