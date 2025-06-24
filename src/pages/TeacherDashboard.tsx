@@ -220,7 +220,7 @@ const TeacherDashboard = () => {
               <TabsContent value="weekly-summaries" className="mt-0">
                 <WeeklySummariesTab 
                   school={teacher.school}
-                  subscription={null}
+                  subscription={{ active: true }} // Remove subscription requirement
                   onCreateCheckout={() => {}}
                   isCreatingCheckout={false}
                 />
