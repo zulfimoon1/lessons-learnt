@@ -1,3 +1,4 @@
+
 import { enAuthTranslations } from './en/auth';
 import { enTeacherTranslations } from './en/teacher';
 import { enWeeklyTranslations } from './en/weekly';
@@ -76,6 +77,26 @@ export const enTranslations = {
   'dashboard.analytics': 'School Analytics',
   'dashboard.adminPanel': 'Admin Panel',
   'dashboard.accessAnalytics': 'Access detailed school analytics in the',
+
+  // Class Schedule Form
+  'schedule.createTitle': 'Create Class Schedule',
+  'schedule.gradeClass': 'Grade/Class',
+  'schedule.gradePlaceholder': 'e.g., 5A, Grade 10',
+  'schedule.subject': 'Subject',
+  'schedule.subjectPlaceholder': 'e.g., Mathematics, English',
+  'schedule.lessonTopic': 'Lesson Topic',
+  'schedule.lessonTopicPlaceholder': 'e.g., Algebra Basics, Shakespeare\'s Hamlet',
+  'schedule.classDate': 'Class Date',
+  'schedule.classTime': 'Class Time',
+  'schedule.duration': 'Duration (minutes)',
+  'schedule.description': 'Description (Optional)',
+  'schedule.descriptionPlaceholder': 'Additional notes about the lesson...',
+  'schedule.creating': 'Creating...',
+  'schedule.createButton': 'Create Class Schedule',
+  'schedule.success': 'Class schedule created successfully',
+  'schedule.error': 'Failed to create class schedule. Please try again.',
+  'schedule.mySchedules': 'My Class Schedules',
+  'schedule.noSchedules': 'No class schedules created yet. Create your first schedule above.',
 
   // Feedback
   'feedback.title': 'Lesson Feedback',
@@ -191,7 +212,6 @@ export const enTranslations = {
   'student.classGrade': 'Class/Grade',
   'student.school': 'School',
 
-  // Welcome/Home page
   'welcome.title': 'Lessons Learnt',
   'welcome.heroTitle1': 'Collaborative Classrooms',
   'welcome.heroTitle2': 'Unstoppable Minds',
@@ -199,7 +219,6 @@ export const enTranslations = {
   'welcome.freeForStudents': 'Always free for students!',
   'tagline.studentLead': 'Where every student voice shapes the future of learning',
 
-  // Features
   'features.studentFeedback.title': 'Student Feedback Collection',
   'features.studentFeedback.description': 'Collect direct feedback on lessons and experiences',
   'features.teacherInsights.title': 'Teacher Analytics Dashboard',
@@ -207,7 +226,6 @@ export const enTranslations = {
   'features.mentalHealth.title': 'Mental Health Support',
   'features.mentalHealth.description': 'Anonymous chat with school psychologists',
 
-  // Platform
   'platform.whySchools': 'Why Schools Choose Lessons Learnt',
   'platform.whySchoolsSubtitle': 'Comprehensive educational technology that puts student wellbeing first',
   'platform.studentInsights': 'Real-time Student Insights',
@@ -223,7 +241,6 @@ export const enTranslations = {
   'platform.readyToTransform': 'Ready to Transform Your School?',
   'platform.readyToTransformDesc': 'Join thousands of educators already using our platform',
 
-  // Compliance Footer
   'compliance.gdpr.title': 'GDPR Compliant',
   'compliance.gdpr.description': 'Full compliance with European data protection regulations',
   'compliance.soc2.title': 'SOC 2 Certified',
@@ -236,7 +253,6 @@ export const enTranslations = {
   'compliance.dataRetention': 'Data Retention',
   'compliance.rightToDelete': 'Right to Delete',
 
-  // Demo
   'demo.featureDemo': 'Feature Demo',
   'demo.title': 'Demo',
   'demo.subtitle': 'Try our platform features',

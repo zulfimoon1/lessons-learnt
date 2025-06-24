@@ -1,3 +1,4 @@
+
 import { ltAuthTranslations } from './lt/auth';
 import { ltTeacherTranslations } from './lt/teacher';
 import { ltWeeklyTranslations } from './lt/weekly';
@@ -76,6 +77,26 @@ export const ltTranslations = {
   'dashboard.analytics': 'Mokyklos analitika',
   'dashboard.adminPanel': 'Administratoriaus skydelis',
   'dashboard.accessAnalytics': 'Prieiga prie išsamios mokyklos analitikos',
+
+  // Class Schedule Form
+  'schedule.createTitle': 'Sukurti pamokos tvarkaraštį',
+  'schedule.gradeClass': 'Klasė/Skyrius',
+  'schedule.gradePlaceholder': 'pvz., 5A, 10 klasė',
+  'schedule.subject': 'Dalykas',
+  'schedule.subjectPlaceholder': 'pvz., Matematika, Anglų kalba',
+  'schedule.lessonTopic': 'Pamokos tema',
+  'schedule.lessonTopicPlaceholder': 'pvz., Algebros pagrindai, Šekspyro Hamletas',
+  'schedule.classDate': 'Pamokos data',
+  'schedule.classTime': 'Pamokos laikas',
+  'schedule.duration': 'Trukmė (minutės)',
+  'schedule.description': 'Aprašymas (Neprivaloma)',
+  'schedule.descriptionPlaceholder': 'Papildomi pastabos apie pamoką...',
+  'schedule.creating': 'Kuriama...',
+  'schedule.createButton': 'Sukurti pamokos tvarkaraštį',
+  'schedule.success': 'Pamokos tvarkaraštis sėkmingai sukurtas',
+  'schedule.error': 'Nepavyko sukurti pamokos tvarkaraščio. Bandykite dar kartą.',
+  'schedule.mySchedules': 'Mano pamokų tvarkaraščiai',
+  'schedule.noSchedules': 'Dar nesukurta pamokų tvarkaraščių. Sukurkite pirmą tvarkaraštį aukščiau.',
 
   // Feedback
   'feedback.title': 'Pamokos atsiliepimas',
@@ -191,7 +212,6 @@ export const ltTranslations = {
   'student.classGrade': 'Klasė/Skyrius',
   'student.school': 'Mokykla',
 
-  // Welcome/Home page
   'welcome.title': 'Lessons Learnt',
   'welcome.heroTitle1': 'Bendradarbiaujančios klasės',
   'welcome.heroTitle2': 'Nesustabdomi protai',
@@ -199,7 +219,6 @@ export const ltTranslations = {
   'welcome.freeForStudents': 'Visada nemokama studentams!',
   'tagline.studentLead': 'Kur kiekvieno studento balsas formuoja mokymosi ateitį',
 
-  // Features
   'features.studentFeedback.title': 'Studentų atsiliepimų rinkimas',
   'features.studentFeedback.description': 'Rinkite tiesioginius atsiliepimus apie pamokas ir patirtis',
   'features.teacherInsights.title': 'Mokytojų analitikos skydelis',
@@ -207,7 +226,6 @@ export const ltTranslations = {
   'features.mentalHealth.title': 'Psichikos sveikatos pagalba',
   'features.mentalHealth.description': 'Anonimiškas pokalbis su mokyklos psichologais',
 
-  // Platform
   'platform.whySchools': 'Kodėl mokyklos renkasi Lessons Learnt',
   'platform.whySchoolsSubtitle': 'Išsami švietimo technologija, kuri pirmiausia rūpinasi studentų gerove',
   'platform.studentInsights': 'Realaus laiko studentų įžvalgos',
@@ -223,7 +241,6 @@ export const ltTranslations = {
   'platform.readyToTransform': 'Pasiruošę transformuoti savo mokyklą?',
   'platform.readyToTransformDesc': 'Prisijunkite prie tūkstančių pedagogų, jau naudojančių mūsų platformą',
 
-  // Compliance Footer
   'compliance.gdpr.title': 'GDPR atitinkantis',
   'compliance.gdpr.description': 'Pilnas atitikimas Europos duomenų apsaugos reglamentams',
   'compliance.soc2.title': 'SOC 2 sertifikuotas',
@@ -236,7 +253,6 @@ export const ltTranslations = {
   'compliance.dataRetention': 'Duomenų saugojimas',
   'compliance.rightToDelete': 'Teisė ištrinti',
 
-  // Demo
   'demo.featureDemo': 'Funkcionalumo demonstracija',
   'demo.title': 'Demonstracija',
   'demo.subtitle': 'Išbandykite mūsų platformos funkcijas',
