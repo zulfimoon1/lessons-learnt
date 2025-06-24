@@ -40,14 +40,20 @@ class ClassScheduleService {
 
   async getSchedulesByTeacher(teacherId: string) {
     try {
-      // Direct query to class_schedules without joining teachers table
+      console.log('Fetching schedules for teacher:', teacherId);
+      
       const { data, error } = await supabase
         .from('class_schedules')
         .select('*')
         .eq('teacher_id', teacherId)
         .order('class_date', { ascending: true });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching teacher schedules:', error);
+        throw error;
+      }
+      
+      console.log('Teacher schedules fetched successfully:', data?.length || 0);
       return { data, error: null };
     } catch (error) {
       console.error('Error fetching teacher schedules:', error);
@@ -57,13 +63,20 @@ class ClassScheduleService {
 
   async getSchedulesBySchool(school: string) {
     try {
+      console.log('Fetching schedules for school:', school);
+      
       const { data, error } = await supabase
         .from('class_schedules')
         .select('*')
         .eq('school', school)
         .order('class_date', { ascending: true });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching school schedules:', error);
+        throw error;
+      }
+      
+      console.log('School schedules fetched successfully:', data?.length || 0);
       return { data, error: null };
     } catch (error) {
       console.error('Error fetching school schedules:', error);
