@@ -33,18 +33,6 @@ const Index = () => {
               <h1 className="text-2xl font-bold text-foreground">Lessons Learnt</h1>
             </div>
             <div className="flex items-center gap-4">
-              <Link to="/student-login">
-                <Button variant="outline" size="sm" className="flex items-center gap-2">
-                  <UsersIcon className="w-4 h-4" />
-                  {t('auth.studentLogin')}
-                </Button>
-              </Link>
-              <Link to="/teacher-login">
-                <Button variant="outline" size="sm" className="flex items-center gap-2">
-                  <BookOpenIcon className="w-4 h-4" />
-                  {t('auth.teacherLogin')}
-                </Button>
-              </Link>
               <Link to="/pricing-showcase">
                 <Button variant="outline" size="sm" className="bg-purple-50 border-purple-200 hover:bg-purple-100 text-purple-700 hover:text-purple-800">
                   Pricing
@@ -66,10 +54,10 @@ const Index = () => {
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 text-center">
         <div className="max-w-3xl mx-auto">
           <h2 className="text-5xl font-bold text-foreground mb-6">
-            {t('welcome.title')}
+            {t('welcome.subtitle')}
           </h2>
           <p className="text-xl text-muted-foreground mb-12">
-            {t('welcome.subtitle')}
+            {t('welcome.title')}
           </p>
           
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-md mx-auto">

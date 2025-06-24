@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 
 export default {
@@ -61,7 +62,11 @@ export default {
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
-				}
+				},
+				// Custom brand colors
+				'brand-dark': '#023436',
+				'brand-teal': '#03b5aa', 
+				'brand-orange': '#ff8522'
 			},
 			borderRadius: {
 				lg: 'var(--radius)',
