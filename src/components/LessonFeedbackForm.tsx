@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -6,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { MessageSquareIcon, BookOpenIcon, EyeOffIcon } from "lucide-react";
 import StarRating from "./StarRating";
 import EmotionalStateSelector from "./EmotionalStateSelector";
@@ -15,8 +17,8 @@ import { useAuthStorage } from "@/hooks/useAuthStorage";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 const LessonFeedbackForm = () => {
-  const [lessonTitle, setLessonTitle] = useState("");
-  const [lessonDescription, setLessonDescription] = useState("");
+  const [selectedSubject, setSelectedSubject] = useState("");
+  const [lessonTopic, setLessonTopic] = useState("");
   const [understanding, setUnderstanding] = useState(0);
   const [interest, setInterest] = useState(0);
   const [growth, setGrowth] = useState(0);
@@ -30,16 +32,42 @@ const LessonFeedbackForm = () => {
   const { student } = useAuthStorage();
   const { t } = useLanguage();
 
-  // Check if this is a demo student
+  // Common subjects for dropdown
+  const subjects = [
+    "Mathematics",
+    "English",
+    "Science", 
+    "History",
+    "Geography",
+    "Physics",
+    "Chemistry",
+    "Biology",
+    "Literature",
+    "Art",
+    "Music",
+    "Physical Education",
+    "Computer Science",
+    "Foreign Languages"
+  ];
+
   const isDemoStudent = student?.id?.includes('-') && student?.full_name?.toLowerCase().includes('demo');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!lessonTitle.trim()) {
+    if (!selectedSubject || !lessonTopic.trim()) {
       toast({
         title: t('common.error'),
-        description: "Please enter a lesson title",
+        description: "Please fill in all required fields",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (understanding === 0 || interest === 0 || growth === 0) {
+      toast({
+        title: t('common.error'),
+        description: "Please provide ratings for all assessment questions",
         variant: "destructive",
       });
       return;
@@ -54,14 +82,14 @@ const LessonFeedbackForm = () => {
         studentName: student?.full_name 
       });
 
-      // All students (including demo) go through the same database operations
+      // Create a class schedule entry for the feedback
       const { data: scheduleData, error: scheduleError } = await supabase
         .from('class_schedules')
         .insert({
-          teacher_id: '00000000-0000-0000-0000-000000000000', // Placeholder for feedback-only submissions
-          subject: 'Student Feedback',
-          lesson_topic: lessonTitle.trim(),
-          description: lessonDescription.trim() || null,
+          teacher_id: '00000000-0000-0000-0000-000000000000',
+          subject: selectedSubject,
+          lesson_topic: lessonTopic.trim(),
+          description: additionalComments.trim() || null,
           grade: student?.grade || 'Unknown',
           school: student?.school || 'Unknown',
           class_date: new Date().toISOString().split('T')[0],
@@ -72,6 +100,7 @@ const LessonFeedbackForm = () => {
 
       if (scheduleError) throw scheduleError;
 
+      // Submit the feedback
       const { error } = await supabase
         .from('feedback')
         .insert({
@@ -96,8 +125,8 @@ const LessonFeedbackForm = () => {
       });
 
       // Reset form
-      setLessonTitle("");
-      setLessonDescription("");
+      setSelectedSubject("");
+      setLessonTopic("");
       setUnderstanding(0);
       setInterest(0);
       setGrowth(0);
@@ -119,152 +148,175 @@ const LessonFeedbackForm = () => {
   };
 
   return (
-    <Card className="bg-white/80 backdrop-blur-sm border-blue-100">
-      <CardHeader className="text-center">
+    <div className="space-y-6">
+      {/* Header Section */}
+      <div className="bg-white/80 backdrop-blur-sm rounded-lg p-6 border border-brand-teal/20 text-center">
         <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full mx-auto flex items-center justify-center mb-4">
           <MessageSquareIcon className="w-8 h-8 text-white" />
         </div>
-        <CardTitle className="text-2xl text-gray-900">{t('feedback.title')}</CardTitle>
-        <CardDescription className="text-lg">
-          {t('feedback.description')}
-        </CardDescription>
+        <h1 className="text-2xl font-bold text-gray-900 mb-2">Share Your Learning Experience</h1>
+        <p className="text-lg text-gray-600 mb-4">Help your teacher understand how to make lessons even better</p>
         {isDemoStudent && (
           <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
-            Demo Mode
+            👤 test student
           </Badge>
         )}
-      </CardHeader>
-      
-      <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      </div>
+
+      <Card className="bg-white/80 backdrop-blur-sm border-blue-100">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <BookOpenIcon className="w-5 h-5" />
+            Lesson Details
+          </CardTitle>
+          <CardDescription>
+            Tell us about today's lesson
+          </CardDescription>
+        </CardHeader>
+        
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Lesson Details Section */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <Label htmlFor="subject" className="text-base font-medium">
+                  Subject
+                </Label>
+                <Select value={selectedSubject} onValueChange={setSelectedSubject}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select subject" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {subjects.map((subject) => (
+                      <SelectItem key={subject} value={subject}>
+                        {subject}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="lessonTopic" className="text-base font-medium">
+                  Lesson Topic
+                </Label>
+                <Input
+                  id="lessonTopic"
+                  value={lessonTopic}
+                  onChange={(e) => setLessonTopic(e.target.value)}
+                  placeholder="e.g., Fractions, Photosynthesis, Shakespeare"
+                  required
+                />
+              </div>
+            </div>
+
+            {/* Learning Assessment Section */}
             <div>
-              <Label htmlFor="lessonTitle" className="flex items-center gap-2 text-base font-medium">
-                <BookOpenIcon className="w-5 h-5 text-blue-500" />
-                {t('feedback.lessonTitle')}
-              </Label>
-              <Badge variant="outline" className="mb-2 bg-red-50 text-red-700 border-red-200">
-                Required
-              </Badge>
-              <Input
-                id="lessonTitle"
-                value={lessonTitle}
-                onChange={(e) => setLessonTitle(e.target.value)}
-                placeholder={t('feedback.lessonTitlePlaceholder')}
-                required
+              <h3 className="text-lg font-semibold mb-4">Learning Assessment</h3>
+              <p className="text-sm text-gray-600 mb-6">Rate your learning experience</p>
+              
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="space-y-3">
+                  <Label className="text-base font-medium">How well did you understand the lesson content?</Label>
+                  <StarRating rating={understanding} onRatingChange={setUnderstanding} />
+                </div>
+
+                <div className="space-y-3">
+                  <Label className="text-base font-medium">How interesting was the lesson?</Label>
+                  <StarRating rating={interest} onRatingChange={setInterest} />
+                </div>
+
+                <div className="space-y-3">
+                  <Label className="text-base font-medium">How much do you feel you learned or grew from this lesson?</Label>
+                  <StarRating rating={growth} onRatingChange={setGrowth} />
+                </div>
+              </div>
+            </div>
+
+            {/* Emotional State Section */}
+            <div>
+              <Label className="text-base font-medium">Emotional State</Label>
+              <p className="text-sm text-gray-600 mb-4">
+                How did you feel emotionally during the lesson?
+              </p>
+              <p className="text-sm text-gray-500 mb-3">
+                Select how you felt emotionally during the lesson. This helps your teacher understand the classroom environment.
+              </p>
+              <EmotionalStateSelector 
+                selectedState={emotionalState} 
+                onStateChange={setEmotionalState} 
               />
             </div>
 
-            <div>
-              <Label htmlFor="lessonDescription" className="text-base font-medium">
-                {t('feedback.lessonDescription')}
+            {/* Detailed Feedback Section */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <Label htmlFor="whatWentWell" className="text-base font-medium">
+                  What went well in this lesson?
+                </Label>
+                <Textarea
+                  id="whatWentWell"
+                  value={whatWentWell}
+                  onChange={(e) => setWhatWentWell(e.target.value)}
+                  placeholder="Share what you liked or found helpful in the lesson"
+                  rows={4}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="suggestions" className="text-base font-medium">
+                  Suggestions for improvement
+                </Label>
+                <Textarea
+                  id="suggestions"
+                  value={suggestions}
+                  onChange={(e) => setSuggestions(e.target.value)}
+                  placeholder="What could be improved in future lessons?"
+                  rows={4}
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="additionalComments" className="text-base font-medium">
+                Additional comments
               </Label>
-              <Badge variant="outline" className="mb-2 bg-gray-50 text-gray-700 border-gray-200">
-                Optional
-              </Badge>
               <Textarea
-                id="lessonDescription"
-                value={lessonDescription}
-                onChange={(e) => setLessonDescription(e.target.value)}
-                placeholder={t('feedback.lessonDescriptionPlaceholder')}
+                id="additionalComments"
+                value={additionalComments}
+                onChange={(e) => setAdditionalComments(e.target.value)}
+                placeholder="Do you have any other thoughts or feedback you'd like to share?"
                 rows={3}
               />
             </div>
-          </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div>
-              <Label className="text-base font-medium">{t('feedback.understanding')}</Label>
-              <StarRating rating={understanding} onRatingChange={setUnderstanding} />
-            </div>
-
-            <div>
-              <Label className="text-base font-medium">{t('feedback.interest')}</Label>
-              <StarRating rating={interest} onRatingChange={setInterest} />
-            </div>
-
-            <div>
-              <Label className="text-base font-medium">{t('feedback.growth')}</Label>
-              <StarRating rating={growth} onRatingChange={setGrowth} />
-            </div>
-          </div>
-
-          <div>
-            <Label className="text-base font-medium">{t('feedback.emotionalState')}</Label>
-            <p className="text-sm text-gray-600 mb-3">
-              {t('feedback.emotionalStateDescription')}
-            </p>
-            <EmotionalStateSelector 
-              selectedState={emotionalState} 
-              onStateChange={setEmotionalState} 
-            />
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <Label htmlFor="whatWentWell" className="text-base font-medium">
-                {t('feedback.whatWentWell')}
-              </Label>
-              <Textarea
-                id="whatWentWell"
-                value={whatWentWell}
-                onChange={(e) => setWhatWentWell(e.target.value)}
-                placeholder={t('feedback.whatWentWellPlaceholder')}
-                rows={4}
+            {/* Anonymous Option */}
+            <div className="flex items-center space-x-2 p-4 bg-gray-50 rounded-lg">
+              <Checkbox
+                id="anonymous"
+                checked={isAnonymous}
+                onCheckedChange={(checked) => setIsAnonymous(checked as boolean)}
               />
-            </div>
-
-            <div>
-              <Label htmlFor="suggestions" className="text-base font-medium">
-                {t('feedback.suggestions')}
+              <Label htmlFor="anonymous" className="flex items-center gap-2 text-sm">
+                <EyeOffIcon className="w-4 h-4 text-gray-500" />
+                {t('feedback.submitAnonymously')}
               </Label>
-              <Textarea
-                id="suggestions"
-                value={suggestions}
-                onChange={(e) => setSuggestions(e.target.value)}
-                placeholder={t('feedback.suggestionsPlaceholder')}
-                rows={4}
-              />
             </div>
-          </div>
 
-          <div>
-            <Label htmlFor="additionalComments" className="text-base font-medium">
-              {t('feedback.additionalComments')}
-            </Label>
-            <Textarea
-              id="additionalComments"
-              value={additionalComments}
-              onChange={(e) => setAdditionalComments(e.target.value)}
-              placeholder={t('feedback.additionalCommentsPlaceholder')}
-              rows={3}
-            />
-          </div>
-
-          <div className="flex items-center space-x-2 p-4 bg-gray-50 rounded-lg">
-            <Checkbox
-              id="anonymous"
-              checked={isAnonymous}
-              onCheckedChange={(checked) => setIsAnonymous(checked as boolean)}
-            />
-            <Label htmlFor="anonymous" className="flex items-center gap-2 text-sm">
-              <EyeOffIcon className="w-4 h-4 text-gray-500" />
-              {t('feedback.submitAnonymously')}
-            </Label>
-          </div>
-
-          <div className="flex justify-center pt-4">
-            <Button
-              type="submit"
-              disabled={isSubmitting}
-              className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
-            >
-              {isSubmitting ? t('feedback.submitting') : t('feedback.submitFeedback')}
-            </Button>
-          </div>
-        </form>
-      </CardContent>
-    </Card>
+            {/* Submit Button */}
+            <div className="flex justify-center pt-4">
+              <Button
+                type="submit"
+                disabled={isSubmitting}
+                className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 px-8 py-3"
+              >
+                {isSubmitting ? t('feedback.submitting') : t('feedback.submitFeedback')}
+              </Button>
+            </div>
+          </form>
+        </CardContent>
+      </Card>
+    </div>
   );
 };
 

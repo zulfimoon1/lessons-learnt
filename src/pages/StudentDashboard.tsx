@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import StudentUpcomingClasses from "@/components/dashboard/student/StudentUpcomingClasses";
 import WeeklySummaryForm from "@/components/dashboard/student/WeeklySummaryForm";
 import MentalHealthSupportTab from "@/components/dashboard/MentalHealthSupportTab";
-import FeedbackForm from "@/components/FeedbackForm";
+import LessonFeedbackForm from "@/components/LessonFeedbackForm";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { LogOut } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -15,7 +15,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 const StudentDashboard = () => {
   const { student, logout, isLoading } = useAuth();
   const [searchParams] = useSearchParams();
-  const activeTab = searchParams.get('tab') || 'classes';
+  const activeTab = searchParams.get('tab') || 'feedback';
   const classId = searchParams.get('classId');
   const { t } = useLanguage();
 
@@ -42,7 +42,7 @@ const StudentDashboard = () => {
           <div>
             <h1 className="text-2xl font-bold text-brand-dark">{t('dashboard.title')}</h1>
             <p className="text-brand-dark/70">
-              {t('dashboard.welcome')} {student.full_name} - {t('dashboard.grade')} {student.grade}, {student.school}
+              {t('dashboard.welcome')}, {student.full_name} - {t('dashboard.grade')} {student.grade}, {student.school}
             </p>
           </div>
           <div className="flex items-center gap-4">
@@ -54,13 +54,52 @@ const StudentDashboard = () => {
           </div>
         </div>
 
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+          <div className="bg-white/80 backdrop-blur-sm rounded-lg p-6 border border-brand-teal/20">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 bg-brand-teal/10 rounded-lg flex items-center justify-center">
+                <span className="text-brand-teal font-semibold">🏫</span>
+              </div>
+              <div>
+                <p className="text-sm text-brand-dark/70">School</p>
+                <p className="font-semibold text-brand-dark">{student.school}</p>
+              </div>
+            </div>
+          </div>
+          
+          <div className="bg-white/80 backdrop-blur-sm rounded-lg p-6 border border-brand-teal/20">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 bg-brand-orange/10 rounded-lg flex items-center justify-center">
+                <span className="text-brand-orange font-semibold">📚</span>
+              </div>
+              <div>
+                <p className="text-sm text-brand-dark/70">Grade</p>
+                <p className="font-semibold text-brand-dark">{student.grade}</p>
+              </div>
+            </div>
+          </div>
+          
+          <div className="bg-white/80 backdrop-blur-sm rounded-lg p-6 border border-brand-teal/20">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 bg-brand-teal/10 rounded-lg flex items-center justify-center">
+                <span className="text-brand-teal font-semibold">📅</span>
+              </div>
+              <div>
+                <p className="text-sm text-brand-dark/70">{t('dashboard.upcomingClasses')}</p>
+                <p className="font-semibold text-brand-dark">0</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <Tabs value={activeTab} className="space-y-4">
           <TabsList className="grid w-full grid-cols-4 bg-white/80 backdrop-blur-sm border border-brand-teal/20">
-            <TabsTrigger value="classes" className="data-[state=active]:bg-brand-teal data-[state=active]:text-white text-brand-dark">
-              {t('dashboard.upcomingClasses')}
-            </TabsTrigger>
             <TabsTrigger value="feedback" className="data-[state=active]:bg-brand-teal data-[state=active]:text-white text-brand-dark">
               {t('dashboard.feedback')}
+            </TabsTrigger>
+            <TabsTrigger value="classes" className="data-[state=active]:bg-brand-teal data-[state=active]:text-white text-brand-dark">
+              {t('dashboard.upcomingClasses')}
             </TabsTrigger>
             <TabsTrigger value="weekly" className="data-[state=active]:bg-brand-orange data-[state=active]:text-white text-brand-dark">
               {t('dashboard.weeklySummary')}
@@ -70,18 +109,12 @@ const StudentDashboard = () => {
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="classes" className="space-y-4">
-            <StudentUpcomingClasses student={student} />
+          <TabsContent value="feedback" className="space-y-4">
+            <LessonFeedbackForm />
           </TabsContent>
 
-          <TabsContent value="feedback" className="space-y-4">
-            <FeedbackForm 
-              student={student} 
-              classScheduleId={classId}
-              onFeedbackSubmitted={() => {
-                window.location.href = '/student-dashboard?tab=classes';
-              }}
-            />
+          <TabsContent value="classes" className="space-y-4">
+            <StudentUpcomingClasses student={student} />
           </TabsContent>
 
           <TabsContent value="weekly" className="space-y-4">
