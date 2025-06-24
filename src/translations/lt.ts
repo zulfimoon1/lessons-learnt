@@ -103,6 +103,12 @@ export const ltTranslations = {
   'demo.fullFeatureAccess': 'Pilna prieiga prie funkcijų',
   'demo.sampleDataIncluded': 'Įtraukti pavyzdiniai duomenys',
   'demo.tryBeforeCommit': 'Išbandykite prieš apsispręsdami',
+  'demo.studentExperience': 'Studentų patirtis',
+  'demo.studentExperienceDesc': 'Pateikite pamokų atsiliepimus, dalykitės savaitės santraukomis ir gaukite psichinės sveikatos palaikymą - visa tai saugioje, anonimiškoje aplinkoje.',
+  'demo.teacherDashboard': 'Mokytojų skydelis',
+  'demo.teacherDashboardDesc': 'Stebėkite studentų įsitraukimą, sekite mokymosi pažangą ir identifikuokite studentus, kuriems reikia papildomo palaikymo.',
+  'demo.adminOverview': 'Administratoriaus apžvalga',
+  'demo.adminOverviewDesc': 'Visos mokyklos analitika, mokytojų valdymas ir išsamūs švietimo rezultatų įžvalgos.',
 
   // Student specific
   'student.failedToLoadClasses': 'Nepavyko įkelti pamokų',
@@ -111,6 +117,11 @@ export const ltTranslations = {
   'student.gradePlaceholder': '5 klasė, 10A',
   'student.classGrade': 'Klasė/Grupė',
   'student.school': 'Mokykla',
+  'student.passwordMismatch': 'Slaptažodžiai nesutampa',
+  'student.passwordsDoNotMatch': 'Slaptažodžiai nesutampa',
+  'student.signupFailed': 'Registracija nepavyko',
+  'student.accountCreated': 'Paskyra sukurta!',
+  'student.welcomeToApp': 'Sveiki atvykę į Lesson Lens!',
 
   // Teacher specific  
   'teacher.missingInfo': 'Trūksta informacijos',
