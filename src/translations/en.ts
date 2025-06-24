@@ -1,4 +1,3 @@
-
 import { enAuthTranslations } from './en/auth';
 import { enTeacherTranslations } from './en/teacher';
 import { enWeeklyTranslations } from './en/weekly';
@@ -235,7 +234,17 @@ export const enTranslations = {
   'demo.title': 'Demo',
   'demo.subtitle': 'Try our platform features',
   'demo.featuresUserTypes': '5+ Features, 3 User Types',
-  'demo.experienceComplete': 'Experience the complete platform',
+  'demo.studentExperience': 'Student Experience',
+  'demo.studentExperienceDesc': 'Submit lesson feedback, share weekly summaries, and access mental health support - all in a safe, anonymous environment.',
+  'demo.teacherDashboard': 'Teacher Dashboard',
+  'demo.teacherDashboardDesc': 'Monitor student engagement, track learning progress, and identify students who need additional support.',
+  'demo.adminOverview': 'Admin Overview',
+  'demo.adminOverviewDesc': 'School-wide analytics, teacher management, and comprehensive insights into educational outcomes.',
+  'demo.demoFeatures': 'Demo Features',
+  'demo.tryBeforeCommit': 'Try before you commit',
+  'demo.noRegistrationRequired': 'No registration required',
+  'demo.fullFeatureAccess': 'Full feature access',
+  'demo.sampleDataIncluded': 'Sample data included',
   'demo.discoverFuture': 'Discover the future of education in action - explore our innovative platform designed to transform learning for students, empower educators, and support mental health.',
   'demo.discoverDescription': 'From interactive student simulations to comprehensive teacher analytics - see how our platform creates a supportive and engaging learning environment.',
   'demo.experienceFullPlatform': 'Experience the Full Platform',

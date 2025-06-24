@@ -1,3 +1,4 @@
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -42,9 +43,9 @@ const DemoSection = () => {
                 <UserIcon className="w-6 h-6 text-brand-teal" />
               </div>
               <div>
-                <h3 className="text-xl font-semibold text-brand-dark mb-2">Student Experience</h3>
+                <h3 className="text-xl font-semibold text-brand-dark mb-2">{t('demo.studentExperience')}</h3>
                 <p className="text-gray-600">
-                  Submit lesson feedback, share weekly summaries, and access mental health support - all in a safe, anonymous environment.
+                  {t('demo.studentExperienceDesc')}
                 </p>
               </div>
             </div>
@@ -54,9 +55,9 @@ const DemoSection = () => {
                 <BookOpenIcon className="w-6 h-6 text-brand-teal" />
               </div>
               <div>
-                <h3 className="text-xl font-semibold text-brand-dark mb-2">Teacher Dashboard</h3>
+                <h3 className="text-xl font-semibold text-brand-dark mb-2">{t('demo.teacherDashboard')}</h3>
                 <p className="text-gray-600">
-                  Monitor student engagement, track learning progress, and identify students who need additional support.
+                  {t('demo.teacherDashboardDesc')}
                 </p>
               </div>
             </div>
@@ -66,9 +67,9 @@ const DemoSection = () => {
                 <BarChart3Icon className="w-6 h-6 text-brand-orange" />
               </div>
               <div>
-                <h3 className="text-xl font-semibold text-brand-dark mb-2">Admin Overview</h3>
+                <h3 className="text-xl font-semibold text-brand-dark mb-2">{t('demo.adminOverview')}</h3>
                 <p className="text-gray-600">
-                  School-wide analytics, teacher management, and comprehensive insights into educational outcomes.
+                  {t('demo.adminOverviewDesc')}
                 </p>
               </div>
             </div>
@@ -82,23 +83,23 @@ const DemoSection = () => {
                     <HeartIcon className="w-5 h-5 text-white" />
                   </div>
                   <div>
-                    <CardTitle className="text-lg text-brand-dark">Demo Features</CardTitle>
-                    <CardDescription className="text-gray-600">Try before you commit</CardDescription>
+                    <CardTitle className="text-lg text-brand-dark">{t('demo.demoFeatures')}</CardTitle>
+                    <CardDescription className="text-gray-600">{t('demo.tryBeforeCommit')}</CardDescription>
                   </div>
                 </div>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex items-center gap-3">
                   <ShieldCheckIcon className="w-5 h-5 text-brand-teal" />
-                  <span className="text-brand-dark">No registration required</span>
+                  <span className="text-brand-dark">{t('demo.noRegistrationRequired')}</span>
                 </div>
                 <div className="flex items-center gap-3">
                   <ShieldCheckIcon className="w-5 h-5 text-brand-teal" />
-                  <span className="text-brand-dark">Full feature access</span>
+                  <span className="text-brand-dark">{t('demo.fullFeatureAccess')}</span>
                 </div>
                 <div className="flex items-center gap-3">
                   <ShieldCheckIcon className="w-5 h-5 text-brand-teal" />
-                  <span className="text-brand-dark">Sample data included</span>
+                  <span className="text-brand-dark">{t('demo.sampleDataIncluded')}</span>
                 </div>
                 
                 <div className="pt-4">

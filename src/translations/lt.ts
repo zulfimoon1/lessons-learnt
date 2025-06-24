@@ -1,4 +1,3 @@
-
 import { ltAuthTranslations } from './lt/auth';
 import { ltTeacherTranslations } from './lt/teacher';
 import { ltWeeklyTranslations } from './lt/weekly';
@@ -236,6 +235,17 @@ export const ltTranslations = {
   'demo.subtitle': 'Išbandykite mūsų platformos funkcijas',
   'demo.featuresUserTypes': '5+ funkcijos, 3 vartotojų tipai',
   'demo.experienceComplete': 'Patirkite visą platformą',
+  'demo.studentExperience': 'Studento patirtis',
+  'demo.studentExperienceDesc': 'Pateikite pamokų atsiliepimus, dalykitės savaitės santraukomis ir naudokitės psichikos sveikatos pagalba - visa tai saugioje, anonimiškoje aplinkoje.',
+  'demo.teacherDashboard': 'Mokytojo skydelis',
+  'demo.teacherDashboardDesc': 'Stebėkite studentų įsitraukimą, sekite mokymosi pažangą ir identifikuokite studentus, kuriems reikia papildomos pagalbos.',
+  'demo.adminOverview': 'Administratoriaus apžvalga',
+  'demo.adminOverviewDesc': 'Visos mokyklos analitika, mokytojų valdymas ir išsamūs švietimo rezultatų įžvalgos.',
+  'demo.demoFeatures': 'Demonstracijos funkcijos',
+  'demo.tryBeforeCommit': 'Išbandykite prieš įsipareigojant',
+  'demo.noRegistrationRequired': 'Registracija nereikalinga',
+  'demo.fullFeatureAccess': 'Pilnas funkcijų prieigos',
+  'demo.sampleDataIncluded': 'Pavyzdiniai duomenys įtraukti',
   'demo.discoverFuture': 'Atraskite švietimo ateitį veiksmais - tyrinėkite mūsų inovatyvų platformą, skirtą transformuoti mokymąsi studentams, įgalinti pedagogus ir palaikyti psichikos sveikatą.',
   'demo.discoverDescription': 'Nuo interaktyvių studentų simuliacijų iki išsamios mokytojų analitikos - pamatykite, kaip mūsų platforma kuria palaikančią ir įtraukiančią mokymosi aplinką.',
   'demo.experienceFullPlatform': 'Patirkite visą platformą',
