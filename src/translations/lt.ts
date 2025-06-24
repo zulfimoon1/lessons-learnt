@@ -86,6 +86,8 @@ export const ltTranslations = {
   'teacher.dashboard.teacherAt': '{role} mokykloje {school}',
   'teacher.logout.success': 'Sėkmingai atsijungėte',
   'teacher.logout.description': 'Jūs buvote atsijungęs.',
+  'teacher.subscriptionRequiredForSummaries': 'Prenumerata reikalinga savaitės santraukoms peržiūrėti',
+  'teacher.subscribeToContinue': 'Prenumeruoti, kad tęsti',
 
   // Class Schedule Form
   'schedule.createTitle': 'Sukurti pamokos tvarkaraštį',

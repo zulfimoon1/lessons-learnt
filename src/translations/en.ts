@@ -1,4 +1,3 @@
-
 import { enAuthTranslations } from './en/auth';
 import { enTeacherTranslations } from './en/teacher';
 import { enWeeklyTranslations } from './en/weekly';
@@ -87,6 +86,8 @@ export const enTranslations = {
   'teacher.dashboard.teacherAt': '{role} at {school}',
   'teacher.logout.success': 'Logged out successfully',
   'teacher.logout.description': 'You have been logged out.',
+  'teacher.subscriptionRequiredForSummaries': 'A subscription is required to view weekly summaries',
+  'teacher.subscribeToContinue': 'Subscribe to Continue',
 
   // Class Schedule Form
   'schedule.createTitle': 'Create Class Schedule',
