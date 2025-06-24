@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -5,9 +6,9 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { AlertTriangle, Calendar, Heart, MessageSquare, User, Eye } from "lucide-react";
+import { AlertTriangle, Calendar, Heart, MessageSquare, User, Eye, LogOut } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
-import DashboardHeader from "@/components/dashboard/DashboardHeader";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { useNavigate } from "react-router-dom";
 
 interface WeeklySummary {
@@ -155,13 +156,32 @@ const DoctorDashboard: React.FC<DoctorDashboardProps> = ({ teacher }) => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-brand-teal/10 via-white to-brand-orange/10">
-      <DashboardHeader 
-        title="Doctor Overview"
-        userName={`${teacher.name} - Doctor at ${teacher.school}`}
-        onLogout={handleLogout}
-      />
-
       <div className="container mx-auto px-4 py-6 max-w-6xl">
+        {/* Header - matching teacher dashboard style exactly */}
+        <div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-lg border border-gray-200/50 mb-6 p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold text-brand-dark mb-2">
+                Doctor Overview
+              </h1>
+              <p className="text-brand-dark/70 text-lg">
+                Welcome, {teacher.name} - Doctor at {teacher.school}
+              </p>
+            </div>
+            <div className="flex gap-3">
+              <LanguageSwitcher />
+              <Button 
+                variant="outline" 
+                onClick={handleLogout}
+                className="border-brand-orange/30 hover:bg-brand-orange/10"
+              >
+                <LogOut className="w-4 h-4 mr-2" />
+                Logout
+              </Button>
+            </div>
+          </div>
+        </div>
+
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
           <Card className="bg-white/90 backdrop-blur-sm border-gray-200/50 shadow-lg">
