@@ -26,11 +26,11 @@ const TeacherLoginForm: React.FC<TeacherLoginFormProps> = ({ onLogin, isLoading 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="space-y-2">
-        <Label htmlFor="email" className="text-brand-dark">{t('auth.email')}</Label>
+        <Label htmlFor="email" className="text-brand-dark">{t('auth.email') || 'Email'}</Label>
         <Input
           id="email"
           type="email"
-          placeholder={t('auth.emailPlaceholder') || "Enter your email"}
+          placeholder="Enter your email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
@@ -39,12 +39,12 @@ const TeacherLoginForm: React.FC<TeacherLoginFormProps> = ({ onLogin, isLoading 
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="password" className="text-brand-dark">{t('auth.password')}</Label>
+        <Label htmlFor="password" className="text-brand-dark">{t('auth.password') || 'Password'}</Label>
         <div className="relative">
           <Input
             id="password"
             type={showPassword ? "text" : "password"}
-            placeholder={t('auth.passwordPlaceholder') || "Enter your password"}
+            placeholder="Enter your password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required

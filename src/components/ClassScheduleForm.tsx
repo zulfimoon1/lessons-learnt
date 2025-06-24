@@ -89,31 +89,10 @@ const ClassScheduleForm = ({ teacher }: ClassScheduleFormProps) => {
     
     try {
       console.log('🔄 Starting class scheduling process...');
-      console.log('📧 Teacher email:', teacher.email);
-      console.log('🏫 Teacher school:', teacher.school);
+      console.log('📧 Teacher:', teacher);
       console.log('📝 Form data:', formData);
       
-      // First, verify teacher exists and get their ID
-      console.log('🔍 Verifying teacher exists in database...');
-      const { data: teacherData, error: teacherError } = await supabase
-        .from('teachers')
-        .select('id, email, school, role')
-        .eq('email', teacher.email)
-        .single();
-
-      if (teacherError) {
-        console.error('❌ Teacher verification failed:', teacherError);
-        throw new Error(`Teacher verification failed: ${teacherError.message}`);
-      }
-
-      if (!teacherData) {
-        console.error('❌ Teacher not found in database');
-        throw new Error('Teacher not found in database. Please contact support.');
-      }
-
-      console.log('✅ Teacher verified:', teacherData);
-
-      // Set platform admin context for the current user
+      // Set platform admin context using the teacher's email
       console.log('🔐 Setting platform admin context...');
       const { error: contextError } = await supabase.rpc('set_platform_admin_context', { 
         admin_email: teacher.email 
@@ -121,7 +100,7 @@ const ClassScheduleForm = ({ teacher }: ClassScheduleFormProps) => {
       
       if (contextError) {
         console.error('❌ Failed to set admin context:', contextError);
-        console.log('⚠️ Proceeding without admin context - teacher should have insert permissions');
+        // Continue anyway - teacher might have direct permissions
       } else {
         console.log('✅ Platform admin context set successfully');
       }
@@ -144,7 +123,7 @@ const ClassScheduleForm = ({ teacher }: ClassScheduleFormProps) => {
           school: formData.school,
           grade: formData.grade,
           description: formData.description,
-          teacher_id: teacherData.id // Use verified teacher ID
+          teacher_id: teacher.id
         }));
 
         console.log('📅 Inserting recurring schedules:', schedules.length, 'classes');
@@ -176,7 +155,7 @@ const ClassScheduleForm = ({ teacher }: ClassScheduleFormProps) => {
           school: formData.school,
           grade: formData.grade,
           description: formData.description,
-          teacher_id: teacherData.id // Use verified teacher ID
+          teacher_id: teacher.id
         };
 
         console.log('📅 Inserting single schedule:', scheduleData);
@@ -236,21 +215,6 @@ const ClassScheduleForm = ({ teacher }: ClassScheduleFormProps) => {
   return (
     <div className="space-y-8">
       <form onSubmit={handleSubmit} className="space-y-8">
-        {/* Testing Panel - Only visible in development */}
-        {process.env.NODE_ENV === 'development' && (
-          <Card className="bg-yellow-50 border-yellow-200">
-            <CardHeader>
-              <CardTitle className="text-yellow-800">🧪 Testing Panel</CardTitle>
-            </CardHeader>
-            <CardContent className="text-sm text-yellow-700">
-              <p><strong>Teacher ID:</strong> {teacher.id}</p>
-              <p><strong>Teacher Email:</strong> {teacher.email}</p>
-              <p><strong>Teacher School:</strong> {teacher.school}</p>
-              <p><strong>Form Valid:</strong> {isFormValid ? '✅' : '❌'}</p>
-            </CardContent>
-          </Card>
-        )}
-
         {/* Basic Information */}
         <Card className="bg-white/80 backdrop-blur-sm border-blue-100">
           <CardHeader>
