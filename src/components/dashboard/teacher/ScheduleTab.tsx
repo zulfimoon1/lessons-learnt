@@ -20,6 +20,7 @@ interface ScheduleTabProps {
 const ScheduleTab: React.FC<ScheduleTabProps> = ({ teacher }) => {
   const [schedules, setSchedules] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [fetchError, setFetchError] = useState<string>("");
   const { toast } = useToast();
   const { t } = useLanguage();
 
@@ -29,23 +30,29 @@ const ScheduleTab: React.FC<ScheduleTabProps> = ({ teacher }) => {
 
   const fetchSchedules = async () => {
     try {
+      console.log('ScheduleTab: Attempting to fetch schedules for teacher:', teacher.id);
+      setFetchError("");
+      
       const result = await classScheduleService.getSchedulesByTeacher(teacher.id);
       if (result.data) {
+        console.log('ScheduleTab: Successfully fetched schedules:', result.data.length);
         setSchedules(result.data);
+      } else if (result.error) {
+        console.error('ScheduleTab: Error from service:', result.error);
+        setFetchError('Unable to load existing schedules. You can still create new ones.');
+        setSchedules([]); // Set empty array instead of failing
       }
     } catch (error) {
-      console.error('Error fetching schedules:', error);
-      toast({
-        title: t('common.error'),
-        description: t('student.failedToLoadClasses'),
-        variant: "destructive",
-      });
+      console.error('ScheduleTab: Error fetching schedules:', error);
+      setFetchError('Unable to load existing schedules. You can still create new ones.');
+      setSchedules([]); // Set empty array instead of failing
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleScheduleCreated = () => {
+    console.log('ScheduleTab: Schedule created, refreshing list...');
     fetchSchedules(); // Refresh the schedule list
   };
 
@@ -76,9 +83,15 @@ const ScheduleTab: React.FC<ScheduleTabProps> = ({ teacher }) => {
           </CardTitle>
         </CardHeader>
         <CardContent>
+          {fetchError && (
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-4">
+              <p className="text-yellow-800 text-sm">{fetchError}</p>
+            </div>
+          )}
+          
           {schedules.length === 0 ? (
             <p className="text-muted-foreground text-center py-4">
-              {t('schedule.noSchedules')}
+              {fetchError ? 'Create your first schedule below.' : t('schedule.noSchedules')}
             </p>
           ) : (
             <div className="grid gap-4">
