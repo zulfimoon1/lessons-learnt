@@ -1,4 +1,3 @@
-
 import React from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Navigate } from "react-router-dom";
@@ -54,25 +53,32 @@ const TeacherDashboard = () => {
   if (isDoctor) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-brand-teal/10 via-white to-brand-orange/10">
-        <div className="container mx-auto py-6">
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h1 className="text-2xl font-bold text-brand-dark">
-                {t('dashboard.doctorOverview')}
-              </h1>
-              <p className="text-brand-dark/70">
-                {t('teacher.dashboard.welcome')}, {teacher.name} - {t('teacher.dashboard.teacherAt', { 
-                  role: teacher.role.charAt(0).toUpperCase() + teacher.role.slice(1),
-                  school: teacher.school
-                })}
-              </p>
-            </div>
-            <div className="flex gap-2">
-              <LanguageSwitcher />
-              <Button variant="outline" onClick={handleLogout}>
-                <LogOut className="w-4 h-4 mr-2" />
-                {t('logout')}
-              </Button>
+        <div className="container mx-auto px-4 py-6 max-w-6xl">
+          {/* Header - matching teacher dashboard style */}
+          <div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-lg border border-gray-200/50 mb-6 p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="text-3xl font-bold text-brand-dark mb-2">
+                  {t('dashboard.doctorOverview')}
+                </h1>
+                <p className="text-brand-dark/70 text-lg">
+                  {t('teacher.dashboard.welcome')}, {teacher.name} - {t('teacher.dashboard.teacherAt', { 
+                    role: teacher.role.charAt(0).toUpperCase() + teacher.role.slice(1),
+                    school: teacher.school
+                  })}
+                </p>
+              </div>
+              <div className="flex gap-3">
+                <LanguageSwitcher />
+                <Button 
+                  variant="outline" 
+                  onClick={handleLogout}
+                  className="border-brand-orange/30 hover:bg-brand-orange/10"
+                >
+                  <LogOut className="w-4 h-4 mr-2" />
+                  {t('logout')}
+                </Button>
+              </div>
             </div>
           </div>
           <DoctorDashboard teacher={teacher} />
