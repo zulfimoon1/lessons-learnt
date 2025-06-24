@@ -9,7 +9,6 @@ import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { MessageSquare, Star, BookOpen, TrendingUp, Heart } from "lucide-react";
-import { useLanguage } from "@/contexts/LanguageContext";
 
 interface ClassSchedule {
   id: string;
@@ -18,9 +17,7 @@ interface ClassSchedule {
   class_date: string;
   class_time: string;
   teacher_id: string;
-  teacher: {
-    name: string;
-  };
+  teacher_name?: string;
 }
 
 interface FeedbackFormProps {
@@ -53,7 +50,6 @@ const FeedbackForm: React.FC<FeedbackFormProps> = ({
     additional_comments: ''
   });
   const { toast } = useToast();
-  const { t } = useLanguage();
 
   useEffect(() => {
     fetchAvailableClasses();
@@ -70,37 +66,36 @@ const FeedbackForm: React.FC<FeedbackFormProps> = ({
 
   const fetchAvailableClasses = async () => {
     try {
-      // Use efficient join (scalable architecture principle)
+      // Fetch recent and upcoming classes for feedback
       const { data: classData, error } = await supabase
         .from('class_schedules')
-        .select(`
-          *,
-          teacher:teachers!inner(name)
-        `)
+        .select('*')
         .eq('school', student.school)
         .eq('grade', student.grade)
         .gte('class_date', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]) // Last 7 days
         .order('class_date', { ascending: false });
 
-      if (error) {
-        // Security logging (comprehensive security principle)
-        await supabase.rpc('log_security_event_enhanced', {
-          event_type: 'feedback_class_fetch_error',
-          user_id: null,
-          details: `Failed to fetch classes for feedback: ${error.message}`,
-          severity: 'medium'
-        });
-        throw error;
-      }
+      if (error) throw error;
 
-      setAvailableClasses(classData || []);
+      // Fetch teacher names separately
+      const classesWithTeachers = await Promise.all(
+        (classData || []).map(async (classItem) => {
+          const { data: teacherData } = await supabase
+            .from('teachers')
+            .select('name')
+            .eq('id', classItem.teacher_id)
+            .single();
+
+          return {
+            ...classItem,
+            teacher_name: teacherData?.name || 'Unknown Teacher'
+          };
+        })
+      );
+
+      setAvailableClasses(classesWithTeachers);
     } catch (error) {
       console.error('Error fetching classes:', error);
-      toast({
-        title: t('errors.title'),
-        description: t('errors.fetchClasses'),
-        variant: "destructive",
-      });
     }
   };
 
@@ -109,8 +104,8 @@ const FeedbackForm: React.FC<FeedbackFormProps> = ({
     
     if (!selectedClass) {
       toast({
-        title: t('feedback.selectClass'),
-        description: t('feedback.selectClassDescription'),
+        title: "Please select a class",
+        description: "Choose which class you want to provide feedback for",
         variant: "destructive",
       });
       return;
@@ -118,8 +113,8 @@ const FeedbackForm: React.FC<FeedbackFormProps> = ({
 
     if (!formData.understanding || !formData.interest || !formData.educational_growth || !formData.emotional_state) {
       toast({
-        title: t('feedback.completeRequired'),
-        description: t('feedback.completeRequiredDescription'),
+        title: "Please complete all required fields",
+        description: "All rating fields are required",
         variant: "destructive",
       });
       return;
@@ -133,7 +128,7 @@ const FeedbackForm: React.FC<FeedbackFormProps> = ({
         .insert({
           class_schedule_id: selectedClass.id,
           student_id: isAnonymous ? null : student.id,
-          student_name: isAnonymous ? t('feedback.anonymousStudent') : student.full_name,
+          student_name: isAnonymous ? 'Anonymous Student' : student.full_name,
           is_anonymous: isAnonymous,
           understanding: parseInt(formData.understanding),
           interest: parseInt(formData.interest),
@@ -146,17 +141,9 @@ const FeedbackForm: React.FC<FeedbackFormProps> = ({
 
       if (error) throw error;
 
-      // Security audit logging (comprehensive security principle)
-      await supabase.rpc('log_security_event_enhanced', {
-        event_type: 'feedback_submitted',
-        user_id: isAnonymous ? null : student.id,
-        details: `Feedback submitted for class ${selectedClass.id} by ${isAnonymous ? 'anonymous' : student.full_name}`,
-        severity: 'low'
-      });
-
       toast({
-        title: t('feedback.submitSuccess'),
-        description: t('feedback.submitSuccessDescription'),
+        title: "Feedback submitted successfully",
+        description: "Thank you for your feedback! It will help improve future classes.",
       });
 
       // Reset form
@@ -176,8 +163,8 @@ const FeedbackForm: React.FC<FeedbackFormProps> = ({
     } catch (error) {
       console.error('Error submitting feedback:', error);
       toast({
-        title: t('errors.title'),
-        description: t('feedback.submitError'),
+        title: "Error",
+        description: "Failed to submit feedback. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -190,17 +177,17 @@ const FeedbackForm: React.FC<FeedbackFormProps> = ({
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <MessageSquare className="w-5 h-5" />
-          {t('feedback.classFeedback')}
+          Class Feedback
         </CardTitle>
         <p className="text-sm text-muted-foreground">
-          {t('feedback.classFeedbackDescription')}
+          Share your experience about a class to help improve teaching and learning
         </p>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Class Selection */}
           <div className="space-y-3">
-            <Label>{t('feedback.selectClassLabel')}</Label>
+            <Label>Select a class to provide feedback for:</Label>
             <div className="space-y-2 max-h-60 overflow-y-auto">
               {availableClasses.map((classItem) => (
                 <div
@@ -215,7 +202,7 @@ const FeedbackForm: React.FC<FeedbackFormProps> = ({
                       <h4 className="font-medium">{classItem.subject}</h4>
                       <p className="text-sm text-gray-600">{classItem.lesson_topic}</p>
                       <p className="text-xs text-gray-500">
-                        {new Date(classItem.class_date).toLocaleDateString()} {t('common.at')} {classItem.class_time} - {classItem.teacher.name}
+                        {new Date(classItem.class_date).toLocaleDateString()} at {classItem.class_time} - {classItem.teacher_name}
                       </p>
                     </div>
                   </div>
@@ -223,7 +210,7 @@ const FeedbackForm: React.FC<FeedbackFormProps> = ({
               ))}
               {availableClasses.length === 0 && (
                 <p className="text-center text-muted-foreground py-4">
-                  {t('feedback.noRecentClasses')}
+                  No recent classes available for feedback
                 </p>
               )}
             </div>
@@ -238,7 +225,7 @@ const FeedbackForm: React.FC<FeedbackFormProps> = ({
                   checked={isAnonymous}
                   onCheckedChange={setIsAnonymous}
                 />
-                <Label htmlFor="anonymous">{t('feedback.submitAnonymously')}</Label>
+                <Label htmlFor="anonymous">Submit feedback anonymously</Label>
               </div>
 
               {/* Rating Questions */}
@@ -246,7 +233,7 @@ const FeedbackForm: React.FC<FeedbackFormProps> = ({
                 <div className="space-y-3">
                   <Label className="flex items-center gap-2">
                     <BookOpen className="w-4 h-4" />
-                    {t('feedback.understanding')} *
+                    How well did you understand the lesson? *
                   </Label>
                   <RadioGroup value={formData.understanding} onValueChange={(value) => setFormData(prev => ({ ...prev, understanding: value }))}>
                     {[1, 2, 3, 4, 5].map((rating) => (
@@ -264,7 +251,7 @@ const FeedbackForm: React.FC<FeedbackFormProps> = ({
                 <div className="space-y-3">
                   <Label className="flex items-center gap-2">
                     <Heart className="w-4 h-4" />
-                    {t('feedback.interest')} *
+                    How interesting was the lesson? *
                   </Label>
                   <RadioGroup value={formData.interest} onValueChange={(value) => setFormData(prev => ({ ...prev, interest: value }))}>
                     {[1, 2, 3, 4, 5].map((rating) => (
@@ -282,7 +269,7 @@ const FeedbackForm: React.FC<FeedbackFormProps> = ({
                 <div className="space-y-3">
                   <Label className="flex items-center gap-2">
                     <TrendingUp className="w-4 h-4" />
-                    {t('feedback.educationalGrowth')} *
+                    How much did you learn? *
                   </Label>
                   <RadioGroup value={formData.educational_growth} onValueChange={(value) => setFormData(prev => ({ ...prev, educational_growth: value }))}>
                     {[1, 2, 3, 4, 5].map((rating) => (
@@ -300,14 +287,14 @@ const FeedbackForm: React.FC<FeedbackFormProps> = ({
 
               {/* Emotional State */}
               <div className="space-y-3">
-                <Label>{t('feedback.emotionalState')} *</Label>
+                <Label>How did you feel during the lesson? *</Label>
                 <RadioGroup value={formData.emotional_state} onValueChange={(value) => setFormData(prev => ({ ...prev, emotional_state: value }))}>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                     {['excited', 'focused', 'confused', 'bored', 'stressed', 'happy', 'frustrated', 'calm'].map((emotion) => (
                       <div key={emotion} className="flex items-center space-x-2">
                         <RadioGroupItem value={emotion} id={`emotion-${emotion}`} />
                         <Label htmlFor={`emotion-${emotion}`} className="capitalize">
-                          {t(`feedback.emotions.${emotion}`)}
+                          {emotion}
                         </Label>
                       </div>
                     ))}
@@ -318,41 +305,41 @@ const FeedbackForm: React.FC<FeedbackFormProps> = ({
               {/* Text Feedback */}
               <div className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="what_went_well">{t('feedback.whatWentWell')}</Label>
+                  <Label htmlFor="what_went_well">What went well in this lesson?</Label>
                   <Textarea
                     id="what_went_well"
                     value={formData.what_went_well}
                     onChange={(e) => setFormData(prev => ({ ...prev, what_went_well: e.target.value }))}
-                    placeholder={t('feedback.whatWentWellPlaceholder')}
+                    placeholder="Share what you enjoyed or found helpful..."
                     rows={3}
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="suggestions">{t('feedback.suggestions')}</Label>
+                  <Label htmlFor="suggestions">Any suggestions for improvement?</Label>
                   <Textarea
                     id="suggestions"
                     value={formData.suggestions}
                     onChange={(e) => setFormData(prev => ({ ...prev, suggestions: e.target.value }))}
-                    placeholder={t('feedback.suggestionsPlaceholder')}
+                    placeholder="How could the lesson be improved?"
                     rows={3}
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="additional_comments">{t('feedback.additionalComments')}</Label>
+                  <Label htmlFor="additional_comments">Additional comments</Label>
                   <Textarea
                     id="additional_comments"
                     value={formData.additional_comments}
                     onChange={(e) => setFormData(prev => ({ ...prev, additional_comments: e.target.value }))}
-                    placeholder={t('feedback.additionalCommentsPlaceholder')}
+                    placeholder="Any other thoughts or feedback..."
                     rows={3}
                   />
                 </div>
               </div>
 
               <Button type="submit" disabled={isSubmitting} className="w-full">
-                {isSubmitting ? t('common.submitting') : t('feedback.submitFeedback')}
+                {isSubmitting ? 'Submitting...' : 'Submit Feedback'}
               </Button>
             </>
           )}

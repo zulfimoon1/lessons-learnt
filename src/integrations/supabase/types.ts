@@ -117,15 +117,7 @@ export type Database = {
           subject?: string
           teacher_id?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "fk_class_schedules_teacher_id"
-            columns: ["teacher_id"]
-            isOneToOne: false
-            referencedRelation: "teachers"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       discount_codes: {
         Row: {

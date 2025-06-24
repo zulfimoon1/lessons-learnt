@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -6,7 +7,6 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Calendar, Clock, BookOpen, User, MessageSquare } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useLanguage } from "@/contexts/LanguageContext";
 
 interface ClassSchedule {
   id: string;
@@ -18,9 +18,7 @@ interface ClassSchedule {
   teacher_id: string;
   school: string;
   grade: string;
-  teacher: {
-    name: string;
-  };
+  teacher_name?: string;
 }
 
 interface StudentUpcomingClassesProps {
@@ -32,14 +30,11 @@ interface StudentUpcomingClassesProps {
   };
 }
 
-const StudentUpcomingClasses: React.FC<StudentUpcomingClassesProps> = React.memo(({ 
-  student 
-}) => {
+const StudentUpcomingClasses: React.FC<StudentUpcomingClassesProps> = ({ student }) => {
   const [upcomingClasses, setUpcomingClasses] = useState<ClassSchedule[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
   const navigate = useNavigate();
-  const { t } = useLanguage();
 
   useEffect(() => {
     fetchUpcomingClasses();
@@ -51,13 +46,9 @@ const StudentUpcomingClasses: React.FC<StudentUpcomingClassesProps> = React.memo
       
       const today = new Date().toISOString().split('T')[0];
       
-      // Use efficient join instead of multiple queries (scalable architecture principle)
       const { data: classData, error } = await supabase
         .from('class_schedules')
-        .select(`
-          *,
-          teacher:teachers!inner(name)
-        `)
+        .select('*')
         .eq('school', student.school)
         .eq('grade', student.grade)
         .gte('class_date', today)
@@ -65,32 +56,30 @@ const StudentUpcomingClasses: React.FC<StudentUpcomingClassesProps> = React.memo
         .order('class_time', { ascending: true })
         .limit(20);
 
-      if (error) {
-        // Security logging (comprehensive security principle)
-        await supabase.rpc('log_security_event_enhanced', {
-          event_type: 'data_access_error',
-          user_id: null,
-          details: `Failed to fetch upcoming classes for ${student.school}/${student.grade}: ${error.message}`,
-          severity: 'medium'
-        });
-        throw error;
-      }
+      if (error) throw error;
 
-      setUpcomingClasses(classData || []);
+      // Fetch teacher names separately
+      const classesWithTeachers = await Promise.all(
+        (classData || []).map(async (classItem) => {
+          const { data: teacherData } = await supabase
+            .from('teachers')
+            .select('name')
+            .eq('id', classItem.teacher_id)
+            .single();
 
-      // Security audit logging (comprehensive security principle)
-      await supabase.rpc('log_security_event_enhanced', {
-        event_type: 'student_class_access',
-        user_id: null,
-        details: `Student ${student.full_name} accessed upcoming classes`,
-        severity: 'low'
-      });
+          return {
+            ...classItem,
+            teacher_name: teacherData?.name || 'Unknown Teacher'
+          };
+        })
+      );
 
+      setUpcomingClasses(classesWithTeachers);
     } catch (error) {
       console.error('Error fetching upcoming classes:', error);
       toast({
-        title: t('errors.title'),
-        description: t('errors.fetchClasses'),
+        title: "Error",
+        description: "Failed to fetch upcoming classes",
         variant: "destructive",
       });
     } finally {
@@ -104,7 +93,7 @@ const StudentUpcomingClasses: React.FC<StudentUpcomingClassesProps> = React.memo
   };
 
   if (isLoading) {
-    return <div className="flex items-center justify-center p-8">{t('common.loading')}</div>;
+    return <div className="flex items-center justify-center p-8">Loading upcoming classes...</div>;
   }
 
   return (
@@ -112,16 +101,16 @@ const StudentUpcomingClasses: React.FC<StudentUpcomingClassesProps> = React.memo
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Calendar className="w-5 h-5" />
-          {t('dashboard.upcomingClasses')}
+          Upcoming Classes
         </CardTitle>
       </CardHeader>
       <CardContent>
         {upcomingClasses.length === 0 ? (
           <div className="text-center py-8">
             <BookOpen className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-            <p className="text-muted-foreground">{t('dashboard.noUpcomingClasses')}</p>
+            <p className="text-muted-foreground">No upcoming classes scheduled</p>
             <p className="text-sm text-muted-foreground mt-2">
-              {t('dashboard.classesWillAppear', { grade: student.grade, school: student.school })}
+              Classes for {student.grade} at {student.school} will appear here
             </p>
           </div>
         ) : (
@@ -149,13 +138,13 @@ const StudentUpcomingClasses: React.FC<StudentUpcomingClassesProps> = React.memo
                       </span>
                       <span className="flex items-center gap-1">
                         <User className="w-3 h-3" />
-                        {classItem.teacher.name}
+                        {classItem.teacher_name}
                       </span>
                     </div>
                     
                     <div className="flex items-center gap-2">
                       <Badge variant="secondary">
-                        {t('dashboard.durationMinutes', { minutes: classItem.duration_minutes.toString() })}
+                        {classItem.duration_minutes} minutes
                       </Badge>
                     </div>
                   </div>
@@ -168,7 +157,7 @@ const StudentUpcomingClasses: React.FC<StudentUpcomingClassesProps> = React.memo
                       className="flex items-center gap-2"
                     >
                       <MessageSquare className="w-4 h-4" />
-                      {t('feedback.leaveFeedback')}
+                      Leave Feedback
                     </Button>
                   </div>
                 </div>
@@ -179,6 +168,6 @@ const StudentUpcomingClasses: React.FC<StudentUpcomingClassesProps> = React.memo
       </CardContent>
     </Card>
   );
-});
+};
 
 export default StudentUpcomingClasses;

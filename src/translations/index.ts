@@ -1,8 +1,8 @@
 
-import { en } from './en';
-import { lt } from './lt';
+import { enTranslations } from './en';
+import { ltTranslations } from './lt';
 
 export const translations = {
-  en: en,
-  lt: lt,
+  en: enTranslations,
+  lt: ltTranslations,
 };
