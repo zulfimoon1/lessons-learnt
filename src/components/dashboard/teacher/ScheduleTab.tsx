@@ -20,6 +20,7 @@ interface ScheduleTabProps {
 
 const ScheduleTab: React.FC<ScheduleTabProps> = ({ teacher }) => {
   const [schedules, setSchedules] = useState<any[]>([]);
+  const [upcomingSchedules, setUpcomingSchedules] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [fetchError, setFetchError] = useState<string>("");
   const [isCreateOpen, setIsCreateOpen] = useState(false);
@@ -38,16 +39,30 @@ const ScheduleTab: React.FC<ScheduleTabProps> = ({ teacher }) => {
       const result = await classScheduleService.getSchedulesByTeacher(teacher.id);
       if (result.data) {
         console.log('ScheduleTab: Successfully fetched schedules:', result.data.length);
+        
+        // Filter upcoming schedules (future dates only)
+        const now = new Date();
+        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        
+        const upcoming = result.data.filter(schedule => {
+          const scheduleDate = new Date(schedule.class_date);
+          return scheduleDate >= today;
+        });
+        
+        console.log('ScheduleTab: Upcoming schedules filtered:', upcoming.length);
         setSchedules(result.data);
+        setUpcomingSchedules(upcoming);
       } else if (result.error) {
         console.error('ScheduleTab: Error from service:', result.error);
         setFetchError('Unable to load existing schedules. You can still create new ones.');
-        setSchedules([]); // Set empty array instead of failing
+        setSchedules([]);
+        setUpcomingSchedules([]);
       }
     } catch (error) {
       console.error('ScheduleTab: Error fetching schedules:', error);
       setFetchError('Unable to load existing schedules. You can still create new ones.');
-      setSchedules([]); // Set empty array instead of failing
+      setSchedules([]);
+      setUpcomingSchedules([]);
     } finally {
       setIsLoading(false);
     }
@@ -69,7 +84,7 @@ const ScheduleTab: React.FC<ScheduleTabProps> = ({ teacher }) => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Calendar className="w-5 h-5" />
-            {t('schedule.mySchedules')} ({schedules.length})
+            {t('schedule.mySchedules')} ({upcomingSchedules.length})
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -79,13 +94,13 @@ const ScheduleTab: React.FC<ScheduleTabProps> = ({ teacher }) => {
             </div>
           )}
           
-          {schedules.length === 0 ? (
+          {upcomingSchedules.length === 0 ? (
             <p className="text-muted-foreground text-center py-4">
               {fetchError ? 'Create your first schedule below.' : t('schedule.noSchedules')}
             </p>
           ) : (
             <div className="grid gap-4">
-              {schedules.map((schedule) => (
+              {upcomingSchedules.map((schedule) => (
                 <Card key={schedule.id} className="border border-gray-200">
                   <CardContent className="p-4">
                     <div className="flex justify-between items-start">

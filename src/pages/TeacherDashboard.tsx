@@ -1,4 +1,3 @@
-
 import React from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Navigate } from "react-router-dom";
@@ -14,6 +13,7 @@ import { LogOut, Calendar, MessageSquare, FileText, Heart, School, GraduationCap
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { classScheduleService } from "@/services/classScheduleService";
 
 const TeacherDashboard = () => {
   const { teacher, logout, isLoading } = useAuth();
