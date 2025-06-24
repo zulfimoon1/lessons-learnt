@@ -30,23 +30,29 @@ const StudentManagement: React.FC = () => {
   });
   const [isLoading, setIsLoading] = useState(false);
 
-  const fetchStudentsViaEdgeFunction = async () => {
-    try {
-      console.log('🔄 Fetching students via edge function...');
-      const { data, error } = await supabase.functions.invoke('platform-admin', {
-        body: {
-          operation: 'getStudents',
-          adminEmail: admin?.email
-        }
-      });
+  const ensurePlatformAdminContext = async () => {
+    if (admin?.email) {
+      await supabase.rpc('set_platform_admin_context', { admin_email: admin.email });
+    }
+  };
 
-      if (error) throw error;
+  const fetchStudents = async () => {
+    try {
+      console.log('🔄 Fetching students...');
+      await ensurePlatformAdminContext();
       
-      if (data?.success) {
-        console.log('✅ Students fetched:', data.data?.length || 0);
-        setStudents(data.data || []);
+      const { data, error } = await supabase
+        .from('students')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('❌ Error fetching students:', error);
+        toast.error('Failed to fetch students');
+        setStudents([]);
       } else {
-        throw new Error(data?.error || 'Failed to fetch students');
+        console.log('✅ Students fetched:', data?.length || 0);
+        setStudents(data || []);
       }
     } catch (error) {
       console.error('❌ Error fetching students:', error);
@@ -55,24 +61,24 @@ const StudentManagement: React.FC = () => {
     }
   };
 
-  const fetchSchoolsViaEdgeFunction = async () => {
+  const fetchSchools = async () => {
     try {
-      console.log('🔄 Fetching schools via edge function...');
-      const { data, error } = await supabase.functions.invoke('platform-admin', {
-        body: {
-          operation: 'getSchoolData',
-          adminEmail: admin?.email
-        }
-      });
-
-      if (error) throw error;
+      console.log('🔄 Fetching schools...');
+      await ensurePlatformAdminContext();
       
-      if (data?.success) {
-        const schoolNames = (data.data || []).map((school: any) => school.name);
+      const { data, error } = await supabase
+        .from('teachers')
+        .select('school')
+        .not('school', 'eq', 'Platform Administration');
+
+      if (error) {
+        console.error('❌ Error fetching schools:', error);
+        setSchools([]);
+      } else {
+        // Group by school and get unique schools
+        const schoolNames = [...new Set((data || []).map(teacher => teacher.school))];
         console.log('✅ Schools fetched:', schoolNames.length);
         setSchools(schoolNames);
-      } else {
-        throw new Error(data?.error || 'Failed to fetch schools');
       }
     } catch (error) {
       console.error('❌ Error fetching schools:', error);
@@ -94,35 +100,39 @@ const StudentManagement: React.FC = () => {
     setIsLoading(true);
     try {
       console.log('👨‍🎓 Creating new student:', newStudent.full_name);
+      await ensurePlatformAdminContext();
 
-      const { data, error } = await supabase.functions.invoke('platform-admin', {
-        body: {
-          operation: 'createStudent',
-          adminEmail: admin.email,
-          studentData: newStudent
-        }
-      });
+      // Hash password
+      const crypto = await import('crypto');
+      const hashedPassword = crypto.createHash('sha256').update(newStudent.password + 'simple_salt_2024').digest('hex');
+
+      const { data, error } = await supabase
+        .from('students')
+        .insert([{
+          full_name: newStudent.full_name,
+          school: newStudent.school,
+          grade: newStudent.grade,
+          password_hash: hashedPassword
+        }])
+        .select()
+        .single();
 
       if (error) throw error;
       
-      if (data?.success) {
-        console.log('✅ Student created successfully');
-        toast.success('Student added successfully');
-        
-        setNewStudent({
-          full_name: '',
-          school: '',
-          grade: '',
-          password: ''
-        });
-        
-        fetchStudentsViaEdgeFunction();
-      } else {
-        throw new Error(data?.error || 'Failed to create student');
-      }
+      console.log('✅ Student created successfully');
+      toast.success('Student added successfully');
+      
+      setNewStudent({
+        full_name: '',
+        school: '',
+        grade: '',
+        password: ''
+      });
+      
+      fetchStudents();
     } catch (error) {
       console.error('💥 Error adding student:', error);
-      if (error.message?.includes('unique constraint')) {
+      if (error.message?.includes('unique constraint') || error.message?.includes('duplicate')) {
         toast.error('A student with this name already exists at this school');
       } else {
         toast.error(`Failed to add student: ${error.message}`);
@@ -145,24 +155,18 @@ const StudentManagement: React.FC = () => {
     setIsLoading(true);
     try {
       console.log('🗑️ Deleting student:', studentName);
+      await ensurePlatformAdminContext();
       
-      const { data, error } = await supabase.functions.invoke('platform-admin', {
-        body: {
-          operation: 'deleteStudent',
-          adminEmail: admin.email,
-          studentId: studentId
-        }
-      });
+      const { error } = await supabase
+        .from('students')
+        .delete()
+        .eq('id', studentId);
 
       if (error) throw error;
       
-      if (data?.success) {
-        console.log('✅ Student deleted successfully');
-        toast.success('Student deleted successfully');
-        fetchStudentsViaEdgeFunction();
-      } else {
-        throw new Error(data?.error || 'Failed to delete student');
-      }
+      console.log('✅ Student deleted successfully');
+      toast.success('Student deleted successfully');
+      fetchStudents();
     } catch (error) {
       console.error('💥 Error deleting student:', error);
       toast.error(`Failed to delete student: ${error.message}`);
@@ -174,8 +178,8 @@ const StudentManagement: React.FC = () => {
   useEffect(() => {
     if (admin?.email) {
       console.log('🚀 Starting student management data fetch...');
-      fetchStudentsViaEdgeFunction();
-      fetchSchoolsViaEdgeFunction();
+      fetchStudents();
+      fetchSchools();
     }
   }, [admin?.email]);
 

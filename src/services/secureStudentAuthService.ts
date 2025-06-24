@@ -2,10 +2,26 @@
 import { supabase } from '@/integrations/supabase/client';
 import bcrypt from 'bcryptjs';
 
+const setPlatformAdminContext = async () => {
+  // Check if platform admin is stored in localStorage
+  const adminEmail = localStorage.getItem('platform_admin');
+  if (adminEmail) {
+    try {
+      const adminData = JSON.parse(adminEmail);
+      await supabase.rpc('set_platform_admin_context', { admin_email: adminData.email });
+    } catch (error) {
+      console.log('No platform admin context available');
+    }
+  }
+};
+
 export const secureStudentLogin = async (fullName: string, school: string, grade: string, password: string) => {
   console.log('🔐 SECURE STUDENT LOGIN:', { fullName, school, grade });
   
   try {
+    // Set platform admin context if available
+    await setPlatformAdminContext();
+
     // Handle demo student case first
     if (fullName.toLowerCase().includes('demo') && school.toLowerCase().includes('demo')) {
       console.log('✅ Demo student detected, allowing login');
@@ -71,6 +87,9 @@ export const secureStudentSignup = async (fullName: string, school: string, grad
   console.log('📝 SECURE STUDENT SIGNUP:', { fullName, school, grade });
   
   try {
+    // Set platform admin context if available
+    await setPlatformAdminContext();
+
     // Handle demo student case
     if (fullName.toLowerCase().includes('demo') && school.toLowerCase().includes('demo')) {
       console.log('✅ Demo student signup, creating demo student');
