@@ -1,3 +1,4 @@
+
 import React from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Navigate } from "react-router-dom";
@@ -62,10 +63,7 @@ const TeacherDashboard = () => {
                   {t('dashboard.doctorOverview')}
                 </h1>
                 <p className="text-brand-dark/70 text-lg">
-                  {t('doctor.dashboard.welcome')}, {teacher.name} - {t('doctor.dashboard.doctorAt', { 
-                    role: teacher.role.charAt(0).toUpperCase() + teacher.role.slice(1),
-                    school: teacher.school
-                  })}
+                  {t('doctor.dashboard.welcome')}, {teacher.name} - {teacher.role.charAt(0).toUpperCase() + teacher.role.slice(1)} at {teacher.school}
                 </p>
               </div>
               <div className="flex gap-3">
@@ -98,10 +96,7 @@ const TeacherDashboard = () => {
                 {isAdmin ? t('dashboard.schoolAdmin') : t('teacher.dashboard.title')}
               </h1>
               <p className="text-brand-dark/70 text-lg">
-                {t('teacher.dashboard.welcome')}, {teacher.name} - {t('teacher.dashboard.teacherAt', { 
-                  role: teacher.role.charAt(0).toUpperCase() + teacher.role.slice(1),
-                  school: teacher.school
-                })}
+                {t('teacher.dashboard.welcome')}, {teacher.name} - {teacher.role.charAt(0).toUpperCase() + teacher.role.slice(1)} at {teacher.school}
               </p>
             </div>
             <div className="flex gap-3">
