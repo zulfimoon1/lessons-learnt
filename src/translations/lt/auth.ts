@@ -23,6 +23,7 @@ export const ltAuthTranslations = {
   'auth.schoolCode': 'Mokyklos kodas',
   'auth.fullName': 'Vardas ir pavardė',
   'auth.grade': 'Klasė',
+  'auth.gradeClass': 'Klasė/Skyrius',
   'auth.chooseGrade': 'Pasirinkite klasę',
   'auth.continue': 'Tęsti',
   'auth.loggingIn': 'Prisijungiama...',

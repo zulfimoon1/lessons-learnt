@@ -37,6 +37,7 @@ export const enAuthTranslations = {
   'auth.confirmPassword': 'Confirm Password',
   'auth.fullName': 'Full Name',
   'auth.school': 'School',
+  'auth.gradeClass': 'Class/Grade',
   'auth.loggingIn': 'Logging in...',
   'auth.creatingAccount': 'Creating account...',
   'auth.loginSuccess': 'Login successful',

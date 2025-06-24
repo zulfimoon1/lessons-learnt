@@ -62,6 +62,8 @@ export const enTranslations = {
   'dashboard.grade': 'Grade',
   'dashboard.upcomingClasses': 'Upcoming Classes',
   'dashboard.subscribeNow': 'Subscribe Now',
+  'dashboard.noPsychologists': 'No psychologists available at your school',
+  'dashboard.contactAdmin': 'Please contact your school administrator for mental health support',
 
   // Feedback
   'feedback.title': 'Lesson Feedback',
@@ -86,6 +88,7 @@ export const enTranslations = {
   'feedback.submitted': 'Feedback Submitted',
   'feedback.submittedDescription': 'Thank you for your feedback!',
   'feedback.submitError': 'Failed to submit feedback. Please try again.',
+  'feedback.submitAnonymously': 'Submit anonymously',
 
   // Admin
   'admin.title': 'Admin Dashboard',
@@ -168,6 +171,13 @@ export const enTranslations = {
 
   // Student
   'student.failedToLoadClasses': 'Failed to load classes',
+  'student.accessMentalHealthResources': 'Access mental health resources at {school}',
+  'student.defaultName': 'Student',
+  'student.fullNamePlaceholder': 'John Smith',
+  'student.schoolPlaceholder': 'Central High School',
+  'student.gradePlaceholder': 'Grade 5, 10A',
+  'student.classGrade': 'Class/Grade',
+  'student.school': 'School',
 
   // Welcome/Home page
   'welcome.title': 'Lessons Learnt',
@@ -217,6 +227,7 @@ export const enTranslations = {
   'demo.discoverDescription': 'From interactive student simulations to comprehensive teacher analytics - see how our platform creates a supportive and engaging learning environment.',
   'demo.experienceFullPlatform': 'Experience the full platform',
   'demo.experienceDescription': 'From interactive student simulations to comprehensive teacher analytics - see how our platform creates a supportive and engaging learning environment.',
+  'demo.mockup.anonymousStudent': 'Anonymous Student',
 
   // Merge all sub-translations
   ...enAuthTranslations,

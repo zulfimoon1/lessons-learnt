@@ -1,3 +1,4 @@
+
 import { ltAuthTranslations } from './lt/auth';
 import { ltTeacherTranslations } from './lt/teacher';
 import { ltWeeklyTranslations } from './lt/weekly';
@@ -61,6 +62,8 @@ export const ltTranslations = {
   'dashboard.grade': 'Klasė',
   'dashboard.upcomingClasses': 'Artėjančios pamokos',
   'dashboard.subscribeNow': 'Užsisakyti dabar',
+  'dashboard.noPsychologists': 'Jūsų mokykloje nėra psichologų',
+  'dashboard.contactAdmin': 'Kreipkitės į mokyklos administratorių dėl psichikos sveikatos pagalbos',
 
   // Feedback
   'feedback.title': 'Pamokos atsiliepimas',
@@ -85,6 +88,7 @@ export const ltTranslations = {
   'feedback.submitted': 'Atsiliepimas pateiktas',
   'feedback.submittedDescription': 'Ačiū už jūsų atsiliepimą!',
   'feedback.submitError': 'Nepavyko pateikti atsiliepimo. Bandykite dar kartą.',
+  'feedback.submitAnonymously': 'Pateikti anonimiškai',
 
   // Admin
   'admin.title': 'Administratoriaus skydelis',
@@ -167,9 +171,16 @@ export const ltTranslations = {
 
   // Student
   'student.failedToLoadClasses': 'Nepavyko įkelti pamokų',
+  'student.accessMentalHealthResources': 'Naudokitės psichikos sveikatos ištekliais {school} mokykloje',
+  'student.defaultName': 'Studentas',
+  'student.fullNamePlaceholder': 'Vardas Pavardė',
+  'student.schoolPlaceholder': 'Vilniaus licėjus',
+  'student.gradePlaceholder': '10A, 9 klasė',
+  'student.classGrade': 'Klasė/Skyrius',
+  'student.school': 'Mokykla',
 
   // Welcome/Home page
-  'welcome.title': 'Lesson Lens',
+  'welcome.title': 'Lessons Learnt',
   'welcome.heroTitle1': 'Bendradarbiaujančios klasės',
   'welcome.heroTitle2': 'Nesustabdomi protai',
   'welcome.subtitle': 'Įgalinkite studentus, palaikykite mokytojus ir pagerinkite mokymąsi su mūsų išsamia švietimo platforma',
@@ -216,6 +227,7 @@ export const ltTranslations = {
   'demo.discoverDescription': 'Nuo interaktyvių studentų simuliacijų iki išsamios mokytojų analitikos - pamatykite, kaip mūsų platforma kuria palaikančią ir įtraukiančią mokymosi aplinką.',
   'demo.experienceFullPlatform': 'Patirkite visą platformą',
   'demo.experienceDescription': 'Nuo interaktyvių studentų simuliacijų iki išsamios mokytojų analitikos - pamatykite, kaip mūsų platforma kuria palaikančią ir įtraukiančią mokymosi aplinką.',
+  'demo.mockup.anonymousStudent': 'Anoniminis studentas',
 
   // Merge all sub-translations
   ...ltAuthTranslations,
