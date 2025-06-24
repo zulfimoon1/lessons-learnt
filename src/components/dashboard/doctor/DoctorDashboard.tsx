@@ -104,14 +104,14 @@ const DoctorDashboard: React.FC<DoctorDashboardProps> = ({ teacher }) => {
       );
 
       toast({
-        title: t('dashboard.alertReviewed'),
-        description: t('dashboard.alertMarkedReviewed'),
+        title: "Alert Reviewed",
+        description: "Alert has been marked as reviewed",
       });
     } catch (error) {
       console.error('Error reviewing alert:', error);
       toast({
         title: t('common.error'),
-        description: t('dashboard.failedToReview'),
+        description: "Failed to review alert",
         variant: "destructive",
       });
     }
@@ -124,9 +124,9 @@ const DoctorDashboard: React.FC<DoctorDashboardProps> = ({ teacher }) => {
   };
 
   const getSeverityText = (level: number) => {
-    if (level >= 5) return t('dashboard.highRisk');
-    if (level >= 3) return t('dashboard.mediumRisk');
-    return t('dashboard.lowRisk');
+    if (level >= 5) return 'High Risk';
+    if (level >= 3) return 'Medium Risk';
+    return 'Low Risk';
   };
 
   if (isLoading) {
@@ -157,7 +157,7 @@ const DoctorDashboard: React.FC<DoctorDashboardProps> = ({ teacher }) => {
                   <Calendar className="w-6 h-6 text-brand-teal" />
                 </div>
                 <div>
-                  <p className="text-sm text-gray-600">{t('dashboard.weeklySummaries')}</p>
+                  <p className="text-sm text-gray-600">Savaitės santraukos</p>
                   <p className="text-2xl font-bold text-brand-dark">{weeklySummaries.length}</p>
                 </div>
               </div>
@@ -171,7 +171,7 @@ const DoctorDashboard: React.FC<DoctorDashboardProps> = ({ teacher }) => {
                   <AlertTriangle className="w-6 h-6 text-brand-orange" />
                 </div>
                 <div>
-                  <p className="text-sm text-gray-600">{t('dashboard.mentalHealthAlerts')}</p>
+                  <p className="text-sm text-gray-600">Psichinės sveikatos perspėjimai</p>
                   <p className="text-2xl font-bold text-brand-dark">{mentalHealthAlerts.length}</p>
                 </div>
               </div>
@@ -185,7 +185,7 @@ const DoctorDashboard: React.FC<DoctorDashboardProps> = ({ teacher }) => {
                   <Eye className="w-6 h-6 text-red-600" />
                 </div>
                 <div>
-                  <p className="text-sm text-gray-600">{t('dashboard.unreviewed')}</p>
+                  <p className="text-sm text-gray-600">Neperžiūrėti</p>
                   <p className="text-2xl font-bold text-red-600">{unreviewed.length}</p>
                 </div>
               </div>
@@ -199,7 +199,7 @@ const DoctorDashboard: React.FC<DoctorDashboardProps> = ({ teacher }) => {
                   <AlertTriangle className="w-6 h-6 text-red-600" />
                 </div>
                 <div>
-                  <p className="text-sm text-gray-600">{t('dashboard.highRisk')}</p>
+                  <p className="text-sm text-gray-600">Didelė rizika</p>
                   <p className="text-2xl font-bold text-red-600">{highRiskAlerts.length}</p>
                 </div>
               </div>
@@ -218,14 +218,14 @@ const DoctorDashboard: React.FC<DoctorDashboardProps> = ({ teacher }) => {
                   className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-brand-orange data-[state=active]:to-brand-teal data-[state=active]:text-white data-[state=inactive]:text-gray-600 data-[state=inactive]:hover:text-brand-dark border-b-2 border-transparent data-[state=active]:border-brand-teal rounded-none px-6 py-4 font-medium transition-all duration-200"
                 >
                   <AlertTriangle className="w-4 h-4 mr-2" />
-                  {t('dashboard.mentalHealthAlerts')}
+                  Psichinės sveikatos perspėjimai
                 </TabsTrigger>
                 <TabsTrigger 
                   value="summaries" 
                   className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-brand-orange data-[state=active]:to-brand-teal data-[state=active]:text-white data-[state=inactive]:text-gray-600 data-[state=inactive]:hover:text-brand-dark border-b-2 border-transparent data-[state=active]:border-brand-teal rounded-none px-6 py-4 font-medium transition-all duration-200"
                 >
                   <Calendar className="w-4 h-4 mr-2" />
-                  {t('dashboard.weeklySummaries')}
+                  Savaitės santraukos
                 </TabsTrigger>
               </TabsList>
             </div>
@@ -237,14 +237,14 @@ const DoctorDashboard: React.FC<DoctorDashboardProps> = ({ teacher }) => {
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2 text-brand-dark">
                       <AlertTriangle className="w-5 h-5 text-red-500" />
-                      {t('dashboard.mentalHealthAlerts')}
+                      Psichinės sveikatos perspėjimai
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
                     {mentalHealthAlerts.length === 0 ? (
                       <div className="text-center py-8">
                         <Heart className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                        <p className="text-gray-600">{t('dashboard.noAlertsAtThisTime')}</p>
+                        <p className="text-gray-600">Šiuo metu perspėjimų nėra</p>
                       </div>
                     ) : (
                       <div className="space-y-4">
@@ -259,14 +259,14 @@ const DoctorDashboard: React.FC<DoctorDashboardProps> = ({ teacher }) => {
                                   </Badge>
                                   {alert.is_reviewed && (
                                     <Badge variant="outline" className="border-green-200 text-green-800 bg-green-50">
-                                      {t('dashboard.reviewed')}
+                                      Peržiūrėta
                                     </Badge>
                                   )}
                                 </div>
                                 <div className="flex items-center gap-4 text-sm text-gray-600 mb-2">
                                   <span className="flex items-center gap-1">
                                     <User className="w-3 h-3" />
-                                    {t('dashboard.grade')} {alert.grade}
+                                    Klasė {alert.grade}
                                   </span>
                                   <span className="flex items-center gap-1">
                                     <Calendar className="w-3 h-3" />
@@ -282,7 +282,7 @@ const DoctorDashboard: React.FC<DoctorDashboardProps> = ({ teacher }) => {
                                   className="border-brand-teal text-brand-teal hover:bg-brand-teal hover:text-white"
                                 >
                                   <Eye className="w-4 h-4 mr-2" />
-                                  {t('dashboard.markReviewed')}
+                                  Pažymėti kaip peržiūrėta
                                 </Button>
                               )}
                             </div>
@@ -300,14 +300,14 @@ const DoctorDashboard: React.FC<DoctorDashboardProps> = ({ teacher }) => {
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2 text-brand-dark">
                       <Calendar className="w-5 h-5 text-brand-teal" />
-                      {t('dashboard.weeklySummaries')}
+                      Savaitės santraukos
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
                     {weeklySummaries.length === 0 ? (
                       <div className="text-center py-8">
                         <MessageSquare className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                        <p className="text-gray-600">{t('dashboard.noSummariesYet')}</p>
+                        <p className="text-gray-600">Santraukų dar nėra</p>
                       </div>
                     ) : (
                       <div className="space-y-4">
@@ -317,16 +317,16 @@ const DoctorDashboard: React.FC<DoctorDashboardProps> = ({ teacher }) => {
                               <div>
                                 <h3 className="font-semibold text-brand-dark">{summary.student_name}</h3>
                                 <div className="flex items-center gap-4 text-sm text-gray-600">
-                                  <span>{t('dashboard.grade')} {summary.grade}</span>
-                                  <span>{t('dashboard.weekOf')} {new Date(summary.week_start_date).toLocaleDateString()}</span>
-                                  <span>{t('dashboard.submitted')} {new Date(summary.submitted_at).toLocaleDateString()}</span>
+                                  <span>Klasė {summary.grade}</span>
+                                  <span>Savaitė nuo {new Date(summary.week_start_date).toLocaleDateString()}</span>
+                                  <span>Pateikta {new Date(summary.submitted_at).toLocaleDateString()}</span>
                                 </div>
                               </div>
                             </div>
                             
                             {summary.emotional_concerns && (
                               <div className="mb-3">
-                                <h4 className="text-sm font-medium text-gray-700 mb-1">{t('dashboard.emotionalConcerns')}:</h4>
+                                <h4 className="text-sm font-medium text-gray-700 mb-1">Emociniai rūpesčiai:</h4>
                                 <p className="text-sm bg-red-50 p-3 rounded border-l-4 border-red-200 text-brand-dark">
                                   {summary.emotional_concerns}
                                 </p>
@@ -335,7 +335,7 @@ const DoctorDashboard: React.FC<DoctorDashboardProps> = ({ teacher }) => {
                             
                             {summary.academic_concerns && (
                               <div>
-                                <h4 className="text-sm font-medium text-gray-700 mb-1">{t('dashboard.academicConcerns')}:</h4>
+                                <h4 className="text-sm font-medium text-gray-700 mb-1">Akademiniai rūpesčiai:</h4>
                                 <p className="text-sm bg-blue-50 p-3 rounded border-l-4 border-blue-200 text-brand-dark">
                                   {summary.academic_concerns}
                                 </p>
