@@ -31,9 +31,10 @@ interface StudentUpcomingClassesProps {
     school: string;
     grade: string;
   };
+  onClassCountChange?: (count: number) => void;
 }
 
-const StudentUpcomingClasses: React.FC<StudentUpcomingClassesProps> = ({ student }) => {
+const StudentUpcomingClasses: React.FC<StudentUpcomingClassesProps> = ({ student, onClassCountChange }) => {
   const [upcomingClasses, setUpcomingClasses] = useState<ClassSchedule[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
@@ -43,6 +44,11 @@ const StudentUpcomingClasses: React.FC<StudentUpcomingClassesProps> = ({ student
   useEffect(() => {
     fetchUpcomingClasses();
   }, [student.school, student.grade]);
+
+  useEffect(() => {
+    // Notify parent component of class count change
+    onClassCountChange?.(upcomingClasses.length);
+  }, [upcomingClasses.length, onClassCountChange]);
 
   const fetchUpcomingClasses = async () => {
     try {

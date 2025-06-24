@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Navigate, useSearchParams, useNavigate } from "react-router-dom";
@@ -18,6 +19,7 @@ const StudentDashboard = () => {
   const activeTab = searchParams.get('tab') || 'classes';
   const classId = searchParams.get('classId');
   const { t } = useLanguage();
+  const [upcomingClassesCount, setUpcomingClassesCount] = useState(0);
 
   if (isLoading) {
     return (
@@ -93,7 +95,7 @@ const StudentDashboard = () => {
               </div>
               <div>
                 <p className="text-sm text-brand-dark/70">{t('dashboard.upcomingClasses')}</p>
-                <p className="font-semibold text-brand-dark">0</p>
+                <p className="font-semibold text-brand-dark">{upcomingClassesCount}</p>
               </div>
             </div>
           </div>
@@ -128,7 +130,10 @@ const StudentDashboard = () => {
           </TabsList>
 
           <TabsContent value="classes" className="space-y-4">
-            <StudentUpcomingClasses student={student} />
+            <StudentUpcomingClasses 
+              student={student} 
+              onClassCountChange={setUpcomingClassesCount}
+            />
           </TabsContent>
 
           <TabsContent value="feedback" className="space-y-4">
