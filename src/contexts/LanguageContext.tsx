@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { translations } from '@/translations';
 
@@ -14,8 +15,11 @@ interface LanguageContextType {
 const defaultContextValue: LanguageContextType = {
   language: 'en',
   setLanguage: () => {},
-  t: (key: string) => key, // Return the key as fallback
-  isLoading: true
+  t: (key: string) => {
+    // Return English translation or the key as fallback
+    return translations.en[key] || key;
+  },
+  isLoading: false
 };
 
 const LanguageContext = createContext<LanguageContextType>(defaultContextValue);
@@ -51,15 +55,20 @@ export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }
   };
 
   const t = (key: string, params?: Record<string, string>): string => {
-    let translation = translations[language][key] || key;
-    
-    if (params) {
-      Object.entries(params).forEach(([param, value]) => {
-        translation = translation.replace(`{${param}}`, value);
-      });
+    try {
+      let translation = translations[language]?.[key] || translations.en[key] || key;
+      
+      if (params) {
+        Object.entries(params).forEach(([param, value]) => {
+          translation = translation.replace(`{${param}}`, value);
+        });
+      }
+      
+      return translation;
+    } catch (error) {
+      console.warn(`Translation error for key "${key}":`, error);
+      return key;
     }
-    
-    return translation;
   };
 
   const contextValue: LanguageContextType = {
@@ -78,10 +87,8 @@ export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }
 
 export const useLanguage = () => {
   const context = useContext(LanguageContext);
-  // Since we now provide a default context value, this should never be undefined
-  // But we'll keep a safety check with a more informative message
   if (!context) {
-    console.error('useLanguage: Context is unexpectedly undefined');
+    console.warn('useLanguage: Context not found, using default');
     return defaultContextValue;
   }
   return context;
