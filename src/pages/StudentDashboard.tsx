@@ -1,4 +1,3 @@
-
 import { useState, useEffect, Suspense, lazy } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuthStorage } from "@/hooks/useAuthStorage";
@@ -135,7 +134,7 @@ const StudentDashboard = () => {
   const handleLogout = () => {
     console.log('StudentDashboard: Logging out student');
     clearAuth();
-    navigate('/student-login', { replace: true });
+    // Navigation is handled by DashboardHeader
   };
 
   if (isLoading) {

@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { SchoolIcon, LogOut } from "lucide-react";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useNavigate } from "react-router-dom";
 
 interface DashboardHeaderProps {
   title: string;
@@ -13,6 +14,13 @@ interface DashboardHeaderProps {
 
 const DashboardHeader: React.FC<DashboardHeaderProps> = ({ title, userName, onLogout }) => {
   const { t } = useLanguage();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    onLogout();
+    // Redirect to homepage after logout
+    navigate('/', { replace: true });
+  };
 
   return (
     <header className="bg-card/80 backdrop-blur-sm border-b border-border p-4">
@@ -30,7 +38,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({ title, userName, onLo
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
-              onLogout();
+              handleLogout();
             }}
             variant="outline"
             className="flex items-center gap-2"

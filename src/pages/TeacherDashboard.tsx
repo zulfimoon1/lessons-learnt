@@ -1,4 +1,3 @@
-
 import { useState, useEffect, Suspense, lazy } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuthStorage } from "@/hooks/useAuthStorage";
@@ -78,10 +77,11 @@ const TeacherDashboard = () => {
   const handleLogout = () => {
     try {
       clearAuth();
-      window.location.href = '/teacher-login';
+      // Navigation is handled by DashboardHeader
     } catch (error) {
       console.error('Logout error:', error);
-      window.location.href = '/teacher-login';
+      // Fallback navigation if DashboardHeader fails
+      navigate('/', { replace: true });
     }
   };
 
