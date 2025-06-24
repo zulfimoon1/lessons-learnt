@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -77,7 +78,7 @@ const ClassScheduleForm = ({ teacher }: ClassScheduleFormProps) => {
     if (!formData.subject || !formData.lesson_topic || !formData.class_date || 
         !formData.class_time || !formData.school || !formData.grade) {
       toast({
-        title: t('common.error'),
+        title: t('common.error') || 'Error',
         description: "Please fill in all required fields",
         variant: "destructive",
       });
@@ -92,6 +93,26 @@ const ClassScheduleForm = ({ teacher }: ClassScheduleFormProps) => {
       console.log('🏫 Teacher school:', teacher.school);
       console.log('📝 Form data:', formData);
       
+      // First, verify teacher exists and get their ID
+      console.log('🔍 Verifying teacher exists in database...');
+      const { data: teacherData, error: teacherError } = await supabase
+        .from('teachers')
+        .select('id, email, school, role')
+        .eq('email', teacher.email)
+        .single();
+
+      if (teacherError) {
+        console.error('❌ Teacher verification failed:', teacherError);
+        throw new Error(`Teacher verification failed: ${teacherError.message}`);
+      }
+
+      if (!teacherData) {
+        console.error('❌ Teacher not found in database');
+        throw new Error('Teacher not found in database. Please contact support.');
+      }
+
+      console.log('✅ Teacher verified:', teacherData);
+
       // Set platform admin context for the current user
       console.log('🔐 Setting platform admin context...');
       const { error: contextError } = await supabase.rpc('set_platform_admin_context', { 
@@ -100,10 +121,10 @@ const ClassScheduleForm = ({ teacher }: ClassScheduleFormProps) => {
       
       if (contextError) {
         console.error('❌ Failed to set admin context:', contextError);
-        throw new Error(`Failed to set admin context: ${contextError.message}`);
+        console.log('⚠️ Proceeding without admin context - teacher should have insert permissions');
+      } else {
+        console.log('✅ Platform admin context set successfully');
       }
-      
-      console.log('✅ Platform admin context set successfully');
       
       if (formData.is_recurring) {
         // Generate recurring schedule entries
@@ -123,7 +144,7 @@ const ClassScheduleForm = ({ teacher }: ClassScheduleFormProps) => {
           school: formData.school,
           grade: formData.grade,
           description: formData.description,
-          teacher_id: teacher.id
+          teacher_id: teacherData.id // Use verified teacher ID
         }));
 
         console.log('📅 Inserting recurring schedules:', schedules.length, 'classes');
@@ -141,7 +162,7 @@ const ClassScheduleForm = ({ teacher }: ClassScheduleFormProps) => {
         console.log('✅ Successfully inserted recurring schedules:', data?.length);
 
         toast({
-          title: t('common.success'),
+          title: t('common.success') || 'Success',
           description: `${schedules.length} classes scheduled successfully!`,
         });
       } else {
@@ -155,7 +176,7 @@ const ClassScheduleForm = ({ teacher }: ClassScheduleFormProps) => {
           school: formData.school,
           grade: formData.grade,
           description: formData.description,
-          teacher_id: teacher.id
+          teacher_id: teacherData.id // Use verified teacher ID
         };
 
         console.log('📅 Inserting single schedule:', scheduleData);
@@ -173,7 +194,7 @@ const ClassScheduleForm = ({ teacher }: ClassScheduleFormProps) => {
         console.log('✅ Successfully inserted schedule:', data);
 
         toast({
-          title: t('common.success'),
+          title: t('common.success') || 'Success',
           description: "Class scheduled successfully!",
         });
       }
@@ -196,7 +217,7 @@ const ClassScheduleForm = ({ teacher }: ClassScheduleFormProps) => {
     } catch (error) {
       console.error('💥 Error scheduling class:', error);
       toast({
-        title: t('common.error'),
+        title: t('common.error') || 'Error',
         description: `Failed to schedule class: ${error.message}`,
         variant: "destructive",
       });
@@ -235,37 +256,37 @@ const ClassScheduleForm = ({ teacher }: ClassScheduleFormProps) => {
           <CardHeader>
             <CardTitle className="text-xl text-gray-900 flex items-center gap-2">
               <BookOpenIcon className="w-5 h-5" />
-              {t('teacher.classDetailsTitle')}
+              {t('teacher.classDetailsTitle') || 'Class Details'}
             </CardTitle>
-            <CardDescription>{t('teacher.classDetailsDescription')}</CardDescription>
+            <CardDescription>{t('teacher.classDetailsDescription') || 'Enter the details for your class'}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="subject" className="text-gray-700 font-medium">{t('teacher.subjectLabel')}</Label>
+                <Label htmlFor="subject" className="text-gray-700 font-medium">{t('teacher.subjectLabel') || 'Subject'}</Label>
                 <Select value={formData.subject} onValueChange={(value) => setFormData(prev => ({ ...prev, subject: value }))}>
                   <SelectTrigger>
-                    <SelectValue placeholder={t('teacher.selectSubject')} />
+                    <SelectValue placeholder={t('teacher.selectSubject') || 'Select a subject'} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="mathematics">{t('teacher.mathematics')}</SelectItem>
-                    <SelectItem value="science">{t('teacher.science')}</SelectItem>
-                    <SelectItem value="english">{t('teacher.english')}</SelectItem>
-                    <SelectItem value="history">{t('teacher.history')}</SelectItem>
-                    <SelectItem value="geography">{t('teacher.geography')}</SelectItem>
-                    <SelectItem value="art">{t('teacher.art')}</SelectItem>
-                    <SelectItem value="music">{t('teacher.music')}</SelectItem>
-                    <SelectItem value="physical-education">{t('teacher.physicalEducation')}</SelectItem>
-                    <SelectItem value="computer-science">{t('teacher.computerScience')}</SelectItem>
-                    <SelectItem value="other">{t('teacher.other')}</SelectItem>
+                    <SelectItem value="mathematics">{t('teacher.mathematics') || 'Mathematics'}</SelectItem>
+                    <SelectItem value="science">{t('teacher.science') || 'Science'}</SelectItem>
+                    <SelectItem value="english">{t('teacher.english') || 'English'}</SelectItem>
+                    <SelectItem value="history">{t('teacher.history') || 'History'}</SelectItem>
+                    <SelectItem value="geography">{t('teacher.geography') || 'Geography'}</SelectItem>
+                    <SelectItem value="art">{t('teacher.art') || 'Art'}</SelectItem>
+                    <SelectItem value="music">{t('teacher.music') || 'Music'}</SelectItem>
+                    <SelectItem value="physical-education">{t('teacher.physicalEducation') || 'Physical Education'}</SelectItem>
+                    <SelectItem value="computer-science">{t('teacher.computerScience') || 'Computer Science'}</SelectItem>
+                    <SelectItem value="other">{t('teacher.other') || 'Other'}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div>
-                <Label htmlFor="lesson_topic" className="text-gray-700 font-medium">{t('teacher.lessonTopicLabel')}</Label>
+                <Label htmlFor="lesson_topic" className="text-gray-700 font-medium">{t('teacher.lessonTopicLabel') || 'Lesson Topic'}</Label>
                 <Input
                   id="lesson_topic"
-                  placeholder={t('teacher.lessonTopicPlaceholder')}
+                  placeholder={t('teacher.lessonTopicPlaceholder') || 'Enter lesson topic'}
                   value={formData.lesson_topic}
                   onChange={(e) => setFormData(prev => ({ ...prev, lesson_topic: e.target.value }))}
                   className="border-gray-200"
@@ -274,10 +295,10 @@ const ClassScheduleForm = ({ teacher }: ClassScheduleFormProps) => {
             </div>
 
             <div>
-              <Label htmlFor="description" className="text-gray-700 font-medium">{t('teacher.descriptionLabel')}</Label>
+              <Label htmlFor="description" className="text-gray-700 font-medium">{t('teacher.descriptionLabel') || 'Description'}</Label>
               <Textarea
                 id="description"
-                placeholder={t('teacher.descriptionPlaceholder')}
+                placeholder={t('teacher.descriptionPlaceholder') || 'Enter class description'}
                 value={formData.description}
                 onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
                 className="border-gray-200 min-h-[80px]"
@@ -291,14 +312,14 @@ const ClassScheduleForm = ({ teacher }: ClassScheduleFormProps) => {
           <CardHeader>
             <CardTitle className="text-xl text-gray-900 flex items-center gap-2">
               <CalendarIcon className="w-5 h-5" />
-              {t('teacher.scheduleDetailsTitle')}
+              {t('teacher.scheduleDetailsTitle') || 'Schedule Details'}
             </CardTitle>
-            <CardDescription>{t('teacher.scheduleDetailsDescription')}</CardDescription>
+            <CardDescription>{t('teacher.scheduleDetailsDescription') || 'Set the date and time for your class'}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <Label htmlFor="class_date" className="text-gray-700 font-medium">{t('teacher.dateLabel')}</Label>
+                <Label htmlFor="class_date" className="text-gray-700 font-medium">{t('teacher.dateLabel') || 'Date'}</Label>
                 <Input
                   id="class_date"
                   type="date"
@@ -308,7 +329,7 @@ const ClassScheduleForm = ({ teacher }: ClassScheduleFormProps) => {
                 />
               </div>
               <div>
-                <Label htmlFor="class_time" className="text-gray-700 font-medium">{t('teacher.timeLabel')}</Label>
+                <Label htmlFor="class_time" className="text-gray-700 font-medium">{t('teacher.timeLabel') || 'Time'}</Label>
                 <Input
                   id="class_time"
                   type="time"
@@ -318,17 +339,17 @@ const ClassScheduleForm = ({ teacher }: ClassScheduleFormProps) => {
                 />
               </div>
               <div>
-                <Label htmlFor="duration_minutes" className="text-gray-700 font-medium">{t('teacher.durationLabel')}</Label>
+                <Label htmlFor="duration_minutes" className="text-gray-700 font-medium">{t('teacher.durationLabel') || 'Duration'}</Label>
                 <Select value={formData.duration_minutes.toString()} onValueChange={(value) => setFormData(prev => ({ ...prev, duration_minutes: parseInt(value) }))}>
                   <SelectTrigger>
                     <SelectValue placeholder="60" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="30">{t('teacher.30minutes')}</SelectItem>
-                    <SelectItem value="45">{t('teacher.45minutes')}</SelectItem>
-                    <SelectItem value="60">{t('teacher.60minutes')}</SelectItem>
-                    <SelectItem value="90">{t('teacher.90minutes')}</SelectItem>
-                    <SelectItem value="120">{t('teacher.120minutes')}</SelectItem>
+                    <SelectItem value="30">{t('teacher.30minutes') || '30 minutes'}</SelectItem>
+                    <SelectItem value="45">{t('teacher.45minutes') || '45 minutes'}</SelectItem>
+                    <SelectItem value="60">{t('teacher.60minutes') || '60 minutes'}</SelectItem>
+                    <SelectItem value="90">{t('teacher.90minutes') || '90 minutes'}</SelectItem>
+                    <SelectItem value="120">{t('teacher.120minutes') || '120 minutes'}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -336,20 +357,20 @@ const ClassScheduleForm = ({ teacher }: ClassScheduleFormProps) => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="school" className="text-gray-700 font-medium">{t('teacher.schoolLabel')}</Label>
+                <Label htmlFor="school" className="text-gray-700 font-medium">{t('teacher.schoolLabel') || 'School'}</Label>
                 <Input
                   id="school"
-                  placeholder={t('teacher.schoolPlaceholder')}
+                  placeholder={t('teacher.schoolPlaceholder') || 'Enter school name'}
                   value={formData.school}
                   onChange={(e) => setFormData(prev => ({ ...prev, school: e.target.value }))}
                   className="border-gray-200"
                 />
               </div>
               <div>
-                <Label htmlFor="grade" className="text-gray-700 font-medium">{t('teacher.classGradeLabel')}</Label>
+                <Label htmlFor="grade" className="text-gray-700 font-medium">{t('teacher.classGradeLabel') || 'Class/Grade'}</Label>
                 <Input
                   id="grade"
-                  placeholder={t('teacher.classGradePlaceholder')}
+                  placeholder={t('teacher.classGradePlaceholder') || 'Enter class or grade'}
                   value={formData.grade}
                   onChange={(e) => setFormData(prev => ({ ...prev, grade: e.target.value }))}
                   className="border-gray-200"
@@ -364,9 +385,9 @@ const ClassScheduleForm = ({ teacher }: ClassScheduleFormProps) => {
           <CardHeader>
             <CardTitle className="text-xl text-gray-900 flex items-center gap-2">
               <RefreshCcwIcon className="w-5 h-5" />
-              {t('teacher.recurringScheduleTitle')}
+              {t('teacher.recurringScheduleTitle') || 'Recurring Schedule'}
             </CardTitle>
-            <CardDescription>{t('teacher.recurringScheduleDescription')}</CardDescription>
+            <CardDescription>{t('teacher.recurringScheduleDescription') || 'Set up recurring classes'}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-center space-x-2">
@@ -376,7 +397,7 @@ const ClassScheduleForm = ({ teacher }: ClassScheduleFormProps) => {
                 onCheckedChange={(checked) => setFormData(prev => ({ ...prev, is_recurring: checked }))}
               />
               <Label htmlFor="is_recurring" className="text-gray-700 font-medium">
-                {t('teacher.makeRecurring')}
+                {t('teacher.makeRecurring') || 'Make this a recurring class'}
               </Label>
             </div>
 
@@ -384,7 +405,7 @@ const ClassScheduleForm = ({ teacher }: ClassScheduleFormProps) => {
               <div className="space-y-4 pt-4 border-t border-gray-200">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
-                    <Label htmlFor="recurrence_pattern" className="text-gray-700 font-medium">{t('teacher.repeatPatternLabel')}</Label>
+                    <Label htmlFor="recurrence_pattern" className="text-gray-700 font-medium">{t('teacher.repeatPatternLabel') || 'Repeat Pattern'}</Label>
                     <Select 
                       value={formData.recurrence_pattern} 
                       onValueChange={(value) => setFormData(prev => ({ ...prev, recurrence_pattern: value }))}
@@ -393,14 +414,14 @@ const ClassScheduleForm = ({ teacher }: ClassScheduleFormProps) => {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="weekly">{t('teacher.weekly')}</SelectItem>
-                        <SelectItem value="biweekly">{t('teacher.biweekly')}</SelectItem>
-                        <SelectItem value="monthly">{t('teacher.monthly')}</SelectItem>
+                        <SelectItem value="weekly">{t('teacher.weekly') || 'Weekly'}</SelectItem>
+                        <SelectItem value="biweekly">{t('teacher.biweekly') || 'Bi-weekly'}</SelectItem>
+                        <SelectItem value="monthly">{t('teacher.monthly') || 'Monthly'}</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
                   <div>
-                    <Label htmlFor="number_of_occurrences" className="text-gray-700 font-medium">{t('teacher.numberOfClassesLabel')}</Label>
+                    <Label htmlFor="number_of_occurrences" className="text-gray-700 font-medium">{t('teacher.numberOfClassesLabel') || 'Number of Classes'}</Label>
                     <Input
                       id="number_of_occurrences"
                       type="number"
@@ -412,7 +433,7 @@ const ClassScheduleForm = ({ teacher }: ClassScheduleFormProps) => {
                     />
                   </div>
                   <div>
-                    <Label htmlFor="recurrence_end_date" className="text-gray-700 font-medium">{t('teacher.endDateLabel')}</Label>
+                    <Label htmlFor="recurrence_end_date" className="text-gray-700 font-medium">{t('teacher.endDateLabel') || 'End Date'}</Label>
                     <Input
                       id="recurrence_end_date"
                       type="date"
@@ -424,12 +445,12 @@ const ClassScheduleForm = ({ teacher }: ClassScheduleFormProps) => {
                 </div>
                 
                 {!isRecurrenceEndDateValid && (
-                  <p className="text-sm text-red-600">{t('teacher.endDateMustBeAfterStart')}</p>
+                  <p className="text-sm text-red-600">{t('teacher.endDateMustBeAfterStart') || 'End date must be after start date'}</p>
                 )}
 
                 <div className="bg-purple-50 p-3 rounded-lg">
                   <p className="text-sm text-purple-700">
-                    <strong>{t('common.preview')}:</strong> {formData.number_of_occurrences} classes will be scheduled starting from {formData.class_date && new Date(formData.class_date).toLocaleDateString()} ({formData.recurrence_pattern}ly)
+                    <strong>{t('common.preview') || 'Preview'}:</strong> {formData.number_of_occurrences} classes will be scheduled starting from {formData.class_date && new Date(formData.class_date).toLocaleDateString()} ({formData.recurrence_pattern}ly)
                   </p>
                 </div>
               </div>
@@ -437,7 +458,7 @@ const ClassScheduleForm = ({ teacher }: ClassScheduleFormProps) => {
           </CardContent>
         </Card>
 
-        {/* Submit Button - Made more prominent and visible */}
+        {/* Submit Button */}
         <div className="sticky bottom-4 z-10 pt-6">
           <div className="bg-white/95 backdrop-blur-sm border border-gray-200 rounded-xl p-4 shadow-xl">
             <Button 

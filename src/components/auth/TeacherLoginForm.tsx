@@ -30,7 +30,7 @@ const TeacherLoginForm: React.FC<TeacherLoginFormProps> = ({ onLogin, isLoading 
         <Input
           id="email"
           type="email"
-          placeholder={t('auth.emailPlaceholder')}
+          placeholder={t('auth.emailPlaceholder') || "Enter your email"}
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
@@ -44,7 +44,7 @@ const TeacherLoginForm: React.FC<TeacherLoginFormProps> = ({ onLogin, isLoading 
           <Input
             id="password"
             type={showPassword ? "text" : "password"}
-            placeholder={t('auth.passwordPlaceholder')}
+            placeholder={t('auth.passwordPlaceholder') || "Enter your password"}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
@@ -79,10 +79,10 @@ const TeacherLoginForm: React.FC<TeacherLoginFormProps> = ({ onLogin, isLoading 
         {isLoading ? (
           <div className="flex items-center gap-2">
             <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-            {t('auth.signingIn')}
+            {t('auth.signingIn') || 'Signing In...'}
           </div>
         ) : (
-          t('auth.signIn')
+          t('auth.signIn') || 'Sign In'
         )}
       </Button>
     </form>
