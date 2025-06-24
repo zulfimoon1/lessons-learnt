@@ -207,6 +207,111 @@ class SecurePlatformAdminService {
     }
   }
 
+  async createSchool(adminEmail: string, schoolName: string) {
+    await supabase.rpc('set_platform_admin_context', { admin_email: adminEmail });
+    
+    try {
+      // For now, we'll create a placeholder teacher entry for the school
+      // This maintains the school in our system
+      const { data, error } = await supabase
+        .from('teachers')
+        .insert([{
+          name: `${schoolName} Administrator`,
+          email: `admin@${schoolName.toLowerCase().replace(/\s+/g, '')}.edu`,
+          school: schoolName,
+          role: 'admin',
+          password_hash: 'placeholder',
+          is_available: true
+        }])
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error('Error creating school:', error);
+      throw error;
+    }
+  }
+
+  async deleteSchool(adminEmail: string, schoolName: string) {
+    await supabase.rpc('set_platform_admin_context', { admin_email: adminEmail });
+    
+    try {
+      // Use the existing platform admin function for safe school deletion
+      const result = await supabase.rpc('platform_admin_delete_school', {
+        school_name_param: schoolName,
+        admin_email_param: adminEmail
+      });
+
+      if (result.error) throw result.error;
+      return result.data;
+    } catch (error) {
+      console.error('Error deleting school:', error);
+      throw error;
+    }
+  }
+
+  async callAdminFunction(functionName: string, params: any = {}) {
+    try {
+      const { data, error } = await supabase.functions.invoke('platform-admin', {
+        body: {
+          action: functionName,
+          ...params
+        }
+      });
+
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error(`Error calling admin function ${functionName}:`, error);
+      throw error;
+    }
+  }
+
+  async createTransaction(adminEmail: string, transactionData: any) {
+    await supabase.rpc('set_platform_admin_context', { admin_email: adminEmail });
+    
+    try {
+      const { data, error } = await supabase
+        .from('transactions')
+        .insert([{
+          school_name: transactionData.school_name,
+          amount: Math.round(parseFloat(transactionData.amount) * 100), // Convert to cents
+          currency: transactionData.currency,
+          transaction_type: transactionData.transaction_type,
+          status: transactionData.status,
+          description: transactionData.description,
+          created_by: null // Platform admin transactions
+        }])
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error('Error creating transaction:', error);
+      throw error;
+    }
+  }
+
+  async deleteTransaction(adminEmail: string, transactionId: string) {
+    await supabase.rpc('set_platform_admin_context', { admin_email: adminEmail });
+    
+    try {
+      const { error } = await supabase
+        .from('transactions')
+        .delete()
+        .eq('id', transactionId);
+
+      if (error) throw error;
+      return { success: true };
+    } catch (error) {
+      console.error('Error deleting transaction:', error);
+      throw error;
+    }
+  }
+
   calculateMonthlyRevenue(transactions: any[]): number {
     const currentMonth = new Date().getMonth();
     const currentYear = new Date().getFullYear();
