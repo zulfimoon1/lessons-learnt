@@ -49,7 +49,7 @@ const StudentDashboard = () => {
             <LanguageSwitcher />
             <Button variant="outline" onClick={handleLogout} className="border-brand-teal text-brand-teal hover:bg-brand-teal hover:text-white">
               <LogOut className="w-4 h-4 mr-2" />
-              {t('auth.logout')}
+              {t('logout')}
             </Button>
           </div>
         </div>
