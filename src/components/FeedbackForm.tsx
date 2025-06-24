@@ -17,9 +17,7 @@ interface ClassSchedule {
   class_date: string;
   class_time: string;
   teacher_id: string;
-  teachers: {
-    name: string;
-  };
+  teacher_name?: string;
 }
 
 interface FeedbackFormProps {
@@ -69,19 +67,33 @@ const FeedbackForm: React.FC<FeedbackFormProps> = ({
   const fetchAvailableClasses = async () => {
     try {
       // Fetch recent and upcoming classes for feedback
-      const { data, error } = await supabase
+      const { data: classData, error } = await supabase
         .from('class_schedules')
-        .select(`
-          *,
-          teachers!inner(name)
-        `)
+        .select('*')
         .eq('school', student.school)
         .eq('grade', student.grade)
         .gte('class_date', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]) // Last 7 days
         .order('class_date', { ascending: false });
 
       if (error) throw error;
-      setAvailableClasses(data || []);
+
+      // Fetch teacher names separately
+      const classesWithTeachers = await Promise.all(
+        (classData || []).map(async (classItem) => {
+          const { data: teacherData } = await supabase
+            .from('teachers')
+            .select('name')
+            .eq('id', classItem.teacher_id)
+            .single();
+
+          return {
+            ...classItem,
+            teacher_name: teacherData?.name || 'Unknown Teacher'
+          };
+        })
+      );
+
+      setAvailableClasses(classesWithTeachers);
     } catch (error) {
       console.error('Error fetching classes:', error);
     }
@@ -190,7 +202,7 @@ const FeedbackForm: React.FC<FeedbackFormProps> = ({
                       <h4 className="font-medium">{classItem.subject}</h4>
                       <p className="text-sm text-gray-600">{classItem.lesson_topic}</p>
                       <p className="text-xs text-gray-500">
-                        {new Date(classItem.class_date).toLocaleDateString()} at {classItem.class_time} - {classItem.teachers.name}
+                        {new Date(classItem.class_date).toLocaleDateString()} at {classItem.class_time} - {classItem.teacher_name}
                       </p>
                     </div>
                   </div>

@@ -18,9 +18,7 @@ interface ClassSchedule {
   teacher_id: string;
   school: string;
   grade: string;
-  teachers: {
-    name: string;
-  };
+  teacher_name?: string;
 }
 
 interface StudentUpcomingClassesProps {
@@ -48,12 +46,9 @@ const StudentUpcomingClasses: React.FC<StudentUpcomingClassesProps> = ({ student
       
       const today = new Date().toISOString().split('T')[0];
       
-      const { data, error } = await supabase
+      const { data: classData, error } = await supabase
         .from('class_schedules')
-        .select(`
-          *,
-          teachers!inner(name)
-        `)
+        .select('*')
         .eq('school', student.school)
         .eq('grade', student.grade)
         .gte('class_date', today)
@@ -63,7 +58,23 @@ const StudentUpcomingClasses: React.FC<StudentUpcomingClassesProps> = ({ student
 
       if (error) throw error;
 
-      setUpcomingClasses(data || []);
+      // Fetch teacher names separately
+      const classesWithTeachers = await Promise.all(
+        (classData || []).map(async (classItem) => {
+          const { data: teacherData } = await supabase
+            .from('teachers')
+            .select('name')
+            .eq('id', classItem.teacher_id)
+            .single();
+
+          return {
+            ...classItem,
+            teacher_name: teacherData?.name || 'Unknown Teacher'
+          };
+        })
+      );
+
+      setUpcomingClasses(classesWithTeachers);
     } catch (error) {
       console.error('Error fetching upcoming classes:', error);
       toast({
@@ -127,7 +138,7 @@ const StudentUpcomingClasses: React.FC<StudentUpcomingClassesProps> = ({ student
                       </span>
                       <span className="flex items-center gap-1">
                         <User className="w-3 h-3" />
-                        {classItem.teachers.name}
+                        {classItem.teacher_name}
                       </span>
                     </div>
                     
