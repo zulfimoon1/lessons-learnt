@@ -1,3 +1,4 @@
+
 import { enAuthTranslations } from './en/auth';
 import { enTeacherTranslations } from './en/teacher';
 import { enWeeklyTranslations } from './en/weekly';
@@ -188,7 +189,7 @@ export const enTranslations = {
   'welcome.title': 'Lessons Learnt',
   'welcome.heroTitle1': 'Collaborative Classrooms',
   'welcome.heroTitle2': 'Unstoppable Minds',
-  'welcome.subtitle': 'Empower students, support teachers, and enhance learning with our comprehensive educational platform',
+  'welcome.subtitle': 'Students feedback, teachers transform, wellbeing thrives—the game-changing platform where every student becomes a co-creator of their educational journey',
   'welcome.freeForStudents': 'Always free for students!',
   'tagline.studentLead': 'Where every student voice shapes the future of learning',
 
@@ -234,6 +235,7 @@ export const enTranslations = {
   'demo.title': 'Demo',
   'demo.subtitle': 'Try our platform features',
   'demo.featuresUserTypes': '5+ Features, 3 User Types',
+  'demo.experienceComplete': 'Experience the Complete Platform',
   'demo.studentExperience': 'Student Experience',
   'demo.studentExperienceDesc': 'Submit lesson feedback, share weekly summaries, and access mental health support - all in a safe, anonymous environment.',
   'demo.teacherDashboard': 'Teacher Dashboard',
@@ -245,8 +247,8 @@ export const enTranslations = {
   'demo.noRegistrationRequired': 'No registration required',
   'demo.fullFeatureAccess': 'Full feature access',
   'demo.sampleDataIncluded': 'Sample data included',
-  'demo.discoverFuture': 'Discover the future of education in action - explore our innovative platform designed to transform learning for students, empower educators, and support mental health.',
-  'demo.discoverDescription': 'From interactive student simulations to comprehensive teacher analytics - see how our platform creates a supportive and engaging learning environment.',
+  'demo.discoverFuture': 'Discover the future of education in action',
+  'demo.discoverDescription': 'Explore our innovative platform designed to transform learning for students, empower educators, and support mental health.',
   'demo.experienceFullPlatform': 'Experience the Full Platform',
   'demo.experienceDescription': 'From interactive student simulations to comprehensive teacher analytics - see how our platform creates a supportive and engaging learning environment.',
   'demo.mockup.anonymousStudent': 'Anonymous Student',

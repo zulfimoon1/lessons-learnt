@@ -1,3 +1,4 @@
+
 import { ltAuthTranslations } from './lt/auth';
 import { ltTeacherTranslations } from './lt/teacher';
 import { ltWeeklyTranslations } from './lt/weekly';
@@ -188,7 +189,7 @@ export const ltTranslations = {
   'welcome.title': 'Lessons Learnt',
   'welcome.heroTitle1': 'Bendradarbiaujančios klasės',
   'welcome.heroTitle2': 'Nesustabdomi protai',
-  'welcome.subtitle': 'Įgalinkite studentus, palaikykite mokytojus ir pagerinkite mokymąsi su mūsų išsamia švietimo platforma',
+  'welcome.subtitle': 'Studentų atsiliepimai, mokytojų transformacijos, gerovės klestėjimas—revoliucinė platforma, kurioje kiekvienas studentas tampa savo švietimo kelionės bendraautorium',
   'welcome.freeForStudents': 'Visada nemokama studentams!',
   'tagline.studentLead': 'Kur kiekvieno studento balsas formuoja mokymosi ateitį',
 
@@ -246,8 +247,8 @@ export const ltTranslations = {
   'demo.noRegistrationRequired': 'Registracija nereikalinga',
   'demo.fullFeatureAccess': 'Pilnas funkcijų prieigos',
   'demo.sampleDataIncluded': 'Pavyzdiniai duomenys įtraukti',
-  'demo.discoverFuture': 'Atraskite švietimo ateitį veiksmais - tyrinėkite mūsų inovatyvų platformą, skirtą transformuoti mokymąsi studentams, įgalinti pedagogus ir palaikyti psichikos sveikatą.',
-  'demo.discoverDescription': 'Nuo interaktyvių studentų simuliacijų iki išsamios mokytojų analitikos - pamatykite, kaip mūsų platforma kuria palaikančią ir įtraukiančią mokymosi aplinką.',
+  'demo.discoverFuture': 'Atraskite švietimo ateitį veiksmais',
+  'demo.discoverDescription': 'Tyrinėkite mūsų inovatyvų platformą, skirtą transformuoti mokymąsi studentams, įgalinti pedagogus ir palaikyti psichikos sveikatą.',
   'demo.experienceFullPlatform': 'Patirkite visą platformą',
   'demo.experienceDescription': 'Nuo interaktyvių studentų simuliacijų iki išsamios mokytojų analitikos - pamatykite, kaip mūsų platforma kuria palaikančią ir įtraukiančią mokymosi aplinką.',
   'demo.mockup.anonymousStudent': 'Anoniminis studentas',
