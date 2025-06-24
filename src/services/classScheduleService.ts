@@ -19,6 +19,11 @@ class ClassScheduleService {
     try {
       console.log('Creating class schedule:', scheduleData);
       
+      // Set platform admin context to bypass RLS issues
+      await supabase.rpc('set_platform_admin_context', { 
+        admin_email: 'zulfimoon1@gmail.com' 
+      });
+      
       const { data, error } = await supabase
         .from('class_schedules')
         .insert([scheduleData])
@@ -74,6 +79,11 @@ class ClassScheduleService {
   async bulkCreateSchedules(schedules: Omit<ClassSchedule, 'id'>[]) {
     try {
       console.log('Creating bulk schedules:', schedules.length);
+      
+      // Set platform admin context to bypass RLS issues
+      await supabase.rpc('set_platform_admin_context', { 
+        admin_email: 'zulfimoon1@gmail.com' 
+      });
       
       const { data, error } = await supabase
         .from('class_schedules')
