@@ -1,4 +1,3 @@
-
 import { enAuthTranslations } from './en/auth';
 import { enTeacherTranslations } from './en/teacher';
 import { enWeeklyTranslations } from './en/weekly';
@@ -213,6 +212,10 @@ export const enTranslations = {
   'demo.featureDemo': 'Feature Demonstration',
   'demo.featuresUserTypes': '5+ Features, 3 User Types',
   'demo.experienceComplete': 'Experience the complete platform',
+  'demo.discoverFuture': 'Discover the future of education in action - explore our innovative platform designed to transform learning for students, empower educators, and support mental health.',
+  'demo.discoverDescription': 'From interactive student simulations to comprehensive teacher analytics - see how our platform creates a supportive and engaging learning environment.',
+  'demo.experienceFullPlatform': 'Experience the full platform',
+  'demo.experienceDescription': 'From interactive student simulations to comprehensive teacher analytics - see how our platform creates a supportive and engaging learning environment.',
 
   // Merge all sub-translations
   ...enAuthTranslations,

@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -15,8 +14,8 @@ const DemoSection = () => {
         <div className="text-center mb-16">
           <div className="flex justify-center items-center gap-3 mb-6">
             <Link to="/demo">
-              <Badge variant="outline" className="bg-brand-teal/10 border-brand-teal text-brand-teal px-4 py-2 cursor-pointer hover:bg-brand-teal hover:text-white transition-colors">
-                <PlayIcon className="w-4 h-4 mr-2" />
+              <Badge variant="outline" className="bg-brand-teal/10 border-brand-teal text-brand-teal px-6 py-3 cursor-pointer hover:bg-brand-teal hover:text-white transition-colors text-lg font-semibold">
+                <PlayIcon className="w-5 h-5 mr-2" />
                 {t('demo.featureDemo')}
               </Badge>
             </Link>
@@ -27,7 +26,7 @@ const DemoSection = () => {
           
           {/* Enhanced visibility for the features section */}
           <div className="bg-brand-gradient text-white rounded-lg p-8 max-w-md mx-auto mb-12 shadow-xl">
-            <p className="text-3xl font-black tracking-wide drop-shadow-lg">
+            <p className="text-4xl font-black tracking-wide drop-shadow-lg">
               {t('demo.featuresUserTypes')}
             </p>
             <p className="text-xl font-bold mt-3 opacity-95 drop-shadow-md">

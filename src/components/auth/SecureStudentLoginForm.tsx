@@ -13,7 +13,7 @@ interface SecureStudentLoginFormProps {
 }
 
 const SecureStudentLoginForm: React.FC<SecureStudentLoginFormProps> = ({ onLogin, isLoading }) => {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [loginData, setLoginData] = useState({
     fullName: "",
     school: "",
@@ -40,13 +40,13 @@ const SecureStudentLoginForm: React.FC<SecureStudentLoginFormProps> = ({ onLogin
         <SecurityEnhancedInput
           name="fullName"
           type="text"
-          placeholder={t('student.fullNamePlaceholder') || "Enter your full name"}
+          placeholder={language === 'lt' ? 'Vardas Pavardė' : 'John Smith'}
           value={loginData.fullName}
           onChange={(e) => setLoginData(prev => ({ ...prev, fullName: e.target.value }))}
           required
           validateAs="name"
           maxLength={100}
-          className="border-gray-300 focus:border-brand-teal focus:ring-brand-teal"
+          className="bg-white border-gray-300 focus:border-brand-teal focus:ring-brand-teal text-brand-dark placeholder:text-gray-500"
         />
       </div>
 
@@ -58,13 +58,13 @@ const SecureStudentLoginForm: React.FC<SecureStudentLoginFormProps> = ({ onLogin
         <SecurityEnhancedInput
           name="school"
           type="text"
-          placeholder={t('auth.schoolPlaceholder') || "Enter your school name"}
+          placeholder={language === 'lt' ? 'Vilniaus licėjus' : 'Central High School'}
           value={loginData.school}
           onChange={(e) => setLoginData(prev => ({ ...prev, school: e.target.value }))}
           required
           validateAs="school"
           maxLength={200}
-          className="border-gray-300 focus:border-brand-teal focus:ring-brand-teal"
+          className="bg-white border-gray-300 focus:border-brand-teal focus:ring-brand-teal text-brand-dark placeholder:text-gray-500"
         />
       </div>
 
@@ -76,13 +76,13 @@ const SecureStudentLoginForm: React.FC<SecureStudentLoginFormProps> = ({ onLogin
         <SecurityEnhancedInput
           name="grade"
           type="text"
-          placeholder={t('auth.gradePlaceholder') || "e.g., Grade 5, 10A, Year 9"}
+          placeholder={language === 'lt' ? '10A, 9 klasė' : 'Grade 5, 10A'}
           value={loginData.grade}
           onChange={(e) => setLoginData(prev => ({ ...prev, grade: e.target.value }))}
           required
           validateAs="grade"
           maxLength={50}
-          className="border-gray-300 focus:border-brand-teal focus:ring-brand-teal"
+          className="bg-white border-gray-300 focus:border-brand-teal focus:ring-brand-teal text-brand-dark placeholder:text-gray-500"
         />
       </div>
 
@@ -91,13 +91,13 @@ const SecureStudentLoginForm: React.FC<SecureStudentLoginFormProps> = ({ onLogin
         <SecurityEnhancedInput
           name="password"
           type="password"
-          placeholder={t('auth.passwordPlaceholder') || "Enter your password"}
+          placeholder={language === 'lt' ? 'Įveskite slaptažodį' : 'Enter your password'}
           value={loginData.password}
           onChange={(e) => setLoginData(prev => ({ ...prev, password: e.target.value }))}
           required
           validateAs="password"
           maxLength={128}
-          className="border-gray-300 focus:border-brand-teal focus:ring-brand-teal"
+          className="bg-white border-gray-300 focus:border-brand-teal focus:ring-brand-teal text-brand-dark placeholder:text-gray-500"
         />
       </div>
 

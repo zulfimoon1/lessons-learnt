@@ -1,4 +1,3 @@
-
 import { ltAuthTranslations } from './lt/auth';
 import { ltTeacherTranslations } from './lt/teacher';
 import { ltWeeklyTranslations } from './lt/weekly';
@@ -213,6 +212,10 @@ export const ltTranslations = {
   'demo.featureDemo': 'Funkcionalumo demonstracija',
   'demo.featuresUserTypes': '5+ funkcijos, 3 vartotojų tipai',
   'demo.experienceComplete': 'Patirkite visą platformą',
+  'demo.discoverFuture': 'Atraskite švietimo ateitį veiksmais - tyrinėkite mūsų inovatyvų platformą, skirtą transformuoti mokymąsi studentams, įgalinti pedagogus ir palaikyti psichikos sveikatą.',
+  'demo.discoverDescription': 'Nuo interaktyvių studentų simuliacijų iki išsamios mokytojų analitikos - pamatykite, kaip mūsų platforma kuria palaikančią ir įtraukiančią mokymosi aplinką.',
+  'demo.experienceFullPlatform': 'Patirkite visą platformą',
+  'demo.experienceDescription': 'Nuo interaktyvių studentų simuliacijų iki išsamios mokytojų analitikos - pamatykite, kaip mūsų platforma kuria palaikančią ir įtraukiančią mokymosi aplinką.',
 
   // Merge all sub-translations
   ...ltAuthTranslations,

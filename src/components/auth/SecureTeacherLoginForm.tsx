@@ -42,7 +42,7 @@ const SecureTeacherLoginForm: React.FC<SecureTeacherLoginFormProps> = ({ onLogin
           required
           validateAs="email"
           maxLength={254}
-          className="border-gray-300 focus:border-brand-teal focus:ring-brand-teal"
+          className="bg-white border-gray-300 focus:border-brand-teal focus:ring-brand-teal text-brand-dark placeholder:text-gray-500"
         />
       </div>
 
@@ -57,7 +57,7 @@ const SecureTeacherLoginForm: React.FC<SecureTeacherLoginFormProps> = ({ onLogin
           required
           validateAs="password"
           maxLength={128}
-          className="border-gray-300 focus:border-brand-teal focus:ring-brand-teal"
+          className="bg-white border-gray-300 focus:border-brand-teal focus:ring-brand-teal text-brand-dark placeholder:text-gray-500"
         />
       </div>
 
