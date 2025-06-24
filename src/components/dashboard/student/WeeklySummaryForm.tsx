@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Calendar, Heart, BookOpen, EyeOff } from "lucide-react";
+import { Calendar, Heart, BookOpen, EyeOff, CheckCircle } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 interface WeeklySummaryFormProps {
@@ -23,12 +23,47 @@ interface WeeklySummaryFormProps {
 const WeeklySummaryForm: React.FC<WeeklySummaryFormProps> = ({ student, onSubmitted }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isAnonymous, setIsAnonymous] = useState(false);
+  const [hasSubmitted, setHasSubmitted] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [formData, setFormData] = useState({
     emotional_concerns: '',
     academic_concerns: ''
   });
   const { toast } = useToast();
   const { t } = useLanguage();
+
+  const getWeekStartDate = () => {
+    const today = new Date();
+    const dayOfWeek = today.getDay();
+    const diff = today.getDate() - dayOfWeek;
+    const weekStart = new Date(today.setDate(diff));
+    return weekStart.toISOString().split('T')[0];
+  };
+
+  useEffect(() => {
+    const checkExistingSubmission = async () => {
+      try {
+        const weekStartDate = getWeekStartDate();
+        const { data, error } = await supabase
+          .from('weekly_summaries')
+          .select('id')
+          .eq('student_id', student.id)
+          .eq('week_start_date', weekStartDate);
+
+        if (error) {
+          console.error('Error checking existing submission:', error);
+        } else {
+          setHasSubmitted(data && data.length > 0);
+        }
+      } catch (error) {
+        console.error('Error checking submission:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    checkExistingSubmission();
+  }, [student.id]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -47,55 +82,46 @@ const WeeklySummaryForm: React.FC<WeeklySummaryFormProps> = ({ student, onSubmit
     try {
       const weekStartDate = getWeekStartDate();
       
-      // Submit emotional concerns to doctors/mental health system
-      if (formData.emotional_concerns.trim()) {
-        const { error: emotionalError } = await supabase
-          .from('weekly_summaries')
-          .insert({
-            student_id: isAnonymous ? null : student.id,
-            student_name: isAnonymous ? 'Anonymous Student' : student.full_name,
-            school: student.school,
-            grade: student.grade,
-            week_start_date: weekStartDate,
-            emotional_concerns: formData.emotional_concerns.trim(),
-            academic_concerns: null,
-            is_anonymous: isAnonymous
+      // Create a single submission with both concerns
+      const { error } = await supabase
+        .from('weekly_summaries')
+        .insert({
+          student_id: isAnonymous ? null : student.id,
+          student_name: isAnonymous ? 'Anonymous Student' : student.full_name,
+          school: student.school,
+          grade: student.grade,
+          week_start_date: weekStartDate,
+          emotional_concerns: formData.emotional_concerns.trim() || null,
+          academic_concerns: formData.academic_concerns.trim() || null,
+          is_anonymous: isAnonymous
+        });
+
+      if (error) {
+        if (error.code === '23505') {
+          toast({
+            title: "Already submitted",
+            description: "You have already submitted a weekly summary for this week.",
+            variant: "destructive",
           });
+          setHasSubmitted(true);
+        } else {
+          throw error;
+        }
+      } else {
+        toast({
+          title: t('weeklySummary.submitted'),
+          description: t('weeklySummary.submittedDescription'),
+        });
 
-        if (emotionalError) throw emotionalError;
+        // Reset form
+        setFormData({
+          emotional_concerns: '',
+          academic_concerns: ''
+        });
+        setIsAnonymous(false);
+        setHasSubmitted(true);
+        onSubmitted?.();
       }
-
-      // Submit academic concerns to teachers
-      if (formData.academic_concerns.trim()) {
-        const { error: academicError } = await supabase
-          .from('weekly_summaries')
-          .insert({
-            student_id: isAnonymous ? null : student.id,
-            student_name: isAnonymous ? 'Anonymous Student' : student.full_name,
-            school: student.school,
-            grade: student.grade,
-            week_start_date: weekStartDate,
-            emotional_concerns: null,
-            academic_concerns: formData.academic_concerns.trim(),
-            is_anonymous: isAnonymous
-          });
-
-        if (academicError) throw academicError;
-      }
-
-      toast({
-        title: t('weeklySummary.submitted'),
-        description: t('weeklySummary.submittedDescription'),
-      });
-
-      // Reset form
-      setFormData({
-        emotional_concerns: '',
-        academic_concerns: ''
-      });
-      setIsAnonymous(false);
-
-      onSubmitted?.();
     } catch (error) {
       console.error('Error submitting weekly summary:', error);
       toast({
@@ -108,13 +134,44 @@ const WeeklySummaryForm: React.FC<WeeklySummaryFormProps> = ({ student, onSubmit
     }
   };
 
-  const getWeekStartDate = () => {
-    const today = new Date();
-    const dayOfWeek = today.getDay();
-    const diff = today.getDate() - dayOfWeek;
-    const weekStart = new Date(today.setDate(diff));
-    return weekStart.toISOString().split('T')[0];
-  };
+  if (isLoading) {
+    return (
+      <Card className="bg-white/80 backdrop-blur-sm border-brand-teal/20 shadow-lg">
+        <CardContent className="p-6">
+          <div className="flex items-center justify-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-teal"></div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (hasSubmitted) {
+    return (
+      <Card className="bg-white/80 backdrop-blur-sm border-brand-teal/20 shadow-lg">
+        <CardHeader className="bg-gradient-to-r from-green-500 to-green-600 rounded-t-lg">
+          <CardTitle className="flex items-center gap-3 text-white">
+            <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
+              <CheckCircle className="w-5 h-5" />
+            </div>
+            Weekly Summary Submitted
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="p-6">
+          <div className="text-center">
+            <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
+            <h3 className="text-lg font-semibold text-brand-dark mb-2">
+              Thank you for your submission!
+            </h3>
+            <p className="text-brand-dark/70">
+              You have already submitted your weekly summary for this week. 
+              Your feedback has been recorded and will be reviewed by the appropriate staff.
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card className="bg-white/80 backdrop-blur-sm border-brand-teal/20 shadow-lg">
