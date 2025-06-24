@@ -62,7 +62,7 @@ const ScheduleTab: React.FC<ScheduleTabProps> = ({ teacher }) => {
 
   return (
     <div className="space-y-6">
-      {/* My Classes Section - Now at the top */}
+      {/* My Classes Section - First at the top */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -120,7 +120,7 @@ const ScheduleTab: React.FC<ScheduleTabProps> = ({ teacher }) => {
         </CardContent>
       </Card>
 
-      {/* Create Class Section - Now below My Classes */}
+      {/* Create Class Section - Second, below My Classes */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -136,7 +136,7 @@ const ScheduleTab: React.FC<ScheduleTabProps> = ({ teacher }) => {
         </CardContent>
       </Card>
 
-      {/* Bulk Upload Section */}
+      {/* Bulk Upload Section - Third, at the bottom */}
       <BulkScheduleUpload 
         teacher={teacher} 
         onUploadComplete={handleScheduleCreated} 
