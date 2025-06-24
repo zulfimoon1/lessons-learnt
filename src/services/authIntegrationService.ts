@@ -7,7 +7,7 @@ export interface Teacher {
   name: string;
   email: string;
   school: string;
-  role: string;
+  role: 'teacher' | 'admin' | 'doctor';
   specialization?: string;
   is_available?: boolean;
 }
@@ -73,7 +73,7 @@ export const loginTeacher = async (email: string, password: string): Promise<Aut
       name: teacherData.name,
       email: teacherData.email,
       school: teacherData.school,
-      role: teacherData.role,
+      role: teacherData.role as 'teacher' | 'admin' | 'doctor',
       specialization: teacherData.specialization,
       is_available: teacherData.is_available
     };
@@ -91,7 +91,7 @@ export const signupTeacher = async (
   email: string, 
   school: string, 
   password: string, 
-  role: string = 'teacher'
+  role: 'teacher' | 'admin' | 'doctor' = 'teacher'
 ): Promise<AuthResult> => {
   try {
     console.log('🔐 Teacher signup attempt for:', email);
@@ -136,7 +136,7 @@ export const signupTeacher = async (
       name: newTeacher.name,
       email: newTeacher.email,
       school: newTeacher.school,
-      role: newTeacher.role,
+      role: newTeacher.role as 'teacher' | 'admin' | 'doctor',
       specialization: newTeacher.specialization,
       is_available: newTeacher.is_available
     };
@@ -202,5 +202,65 @@ export const loginStudent = async (
   } catch (error) {
     console.error('💥 Student login error:', error);
     return { error: 'Login failed. Please try again.' };
+  }
+};
+
+export const signupStudent = async (
+  fullName: string, 
+  school: string, 
+  grade: string, 
+  password: string
+): Promise<AuthResult> => {
+  try {
+    console.log('🔐 Student signup attempt for:', fullName, 'at', school);
+
+    // Check if student already exists
+    const { data: existingStudent } = await supabase
+      .from('students')
+      .select('full_name, school, grade')
+      .eq('full_name', fullName.trim())
+      .eq('school', school.trim())
+      .eq('grade', grade.trim())
+      .single();
+
+    if (existingStudent) {
+      return { error: 'A student with these details already exists' };
+    }
+
+    // Hash password
+    const saltRounds = 12;
+    const hashedPassword = await bcrypt.hash(password, saltRounds);
+
+    // Create student
+    const { data: newStudent, error: createError } = await supabase
+      .from('students')
+      .insert({
+        full_name: fullName.trim(),
+        school: school.trim(),
+        grade: grade.trim(),
+        password_hash: hashedPassword
+      })
+      .select()
+      .single();
+
+    if (createError) {
+      console.error('❌ Student creation error:', createError);
+      return { error: `Failed to create account: ${createError.message}` };
+    }
+
+    console.log('✅ Student created successfully:', newStudent.full_name);
+
+    const student: Student = {
+      id: newStudent.id,
+      full_name: newStudent.full_name,
+      school: newStudent.school,
+      grade: newStudent.grade
+    };
+
+    return { student };
+
+  } catch (error) {
+    console.error('💥 Student signup error:', error);
+    return { error: 'Account creation failed. Please try again.' };
   }
 };

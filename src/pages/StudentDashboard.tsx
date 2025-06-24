@@ -57,10 +57,10 @@ const StudentDashboard = () => {
         console.error('Error loading school psychologists:', schoolError);
       }
 
-      // Also try teachers with doctor role
+      // Also try teachers with doctor role - fix the SQL syntax
       const { data: doctorTeachers, error: doctorError } = await supabase
         .from('teachers')
-        .select('id, name, email, specialization as phone, role')
+        .select('id, name, email, specialization, role')
         .eq('school', student.school)
         .eq('role', 'doctor');
 
@@ -75,7 +75,7 @@ const StudentDashboard = () => {
           id: doc.id,
           name: doc.name,
           email: doc.email,
-          phone: doc.phone,
+          phone: doc.specialization,
           office_location: 'School Medical Office',
           availability_hours: 'Available during school hours'
         }))
@@ -147,10 +147,7 @@ const StudentDashboard = () => {
           </TabsList>
 
           <TabsContent value="upcoming-classes">
-            <UpcomingClassesTab 
-              school={student?.school} 
-              grade={student?.grade}
-            />
+            <UpcomingClassesTab />
           </TabsContent>
 
           <TabsContent value="feedback">
@@ -171,10 +168,12 @@ const StudentDashboard = () => {
 
           <TabsContent value="weekly-summary">
             <WeeklySummaryTab 
-              studentId={student?.id}
-              studentName={student?.full_name}
-              school={student?.school}
-              grade={student?.grade}
+              student={{
+                id: student?.id,
+                full_name: student?.full_name,
+                school: student?.school,
+                grade: student?.grade
+              }}
             />
           </TabsContent>
 
