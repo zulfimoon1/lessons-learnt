@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from "react";
 import ClassScheduleForm from "@/components/ClassScheduleForm";
+import BulkScheduleUpload from "@/components/BulkScheduleUpload";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { classScheduleService } from "@/services/classScheduleService";
-import { Upload, Calendar, Clock, BookOpen } from "lucide-react";
+import { Calendar, Clock, BookOpen } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface ScheduleTabProps {
@@ -52,10 +52,16 @@ const ScheduleTab: React.FC<ScheduleTabProps> = ({ teacher }) => {
 
   return (
     <div className="space-y-6">
-      {/* Create Schedule Form */}
+      {/* Create Single Schedule Form */}
       <ClassScheduleForm 
         teacher={teacher} 
         onScheduleCreated={handleScheduleCreated}
+      />
+
+      {/* Bulk Upload Section */}
+      <BulkScheduleUpload 
+        teacher={teacher} 
+        onUploadComplete={handleScheduleCreated} 
       />
 
       {/* Existing Schedules */}
@@ -107,25 +113,6 @@ const ScheduleTab: React.FC<ScheduleTabProps> = ({ teacher }) => {
               ))}
             </div>
           )}
-        </CardContent>
-      </Card>
-
-      {/* Bulk Upload Section */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Upload className="w-5 h-5" />
-            Bulk Upload Schedules
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-muted-foreground mb-4">
-            Upload multiple class schedules at once using a CSV file.
-          </p>
-          <Button variant="outline" disabled>
-            <Upload className="w-4 h-4 mr-2" />
-            Upload CSV (Coming Soon)
-          </Button>
         </CardContent>
       </Card>
     </div>

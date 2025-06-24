@@ -5,9 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
-import { UploadIcon, FileTextIcon } from "lucide-react";
+import { UploadIcon, FileTextIcon, CheckCircleIcon } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { classScheduleService } from "@/services/classScheduleService";
 
 interface BulkScheduleUploadProps {
   teacher: {
@@ -18,95 +18,91 @@ interface BulkScheduleUploadProps {
 }
 
 const BulkScheduleUpload = ({ teacher, onUploadComplete }: BulkScheduleUploadProps) => {
+  const [file, setFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [uploadResult, setUploadResult] = useState<{ success: number; errors: string[] } | null>(null);
   const { toast } = useToast();
   const { t } = useLanguage();
 
-  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    if (!file.name.endsWith('.csv')) {
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFile = event.target.files?.[0];
+    if (selectedFile && selectedFile.type === 'text/csv') {
+      setFile(selectedFile);
+      setUploadResult(null);
+    } else {
       toast({
-        title: t('common.error'),
-        description: t('upload.csvOnly'),
+        title: "Invalid file type",
+        description: "Please select a CSV file",
         variant: "destructive",
       });
-      return;
     }
+  };
 
-    setIsUploading(true);
+  const parseCSV = (csvText: string) => {
+    const lines = csvText.split('\n');
+    const headers = lines[0].split(',').map(h => h.trim());
+    const schedules = [];
 
-    try {
-      const text = await file.text();
-      const lines = text.split('\n').filter(line => line.trim());
-      const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
-      
-      // Expected headers: subject, grade, lesson_topic, class_date, class_time, duration_minutes, description
-      const requiredHeaders = ['subject', 'grade', 'lesson_topic', 'class_date', 'class_time'];
-      const hasRequiredHeaders = requiredHeaders.every(header => headers.includes(header));
-      
-      if (!hasRequiredHeaders) {
-        toast({
-          title: t('common.error'),
-          description: t('upload.invalidHeaders'),
-          variant: "destructive",
-        });
-        return;
-      }
+    for (let i = 1; i < lines.length; i++) {
+      const line = lines[i].trim();
+      if (!line) continue;
 
-      const schedules = [];
-      for (let i = 1; i < lines.length; i++) {
-        const values = lines[i].split(',').map(v => v.trim().replace(/^"|"$/g, ''));
-        if (values.length !== headers.length) continue;
+      const values = line.split(',').map(v => v.trim().replace(/"/g, ''));
+      const schedule = {
+        teacher_id: teacher.id,
+        school: teacher.school,
+        grade: values[headers.indexOf('grade')] || '',
+        subject: values[headers.indexOf('subject')] || '',
+        lesson_topic: values[headers.indexOf('lesson_topic')] || '',
+        class_date: values[headers.indexOf('class_date')] || '',
+        class_time: values[headers.indexOf('class_time')] || '',
+        duration_minutes: parseInt(values[headers.indexOf('duration_minutes')] || '60'),
+        description: values[headers.indexOf('description')] || ''
+      };
 
-        const schedule: any = {
-          teacher_id: teacher.id,
-          school: teacher.school,
-        };
-
-        headers.forEach((header, index) => {
-          schedule[header] = values[index];
-        });
-
-        // Set default duration if not provided
-        if (!schedule.duration_minutes) {
-          schedule.duration_minutes = 60;
-        } else {
-          schedule.duration_minutes = parseInt(schedule.duration_minutes) || 60;
-        }
-
+      if (schedule.grade && schedule.subject && schedule.lesson_topic && schedule.class_date && schedule.class_time) {
         schedules.push(schedule);
       }
+    }
+
+    return schedules;
+  };
+
+  const handleUpload = async () => {
+    if (!file) return;
+
+    setIsUploading(true);
+    try {
+      const csvText = await file.text();
+      const schedules = parseCSV(csvText);
 
       if (schedules.length === 0) {
         toast({
-          title: t('common.error'),
-          description: t('upload.noValidData'),
+          title: "No valid schedules found",
+          description: "Please check your CSV format",
           variant: "destructive",
         });
         return;
       }
 
-      // Insert schedules in batches
-      const { error } = await supabase
-        .from('class_schedules')
-        .insert(schedules);
+      console.log('Uploading schedules:', schedules);
+      const result = await classScheduleService.bulkCreateSchedules(schedules);
 
-      if (error) throw error;
-
-      toast({
-        title: t('upload.success'),
-        description: t('upload.schedulesUploaded', { count: schedules.length.toString() }),
-      });
-
-      onUploadComplete();
-      event.target.value = ''; // Reset file input
+      if (result.data) {
+        setUploadResult({ success: result.data.length, errors: [] });
+        toast({
+          title: t('upload.uploadComplete'),
+          description: `Successfully uploaded ${result.data.length} class schedules`,
+        });
+        onUploadComplete();
+      } else {
+        throw result.error;
+      }
     } catch (error) {
       console.error('Upload error:', error);
       toast({
-        title: t('common.error'),
-        description: t('upload.failed'),
+        title: "Upload failed",
+        description: "Failed to upload schedules. Please check your file format.",
         variant: "destructive",
       });
     } finally {
@@ -114,55 +110,88 @@ const BulkScheduleUpload = ({ teacher, onUploadComplete }: BulkScheduleUploadPro
     }
   };
 
+  const downloadTemplate = () => {
+    const csvContent = `grade,subject,lesson_topic,class_date,class_time,duration_minutes,description
+10A,Mathematics,Algebra Basics,2024-07-01,09:00,60,Introduction to algebraic expressions
+10A,Physics,Newton's Laws,2024-07-02,10:00,60,Understanding force and motion
+9B,English,Shakespeare,2024-07-03,11:00,45,Romeo and Juliet analysis`;
+
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'schedule_template.csv';
+    a.click();
+    window.URL.revokeObjectURL(url);
+  };
+
   return (
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <UploadIcon className="w-5 h-5" />
-          {t('upload.bulkSchedule')}
+          {t('upload.bulkUpload')}
         </CardTitle>
         <CardDescription>
-          {t('upload.csvDescription')} {/* Schedule uploads are free for all teachers */}
+          Upload multiple class schedules using a CSV file. Download the template to see the required format.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="bg-green-50 p-4 rounded-lg border border-green-200">
-          <p className="text-green-800 font-medium mb-2">✅ Free Feature</p>
-          <p className="text-green-700 text-sm">
-            Schedule uploads are available for free to all teachers. Upload your class schedules without needing a subscription.
-          </p>
+        <div className="flex gap-4">
+          <Button variant="outline" onClick={downloadTemplate}>
+            <FileTextIcon className="w-4 h-4 mr-2" />
+            Download Template
+          </Button>
         </div>
-        
-        <div className="space-y-2">
-          <Label htmlFor="csv-upload">{t('upload.selectFile')}</Label>
+
+        <div>
+          <Label htmlFor="csv-file">Select CSV File</Label>
           <Input
-            id="csv-upload"
+            id="csv-file"
             type="file"
             accept=".csv"
-            onChange={handleFileUpload}
-            disabled={isUploading}
-            className="file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-green-50 file:text-green-700 hover:file:bg-green-100"
+            onChange={handleFileChange}
+            className="mt-1"
           />
         </div>
-        
-        <div className="bg-blue-50 p-4 rounded-lg">
-          <h4 className="font-medium text-blue-800 mb-2 flex items-center gap-2">
-            <FileTextIcon className="w-4 h-4" />
-            {t('upload.csvFormat')}
-          </h4>
-          <p className="text-sm text-blue-700 mb-2">{t('upload.requiredColumns')}:</p>
-          <code className="text-xs bg-white p-2 rounded block">
-            subject,grade,lesson_topic,class_date,class_time,duration_minutes,description
-          </code>
-          <p className="text-xs text-blue-600 mt-2">{t('upload.formatNote')}</p>
-        </div>
-        
-        {isUploading && (
-          <div className="text-center py-4">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600 mx-auto mb-2"></div>
-            <p className="text-sm text-gray-600">{t('upload.processing')}</p>
+
+        {file && (
+          <div className="p-4 bg-muted rounded-lg">
+            <p className="text-sm">
+              <strong>Selected file:</strong> {file.name} ({(file.size / 1024).toFixed(1)} KB)
+            </p>
           </div>
         )}
+
+        {uploadResult && (
+          <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
+            <div className="flex items-center gap-2 text-green-800">
+              <CheckCircleIcon className="w-4 h-4" />
+              <span className="font-medium">{t('upload.uploadComplete')}</span>
+            </div>
+            <p className="text-sm text-green-700 mt-1">
+              Successfully uploaded {uploadResult.success} class schedules
+            </p>
+          </div>
+        )}
+
+        <Button 
+          onClick={handleUpload} 
+          disabled={!file || isUploading}
+          className="w-full"
+        >
+          {isUploading ? "Uploading..." : "Upload Schedules"}
+        </Button>
+
+        <div className="text-sm text-muted-foreground space-y-1">
+          <p><strong>CSV Format Requirements:</strong></p>
+          <ul className="list-disc list-inside space-y-1">
+            <li>Headers: grade, subject, lesson_topic, class_date, class_time, duration_minutes, description</li>
+            <li>Date format: YYYY-MM-DD (e.g., 2024-07-01)</li>
+            <li>Time format: HH:MM (e.g., 09:00)</li>
+            <li>Duration in minutes (e.g., 60)</li>
+          </ul>
+        </div>
       </CardContent>
     </Card>
   );
