@@ -29,14 +29,14 @@ const generateDemoStudentId = (fullName: string, school: string, grade: string):
     hash = hash & hash; // Convert to 32bit integer
   }
   
-  // Convert to positive number and create UUID format
-  const positiveHash = Math.abs(hash).toString(16).padStart(8, '0');
+  // Convert to positive number and create proper UUID format
+  const positiveHash = Math.abs(hash).toString(16).padStart(32, '0');
   return [
     positiveHash.substring(0, 8),
-    positiveHash.substring(0, 4),
-    positiveHash.substring(4, 8),
-    positiveHash.substring(0, 4),
-    positiveHash.substring(4, 8) + positiveHash.substring(0, 4)
+    positiveHash.substring(8, 12),
+    positiveHash.substring(12, 16),
+    positiveHash.substring(16, 20),
+    positiveHash.substring(20, 32)
   ].join('-');
 };
 
