@@ -45,7 +45,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({ title, userName, onLo
             type="button"
           >
             <LogOut className="w-4 h-4" />
-            {t('auth.logout') || 'Logout'}
+            {t('logout') || t('auth.logout') || 'Logout'}
           </Button>
         </div>
       </div>
