@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -33,7 +32,9 @@ interface StudentUpcomingClassesProps {
   };
 }
 
-const StudentUpcomingClasses: React.FC<StudentUpcomingClassesProps> = ({ student }) => {
+const StudentUpcomingClasses: React.FC<StudentUpcomingClassesProps> = React.memo(({ 
+  student 
+}) => {
   const [upcomingClasses, setUpcomingClasses] = useState<ClassSchedule[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
@@ -154,7 +155,7 @@ const StudentUpcomingClasses: React.FC<StudentUpcomingClassesProps> = ({ student
                     
                     <div className="flex items-center gap-2">
                       <Badge variant="secondary">
-                        {t('dashboard.durationMinutes', { minutes: classItem.duration_minutes })}
+                        {t('dashboard.durationMinutes', { minutes: classItem.duration_minutes.toString() })}
                       </Badge>
                     </div>
                   </div>
@@ -178,6 +179,6 @@ const StudentUpcomingClasses: React.FC<StudentUpcomingClassesProps> = ({ student
       </CardContent>
     </Card>
   );
-};
+});
 
 export default StudentUpcomingClasses;
