@@ -20,19 +20,17 @@ const SecureTeacherLogin = () => {
   const { teacher, isLoading: authLoading, setTeacher } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
 
-  // Redirect if already logged in
   useEffect(() => {
     if (teacher && !authLoading) {
       navigate("/teacher-dashboard", { replace: true });
     }
   }, [teacher, authLoading, navigate]);
 
-  // Don't render if still loading auth state
   if (authLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-teal mx-auto"></div>
           <p className="mt-2 text-muted-foreground">{t('common.loading')}</p>
         </div>
       </div>
@@ -61,7 +59,6 @@ const SecureTeacherLogin = () => {
           variant: "destructive",
         });
       } else if (result.teacher) {
-        // Set the teacher in auth context
         setTeacher(result.teacher);
         toast({
           title: "Welcome back!",
@@ -112,7 +109,6 @@ const SecureTeacherLogin = () => {
           variant: "destructive",
         });
       } else if (result.teacher) {
-        // Set the teacher in auth context
         setTeacher(result.teacher);
         toast({
           title: t('teacher.accountCreated') || "Account created!",
@@ -133,26 +129,26 @@ const SecureTeacherLogin = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4">
+    <div className="min-h-screen bg-brand-gradient-soft flex items-center justify-center p-4">
       <AuthHeader />
       
       <div className="w-full max-w-md">
         <SessionSecurityMonitor />
-        <Card className="bg-card/80 backdrop-blur-sm border-border">
+        <Card className="bg-white/90 backdrop-blur-sm border-brand-teal/20 shadow-xl">
           <CardHeader className="text-center">
-            <div className="w-16 h-16 bg-emerald-600 rounded-full mx-auto flex items-center justify-center mb-4">
+            <div className="w-16 h-16 bg-brand-teal rounded-full mx-auto flex items-center justify-center mb-4">
               <GraduationCapIcon className="w-8 h-8 text-white" />
             </div>
-            <CardTitle className="text-2xl text-foreground">{t('login.teacher.title')}</CardTitle>
-            <CardDescription>
+            <CardTitle className="text-2xl text-brand-dark">{t('login.teacher.title')}</CardTitle>
+            <CardDescription className="text-gray-600">
               {t('login.teacher.subtitle')}
             </CardDescription>
           </CardHeader>
           <CardContent>
             <Tabs defaultValue="login" className="space-y-4">
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="login">{t('auth.login')}</TabsTrigger>
-                <TabsTrigger value="signup">{t('auth.signUp')}</TabsTrigger>
+              <TabsList className="grid w-full grid-cols-2 bg-gray-100">
+                <TabsTrigger value="login" className="data-[state=active]:bg-brand-teal data-[state=active]:text-white">{t('auth.login')}</TabsTrigger>
+                <TabsTrigger value="signup" className="data-[state=active]:bg-brand-teal data-[state=active]:text-white">{t('auth.signUp')}</TabsTrigger>
               </TabsList>
 
               <TabsContent value="login">

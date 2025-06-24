@@ -15,7 +15,7 @@ const Index = () => {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
-          <GraduationCapIcon className="w-12 h-12 text-primary mx-auto mb-4" />
+          <GraduationCapIcon className="w-12 h-12 text-brand-teal mx-auto mb-4" />
           <p className="text-muted-foreground">Loading...</p>
         </div>
       </div>
@@ -25,21 +25,21 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="bg-card/80 backdrop-blur-sm border-b border-border">
+      <header className="bg-white/80 backdrop-blur-sm border-b border-border shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex justify-between items-center">
             <div className="flex items-center gap-2">
-              <GraduationCapIcon className="w-8 h-8 text-primary" />
-              <h1 className="text-2xl font-bold text-foreground">Lessons Learnt</h1>
+              <GraduationCapIcon className="w-8 h-8 text-brand-teal" />
+              <h1 className="text-2xl font-bold text-brand-dark">Lessons Learnt</h1>
             </div>
             <div className="flex items-center gap-4">
               <Link to="/pricing-showcase">
-                <Button variant="outline" size="sm" className="bg-accent/10 border-accent hover:bg-accent/20 text-accent hover:text-accent">
+                <Button variant="outline" size="sm" className="bg-brand-orange/10 border-brand-orange hover:bg-brand-orange/20 text-brand-orange hover:text-brand-orange">
                   Pricing
                 </Button>
               </Link>
               <Link to="/demo">
-                <Button variant="outline" size="sm" className="flex items-center gap-2">
+                <Button variant="outline" size="sm" className="flex items-center gap-2 border-brand-teal text-brand-teal hover:bg-brand-teal hover:text-white">
                   <PlayCircleIcon className="w-4 h-4" />
                   View Demo
                 </Button>
@@ -50,87 +50,90 @@ const Index = () => {
         </div>
       </header>
 
-      {/* Hero Section */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 text-center">
-        <div className="max-w-3xl mx-auto">
-          <h2 className="text-5xl font-bold text-foreground mb-2">
-            Collaborative classrooms
-          </h2>
-          <h2 className="text-5xl font-bold text-foreground mb-6">
-            Unstoppable minds
-          </h2>
-          <p className="text-xl text-muted-foreground mb-12">
-            Empower students, support teachers, and enhance learning with our comprehensive education platform
-          </p>
-          
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-md mx-auto">
-            <Link to="/student-login">
-              <Button 
-                size="lg" 
-                className="w-full min-h-16 py-3 px-4 text-base flex items-center justify-center bg-primary hover:bg-primary/90"
-              >
-                <UsersIcon className="w-5 h-5 mr-2 flex-shrink-0" />
-                <span className="text-center leading-tight whitespace-normal">{t('auth.studentLogin')}</span>
-              </Button>
-            </Link>
-            
-            <Link to="/teacher-login">
-              <Button 
-                size="lg" 
-                variant="outline" 
-                className="w-full border-2 border-primary text-primary hover:bg-primary hover:text-white min-h-16 py-3 px-4 text-base flex items-center justify-center"
-              >
-                <BookOpenIcon className="w-5 h-5 mr-2 flex-shrink-0" />
-                <span className="text-center leading-tight whitespace-normal">{t('auth.teacherLogin')}</span>
-              </Button>
-            </Link>
-          </div>
-          
-          <div className="max-w-2xl mx-auto mt-6">
-            <p className="text-lg text-primary font-black mt-2">
-              {t('welcome.freeForStudents')}
+      {/* Hero Section with Enhanced Gradient */}
+      <section className="relative bg-hero-gradient py-20 overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-brand-dark/80 via-brand-teal/60 to-brand-orange/40"></div>
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <div className="max-w-3xl mx-auto">
+            <h2 className="text-5xl font-bold text-white mb-2">
+              Collaborative classrooms
+            </h2>
+            <h2 className="text-5xl font-bold text-white mb-6">
+              Unstoppable minds
+            </h2>
+            <p className="text-xl text-white/90 mb-12">
+              Empower students, support teachers, and enhance learning with our comprehensive education platform
             </p>
+            
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-md mx-auto">
+              <Link to="/student-login">
+                <Button 
+                  size="lg" 
+                  className="w-full min-h-16 py-3 px-4 text-base flex items-center justify-center bg-brand-teal hover:bg-brand-dark text-white"
+                >
+                  <UsersIcon className="w-5 h-5 mr-2 flex-shrink-0" />
+                  <span className="text-center leading-tight whitespace-normal">{t('auth.studentLogin')}</span>
+                </Button>
+              </Link>
+              
+              <Link to="/teacher-login">
+                <Button 
+                  size="lg" 
+                  variant="outline" 
+                  className="w-full border-2 border-white text-white hover:bg-white hover:text-brand-dark min-h-16 py-3 px-4 text-base flex items-center justify-center"
+                >
+                  <BookOpenIcon className="w-5 h-5 mr-2 flex-shrink-0" />
+                  <span className="text-center leading-tight whitespace-normal">{t('auth.teacherLogin')}</span>
+                </Button>
+              </Link>
+            </div>
+            
+            <div className="max-w-2xl mx-auto mt-6">
+              <p className="text-lg text-brand-orange font-black mt-2">
+                {t('welcome.freeForStudents')}
+              </p>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* Demo Section - Moved up right after hero */}
+      {/* Demo Section */}
       <DemoSection />
 
       {/* Features Section */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          <Card className="bg-card/60 backdrop-blur-sm border-border">
+          <Card className="bg-white/90 backdrop-blur-sm border-brand-teal/20 hover:shadow-lg transition-shadow">
             <CardHeader>
-              <div className="w-12 h-12 bg-primary/20 rounded-lg flex items-center justify-center mb-4">
-                <UsersIcon className="w-6 h-6 text-primary" />
+              <div className="w-12 h-12 bg-brand-teal/20 rounded-lg flex items-center justify-center mb-4">
+                <UsersIcon className="w-6 h-6 text-brand-teal" />
               </div>
-              <CardTitle className="text-xl">{t('features.studentFeedback.title')}</CardTitle>
-              <CardDescription>
+              <CardTitle className="text-xl text-brand-dark">{t('features.studentFeedback.title')}</CardTitle>
+              <CardDescription className="text-gray-600">
                 {t('features.studentFeedback.description')}
               </CardDescription>
             </CardHeader>
           </Card>
 
-          <Card className="bg-card/60 backdrop-blur-sm border-border">
+          <Card className="bg-white/90 backdrop-blur-sm border-brand-teal/20 hover:shadow-lg transition-shadow">
             <CardHeader>
-              <div className="w-12 h-12 bg-primary/20 rounded-lg flex items-center justify-center mb-4">
-                <BookOpenIcon className="w-6 h-6 text-primary" />
+              <div className="w-12 h-12 bg-brand-teal/20 rounded-lg flex items-center justify-center mb-4">
+                <BookOpenIcon className="w-6 h-6 text-brand-teal" />
               </div>
-              <CardTitle className="text-xl">{t('features.teacherInsights.title')}</CardTitle>
-              <CardDescription>
+              <CardTitle className="text-xl text-brand-dark">{t('features.teacherInsights.title')}</CardTitle>
+              <CardDescription className="text-gray-600">
                 {t('features.teacherInsights.description')}
               </CardDescription>
             </CardHeader>
           </Card>
 
-          <Card className="bg-card/60 backdrop-blur-sm border-border">
+          <Card className="bg-white/90 backdrop-blur-sm border-brand-teal/20 hover:shadow-lg transition-shadow">
             <CardHeader>
-              <div className="w-12 h-12 bg-primary/20 rounded-lg flex items-center justify-center mb-4">
-                <HeartIcon className="w-6 h-6 text-primary" />
+              <div className="w-12 h-12 bg-brand-orange/20 rounded-lg flex items-center justify-center mb-4">
+                <HeartIcon className="w-6 h-6 text-brand-orange" />
               </div>
-              <CardTitle className="text-xl">{t('features.mentalHealth.title')}</CardTitle>
-              <CardDescription>
+              <CardTitle className="text-xl text-brand-dark">{t('features.mentalHealth.title')}</CardTitle>
+              <CardDescription className="text-gray-600">
                 {t('features.mentalHealth.description')}
               </CardDescription>
             </CardHeader>
@@ -139,57 +142,57 @@ const Index = () => {
       </section>
 
       {/* Platform Overview Section */}
-      <section className="bg-muted/30 py-20">
+      <section className="bg-brand-gradient-soft py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-foreground mb-6">
+            <h2 className="text-4xl font-bold text-brand-dark mb-6">
               {t('platform.whySchools')}
             </h2>
-            <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
               {t('platform.whySchoolsSubtitle')}
             </p>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center mb-16">
             <div>
-              <h3 className="text-3xl font-bold text-foreground mb-6">
+              <h3 className="text-3xl font-bold text-brand-dark mb-6">
                 {t('platform.studentInsights')}
               </h3>
               <div className="space-y-6">
                 <div className="flex items-start gap-4">
-                  <BarChart3Icon className="w-6 h-6 text-primary mt-1" />
+                  <BarChart3Icon className="w-6 h-6 text-brand-teal mt-1" />
                   <div>
-                    <h4 className="font-semibold text-lg mb-2">{t('platform.realTimeAnalytics')}</h4>
-                    <p className="text-muted-foreground">
+                    <h4 className="font-semibold text-lg mb-2 text-brand-dark">{t('platform.realTimeAnalytics')}</h4>
+                    <p className="text-gray-600">
                       {t('platform.realTimeAnalyticsDesc')}
                     </p>
                   </div>
                 </div>
                 <div className="flex items-start gap-4">
-                  <HeartIcon className="w-6 h-6 text-primary mt-1" />
+                  <HeartIcon className="w-6 h-6 text-brand-orange mt-1" />
                   <div>
-                    <h4 className="font-semibold text-lg mb-2">{t('platform.mentalHealthMonitoring')}</h4>
-                    <p className="text-muted-foreground">
+                    <h4 className="font-semibold text-lg mb-2 text-brand-dark">{t('platform.mentalHealthMonitoring')}</h4>
+                    <p className="text-gray-600">
                       {t('platform.mentalHealthMonitoringDesc')}
                     </p>
                   </div>
                 </div>
                 <div className="flex items-start gap-4">
-                  <ShieldCheckIcon className="w-6 h-6 text-primary mt-1" />
+                  <ShieldCheckIcon className="w-6 h-6 text-brand-teal mt-1" />
                   <div>
-                    <h4 className="font-semibold text-lg mb-2">{t('platform.privacySecurity')}</h4>
-                    <p className="text-muted-foreground">
+                    <h4 className="font-semibold text-lg mb-2 text-brand-dark">{t('platform.privacySecurity')}</h4>
+                    <p className="text-gray-600">
                       {t('platform.privacySecurityDesc')}
                     </p>
                   </div>
                 </div>
               </div>
             </div>
-            <div className="bg-gradient-to-br from-primary/10 to-primary/5 rounded-2xl p-8">
+            <div className="bg-brand-gradient p-8 rounded-2xl text-white">
               <div className="text-center">
-                <div className="text-6xl font-bold text-primary mb-4">{t('platform.improvementPercent')}</div>
+                <div className="text-6xl font-bold mb-4">{t('platform.improvementPercent')}</div>
                 <p className="text-xl font-semibold mb-2">{t('platform.improvementTitle')}</p>
-                <p className="text-muted-foreground">
+                <p className="text-white/90">
                   {t('platform.improvementDesc')}
                 </p>
               </div>
@@ -197,14 +200,14 @@ const Index = () => {
           </div>
 
           <div className="text-center">
-            <h3 className="text-2xl font-bold text-foreground mb-4">
+            <h3 className="text-2xl font-bold text-brand-dark mb-4">
               {t('platform.readyToTransform')}
             </h3>
-            <p className="text-lg text-muted-foreground mb-8">
+            <p className="text-lg text-gray-600 mb-8">
               {t('platform.readyToTransformDesc')}
             </p>
             <Link to="/teacher-login">
-              <Button size="lg" className="text-lg px-8 py-3 bg-primary hover:bg-primary/90">
+              <Button size="lg" className="text-lg px-8 py-3 bg-brand-orange hover:bg-brand-orange/90 text-white">
                 {t('auth.signUpNow')}
               </Button>
             </Link>

@@ -26,8 +26,8 @@ export default {
 				background: 'hsl(var(--background))',
 				foreground: 'hsl(var(--foreground))',
 				primary: {
-					DEFAULT: 'hsl(var(--primary))',
-					foreground: 'hsl(var(--primary-foreground))'
+					DEFAULT: '#03b5aa',
+					foreground: '#ffffff'
 				},
 				secondary: {
 					DEFAULT: 'hsl(var(--secondary))',
@@ -42,8 +42,8 @@ export default {
 					foreground: 'hsl(var(--muted-foreground))'
 				},
 				accent: {
-					DEFAULT: 'hsl(var(--accent))',
-					foreground: 'hsl(var(--accent-foreground))'
+					DEFAULT: '#ff8522',
+					foreground: '#ffffff'
 				},
 				popover: {
 					DEFAULT: 'hsl(var(--popover))',
@@ -63,11 +63,11 @@ export default {
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
 				},
-				// Custom brand colors - override any existing color references
+				// Brand Colors - Override All Traditional Colors
 				'brand-dark': '#023436',
 				'brand-teal': '#03b5aa', 
 				'brand-orange': '#ff8522',
-				// Override common colors to use our brand colors
+				// Override blue to use brand teal
 				blue: {
 					50: '#f0fffe',
 					100: '#ccfffe',
@@ -75,12 +75,13 @@ export default {
 					300: '#5efffd',
 					400: '#18f4f8',
 					500: '#03b5aa',
-					600: '#038a89',
-					700: '#08706f',
-					800: '#0d5a5a',
-					900: '#104a4b',
+					600: '#03b5aa',
+					700: '#023436',
+					800: '#023436',
+					900: '#023436',
 					950: '#023436',
 				},
+				// Override emerald to use brand teal
 				emerald: {
 					50: '#f0fffe',
 					100: '#ccfffe',
@@ -88,12 +89,13 @@ export default {
 					300: '#5efffd',
 					400: '#18f4f8',
 					500: '#03b5aa',
-					600: '#038a89',
-					700: '#08706f',
-					800: '#0d5a5a',
-					900: '#104a4b',
+					600: '#03b5aa',
+					700: '#023436',
+					800: '#023436',
+					900: '#023436',
 					950: '#023436',
 				},
+				// Override purple to use brand orange
 				purple: {
 					50: '#fff7ed',
 					100: '#ffedd5',
@@ -101,11 +103,95 @@ export default {
 					300: '#fdba74',
 					400: '#fb923c',
 					500: '#ff8522',
-					600: '#ea580c',
-					700: '#c2410c',
-					800: '#9a3412',
-					900: '#7c2d12',
+					600: '#ff8522',
+					700: '#e07420',
+					800: '#c2410c',
+					900: '#9a3412',
 					950: '#431407',
+				},
+				// Override violet to use brand orange
+				violet: {
+					50: '#fff7ed',
+					100: '#ffedd5',
+					200: '#fed7aa',
+					300: '#fdba74',
+					400: '#fb923c',
+					500: '#ff8522',
+					600: '#ff8522',
+					700: '#e07420',
+					800: '#c2410c',
+					900: '#9a3412',
+					950: '#431407',
+				},
+				// Override indigo to use brand orange
+				indigo: {
+					50: '#fff7ed',
+					100: '#ffedd5',
+					200: '#fed7aa',
+					300: '#fdba74',
+					400: '#fb923c',
+					500: '#ff8522',
+					600: '#ff8522',
+					700: '#e07420',
+					800: '#c2410c',
+					900: '#9a3412',
+					950: '#431407',
+				},
+				// Override pink to use brand orange
+				pink: {
+					50: '#fff7ed',
+					100: '#ffedd5',
+					200: '#fed7aa',
+					300: '#fdba74',
+					400: '#fb923c',
+					500: '#ff8522',
+					600: '#ff8522',
+					700: '#e07420',
+					800: '#c2410c',
+					900: '#9a3412',
+					950: '#431407',
+				},
+				// Override orange to maintain consistency
+				orange: {
+					50: '#fff7ed',
+					100: '#ffedd5',
+					200: '#fed7aa',
+					300: '#fdba74',
+					400: '#fb923c',
+					500: '#ff8522',
+					600: '#ff8522',
+					700: '#e07420',
+					800: '#c2410c',
+					900: '#9a3412',
+					950: '#431407',
+				},
+				// Override slate for dark elements
+				slate: {
+					50: '#f8fafc',
+					100: '#f1f5f9',
+					200: '#e2e8f0',
+					300: '#cbd5e1',
+					400: '#94a3b8',
+					500: '#64748b',
+					600: '#475569',
+					700: '#334155',
+					800: '#023436',
+					900: '#023436',
+					950: '#023436',
+				},
+				// Override gray for dark elements
+				gray: {
+					50: '#f9fafb',
+					100: '#f3f4f6',
+					200: '#e5e7eb',
+					300: '#d1d5db',
+					400: '#9ca3af',
+					500: '#6b7280',
+					600: '#4b5563',
+					700: '#374151',
+					800: '#023436',
+					900: '#023436',
+					950: '#023436',
 				}
 			},
 			borderRadius: {
@@ -129,11 +215,39 @@ export default {
 					to: {
 						height: '0'
 					}
+				},
+				'fade-in': {
+					'0%': {
+						opacity: '0',
+						transform: 'translateY(10px)'
+					},
+					'100%': {
+						opacity: '1',
+						transform: 'translateY(0)'
+					}
+				},
+				'brand-gradient': {
+					'0%': {
+						backgroundPosition: '0% 50%'
+					},
+					'50%': {
+						backgroundPosition: '100% 50%'
+					},
+					'100%': {
+						backgroundPosition: '0% 50%'
+					}
 				}
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
-				'accordion-up': 'accordion-up 0.2s ease-out'
+				'accordion-up': 'accordion-up 0.2s ease-out',
+				'fade-in': 'fade-in 0.3s ease-out',
+				'brand-gradient': 'brand-gradient 3s ease infinite'
+			},
+			backgroundImage: {
+				'brand-gradient': 'linear-gradient(135deg, #ff8522 0%, #03b5aa 50%, #023436 100%)',
+				'brand-gradient-soft': 'linear-gradient(135deg, rgba(255,133,34,0.1) 0%, rgba(3,181,170,0.1) 100%)',
+				'hero-gradient': 'linear-gradient(135deg, #023436 0%, #03b5aa 50%, #ff8522 100%)'
 			}
 		}
 	},
