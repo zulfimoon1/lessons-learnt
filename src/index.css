@@ -92,4 +92,41 @@
   body {
     @apply bg-background text-foreground;
   }
+
+  /* Force override any remaining blue/purple colors */
+  .bg-blue-600,
+  .bg-blue-500,
+  .bg-purple-600,
+  .bg-purple-500,
+  .bg-emerald-600,
+  .bg-emerald-500 {
+    @apply bg-brand-teal !important;
+  }
+
+  .text-blue-600,
+  .text-blue-500,
+  .text-purple-600,
+  .text-purple-500,
+  .text-emerald-600,
+  .text-emerald-500 {
+    @apply text-brand-teal !important;
+  }
+
+  .border-blue-600,
+  .border-blue-500,
+  .border-purple-600,
+  .border-purple-500,
+  .border-emerald-600,
+  .border-emerald-500 {
+    @apply border-brand-teal !important;
+  }
+
+  .hover\:bg-blue-700:hover,
+  .hover\:bg-blue-600:hover,
+  .hover\:bg-purple-700:hover,
+  .hover\:bg-purple-600:hover,
+  .hover\:bg-emerald-700:hover,
+  .hover\:bg-emerald-600:hover {
+    @apply hover:bg-brand-dark !important;
+  }
 }

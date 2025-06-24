@@ -63,10 +63,50 @@ export default {
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
 				},
-				// Custom brand colors
+				// Custom brand colors - override any existing color references
 				'brand-dark': '#023436',
 				'brand-teal': '#03b5aa', 
-				'brand-orange': '#ff8522'
+				'brand-orange': '#ff8522',
+				// Override common colors to use our brand colors
+				blue: {
+					50: '#f0fffe',
+					100: '#ccfffe',
+					200: '#9efffe',
+					300: '#5efffd',
+					400: '#18f4f8',
+					500: '#03b5aa',
+					600: '#038a89',
+					700: '#08706f',
+					800: '#0d5a5a',
+					900: '#104a4b',
+					950: '#023436',
+				},
+				emerald: {
+					50: '#f0fffe',
+					100: '#ccfffe',
+					200: '#9efffe',
+					300: '#5efffd',
+					400: '#18f4f8',
+					500: '#03b5aa',
+					600: '#038a89',
+					700: '#08706f',
+					800: '#0d5a5a',
+					900: '#104a4b',
+					950: '#023436',
+				},
+				purple: {
+					50: '#fff7ed',
+					100: '#ffedd5',
+					200: '#fed7aa',
+					300: '#fdba74',
+					400: '#fb923c',
+					500: '#ff8522',
+					600: '#ea580c',
+					700: '#c2410c',
+					800: '#9a3412',
+					900: '#7c2d12',
+					950: '#431407',
+				}
 			},
 			borderRadius: {
 				lg: 'var(--radius)',

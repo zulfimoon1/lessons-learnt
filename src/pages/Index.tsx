@@ -34,7 +34,7 @@ const Index = () => {
             </div>
             <div className="flex items-center gap-4">
               <Link to="/pricing-showcase">
-                <Button variant="outline" size="sm" className="bg-purple-50 border-purple-200 hover:bg-purple-100 text-purple-700 hover:text-purple-800">
+                <Button variant="outline" size="sm" className="bg-accent/10 border-accent hover:bg-accent/20 text-accent hover:text-accent">
                   Pricing
                 </Button>
               </Link>
@@ -53,18 +53,21 @@ const Index = () => {
       {/* Hero Section */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 text-center">
         <div className="max-w-3xl mx-auto">
+          <h2 className="text-5xl font-bold text-foreground mb-2">
+            Collaborative classrooms
+          </h2>
           <h2 className="text-5xl font-bold text-foreground mb-6">
-            {t('welcome.subtitle')}
+            Unstoppable minds
           </h2>
           <p className="text-xl text-muted-foreground mb-12">
-            {t('welcome.title')}
+            Empower students, support teachers, and enhance learning with our comprehensive education platform
           </p>
           
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-md mx-auto">
             <Link to="/student-login">
               <Button 
                 size="lg" 
-                className="w-full min-h-16 py-3 px-4 text-base flex items-center justify-center"
+                className="w-full min-h-16 py-3 px-4 text-base flex items-center justify-center bg-primary hover:bg-primary/90"
               >
                 <UsersIcon className="w-5 h-5 mr-2 flex-shrink-0" />
                 <span className="text-center leading-tight whitespace-normal">{t('auth.studentLogin')}</span>
@@ -75,7 +78,7 @@ const Index = () => {
               <Button 
                 size="lg" 
                 variant="outline" 
-                className="w-full border-2 border-border hover:bg-accent min-h-16 py-3 px-4 text-base flex items-center justify-center"
+                className="w-full border-2 border-primary text-primary hover:bg-primary hover:text-white min-h-16 py-3 px-4 text-base flex items-center justify-center"
               >
                 <BookOpenIcon className="w-5 h-5 mr-2 flex-shrink-0" />
                 <span className="text-center leading-tight whitespace-normal">{t('auth.teacherLogin')}</span>
@@ -84,9 +87,6 @@ const Index = () => {
           </div>
           
           <div className="max-w-2xl mx-auto mt-6">
-            <p className="text-2xl text-foreground font-bold italic leading-relaxed">
-              {t('tagline.studentLead')}
-            </p>
             <p className="text-lg text-primary font-black mt-2">
               {t('welcome.freeForStudents')}
             </p>
@@ -204,7 +204,7 @@ const Index = () => {
               {t('platform.readyToTransformDesc')}
             </p>
             <Link to="/teacher-login">
-              <Button size="lg" className="text-lg px-8 py-3">
+              <Button size="lg" className="text-lg px-8 py-3 bg-primary hover:bg-primary/90">
                 {t('auth.signUpNow')}
               </Button>
             </Link>
