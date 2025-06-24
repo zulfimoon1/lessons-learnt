@@ -93,6 +93,102 @@
     @apply bg-background text-foreground;
   }
 
+  /* ENHANCED CONTRAST FIXES - HIGH PRIORITY */
+  
+  /* White text on dark backgrounds */
+  .bg-brand-dark,
+  .bg-brand-dark *,
+  .bg-slate-800,
+  .bg-slate-900,
+  .bg-slate-950,
+  .bg-gray-800,
+  .bg-gray-900,
+  .bg-gray-950,
+  [class*="bg-brand-dark"] {
+    color: white !important;
+  }
+
+  /* Dark text on light backgrounds */
+  .bg-white,
+  .bg-gray-50,
+  .bg-gray-100,
+  .bg-gray-200,
+  .bg-brand-gradient-soft,
+  [class*="bg-white"],
+  [class*="bg-gray-50"],
+  [class*="bg-gray-100"] {
+    color: #023436 !important;
+  }
+
+  /* Ensure card text is visible */
+  .bg-card,
+  .bg-card *:not(button):not(.text-brand-teal):not(.text-brand-orange) {
+    color: #023436 !important;
+  }
+
+  /* Button contrast fixes */
+  .bg-brand-teal,
+  .bg-brand-teal *,
+  button.bg-brand-teal,
+  button.bg-brand-teal * {
+    background-color: #03b5aa !important;
+    color: white !important;
+  }
+
+  .bg-brand-orange,
+  .bg-brand-orange *,
+  button.bg-brand-orange,
+  button.bg-brand-orange * {
+    background-color: #ff8522 !important;
+    color: white !important;
+  }
+
+  /* Form elements with proper contrast */
+  input,
+  textarea,
+  select {
+    background-color: white !important;
+    color: #023436 !important;
+    border-color: #cbd5e1 !important;
+  }
+
+  input:focus,
+  textarea:focus,
+  select:focus {
+    border-color: #03b5aa !important;
+    --tw-ring-color: #03b5aa !important;
+  }
+
+  /* Navigation and header contrast */
+  header,
+  nav,
+  .header,
+  .navigation {
+    color: #023436 !important;
+  }
+
+  /* Muted text with better contrast */
+  .text-muted-foreground,
+  .text-gray-600,
+  .text-gray-500 {
+    color: #64748b !important;
+  }
+
+  /* Description text with proper contrast */
+  .text-gray-600,
+  .text-gray-700 {
+    color: #475569 !important;
+  }
+
+  /* Link colors with proper contrast */
+  a:not(.btn):not(.button):not([class*="bg-"]) {
+    color: #03b5aa !important;
+  }
+
+  a:not(.btn):not(.button):not([class*="bg-"]):hover {
+    color: #023436 !important;
+  }
+
   /* COMPREHENSIVE COLOR OVERRIDES - HIGHEST PRIORITY */
   
   /* All Blue Colors to Teal */
@@ -108,6 +204,7 @@
   .bg-blue-900,
   .bg-blue-950 {
     background-color: #03b5aa !important;
+    color: white !important;
   }
 
   .text-blue-50,
@@ -151,6 +248,7 @@
   .bg-purple-900,
   .bg-purple-950 {
     background-color: #ff8522 !important;
+    color: white !important;
   }
 
   .text-purple-50,
@@ -194,6 +292,7 @@
   .bg-emerald-900,
   .bg-emerald-950 {
     background-color: #03b5aa !important;
+    color: white !important;
   }
 
   .text-emerald-50,
@@ -248,6 +347,7 @@
   .bg-indigo-900,
   .bg-indigo-950 {
     background-color: #ff8522 !important;
+    color: white !important;
   }
 
   .text-violet-50,
@@ -288,6 +388,7 @@
   .bg-pink-900,
   .bg-pink-950 {
     background-color: rgba(255, 133, 34, 0.1) !important;
+    color: #ff8522 !important;
   }
 
   .text-pink-50,
@@ -312,9 +413,10 @@
   .bg-gray-900,
   .bg-gray-950 {
     background-color: #023436 !important;
+    color: white !important;
   }
 
-  /* Hover States */
+  /* Hover States with proper contrast */
   .hover\:bg-blue-700:hover,
   .hover\:bg-blue-600:hover,
   .hover\:bg-blue-800:hover,
@@ -327,11 +429,13 @@
   .hover\:bg-indigo-700:hover,
   .hover\:bg-indigo-600:hover {
     background-color: #023436 !important;
+    color: white !important;
   }
 
   .hover\:bg-orange-700:hover,
   .hover\:bg-orange-600:hover {
     background-color: #e07420 !important;
+    color: white !important;
   }
 
   /* Focus States */
@@ -350,7 +454,7 @@
     border-color: #03b5aa !important;
   }
 
-  /* Gradients - Enhanced with Brand Colors */
+  /* Enhanced Gradients with better contrast */
   .bg-gradient-to-br,
   .bg-gradient-to-r,
   .bg-gradient-to-l,
@@ -360,11 +464,13 @@
   .bg-gradient-to-tl,
   .bg-gradient-to-bl {
     background-image: linear-gradient(to bottom right, #ff8522, #03b5aa) !important;
+    color: white !important;
   }
 
-  /* Primary Brand Elements */
+  /* Primary Brand Elements with contrast */
   .bg-primary {
     background-color: #03b5aa !important;
+    color: white !important;
   }
 
   .text-primary {
@@ -375,14 +481,17 @@
     border-color: #03b5aa !important;
   }
 
-  /* Accent Elements */
-  .bg-accent,
-  .text-accent {
+  /* Accent Elements with contrast */
+  .bg-accent {
     background-color: #ff8522 !important;
-    color: #ffffff !important;
+    color: white !important;
   }
 
-  /* Button Specific Overrides */
+  .text-accent {
+    color: #ff8522 !important;
+  }
+
+  /* Button Specific Overrides with proper contrast */
   button.bg-blue-600,
   button.bg-blue-500,
   button.bg-purple-600,
@@ -390,6 +499,7 @@
   button.bg-emerald-600,
   button.bg-emerald-500 {
     background-color: #03b5aa !important;
+    color: white !important;
   }
 
   button.bg-blue-600:hover,
@@ -399,52 +509,37 @@
   button.bg-emerald-600:hover,
   button.bg-emerald-500:hover {
     background-color: #023436 !important;
+    color: white !important;
   }
 
-  /* Form Elements */
-  input:focus,
-  textarea:focus,
-  select:focus {
-    border-color: #03b5aa !important;
-    --tw-ring-color: #03b5aa !important;
-  }
-
-  /* Card Backgrounds */
+  /* Card Backgrounds with proper text contrast */
   .bg-card\/60,
   .bg-card\/80,
   .bg-white\/80,
   .bg-white\/60 {
     background-color: rgba(255, 255, 255, 0.9) !important;
+    color: #023436 !important;
   }
 
-  /* Ensure proper contrast on dark backgrounds */
-  .bg-slate-800 *,
-  .bg-slate-900 *,
-  .bg-gray-800 *,
-  .bg-gray-900 * {
-    color: white !important;
-  }
-
-  /* Special Login Page Overrides */
+  /* Special overrides for specific components */
   .login-page .bg-blue-600,
   .login-page .bg-emerald-600 {
     background-color: #03b5aa !important;
+    color: white !important;
   }
 
-  /* Dashboard Specific Overrides */
   .dashboard .text-blue-600,
   .dashboard .text-purple-600,
   .dashboard .text-emerald-600 {
     color: #03b5aa !important;
   }
 
-  /* Demo Page Overrides */
   .demo-page .bg-blue-50,
   .demo-page .bg-purple-50 {
     background-color: rgba(3, 181, 170, 0.1) !important;
+    color: #023436 !important;
   }
 
-  /* Pricing Page CTA Buttons */
   .pricing-page button {
     background-color: #ff8522 !important;
     color: white !important;
@@ -452,9 +547,10 @@
 
   .pricing-page button:hover {
     background-color: #e07420 !important;
+    color: white !important;
   }
 
-  /* Ensure Icons Match */
+  /* Icons with matching colors */
   svg.text-blue-600,
   svg.text-purple-600,
   svg.text-emerald-600 {
@@ -464,5 +560,45 @@
   svg.text-orange-500,
   svg.text-orange-600 {
     color: #ff8522 !important;
+  }
+
+  /* Dropdown and popover contrast fixes */
+  .bg-popover,
+  .bg-popover * {
+    background-color: white !important;
+    color: #023436 !important;
+  }
+
+  /* Tab content contrast */
+  [data-state="active"] {
+    background-color: #03b5aa !important;
+    color: white !important;
+  }
+
+  /* Badge and chip elements */
+  .bg-secondary {
+    background-color: #f1f5f9 !important;
+    color: #023436 !important;
+  }
+
+  /* Loading spinner colors */
+  .border-brand-teal {
+    border-color: #03b5aa !important;
+  }
+
+  /* Ensure proper contrast for all text elements */
+  h1, h2, h3, h4, h5, h6 {
+    color: inherit !important;
+  }
+
+  p {
+    color: inherit !important;
+  }
+
+  /* Card headers with proper contrast */
+  .card-header,
+  .card-title,
+  .card-description {
+    color: inherit !important;
   }
 }
