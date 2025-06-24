@@ -7,6 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Calendar, Clock, BookOpen, User, MessageSquare } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface ClassSchedule {
   id: string;
@@ -18,7 +19,9 @@ interface ClassSchedule {
   teacher_id: string;
   school: string;
   grade: string;
-  teacher_name?: string;
+  teacher: {
+    name: string;
+  };
 }
 
 interface StudentUpcomingClassesProps {
@@ -35,6 +38,7 @@ const StudentUpcomingClasses: React.FC<StudentUpcomingClassesProps> = ({ student
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { t } = useLanguage();
 
   useEffect(() => {
     fetchUpcomingClasses();
@@ -46,9 +50,13 @@ const StudentUpcomingClasses: React.FC<StudentUpcomingClassesProps> = ({ student
       
       const today = new Date().toISOString().split('T')[0];
       
+      // Use efficient join instead of multiple queries (scalable architecture principle)
       const { data: classData, error } = await supabase
         .from('class_schedules')
-        .select('*')
+        .select(`
+          *,
+          teacher:teachers!inner(name)
+        `)
         .eq('school', student.school)
         .eq('grade', student.grade)
         .gte('class_date', today)
@@ -56,30 +64,32 @@ const StudentUpcomingClasses: React.FC<StudentUpcomingClassesProps> = ({ student
         .order('class_time', { ascending: true })
         .limit(20);
 
-      if (error) throw error;
+      if (error) {
+        // Security logging (comprehensive security principle)
+        await supabase.rpc('log_security_event_enhanced', {
+          event_type: 'data_access_error',
+          user_id: null,
+          details: `Failed to fetch upcoming classes for ${student.school}/${student.grade}: ${error.message}`,
+          severity: 'medium'
+        });
+        throw error;
+      }
 
-      // Fetch teacher names separately
-      const classesWithTeachers = await Promise.all(
-        (classData || []).map(async (classItem) => {
-          const { data: teacherData } = await supabase
-            .from('teachers')
-            .select('name')
-            .eq('id', classItem.teacher_id)
-            .single();
+      setUpcomingClasses(classData || []);
 
-          return {
-            ...classItem,
-            teacher_name: teacherData?.name || 'Unknown Teacher'
-          };
-        })
-      );
+      // Security audit logging (comprehensive security principle)
+      await supabase.rpc('log_security_event_enhanced', {
+        event_type: 'student_class_access',
+        user_id: null,
+        details: `Student ${student.full_name} accessed upcoming classes`,
+        severity: 'low'
+      });
 
-      setUpcomingClasses(classesWithTeachers);
     } catch (error) {
       console.error('Error fetching upcoming classes:', error);
       toast({
-        title: "Error",
-        description: "Failed to fetch upcoming classes",
+        title: t('errors.title'),
+        description: t('errors.fetchClasses'),
         variant: "destructive",
       });
     } finally {
@@ -93,7 +103,7 @@ const StudentUpcomingClasses: React.FC<StudentUpcomingClassesProps> = ({ student
   };
 
   if (isLoading) {
-    return <div className="flex items-center justify-center p-8">Loading upcoming classes...</div>;
+    return <div className="flex items-center justify-center p-8">{t('common.loading')}</div>;
   }
 
   return (
@@ -101,16 +111,16 @@ const StudentUpcomingClasses: React.FC<StudentUpcomingClassesProps> = ({ student
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Calendar className="w-5 h-5" />
-          Upcoming Classes
+          {t('dashboard.upcomingClasses')}
         </CardTitle>
       </CardHeader>
       <CardContent>
         {upcomingClasses.length === 0 ? (
           <div className="text-center py-8">
             <BookOpen className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-            <p className="text-muted-foreground">No upcoming classes scheduled</p>
+            <p className="text-muted-foreground">{t('dashboard.noUpcomingClasses')}</p>
             <p className="text-sm text-muted-foreground mt-2">
-              Classes for {student.grade} at {student.school} will appear here
+              {t('dashboard.classesWillAppear', { grade: student.grade, school: student.school })}
             </p>
           </div>
         ) : (
@@ -138,13 +148,13 @@ const StudentUpcomingClasses: React.FC<StudentUpcomingClassesProps> = ({ student
                       </span>
                       <span className="flex items-center gap-1">
                         <User className="w-3 h-3" />
-                        {classItem.teacher_name}
+                        {classItem.teacher.name}
                       </span>
                     </div>
                     
                     <div className="flex items-center gap-2">
                       <Badge variant="secondary">
-                        {classItem.duration_minutes} minutes
+                        {t('dashboard.durationMinutes', { minutes: classItem.duration_minutes })}
                       </Badge>
                     </div>
                   </div>
@@ -157,7 +167,7 @@ const StudentUpcomingClasses: React.FC<StudentUpcomingClassesProps> = ({ student
                       className="flex items-center gap-2"
                     >
                       <MessageSquare className="w-4 h-4" />
-                      Leave Feedback
+                      {t('feedback.leaveFeedback')}
                     </Button>
                   </div>
                 </div>

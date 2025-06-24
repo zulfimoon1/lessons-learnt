@@ -1,0 +1,38 @@
+
+export const feedback = {
+  classFeedback: "Pamokos atsiliepimas",
+  classFeedbackDescription: "Pasidalykite savo patirtimi apie pamoką, kad padėtumėte pagerinti mokymą ir mokymąsi",
+  leaveFeedback: "Palikti atsiliepimą",
+  selectClass: "Prašome pasirinkti pamoką",
+  selectClassDescription: "Pasirinkite, kuriai pamokai norite pateikti atsiliepimą",
+  selectClassLabel: "Pasirinkite pamoką atsiliepimui:",
+  completeRequired: "Prašome užpildyti visus privalomų laukus",
+  completeRequiredDescription: "Visi vertinimo laukai yra privalomi",
+  submitSuccess: "Atsiliepimas sėkmingai pateiktas",
+  submitSuccessDescription: "Ačiū už atsiliepimą! Jis padės pagerinti būsimas pamokas.",
+  submitError: "Nepavyko pateikti atsiliepimo. Bandykite dar kartą.",
+  submitAnonymously: "Pateikti atsiliepimą anonimiškai",
+  understanding: "Kaip gerai supratote pamoką?",
+  interest: "Kiek įdomi buvo pamoka?",
+  educationalGrowth: "Kiek išmokote?",
+  emotionalState: "Kaip jautėtės pamokos metu?",
+  whatWentWell: "Kas pavyko šioje pamokoje?",
+  whatWentWellPlaceholder: "Pasidalykite tuo, kas jums patiko ar buvo naudinga...",
+  suggestions: "Ar turite pasiūlymų pagerinimui?",
+  suggestionsPlaceholder: "Kaip būtų galima pagerinti pamoką?",
+  additionalComments: "Papildomi komentarai",
+  additionalCommentsPlaceholder: "Kitos mintys ar atsiliepimas...",
+  submitFeedback: "Pateikti atsiliepimą",
+  anonymousStudent: "Anoniminis mokinys",
+  noRecentClasses: "Nėra naujausių pamokų atsiliepimams",
+  emotions: {
+    excited: "sujaudintas",
+    focused: "susikaupęs",
+    confused: "sutrikęs",
+    bored: "nuobodus",
+    stressed: "streso",
+    happy: "laimingas",
+    frustrated: "nusivylęs",
+    calm: "ramus"
+  }
+};

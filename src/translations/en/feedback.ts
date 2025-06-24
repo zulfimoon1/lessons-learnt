@@ -1,0 +1,38 @@
+
+export const feedback = {
+  classFeedback: "Class Feedback",
+  classFeedbackDescription: "Share your experience about a class to help improve teaching and learning",
+  leaveFeedback: "Leave Feedback",
+  selectClass: "Please select a class",
+  selectClassDescription: "Choose which class you want to provide feedback for",
+  selectClassLabel: "Select a class to provide feedback for:",
+  completeRequired: "Please complete all required fields",
+  completeRequiredDescription: "All rating fields are required",
+  submitSuccess: "Feedback submitted successfully",
+  submitSuccessDescription: "Thank you for your feedback! It will help improve future classes.",
+  submitError: "Failed to submit feedback. Please try again.",
+  submitAnonymously: "Submit feedback anonymously",
+  understanding: "How well did you understand the lesson?",
+  interest: "How interesting was the lesson?",
+  educationalGrowth: "How much did you learn?",
+  emotionalState: "How did you feel during the lesson?",
+  whatWentWell: "What went well in this lesson?",
+  whatWentWellPlaceholder: "Share what you enjoyed or found helpful...",
+  suggestions: "Any suggestions for improvement?",
+  suggestionsPlaceholder: "How could the lesson be improved?",
+  additionalComments: "Additional comments",
+  additionalCommentsPlaceholder: "Any other thoughts or feedback...",
+  submitFeedback: "Submit Feedback",
+  anonymousStudent: "Anonymous Student",
+  noRecentClasses: "No recent classes available for feedback",
+  emotions: {
+    excited: "excited",
+    focused: "focused",
+    confused: "confused",
+    bored: "bored",
+    stressed: "stressed",
+    happy: "happy",
+    frustrated: "frustrated",
+    calm: "calm"
+  }
+};
