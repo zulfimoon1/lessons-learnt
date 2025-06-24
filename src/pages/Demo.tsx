@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -14,19 +15,22 @@ import {
   Zap,
   Star
 } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
+import ComplianceFooter from "@/components/ComplianceFooter";
 
 const Demo = () => {
   const [isDemoActive, setIsDemoActive] = useState(false);
+  const { t } = useLanguage();
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
       <div className="container mx-auto py-12 px-4 sm:px-6 lg:px-8">
         <div className="text-center">
           <h2 className="text-3xl font-extrabold text-gray-900">
-            Experience Lesson Lens in Demo Mode
+            {t('demo.title')}
           </h2>
           <p className="mt-3 max-w-2xl mx-auto text-xl text-gray-500 sm:mt-4">
-            Explore the platform's features and benefits without any commitment.
+            {t('demo.subtitle')}
           </p>
         </div>
 
@@ -123,7 +127,7 @@ const Demo = () => {
             onClick={() => setIsDemoActive(!isDemoActive)}
             className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-bold py-3 px-6 rounded-full"
           >
-            {isDemoActive ? 'Exit Demo Mode' : 'Enter Demo Mode'}
+            {isDemoActive ? t('demo.exitDemo') : t('demo.enterDemo')}
           </Button>
         </div>
 
@@ -132,14 +136,14 @@ const Demo = () => {
             <Card className="bg-white shadow-lg rounded-lg overflow-hidden">
               <CardHeader className="px-4 py-5 sm:px-6">
                 <CardTitle className="text-lg font-medium text-gray-900">
-                  Demo Mode Activated
+                  {t('demo.demoActive')}
                   <Badge className="ml-2 bg-green-500 text-white">
                     <Zap className="h-4 w-4 mr-1" />
                     Active
                   </Badge>
                 </CardTitle>
                 <CardDescription className="text-gray-500">
-                  You are now experiencing Lesson Lens in demo mode.
+                  {t('demo.demoDescription')}
                 </CardDescription>
               </CardHeader>
               <CardContent className="bg-gray-50 px-4 py-5 sm:p-6">
@@ -147,37 +151,37 @@ const Demo = () => {
                   <div className="bg-white rounded-md shadow-sm p-4">
                     <h3 className="text-md font-semibold text-gray-700">
                       <Calendar className="h-4 w-4 mr-1 inline-block" />
-                      Explore Scheduling
+                      {t('demo.exploreScheduling')}
                     </h3>
                     <p className="text-sm text-gray-500 mt-1">
-                      Create and manage class schedules with ease.
+                      {t('demo.schedulingDesc')}
                     </p>
                   </div>
                   <div className="bg-white rounded-md shadow-sm p-4">
                     <h3 className="text-md font-semibold text-gray-700">
                       <BookOpen className="h-4 w-4 mr-1 inline-block" />
-                      View Sample Lessons
+                      {t('demo.viewSampleLessons')}
                     </h3>
                     <p className="text-sm text-gray-500 mt-1">
-                      Access pre-built lesson plans and resources.
+                      {t('demo.sampleLessonsDesc')}
                     </p>
                   </div>
                   <div className="bg-white rounded-md shadow-sm p-4">
                     <h3 className="text-md font-semibold text-gray-700">
                       <Star className="h-4 w-4 mr-1 inline-block" />
-                      Test Feedback System
+                      {t('demo.testFeedback')}
                     </h3>
                     <p className="text-sm text-gray-500 mt-1">
-                      Simulate student feedback and analyze results.
+                      {t('demo.feedbackDesc')}
                     </p>
                   </div>
                   <div className="bg-white rounded-md shadow-sm p-4">
                     <h3 className="text-md font-semibold text-gray-700">
                       <Users className="h-4 w-4 mr-1 inline-block" />
-                      Manage Demo Students
+                      {t('demo.manageDemoStudents')}
                     </h3>
                     <p className="text-sm text-gray-500 mt-1">
-                      Add, edit, or remove demo student accounts.
+                      {t('demo.demoStudentsDesc')}
                     </p>
                   </div>
                 </div>
@@ -186,6 +190,7 @@ const Demo = () => {
           </div>
         )}
       </div>
+      <ComplianceFooter />
     </div>
   );
 };
