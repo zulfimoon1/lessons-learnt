@@ -5,8 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { StarRating } from "@/components/StarRating";
-import { EmotionalStateSelector } from "@/components/EmotionalStateSelector";
+import StarRating from "@/components/StarRating";
+import EmotionalStateSelector from "@/components/EmotionalStateSelector";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
 
