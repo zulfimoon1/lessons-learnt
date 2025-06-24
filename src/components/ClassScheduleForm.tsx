@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -85,6 +84,15 @@ const ClassScheduleForm = ({ teacher }: ClassScheduleFormProps) => {
       return;
     }
 
+    if (!teacher?.id) {
+      toast({
+        title: "Error",
+        description: "Teacher information not found. Please login again.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsSubmitting(true);
     
     try {
@@ -109,46 +117,43 @@ const ClassScheduleForm = ({ teacher }: ClassScheduleFormProps) => {
           duration_minutes: formData.duration_minutes,
           school: formData.school,
           grade: formData.grade,
-          description: formData.description,
+          description: formData.description || '',
           teacher_id: teacher.id
         }));
 
         console.log('📅 Inserting recurring schedules:', schedules.length, 'classes');
 
-        // Insert using direct SQL to bypass RLS
-        const { data, error } = await supabase
-          .from('class_schedules')
-          .insert(schedules)
-          .select();
+        // Insert schedules one by one to handle any individual failures
+        let successCount = 0;
+        const errors = [];
 
-        if (error) {
-          console.error('❌ Database error inserting recurring schedules:', error);
-          
-          // Try alternative approach - insert one by one
-          console.log('🔄 Trying alternative insertion method...');
-          const results = [];
-          for (const schedule of schedules) {
-            const { data: singleResult, error: singleError } = await supabase
+        for (const schedule of schedules) {
+          try {
+            const { error } = await supabase
               .from('class_schedules')
-              .insert(schedule)
-              .select()
-              .single();
-            
-            if (singleError) {
-              console.error('❌ Failed to insert schedule:', singleError);
-              throw new Error(`Failed to create schedule: ${singleError.message}`);
+              .insert(schedule);
+
+            if (error) {
+              console.error('❌ Failed to insert schedule:', error);
+              errors.push(error.message);
+            } else {
+              successCount++;
+              console.log('✅ Successfully inserted schedule for date:', schedule.class_date);
             }
-            results.push(singleResult);
+          } catch (err) {
+            console.error('❌ Exception inserting schedule:', err);
+            errors.push(err.message);
           }
-          console.log('✅ Successfully inserted schedules via alternative method');
-        } else {
-          console.log('✅ Successfully inserted recurring schedules:', data?.length);
         }
 
-        toast({
-          title: "Success",
-          description: `${schedules.length} classes scheduled successfully!`,
-        });
+        if (successCount > 0) {
+          toast({
+            title: "Success",
+            description: `${successCount} classes scheduled successfully!${errors.length > 0 ? ` ${errors.length} failed.` : ''}`,
+          });
+        } else {
+          throw new Error(`Failed to create any schedules: ${errors.join(', ')}`);
+        }
       } else {
         // Single schedule entry
         const scheduleData = {
@@ -159,23 +164,22 @@ const ClassScheduleForm = ({ teacher }: ClassScheduleFormProps) => {
           duration_minutes: formData.duration_minutes,
           school: formData.school,
           grade: formData.grade,
-          description: formData.description,
+          description: formData.description || '',
           teacher_id: teacher.id
         };
 
         console.log('📅 Inserting single schedule:', scheduleData);
 
-        const { data, error } = await supabase
+        const { error } = await supabase
           .from('class_schedules')
-          .insert(scheduleData)
-          .select();
+          .insert(scheduleData);
 
         if (error) {
           console.error('❌ Database error inserting schedule:', error);
           throw new Error(`Failed to create schedule: ${error.message}`);
         }
 
-        console.log('✅ Successfully inserted schedule:', data);
+        console.log('✅ Successfully inserted schedule');
 
         toast({
           title: "Success",
@@ -202,7 +206,7 @@ const ClassScheduleForm = ({ teacher }: ClassScheduleFormProps) => {
       console.error('💥 Error scheduling class:', error);
       toast({
         title: "Error",
-        description: `Failed to schedule class: ${error.message}`,
+        description: error.message || "Failed to schedule class. Please try again.",
         variant: "destructive",
       });
     } finally {

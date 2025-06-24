@@ -12,11 +12,32 @@ import TeacherLoginForm from "@/components/auth/TeacherLoginForm";
 import TeacherSignupForm from "@/components/auth/TeacherSignupForm";
 
 const TeacherLogin = () => {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const navigate = useNavigate();
   const { toast } = useToast();
   const { teacher, isLoading: authLoading, teacherLogin } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
+
+  // Get proper translations with fallbacks
+  const getTitle = () => {
+    if (language === 'lt') return 'Mokytojų portalas';
+    return t('login.teacher.title') || 'Teacher Portal';
+  };
+
+  const getSubtitle = () => {
+    if (language === 'lt') return 'Prisijunkite prie savo mokymo skydelio';
+    return t('login.teacher.subtitle') || 'Log in to your teaching dashboard';
+  };
+
+  const getLoginText = () => {
+    if (language === 'lt') return 'Prisijungti';
+    return t('auth.login') || 'Login';
+  };
+
+  const getSignUpText = () => {
+    if (language === 'lt') return 'Registruotis';
+    return t('auth.signUp') || 'Sign Up';
+  };
 
   // Redirect if already logged in
   useEffect(() => {
@@ -32,7 +53,7 @@ const TeacherLogin = () => {
       <div className="min-h-screen bg-brand-gradient-soft flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-teal mx-auto"></div>
-          <p className="mt-2 text-brand-dark">{t('common.loading')}</p>
+          <p className="mt-2 text-brand-dark">{t('common.loading') || 'Loading...'}</p>
         </div>
       </div>
     );
@@ -150,16 +171,16 @@ const TeacherLogin = () => {
             <div className="w-16 h-16 bg-brand-teal rounded-full mx-auto flex items-center justify-center mb-4">
               <GraduationCapIcon className="w-8 h-8 text-white" />
             </div>
-            <CardTitle className="text-2xl text-brand-dark">{t('login.teacher.title')}</CardTitle>
+            <CardTitle className="text-2xl text-brand-dark">{getTitle()}</CardTitle>
             <CardDescription className="text-gray-600">
-              {t('login.teacher.subtitle')}
+              {getSubtitle()}
             </CardDescription>
           </CardHeader>
           <CardContent>
             <Tabs defaultValue="login" className="space-y-4">
               <TabsList className="grid w-full grid-cols-2 bg-gray-100">
-                <TabsTrigger value="login" className="data-[state=active]:bg-brand-teal data-[state=active]:text-white text-brand-dark">{t('auth.login')}</TabsTrigger>
-                <TabsTrigger value="signup" className="data-[state=active]:bg-brand-teal data-[state=active]:text-white text-brand-dark">{t('auth.signUp')}</TabsTrigger>
+                <TabsTrigger value="login" className="data-[state=active]:bg-brand-teal data-[state=active]:text-white text-brand-dark">{getLoginText()}</TabsTrigger>
+                <TabsTrigger value="signup" className="data-[state=active]:bg-brand-teal data-[state=active]:text-white text-brand-dark">{getSignUpText()}</TabsTrigger>
               </TabsList>
 
               <TabsContent value="login">
