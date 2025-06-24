@@ -42,7 +42,7 @@ const StudentDashboard = () => {
           <div>
             <h1 className="text-2xl font-bold text-brand-dark">{t('dashboard.title')}</h1>
             <p className="text-brand-dark/70">
-              {t('dashboard.welcome')}, {student.full_name} - {t('dashboard.grade')} {student.grade} {t('auth.school').toLowerCase()} {student.school}
+              {t('dashboard.welcome')}, {student.full_name} - {t('dashboard.grade')} {student.grade}, {student.school}
             </p>
           </div>
           <div className="flex items-center gap-4">

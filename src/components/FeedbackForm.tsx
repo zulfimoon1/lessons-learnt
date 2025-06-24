@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -9,6 +8,7 @@ import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { MessageSquare, Star, BookOpen, TrendingUp, Heart } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface ClassSchedule {
   id: string;
@@ -50,6 +50,7 @@ const FeedbackForm: React.FC<FeedbackFormProps> = ({
     additional_comments: ''
   });
   const { toast } = useToast();
+  const { t } = useLanguage();
 
   useEffect(() => {
     fetchAvailableClasses();
@@ -88,7 +89,7 @@ const FeedbackForm: React.FC<FeedbackFormProps> = ({
 
           return {
             ...classItem,
-            teacher_name: teacherData?.name || 'Unknown Teacher'
+            teacher_name: teacherData?.name || t('student.defaultName')
           };
         })
       );
@@ -104,8 +105,8 @@ const FeedbackForm: React.FC<FeedbackFormProps> = ({
     
     if (!selectedClass) {
       toast({
-        title: "Please select a class",
-        description: "Choose which class you want to provide feedback for",
+        title: t('feedback.selectClass'),
+        description: t('feedback.selectClassDescription'),
         variant: "destructive",
       });
       return;
@@ -113,8 +114,8 @@ const FeedbackForm: React.FC<FeedbackFormProps> = ({
 
     if (!formData.understanding || !formData.interest || !formData.educational_growth || !formData.emotional_state) {
       toast({
-        title: "Please complete all required fields",
-        description: "All rating fields are required",
+        title: t('feedback.completeRequired'),
+        description: t('feedback.completeRequiredDescription'),
         variant: "destructive",
       });
       return;
@@ -128,7 +129,7 @@ const FeedbackForm: React.FC<FeedbackFormProps> = ({
         .insert({
           class_schedule_id: selectedClass.id,
           student_id: isAnonymous ? null : student.id,
-          student_name: isAnonymous ? 'Anonymous Student' : student.full_name,
+          student_name: isAnonymous ? t('demo.mockup.anonymousStudent') : student.full_name,
           is_anonymous: isAnonymous,
           understanding: parseInt(formData.understanding),
           interest: parseInt(formData.interest),
@@ -142,8 +143,8 @@ const FeedbackForm: React.FC<FeedbackFormProps> = ({
       if (error) throw error;
 
       toast({
-        title: "Feedback submitted successfully",
-        description: "Thank you for your feedback! It will help improve future classes.",
+        title: t('feedback.submitted'),
+        description: t('feedback.submittedDescription'),
       });
 
       // Reset form
@@ -163,8 +164,8 @@ const FeedbackForm: React.FC<FeedbackFormProps> = ({
     } catch (error) {
       console.error('Error submitting feedback:', error);
       toast({
-        title: "Error",
-        description: "Failed to submit feedback. Please try again.",
+        title: t('common.error'),
+        description: t('feedback.submitError'),
         variant: "destructive",
       });
     } finally {
@@ -177,17 +178,17 @@ const FeedbackForm: React.FC<FeedbackFormProps> = ({
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <MessageSquare className="w-5 h-5" />
-          Class Feedback
+          {t('feedback.classFeedbackTitle')}
         </CardTitle>
         <p className="text-sm text-muted-foreground">
-          Share your experience about a class to help improve teaching and learning
+          {t('feedback.classFeedbackDescription')}
         </p>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Class Selection */}
           <div className="space-y-3">
-            <Label>Select a class to provide feedback for:</Label>
+            <Label>{t('feedback.selectClassLabel')}</Label>
             <div className="space-y-2 max-h-60 overflow-y-auto">
               {availableClasses.map((classItem) => (
                 <div
@@ -210,7 +211,7 @@ const FeedbackForm: React.FC<FeedbackFormProps> = ({
               ))}
               {availableClasses.length === 0 && (
                 <p className="text-center text-muted-foreground py-4">
-                  No recent classes available for feedback
+                  {t('feedback.noRecentClasses')}
                 </p>
               )}
             </div>
@@ -225,7 +226,7 @@ const FeedbackForm: React.FC<FeedbackFormProps> = ({
                   checked={isAnonymous}
                   onCheckedChange={setIsAnonymous}
                 />
-                <Label htmlFor="anonymous">Submit feedback anonymously</Label>
+                <Label htmlFor="anonymous">{t('feedback.submitAnonymously')}</Label>
               </div>
 
               {/* Rating Questions */}
@@ -233,7 +234,7 @@ const FeedbackForm: React.FC<FeedbackFormProps> = ({
                 <div className="space-y-3">
                   <Label className="flex items-center gap-2">
                     <BookOpen className="w-4 h-4" />
-                    How well did you understand the lesson? *
+                    {t('feedback.understanding')} *
                   </Label>
                   <RadioGroup value={formData.understanding} onValueChange={(value) => setFormData(prev => ({ ...prev, understanding: value }))}>
                     {[1, 2, 3, 4, 5].map((rating) => (
@@ -251,7 +252,7 @@ const FeedbackForm: React.FC<FeedbackFormProps> = ({
                 <div className="space-y-3">
                   <Label className="flex items-center gap-2">
                     <Heart className="w-4 h-4" />
-                    How interesting was the lesson? *
+                    {t('feedback.interest')} *
                   </Label>
                   <RadioGroup value={formData.interest} onValueChange={(value) => setFormData(prev => ({ ...prev, interest: value }))}>
                     {[1, 2, 3, 4, 5].map((rating) => (
@@ -269,7 +270,7 @@ const FeedbackForm: React.FC<FeedbackFormProps> = ({
                 <div className="space-y-3">
                   <Label className="flex items-center gap-2">
                     <TrendingUp className="w-4 h-4" />
-                    How much did you learn? *
+                    {t('feedback.growth')} *
                   </Label>
                   <RadioGroup value={formData.educational_growth} onValueChange={(value) => setFormData(prev => ({ ...prev, educational_growth: value }))}>
                     {[1, 2, 3, 4, 5].map((rating) => (
@@ -287,14 +288,14 @@ const FeedbackForm: React.FC<FeedbackFormProps> = ({
 
               {/* Emotional State */}
               <div className="space-y-3">
-                <Label>How did you feel during the lesson? *</Label>
+                <Label>{t('feedback.emotionalState')} *</Label>
                 <RadioGroup value={formData.emotional_state} onValueChange={(value) => setFormData(prev => ({ ...prev, emotional_state: value }))}>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                     {['excited', 'focused', 'confused', 'bored', 'stressed', 'happy', 'frustrated', 'calm'].map((emotion) => (
                       <div key={emotion} className="flex items-center space-x-2">
                         <RadioGroupItem value={emotion} id={`emotion-${emotion}`} />
                         <Label htmlFor={`emotion-${emotion}`} className="capitalize">
-                          {emotion}
+                          {t(`feedback.emotion.${emotion}`)}
                         </Label>
                       </div>
                     ))}
@@ -305,41 +306,41 @@ const FeedbackForm: React.FC<FeedbackFormProps> = ({
               {/* Text Feedback */}
               <div className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="what_went_well">What went well in this lesson?</Label>
+                  <Label htmlFor="what_went_well">{t('feedback.whatWentWell')}</Label>
                   <Textarea
                     id="what_went_well"
                     value={formData.what_went_well}
                     onChange={(e) => setFormData(prev => ({ ...prev, what_went_well: e.target.value }))}
-                    placeholder="Share what you enjoyed or found helpful..."
+                    placeholder={t('feedback.whatWentWellPlaceholder')}
                     rows={3}
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="suggestions">Any suggestions for improvement?</Label>
+                  <Label htmlFor="suggestions">{t('feedback.suggestions')}</Label>
                   <Textarea
                     id="suggestions"
                     value={formData.suggestions}
                     onChange={(e) => setFormData(prev => ({ ...prev, suggestions: e.target.value }))}
-                    placeholder="How could the lesson be improved?"
+                    placeholder={t('feedback.suggestionsPlaceholder')}
                     rows={3}
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="additional_comments">Additional comments</Label>
+                  <Label htmlFor="additional_comments">{t('feedback.additionalComments')}</Label>
                   <Textarea
                     id="additional_comments"
                     value={formData.additional_comments}
                     onChange={(e) => setFormData(prev => ({ ...prev, additional_comments: e.target.value }))}
-                    placeholder="Any other thoughts or feedback..."
+                    placeholder={t('feedback.additionalCommentsPlaceholder')}
                     rows={3}
                   />
                 </div>
               </div>
 
               <Button type="submit" disabled={isSubmitting} className="w-full">
-                {isSubmitting ? 'Submitting...' : 'Submit Feedback'}
+                {isSubmitting ? t('feedback.submitting') : t('feedback.submitFeedback')}
               </Button>
             </>
           )}

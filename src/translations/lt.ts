@@ -1,4 +1,3 @@
-
 import { ltAuthTranslations } from './lt/auth';
 import { ltTeacherTranslations } from './lt/teacher';
 import { ltWeeklyTranslations } from './lt/weekly';
@@ -38,6 +37,8 @@ export const ltTranslations = {
   'common.update': 'Atnaujinti',
   'common.create': 'Sukurti',
   'common.days': 'Dienos',
+  'common.minute': 'minutė',
+  'common.minutes': 'minutės',
 
   // Navigation
   'nav.home': 'Pradžia',
@@ -108,6 +109,14 @@ export const ltTranslations = {
   // Feedback
   'feedback.title': 'Pamokos atsiliepimas',
   'feedback.description': 'Pasidalykite savo mintimis apie šiandienos pamoką, kad padėtumėte pagerinti mokymosi patirtį.',
+  'feedback.classFeedbackTitle': 'Klasės atsiliepimas',
+  'feedback.classFeedbackDescription': 'Pasidalykite savo patirtimi apie klasę, kad padėtumėte pagerinti mokymą ir mokymąsi',
+  'feedback.selectClass': 'Prašome pasirinkti klasę',
+  'feedback.selectClassDescription': 'Pasirinkite, kuriai klasei norite pateikti atsiliepimą',
+  'feedback.selectClassLabel': 'Pasirinkite klasę, kuriai pateiksite atsiliepimą:',
+  'feedback.completeRequired': 'Prašome užpildyti visus privaloms laukus',
+  'feedback.completeRequiredDescription': 'Visi įvertinimo laukai yra privalomi',
+  'feedback.noRecentClasses': 'Nėra paskutinių klasių atsiliepimams',
   'feedback.lessonTitle': 'Pamokos pavadinimas',
   'feedback.lessonTitlePlaceholder': 'Įveskite pamokos pavadinimą',
   'feedback.lessonDescription': 'Pamokos aprašymas',
@@ -117,6 +126,14 @@ export const ltTranslations = {
   'feedback.growth': 'Kiek jaučiatės išmokę ar išaugę iš šios pamokos?',
   'feedback.emotionalState': 'Emocinė būsena',
   'feedback.emotionalStateDescription': 'Pasirinkite, kaip jautėtės emociškai pamokos metu. Tai padeda mokytojui suprasti klasės aplinką.',
+  'feedback.emotion.excited': 'Susijaudinęs',
+  'feedback.emotion.focused': 'Sutelktas',
+  'feedback.emotion.confused': 'Sutrikęs',
+  'feedback.emotion.bored': 'Nuobodus',
+  'feedback.emotion.stressed': 'Streso',
+  'feedback.emotion.happy': 'Laimingas',
+  'feedback.emotion.frustrated': 'Nuvylęs',
+  'feedback.emotion.calm': 'Ramus',
   'feedback.whatWentWell': 'Kas gerai pavyko šioje pamokoje?',
   'feedback.whatWentWellPlaceholder': 'Pasidalykite tuo, kas jums patiko ar buvo naudinga pamokoje',
   'feedback.suggestions': 'Pasiūlymai pagerinimui',

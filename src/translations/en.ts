@@ -1,4 +1,3 @@
-
 import { enAuthTranslations } from './en/auth';
 import { enTeacherTranslations } from './en/teacher';
 import { enWeeklyTranslations } from './en/weekly';
@@ -38,6 +37,8 @@ export const enTranslations = {
   'common.update': 'Update',
   'common.create': 'Create',
   'common.days': 'Days',
+  'common.minute': 'minute',
+  'common.minutes': 'minutes',
 
   // Navigation
   'nav.home': 'Home',
@@ -108,6 +109,14 @@ export const enTranslations = {
   // Feedback
   'feedback.title': 'Lesson Feedback',
   'feedback.description': 'Share your thoughts about today\'s lesson to help improve the learning experience.',
+  'feedback.classFeedbackTitle': 'Class Feedback',
+  'feedback.classFeedbackDescription': 'Share your experience about a class to help improve teaching and learning',
+  'feedback.selectClass': 'Please select a class',
+  'feedback.selectClassDescription': 'Choose which class you want to provide feedback for',
+  'feedback.selectClassLabel': 'Select a class to provide feedback for:',
+  'feedback.completeRequired': 'Please complete all required fields',
+  'feedback.completeRequiredDescription': 'All rating fields are required',
+  'feedback.noRecentClasses': 'No recent classes available for feedback',
   'feedback.lessonTitle': 'Lesson Title',
   'feedback.lessonTitlePlaceholder': 'Enter the lesson title',
   'feedback.lessonDescription': 'Lesson Description',
@@ -117,6 +126,14 @@ export const enTranslations = {
   'feedback.growth': 'How much do you feel you learned or grew from this lesson?',
   'feedback.emotionalState': 'Emotional State',
   'feedback.emotionalStateDescription': 'Select how you felt emotionally during the lesson. This helps the teacher understand the classroom environment.',
+  'feedback.emotion.excited': 'Excited',
+  'feedback.emotion.focused': 'Focused',
+  'feedback.emotion.confused': 'Confused',
+  'feedback.emotion.bored': 'Bored',
+  'feedback.emotion.stressed': 'Stressed',
+  'feedback.emotion.happy': 'Happy',
+  'feedback.emotion.frustrated': 'Frustrated',
+  'feedback.emotion.calm': 'Calm',
   'feedback.whatWentWell': 'What went well in this lesson?',
   'feedback.whatWentWellPlaceholder': 'Share what you liked or found helpful in the lesson',
   'feedback.suggestions': 'Suggestions for improvement',
