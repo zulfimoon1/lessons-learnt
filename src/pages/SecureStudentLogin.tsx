@@ -28,10 +28,10 @@ const SecureStudentLogin = () => {
 
   if (authLoading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="min-h-screen bg-brand-gradient-soft flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-teal mx-auto"></div>
-          <p className="mt-2 text-muted-foreground">{t('common.loading')}</p>
+          <p className="mt-2 text-brand-dark">{t('common.loading')}</p>
         </div>
       </div>
     );
@@ -141,7 +141,7 @@ const SecureStudentLogin = () => {
       
       <div className="w-full max-w-md">
         <SessionSecurityMonitor />
-        <Card className="bg-white/90 backdrop-blur-sm border-brand-teal/20 shadow-xl">
+        <Card className="bg-white/95 backdrop-blur-sm border-brand-teal/30 shadow-xl">
           <CardHeader className="text-center">
             <div className="w-16 h-16 bg-brand-teal rounded-full mx-auto flex items-center justify-center mb-4">
               <UserIcon className="w-8 h-8 text-white" />
@@ -154,8 +154,8 @@ const SecureStudentLogin = () => {
           <CardContent>
             <Tabs defaultValue="login" className="space-y-4">
               <TabsList className="grid w-full grid-cols-2 bg-gray-100">
-                <TabsTrigger value="login" className="data-[state=active]:bg-brand-teal data-[state=active]:text-white">{t('auth.login')}</TabsTrigger>
-                <TabsTrigger value="signup" className="data-[state=active]:bg-brand-teal data-[state=active]:text-white">{t('auth.signUp')}</TabsTrigger>
+                <TabsTrigger value="login" className="data-[state=active]:bg-brand-teal data-[state=active]:text-white text-brand-dark">{t('auth.login')}</TabsTrigger>
+                <TabsTrigger value="signup" className="data-[state=active]:bg-brand-teal data-[state=active]:text-white text-brand-dark">{t('auth.signUp')}</TabsTrigger>
               </TabsList>
 
               <TabsContent value="login">

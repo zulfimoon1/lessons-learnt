@@ -29,7 +29,7 @@ const SecureTeacherLoginForm: React.FC<SecureTeacherLoginFormProps> = ({ onLogin
   return (
     <SecureFormWrapper onSubmit={handleSecureSubmit} className="space-y-4">
       <div className="space-y-2">
-        <Label htmlFor="email" className="flex items-center gap-2">
+        <Label htmlFor="email" className="flex items-center gap-2 text-brand-dark">
           <Mail className="w-4 h-4" />
           {t('auth.email')}
         </Label>
@@ -46,7 +46,7 @@ const SecureTeacherLoginForm: React.FC<SecureTeacherLoginFormProps> = ({ onLogin
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="password">{t('auth.password')}</Label>
+        <Label htmlFor="password" className="text-brand-dark">{t('auth.password')}</Label>
         <SecurityEnhancedInput
           name="password"
           type="password"
@@ -61,7 +61,7 @@ const SecureTeacherLoginForm: React.FC<SecureTeacherLoginFormProps> = ({ onLogin
 
       <Button 
         type="submit" 
-        className="w-full bg-emerald-600 hover:bg-emerald-700"
+        className="w-full bg-brand-teal hover:bg-brand-dark text-white"
         disabled={isLoading}
       >
         {isLoading ? t('auth.loggingIn') : (

@@ -140,7 +140,7 @@ const StudentDashboard = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen bg-brand-gradient-soft">
         <CookieConsent />
         <DashboardHeader 
           title={t('dashboard.title')}
@@ -156,7 +156,7 @@ const StudentDashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-brand-gradient-soft">
       <CookieConsent />
       <DashboardHeader 
         title={t('dashboard.title')}
@@ -186,11 +186,11 @@ const StudentDashboard = () => {
         </div>
 
         <Tabs defaultValue="feedback" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="feedback">{t('dashboard.feedback')}</TabsTrigger>
-            <TabsTrigger value="classes">{t('class.upcomingClasses')}</TabsTrigger>
-            <TabsTrigger value="weekly">{t('dashboard.weeklySummary')}</TabsTrigger>
-            <TabsTrigger value="support">{t('dashboard.mentalHealthSupport')}</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-4 bg-white/90">
+            <TabsTrigger value="feedback" className="data-[state=active]:bg-brand-teal data-[state=active]:text-white text-brand-dark">{t('dashboard.feedback')}</TabsTrigger>
+            <TabsTrigger value="classes" className="data-[state=active]:bg-brand-teal data-[state=active]:text-white text-brand-dark">{t('class.upcomingClasses')}</TabsTrigger>
+            <TabsTrigger value="weekly" className="data-[state=active]:bg-brand-teal data-[state=active]:text-white text-brand-dark">{t('dashboard.weeklySummary')}</TabsTrigger>
+            <TabsTrigger value="support" className="data-[state=active]:bg-brand-teal data-[state=active]:text-white text-brand-dark">{t('dashboard.mentalHealthSupport')}</TabsTrigger>
           </TabsList>
 
           <TabsContent value="feedback" className="space-y-6">

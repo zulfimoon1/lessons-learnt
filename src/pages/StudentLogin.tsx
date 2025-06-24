@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -31,10 +32,10 @@ const StudentLogin = () => {
   // Don't render if still loading auth state
   if (authLoading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="min-h-screen bg-brand-gradient-soft flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-          <p className="mt-2 text-muted-foreground">{t('common.loading')}</p>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-teal mx-auto"></div>
+          <p className="mt-2 text-brand-dark">{t('common.loading')}</p>
         </div>
       </div>
     );
@@ -152,7 +153,7 @@ const StudentLogin = () => {
   }, [showTester]);
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4">
+    <div className="min-h-screen bg-brand-gradient-soft flex items-center justify-center p-4">
       <AuthHeader />
       
       {showTester ? (
@@ -161,28 +162,28 @@ const StudentLogin = () => {
           <div className="mt-4 text-center">
             <button 
               onClick={() => setShowTester(false)}
-              className="text-sm text-muted-foreground hover:text-foreground"
+              className="text-sm text-gray-600 hover:text-brand-dark"
             >
               Hide Login Tester (Ctrl+Shift+T)
             </button>
           </div>
         </div>
       ) : (
-        <Card className="w-full max-w-md bg-card/80 backdrop-blur-sm border-border">
+        <Card className="w-full max-w-md bg-white/95 backdrop-blur-sm border-brand-teal/30 shadow-xl">
           <CardHeader className="text-center">
-            <div className="w-16 h-16 bg-primary rounded-full mx-auto flex items-center justify-center mb-4">
-              <BookOpenIcon className="w-8 h-8 text-primary-foreground" />
+            <div className="w-16 h-16 bg-brand-teal rounded-full mx-auto flex items-center justify-center mb-4">
+              <BookOpenIcon className="w-8 h-8 text-white" />
             </div>
-            <CardTitle className="text-2xl text-foreground">{t('login.student.title')}</CardTitle>
-            <CardDescription>
+            <CardTitle className="text-2xl text-brand-dark">{t('login.student.title')}</CardTitle>
+            <CardDescription className="text-gray-600">
               {t('login.student.subtitle')}
             </CardDescription>
           </CardHeader>
           <CardContent>
             <Tabs defaultValue="login" className="space-y-4">
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="login">{t('auth.login')}</TabsTrigger>
-                <TabsTrigger value="signup">{t('auth.signUp')}</TabsTrigger>
+              <TabsList className="grid w-full grid-cols-2 bg-gray-100">
+                <TabsTrigger value="login" className="data-[state=active]:bg-brand-teal data-[state=active]:text-white text-brand-dark">{t('auth.login')}</TabsTrigger>
+                <TabsTrigger value="signup" className="data-[state=active]:bg-brand-teal data-[state=active]:text-white text-brand-dark">{t('auth.signUp')}</TabsTrigger>
               </TabsList>
 
               <TabsContent value="login">
@@ -197,7 +198,7 @@ const StudentLogin = () => {
             <div className="mt-4 text-center">
               <button 
                 onClick={() => setShowTester(true)}
-                className="text-xs text-muted-foreground hover:text-foreground"
+                className="text-xs text-gray-600 hover:text-brand-dark"
               >
                 Press Ctrl+Shift+T for login verification
               </button>
