@@ -55,14 +55,14 @@ const SecureStudentLogin = () => {
       console.log('SecureStudentLogin: Attempting login for:', { fullName, school, grade });
       const result = await studentLogin(fullName, school, grade, password);
 
-      if (result.error) {
+      if ('error' in result && result.error) {
         console.log('SecureStudentLogin: Login failed with error:', result.error);
         toast({
           title: "Login failed",
           description: result.error,
           variant: "destructive",
         });
-      } else if (result.student) {
+      } else if ('student' in result && result.student) {
         console.log('SecureStudentLogin: Login successful, navigating to dashboard');
         toast({
           title: "Welcome back!",
@@ -110,13 +110,13 @@ const SecureStudentLogin = () => {
       const { signupStudent } = await import('@/services/authIntegrationService');
       const result = await signupStudent(fullName.trim(), school.trim(), grade.trim(), password);
 
-      if (result.error) {
+      if ('error' in result && result.error) {
         toast({
           title: "Signup failed",
           description: result.error,
           variant: "destructive",
         });
-      } else if (result.student) {
+      } else if ('student' in result && result.student) {
         // Set the student in auth context
         setStudent(result.student);
         localStorage.setItem('student', JSON.stringify(result.student));

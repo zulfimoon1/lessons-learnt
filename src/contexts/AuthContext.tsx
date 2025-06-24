@@ -77,7 +77,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.log('AuthContext: Student login attempt for:', fullName);
       const result = await loginStudent(fullName, school, grade, password);
       
-      if (result.student) {
+      if ('student' in result && result.student) {
         setStudent(result.student);
         setTeacher(null);
         localStorage.setItem('student', JSON.stringify(result.student));
@@ -86,8 +86,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return { student: result.student };
       }
       
-      console.log('AuthContext: Student login failed:', result.error);
-      return { error: result.error };
+      const errorMessage = 'error' in result ? result.error : 'Login failed. Please try again.';
+      console.log('AuthContext: Student login failed:', errorMessage);
+      return { error: errorMessage };
     } catch (error) {
       console.error('AuthContext: Student authentication error:', error);
       return { error: 'Authentication failed. Please try again.' };
@@ -99,7 +100,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.log('AuthContext: Student signup attempt for:', fullName);
       const result = await signupStudent(fullName, school, grade, password);
       
-      if (result.student) {
+      if ('student' in result && result.student) {
         setStudent(result.student);
         setTeacher(null);
         localStorage.setItem('student', JSON.stringify(result.student));
@@ -108,7 +109,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return { student: result.student };
       }
       
-      return { error: result.error };
+      const errorMessage = 'error' in result ? result.error : 'Signup failed. Please try again.';
+      return { error: errorMessage };
     } catch (error) {
       console.error('AuthContext: Student signup error:', error);
       return { error: 'Signup failed. Please try again.' };
