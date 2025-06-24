@@ -1,3 +1,4 @@
+
 import { enAuthTranslations } from './en/auth';
 import { enTeacherTranslations } from './en/teacher';
 import { enWeeklyTranslations } from './en/weekly';
@@ -76,6 +77,13 @@ export const enTranslations = {
   'dashboard.analytics': 'School Analytics',
   'dashboard.adminPanel': 'Admin Panel',
   'dashboard.accessAnalytics': 'Access detailed school analytics in the',
+
+  // Teacher Dashboard
+  'teacher.dashboard.title': 'Teacher Dashboard',
+  'teacher.dashboard.welcome': 'Welcome',
+  'teacher.dashboard.teacherAt': '{role} at {school}',
+  'teacher.logout.success': 'Logged out successfully',
+  'teacher.logout.description': 'You have been logged out.',
 
   // Class Schedule Form
   'schedule.createTitle': 'Create Class Schedule',

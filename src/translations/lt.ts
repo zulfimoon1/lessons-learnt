@@ -1,3 +1,4 @@
+
 import { ltAuthTranslations } from './lt/auth';
 import { ltTeacherTranslations } from './lt/teacher';
 import { ltWeeklyTranslations } from './lt/weekly';
@@ -76,6 +77,13 @@ export const ltTranslations = {
   'dashboard.analytics': 'Mokyklos analitika',
   'dashboard.adminPanel': 'Administratoriaus skydelis',
   'dashboard.accessAnalytics': 'Prieiga prie išsamios mokyklos analitikos',
+
+  // Teacher Dashboard
+  'teacher.dashboard.title': 'Mokytojo skydelis',
+  'teacher.dashboard.welcome': 'Sveiki',
+  'teacher.dashboard.teacherAt': '{role} {school} mokykloje',
+  'teacher.logout.success': 'Sėkmingai atsijungėte',
+  'teacher.logout.description': 'Jūs buvote atsijungę.',
 
   // Class Schedule Form
   'schedule.createTitle': 'Sukurti pamokos tvarkaraštį',
