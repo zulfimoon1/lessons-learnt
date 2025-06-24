@@ -15,6 +15,21 @@ const setPlatformAdminContext = async () => {
   }
 };
 
+// Generate a consistent UUID for demo students based on their details
+const generateDemoStudentId = (fullName: string, school: string, grade: string): string => {
+  // Create a consistent hash-based UUID for demo students
+  const crypto = require('crypto');
+  const hash = crypto.createHash('sha256').update(`${fullName}-${school}-${grade}-demo`).digest('hex');
+  // Convert hash to UUID format
+  return [
+    hash.substring(0, 8),
+    hash.substring(8, 12),
+    hash.substring(12, 16),
+    hash.substring(16, 20),
+    hash.substring(20, 32)
+  ].join('-');
+};
+
 export const secureStudentLogin = async (fullName: string, school: string, grade: string, password: string) => {
   console.log('🔐 SECURE STUDENT LOGIN:', { fullName, school, grade });
   
@@ -25,9 +40,10 @@ export const secureStudentLogin = async (fullName: string, school: string, grade
     // Handle demo student case first
     if (fullName.toLowerCase().includes('demo') && school.toLowerCase().includes('demo')) {
       console.log('✅ Demo student detected, allowing login');
+      const demoId = generateDemoStudentId(fullName, school, grade);
       return {
         student: {
-          id: 'demo-student-id',
+          id: demoId,
           full_name: fullName,
           school: school,
           grade: grade
@@ -93,9 +109,10 @@ export const secureStudentSignup = async (fullName: string, school: string, grad
     // Handle demo student case
     if (fullName.toLowerCase().includes('demo') && school.toLowerCase().includes('demo')) {
       console.log('✅ Demo student signup, creating demo student');
+      const demoId = generateDemoStudentId(fullName, school, grade);
       return {
         student: {
-          id: 'demo-student-id',
+          id: demoId,
           full_name: fullName,
           school: school,
           grade: grade
