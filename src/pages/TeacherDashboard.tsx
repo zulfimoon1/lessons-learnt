@@ -5,11 +5,17 @@ import { Navigate } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import ScheduleTab from "@/components/dashboard/teacher/ScheduleTab";
+import FeedbackDashboard from "@/components/dashboard/teacher/FeedbackDashboard";
 import DoctorDashboard from "@/components/dashboard/doctor/DoctorDashboard";
-import { LogOut, Calendar, Heart } from "lucide-react";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
+import { LogOut, Calendar, Heart, MessageSquare } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { useNavigate } from "react-router-dom";
 
 const TeacherDashboard = () => {
   const { teacher, logout, isLoading } = useAuth();
+  const { toast } = useToast();
+  const navigate = useNavigate();
 
   if (isLoading) {
     return (
@@ -26,6 +32,14 @@ const TeacherDashboard = () => {
 
   const handleLogout = () => {
     logout();
+    toast({
+      title: "Logout Successful",
+      description: "You have been successfully logged out.",
+    });
+    // Navigate to homepage after a short delay to show the toast
+    setTimeout(() => {
+      navigate('/');
+    }, 1500);
   };
 
   // Check for special roles
@@ -45,6 +59,7 @@ const TeacherDashboard = () => {
             </p>
           </div>
           <div className="flex gap-2">
+            <LanguageSwitcher />
             {isAdmin && (
               <Button variant="outline" onClick={() => window.location.href = '/admin-dashboard'}>
                 Admin Panel
@@ -66,6 +81,10 @@ const TeacherDashboard = () => {
                 <Calendar className="w-4 h-4" />
                 Class Schedules
               </TabsTrigger>
+              <TabsTrigger value="feedback" className="flex items-center gap-2">
+                <MessageSquare className="w-4 h-4" />
+                Student Feedback
+              </TabsTrigger>
               {isAdmin && (
                 <TabsTrigger value="analytics" className="flex items-center gap-2">
                   <Heart className="w-4 h-4" />
@@ -76,6 +95,10 @@ const TeacherDashboard = () => {
 
             <TabsContent value="schedules" className="space-y-4">
               <ScheduleTab teacher={teacher} />
+            </TabsContent>
+
+            <TabsContent value="feedback" className="space-y-4">
+              <FeedbackDashboard teacher={teacher} />
             </TabsContent>
 
             {isAdmin && (
