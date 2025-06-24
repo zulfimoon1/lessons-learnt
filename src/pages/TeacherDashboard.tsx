@@ -11,11 +11,13 @@ import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { LogOut, Calendar, Heart, MessageSquare } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const TeacherDashboard = () => {
   const { teacher, logout, isLoading } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { t } = useLanguage();
 
   if (isLoading) {
     return (
@@ -33,8 +35,8 @@ const TeacherDashboard = () => {
   const handleLogout = () => {
     logout();
     toast({
-      title: "Logout Successful",
-      description: "You have been successfully logged out.",
+      title: t('teacher.logout.success'),
+      description: t('teacher.logout.description'),
     });
     // Navigate to homepage after a short delay to show the toast
     setTimeout(() => {
@@ -52,10 +54,10 @@ const TeacherDashboard = () => {
         <div className="flex items-center justify-between mb-6">
           <div>
             <h1 className="text-2xl font-bold">
-              {isDoctor ? 'Doctor Dashboard' : isAdmin ? 'School Admin Dashboard' : 'Teacher Dashboard'}
+              {isDoctor ? t('dashboard.doctorOverview') : isAdmin ? 'School Admin Dashboard' : t('teacher.dashboard.title')}
             </h1>
             <p className="text-muted-foreground">
-              Welcome, {teacher.name} - {teacher.role.charAt(0).toUpperCase() + teacher.role.slice(1)} at {teacher.school}
+              {t('admin.welcome')}, {teacher.name} - {teacher.role.charAt(0).toUpperCase() + teacher.role.slice(1)} at {teacher.school}
             </p>
           </div>
           <div className="flex gap-2">
@@ -67,7 +69,7 @@ const TeacherDashboard = () => {
             )}
             <Button variant="outline" onClick={handleLogout}>
               <LogOut className="w-4 h-4 mr-2" />
-              Logout
+              {t('auth.logout')}
             </Button>
           </div>
         </div>
@@ -79,11 +81,11 @@ const TeacherDashboard = () => {
             <TabsList>
               <TabsTrigger value="schedules" className="flex items-center gap-2">
                 <Calendar className="w-4 h-4" />
-                Class Schedules
+                {t('class.schedule')}
               </TabsTrigger>
               <TabsTrigger value="feedback" className="flex items-center gap-2">
                 <MessageSquare className="w-4 h-4" />
-                Student Feedback
+                {t('dashboard.feedback')}
               </TabsTrigger>
               {isAdmin && (
                 <TabsTrigger value="analytics" className="flex items-center gap-2">

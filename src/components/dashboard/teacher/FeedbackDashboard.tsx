@@ -89,7 +89,7 @@ const FeedbackDashboard: React.FC<FeedbackDashboardProps> = ({ teacher }) => {
       console.error('Error fetching feedback:', error);
       toast({
         title: t('common.error'),
-        description: "Failed to fetch feedback data",
+        description: t('teacher.feedback.failedToFetch'),
         variant: "destructive",
       });
     } finally {
@@ -109,7 +109,7 @@ const FeedbackDashboard: React.FC<FeedbackDashboardProps> = ({ teacher }) => {
   };
 
   if (isLoading) {
-    return <div className="text-center py-8">Loading feedback...</div>;
+    return <div className="text-center py-8">{t('teacher.feedback.loading')}</div>;
   }
 
   return (
@@ -122,7 +122,7 @@ const FeedbackDashboard: React.FC<FeedbackDashboardProps> = ({ teacher }) => {
               <MessageSquare className="w-8 h-8 text-blue-500" />
               <div>
                 <p className="text-2xl font-bold">{stats.totalFeedback}</p>
-                <p className="text-sm text-muted-foreground">Total Feedback</p>
+                <p className="text-sm text-muted-foreground">{t('teacher.feedback.totalFeedback')}</p>
               </div>
             </div>
           </CardContent>
@@ -136,7 +136,7 @@ const FeedbackDashboard: React.FC<FeedbackDashboardProps> = ({ teacher }) => {
                 <div className="flex items-center gap-1">
                   {renderStars(Math.round(stats.avgUnderstanding))}
                 </div>
-                <p className="text-sm text-muted-foreground">Avg Understanding</p>
+                <p className="text-sm text-muted-foreground">{t('teacher.feedback.avgUnderstanding')}</p>
               </div>
             </div>
           </CardContent>
@@ -150,7 +150,7 @@ const FeedbackDashboard: React.FC<FeedbackDashboardProps> = ({ teacher }) => {
                 <div className="flex items-center gap-1">
                   {renderStars(Math.round(stats.avgInterest))}
                 </div>
-                <p className="text-sm text-muted-foreground">Avg Interest</p>
+                <p className="text-sm text-muted-foreground">{t('teacher.feedback.avgInterest')}</p>
               </div>
             </div>
           </CardContent>
@@ -164,7 +164,7 @@ const FeedbackDashboard: React.FC<FeedbackDashboardProps> = ({ teacher }) => {
                 <div className="flex items-center gap-1">
                   {renderStars(Math.round(stats.avgGrowth))}
                 </div>
-                <p className="text-sm text-muted-foreground">Avg Growth</p>
+                <p className="text-sm text-muted-foreground">{t('teacher.feedback.avgGrowth')}</p>
               </div>
             </div>
           </CardContent>
@@ -176,16 +176,16 @@ const FeedbackDashboard: React.FC<FeedbackDashboardProps> = ({ teacher }) => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <MessageSquare className="w-5 h-5" />
-            Student Feedback
+            {t('teacher.feedback.studentFeedback')}
           </CardTitle>
           <CardDescription>
-            Recent feedback from your students on class lessons
+            {t('teacher.feedback.recentFeedback')}
           </CardDescription>
         </CardHeader>
         <CardContent>
           {feedback.length === 0 ? (
             <p className="text-center text-muted-foreground py-8">
-              No feedback received yet. Students will see this once they start submitting feedback.
+              {t('teacher.feedback.noFeedback')}
             </p>
           ) : (
             <div className="space-y-4">
@@ -208,15 +208,15 @@ const FeedbackDashboard: React.FC<FeedbackDashboardProps> = ({ teacher }) => {
 
                     <div className="grid grid-cols-3 gap-4 mb-4">
                       <div>
-                        <p className="text-xs text-muted-foreground mb-1">Understanding</p>
+                        <p className="text-xs text-muted-foreground mb-1">{t('teacher.feedback.understanding')}</p>
                         <div className="flex gap-1">{renderStars(item.understanding)}</div>
                       </div>
                       <div>
-                        <p className="text-xs text-muted-foreground mb-1">Interest</p>
+                        <p className="text-xs text-muted-foreground mb-1">{t('teacher.feedback.interest')}</p>
                         <div className="flex gap-1">{renderStars(item.interest)}</div>
                       </div>
                       <div>
-                        <p className="text-xs text-muted-foreground mb-1">Growth</p>
+                        <p className="text-xs text-muted-foreground mb-1">{t('teacher.feedback.growth')}</p>
                         <div className="flex gap-1">{renderStars(item.educational_growth)}</div>
                       </div>
                     </div>
@@ -225,19 +225,19 @@ const FeedbackDashboard: React.FC<FeedbackDashboardProps> = ({ teacher }) => {
                       <div className="space-y-2 text-sm">
                         {item.what_went_well && (
                           <div>
-                            <p className="font-medium text-green-700">What went well:</p>
+                            <p className="font-medium text-green-700">{t('teacher.feedback.whatWentWell')}</p>
                             <p className="text-gray-600">{item.what_went_well}</p>
                           </div>
                         )}
                         {item.suggestions && (
                           <div>
-                            <p className="font-medium text-blue-700">Suggestions:</p>
+                            <p className="font-medium text-blue-700">{t('teacher.feedback.suggestions')}</p>
                             <p className="text-gray-600">{item.suggestions}</p>
                           </div>
                         )}
                         {item.additional_comments && (
                           <div>
-                            <p className="font-medium text-purple-700">Additional comments:</p>
+                            <p className="font-medium text-purple-700">{t('teacher.feedback.additionalComments')}</p>
                             <p className="text-gray-600">{item.additional_comments}</p>
                           </div>
                         )}
@@ -245,7 +245,7 @@ const FeedbackDashboard: React.FC<FeedbackDashboardProps> = ({ teacher }) => {
                     )}
 
                     <p className="text-xs text-muted-foreground mt-3">
-                      Submitted: {new Date(item.submitted_at).toLocaleString()}
+                      {t('teacher.feedback.submitted')} {new Date(item.submitted_at).toLocaleString()}
                     </p>
                   </CardContent>
                 </Card>

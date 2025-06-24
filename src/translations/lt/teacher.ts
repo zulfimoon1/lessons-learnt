@@ -65,6 +65,28 @@ export const ltTeacherTranslations = {
   'teacher.classesScheduledSuccess': '{count} pamokos sėkmingai suplanuotos!',
   'teacher.scheduleClassFailed': 'Nepavyko suplanuoti pamokos. Bandykite dar kartą.',
   
+  // Logout
+  'teacher.logout.success': 'Atsijungimas sėkmingas',
+  'teacher.logout.description': 'Jūs sėkmingai atsijungėte.',
+  
+  // Feedback Dashboard
+  'teacher.feedback.loading': 'Kraunami atsiliepimai...',
+  'teacher.feedback.totalFeedback': 'Iš viso atsiliepimų',
+  'teacher.feedback.avgUnderstanding': 'Vid. supratimas',
+  'teacher.feedback.avgInterest': 'Vid. susidomėjimas',
+  'teacher.feedback.avgGrowth': 'Vid. augimas',
+  'teacher.feedback.studentFeedback': 'Studentų atsiliepimai',
+  'teacher.feedback.recentFeedback': 'Paskutiniai studentų atsiliepimai apie pamokas',
+  'teacher.feedback.noFeedback': 'Kol kas negauta atsiliepimų. Studentai matys tai, kai pradės teikti atsiliepimus.',
+  'teacher.feedback.understanding': 'Supratimas',
+  'teacher.feedback.interest': 'Susidomėjimas',
+  'teacher.feedback.growth': 'Augimas',
+  'teacher.feedback.whatWentWell': 'Kas sekėsi gerai:',
+  'teacher.feedback.suggestions': 'Pasiūlymai:',
+  'teacher.feedback.additionalComments': 'Papildomi komentarai:',
+  'teacher.feedback.submitted': 'Pateikta:',
+  'teacher.feedback.failedToFetch': 'Nepavyko gauti atsiliepimų duomenų',
+  
   // Alerts
   'teacher.alerts.title': 'Peržiūrėti įspėjimus',
   'teacher.alerts.description': 'Ponia Johnson tikrina psichinės sveikatos įspėjimus ir klasės veiklos perspėjimus',

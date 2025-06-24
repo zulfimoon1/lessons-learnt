@@ -65,6 +65,28 @@ export const enTeacherTranslations = {
   'teacher.classesScheduledSuccess': '{count} classes scheduled successfully!',
   'teacher.scheduleClassFailed': 'Failed to schedule class. Please try again.',
   
+  // Logout
+  'teacher.logout.success': 'Logout Successful',
+  'teacher.logout.description': 'You have been successfully logged out.',
+  
+  // Feedback Dashboard
+  'teacher.feedback.loading': 'Loading feedback...',
+  'teacher.feedback.totalFeedback': 'Total Feedback',
+  'teacher.feedback.avgUnderstanding': 'Avg Understanding',
+  'teacher.feedback.avgInterest': 'Avg Interest',
+  'teacher.feedback.avgGrowth': 'Avg Growth',
+  'teacher.feedback.studentFeedback': 'Student Feedback',
+  'teacher.feedback.recentFeedback': 'Recent feedback from your students on class lessons',
+  'teacher.feedback.noFeedback': 'No feedback received yet. Students will see this once they start submitting feedback.',
+  'teacher.feedback.understanding': 'Understanding',
+  'teacher.feedback.interest': 'Interest',
+  'teacher.feedback.growth': 'Growth',
+  'teacher.feedback.whatWentWell': 'What went well:',
+  'teacher.feedback.suggestions': 'Suggestions:',
+  'teacher.feedback.additionalComments': 'Additional comments:',
+  'teacher.feedback.submitted': 'Submitted:',
+  'teacher.feedback.failedToFetch': 'Failed to fetch feedback data',
+  
   // Alerts
   'teacher.alerts.title': 'Review Alerts',
   'teacher.alerts.description': 'Mrs. Johnson checks mental health alerts and classroom activity warnings',
