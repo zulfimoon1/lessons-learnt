@@ -23,7 +23,9 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({ title, userName, onLo
         </div>
         <div className="flex items-center gap-4">
           <LanguageSwitcher />
-          <span className="text-sm text-muted-foreground">{t('admin.welcome')}, {userName}</span>
+          <span className="text-sm text-muted-foreground">
+            {t('admin.welcome') || 'Welcome'}, {userName}
+          </span>
           <Button
             onClick={(e) => {
               e.preventDefault();
@@ -35,7 +37,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({ title, userName, onLo
             type="button"
           >
             <LogOut className="w-4 h-4" />
-            {t('auth.logout')}
+            {t('auth.logout') || 'Logout'}
           </Button>
         </div>
       </div>

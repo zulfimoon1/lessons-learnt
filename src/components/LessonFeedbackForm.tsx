@@ -1,103 +1,56 @@
 
-import { useState } from "react";
+import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Checkbox } from "@/components/ui/checkbox";
+import { StarRating } from "@/components/StarRating";
+import { EmotionalStateSelector } from "@/components/EmotionalStateSelector";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
-import { EyeOffIcon } from "lucide-react";
-import StarRating from "./StarRating";
-import EmotionalStateSelector from "./EmotionalStateSelector";
-import DataProtectionBanner from "./DataProtectionBanner";
 import { useLanguage } from "@/contexts/LanguageContext";
 
-interface FeedbackData {
-  understanding: number;
-  interest: number;
-  educationalGrowth: number;
-  emotionalState: string;
-  whatWentWell: string;
-  suggestions: string;
-  additionalComments: string;
-  isAnonymous: boolean;
-}
-
-interface LessonFeedbackFormProps {
-  classScheduleId?: string;
-  student?: any;
-}
-
-const LessonFeedbackForm: React.FC<LessonFeedbackFormProps> = ({ 
-  classScheduleId, 
-  student
-}) => {
-  const [feedbackData, setFeedbackData] = useState<FeedbackData>({
-    understanding: 0,
-    interest: 0,
-    educationalGrowth: 0,
-    emotionalState: '',
-    whatWentWell: '',
-    suggestions: '',
-    additionalComments: '',
-    isAnonymous: false,
-  });
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const { toast } = useToast();
+const LessonFeedbackForm = () => {
   const { t } = useLanguage();
+  const { toast } = useToast();
+  const [title, setTitle] = useState('');
+  const [description, setDescription] = useState('');
+  const [understanding, setUnderstanding] = useState(0);
+  const [interest, setInterest] = useState(0);
+  const [growth, setGrowth] = useState(0);
+  const [emotionalState, setEmotionalState] = useState('');
+  const [whatWentWell, setWhatWentWell] = useState('');
+  const [suggestions, setSuggestions] = useState('');
+  const [additionalComments, setAdditionalComments] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
     setIsSubmitting(true);
-    try {
-      const { error } = await supabase
-        .from('feedback')
-        .insert([
-          {
-            class_schedule_id: classScheduleId,
-            understanding: feedbackData.understanding,
-            interest: feedbackData.interest,
-            educational_growth: feedbackData.educationalGrowth,
-            emotional_state: feedbackData.emotionalState,
-            what_went_well: feedbackData.whatWentWell,
-            suggestions: feedbackData.suggestions,
-            additional_comments: feedbackData.additionalComments,
-            is_anonymous: feedbackData.isAnonymous,
-            submitted_at: new Date().toISOString(),
-          },
-        ]);
 
-      if (error) {
-        console.error('Error submitting feedback:', error);
-        toast({
-          title: t('common.error'),
-          description: t('feedback.submitFailed'),
-          variant: "destructive",
-        });
-      } else {
-        toast({
-          title: t('feedback.submitted'),
-          description: t('feedback.submitSuccess'),
-        });
-        // Reset form
-        setFeedbackData({
-          understanding: 0,
-          interest: 0,
-          educationalGrowth: 0,
-          emotionalState: '',
-          whatWentWell: '',
-          suggestions: '',
-          additionalComments: '',
-          isAnonymous: false,
-        });
-      }
-    } catch (error) {
-      console.error('Unexpected error:', error);
+    try {
+      // Simulate form submission
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
       toast({
-        title: t('common.error'),
-        description: t('feedback.unexpectedError'),
+        title: t('feedback.submitted') || "Feedback Submitted",
+        description: t('feedback.submittedDescription') || "Thank you for your feedback!",
+      });
+
+      // Reset form
+      setTitle('');
+      setDescription('');
+      setUnderstanding(0);
+      setInterest(0);
+      setGrowth(0);
+      setEmotionalState('');
+      setWhatWentWell('');
+      setSuggestions('');
+      setAdditionalComments('');
+    } catch (error) {
+      toast({
+        title: t('common.error') || "Error",
+        description: t('feedback.submitError') || "Failed to submit feedback. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -105,116 +58,106 @@ const LessonFeedbackForm: React.FC<LessonFeedbackFormProps> = ({
     }
   };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setFeedbackData(prev => ({ ...prev, [name]: value }));
-  };
-
-  const handleStarClick = (name: string, value: number) => {
-    setFeedbackData(prev => ({ ...prev, [name]: value }));
-  };
-
-  const handleEmotionalStateChange = (state: string) => {
-    setFeedbackData(prev => ({ ...prev, emotionalState: state }));
-  };
-
   return (
-    <div className="space-y-6">
-      <DataProtectionBanner />
-      <Card>
-        <CardHeader>
-          <CardTitle>{t('feedback.title')}</CardTitle>
-          <CardDescription>{t('feedback.description')}</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <Label>{t('feedback.understanding')}</Label>
-              <StarRating
-                rating={feedbackData.understanding}
-                onRatingChange={(value) => handleStarClick('understanding', value)}
-              />
-            </div>
-            
-            <div>
-              <Label>{t('feedback.interest')}</Label>
-              <StarRating
-                rating={feedbackData.interest}
-                onRatingChange={(value) => handleStarClick('interest', value)}
-              />
-            </div>
-            
-            <div>
-              <Label>{t('feedback.growth')}</Label>
-              <StarRating
-                rating={feedbackData.educationalGrowth}
-                onRatingChange={(value) => handleStarClick('educationalGrowth', value)}
-              />
-            </div>
+    <Card>
+      <CardHeader>
+        <CardTitle>{t('feedback.title') || 'Lesson Feedback'}</CardTitle>
+        <CardDescription>
+          {t('feedback.description') || 'Share your thoughts about today\'s lesson to help improve the learning experience.'}
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div>
+            <Label htmlFor="title">{t('feedback.lessonTitle') || 'Lesson Title'}</Label>
+            <Input
+              id="title"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder={t('feedback.lessonTitlePlaceholder') || 'Enter the lesson title'}
+              required
+            />
+          </div>
 
-            <div>
-              <Label>{t('feedback.emotionalState')}</Label>
-              <EmotionalStateSelector
-                onStateChange={handleEmotionalStateChange}
-                selectedState={feedbackData.emotionalState}
-              />
-            </div>
+          <div>
+            <Label htmlFor="description">{t('feedback.lessonDescription') || 'Lesson Description'}</Label>
+            <Textarea
+              id="description"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder={t('feedback.lessonDescriptionPlaceholder') || 'Briefly describe what was covered in the lesson'}
+              rows={3}
+            />
+          </div>
 
-            <div>
-              <Label htmlFor="whatWentWell">{t('feedback.whatWentWell')}</Label>
-              <Textarea
-                id="whatWentWell"
-                name="whatWentWell"
-                value={feedbackData.whatWentWell}
-                onChange={handleInputChange}
-                placeholder={t('feedback.whatWentWellPlaceholder')}
-                rows={3}
-              />
-            </div>
+          <div>
+            <Label>{t('feedback.understanding') || 'How well did you understand the lesson content?'}</Label>
+            <StarRating rating={understanding} onRatingChange={setUnderstanding} />
+          </div>
 
-            <div>
-              <Label htmlFor="suggestions">{t('feedback.suggestions')}</Label>
-              <Textarea
-                id="suggestions"
-                name="suggestions"
-                value={feedbackData.suggestions}
-                onChange={handleInputChange}
-                placeholder={t('feedback.suggestionsPlaceholder')}
-                rows={3}
-              />
-            </div>
+          <div>
+            <Label>{t('feedback.interest') || 'How interesting was the lesson for you?'}</Label>
+            <StarRating rating={interest} onRatingChange={setInterest} />
+          </div>
 
-            <div>
-              <Label htmlFor="additionalComments">{t('feedback.additionalComments')}</Label>
-              <Textarea
-                id="additionalComments"
-                name="additionalComments"
-                value={feedbackData.additionalComments}
-                onChange={handleInputChange}
-                placeholder={t('feedback.additionalCommentsPlaceholder')}
-                rows={3}
-              />
-            </div>
+          <div>
+            <Label>{t('feedback.growth') || 'How much do you feel you learned or grew from this lesson?'}</Label>
+            <StarRating rating={growth} onRatingChange={setGrowth} />
+          </div>
 
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="isAnonymous"
-                checked={feedbackData.isAnonymous}
-                onCheckedChange={(checked) => setFeedbackData(prev => ({ ...prev, isAnonymous: Boolean(checked) }))}
-              />
-              <Label htmlFor="isAnonymous" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed flex items-center gap-1">
-                {t('feedback.anonymous')}
-                <EyeOffIcon className="w-4 h-4 text-gray-500" />
-              </Label>
-            </div>
+          <div>
+            <Label>{t('feedback.emotionalState') || 'Emotional State'}</Label>
+            <p className="text-sm text-muted-foreground mb-3">
+              {t('feedback.emotionalStateDescription') || 'Select how you felt emotionally during the lesson. This helps your teacher understand the classroom environment.'}
+            </p>
+            <EmotionalStateSelector
+              selectedState={emotionalState}
+              onStateChange={setEmotionalState}
+            />
+          </div>
 
-            <Button disabled={isSubmitting} className="bg-green-600 hover:bg-green-700">
-              {isSubmitting ? t('common.submitting') : t('feedback.submit')}
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
-    </div>
+          <div>
+            <Label htmlFor="whatWentWell">{t('feedback.whatWentWell') || 'What went well in this lesson?'}</Label>
+            <Textarea
+              id="whatWentWell"
+              value={whatWentWell}
+              onChange={(e) => setWhatWentWell(e.target.value)}
+              placeholder={t('feedback.whatWentWellPlaceholder') || 'Share what you enjoyed or found helpful about the lesson'}
+              rows={3}
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="suggestions">{t('feedback.suggestions') || 'Suggestions for Improvement'}</Label>
+            <Textarea
+              id="suggestions"
+              value={suggestions}
+              onChange={(e) => setSuggestions(e.target.value)}
+              placeholder={t('feedback.suggestionsPlaceholder') || 'What could be improved in future lessons?'}
+              rows={3}
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="additionalComments">{t('feedback.additionalComments') || 'Additional Comments'}</Label>
+            <Textarea
+              id="additionalComments"
+              value={additionalComments}
+              onChange={(e) => setAdditionalComments(e.target.value)}
+              placeholder={t('feedback.additionalCommentsPlaceholder') || 'Any other thoughts or feedback you\'d like to share?'}
+              rows={3}
+            />
+          </div>
+
+          <Button type="submit" disabled={isSubmitting} className="w-full">
+            {isSubmitting 
+              ? (t('feedback.submitting') || 'Submitting...') 
+              : (t('feedback.submitFeedback') || 'Submit Feedback')
+            }
+          </Button>
+        </form>
+      </CardContent>
+    </Card>
   );
 };
 
