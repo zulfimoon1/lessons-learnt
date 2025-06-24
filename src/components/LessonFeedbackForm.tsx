@@ -46,19 +46,35 @@ const LessonFeedbackForm = () => {
     setIsSubmitting(true);
 
     try {
+      // First create a class schedule entry (simplified for feedback submission)
+      const { data: scheduleData, error: scheduleError } = await supabase
+        .from('class_schedules')
+        .insert({
+          teacher_id: '00000000-0000-0000-0000-000000000000', // Placeholder for feedback-only submissions
+          subject: 'Student Feedback',
+          lesson_topic: lessonTitle.trim(),
+          description: lessonDescription.trim() || null,
+          grade: student?.grade || 'Unknown',
+          school: student?.school || 'Unknown',
+          class_date: new Date().toISOString().split('T')[0],
+          class_time: '00:00:00'
+        })
+        .select()
+        .single();
+
+      if (scheduleError) throw scheduleError;
+
+      // Now create the feedback entry
       const { error } = await supabase
         .from('feedback')
         .insert({
           student_id: isAnonymous ? null : student?.id,
           student_name: isAnonymous ? t('demo.mockup.anonymousStudent') : student?.full_name || '',
-          school: student?.school || '',
-          grade: student?.grade || '',
-          lesson_title: lessonTitle.trim(),
-          lesson_description: lessonDescription.trim() || null,
-          understanding_rating: understanding,
-          interest_rating: interest,
-          growth_rating: growth,
-          emotional_state: emotionalState || null,
+          class_schedule_id: scheduleData.id,
+          understanding: understanding,
+          interest: interest,
+          educational_growth: growth,
+          emotional_state: emotionalState || 'neutral',
           what_went_well: whatWentWell.trim() || null,
           suggestions: suggestions.trim() || null,
           additional_comments: additionalComments.trim() || null,
@@ -84,6 +100,7 @@ const LessonFeedbackForm = () => {
       setAdditionalComments("");
       setIsAnonymous(false);
     } catch (error) {
+      console.error('Feedback submission error:', error);
       toast({
         title: t('common.error'),
         description: t('feedback.submitError'),
