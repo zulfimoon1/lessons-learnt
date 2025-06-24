@@ -11,7 +11,7 @@ interface BreadcrumbsProps {
   items: BreadcrumbItem[];
 }
 
-// Breadcrumbs component completely disabled - returns nothing
+// Breadcrumbs component completely disabled - returns nothing to avoid translation issues
 const Breadcrumbs = ({ items }: BreadcrumbsProps) => {
   return null;
 };

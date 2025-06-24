@@ -62,6 +62,11 @@ export const enTranslations = {
   'dashboard.grade': 'Grade',
   'dashboard.upcomingClasses': 'Upcoming Classes',
   'dashboard.subscribeNow': 'Subscribe Now',
+  'dashboard.scheduledClasses': 'You have {count} scheduled classes for grade {grade} at {school}',
+  'dashboard.noClasses': 'No upcoming classes scheduled',
+  'dashboard.contactAdmin': 'Contact your school administrator if you need assistance',
+  'dashboard.noPsychologists': 'No psychologists are currently available at your school',
+  'dashboard.accessMentalHealthResources': 'Access mental health resources and support',
 
   // Feedback
   'feedback.title': 'Lesson Feedback',
@@ -172,6 +177,7 @@ export const enTranslations = {
   'student.schoolPlaceholder': 'Enter your school name',
   'student.classGrade': 'Grade/Class',
   'student.gradePlaceholder': 'e.g., Grade 5, 10A, Year 9',
+  'student.accessMentalHealthResources': 'Access mental health resources and support',
 
   // Welcome/Home page
   'welcome.title': 'Transform Education Through Student-Led Feedback',
@@ -226,6 +232,29 @@ export const enTranslations = {
   'demo.feedbackDesc': 'Simulate student feedback and analyze results.',
   'demo.manageDemoStudents': 'Manage Demo Students',
   'demo.demoStudentsDesc': 'Add, edit, or remove demo student accounts.',
+
+  // Chat
+  'chat.chatWithDoctor': 'Chat with Doctor',
+
+  // Weekly Summary (these were missing)
+  'weekly.title': 'Weekly Summary',
+  'weekly.subtitle': 'Share your weekly thoughts and experiences',
+  'weekly.howFeeling': 'How are you feeling this week?',
+  'weekly.emotional': 'Emotional Concerns',
+  'weekly.academic': 'Academic Concerns',
+  'weekly.optional': 'Optional',
+  'weekly.emotionalPlaceholder': 'Share any emotional concerns or feelings you\'d like to discuss...',
+  'weekly.academicPlaceholder': 'Share any academic challenges or concerns you\'re experiencing...',
+  'weekly.submitAnonymously': 'Submit anonymously',
+  'weekly.submit': 'Submit Summary',
+  'weekly.submitting': 'Submitting...',
+  'weekly.submitted': 'Summary Submitted',
+  'weekly.submittedDesc': 'Thank you for sharing your thoughts. Your feedback helps improve your learning experience.',
+  'weekly.submitFailed': 'Submission Failed',
+  'weekly.submitFailedDesc': 'Please try again later.',
+  'weekly.fillAtLeastOne': 'Please fill at least one field',
+  'weekly.shareThoughts': 'Please share your thoughts in at least one section.',
+  'weekly.anonymous': 'Anonymous Student',
 
   // Merge all sub-translations
   ...enAuthTranslations,
