@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -26,7 +27,7 @@ const PricingShowcase = () => {
               >
                 <Link to="/">
                   <ArrowLeft className="h-4 w-4" />
-                  {t('nav.home')}
+                  {t('navigation.backToHome')}
                 </Link>
               </Button>
               <Link to="/" className="flex items-center gap-2">

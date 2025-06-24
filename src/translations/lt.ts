@@ -47,6 +47,10 @@ export const ltTranslations = {
   'nav.help': 'Pagalba',
   'nav.about': 'Apie mus',
   'nav.contact': 'Kontaktai',
+  'navigation.studentLogin': 'Studento prisijungimas',
+  'navigation.teacherLogin': 'Mokytojo prisijungimas',
+  'navigation.signUpNow': 'Registruotis dabar',
+  'navigation.backToHome': 'Grįžti į pradžią',
 
   // Dashboard
   'dashboard.title': 'Studento skydelis',

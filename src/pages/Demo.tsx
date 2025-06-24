@@ -64,7 +64,7 @@ const Demo = () => {
                 className="flex items-center gap-2 text-gray-600 hover:text-gray-900"
               >
                 <ArrowLeft className="h-4 w-4" />
-                {t('demo.page.backToHome')}
+                {t('navigation.backToHome')}
               </Button>
               <div className="flex items-center gap-2">
                 <GraduationCap className="h-6 w-6 text-primary" />
@@ -85,15 +85,6 @@ const Demo = () => {
               <LanguageSwitcher />
             </div>
           </div>
-        </div>
-      </div>
-
-      {/* Breadcrumbs */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-        <div className="flex items-center gap-2 text-sm text-gray-500">
-          <span>{t('nav.home')}</span>
-          <span>›</span>
-          <span>{t('demo.page.interactivePlatformDemo')}</span>
         </div>
       </div>
 
@@ -274,13 +265,13 @@ const Demo = () => {
               </div>
             </div>
 
-            {/* Call to Action - Updated with working button */}
+            {/* Call to Action - Updated with working button matching homepage styling */}
             <div className="mt-16 bg-brand-gradient text-white rounded-lg p-8 text-center">
               <h3 className="text-2xl font-bold mb-4">{t('demo.experienceFullPlatform')}</h3>
               <p className="text-lg mb-6 opacity-90">{t('demo.experienceDescription')}</p>
               <Button 
                 size="lg" 
-                className="bg-white text-brand-teal hover:bg-gray-100 font-semibold"
+                className="text-xl px-12 py-4 bg-brand-orange hover:bg-brand-orange/90 text-white transform scale-125"
                 onClick={handleStartFreeTrial}
               >
                 {t('pricing.startFreeTrial')}

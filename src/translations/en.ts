@@ -47,6 +47,10 @@ export const enTranslations = {
   'nav.help': 'Help',
   'nav.about': 'About',
   'nav.contact': 'Contact',
+  'navigation.studentLogin': 'Student Login',
+  'navigation.teacherLogin': 'Teacher Login',
+  'navigation.signUpNow': 'Sign Up Now',
+  'navigation.backToHome': 'Back to Home',
 
   // Dashboard
   'dashboard.title': 'Student Dashboard',

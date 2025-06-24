@@ -72,7 +72,7 @@ const Index = () => {
                   className="w-full min-h-16 py-3 px-4 text-base flex items-center justify-center bg-brand-teal hover:bg-brand-dark text-white"
                 >
                   <UsersIcon className="w-5 h-5 mr-2 flex-shrink-0" />
-                  <span className="text-center leading-tight whitespace-normal">{t('auth.studentLogin')}</span>
+                  <span className="text-center leading-tight whitespace-normal">{t('navigation.studentLogin')}</span>
                 </Button>
               </Link>
               
@@ -83,7 +83,7 @@ const Index = () => {
                   className="w-full border-2 border-white text-white hover:bg-white hover:text-brand-dark min-h-16 py-3 px-4 text-base flex items-center justify-center"
                 >
                   <BookOpenIcon className="w-5 h-5 mr-2 flex-shrink-0" />
-                  <span className="text-center leading-tight whitespace-normal">{t('auth.teacherLogin')}</span>
+                  <span className="text-center leading-tight whitespace-normal">{t('navigation.teacherLogin')}</span>
                 </Button>
               </Link>
             </div>
@@ -208,7 +208,7 @@ const Index = () => {
             </p>
             <Link to="/teacher-login?tab=signup">
               <Button size="lg" className="text-xl px-12 py-4 bg-brand-orange hover:bg-brand-orange/90 text-white transform scale-125">
-                {t('auth.signUpNow')}
+                {t('navigation.signUpNow')}
               </Button>
             </Link>
           </div>
