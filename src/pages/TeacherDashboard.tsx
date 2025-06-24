@@ -1,3 +1,4 @@
+
 import { useState, useEffect, Suspense, lazy } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuthStorage } from "@/hooks/useAuthStorage";
@@ -43,6 +44,9 @@ const TeacherDashboard = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isCreatingCheckout, setIsCreatingCheckout] = useState(false);
 
+  // Check if this is a demo admin (shouldn't see scheduling features)
+  const isDemoAdmin = teacher?.email === 'demoadmin@demo.com' || teacher?.school === 'demo school';
+
   useEffect(() => {
     if (!teacher) {
       navigate('/teacher-login');
@@ -77,10 +81,9 @@ const TeacherDashboard = () => {
   const handleLogout = () => {
     try {
       clearAuth();
-      // Navigation is handled by DashboardHeader
+      navigate('/', { replace: true });
     } catch (error) {
       console.error('Logout error:', error);
-      // Fallback navigation if DashboardHeader fails
       navigate('/', { replace: true });
     }
   };
@@ -88,8 +91,8 @@ const TeacherDashboard = () => {
   const handleCreateCheckout = async () => {
     if (!teacher?.email || !teacher?.school) {
       toast({
-        title: t('common.error'),
-        description: t('teacher.missingInfo'),
+        title: "Error",
+        description: "Missing teacher information",
         variant: "destructive",
       });
       return;
@@ -124,8 +127,8 @@ const TeacherDashboard = () => {
     } catch (error) {
       console.error('Error creating checkout:', error);
       toast({
-        title: t('common.error'),
-        description: `${t('teacher.checkoutFailed')}: ${error.message}`,
+        title: "Error",
+        description: `Checkout failed: ${error.message}`,
         variant: "destructive",
       });
     } finally {
@@ -135,8 +138,8 @@ const TeacherDashboard = () => {
 
   const handleScheduleUploadComplete = () => {
     toast({
-      title: t('common.success'),
-      description: t('upload.uploadComplete'),
+      title: "Success",
+      description: "Upload complete",
     });
   };
 
@@ -161,7 +164,7 @@ const TeacherDashboard = () => {
     <div className="min-h-screen bg-background">
       <CookieConsent />
       <DashboardHeader 
-        title={teacher?.role === 'doctor' ? t('dashboard.doctorOverview') : t('dashboard.teacherOverview')}
+        title={teacher?.role === 'doctor' ? 'Doctor Overview' : 'Teacher Overview'}
         userName={teacher?.name || ""}
         onLogout={handleLogout}
       />
@@ -184,41 +187,45 @@ const TeacherDashboard = () => {
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <StatsCard
-            title={t('auth.school')}
+            title="School"
             value={teacher?.school || ""}
             icon={SchoolIcon}
           />
           
           <StatsCard
-            title={t('login.teacher.role')}
-            value={teacher?.role === 'doctor' ? t('teacher.mentalHealthProfessional') : (teacher?.role || "")}
+            title="Role"
+            value={teacher?.role === 'doctor' ? 'Mental Health Professional' : (teacher?.role || "")}
             icon={SchoolIcon}
           />
 
           <StatsCard
-            title={teacher?.role === 'doctor' ? t('teacher.availability') : t('admin.subscription')}
+            title={teacher?.role === 'doctor' ? 'Availability' : 'Subscription'}
             value={teacher?.role === 'doctor' 
-              ? (teacher?.is_available ? t('teacher.available') : t('teacher.busy'))
-              : (subscription ? t('teacher.active') : t('teacher.inactive'))}
+              ? (teacher?.is_available ? 'Available' : 'Busy')
+              : (subscription ? 'Active' : 'Inactive')}
             icon={CreditCardIcon}
           />
         </div>
 
         {/* Tabs */}
-        <Tabs defaultValue={teacher?.role === 'doctor' ? 'weekly-summaries' : 'schedule'} className="space-y-6">
+        <Tabs defaultValue={teacher?.role === 'doctor' ? 'weekly-summaries' : (isDemoAdmin ? 'feedback' : 'schedule')} className="space-y-6">
           <TabsList>
             {teacher?.role === 'doctor' ? (
               <>
-                <TabsTrigger value="weekly-summaries">{t('dashboard.weeklySummaries')}</TabsTrigger>
-                <TabsTrigger value="mental-health">{t('dashboard.mentalHealthSupport')}</TabsTrigger>
+                <TabsTrigger value="weekly-summaries">Weekly Summaries</TabsTrigger>
+                <TabsTrigger value="mental-health">Mental Health Support</TabsTrigger>
               </>
             ) : (
               <>
-                <TabsTrigger value="schedule">{t('class.schedule')}</TabsTrigger>
-                <TabsTrigger value="feedback">{t('dashboard.feedback')}</TabsTrigger>
-                <TabsTrigger value="bulk-upload">{t('upload.bulkUpload')}</TabsTrigger>
+                {!isDemoAdmin && (
+                  <>
+                    <TabsTrigger value="schedule">Schedule</TabsTrigger>
+                    <TabsTrigger value="bulk-upload">Bulk Upload</TabsTrigger>
+                  </>
+                )}
+                <TabsTrigger value="feedback">Feedback</TabsTrigger>
                 {teacher?.role === 'admin' && (
-                  <TabsTrigger value="articles">{t('articles.mentalHealth')}</TabsTrigger>
+                  <TabsTrigger value="articles">Mental Health Articles</TabsTrigger>
                 )}
               </>
             )}
@@ -250,24 +257,28 @@ const TeacherDashboard = () => {
             </>
           ) : (
             <>
-              <TabsContent value="schedule" className="space-y-6">
-                <Suspense fallback={<TabContentSkeleton />}>
-                  <ScheduleTab teacher={teacher} />
-                </Suspense>
-              </TabsContent>
+              {!isDemoAdmin && (
+                <>
+                  <TabsContent value="schedule" className="space-y-6">
+                    <Suspense fallback={<TabContentSkeleton />}>
+                      <ScheduleTab teacher={teacher} />
+                    </Suspense>
+                  </TabsContent>
+
+                  <TabsContent value="bulk-upload" className="space-y-6">
+                    <Suspense fallback={<TabContentSkeleton />}>
+                      <BulkUploadTab 
+                        teacher={teacher} 
+                        onUploadComplete={handleScheduleUploadComplete}
+                      />
+                    </Suspense>
+                  </TabsContent>
+                </>
+              )}
 
               <TabsContent value="feedback" className="space-y-6">
                 <Suspense fallback={<TabContentSkeleton />}>
                   <FeedbackTab />
-                </Suspense>
-              </TabsContent>
-
-              <TabsContent value="bulk-upload" className="space-y-6">
-                <Suspense fallback={<TabContentSkeleton />}>
-                  <BulkUploadTab 
-                    teacher={teacher} 
-                    onUploadComplete={handleScheduleUploadComplete}
-                  />
                 </Suspense>
               </TabsContent>
 

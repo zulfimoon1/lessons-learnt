@@ -10,33 +10,34 @@ import { useAuth } from "@/contexts/AuthContext";
 import AuthHeader from "@/components/auth/AuthHeader";
 import TeacherLoginForm from "@/components/auth/TeacherLoginForm";
 import TeacherSignupForm from "@/components/auth/TeacherSignupForm";
+import { loginTeacher, signupTeacher } from "@/services/authIntegrationService";
 
 const TeacherLogin = () => {
   const { t, language } = useLanguage();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { teacher, isLoading: authLoading, teacherLogin } = useAuth();
+  const { teacher, isLoading: authLoading, setTeacher } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
 
   // Get proper translations with fallbacks
   const getTitle = () => {
     if (language === 'lt') return 'Mokytojų portalas';
-    return t('login.teacher.title') || 'Teacher Portal';
+    return 'Teacher Portal';
   };
 
   const getSubtitle = () => {
     if (language === 'lt') return 'Prisijunkite prie savo mokymo skydelio';
-    return t('login.teacher.subtitle') || 'Log in to your teaching dashboard';
+    return 'Log in to your teaching dashboard';
   };
 
   const getLoginText = () => {
     if (language === 'lt') return 'Prisijungti';
-    return t('auth.login') || 'Login';
+    return 'Login';
   };
 
   const getSignUpText = () => {
     if (language === 'lt') return 'Registruotis';
-    return t('auth.signUp') || 'Sign Up';
+    return 'Sign Up';
   };
 
   // Redirect if already logged in
@@ -53,7 +54,7 @@ const TeacherLogin = () => {
       <div className="min-h-screen bg-brand-gradient-soft flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-teal mx-auto"></div>
-          <p className="mt-2 text-brand-dark">{t('common.loading') || 'Loading...'}</p>
+          <p className="mt-2 text-brand-dark">Loading...</p>
         </div>
       </div>
     );
@@ -73,7 +74,7 @@ const TeacherLogin = () => {
 
     try {
       console.log('TeacherLogin: Attempting login for:', email);
-      const result = await teacherLogin(email, password);
+      const result = await loginTeacher(email, password);
 
       if (result.error) {
         console.log('TeacherLogin: Login failed with error:', result.error);
@@ -83,12 +84,13 @@ const TeacherLogin = () => {
           variant: "destructive",
         });
       } else if (result.teacher) {
-        console.log('TeacherLogin: Login successful, navigating to dashboard');
+        console.log('TeacherLogin: Login successful, setting teacher and navigating');
+        setTeacher(result.teacher);
+        localStorage.setItem('teacher', JSON.stringify(result.teacher));
         toast({
           title: "Welcome back!",
           description: "Login successful",
         });
-        // Force navigation after successful login
         setTimeout(() => {
           navigate("/teacher-dashboard", { replace: true });
         }, 100);
@@ -127,8 +129,6 @@ const TeacherLogin = () => {
     setIsLoading(true);
 
     try {
-      // For signup, we need to use the signup service
-      const { signupTeacher } = await import('@/services/authIntegrationService');
       const result = await signupTeacher(name, email, school, password, role);
 
       if (result.error) {
@@ -138,8 +138,6 @@ const TeacherLogin = () => {
           variant: "destructive",
         });
       } else if (result.teacher) {
-        // Set teacher in context
-        const { setTeacher } = useAuth();
         setTeacher(result.teacher);
         localStorage.setItem('teacher', JSON.stringify(result.teacher));
         

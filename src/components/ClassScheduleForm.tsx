@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -5,10 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, Save, BookOpenIcon, CalendarIcon, ClockIcon, RefreshCcwIcon } from "lucide-react";
+import { BookOpenIcon, CalendarIcon, RefreshCcwIcon } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
-import { useLanguage } from "@/contexts/LanguageContext";
-import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -25,7 +24,6 @@ interface ClassScheduleFormProps {
 }
 
 const ClassScheduleForm = ({ teacher }: ClassScheduleFormProps) => {
-  const { t } = useLanguage();
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
@@ -53,7 +51,6 @@ const ClassScheduleForm = ({ teacher }: ClassScheduleFormProps) => {
       
       dates.push(new Date(current));
       
-      // Add interval based on pattern
       switch (pattern) {
         case "weekly":
           current.setDate(current.getDate() + 7);
@@ -73,7 +70,6 @@ const ClassScheduleForm = ({ teacher }: ClassScheduleFormProps) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Basic validation
     if (!formData.subject || !formData.lesson_topic || !formData.class_date || 
         !formData.class_time || !formData.school || !formData.grade) {
       toast({
@@ -100,8 +96,12 @@ const ClassScheduleForm = ({ teacher }: ClassScheduleFormProps) => {
       console.log('📧 Teacher:', teacher);
       console.log('📝 Form data:', formData);
       
+      // Set platform admin context for database operations
+      if (teacher.email === 'zulfimoon1@gmail.com') {
+        await supabase.rpc('set_platform_admin_context', { admin_email: teacher.email });
+      }
+      
       if (formData.is_recurring) {
-        // Generate recurring schedule entries
         const dates = generateRecurringDates(
           formData.class_date,
           formData.recurrence_pattern,
@@ -123,7 +123,6 @@ const ClassScheduleForm = ({ teacher }: ClassScheduleFormProps) => {
 
         console.log('📅 Inserting recurring schedules:', schedules.length, 'classes');
 
-        // Insert schedules one by one to handle any individual failures
         let successCount = 0;
         const errors = [];
 
@@ -155,7 +154,6 @@ const ClassScheduleForm = ({ teacher }: ClassScheduleFormProps) => {
           throw new Error(`Failed to create any schedules: ${errors.join(', ')}`);
         }
       } else {
-        // Single schedule entry
         const scheduleData = {
           subject: formData.subject,
           lesson_topic: formData.lesson_topic,
@@ -440,9 +438,11 @@ const ClassScheduleForm = ({ teacher }: ClassScheduleFormProps) => {
               size="lg"
               className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white px-8 py-6 text-xl font-bold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
             >
-              <Save className="w-6 h-6 mr-3" />
               {isSubmitting ? (
-                "Scheduling..."
+                <div className="flex items-center gap-2">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                  "Scheduling..."
+                </div>
               ) : (
                 formData.is_recurring ? 
                   `Schedule ${formData.number_of_occurrences} Classes` : 
