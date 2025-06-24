@@ -1,3 +1,4 @@
+
 import { ltAuthTranslations } from './lt/auth';
 import { ltTeacherTranslations } from './lt/teacher';
 import { ltWeeklyTranslations } from './lt/weekly';
@@ -58,6 +59,7 @@ export const ltTranslations = {
 
   // Dashboard
   'dashboard.title': 'Studento skydelis',
+  'dashboard.welcome': 'Sveiki',
   'dashboard.overview': 'Apžvalga',
   'dashboard.teacherOverview': 'Mokytojo apžvalga',
   'dashboard.doctorOverview': 'Daktaro apžvalga',

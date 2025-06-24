@@ -1,3 +1,4 @@
+
 import { enAuthTranslations } from './en/auth';
 import { enTeacherTranslations } from './en/teacher';
 import { enWeeklyTranslations } from './en/weekly';
@@ -58,6 +59,7 @@ export const enTranslations = {
 
   // Dashboard
   'dashboard.title': 'Student Dashboard',
+  'dashboard.welcome': 'Welcome',
   'dashboard.overview': 'Overview',
   'dashboard.teacherOverview': 'Teacher Overview',
   'dashboard.doctorOverview': 'Doctor Overview',
