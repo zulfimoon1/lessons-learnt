@@ -7,17 +7,18 @@ import LiveChatWidget from "@/components/LiveChatWidget";
 import PsychologistInfo from "@/components/PsychologistInfo";
 import { supabase } from "@/integrations/supabase/client";
 
-interface SchoolPsychologist {
+interface SchoolDoctor {
   id: string;
   name: string;
   email: string;
   phone?: string;
   office_location?: string;
   availability_hours?: string;
+  specialization?: string;
 }
 
 interface MentalHealthSupportTabProps {
-  psychologists: SchoolPsychologist[];
+  psychologists: SchoolDoctor[];
   studentId?: string;
   studentName?: string;
   studentSchool?: string;
@@ -32,34 +33,64 @@ const MentalHealthSupportTab: React.FC<MentalHealthSupportTabProps> = React.memo
   studentGrade
 }) => {
   const { t } = useLanguage();
-  const [psychologists, setPsychologists] = useState<SchoolPsychologist[]>(initialPsychologists);
+  const [doctors, setDoctors] = useState<SchoolDoctor[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    const fetchPsychologists = async () => {
-      if (!studentSchool || psychologists.length > 0) return;
+    const fetchDoctors = async () => {
+      if (!studentSchool) return;
       
       setIsLoading(true);
       try {
-        const { data, error } = await supabase
+        // First, try to get doctors from the teachers table
+        const { data: teacherDoctors, error: teacherError } = await supabase
+          .from('teachers')
+          .select('id, name, email, specialization')
+          .eq('school', studentSchool)
+          .eq('role', 'doctor');
+
+        if (teacherError) {
+          console.error('Error fetching doctor teachers:', teacherError);
+        }
+
+        // Also get any psychologists from the school_psychologists table
+        const { data: schoolPsychologists, error: psychError } = await supabase
           .from('school_psychologists')
           .select('*')
           .eq('school', studentSchool);
 
-        if (error) {
-          console.error('Error fetching psychologists:', error);
-        } else if (data) {
-          setPsychologists(data);
+        if (psychError) {
+          console.error('Error fetching school psychologists:', psychError);
         }
+
+        // Combine both sources
+        const combinedDoctors: SchoolDoctor[] = [
+          ...(teacherDoctors || []).map(doctor => ({
+            id: doctor.id,
+            name: doctor.name,
+            email: doctor.email,
+            specialization: doctor.specialization
+          })),
+          ...(schoolPsychologists || []).map(psych => ({
+            id: psych.id,
+            name: psych.name,
+            email: psych.email,
+            phone: psych.phone,
+            office_location: psych.office_location,
+            availability_hours: psych.availability_hours
+          }))
+        ];
+
+        setDoctors(combinedDoctors);
       } catch (error) {
-        console.error('Error fetching psychologists:', error);
+        console.error('Error fetching doctors:', error);
       } finally {
         setIsLoading(false);
       }
     };
 
-    fetchPsychologists();
-  }, [studentSchool, psychologists.length]);
+    fetchDoctors();
+  }, [studentSchool]);
 
   if (isLoading) {
     return (
@@ -86,7 +117,7 @@ const MentalHealthSupportTab: React.FC<MentalHealthSupportTabProps> = React.memo
         </CardDescription>
       </CardHeader>
       <CardContent className="p-6">
-        {psychologists.length > 0 ? (
+        {doctors.length > 0 ? (
           <div className="space-y-6">
             <div className="flex justify-end">
               <LiveChatWidget
@@ -97,8 +128,8 @@ const MentalHealthSupportTab: React.FC<MentalHealthSupportTabProps> = React.memo
               />
             </div>
             <div className="space-y-4">
-              {psychologists.map((psychologist) => (
-                <PsychologistInfo key={psychologist.id} psychologist={psychologist} />
+              {doctors.map((doctor) => (
+                <PsychologistInfo key={doctor.id} psychologist={doctor} />
               ))}
             </div>
           </div>
