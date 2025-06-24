@@ -89,8 +89,11 @@ const Index = () => {
             </div>
             
             <div className="max-w-2xl mx-auto mt-6">
-              <p className="text-5xl font-bold text-brand-orange mt-2">
+              <p className="text-3xl font-bold text-brand-orange mt-2">
                 {t('welcome.freeForStudents')}
+              </p>
+              <p className="text-2xl font-bold text-white mt-2">
+                {t('welcome.threeCreditsIncluded')}
               </p>
             </div>
           </div>

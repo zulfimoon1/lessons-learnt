@@ -40,7 +40,8 @@ export const common = {
     heroTitle1: "Transform Student",
     heroTitle2: "Learning Experience",
     subtitle: "Empowering educators with intelligent feedback systems and mental health support tools for better student outcomes",
-    freeForStudents: "FREE FOR STUDENTS"
+    freeForStudents: "FREE FOR STUDENTS",
+    threeCreditsIncluded: "3 CREDITS INCLUDED"
   },
   features: {
     studentFeedback: {
@@ -79,5 +80,23 @@ export const common = {
     studentLogin: "Student Portal",
     teacherLogin: "Teacher Portal", 
     signUpNow: "Get Started Today"
+  },
+  demo: {
+    featureDemo: "FEATURE DEMO",
+    subtitle: "Try our platform",
+    featuresUserTypes: "3 USER TYPES",
+    experienceComplete: "EXPERIENCE THE COMPLETE SYSTEM",
+    enterDemo: "Enter Demo",
+    studentExperience: "Student Experience",
+    studentExperienceDesc: "Submit lesson feedback, share weekly summaries, and access mental health support - all in a safe, anonymous environment.",
+    teacherDashboard: "Teacher Dashboard", 
+    teacherDashboardDesc: "Monitor student engagement, track learning progress, and identify students who need additional support.",
+    adminOverview: "Admin Overview",
+    adminOverviewDesc: "School-wide analytics, teacher management, and comprehensive insights into educational outcomes.",
+    demoFeatures: "Demo Features",
+    demoFeaturesDesc: "Try before you commit",
+    noRegistration: "No registration required",
+    fullAccess: "Full feature access",
+    sampleData: "Sample data included"
   }
 };

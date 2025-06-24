@@ -40,7 +40,8 @@ export const common = {
     heroTitle1: "Transformuokite mokinio",
     heroTitle2: "mokymosi patirtį",
     subtitle: "Suteikiame mokytojams pažangius atsiliepimų sistemas ir psichikos sveikatos palaikymo įrankius geresniam mokinio rezultatui",
-    freeForStudents: "NEMOKAMAI MOKINIAMS"
+    freeForStudents: "NEMOKAMAI MOKINIAMS",
+    threeCreditsIncluded: "3 KREDITAI ĮTRAUKTI"
   },
   features: {
     studentFeedback: {
@@ -79,5 +80,23 @@ export const common = {
     studentLogin: "Mokinio portalas",
     teacherLogin: "Mokytojo portalas",
     signUpNow: "Pradėkite šiandien"
+  },
+  demo: {
+    featureDemo: "FUNKCIJŲ DEMONSTRACIJA",
+    subtitle: "Išbandykite mūsų platformą",
+    featuresUserTypes: "3 VARTOTOJŲ TIPAI",
+    experienceComplete: "PATIRKITE VISĄ SISTEMĄ",
+    enterDemo: "Įeiti į demonstraciją",
+    studentExperience: "Mokinio patirtis",
+    studentExperienceDesc: "Pateikite pamokų atsiliepimus, dalinkitės savaitės suvestinėmis ir naudokitės psichikos sveikatos palaikymu - visa tai saugioje, anoniminėje aplinkoje.",
+    teacherDashboard: "Mokytojo skydelis",
+    teacherDashboardDesc: "Stebėkite mokinių įsitraukimą, sekite mokymosi pažangą ir nustatykite mokinius, kuriems reikia papildomos pagalbos.",
+    adminOverview: "Administratoriaus apžvalga",
+    adminOverviewDesc: "Visos mokyklos analitika, mokytojų valdymas ir išsamūs švietimo rezultatų įžvalgos.",
+    demoFeatures: "Demonstracijos funkcijos",
+    demoFeaturesDesc: "Išbandykite prieš įsipareigojant",
+    noRegistration: "Registracija nereikalinga",
+    fullAccess: "Pilnas funkcijų priėjimas",
+    sampleData: "Pavyzdiniai duomenys įtraukti"
   }
 };
