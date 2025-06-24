@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { SchoolIcon, LogOut } from "lucide-react";
@@ -45,7 +44,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({ title, userName, onLo
             type="button"
           >
             <LogOut className="w-4 h-4" />
-            {t('logout') || t('auth.logout') || 'Logout'}
+            {t('auth.logout') || 'Logout'}
           </Button>
         </div>
       </div>
