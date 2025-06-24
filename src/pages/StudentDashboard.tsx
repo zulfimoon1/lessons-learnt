@@ -1,7 +1,7 @@
 
 import React, { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import { Navigate, useSearchParams } from "react-router-dom";
+import { Navigate, useSearchParams, useNavigate } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import StudentUpcomingClasses from "@/components/dashboard/student/StudentUpcomingClasses";
@@ -15,6 +15,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 const StudentDashboard = () => {
   const { student, logout, isLoading } = useAuth();
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const activeTab = searchParams.get('tab') || 'feedback';
   const classId = searchParams.get('classId');
   const { t } = useLanguage();
@@ -33,6 +34,12 @@ const StudentDashboard = () => {
 
   const handleLogout = () => {
     logout();
+  };
+
+  const handleTabChange = (value: string) => {
+    const params = new URLSearchParams(searchParams);
+    params.set('tab', value);
+    navigate(`/student-dashboard?${params.toString()}`, { replace: true });
   };
 
   return (
@@ -93,18 +100,18 @@ const StudentDashboard = () => {
           </div>
         </div>
 
-        <Tabs value={activeTab} className="space-y-4">
+        <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-4">
           <TabsList className="grid w-full grid-cols-4 bg-white/80 backdrop-blur-sm border border-brand-teal/20">
-            <TabsTrigger value="feedback" className="data-[state=active]:bg-brand-teal data-[state=active]:text-white text-brand-dark">
+            <TabsTrigger value="feedback" className="data-[state=active]:bg-brand-teal data-[state=active]:text-white text-brand-dark hover:bg-brand-teal/10 transition-colors">
               {t('dashboard.feedback')}
             </TabsTrigger>
-            <TabsTrigger value="classes" className="data-[state=active]:bg-brand-teal data-[state=active]:text-white text-brand-dark">
+            <TabsTrigger value="classes" className="data-[state=active]:bg-brand-teal data-[state=active]:text-white text-brand-dark hover:bg-brand-teal/10 transition-colors">
               {t('dashboard.upcomingClasses')}
             </TabsTrigger>
-            <TabsTrigger value="weekly" className="data-[state=active]:bg-brand-orange data-[state=active]:text-white text-brand-dark">
+            <TabsTrigger value="weekly" className="data-[state=active]:bg-brand-orange data-[state=active]:text-white text-brand-dark hover:bg-brand-orange/10 transition-colors">
               {t('dashboard.weeklySummary')}
             </TabsTrigger>
-            <TabsTrigger value="support" className="data-[state=active]:bg-brand-teal data-[state=active]:text-white text-brand-dark">
+            <TabsTrigger value="support" className="data-[state=active]:bg-brand-teal data-[state=active]:text-white text-brand-dark hover:bg-brand-teal/10 transition-colors">
               {t('dashboard.mentalHealthSupport')}
             </TabsTrigger>
           </TabsList>
