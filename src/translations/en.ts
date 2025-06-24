@@ -72,6 +72,10 @@ export const enTranslations = {
   'dashboard.contactAdmin': 'Contact your school administrator for mental health support',
   'dashboard.scheduledClasses': 'Scheduled classes for grade {grade} at {school}',
   'dashboard.noClasses': 'No upcoming classes found',
+  'dashboard.schoolAdmin': 'School Admin Dashboard',
+  'dashboard.analytics': 'School Analytics',
+  'dashboard.adminPanel': 'Admin Panel',
+  'dashboard.accessAnalytics': 'Access detailed school analytics in the',
 
   // Feedback
   'feedback.title': 'Lesson Feedback',

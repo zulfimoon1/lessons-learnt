@@ -72,6 +72,10 @@ export const ltTranslations = {
   'dashboard.contactAdmin': 'Kreipkitės į mokyklos administratorių dėl psichikos sveikatos pagalbos',
   'dashboard.scheduledClasses': 'Suplanuotos pamokos {grade} klasei {school} mokykloje',
   'dashboard.noClasses': 'Nerasta artėjančių pamokų',
+  'dashboard.schoolAdmin': 'Mokyklos administratoriaus skydelis',
+  'dashboard.analytics': 'Mokyklos analitika',
+  'dashboard.adminPanel': 'Administratoriaus skydelis',
+  'dashboard.accessAnalytics': 'Prieiga prie išsamios mokyklos analitikos',
 
   // Feedback
   'feedback.title': 'Pamokos atsiliepimas',

@@ -54,7 +54,7 @@ const TeacherDashboard = () => {
         <div className="flex items-center justify-between mb-6">
           <div>
             <h1 className="text-2xl font-bold">
-              {isDoctor ? t('dashboard.doctorOverview') : isAdmin ? 'School Admin Dashboard' : t('teacher.dashboard.title')}
+              {isDoctor ? t('dashboard.doctorOverview') : isAdmin ? t('dashboard.schoolAdmin') : t('teacher.dashboard.title')}
             </h1>
             <p className="text-muted-foreground">
               {t('admin.welcome')}, {teacher.name} - {teacher.role.charAt(0).toUpperCase() + teacher.role.slice(1)} at {teacher.school}
@@ -64,7 +64,7 @@ const TeacherDashboard = () => {
             <LanguageSwitcher />
             {isAdmin && (
               <Button variant="outline" onClick={() => window.location.href = '/admin-dashboard'}>
-                Admin Panel
+                {t('dashboard.adminPanel')}
               </Button>
             )}
             <Button variant="outline" onClick={handleLogout}>
@@ -90,7 +90,7 @@ const TeacherDashboard = () => {
               {isAdmin && (
                 <TabsTrigger value="analytics" className="flex items-center gap-2">
                   <Heart className="w-4 h-4" />
-                  School Analytics
+                  {t('dashboard.analytics')}
                 </TabsTrigger>
               )}
             </TabsList>
@@ -107,7 +107,7 @@ const TeacherDashboard = () => {
               <TabsContent value="analytics" className="space-y-4">
                 <div className="text-center py-8">
                   <p className="text-muted-foreground">
-                    Access detailed school analytics in the <Button variant="link" onClick={() => window.location.href = '/admin-dashboard'}>Admin Dashboard</Button>
+                    {t('dashboard.accessAnalytics')} <Button variant="link" onClick={() => window.location.href = '/admin-dashboard'}>{t('dashboard.adminPanel')}</Button>
                   </p>
                 </div>
               </TabsContent>
