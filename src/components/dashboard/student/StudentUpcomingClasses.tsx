@@ -5,8 +5,9 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Calendar, Clock, BookOpen, User, MessageSquare } from "lucide-react";
+import { Calendar, Clock, BookOpen, User, MessageSquare, GraduationCap } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface ClassSchedule {
   id: string;
@@ -35,6 +36,7 @@ const StudentUpcomingClasses: React.FC<StudentUpcomingClassesProps> = ({ student
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { t } = useLanguage();
 
   useEffect(() => {
     fetchUpcomingClasses();
@@ -58,7 +60,6 @@ const StudentUpcomingClasses: React.FC<StudentUpcomingClassesProps> = ({ student
 
       if (error) throw error;
 
-      // Fetch teacher names separately
       const classesWithTeachers = await Promise.all(
         (classData || []).map(async (classItem) => {
           const { data: teacherData } = await supabase
@@ -69,7 +70,7 @@ const StudentUpcomingClasses: React.FC<StudentUpcomingClassesProps> = ({ student
 
           return {
             ...classItem,
-            teacher_name: teacherData?.name || 'Unknown Teacher'
+            teacher_name: teacherData?.name || t('student.defaultName')
           };
         })
       );
@@ -78,8 +79,8 @@ const StudentUpcomingClasses: React.FC<StudentUpcomingClassesProps> = ({ student
     } catch (error) {
       console.error('Error fetching upcoming classes:', error);
       toast({
-        title: "Error",
-        description: "Failed to fetch upcoming classes",
+        title: t('common.error'),
+        description: t('student.failedToLoadClasses'),
         variant: "destructive",
       });
     } finally {
@@ -88,76 +89,95 @@ const StudentUpcomingClasses: React.FC<StudentUpcomingClassesProps> = ({ student
   };
 
   const handleLeaveFeedback = (classScheduleId: string) => {
-    // Navigate to feedback form
     navigate(`/student-dashboard?tab=feedback&classId=${classScheduleId}`);
   };
 
   if (isLoading) {
-    return <div className="flex items-center justify-center p-8">Loading upcoming classes...</div>;
+    return (
+      <Card className="bg-white/80 backdrop-blur-sm border-brand-teal/20">
+        <CardContent className="flex items-center justify-center p-8">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-teal"></div>
+          <span className="ml-3 text-brand-dark">{t('common.loading')}</span>
+        </CardContent>
+      </Card>
+    );
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Calendar className="w-5 h-5" />
-          Upcoming Classes
+    <Card className="bg-white/80 backdrop-blur-sm border-brand-teal/20 shadow-lg">
+      <CardHeader className="bg-gradient-to-r from-brand-teal to-brand-orange/20 rounded-t-lg">
+        <CardTitle className="flex items-center gap-3 text-white">
+          <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
+            <Calendar className="w-5 h-5" />
+          </div>
+          {t('dashboard.upcomingClasses')}
         </CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="p-6">
         {upcomingClasses.length === 0 ? (
-          <div className="text-center py-8">
-            <BookOpen className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-            <p className="text-muted-foreground">No upcoming classes scheduled</p>
-            <p className="text-sm text-muted-foreground mt-2">
-              Classes for {student.grade} at {student.school} will appear here
+          <div className="text-center py-12">
+            <div className="w-20 h-20 bg-brand-teal/10 rounded-full mx-auto mb-4 flex items-center justify-center">
+              <BookOpen className="w-10 h-10 text-brand-teal" />
+            </div>
+            <p className="text-brand-dark font-medium mb-2">{t('dashboard.noClasses')}</p>
+            <p className="text-brand-dark/60 text-sm">
+              {t('dashboard.scheduledClasses', { 
+                grade: student.grade, 
+                school: student.school 
+              })}
             </p>
           </div>
         ) : (
           <div className="space-y-4">
-            {upcomingClasses.map((classItem) => (
-              <div key={classItem.id} className="border rounded-lg p-4 hover:bg-gray-50 transition-colors">
+            {upcomingClasses.map((classItem, index) => (
+              <div 
+                key={classItem.id} 
+                className="group border border-brand-teal/20 rounded-lg p-5 hover:bg-brand-teal/5 hover:border-brand-teal/40 transition-all duration-200 hover:shadow-md"
+              >
                 <div className="flex justify-between items-start">
                   <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-2">
-                      <BookOpen className="w-4 h-4 text-blue-500" />
-                      <h3 className="font-semibold">{classItem.subject}</h3>
-                      <Badge variant="outline">{classItem.grade}</Badge>
-                    </div>
-                    
-                    <p className="text-sm text-gray-600 mb-2">{classItem.lesson_topic}</p>
-                    
-                    <div className="flex items-center gap-4 text-sm text-muted-foreground mb-2">
-                      <span className="flex items-center gap-1">
-                        <Calendar className="w-3 h-3" />
-                        {new Date(classItem.class_date).toLocaleDateString()}
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <Clock className="w-3 h-3" />
-                        {classItem.class_time}
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <User className="w-3 h-3" />
-                        {classItem.teacher_name}
-                      </span>
-                    </div>
-                    
-                    <div className="flex items-center gap-2">
-                      <Badge variant="secondary">
-                        {classItem.duration_minutes} minutes
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="w-8 h-8 bg-brand-orange/20 rounded-full flex items-center justify-center">
+                        <GraduationCap className="w-4 h-4 text-brand-orange" />
+                      </div>
+                      <h3 className="font-semibold text-brand-dark text-lg">{classItem.subject}</h3>
+                      <Badge variant="outline" className="border-brand-teal text-brand-teal">
+                        {classItem.grade}
                       </Badge>
                     </div>
+                    
+                    <p className="text-brand-dark/80 mb-3 font-medium">{classItem.lesson_topic}</p>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
+                      <div className="flex items-center gap-2 text-brand-dark/70">
+                        <Calendar className="w-4 h-4 text-brand-teal" />
+                        <span className="text-sm font-medium">
+                          {new Date(classItem.class_date).toLocaleDateString()}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2 text-brand-dark/70">
+                        <Clock className="w-4 h-4 text-brand-orange" />
+                        <span className="text-sm font-medium">{classItem.class_time}</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-brand-dark/70">
+                        <User className="w-4 h-4 text-brand-teal" />
+                        <span className="text-sm font-medium">{classItem.teacher_name}</span>
+                      </div>
+                    </div>
+                    
+                    <Badge variant="secondary" className="bg-brand-teal/10 text-brand-teal border-brand-teal/20">
+                      {classItem.duration_minutes} {t('common.minutes', { count: classItem.duration_minutes })}
+                    </Badge>
                   </div>
                   
-                  <div className="ml-4">
+                  <div className="ml-6">
                     <Button
                       size="sm"
-                      variant="outline"
                       onClick={() => handleLeaveFeedback(classItem.id)}
-                      className="flex items-center gap-2"
+                      className="bg-gradient-to-r from-brand-orange to-brand-orange/80 hover:from-brand-orange/90 hover:to-brand-orange/70 text-white shadow-lg hover:shadow-xl transition-all duration-200 group-hover:scale-105"
                     >
-                      <MessageSquare className="w-4 h-4" />
-                      Leave Feedback
+                      <MessageSquare className="w-4 h-4 mr-2" />
+                      {t('feedback.submitFeedback')}
                     </Button>
                   </div>
                 </div>

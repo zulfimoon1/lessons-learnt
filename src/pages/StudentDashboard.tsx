@@ -8,18 +8,21 @@ import StudentUpcomingClasses from "@/components/dashboard/student/StudentUpcomi
 import WeeklySummaryForm from "@/components/dashboard/student/WeeklySummaryForm";
 import MentalHealthSupportTab from "@/components/dashboard/MentalHealthSupportTab";
 import FeedbackForm from "@/components/FeedbackForm";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { LogOut } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const StudentDashboard = () => {
   const { student, logout, isLoading } = useAuth();
   const [searchParams] = useSearchParams();
   const activeTab = searchParams.get('tab') || 'classes';
   const classId = searchParams.get('classId');
+  const { t } = useLanguage();
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      <div className="min-h-screen bg-brand-gradient-soft flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-teal"></div>
       </div>
     );
   }
@@ -33,27 +36,38 @@ const StudentDashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-brand-gradient-soft">
       <div className="container mx-auto py-6">
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center justify-between mb-6 bg-white/80 backdrop-blur-sm rounded-lg p-6 border border-brand-teal/20">
           <div>
-            <h1 className="text-2xl font-bold">Student Dashboard</h1>
-            <p className="text-muted-foreground">
-              Welcome, {student.full_name} - Grade {student.grade} at {student.school}
+            <h1 className="text-2xl font-bold text-brand-dark">{t('dashboard.title')}</h1>
+            <p className="text-brand-dark/70">
+              {t('dashboard.welcome')}, {student.full_name} - {t('dashboard.grade')} {student.grade} {t('auth.school').toLowerCase()} {student.school}
             </p>
           </div>
-          <Button variant="outline" onClick={handleLogout}>
-            <LogOut className="w-4 h-4 mr-2" />
-            Logout
-          </Button>
+          <div className="flex items-center gap-4">
+            <LanguageSwitcher />
+            <Button variant="outline" onClick={handleLogout} className="border-brand-teal text-brand-teal hover:bg-brand-teal hover:text-white">
+              <LogOut className="w-4 h-4 mr-2" />
+              {t('auth.logout')}
+            </Button>
+          </div>
         </div>
 
         <Tabs value={activeTab} className="space-y-4">
-          <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="classes">Upcoming Classes</TabsTrigger>
-            <TabsTrigger value="feedback">Leave Feedback</TabsTrigger>
-            <TabsTrigger value="weekly">Weekly Summary</TabsTrigger>
-            <TabsTrigger value="support">Mental Health Support</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-4 bg-white/80 backdrop-blur-sm border border-brand-teal/20">
+            <TabsTrigger value="classes" className="data-[state=active]:bg-brand-teal data-[state=active]:text-white text-brand-dark">
+              {t('dashboard.upcomingClasses')}
+            </TabsTrigger>
+            <TabsTrigger value="feedback" className="data-[state=active]:bg-brand-teal data-[state=active]:text-white text-brand-dark">
+              {t('dashboard.feedback')}
+            </TabsTrigger>
+            <TabsTrigger value="weekly" className="data-[state=active]:bg-brand-orange data-[state=active]:text-white text-brand-dark">
+              {t('dashboard.weeklySummary')}
+            </TabsTrigger>
+            <TabsTrigger value="support" className="data-[state=active]:bg-brand-teal data-[state=active]:text-white text-brand-dark">
+              {t('dashboard.mentalHealthSupport')}
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="classes" className="space-y-4">
@@ -65,7 +79,6 @@ const StudentDashboard = () => {
               student={student} 
               classScheduleId={classId}
               onFeedbackSubmitted={() => {
-                // Redirect back to classes tab after feedback submission
                 window.location.href = '/student-dashboard?tab=classes';
               }}
             />
@@ -77,7 +90,7 @@ const StudentDashboard = () => {
 
           <TabsContent value="support" className="space-y-4">
             <MentalHealthSupportTab
-              psychologists={[]} // Will be fetched based on school
+              psychologists={[]}
               studentId={student.id}
               studentName={student.full_name}
               studentSchool={student.school}
