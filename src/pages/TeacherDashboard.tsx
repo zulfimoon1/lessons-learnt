@@ -62,7 +62,7 @@ const TeacherDashboard = () => {
                   {t('dashboard.doctorOverview')}
                 </h1>
                 <p className="text-brand-dark/70 text-lg">
-                  {t('teacher.dashboard.welcome')}, {teacher.name} - {t('teacher.dashboard.teacherAt', { 
+                  {t('doctor.dashboard.welcome')}, {teacher.name} - {t('doctor.dashboard.doctorAt', { 
                     role: teacher.role.charAt(0).toUpperCase() + teacher.role.slice(1),
                     school: teacher.school
                   })}

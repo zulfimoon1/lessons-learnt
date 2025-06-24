@@ -36,5 +36,9 @@ export const ltWeeklyTranslations = {
   'weekly.submitted': 'Pateikta',
   'weekly.submittedDesc': 'Jūsų savaitės suvestinė sėkmingai pateikta',
   'weekly.submitFailed': 'Pateikimas nepavyko',
-  'weekly.submitFailedDesc': 'Nepavyko pateikti savaitės suvestinės. Bandykite dar kartą.'
+  'weekly.submitFailedDesc': 'Nepavyko pateikti savaitės suvestinės. Bandykite dar kartą.',
+  
+  // Add doctor-specific translations
+  'doctor.dashboard.welcome': 'Sveiki',
+  'doctor.dashboard.doctorAt': '{role} mokykloje {school}',
 };
