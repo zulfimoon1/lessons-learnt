@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -55,9 +54,12 @@ const LessonFeedbackForm = () => {
         studentName: student?.full_name 
       });
 
-      // For demo students, show success without database operations
+      // For demo students, show success without any database operations
       if (isDemoStudent) {
         console.log('Demo student feedback - showing success without database operation');
+        
+        // Simulate processing time
+        await new Promise(resolve => setTimeout(resolve, 1000));
         
         toast({
           title: t('feedback.submitted'),
@@ -79,7 +81,7 @@ const LessonFeedbackForm = () => {
         return;
       }
 
-      // Regular student feedback submission
+      // Regular student feedback submission - preserve existing logic
       const { data: scheduleData, error: scheduleError } = await supabase
         .from('class_schedules')
         .insert({
