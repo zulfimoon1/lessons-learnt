@@ -69,7 +69,7 @@ const TeacherDashboard = () => {
             )}
             <Button variant="outline" onClick={handleLogout}>
               <LogOut className="w-4 h-4 mr-2" />
-              {t('auth.logout')}
+              {t('logout')}
             </Button>
           </div>
         </div>

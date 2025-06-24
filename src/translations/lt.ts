@@ -1,4 +1,3 @@
-
 import { ltAuthTranslations } from './lt/auth';
 import { ltTeacherTranslations } from './lt/teacher';
 import { ltWeeklyTranslations } from './lt/weekly';
@@ -51,6 +50,9 @@ export const ltTranslations = {
   'navigation.teacherLogin': 'Mokytojo prisijungimas',
   'navigation.signUpNow': 'Registruotis dabar',
   'navigation.backToHome': 'Grįžti į pradžią',
+
+  // Logout (direct key for simple access)
+  'logout': 'Atsijungti',
 
   // Dashboard
   'dashboard.title': 'Studento skydelis',

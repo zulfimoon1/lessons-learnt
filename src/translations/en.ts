@@ -1,4 +1,3 @@
-
 import { enAuthTranslations } from './en/auth';
 import { enTeacherTranslations } from './en/teacher';
 import { enWeeklyTranslations } from './en/weekly';
@@ -51,6 +50,9 @@ export const enTranslations = {
   'navigation.teacherLogin': 'Teacher Login',
   'navigation.signUpNow': 'Sign Up Now',
   'navigation.backToHome': 'Back to Home',
+
+  // Logout (direct key for simple access)
+  'logout': 'Logout',
 
   // Dashboard
   'dashboard.title': 'Student Dashboard',
