@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { BookOpenIcon, UserIcon, BarChart3Icon, HeartIcon, PlayIcon, ShieldCheckIcon } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { Link } from "react-router-dom";
 
 const DemoSection = () => {
   const { t } = useLanguage();
@@ -13,22 +14,24 @@ const DemoSection = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
           <div className="flex justify-center items-center gap-3 mb-6">
-            <Badge variant="outline" className="bg-brand-teal/10 border-brand-teal text-brand-teal px-4 py-2">
-              <PlayIcon className="w-4 h-4 mr-2" />
-              {t('demo.title')}
-            </Badge>
+            <Link to="/demo">
+              <Badge variant="outline" className="bg-brand-teal/10 border-brand-teal text-brand-teal px-4 py-2 cursor-pointer hover:bg-brand-teal hover:text-white transition-colors">
+                <PlayIcon className="w-4 h-4 mr-2" />
+                {t('demo.featureDemo')}
+              </Badge>
+            </Link>
           </div>
           <h2 className="text-4xl font-bold text-brand-dark mb-6">
             {t('demo.subtitle')}
           </h2>
           
-          {/* Make this text much more visible */}
-          <div className="bg-brand-gradient text-white rounded-lg p-6 max-w-md mx-auto mb-12">
-            <p className="text-2xl font-black tracking-wide">
-              5+ Features, 3 User Types
+          {/* Enhanced visibility for the features section */}
+          <div className="bg-brand-gradient text-white rounded-lg p-8 max-w-md mx-auto mb-12 shadow-xl">
+            <p className="text-3xl font-black tracking-wide drop-shadow-lg">
+              {t('demo.featuresUserTypes')}
             </p>
-            <p className="text-lg font-semibold mt-2 opacity-90">
-              Experience the complete platform
+            <p className="text-xl font-bold mt-3 opacity-95 drop-shadow-md">
+              {t('demo.experienceComplete')}
             </p>
           </div>
         </div>

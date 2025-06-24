@@ -33,8 +33,8 @@ const SecureStudentLoginForm: React.FC<SecureStudentLoginFormProps> = ({ onLogin
   return (
     <SecureFormWrapper onSubmit={handleSecureSubmit} className="space-y-4">
       <div className="space-y-2">
-        <Label htmlFor="fullName" className="flex items-center gap-2 text-brand-dark">
-          <UserIcon className="w-4 h-4" />
+        <Label htmlFor="fullName" className="flex items-center gap-2 text-brand-dark font-medium">
+          <UserIcon className="w-4 h-4 text-brand-teal" />
           {t('auth.fullName')}
         </Label>
         <SecurityEnhancedInput
@@ -46,60 +46,64 @@ const SecureStudentLoginForm: React.FC<SecureStudentLoginFormProps> = ({ onLogin
           required
           validateAs="name"
           maxLength={100}
+          className="border-gray-300 focus:border-brand-teal focus:ring-brand-teal"
         />
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="school" className="flex items-center gap-2 text-brand-dark">
-          <SchoolIcon className="w-4 h-4" />
-          School
+        <Label htmlFor="school" className="flex items-center gap-2 text-brand-dark font-medium">
+          <SchoolIcon className="w-4 h-4 text-brand-teal" />
+          {t('auth.school')}
         </Label>
         <SecurityEnhancedInput
           name="school"
           type="text"
-          placeholder="Enter your school name"
+          placeholder={t('auth.schoolPlaceholder') || "Enter your school name"}
           value={loginData.school}
           onChange={(e) => setLoginData(prev => ({ ...prev, school: e.target.value }))}
           required
           validateAs="school"
           maxLength={200}
+          className="border-gray-300 focus:border-brand-teal focus:ring-brand-teal"
         />
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="grade" className="flex items-center gap-2 text-brand-dark">
-          <GraduationCapIcon className="w-4 h-4" />
-          Grade/Class
+        <Label htmlFor="grade" className="flex items-center gap-2 text-brand-dark font-medium">
+          <GraduationCapIcon className="w-4 h-4 text-brand-teal" />
+          {t('auth.gradeClass')}
         </Label>
         <SecurityEnhancedInput
           name="grade"
           type="text"
-          placeholder="e.g., Grade 5, 10A, Year 9"
+          placeholder={t('auth.gradePlaceholder') || "e.g., Grade 5, 10A, Year 9"}
           value={loginData.grade}
           onChange={(e) => setLoginData(prev => ({ ...prev, grade: e.target.value }))}
           required
           validateAs="grade"
           maxLength={50}
+          className="border-gray-300 focus:border-brand-teal focus:ring-brand-teal"
         />
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="password" className="text-brand-dark">{t('auth.password')}</Label>
+        <Label htmlFor="password" className="text-brand-dark font-medium">{t('auth.password')}</Label>
         <SecurityEnhancedInput
           name="password"
           type="password"
-          placeholder="Enter your password"
+          placeholder={t('auth.passwordPlaceholder') || "Enter your password"}
           value={loginData.password}
           onChange={(e) => setLoginData(prev => ({ ...prev, password: e.target.value }))}
           required
           validateAs="password"
           maxLength={128}
+          className="border-gray-300 focus:border-brand-teal focus:ring-brand-teal"
         />
       </div>
 
       <Button 
         type="submit" 
-        className="w-full bg-brand-teal hover:bg-brand-dark text-white"
+        className="w-full bg-brand-teal hover:bg-brand-dark text-white font-medium py-3"
         disabled={isLoading}
       >
         {isLoading ? t('auth.loggingIn') : (

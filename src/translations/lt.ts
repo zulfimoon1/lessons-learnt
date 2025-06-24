@@ -125,6 +125,7 @@ export const ltTranslations = {
   'pricing.teachers': 'Mokytojai',
   'pricing.standardPrice': 'Standartinė kaina',
   'pricing.discount': 'Nuolaida',
+  'pricing.monthly': 'Mėnesinis',
   'pricing.teacherPlan': 'Mokytojo planas',
   'pricing.perfectIndividual': 'Tobulas individualiems mokytojams',
   'pricing.bestValue': 'Geriausia vertė',
@@ -169,7 +170,9 @@ export const ltTranslations = {
   'student.failedToLoadClasses': 'Nepavyko įkelti pamokų',
 
   // Welcome/Home page
-  'welcome.title': 'Transformuokite švietimą per studentų atsiliepimus',
+  'welcome.title': 'Lesson Lens',
+  'welcome.heroTitle1': 'Bendradarbiaujančios klasės',
+  'welcome.heroTitle2': 'Nesustabdomi protai',
   'welcome.subtitle': 'Įgalinkite studentus, palaikykite mokytojus ir pagerinkite mokymąsi su mūsų išsamia švietimo platforma',
   'welcome.freeForStudents': 'Visada nemokama studentams!',
   'tagline.studentLead': 'Kur kiekvieno studento balsas formuoja mokymosi ateitį',
@@ -206,21 +209,10 @@ export const ltTranslations = {
   'compliance.hipaa.title': 'HIPAA suderintas',
   'compliance.hipaa.description': 'Sveikatos sektoriai atitinkanti privatumo apsauga jautriems duomenims',
 
-  // Demo page translations
-  'demo.title': 'Patirkite Lesson Lens demo režimu',
-  'demo.subtitle': 'Tyrinėkite platformos funkcijas ir privalumus be jokių įsipareigojimų.',
-  'demo.enterDemo': 'Įeiti į demo režimą',
-  'demo.exitDemo': 'Išeiti iš demo režimo',
-  'demo.demoActive': 'Demo režimas aktyvuotas',
-  'demo.demoDescription': 'Dabar patinkate Lesson Lens demo režimu.',
-  'demo.exploreScheduling': 'Tyrinėti tvarkaraščio planavimą',
-  'demo.schedulingDesc': 'Kurkite ir tvarkykite klasių tvarkaraščius lengvai.',
-  'demo.viewSampleLessons': 'Peržiūrėti pavyzdinės pamokas',
-  'demo.sampleLessonsDesc': 'Pasiekite iš anksto sukurtas pamokų planus ir išteklius.',
-  'demo.testFeedback': 'Testuoti atsiliepimų sistemą',
-  'demo.feedbackDesc': 'Modeliuokite studentų atsiliepimus ir analizuokite rezultatus.',
-  'demo.manageDemoStudents': 'Tvarkyti demo studentus',
-  'demo.demoStudentsDesc': 'Pridėkite, redaguokite ar šalinkite demo studentų paskyras.',
+  // Demo
+  'demo.featureDemo': 'Funkcionalumo demonstracija',
+  'demo.featuresUserTypes': '5+ funkcijos, 3 vartotojų tipai',
+  'demo.experienceComplete': 'Patirkite visą platformą',
 
   // Merge all sub-translations
   ...ltAuthTranslations,

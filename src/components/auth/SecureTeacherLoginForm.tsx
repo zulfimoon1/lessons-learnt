@@ -29,8 +29,8 @@ const SecureTeacherLoginForm: React.FC<SecureTeacherLoginFormProps> = ({ onLogin
   return (
     <SecureFormWrapper onSubmit={handleSecureSubmit} className="space-y-4">
       <div className="space-y-2">
-        <Label htmlFor="email" className="flex items-center gap-2 text-brand-dark">
-          <Mail className="w-4 h-4" />
+        <Label htmlFor="email" className="flex items-center gap-2 text-brand-dark font-medium">
+          <Mail className="w-4 h-4 text-brand-teal" />
           {t('auth.email')}
         </Label>
         <SecurityEnhancedInput
@@ -42,11 +42,12 @@ const SecureTeacherLoginForm: React.FC<SecureTeacherLoginFormProps> = ({ onLogin
           required
           validateAs="email"
           maxLength={254}
+          className="border-gray-300 focus:border-brand-teal focus:ring-brand-teal"
         />
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="password" className="text-brand-dark">{t('auth.password')}</Label>
+        <Label htmlFor="password" className="text-brand-dark font-medium">{t('auth.password')}</Label>
         <SecurityEnhancedInput
           name="password"
           type="password"
@@ -56,12 +57,13 @@ const SecureTeacherLoginForm: React.FC<SecureTeacherLoginFormProps> = ({ onLogin
           required
           validateAs="password"
           maxLength={128}
+          className="border-gray-300 focus:border-brand-teal focus:ring-brand-teal"
         />
       </div>
 
       <Button 
         type="submit" 
-        className="w-full bg-brand-teal hover:bg-brand-dark text-white"
+        className="w-full bg-brand-teal hover:bg-brand-dark text-white font-medium py-3"
         disabled={isLoading}
       >
         {isLoading ? t('auth.loggingIn') : (
