@@ -1,3 +1,4 @@
+
 import { enAuthTranslations } from './en/auth';
 import { enTeacherTranslations } from './en/teacher';
 import { enWeeklyTranslations } from './en/weekly';
@@ -169,7 +170,7 @@ export const enTranslations = {
   'student.failedToLoadClasses': 'Failed to load classes',
 
   // Welcome/Home page
-  'welcome.title': 'Lesson Lens',
+  'welcome.title': 'Lessons Learnt',
   'welcome.heroTitle1': 'Collaborative classrooms',
   'welcome.heroTitle2': 'Unstoppable minds',
   'welcome.subtitle': 'Empower students, support teachers, and enhance learning with our comprehensive education platform',

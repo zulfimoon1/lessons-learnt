@@ -20,7 +20,7 @@ const PricingShowcase = () => {
           <div className="flex justify-between items-center">
             <Link to="/" className="flex items-center gap-2">
               <BookOpenIcon className="w-8 h-8 text-brand-teal" />
-              <span className="text-2xl font-bold text-brand-dark">Lesson Lens</span>
+              <span className="text-2xl font-bold text-brand-dark">Lessons Learnt</span>
             </Link>
             <div className="flex items-center gap-4">
               <Link to="/demo">
