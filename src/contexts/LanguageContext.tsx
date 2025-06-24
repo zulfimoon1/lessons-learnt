@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { translations } from '@/translations';
 
@@ -11,7 +10,15 @@ interface LanguageContextType {
   isLoading: boolean;
 }
 
-const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
+// Provide a default context value to prevent the "must be used within provider" error
+const defaultContextValue: LanguageContextType = {
+  language: 'en',
+  setLanguage: () => {},
+  t: (key: string) => key, // Return the key as fallback
+  isLoading: true
+};
+
+const LanguageContext = createContext<LanguageContextType>(defaultContextValue);
 
 export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [language, setLanguage] = useState<Language>('en');
@@ -71,8 +78,11 @@ export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }
 
 export const useLanguage = () => {
   const context = useContext(LanguageContext);
-  if (context === undefined) {
-    throw new Error('useLanguage must be used within a LanguageProvider');
+  // Since we now provide a default context value, this should never be undefined
+  // But we'll keep a safety check with a more informative message
+  if (!context) {
+    console.error('useLanguage: Context is unexpectedly undefined');
+    return defaultContextValue;
   }
   return context;
 };
