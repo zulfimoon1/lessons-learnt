@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { GraduationCapIcon, UsersIcon, BookOpenIcon, HeartIcon, BarChart3Icon, ShieldCheckIcon, PlayCircleIcon } from "lucide-react";
@@ -32,6 +33,18 @@ const Index = () => {
               <h1 className="text-2xl font-bold text-foreground">Lessons Learnt</h1>
             </div>
             <div className="flex items-center gap-4">
+              <Link to="/student-login">
+                <Button variant="outline" size="sm" className="flex items-center gap-2">
+                  <UsersIcon className="w-4 h-4" />
+                  {t('auth.studentLogin')}
+                </Button>
+              </Link>
+              <Link to="/teacher-login">
+                <Button variant="outline" size="sm" className="flex items-center gap-2">
+                  <BookOpenIcon className="w-4 h-4" />
+                  {t('auth.teacherLogin')}
+                </Button>
+              </Link>
               <Link to="/pricing-showcase">
                 <Button variant="outline" size="sm" className="bg-purple-50 border-purple-200 hover:bg-purple-100 text-purple-700 hover:text-purple-800">
                   Pricing

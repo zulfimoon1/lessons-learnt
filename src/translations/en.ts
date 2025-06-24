@@ -167,10 +167,15 @@ export const enTranslations = {
 
   // Student
   'student.failedToLoadClasses': 'Failed to load classes',
+  'student.fullNamePlaceholder': 'Enter your full name',
+  'student.school': 'School',
+  'student.schoolPlaceholder': 'Enter your school name',
+  'student.classGrade': 'Grade/Class',
+  'student.gradePlaceholder': 'e.g., Grade 5, 10A, Year 9',
 
   // Welcome/Home page
   'welcome.title': 'Transform Education Through Student-Led Feedback',
-  'welcome.subtitle': 'Empower students, support teachers, and enhance learning with our comprehensive education platform',
+  'welcome.subtitle': 'Collaborative classrooms = unstoppable minds!',
   'welcome.freeForStudents': 'Always free for students!',
   'tagline.studentLead': 'Where every student voice shapes the future of learning',
 
