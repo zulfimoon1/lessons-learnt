@@ -64,6 +64,8 @@ export const ltTranslations = {
   'dashboard.subscribeNow': 'Užsisakyti dabar',
   'dashboard.noPsychologists': 'Jūsų mokykloje nėra psichologų',
   'dashboard.contactAdmin': 'Kreipkitės į mokyklos administratorių dėl psichikos sveikatos pagalbos',
+  'dashboard.scheduledClasses': 'Suplanuotos pamokos {grade} klasei {school} mokykloje',
+  'dashboard.noClasses': 'Nerasta artėjančių pamokų',
 
   // Feedback
   'feedback.title': 'Pamokos atsiliepimas',
@@ -218,6 +220,11 @@ export const ltTranslations = {
   'compliance.soc2.description': 'Pramonės standarto saugumo ir prieinamumo kontrolė',
   'compliance.hipaa.title': 'HIPAA suderintas',
   'compliance.hipaa.description': 'Sveikatos sektoriai atitinkanti privatumo apsauga jautriems duomenims',
+  'compliance.privacyPolicy': 'Privatumo politika',
+  'compliance.cookiePolicy': 'Slapukų politika',
+  'compliance.dataProcessing': 'Duomenų apdorojimas',
+  'compliance.dataRetention': 'Duomenų saugojimas',
+  'compliance.rightToDelete': 'Teisė ištrinti',
 
   // Demo
   'demo.featureDemo': 'Funkcionalumo demonstracija',
@@ -228,6 +235,7 @@ export const ltTranslations = {
   'demo.experienceFullPlatform': 'Patirkite visą platformą',
   'demo.experienceDescription': 'Nuo interaktyvių studentų simuliacijų iki išsamios mokytojų analitikos - pamatykite, kaip mūsų platforma kuria palaikančią ir įtraukiančią mokymosi aplinką.',
   'demo.mockup.anonymousStudent': 'Anoniminis studentas',
+  'demo.enterDemo': 'Įeiti į demonstraciją',
 
   // Merge all sub-translations
   ...ltAuthTranslations,

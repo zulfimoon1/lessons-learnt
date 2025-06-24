@@ -64,6 +64,8 @@ export const enTranslations = {
   'dashboard.subscribeNow': 'Subscribe Now',
   'dashboard.noPsychologists': 'No psychologists available at your school',
   'dashboard.contactAdmin': 'Please contact your school administrator for mental health support',
+  'dashboard.scheduledClasses': 'Scheduled classes for {grade} at {school}',
+  'dashboard.noClasses': 'No upcoming classes found',
 
   // Feedback
   'feedback.title': 'Lesson Feedback',
@@ -218,6 +220,11 @@ export const enTranslations = {
   'compliance.soc2.description': 'Industry standard security and availability controls',
   'compliance.hipaa.title': 'HIPAA Aligned',
   'compliance.hipaa.description': 'Healthcare-grade privacy protection for sensitive data',
+  'compliance.privacyPolicy': 'Privacy Policy',
+  'compliance.cookiePolicy': 'Cookie Policy',
+  'compliance.dataProcessing': 'Data Processing',
+  'compliance.dataRetention': 'Data Retention',
+  'compliance.rightToDelete': 'Right to Delete',
 
   // Demo
   'demo.featureDemo': 'Feature Demonstration',
@@ -228,6 +235,7 @@ export const enTranslations = {
   'demo.experienceFullPlatform': 'Experience the full platform',
   'demo.experienceDescription': 'From interactive student simulations to comprehensive teacher analytics - see how our platform creates a supportive and engaging learning environment.',
   'demo.mockup.anonymousStudent': 'Anonymous Student',
+  'demo.enterDemo': 'Enter Demo',
 
   // Merge all sub-translations
   ...enAuthTranslations,
