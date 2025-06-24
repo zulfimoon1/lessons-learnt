@@ -17,16 +17,26 @@ const setPlatformAdminContext = async () => {
 
 // Generate a consistent UUID for demo students based on their details
 const generateDemoStudentId = (fullName: string, school: string, grade: string): string => {
-  // Create a consistent hash-based UUID for demo students
-  const crypto = require('crypto');
-  const hash = crypto.createHash('sha256').update(`${fullName}-${school}-${grade}-demo`).digest('hex');
-  // Convert hash to UUID format
+  // Create a consistent hash-based UUID for demo students using browser-compatible method
+  const encoder = new TextEncoder();
+  const data = encoder.encode(`${fullName}-${school}-${grade}-demo`);
+  
+  // Simple hash function for browser compatibility
+  let hash = 0;
+  for (let i = 0; i < data.length; i++) {
+    const char = data[i];
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash; // Convert to 32bit integer
+  }
+  
+  // Convert to positive number and create UUID format
+  const positiveHash = Math.abs(hash).toString(16).padStart(8, '0');
   return [
-    hash.substring(0, 8),
-    hash.substring(8, 12),
-    hash.substring(12, 16),
-    hash.substring(16, 20),
-    hash.substring(20, 32)
+    positiveHash.substring(0, 8),
+    positiveHash.substring(0, 4),
+    positiveHash.substring(4, 8),
+    positiveHash.substring(0, 4),
+    positiveHash.substring(4, 8) + positiveHash.substring(0, 4)
   ].join('-');
 };
 
@@ -79,9 +89,19 @@ export const secureStudentLogin = async (fullName: string, school: string, grade
       passwordValid = await bcrypt.compare(password, student.password_hash);
     } catch (bcryptError) {
       console.log('Bcrypt failed, trying simple hash comparison');
-      // Fallback to simple hash for existing passwords
-      const crypto = await import('crypto');
-      const simpleHash = crypto.createHash('sha256').update(password + 'simple_salt_2024').digest('hex');
+      // Fallback to simple hash for existing passwords - using browser-compatible method
+      const encoder = new TextEncoder();
+      const data = encoder.encode(password + 'simple_salt_2024');
+      
+      // Simple hash function for browser
+      let hash = 0;
+      for (let i = 0; i < data.length; i++) {
+        const char = data[i];
+        hash = ((hash << 5) - hash) + char;
+        hash = hash & hash;
+      }
+      
+      const simpleHash = Math.abs(hash).toString(16);
       passwordValid = simpleHash === student.password_hash;
     }
 
