@@ -38,7 +38,23 @@ export const enWeeklyTranslations = {
   'weekly.submitFailed': 'Submission failed',
   'weekly.submitFailedDesc': 'Failed to submit weekly summary. Please try again.',
   
-  // Add doctor-specific translations
+  // Doctor-specific translations
   'doctor.dashboard.welcome': 'Welcome',
   'doctor.dashboard.doctorAt': '{role} at {school}',
+  'doctor.dashboard.weeklySummaries': 'Weekly Summaries',
+  'doctor.dashboard.mentalHealthAlerts': 'Mental Health Alerts',
+  'doctor.dashboard.unreviewed': 'Unreviewed',
+  'doctor.dashboard.highRisk': 'High Risk',
+  'doctor.dashboard.noAlerts': 'No alerts at this time',
+  'doctor.dashboard.noSummaries': 'No summaries yet',
+  'doctor.dashboard.markReviewed': 'Mark as Reviewed',
+  'doctor.dashboard.reviewed': 'Reviewed',
+  'doctor.dashboard.alertReviewed': 'Alert Reviewed',
+  'doctor.dashboard.alertMarked': 'Alert marked as reviewed',
+  'doctor.dashboard.emotionalConcerns': 'Emotional Concerns:',
+  'doctor.dashboard.academicConcerns': 'Academic Concerns:',
+  'doctor.dashboard.highRiskLevel': 'High Risk',
+  'doctor.dashboard.mediumRiskLevel': 'Medium Risk',
+  'doctor.dashboard.lowRiskLevel': 'Low Risk',
+  'doctor.dashboard.loading': 'Loading...',
 };

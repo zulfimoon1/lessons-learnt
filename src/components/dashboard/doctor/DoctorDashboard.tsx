@@ -104,13 +104,13 @@ const DoctorDashboard: React.FC<DoctorDashboardProps> = ({ teacher }) => {
       );
 
       toast({
-        title: 'Alert Reviewed',
-        description: 'Alert marked as reviewed',
+        title: t('doctor.dashboard.alertReviewed'),
+        description: t('doctor.dashboard.alertMarked'),
       });
     } catch (error) {
       console.error('Error reviewing alert:', error);
       toast({
-        title: 'Error',
+        title: t('common.error') || 'Error',
         description: 'Failed to review alert',
         variant: "destructive",
       });
@@ -124,16 +124,16 @@ const DoctorDashboard: React.FC<DoctorDashboardProps> = ({ teacher }) => {
   };
 
   const getSeverityText = (level: number) => {
-    if (level >= 5) return 'High Risk';
-    if (level >= 3) return 'Medium Risk';
-    return 'Low Risk';
+    if (level >= 5) return t('doctor.dashboard.highRiskLevel');
+    if (level >= 3) return t('doctor.dashboard.mediumRiskLevel');
+    return t('doctor.dashboard.lowRiskLevel');
   };
 
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-12">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-teal"></div>
-        <span className="ml-3 text-brand-dark">Loading...</span>
+        <span className="ml-3 text-brand-dark">{t('doctor.dashboard.loading')}</span>
       </div>
     );
   }
@@ -152,7 +152,7 @@ const DoctorDashboard: React.FC<DoctorDashboardProps> = ({ teacher }) => {
                 <Calendar className="w-6 h-6 text-brand-teal" />
               </div>
               <div>
-                <p className="text-sm text-gray-600">Weekly Summaries</p>
+                <p className="text-sm text-gray-600">{t('doctor.dashboard.weeklySummaries')}</p>
                 <p className="text-2xl font-bold text-brand-dark">{weeklySummaries.length}</p>
               </div>
             </div>
@@ -166,7 +166,7 @@ const DoctorDashboard: React.FC<DoctorDashboardProps> = ({ teacher }) => {
                 <AlertTriangle className="w-6 h-6 text-brand-orange" />
               </div>
               <div>
-                <p className="text-sm text-gray-600">Mental Health Alerts</p>
+                <p className="text-sm text-gray-600">{t('doctor.dashboard.mentalHealthAlerts')}</p>
                 <p className="text-2xl font-bold text-brand-dark">{mentalHealthAlerts.length}</p>
               </div>
             </div>
@@ -180,7 +180,7 @@ const DoctorDashboard: React.FC<DoctorDashboardProps> = ({ teacher }) => {
                 <Eye className="w-6 h-6 text-red-600" />
               </div>
               <div>
-                <p className="text-sm text-gray-600">Unreviewed</p>
+                <p className="text-sm text-gray-600">{t('doctor.dashboard.unreviewed')}</p>
                 <p className="text-2xl font-bold text-red-600">{unreviewed.length}</p>
               </div>
             </div>
@@ -194,7 +194,7 @@ const DoctorDashboard: React.FC<DoctorDashboardProps> = ({ teacher }) => {
                 <AlertTriangle className="w-6 h-6 text-red-600" />
               </div>
               <div>
-                <p className="text-sm text-gray-600">High Risk</p>
+                <p className="text-sm text-gray-600">{t('doctor.dashboard.highRisk')}</p>
                 <p className="text-2xl font-bold text-red-600">{highRiskAlerts.length}</p>
               </div>
             </div>
@@ -213,14 +213,14 @@ const DoctorDashboard: React.FC<DoctorDashboardProps> = ({ teacher }) => {
                 className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-brand-orange data-[state=active]:to-brand-teal data-[state=active]:text-white data-[state=inactive]:text-gray-600 data-[state=inactive]:hover:text-brand-dark border-b-2 border-transparent data-[state=active]:border-brand-teal rounded-none px-6 py-4 font-medium transition-all duration-200"
               >
                 <AlertTriangle className="w-4 h-4 mr-2" />
-                Mental Health Alerts
+                {t('doctor.dashboard.mentalHealthAlerts')}
               </TabsTrigger>
               <TabsTrigger 
                 value="summaries" 
                 className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-brand-orange data-[state=active]:to-brand-teal data-[state=active]:text-white data-[state=inactive]:text-gray-600 data-[state=inactive]:hover:text-brand-dark border-b-2 border-transparent data-[state=active]:border-brand-teal rounded-none px-6 py-4 font-medium transition-all duration-200"
               >
                 <Calendar className="w-4 h-4 mr-2" />
-                Weekly Summaries
+                {t('doctor.dashboard.weeklySummaries')}
               </TabsTrigger>
             </TabsList>
           </div>
@@ -232,14 +232,14 @@ const DoctorDashboard: React.FC<DoctorDashboardProps> = ({ teacher }) => {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2 text-brand-dark">
                     <AlertTriangle className="w-5 h-5 text-red-500" />
-                    Mental Health Alerts
+                    {t('doctor.dashboard.mentalHealthAlerts')}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
                   {mentalHealthAlerts.length === 0 ? (
                     <div className="text-center py-8">
                       <Heart className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                      <p className="text-gray-600">No alerts at this time</p>
+                      <p className="text-gray-600">{t('doctor.dashboard.noAlerts')}</p>
                     </div>
                   ) : (
                     <div className="space-y-4">
@@ -254,7 +254,7 @@ const DoctorDashboard: React.FC<DoctorDashboardProps> = ({ teacher }) => {
                                 </Badge>
                                 {alert.is_reviewed && (
                                   <Badge variant="outline" className="border-green-200 text-green-800 bg-green-50">
-                                    Reviewed
+                                    {t('doctor.dashboard.reviewed')}
                                   </Badge>
                                 )}
                               </div>
@@ -277,7 +277,7 @@ const DoctorDashboard: React.FC<DoctorDashboardProps> = ({ teacher }) => {
                                 className="border-brand-teal text-brand-teal hover:bg-brand-teal hover:text-white"
                               >
                                 <Eye className="w-4 h-4 mr-2" />
-                                Mark as Reviewed
+                                {t('doctor.dashboard.markReviewed')}
                               </Button>
                             )}
                           </div>
@@ -295,14 +295,14 @@ const DoctorDashboard: React.FC<DoctorDashboardProps> = ({ teacher }) => {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2 text-brand-dark">
                     <Calendar className="w-5 h-5 text-brand-teal" />
-                    Weekly Summaries
+                    {t('doctor.dashboard.weeklySummaries')}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
                   {weeklySummaries.length === 0 ? (
                     <div className="text-center py-8">
                       <MessageSquare className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                      <p className="text-gray-600">No summaries yet</p>
+                      <p className="text-gray-600">{t('doctor.dashboard.noSummaries')}</p>
                     </div>
                   ) : (
                     <div className="space-y-4">
@@ -321,7 +321,7 @@ const DoctorDashboard: React.FC<DoctorDashboardProps> = ({ teacher }) => {
                           
                           {summary.emotional_concerns && (
                             <div className="mb-3">
-                              <h4 className="text-sm font-medium text-gray-700 mb-1">Emotional Concerns:</h4>
+                              <h4 className="text-sm font-medium text-gray-700 mb-1">{t('doctor.dashboard.emotionalConcerns')}</h4>
                               <p className="text-sm bg-red-50 p-3 rounded border-l-4 border-red-200 text-brand-dark">
                                 {summary.emotional_concerns}
                               </p>
@@ -330,7 +330,7 @@ const DoctorDashboard: React.FC<DoctorDashboardProps> = ({ teacher }) => {
                           
                           {summary.academic_concerns && (
                             <div>
-                              <h4 className="text-sm font-medium text-gray-700 mb-1">Academic Concerns:</h4>
+                              <h4 className="text-sm font-medium text-gray-700 mb-1">{t('doctor.dashboard.academicConcerns')}</h4>
                               <p className="text-sm bg-blue-50 p-3 rounded border-l-4 border-blue-200 text-brand-dark">
                                 {summary.academic_concerns}
                               </p>

@@ -38,7 +38,23 @@ export const ltWeeklyTranslations = {
   'weekly.submitFailed': 'Pateikimas nepavyko',
   'weekly.submitFailedDesc': 'Nepavyko pateikti savaitės suvestinės. Bandykite dar kartą.',
   
-  // Add doctor-specific translations
+  // Doctor-specific translations
   'doctor.dashboard.welcome': 'Sveiki',
   'doctor.dashboard.doctorAt': '{role} mokykloje {school}',
+  'doctor.dashboard.weeklySummaries': 'Savaitės suvestinės',
+  'doctor.dashboard.mentalHealthAlerts': 'Psichikos sveikatos įspėjimai',
+  'doctor.dashboard.unreviewed': 'Neperžiūrėti',
+  'doctor.dashboard.highRisk': 'Didelė rizika',
+  'doctor.dashboard.noAlerts': 'Šiuo metu nėra įspėjimų',
+  'doctor.dashboard.noSummaries': 'Suvestinių dar nėra',
+  'doctor.dashboard.markReviewed': 'Pažymėti kaip peržiūrėtą',
+  'doctor.dashboard.reviewed': 'Peržiūrėta',
+  'doctor.dashboard.alertReviewed': 'Įspėjimas peržiūrėtas',
+  'doctor.dashboard.alertMarked': 'Įspėjimas pažymėtas kaip peržiūrėtas',
+  'doctor.dashboard.emotionalConcerns': 'Emociniai rūpesčiai:',
+  'doctor.dashboard.academicConcerns': 'Akademiniai rūpesčiai:',
+  'doctor.dashboard.highRiskLevel': 'Didelė rizika',
+  'doctor.dashboard.mediumRiskLevel': 'Vidutinė rizika',
+  'doctor.dashboard.lowRiskLevel': 'Maža rizika',
+  'doctor.dashboard.loading': 'Kraunama...',
 };
