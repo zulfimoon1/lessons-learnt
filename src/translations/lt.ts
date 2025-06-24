@@ -227,6 +227,8 @@ export const ltTranslations = {
   'compliance.rightToDelete': 'Teisė ištrinti',
 
   // Demo
+  'demo.title': 'Demonstracija',
+  'demo.subtitle': '5+ funkcijos, 3 vartotojų tipai',
   'demo.featureDemo': 'Funkcionalumo demonstracija',
   'demo.featuresUserTypes': '5+ funkcijos, 3 vartotojų tipai',
   'demo.experienceComplete': 'Patirkite visą platformą',
@@ -236,6 +238,21 @@ export const ltTranslations = {
   'demo.experienceDescription': 'Nuo interaktyvių studentų simuliacijų iki išsamios mokytojų analitikos - pamatykite, kaip mūsų platforma kuria palaikančią ir įtraukiančią mokymosi aplinką.',
   'demo.mockup.anonymousStudent': 'Anoniminis studentas',
   'demo.enterDemo': 'Įeiti į demonstraciją',
+  'demo.noRegistrationRequired': 'Registracija nereikalinga',
+  'demo.fullFeatureAccess': 'Pilnas funkcijų priėjimas',
+  'demo.sampleDataIncluded': 'Pavyzdiniai duomenys įtraukti',
+  'demo.tryBeforeCommit': 'Išbandykite prieš įsipareigojant',
+  'demo.demoFeatures': 'Demonstracijos funkcijos',
+  'demo.studentExperience': 'Studentų patirtis',
+  'demo.studentExperienceDesc': 'Pateikite pamokų atsiliepimus, dalykitės savaitės santraukomis ir naudokitės psichikos sveikatos pagalba - viskas saugioje, anonimiškoje aplinkoje.',
+  'demo.teacherDashboard': 'Mokytojų skydelis',
+  'demo.teacherDashboardDesc': 'Stebėkite studentų įsitraukimą, sekite mokymosi pažangą ir identifikuokite studentus, kuriems reikia papildomos pagalbos.',
+  'demo.adminOverview': 'Administratorių apžvalga',
+  'demo.adminOverviewDesc': 'Visos mokyklos analitika, mokytojų valdymas ir išsamios švietimo rezultatų įžvalgos.',
+
+  // Auth
+  'auth.backToHome': 'Grįžti į pradžią',
+  'auth.forgotPassword': 'Pamiršote slaptažodį?',
 
   // Merge all sub-translations
   ...ltAuthTranslations,

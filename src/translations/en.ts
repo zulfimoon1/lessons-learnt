@@ -227,6 +227,8 @@ export const enTranslations = {
   'compliance.rightToDelete': 'Right to Delete',
 
   // Demo
+  'demo.title': 'Demo',
+  'demo.subtitle': '5+ Features, 3 User Types',
   'demo.featureDemo': 'Feature Demonstration',
   'demo.featuresUserTypes': '5+ Features, 3 User Types',
   'demo.experienceComplete': 'Experience the complete platform',
@@ -236,6 +238,21 @@ export const enTranslations = {
   'demo.experienceDescription': 'From interactive student simulations to comprehensive teacher analytics - see how our platform creates a supportive and engaging learning environment.',
   'demo.mockup.anonymousStudent': 'Anonymous Student',
   'demo.enterDemo': 'Enter Demo',
+  'demo.noRegistrationRequired': 'No registration required',
+  'demo.fullFeatureAccess': 'Full feature access',
+  'demo.sampleDataIncluded': 'Sample data included',
+  'demo.tryBeforeCommit': 'Try before you commit',
+  'demo.demoFeatures': 'Demo Features',
+  'demo.studentExperience': 'Student Experience',
+  'demo.studentExperienceDesc': 'Submit lesson feedback, share weekly summaries, and access mental health support - all in a safe, anonymous environment.',
+  'demo.teacherDashboard': 'Teacher Dashboard',
+  'demo.teacherDashboardDesc': 'Monitor student engagement, track learning progress, and identify students who need additional support.',
+  'demo.adminOverview': 'Admin Overview',
+  'demo.adminOverviewDesc': 'School-wide analytics, teacher management, and comprehensive insights into educational outcomes.',
+
+  // Auth
+  'auth.backToHome': 'Back to Home',
+  'auth.forgotPassword': 'Forgot Password?',
 
   // Merge all sub-translations
   ...enAuthTranslations,

@@ -26,11 +26,11 @@ const TeacherLoginForm: React.FC<TeacherLoginFormProps> = ({ onLogin, isLoading 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="space-y-2">
-        <Label htmlFor="email" className="text-brand-dark">Email</Label>
+        <Label htmlFor="email" className="text-brand-dark">{t('auth.email') || 'Email'}</Label>
         <Input
           id="email"
           type="email"
-          placeholder="teacher@school.com"
+          placeholder={t('auth.emailPlaceholder') || 'teacher@school.com'}
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
@@ -39,12 +39,12 @@ const TeacherLoginForm: React.FC<TeacherLoginFormProps> = ({ onLogin, isLoading 
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="password" className="text-brand-dark">Password</Label>
+        <Label htmlFor="password" className="text-brand-dark">{t('auth.password') || 'Password'}</Label>
         <div className="relative">
           <Input
             id="password"
             type={showPassword ? "text" : "password"}
-            placeholder="••••••••"
+            placeholder={t('auth.passwordPlaceholder') || '••••••••'}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
@@ -66,7 +66,7 @@ const TeacherLoginForm: React.FC<TeacherLoginFormProps> = ({ onLogin, isLoading 
             type="button"
             className="text-sm text-brand-teal hover:text-brand-dark transition-colors"
           >
-            Forgot Password?
+            {t('auth.forgotPassword') || 'Forgot Password?'}
           </button>
         </ForgotPasswordDialog>
       </div>
@@ -79,10 +79,10 @@ const TeacherLoginForm: React.FC<TeacherLoginFormProps> = ({ onLogin, isLoading 
         {isLoading ? (
           <div className="flex items-center gap-2">
             <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-            Signing In...
+            {t('auth.signingIn') || 'Signing In...'}
           </div>
         ) : (
-          "Sign In"
+          t('auth.signIn') || 'Sign In'
         )}
       </Button>
     </form>
