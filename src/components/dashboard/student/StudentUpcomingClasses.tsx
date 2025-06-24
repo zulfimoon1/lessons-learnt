@@ -171,7 +171,7 @@ const StudentUpcomingClasses: React.FC<StudentUpcomingClassesProps> = ({ student
                       </Badge>
                       {classItem.is_past && !classItem.has_feedback && (
                         <Badge variant="secondary" className="bg-orange-100 text-orange-800 border-orange-200">
-                          Feedback Pending
+                          {t('feedback.pending')}
                         </Badge>
                       )}
                     </div>

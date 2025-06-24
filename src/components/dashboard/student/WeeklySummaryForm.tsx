@@ -35,8 +35,8 @@ const WeeklySummaryForm: React.FC<WeeklySummaryFormProps> = ({ student, onSubmit
     
     if (!formData.emotional_concerns.trim() && !formData.academic_concerns.trim()) {
       toast({
-        title: "Please fill in at least one section",
-        description: "Add either emotional or academic concerns to submit your weekly summary",
+        title: t('weeklySummary.fillAtLeastOne'),
+        description: t('weeklySummary.fillAtLeastOneDescription'),
         variant: "destructive",
       });
       return;
@@ -84,8 +84,8 @@ const WeeklySummaryForm: React.FC<WeeklySummaryFormProps> = ({ student, onSubmit
       }
 
       toast({
-        title: "Weekly summary submitted",
-        description: "Your weekly summary has been submitted successfully. The relevant staff will review it.",
+        title: t('weeklySummary.submitted'),
+        description: t('weeklySummary.submittedDescription'),
       });
 
       // Reset form
@@ -99,8 +99,8 @@ const WeeklySummaryForm: React.FC<WeeklySummaryFormProps> = ({ student, onSubmit
     } catch (error) {
       console.error('Error submitting weekly summary:', error);
       toast({
-        title: "Error",
-        description: "Failed to submit weekly summary. Please try again.",
+        title: t('common.error'),
+        description: t('feedback.submitError'),
         variant: "destructive",
       });
     } finally {
@@ -123,22 +123,22 @@ const WeeklySummaryForm: React.FC<WeeklySummaryFormProps> = ({ student, onSubmit
           <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
             <Calendar className="w-5 h-5" />
           </div>
-          Weekly Summary
+          {t('weeklySummary.title')}
         </CardTitle>
       </CardHeader>
       <CardContent className="p-6">
         <div className="text-center mb-6">
           <p className="text-brand-dark/80 mb-2">
-            Share your thoughts about this week to help us provide better support.
+            {t('weeklySummary.description')}
           </p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-brand-dark/60">
             <div className="flex items-center gap-2 justify-center">
               <Heart className="w-4 h-4 text-pink-500" />
-              <span>Emotional concerns → School Doctor</span>
+              <span>{t('weeklySummary.emotionalRoute')}</span>
             </div>
             <div className="flex items-center gap-2 justify-center">
               <BookOpen className="w-4 h-4 text-blue-500" />
-              <span>Academic concerns → Teachers</span>
+              <span>{t('weeklySummary.academicRoute')}</span>
             </div>
           </div>
         </div>
@@ -147,16 +147,16 @@ const WeeklySummaryForm: React.FC<WeeklySummaryFormProps> = ({ student, onSubmit
           <div className="space-y-2">
             <Label htmlFor="emotional_concerns" className="flex items-center gap-2 text-base font-medium text-brand-dark">
               <Heart className="w-4 h-4 text-pink-500" />
-              How are you feeling emotionally this week?
+              {t('weeklySummary.emotionalLabel')}
             </Label>
             <p className="text-sm text-brand-dark/60 mb-2">
-              This will be reviewed by the school doctor to provide you with mental health support.
+              {t('weeklySummary.emotionalDescription')}
             </p>
             <Textarea
               id="emotional_concerns"
               value={formData.emotional_concerns}
               onChange={(e) => setFormData(prev => ({ ...prev, emotional_concerns: e.target.value }))}
-              placeholder="Share any emotional concerns, feelings, or thoughts you've had this week..."
+              placeholder={t('weeklySummary.emotionalPlaceholder')}
               rows={4}
               className="resize-none border-brand-teal/20 focus:border-brand-teal"
             />
@@ -165,16 +165,16 @@ const WeeklySummaryForm: React.FC<WeeklySummaryFormProps> = ({ student, onSubmit
           <div className="space-y-2">
             <Label htmlFor="academic_concerns" className="flex items-center gap-2 text-base font-medium text-brand-dark">
               <BookOpen className="w-4 h-4 text-blue-500" />
-              Any academic concerns or challenges?
+              {t('weeklySummary.academicLabel')}
             </Label>
             <p className="text-sm text-brand-dark/60 mb-2">
-              This will be reviewed by your teachers to provide academic support.
+              {t('weeklySummary.academicDescription')}
             </p>
             <Textarea
               id="academic_concerns"
               value={formData.academic_concerns}
               onChange={(e) => setFormData(prev => ({ ...prev, academic_concerns: e.target.value }))}
-              placeholder="Share any academic challenges, difficulties with subjects, or study concerns..."
+              placeholder={t('weeklySummary.academicPlaceholder')}
               rows={4}
               className="resize-none border-brand-teal/20 focus:border-brand-teal"
             />
@@ -188,7 +188,7 @@ const WeeklySummaryForm: React.FC<WeeklySummaryFormProps> = ({ student, onSubmit
             />
             <Label htmlFor="anonymous" className="flex items-center gap-2 text-sm text-brand-dark">
               <EyeOff className="w-4 h-4 text-brand-dark/60" />
-              Submit anonymously (your identity will not be shared)
+              {t('weeklySummary.submitAnonymously')}
             </Label>
           </div>
 
@@ -198,7 +198,7 @@ const WeeklySummaryForm: React.FC<WeeklySummaryFormProps> = ({ student, onSubmit
               disabled={isSubmitting}
               className="bg-gradient-to-r from-brand-teal to-brand-orange hover:from-brand-teal/90 hover:to-brand-orange/90 text-white px-8 py-3 shadow-lg hover:shadow-xl transition-all duration-200"
             >
-              {isSubmitting ? 'Submitting...' : 'Submit Weekly Summary'}
+              {isSubmitting ? t('weeklySummary.submitting') : t('weeklySummary.submitButton')}
             </Button>
           </div>
         </form>

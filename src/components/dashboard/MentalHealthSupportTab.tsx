@@ -97,7 +97,7 @@ const MentalHealthSupportTab: React.FC<MentalHealthSupportTabProps> = React.memo
       <Card className="bg-white/80 backdrop-blur-sm border-brand-teal/20 shadow-lg">
         <CardContent className="flex items-center justify-center p-8">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-teal"></div>
-          <span className="ml-3 text-brand-dark">Loading mental health support...</span>
+          <span className="ml-3 text-brand-dark">{t('mentalHealth.loading')}</span>
         </CardContent>
       </Card>
     );

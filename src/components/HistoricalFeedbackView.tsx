@@ -93,7 +93,7 @@ const HistoricalFeedbackView: React.FC = () => {
       console.error('Error fetching feedback history:', error);
       toast({
         title: t('common.error'),
-        description: 'Failed to load feedback history',
+        description: t('feedback.submitError'),
         variant: "destructive",
       });
     } finally {
@@ -134,7 +134,7 @@ const HistoricalFeedbackView: React.FC = () => {
           <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
             <MessageSquare className="w-5 h-5" />
           </div>
-          Historical Feedback
+          {t('feedback.historicalTitle')}
         </CardTitle>
       </CardHeader>
       <CardContent className="p-6">
@@ -143,9 +143,9 @@ const HistoricalFeedbackView: React.FC = () => {
             <div className="w-20 h-20 bg-brand-teal/10 rounded-full mx-auto mb-4 flex items-center justify-center">
               <MessageSquare className="w-10 h-10 text-brand-teal" />
             </div>
-            <p className="text-brand-dark font-medium mb-2">No feedback submitted yet</p>
+            <p className="text-brand-dark font-medium mb-2">{t('feedback.noHistoricalFeedback')}</p>
             <p className="text-brand-dark/60 text-sm">
-              Your submitted feedback will appear here for review
+              {t('feedback.historicalDescription')}
             </p>
           </div>
         ) : (
@@ -169,7 +169,7 @@ const HistoricalFeedbackView: React.FC = () => {
                       </Badge>
                       {feedback.is_anonymous && (
                         <Badge variant="secondary" className="bg-purple-100 text-purple-800 border-purple-200">
-                          Anonymous
+                          {t('feedback.anonymous')}
                         </Badge>
                       )}
                     </div>
@@ -194,7 +194,7 @@ const HistoricalFeedbackView: React.FC = () => {
                       <div className="flex items-center gap-2 text-brand-dark/70">
                         <User className="w-4 h-4 text-brand-teal" />
                         <span className="text-sm font-medium">
-                          {feedback.class_schedule.teacher?.name || 'Teacher'}
+                          {feedback.class_schedule.teacher?.name || t('student.defaultName')}
                         </span>
                       </div>
                       <div className="flex items-center gap-2 text-brand-dark/70">
@@ -210,22 +210,22 @@ const HistoricalFeedbackView: React.FC = () => {
                 {/* Ratings */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4 p-4 bg-brand-teal/5 rounded-lg">
                   <div>
-                    <p className="text-sm font-medium text-brand-dark mb-1">Understanding</p>
+                    <p className="text-sm font-medium text-brand-dark mb-1">{t('feedback.understanding')}</p>
                     {renderStarRating(feedback.understanding)}
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-brand-dark mb-1">Interest</p>
+                    <p className="text-sm font-medium text-brand-dark mb-1">{t('feedback.interest')}</p>
                     {renderStarRating(feedback.interest)}
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-brand-dark mb-1">Educational Growth</p>
+                    <p className="text-sm font-medium text-brand-dark mb-1">{t('feedback.educationalGrowth')}</p>
                     {renderStarRating(feedback.educational_growth)}
                   </div>
                 </div>
 
                 {/* Emotional State */}
                 <div className="mb-4">
-                  <p className="text-sm font-medium text-brand-dark mb-2">Emotional State:</p>
+                  <p className="text-sm font-medium text-brand-dark mb-2">{t('feedback.emotionalStateLabel')}</p>
                   <Badge variant="outline" className="text-sm">
                     {feedback.emotional_state}
                   </Badge>
@@ -235,7 +235,7 @@ const HistoricalFeedbackView: React.FC = () => {
                 <div className="space-y-3">
                   {feedback.what_went_well && (
                     <div>
-                      <p className="text-sm font-medium text-brand-dark mb-1">What went well:</p>
+                      <p className="text-sm font-medium text-brand-dark mb-1">{t('feedback.whatWentWellLabel')}</p>
                       <p className="text-sm text-brand-dark/80 bg-green-50 p-3 rounded-lg">
                         {feedback.what_went_well}
                       </p>
@@ -244,7 +244,7 @@ const HistoricalFeedbackView: React.FC = () => {
                   
                   {feedback.suggestions && (
                     <div>
-                      <p className="text-sm font-medium text-brand-dark mb-1">Suggestions:</p>
+                      <p className="text-sm font-medium text-brand-dark mb-1">{t('feedback.suggestionsLabel')}</p>
                       <p className="text-sm text-brand-dark/80 bg-blue-50 p-3 rounded-lg">
                         {feedback.suggestions}
                       </p>
@@ -253,7 +253,7 @@ const HistoricalFeedbackView: React.FC = () => {
                   
                   {feedback.additional_comments && (
                     <div>
-                      <p className="text-sm font-medium text-brand-dark mb-1">Additional Comments:</p>
+                      <p className="text-sm font-medium text-brand-dark mb-1">{t('feedback.additionalCommentsLabel')}</p>
                       <p className="text-sm text-brand-dark/80 bg-gray-50 p-3 rounded-lg">
                         {feedback.additional_comments}
                       </p>
