@@ -104,14 +104,14 @@ const DoctorDashboard: React.FC<DoctorDashboardProps> = ({ teacher }) => {
       );
 
       toast({
-        title: "Alert Reviewed",
-        description: "Alert has been marked as reviewed",
+        title: "Perspėjimas peržiūrėtas",
+        description: "Perspėjimas pažymėtas kaip peržiūrėtas",
       });
     } catch (error) {
       console.error('Error reviewing alert:', error);
       toast({
         title: t('common.error'),
-        description: "Failed to review alert",
+        description: "Nepavyko peržiūrėti perspėjimo",
         variant: "destructive",
       });
     }
@@ -124,9 +124,9 @@ const DoctorDashboard: React.FC<DoctorDashboardProps> = ({ teacher }) => {
   };
 
   const getSeverityText = (level: number) => {
-    if (level >= 5) return 'High Risk';
-    if (level >= 3) return 'Medium Risk';
-    return 'Low Risk';
+    if (level >= 5) return 'Didelė rizika';
+    if (level >= 3) return 'Vidutinė rizika';
+    return 'Maža rizika';
   };
 
   if (isLoading) {
