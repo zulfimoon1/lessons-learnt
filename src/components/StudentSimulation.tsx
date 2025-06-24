@@ -25,15 +25,24 @@ import {
 } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 
-const StudentSimulation = () => {
+interface StudentSimulationProps {
+  isPlaying: boolean;
+}
+
+const StudentSimulation = ({ isPlaying }: StudentSimulationProps) => {
   const { t } = useLanguage();
   const [currentStep, setCurrentStep] = useState(1);
-  const [isPlaying, setIsPlaying] = useState(false);
+  const [internalIsPlaying, setInternalIsPlaying] = useState(false);
   const [understanding, setUnderstanding] = useState([8]);
   const [engagement, setEngagement] = useState([7]);
   const [selectedEmotion, setSelectedEmotion] = useState('');
   const [writtenFeedback, setWrittenFeedback] = useState('');
   const totalSteps = 10;
+
+  // Update internal playing state when prop changes
+  useEffect(() => {
+    setInternalIsPlaying(isPlaying);
+  }, [isPlaying]);
 
   const simulationSteps = [
     { id: 1, name: t('demo.simulation.steps.1'), shortName: t('demo.simulation.steps.1').split(' ')[0] },
@@ -50,13 +59,13 @@ const StudentSimulation = () => {
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
-    if (isPlaying) {
+    if (internalIsPlaying) {
       interval = setInterval(() => {
         setCurrentStep(prev => prev < totalSteps ? prev + 1 : 1);
       }, 3000);
     }
     return () => clearInterval(interval);
-  }, [isPlaying, totalSteps]);
+  }, [internalIsPlaying, totalSteps]);
 
   const handleStepClick = (stepId: number) => {
     setCurrentStep(stepId);
@@ -427,10 +436,10 @@ const StudentSimulation = () => {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => setIsPlaying(!isPlaying)}
+                onClick={() => setInternalIsPlaying(!internalIsPlaying)}
                 className="flex items-center gap-2"
               >
-                {isPlaying ? (
+                {internalIsPlaying ? (
                   <>
                     <PauseIcon className="w-4 h-4" />
                     {t('demo.simulation.pause')}

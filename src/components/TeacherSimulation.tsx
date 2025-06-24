@@ -22,11 +22,20 @@ import {
 } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 
-const TeacherSimulation = () => {
+interface TeacherSimulationProps {
+  isPlaying: boolean;
+}
+
+const TeacherSimulation = ({ isPlaying }: TeacherSimulationProps) => {
   const { t } = useLanguage();
   const [currentStep, setCurrentStep] = useState(1);
-  const [isPlaying, setIsPlaying] = useState(false);
+  const [internalIsPlaying, setInternalIsPlaying] = useState(false);
   const totalSteps = 8;
+
+  // Update internal playing state when prop changes
+  useEffect(() => {
+    setInternalIsPlaying(isPlaying);
+  }, [isPlaying]);
 
   const simulationSteps = [
     { id: 1, name: t('demo.teacher.steps.1'), shortName: t('demo.teacher.steps.1').split(' ')[0] },
@@ -41,13 +50,13 @@ const TeacherSimulation = () => {
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
-    if (isPlaying) {
+    if (internalIsPlaying) {
       interval = setInterval(() => {
         setCurrentStep(prev => prev < totalSteps ? prev + 1 : 1);
       }, 3500);
     }
     return () => clearInterval(interval);
-  }, [isPlaying, totalSteps]);
+  }, [internalIsPlaying, totalSteps]);
 
   const handleStepClick = (stepId: number) => {
     setCurrentStep(stepId);
@@ -455,10 +464,10 @@ const TeacherSimulation = () => {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => setIsPlaying(!isPlaying)}
+                onClick={() => setInternalIsPlaying(!internalIsPlaying)}
                 className="flex items-center gap-2"
               >
-                {isPlaying ? (
+                {internalIsPlaying ? (
                   <>
                     <PauseIcon className="w-4 h-4" />
                     {t('demo.simulation.pause')}
