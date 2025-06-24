@@ -1,18 +1,12 @@
 
 export const auth = {
   login: "Prisijungti",
-  signIn: "Prisijungti", 
-  signUp: "Registruotis",
-  loggingIn: "Prisijungiama...",
-  signingIn: "Prisijungiama...",
-  signingUp: "Registruojamasi...",
   email: "El. paštas",
   password: "Slaptažodis",
   confirmPassword: "Patvirtinti slaptažodį",
   fullName: "Pilnas vardas",
   school: "Mokykla",
   grade: "Klasė",
-  gradeClass: "Klasė/Grupė",
   role: "Vaidmuo",
   emailPlaceholder: "Įveskite el. paštą",
   passwordPlaceholder: "Įveskite slaptažodį",
@@ -20,16 +14,15 @@ export const auth = {
   fullNamePlaceholder: "Įveskite pilną vardą",
   schoolPlaceholder: "Įveskite mokyklos pavadinimą",
   gradePlaceholder: "Įveskite klasę",
+  signIn: "Prisijungti",
+  signUp: "Registruotis",
+  signingIn: "Prisijungiama...",
+  signingUp: "Registruojamasi...",
   teacher: "Mokytojas",
   admin: "Administratorius",
   doctor: "Daktaras",
   forgotPassword: "Pamiršote slaptažodį?",
-  logout: "Atsijungti",
-  studentLogin: "Studento prisijungimas",
-  teacherLogin: "Mokytojo prisijungimas",
-  signUpNow: "Registruotis dabar",
-  loginTip: "Naudokite mokyklos suteiktą el. pašto adresą prisijungimui",
-  backToHome: "Grįžti į pagrindinį"
+  logout: "Atsijungti"
 };
 
 export const ltAuthTranslations = auth;

@@ -50,34 +50,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, []);
 
-  const teacherLogin = async (
-    email: string, 
-    password: string, 
-    name?: string, 
-    school?: string,
-    role?: 'teacher' | 'admin' | 'doctor'
-  ) => {
+  const teacherLogin = async (email: string, password: string) => {
     try {
       console.log('AuthContext: Teacher login attempt for:', email);
       const result = await loginTeacher(email, password);
       
       if (result.teacher) {
-        const mappedTeacher: Teacher = {
-          id: result.teacher.id,
-          name: result.teacher.name,
-          email: result.teacher.email,
-          school: result.teacher.school,
-          role: result.teacher.role,
-          specialization: result.teacher.specialization,
-          is_available: result.teacher.is_available
-        };
-        
-        setTeacher(mappedTeacher);
+        setTeacher(result.teacher);
         setStudent(null);
-        localStorage.setItem('teacher', JSON.stringify(mappedTeacher));
+        localStorage.setItem('teacher', JSON.stringify(result.teacher));
         localStorage.removeItem('student');
         console.log('AuthContext: Teacher login successful');
-        return { teacher: mappedTeacher };
+        return { teacher: result.teacher };
       }
       
       console.log('AuthContext: Teacher login failed:', result.error);
@@ -88,7 +72,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const studentLoginMethod = async (fullName: string, school: string, grade: string, password: string) => {
+  const studentLogin = async (fullName: string, school: string, grade: string, password: string) => {
     try {
       console.log('AuthContext: Student login attempt for:', fullName);
       const result = await loginStudent(fullName, school, grade, password);
@@ -111,7 +95,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const studentSignupMethod = async (fullName: string, school: string, grade: string, password: string) => {
+  const studentSignup = async (fullName: string, school: string, grade: string, password: string) => {
     try {
       console.log('AuthContext: Student signup attempt for:', fullName);
       const result = await signupStudent(fullName, school, grade, password);
@@ -147,8 +131,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     student,
     isLoading,
     teacherLogin,
-    studentLogin: studentLoginMethod,
-    studentSignup: studentSignupMethod,
+    studentLogin,
+    studentSignup,
     logout,
     csrfToken,
     setTeacher,

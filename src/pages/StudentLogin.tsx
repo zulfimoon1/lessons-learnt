@@ -20,13 +20,11 @@ const StudentLogin = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [showTester, setShowTester] = useState(false);
 
-  console.log('🔍 StudentLogin: Current state', { student, authLoading });
-
   // Redirect if already logged in
   useEffect(() => {
     console.log('StudentLogin: Checking auth state', { student, authLoading });
     if (student && !authLoading) {
-      console.log('✅ StudentLogin: Student already logged in, redirecting...');
+      console.log('StudentLogin: Student already logged in, redirecting...');
       navigate("/student-dashboard", { replace: true });
     }
   }, [student, authLoading, navigate]);
@@ -37,14 +35,14 @@ const StudentLogin = () => {
       <div className="min-h-screen bg-brand-gradient-soft flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-teal mx-auto"></div>
-          <p className="mt-2 text-brand-dark">{t('common.loading') || 'Loading...'}</p>
+          <p className="mt-2 text-brand-dark">{t('common.loading')}</p>
         </div>
       </div>
     );
   }
 
   const handleLogin = async (fullName: string, school: string, grade: string, password: string) => {
-    console.log('🔐 StudentLogin: Login attempt with:', { fullName, school, grade });
+    console.log('StudentLogin: Login attempt with:', { fullName, school, grade });
     
     if (!fullName.trim() || !school.trim() || !grade.trim() || !password) {
       toast({
@@ -58,19 +56,19 @@ const StudentLogin = () => {
     setIsLoading(true);
 
     try {
-      console.log('🔐 StudentLogin: Attempting login with credentials:', { fullName, school, grade });
+      console.log('StudentLogin: Attempting login with credentials:', { fullName, school, grade });
       
       const result = await studentLogin(fullName.trim(), school.trim(), grade.trim(), password);
 
       if (result.error) {
-        console.log('❌ StudentLogin: Login failed with error:', result.error);
+        console.log('StudentLogin: Login failed with error:', result.error);
         toast({
           title: "Login failed",
           description: result.error,
           variant: "destructive",
         });
       } else if (result.student) {
-        console.log('✅ StudentLogin: Login successful, redirecting to dashboard');
+        console.log('StudentLogin: Login successful, redirecting to dashboard');
         toast({
           title: "Welcome back!",
           description: "Login successful",
@@ -78,7 +76,7 @@ const StudentLogin = () => {
         navigate("/student-dashboard", { replace: true });
       }
     } catch (err) {
-      console.error('💥 StudentLogin: Unexpected error during login:', err);
+      console.error('StudentLogin: Unexpected error during login:', err);
       toast({
         title: "Login failed",
         description: "An unexpected error occurred. Please try again.",
@@ -111,19 +109,19 @@ const StudentLogin = () => {
     setIsLoading(true);
 
     try {
-      console.log('🔐 StudentLogin: Attempting signup for:', fullName);
+      console.log('StudentLogin: Attempting signup for:', fullName);
       
       const result = await studentSignup(fullName.trim(), school.trim(), grade.trim(), password);
 
       if (result.error) {
-        console.log('❌ StudentLogin: Signup failed with error:', result.error);
+        console.log('StudentLogin: Signup failed with error:', result.error);
         toast({
           title: t('student.signupFailed') || "Signup failed",
           description: result.error,
           variant: "destructive",
         });
       } else if (result.student) {
-        console.log('✅ StudentLogin: Signup successful, redirecting to dashboard');
+        console.log('StudentLogin: Signup successful, redirecting to dashboard');
         toast({
           title: t('student.accountCreated') || "Account created!",
           description: t('student.welcomeToApp') || "Welcome to Lesson Lens!",
@@ -131,7 +129,7 @@ const StudentLogin = () => {
         navigate("/student-dashboard", { replace: true });
       }
     } catch (err) {
-      console.error('💥 StudentLogin: Unexpected error during signup:', err);
+      console.error('StudentLogin: Unexpected error during signup:', err);
       toast({
         title: t('student.signupFailed') || "Signup failed",
         description: "An unexpected error occurred. Please try again.",
@@ -176,16 +174,16 @@ const StudentLogin = () => {
             <div className="w-16 h-16 bg-brand-teal rounded-full mx-auto flex items-center justify-center mb-4">
               <BookOpenIcon className="w-8 h-8 text-white" />
             </div>
-            <CardTitle className="text-2xl text-brand-dark">{t('login.student.title') || 'Student Portal'}</CardTitle>
+            <CardTitle className="text-2xl text-brand-dark">{t('login.student.title')}</CardTitle>
             <CardDescription className="text-gray-600">
-              {t('login.student.subtitle') || 'Log in to your learning dashboard'}
+              {t('login.student.subtitle')}
             </CardDescription>
           </CardHeader>
           <CardContent>
             <Tabs defaultValue="login" className="space-y-4">
               <TabsList className="grid w-full grid-cols-2 bg-gray-100">
-                <TabsTrigger value="login" className="data-[state=active]:bg-brand-teal data-[state=active]:text-white text-brand-dark">{t('auth.login') || 'Login'}</TabsTrigger>
-                <TabsTrigger value="signup" className="data-[state=active]:bg-brand-teal data-[state=active]:text-white text-brand-dark">{t('auth.signUp') || 'Sign Up'}</TabsTrigger>
+                <TabsTrigger value="login" className="data-[state=active]:bg-brand-teal data-[state=active]:text-white text-brand-dark">{t('auth.login')}</TabsTrigger>
+                <TabsTrigger value="signup" className="data-[state=active]:bg-brand-teal data-[state=active]:text-white text-brand-dark">{t('auth.signUp')}</TabsTrigger>
               </TabsList>
 
               <TabsContent value="login">
