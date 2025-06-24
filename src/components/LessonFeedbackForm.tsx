@@ -54,34 +54,7 @@ const LessonFeedbackForm = () => {
         studentName: student?.full_name 
       });
 
-      // For demo students, show success without any database operations
-      if (isDemoStudent) {
-        console.log('Demo student feedback - showing success without database operation');
-        
-        // Simulate processing time
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
-        toast({
-          title: t('feedback.submitted'),
-          description: t('feedback.submittedDescription'),
-        });
-
-        // Reset form
-        setLessonTitle("");
-        setLessonDescription("");
-        setUnderstanding(0);
-        setInterest(0);
-        setGrowth(0);
-        setEmotionalState("");
-        setWhatWentWell("");
-        setSuggestions("");
-        setAdditionalComments("");
-        setIsAnonymous(false);
-        
-        return;
-      }
-
-      // Regular student feedback submission - preserve existing logic
+      // All students (including demo) go through the same database operations
       const { data: scheduleData, error: scheduleError } = await supabase
         .from('class_schedules')
         .insert({
