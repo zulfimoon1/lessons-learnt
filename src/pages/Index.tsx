@@ -16,7 +16,7 @@ const Index = () => {
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <GraduationCapIcon className="w-12 h-12 text-brand-teal mx-auto mb-4" />
-          <p className="text-muted-foreground">Loading...</p>
+          <p className="text-muted-foreground">{t('common.loading')}</p>
         </div>
       </div>
     );
@@ -30,18 +30,18 @@ const Index = () => {
           <div className="flex justify-between items-center">
             <div className="flex items-center gap-2">
               <GraduationCapIcon className="w-8 h-8 text-brand-teal" />
-              <h1 className="text-2xl font-bold text-brand-dark">Lessons Learnt</h1>
+              <h1 className="text-2xl font-bold text-brand-dark">{t('welcome.title')}</h1>
             </div>
             <div className="flex items-center gap-4">
               <Link to="/pricing-showcase">
                 <Button variant="outline" size="sm" className="bg-brand-orange/10 border-brand-orange hover:bg-brand-orange/20 text-brand-orange hover:text-brand-orange">
-                  Pricing
+                  {t('pricing.title')}
                 </Button>
               </Link>
               <Link to="/demo">
                 <Button variant="outline" size="sm" className="flex items-center gap-2 border-brand-teal text-brand-teal hover:bg-brand-teal hover:text-white">
                   <PlayCircleIcon className="w-4 h-4" />
-                  View Demo
+                  {t('demo.title')}
                 </Button>
               </Link>
               <LanguageSwitcher />
@@ -56,13 +56,13 @@ const Index = () => {
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <div className="max-w-3xl mx-auto">
             <h2 className="text-5xl font-bold text-white mb-2">
-              Collaborative classrooms
+              {t('welcome.heroTitle1')}
             </h2>
             <h2 className="text-5xl font-bold text-white mb-6">
-              Unstoppable minds
+              {t('welcome.heroTitle2')}
             </h2>
             <p className="text-xl text-white/90 mb-12">
-              Empower students, support teachers, and enhance learning with our comprehensive education platform
+              {t('welcome.subtitle')}
             </p>
             
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-md mx-auto">
@@ -89,7 +89,7 @@ const Index = () => {
             </div>
             
             <div className="max-w-2xl mx-auto mt-6">
-              <p className="text-lg text-brand-orange font-black mt-2">
+              <p className="text-5xl font-bold text-brand-orange mt-2">
                 {t('welcome.freeForStudents')}
               </p>
             </div>

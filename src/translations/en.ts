@@ -180,8 +180,10 @@ export const enTranslations = {
   'student.accessMentalHealthResources': 'Access mental health resources and support',
 
   // Welcome/Home page
-  'welcome.title': 'Transform Education Through Student-Led Feedback',
-  'welcome.subtitle': 'Collaborative classrooms = unstoppable minds!',
+  'welcome.title': 'Lessons Learnt',
+  'welcome.subtitle': 'Empower students, support teachers, and enhance learning with our comprehensive education platform',
+  'welcome.heroTitle1': 'Collaborative classrooms',
+  'welcome.heroTitle2': 'Unstoppable minds',
   'welcome.freeForStudents': 'Always free for students!',
   'tagline.studentLead': 'Where every student voice shapes the future of learning',
 
@@ -218,7 +220,7 @@ export const enTranslations = {
   'compliance.hipaa.description': 'Healthcare-grade privacy protections for sensitive data',
 
   // Demo page translations
-  'demo.title': 'Experience Lesson Lens in Demo Mode',
+  'demo.title': 'View Demo',
   'demo.subtitle': 'Explore the platform\'s features and benefits without any commitment.',
   'demo.enterDemo': 'Enter Demo Mode',
   'demo.exitDemo': 'Exit Demo Mode',
