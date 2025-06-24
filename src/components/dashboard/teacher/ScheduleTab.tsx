@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import ClassScheduleForm from "@/components/ClassScheduleForm";
 import BulkScheduleUpload from "@/components/BulkScheduleUpload";
@@ -6,7 +5,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { classScheduleService } from "@/services/classScheduleService";
 import { Calendar, Clock, BookOpen } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useLanguage } from "@/contexts/LanguageContext";
 
 interface ScheduleTabProps {
   teacher: {
@@ -21,7 +19,6 @@ const ScheduleTab: React.FC<ScheduleTabProps> = ({ teacher }) => {
   const [schedules, setSchedules] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
-  const { t } = useLanguage();
 
   useEffect(() => {
     fetchSchedules();
@@ -36,8 +33,8 @@ const ScheduleTab: React.FC<ScheduleTabProps> = ({ teacher }) => {
     } catch (error) {
       console.error('Error fetching schedules:', error);
       toast({
-        title: t('common.error'),
-        description: t('teacher.feedback.failedToFetch'),
+        title: "Error",
+        description: "Failed to fetch class schedules",
         variant: "destructive",
       });
     } finally {
@@ -50,7 +47,7 @@ const ScheduleTab: React.FC<ScheduleTabProps> = ({ teacher }) => {
   };
 
   if (isLoading) {
-    return <div>{t('common.loading')}</div>;
+    return <div>Loading schedules...</div>;
   }
 
   return (
@@ -72,13 +69,13 @@ const ScheduleTab: React.FC<ScheduleTabProps> = ({ teacher }) => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Calendar className="w-5 h-5" />
-            {t('class.schedules')} ({schedules.length})
+            My Class Schedules ({schedules.length})
           </CardTitle>
         </CardHeader>
         <CardContent>
           {schedules.length === 0 ? (
             <p className="text-muted-foreground text-center py-4">
-              {t('teacher.feedback.noFeedback')}
+              No class schedules created yet. Create your first schedule above.
             </p>
           ) : (
             <div className="grid gap-4">
@@ -92,7 +89,7 @@ const ScheduleTab: React.FC<ScheduleTabProps> = ({ teacher }) => {
                           {schedule.subject} - {schedule.lesson_topic}
                         </h4>
                         <p className="text-sm text-muted-foreground">
-                          {t('teacher.classGradeLabel')} {schedule.grade} | {schedule.school}
+                          Grade {schedule.grade} | {schedule.school}
                         </p>
                         <div className="flex items-center gap-4 text-sm text-muted-foreground">
                           <span className="flex items-center gap-1">
@@ -101,7 +98,7 @@ const ScheduleTab: React.FC<ScheduleTabProps> = ({ teacher }) => {
                           </span>
                           <span className="flex items-center gap-1">
                             <Clock className="w-3 h-3" />
-                            {schedule.class_time} ({schedule.duration_minutes} {t('teacher.durationLabel').toLowerCase()})
+                            {schedule.class_time} ({schedule.duration_minutes} min)
                           </span>
                         </div>
                         {schedule.description && (

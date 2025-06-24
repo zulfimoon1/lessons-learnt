@@ -8,7 +8,6 @@ import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { classScheduleService } from '@/services/classScheduleService';
 import { Calendar, Clock, BookOpen, Users } from 'lucide-react';
-import { useLanguage } from '@/contexts/LanguageContext';
 
 interface ClassScheduleFormProps {
   teacher: {
@@ -22,7 +21,6 @@ interface ClassScheduleFormProps {
 
 const ClassScheduleForm: React.FC<ClassScheduleFormProps> = ({ teacher, onScheduleCreated }) => {
   const { toast } = useToast();
-  const { t } = useLanguage();
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     grade: '',
@@ -56,13 +54,12 @@ const ClassScheduleForm: React.FC<ClassScheduleFormProps> = ({ teacher, onSchedu
       const result = await classScheduleService.createSchedule(scheduleData);
 
       if (result.error) {
-        console.error('Schedule creation error:', result.error);
         throw result.error;
       }
 
       toast({
-        title: t('common.success'),
-        description: t('teacher.classScheduledSuccess'),
+        title: "Success",
+        description: "Class schedule created successfully",
       });
 
       // Reset form
@@ -80,8 +77,8 @@ const ClassScheduleForm: React.FC<ClassScheduleFormProps> = ({ teacher, onSchedu
     } catch (error) {
       console.error('Error creating schedule:', error);
       toast({
-        title: t('common.error'),
-        description: t('teacher.scheduleClassFailed'),
+        title: "Error",
+        description: "Failed to create class schedule. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -98,7 +95,7 @@ const ClassScheduleForm: React.FC<ClassScheduleFormProps> = ({ teacher, onSchedu
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Calendar className="w-5 h-5" />
-          {t('teacher.scheduleDetailsTitle')}
+          Create Class Schedule
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -107,13 +104,13 @@ const ClassScheduleForm: React.FC<ClassScheduleFormProps> = ({ teacher, onSchedu
             <div className="space-y-2">
               <Label htmlFor="grade" className="flex items-center gap-2">
                 <Users className="w-4 h-4" />
-                {t('teacher.classGradeLabel')}
+                Grade/Class
               </Label>
               <Input
                 id="grade"
                 value={formData.grade}
                 onChange={(e) => handleInputChange('grade', e.target.value)}
-                placeholder={t('teacher.classGradePlaceholder')}
+                placeholder="e.g., 5A, Grade 10"
                 required
               />
             </div>
@@ -121,32 +118,32 @@ const ClassScheduleForm: React.FC<ClassScheduleFormProps> = ({ teacher, onSchedu
             <div className="space-y-2">
               <Label htmlFor="subject" className="flex items-center gap-2">
                 <BookOpen className="w-4 h-4" />
-                {t('teacher.subjectLabel')}
+                Subject
               </Label>
               <Input
                 id="subject"
                 value={formData.subject}
                 onChange={(e) => handleInputChange('subject', e.target.value)}
-                placeholder={t('teacher.selectSubject')}
+                placeholder="e.g., Mathematics, English"
                 required
               />
             </div>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="lesson_topic">{t('teacher.lessonTopicLabel')}</Label>
+            <Label htmlFor="lesson_topic">Lesson Topic</Label>
             <Input
               id="lesson_topic"
               value={formData.lesson_topic}
               onChange={(e) => handleInputChange('lesson_topic', e.target.value)}
-              placeholder={t('teacher.lessonTopicPlaceholder')}
+              placeholder="e.g., Algebra Basics, Shakespeare's Hamlet"
               required
             />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="class_date">{t('teacher.dateLabel')}</Label>
+              <Label htmlFor="class_date">Class Date</Label>
               <Input
                 id="class_date"
                 type="date"
@@ -159,7 +156,7 @@ const ClassScheduleForm: React.FC<ClassScheduleFormProps> = ({ teacher, onSchedu
             <div className="space-y-2">
               <Label htmlFor="class_time" className="flex items-center gap-2">
                 <Clock className="w-4 h-4" />
-                {t('teacher.timeLabel')}
+                Class Time
               </Label>
               <Input
                 id="class_time"
@@ -172,7 +169,7 @@ const ClassScheduleForm: React.FC<ClassScheduleFormProps> = ({ teacher, onSchedu
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="duration_minutes">{t('teacher.durationLabel')}</Label>
+            <Label htmlFor="duration_minutes">Duration (minutes)</Label>
             <Input
               id="duration_minutes"
               type="number"
@@ -186,12 +183,12 @@ const ClassScheduleForm: React.FC<ClassScheduleFormProps> = ({ teacher, onSchedu
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="description">{t('teacher.descriptionLabel')}</Label>
+            <Label htmlFor="description">Description (Optional)</Label>
             <Textarea
               id="description"
               value={formData.description}
               onChange={(e) => handleInputChange('description', e.target.value)}
-              placeholder={t('teacher.descriptionPlaceholder')}
+              placeholder="Additional notes about the lesson..."
               rows={3}
             />
           </div>
@@ -201,7 +198,7 @@ const ClassScheduleForm: React.FC<ClassScheduleFormProps> = ({ teacher, onSchedu
             className="w-full"
             disabled={isLoading}
           >
-            {isLoading ? t('common.loading') : t('teacher.scheduleClass')}
+            {isLoading ? 'Creating...' : 'Create Class Schedule'}
           </Button>
         </form>
       </CardContent>
