@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Calendar, Clock, BookOpen, User, MessageSquare, GraduationCap } from "lucide-react";
+import { Calendar, Clock, BookOpen, User, MessageSquare, GraduationCap, CheckCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
 
@@ -20,6 +20,8 @@ interface ClassSchedule {
   school: string;
   grade: string;
   teacher_name?: string;
+  has_feedback?: boolean;
+  is_past?: boolean;
 }
 
 interface StudentUpcomingClassesProps {
@@ -46,19 +48,28 @@ const StudentUpcomingClasses: React.FC<StudentUpcomingClassesProps> = ({ student
     try {
       setIsLoading(true);
       
-      const today = new Date().toISOString().split('T')[0];
+      const today = new Date();
+      const currentDate = today.toISOString().split('T')[0];
+      const currentTime = today.toTimeString().slice(0, 8);
       
+      // Fetch classes for the student's school and grade
       const { data: classData, error } = await supabase
         .from('class_schedules')
         .select('*')
         .eq('school', student.school)
         .eq('grade', student.grade)
-        .gte('class_date', today)
         .order('class_date', { ascending: true })
-        .order('class_time', { ascending: true })
-        .limit(20);
+        .order('class_time', { ascending: true });
 
       if (error) throw error;
+
+      // Get existing feedback for this student
+      const { data: feedbackData } = await supabase
+        .from('feedback')
+        .select('class_schedule_id')
+        .eq('student_id', student.id);
+
+      const feedbackClassIds = new Set(feedbackData?.map(f => f.class_schedule_id) || []);
 
       const classesWithTeachers = await Promise.all(
         (classData || []).map(async (classItem) => {
@@ -68,14 +79,28 @@ const StudentUpcomingClasses: React.FC<StudentUpcomingClassesProps> = ({ student
             .eq('id', classItem.teacher_id)
             .single();
 
+          const classDateTime = new Date(`${classItem.class_date}T${classItem.class_time}`);
+          const isPast = classDateTime < today;
+          const hasFeedback = feedbackClassIds.has(classItem.id);
+
           return {
             ...classItem,
-            teacher_name: teacherData?.name || t('student.defaultName')
+            teacher_name: teacherData?.name || t('student.defaultName'),
+            has_feedback: hasFeedback,
+            is_past: isPast
           };
         })
       );
 
-      setUpcomingClasses(classesWithTeachers);
+      // Filter out past classes that already have feedback
+      const filteredClasses = classesWithTeachers.filter(classItem => {
+        if (classItem.is_past && classItem.has_feedback) {
+          return false; // Remove past classes with feedback
+        }
+        return true;
+      });
+
+      setUpcomingClasses(filteredClasses);
     } catch (error) {
       console.error('Error fetching upcoming classes:', error);
       toast({
@@ -144,6 +169,17 @@ const StudentUpcomingClasses: React.FC<StudentUpcomingClassesProps> = ({ student
                       <Badge variant="outline" className="border-brand-teal text-brand-teal">
                         {classItem.grade}
                       </Badge>
+                      {classItem.has_feedback && (
+                        <Badge variant="secondary" className="bg-green-100 text-green-800 border-green-200">
+                          <CheckCircle className="w-3 h-3 mr-1" />
+                          Feedback Submitted
+                        </Badge>
+                      )}
+                      {classItem.is_past && !classItem.has_feedback && (
+                        <Badge variant="secondary" className="bg-orange-100 text-orange-800 border-orange-200">
+                          Feedback Pending
+                        </Badge>
+                      )}
                     </div>
                     
                     <p className="text-brand-dark/80 mb-3 font-medium">{classItem.lesson_topic}</p>
@@ -171,14 +207,26 @@ const StudentUpcomingClasses: React.FC<StudentUpcomingClassesProps> = ({ student
                   </div>
                   
                   <div className="ml-6">
-                    <Button
-                      size="sm"
-                      onClick={() => handleLeaveFeedback(classItem.id)}
-                      className="bg-gradient-to-r from-brand-orange to-brand-orange/80 hover:from-brand-orange/90 hover:to-brand-orange/70 text-white shadow-lg hover:shadow-xl transition-all duration-200 group-hover:scale-105"
-                    >
-                      <MessageSquare className="w-4 h-4 mr-2" />
-                      {t('feedback.submitFeedback')}
-                    </Button>
+                    {!classItem.has_feedback ? (
+                      <Button
+                        size="sm"
+                        onClick={() => handleLeaveFeedback(classItem.id)}
+                        className="bg-gradient-to-r from-brand-orange to-brand-orange/80 hover:from-brand-orange/90 hover:to-brand-orange/70 text-white shadow-lg hover:shadow-xl transition-all duration-200 group-hover:scale-105"
+                      >
+                        <MessageSquare className="w-4 h-4 mr-2" />
+                        {t('feedback.submitFeedback')}
+                      </Button>
+                    ) : (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        disabled
+                        className="border-green-200 text-green-600 bg-green-50"
+                      >
+                        <CheckCircle className="w-4 h-4 mr-2" />
+                        Feedback Complete
+                      </Button>
+                    )}
                   </div>
                 </div>
               </div>
