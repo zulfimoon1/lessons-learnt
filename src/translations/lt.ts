@@ -228,6 +228,8 @@ export const ltTranslations = {
 
   // Demo
   'demo.featureDemo': 'Funkcionalumo demonstracija',
+  'demo.title': 'Demonstracija',
+  'demo.subtitle': 'Išbandykite mūsų platformos funkcijas',
   'demo.featuresUserTypes': '5+ funkcijos, 3 vartotojų tipai',
   'demo.experienceComplete': 'Patirkite visą platformą',
   'demo.discoverFuture': 'Atraskite švietimo ateitį veiksmais - tyrinėkite mūsų inovatyvų platformą, skirtą transformuoti mokymąsi studentams, įgalinti pedagogus ir palaikyti psichikos sveikatą.',
@@ -236,6 +238,13 @@ export const ltTranslations = {
   'demo.experienceDescription': 'Nuo interaktyvių studentų simuliacijų iki išsamios mokytojų analitikos - pamatykite, kaip mūsų platforma kuria palaikančią ir įtraukiančią mokymosi aplinką.',
   'demo.mockup.anonymousStudent': 'Anoniminis studentas',
   'demo.enterDemo': 'Įeiti į demonstraciją',
+  'demo.keyFeaturesShown': 'Pagrindinės funkcijos, rodomos demonstracijoje',
+  'demo.interactiveSimulation': 'Interaktyvi simuliacija',
+  'demo.teacherWorkflow': 'Mokytojo darbo eiga',
+  'demo.fullIntegration': 'Pilna integracija',
+  'demo.interactive.student': 'Pilnas studento patirties vedimas',
+  'demo.interactive.teacher': 'Mokytojo skydelis ir analitika',
+  'demo.interactive.integration': 'Visos platformos funkcijų integracija',
 
   // Merge all sub-translations
   ...ltAuthTranslations,

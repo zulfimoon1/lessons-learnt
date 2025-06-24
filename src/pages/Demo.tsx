@@ -17,6 +17,7 @@ import { useNavigate } from "react-router-dom";
 import StudentSimulation from "@/components/StudentSimulation";
 import TeacherSimulation from "@/components/TeacherSimulation";
 import DemoSection from "@/components/DemoSection";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
 
 const Demo = () => {
   const { t } = useLanguage();
@@ -72,14 +73,17 @@ const Demo = () => {
                 </h1>
               </div>
             </div>
-            <Button
-              variant="outline"
-              onClick={handlePauseDemo}
-              className="flex items-center gap-2"
-            >
-              <Pause className="h-4 w-4" />
-              {t('demo.page.pauseDemo')}
-            </Button>
+            <div className="flex items-center gap-4">
+              <Button
+                variant="outline"
+                onClick={handlePauseDemo}
+                className="flex items-center gap-2"
+              >
+                <Pause className="h-4 w-4" />
+                {t('demo.page.pauseDemo')}
+              </Button>
+              <LanguageSwitcher />
+            </div>
           </div>
         </div>
       </div>

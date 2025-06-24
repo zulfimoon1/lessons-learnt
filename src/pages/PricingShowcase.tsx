@@ -3,7 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
-import { CheckIcon, StarIcon, UsersIcon, BookOpenIcon, BarChart3Icon, ShieldIcon, GlobeIcon, HeartIcon } from "lucide-react";
+import { CheckIcon, StarIcon, UsersIcon, BookOpenIcon, BarChart3Icon, ShieldIcon, GlobeIcon, HeartIcon, ArrowLeft } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
@@ -18,10 +18,22 @@ const PricingShowcase = () => {
       <header className="bg-white border-b border-gray-200 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex justify-between items-center">
-            <Link to="/" className="flex items-center gap-2">
-              <BookOpenIcon className="w-8 h-8 text-brand-teal" />
-              <span className="text-2xl font-bold text-brand-dark">Lessons Learnt</span>
-            </Link>
+            <div className="flex items-center gap-4">
+              <Button 
+                variant="ghost" 
+                asChild
+                className="flex items-center gap-2 text-gray-600 hover:text-gray-900"
+              >
+                <Link to="/">
+                  <ArrowLeft className="h-4 w-4" />
+                  {t('nav.home')}
+                </Link>
+              </Button>
+              <Link to="/" className="flex items-center gap-2">
+                <BookOpenIcon className="w-8 h-8 text-brand-teal" />
+                <span className="text-2xl font-bold text-brand-dark">{t('welcome.title')}</span>
+              </Link>
+            </div>
             <div className="flex items-center gap-4">
               <Link to="/demo">
                 <Button variant="outline" size="sm" className="border-brand-teal text-brand-teal hover:bg-brand-teal hover:text-white">

@@ -206,8 +206,8 @@ const Index = () => {
             <p className="text-lg text-gray-600 mb-8">
               {t('platform.readyToTransformDesc')}
             </p>
-            <Link to="/teacher-login">
-              <Button size="lg" className="text-lg px-8 py-3 bg-brand-orange hover:bg-brand-orange/90 text-white">
+            <Link to="/teacher-login?tab=signup">
+              <Button size="lg" className="text-xl px-12 py-4 bg-brand-orange hover:bg-brand-orange/90 text-white transform scale-125">
                 {t('auth.signUpNow')}
               </Button>
             </Link>
