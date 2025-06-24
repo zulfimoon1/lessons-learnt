@@ -5,18 +5,18 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { UserIcon } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
-import { useLanguage } from "@/contexts/LanguageContext";
-import { useAuth } from "@/contexts/AuthContext";
+import { useSafeLanguage } from "@/contexts/SafeLanguageContext";
+import { useSafeAuth } from "@/contexts/SafeAuthContext";
 import AuthHeader from "@/components/auth/AuthHeader";
 import SecureStudentLoginForm from "@/components/auth/SecureStudentLoginForm";
 import StudentSignupForm from "@/components/auth/StudentSignupForm";
 import SessionSecurityMonitor from "@/components/security/SessionSecurityMonitor";
 
 const SecureStudentLogin = () => {
-  const { t } = useLanguage();
+  const { t } = useSafeLanguage();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { student, isLoading: authLoading, studentLogin, setStudent } = useAuth();
+  const { student, isLoading: authLoading, studentLogin, studentSignup } = useSafeAuth();
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
@@ -31,7 +31,7 @@ const SecureStudentLogin = () => {
       <div className="min-h-screen bg-brand-gradient-soft flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-teal mx-auto"></div>
-          <p className="mt-2 text-brand-dark">{t('common.loading')}</p>
+          <p className="mt-2 text-brand-dark">{t('common.loading') || 'Loading...'}</p>
         </div>
       </div>
     );
@@ -53,14 +53,14 @@ const SecureStudentLogin = () => {
       console.log('SecureStudentLogin: Attempting login for:', { fullName, school, grade });
       const result = await studentLogin(fullName, school, grade, password);
 
-      if ('error' in result && result.error) {
+      if (result.error) {
         console.log('SecureStudentLogin: Login failed with error:', result.error);
         toast({
           title: "Login failed",
           description: result.error,
           variant: "destructive",
         });
-      } else if ('student' in result && result.student) {
+      } else if (result.student) {
         console.log('SecureStudentLogin: Login successful, navigating to dashboard');
         toast({
           title: "Welcome back!",
@@ -104,19 +104,15 @@ const SecureStudentLogin = () => {
     setIsLoading(true);
 
     try {
-      const { signupStudent } = await import('@/services/authIntegrationService');
-      const result = await signupStudent(fullName.trim(), school.trim(), grade.trim(), password);
+      const result = await studentSignup(fullName.trim(), school.trim(), grade.trim(), password);
 
-      if ('error' in result && result.error) {
+      if (result.error) {
         toast({
           title: "Signup failed",
           description: result.error,
           variant: "destructive",
         });
-      } else if ('student' in result && result.student) {
-        setStudent(result.student);
-        localStorage.setItem('student', JSON.stringify(result.student));
-        
+      } else if (result.student) {
         toast({
           title: "Account created!",
           description: "Welcome to Lesson Lens!",
@@ -154,8 +150,8 @@ const SecureStudentLogin = () => {
           <CardContent>
             <Tabs defaultValue="login" className="space-y-4">
               <TabsList className="grid w-full grid-cols-2 bg-gray-100">
-                <TabsTrigger value="login" className="data-[state=active]:bg-brand-teal data-[state=active]:text-white text-brand-dark">{t('auth.login')}</TabsTrigger>
-                <TabsTrigger value="signup" className="data-[state=active]:bg-brand-teal data-[state=active]:text-white text-brand-dark">{t('auth.signUp')}</TabsTrigger>
+                <TabsTrigger value="login" className="data-[state=active]:bg-brand-teal data-[state=active]:text-white text-brand-dark">{t('auth.login') || 'Login'}</TabsTrigger>
+                <TabsTrigger value="signup" className="data-[state=active]:bg-brand-teal data-[state=active]:text-white text-brand-dark">{t('auth.signUp') || 'Sign Up'}</TabsTrigger>
               </TabsList>
 
               <TabsContent value="login">

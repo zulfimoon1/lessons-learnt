@@ -5,19 +5,20 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { GraduationCapIcon } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
-import { useLanguage } from "@/contexts/LanguageContext";
-import { useAuth } from "@/contexts/AuthContext";
+import { useSafeLanguage } from "@/contexts/SafeLanguageContext";
+import { useSafeAuth } from "@/contexts/SafeAuthContext";
 import AuthHeader from "@/components/auth/AuthHeader";
 import TeacherLoginForm from "@/components/auth/TeacherLoginForm";
 import TeacherSignupForm from "@/components/auth/TeacherSignupForm";
-import { loginTeacher, signupTeacher } from "@/services/authIntegrationService";
 
 const TeacherLogin = () => {
-  const { t, language } = useLanguage();
+  const { t, language } = useSafeLanguage();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { teacher, isLoading: authLoading, setTeacher } = useAuth();
+  const { teacher, isLoading: authLoading, teacherLogin } = useSafeAuth();
   const [isLoading, setIsLoading] = useState(false);
+
+  console.log('🔍 TeacherLogin: Current state', { teacher, authLoading });
 
   // Get proper translations with fallbacks
   const getTitle = () => {
@@ -43,7 +44,7 @@ const TeacherLogin = () => {
   // Redirect if already logged in
   useEffect(() => {
     if (teacher && !authLoading) {
-      console.log('Teacher already logged in, redirecting to dashboard');
+      console.log('✅ Teacher already logged in, redirecting to dashboard');
       navigate("/teacher-dashboard", { replace: true });
     }
   }, [teacher, authLoading, navigate]);
@@ -73,20 +74,18 @@ const TeacherLogin = () => {
     setIsLoading(true);
 
     try {
-      console.log('TeacherLogin: Attempting login for:', email);
-      const result = await loginTeacher(email, password);
+      console.log('🔐 TeacherLogin: Attempting login for:', email);
+      const result = await teacherLogin(email, password);
 
       if (result.error) {
-        console.log('TeacherLogin: Login failed with error:', result.error);
+        console.log('❌ TeacherLogin: Login failed with error:', result.error);
         toast({
           title: "Login failed",
           description: result.error,
           variant: "destructive",
         });
       } else if (result.teacher) {
-        console.log('TeacherLogin: Login successful, setting teacher and navigating');
-        setTeacher(result.teacher);
-        localStorage.setItem('teacher', JSON.stringify(result.teacher));
+        console.log('✅ TeacherLogin: Login successful, navigating to dashboard');
         toast({
           title: "Welcome back!",
           description: "Login successful",
@@ -96,7 +95,7 @@ const TeacherLogin = () => {
         }, 100);
       }
     } catch (err) {
-      console.error('TeacherLogin: Login error:', err);
+      console.error('💥 TeacherLogin: Login error:', err);
       toast({
         title: "Login failed",
         description: "An unexpected error occurred. Please try again.",
@@ -129,6 +128,9 @@ const TeacherLogin = () => {
     setIsLoading(true);
 
     try {
+      console.log('🔐 TeacherLogin: Attempting signup for:', email);
+      // Import signup function dynamically to avoid circular imports
+      const { signupTeacher } = await import('@/services/authIntegrationService');
       const validRole = role as 'teacher' | 'admin' | 'doctor';
       const result = await signupTeacher(name, email, school, password, validRole);
 
@@ -139,17 +141,18 @@ const TeacherLogin = () => {
           variant: "destructive",
         });
       } else if (result.teacher) {
-        setTeacher(result.teacher);
-        localStorage.setItem('teacher', JSON.stringify(result.teacher));
-        
-        toast({
-          title: "Account created!",
-          description: "Welcome to Lesson Lens!",
-        });
-        navigate("/teacher-dashboard", { replace: true });
+        // Use safe auth to set teacher
+        const loginResult = await teacherLogin(email, password);
+        if (loginResult.teacher) {
+          toast({
+            title: "Account created!",
+            description: "Welcome to Lesson Lens!",
+          });
+          navigate("/teacher-dashboard", { replace: true });
+        }
       }
     } catch (err) {
-      console.error('Signup error:', err);
+      console.error('💥 TeacherLogin: Signup error:', err);
       toast({
         title: "Signup failed",
         description: "An unexpected error occurred. Please try again.",

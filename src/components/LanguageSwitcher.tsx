@@ -1,11 +1,11 @@
 
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useLanguage } from "@/contexts/LanguageContext";
+import { useSafeLanguage } from "@/contexts/SafeLanguageContext";
 
 const LanguageSwitcher = () => {
   try {
-    const { language, setLanguage } = useLanguage();
+    const { language, setLanguage } = useSafeLanguage();
 
     return (
       <div className="flex items-center gap-2">
@@ -34,7 +34,7 @@ const LanguageSwitcher = () => {
     );
   } catch (error) {
     // Fallback UI when LanguageProvider is not available
-    console.warn('LanguageSwitcher: LanguageProvider not found, showing fallback UI');
+    console.warn('LanguageSwitcher: SafeLanguageProvider not found, showing fallback UI');
     return (
       <div className="flex items-center gap-2">
         <Select defaultValue="en" onValueChange={() => {}}>

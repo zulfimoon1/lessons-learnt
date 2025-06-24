@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { LogInIcon, UserIcon, SchoolIcon, GraduationCapIcon } from "lucide-react";
-import { useLanguage } from "@/contexts/LanguageContext";
+import { useSafeLanguage } from "@/contexts/SafeLanguageContext";
 
 interface StudentLoginFormProps {
   onLogin: (fullName: string, school: string, grade: string, password: string) => Promise<void>;
@@ -12,7 +12,7 @@ interface StudentLoginFormProps {
 }
 
 const StudentLoginForm: React.FC<StudentLoginFormProps> = ({ onLogin, isLoading }) => {
-  const { t } = useLanguage();
+  const { t } = useSafeLanguage();
   const [loginData, setLoginData] = useState({
     fullName: "",
     school: "",
@@ -30,12 +30,12 @@ const StudentLoginForm: React.FC<StudentLoginFormProps> = ({ onLogin, isLoading 
       <div className="space-y-2">
         <Label htmlFor="loginFullName" className="flex items-center gap-2">
           <UserIcon className="w-4 h-4" />
-          {t('auth.fullName')}
+          {t('auth.fullName') || 'Full Name'}
         </Label>
         <Input
           id="loginFullName"
           type="text"
-          placeholder={t('student.fullNamePlaceholder')}
+          placeholder={t('student.fullNamePlaceholder') || 'Your full name'}
           value={loginData.fullName}
           onChange={(e) => setLoginData(prev => ({ ...prev, fullName: e.target.value }))}
           required
@@ -45,12 +45,12 @@ const StudentLoginForm: React.FC<StudentLoginFormProps> = ({ onLogin, isLoading 
       <div className="space-y-2">
         <Label htmlFor="loginSchool" className="flex items-center gap-2">
           <SchoolIcon className="w-4 h-4" />
-          {t('student.school')}
+          {t('student.school') || 'School'}
         </Label>
         <Input
           id="loginSchool"
           type="text"
-          placeholder={t('student.schoolPlaceholder')}
+          placeholder={t('student.schoolPlaceholder') || 'School name'}
           value={loginData.school}
           onChange={(e) => setLoginData(prev => ({ ...prev, school: e.target.value }))}
           required
@@ -60,12 +60,12 @@ const StudentLoginForm: React.FC<StudentLoginFormProps> = ({ onLogin, isLoading 
       <div className="space-y-2">
         <Label htmlFor="loginGrade" className="flex items-center gap-2">
           <GraduationCapIcon className="w-4 h-4" />
-          {t('student.classGrade')}
+          {t('student.classGrade') || 'Grade/Class'}
         </Label>
         <Input
           id="loginGrade"
           type="text"
-          placeholder={t('student.gradePlaceholder')}
+          placeholder={t('student.gradePlaceholder') || 'e.g., Grade 5, 10A'}
           value={loginData.grade}
           onChange={(e) => setLoginData(prev => ({ ...prev, grade: e.target.value }))}
           required
@@ -73,11 +73,11 @@ const StudentLoginForm: React.FC<StudentLoginFormProps> = ({ onLogin, isLoading 
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="loginPassword">{t('auth.password')}</Label>
+        <Label htmlFor="loginPassword">{t('auth.password') || 'Password'}</Label>
         <Input
           id="loginPassword"
           type="password"
-          placeholder={t('auth.password')}
+          placeholder={t('auth.password') || 'Password'}
           value={loginData.password}
           onChange={(e) => setLoginData(prev => ({ ...prev, password: e.target.value }))}
           required
@@ -89,10 +89,10 @@ const StudentLoginForm: React.FC<StudentLoginFormProps> = ({ onLogin, isLoading 
         className="w-full"
         disabled={isLoading}
       >
-        {isLoading ? t('auth.loggingIn') : (
+        {isLoading ? (t('auth.loggingIn') || 'Logging in...') : (
           <>
             <LogInIcon className="w-4 h-4 mr-2" />
-            {t('auth.login')}
+            {t('auth.login') || 'Login'}
           </>
         )}
       </Button>

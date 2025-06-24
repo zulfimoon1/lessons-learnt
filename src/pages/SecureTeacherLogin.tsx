@@ -5,19 +5,18 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { GraduationCapIcon } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
-import { useLanguage } from "@/contexts/LanguageContext";
-import { useAuth } from "@/contexts/AuthContext";
+import { useSafeLanguage } from "@/contexts/SafeLanguageContext";
+import { useSafeAuth } from "@/contexts/SafeAuthContext";
 import AuthHeader from "@/components/auth/AuthHeader";
 import SecureTeacherLoginForm from "@/components/auth/SecureTeacherLoginForm";
 import TeacherSignupForm from "@/components/auth/TeacherSignupForm";
 import SessionSecurityMonitor from "@/components/security/SessionSecurityMonitor";
-import { loginTeacher, signupTeacher } from "@/services/authIntegrationService";
 
 const SecureTeacherLogin = () => {
-  const { t } = useLanguage();
+  const { t } = useSafeLanguage();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { teacher, isLoading: authLoading, setTeacher } = useAuth();
+  const { teacher, isLoading: authLoading, teacherLogin } = useSafeAuth();
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
@@ -31,7 +30,7 @@ const SecureTeacherLogin = () => {
       <div className="min-h-screen bg-brand-gradient-soft flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-teal mx-auto"></div>
-          <p className="mt-2 text-brand-dark">{t('common.loading')}</p>
+          <p className="mt-2 text-brand-dark">{t('common.loading') || 'Loading...'}</p>
         </div>
       </div>
     );
@@ -50,7 +49,7 @@ const SecureTeacherLogin = () => {
     setIsLoading(true);
 
     try {
-      const result = await loginTeacher(email, password);
+      const result = await teacherLogin(email, password);
 
       if (result.error) {
         toast({
@@ -59,7 +58,6 @@ const SecureTeacherLogin = () => {
           variant: "destructive",
         });
       } else if (result.teacher) {
-        setTeacher(result.teacher);
         toast({
           title: "Welcome back!",
           description: "Login successful",
@@ -100,6 +98,7 @@ const SecureTeacherLogin = () => {
     setIsLoading(true);
 
     try {
+      const { signupTeacher } = await import('@/services/authIntegrationService');
       const validRole = role as 'teacher' | 'admin' | 'doctor';
       const result = await signupTeacher(name.trim(), email.trim(), school.trim(), password, validRole);
 
@@ -110,12 +109,15 @@ const SecureTeacherLogin = () => {
           variant: "destructive",
         });
       } else if (result.teacher) {
-        setTeacher(result.teacher);
-        toast({
-          title: t('teacher.accountCreated') || "Account created!",
-          description: t('teacher.welcomeToApp') || "Welcome to Lesson Lens!",
-        });
-        navigate("/teacher-dashboard", { replace: true });
+        // Use safe auth login after signup
+        const loginResult = await teacherLogin(email, password);
+        if (loginResult.teacher) {
+          toast({
+            title: t('teacher.accountCreated') || "Account created!",
+            description: t('teacher.welcomeToApp') || "Welcome to Lesson Lens!",
+          });
+          navigate("/teacher-dashboard", { replace: true });
+        }
       }
     } catch (err) {
       console.error('Signup error:', err);
@@ -140,16 +142,16 @@ const SecureTeacherLogin = () => {
             <div className="w-16 h-16 bg-brand-teal rounded-full mx-auto flex items-center justify-center mb-4">
               <GraduationCapIcon className="w-8 h-8 text-white" />
             </div>
-            <CardTitle className="text-2xl text-brand-dark">{t('login.teacher.title')}</CardTitle>
+            <CardTitle className="text-2xl text-brand-dark">{t('login.teacher.title') || 'Teacher Portal'}</CardTitle>
             <CardDescription className="text-gray-600">
-              {t('login.teacher.subtitle')}
+              {t('login.teacher.subtitle') || 'Log in to your teaching dashboard'}
             </CardDescription>
           </CardHeader>
           <CardContent>
             <Tabs defaultValue="login" className="space-y-4">
               <TabsList className="grid w-full grid-cols-2 bg-gray-100">
-                <TabsTrigger value="login" className="data-[state=active]:bg-brand-teal data-[state=active]:text-white text-brand-dark">{t('auth.login')}</TabsTrigger>
-                <TabsTrigger value="signup" className="data-[state=active]:bg-brand-teal data-[state=active]:text-white text-brand-dark">{t('auth.signUp')}</TabsTrigger>
+                <TabsTrigger value="login" className="data-[state=active]:bg-brand-teal data-[state=active]:text-white text-brand-dark">{t('auth.login') || 'Login'}</TabsTrigger>
+                <TabsTrigger value="signup" className="data-[state=active]:bg-brand-teal data-[state=active]:text-white text-brand-dark">{t('auth.signUp') || 'Sign Up'}</TabsTrigger>
               </TabsList>
 
               <TabsContent value="login">
