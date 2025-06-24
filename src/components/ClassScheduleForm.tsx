@@ -28,6 +28,7 @@ interface ClassScheduleFormProps {
 const ClassScheduleForm = ({ teacher }: ClassScheduleFormProps) => {
   const { t } = useLanguage();
   const { toast } = useToast();
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     subject: "",
     lesson_topic: "",
@@ -73,6 +74,19 @@ const ClassScheduleForm = ({ teacher }: ClassScheduleFormProps) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    // Basic validation
+    if (!formData.subject || !formData.lesson_topic || !formData.class_date || 
+        !formData.class_time || !formData.school || !formData.grade) {
+      toast({
+        title: t('common.error'),
+        description: "Please fill in all required fields",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsSubmitting(true);
+    
     try {
       if (formData.is_recurring) {
         // Generate recurring schedule entries
@@ -103,7 +117,7 @@ const ClassScheduleForm = ({ teacher }: ClassScheduleFormProps) => {
 
         toast({
           title: t('common.success'),
-          description: t('teacher.classesScheduledSuccess', { count: schedules.length.toString() }),
+          description: `${schedules.length} classes scheduled successfully!`,
         });
       } else {
         // Single schedule entry
@@ -125,7 +139,7 @@ const ClassScheduleForm = ({ teacher }: ClassScheduleFormProps) => {
 
         toast({
           title: t('common.success'),
-          description: t('teacher.classScheduledSuccess'),
+          description: "Class scheduled successfully!",
         });
       }
 
@@ -145,11 +159,14 @@ const ClassScheduleForm = ({ teacher }: ClassScheduleFormProps) => {
         number_of_occurrences: 4
       });
     } catch (error) {
+      console.error('Error scheduling class:', error);
       toast({
         title: t('common.error'),
-        description: t('teacher.scheduleClassFailed'),
+        description: "Failed to schedule class. Please try again.",
         variant: "destructive",
       });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -157,6 +174,7 @@ const ClassScheduleForm = ({ teacher }: ClassScheduleFormProps) => {
                      formData.class_time && formData.school && formData.grade;
 
   const isRecurrenceEndDateValid = !formData.is_recurring || 
+                                  !formData.recurrence_end_date ||
                                   (formData.recurrence_end_date && new Date(formData.recurrence_end_date) > new Date(formData.class_date));
 
   return (
@@ -361,11 +379,7 @@ const ClassScheduleForm = ({ teacher }: ClassScheduleFormProps) => {
 
                 <div className="bg-purple-50 p-3 rounded-lg">
                   <p className="text-sm text-purple-700">
-                    <strong>{t('common.preview')}:</strong> {t('teacher.previewText', { 
-                      count: formData.number_of_occurrences.toString(),
-                      date: formData.class_date && new Date(formData.class_date).toLocaleDateString(),
-                      pattern: t(`teacher.${formData.recurrence_pattern}`)
-                    })}
+                    <strong>{t('common.preview')}:</strong> {formData.number_of_occurrences} classes will be scheduled starting from {formData.class_date && new Date(formData.class_date).toLocaleDateString()} ({formData.recurrence_pattern}ly)
                   </p>
                 </div>
               </div>
@@ -373,17 +387,31 @@ const ClassScheduleForm = ({ teacher }: ClassScheduleFormProps) => {
           </CardContent>
         </Card>
 
-        {/* Submit Button */}
-        <div className="flex justify-center pt-6">
-          <Button 
-            type="submit" 
-            disabled={!isFormValid || !isRecurrenceEndDateValid}
-            size="lg"
-            className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white px-8 py-4 text-lg font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <Save className="w-5 h-5 mr-2" />
-            {formData.is_recurring ? t('teacher.scheduleMultipleClasses', { count: formData.number_of_occurrences.toString() }) : t('teacher.scheduleClass')}
-          </Button>
+        {/* Submit Button - Made more prominent and visible */}
+        <div className="sticky bottom-4 z-10 pt-6">
+          <div className="bg-white/95 backdrop-blur-sm border border-gray-200 rounded-xl p-4 shadow-xl">
+            <Button 
+              type="submit" 
+              disabled={!isFormValid || !isRecurrenceEndDateValid || isSubmitting}
+              size="lg"
+              className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white px-8 py-6 text-xl font-bold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+            >
+              <Save className="w-6 h-6 mr-3" />
+              {isSubmitting ? (
+                "Scheduling..."
+              ) : (
+                formData.is_recurring ? 
+                  `Schedule ${formData.number_of_occurrences} Classes` : 
+                  "Schedule Class"
+              )}
+            </Button>
+            
+            {!isFormValid && (
+              <p className="text-center text-sm text-red-600 mt-2">
+                Please fill in all required fields to schedule a class
+              </p>
+            )}
+          </div>
         </div>
       </form>
     </div>
