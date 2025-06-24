@@ -49,8 +49,6 @@ const StudentUpcomingClasses: React.FC<StudentUpcomingClassesProps> = ({ student
       setIsLoading(true);
       
       const today = new Date();
-      const currentDate = today.toISOString().split('T')[0];
-      const currentTime = today.toTimeString().slice(0, 8);
       
       // Fetch classes for the student's school and grade
       const { data: classData, error } = await supabase
@@ -92,12 +90,14 @@ const StudentUpcomingClasses: React.FC<StudentUpcomingClassesProps> = ({ student
         })
       );
 
-      // Filter out past classes that already have feedback
+      // Filter: Only show upcoming classes OR past classes without feedback
       const filteredClasses = classesWithTeachers.filter(classItem => {
-        if (classItem.is_past && classItem.has_feedback) {
-          return false; // Remove past classes with feedback
+        // Show if it's upcoming (not past)
+        if (!classItem.is_past) {
+          return true;
         }
-        return true;
+        // For past classes, only show if no feedback has been submitted
+        return !classItem.has_feedback;
       });
 
       setUpcomingClasses(filteredClasses);
@@ -169,12 +169,6 @@ const StudentUpcomingClasses: React.FC<StudentUpcomingClassesProps> = ({ student
                       <Badge variant="outline" className="border-brand-teal text-brand-teal">
                         {classItem.grade}
                       </Badge>
-                      {classItem.has_feedback && (
-                        <Badge variant="secondary" className="bg-green-100 text-green-800 border-green-200">
-                          <CheckCircle className="w-3 h-3 mr-1" />
-                          Feedback Submitted
-                        </Badge>
-                      )}
                       {classItem.is_past && !classItem.has_feedback && (
                         <Badge variant="secondary" className="bg-orange-100 text-orange-800 border-orange-200">
                           Feedback Pending
@@ -207,26 +201,14 @@ const StudentUpcomingClasses: React.FC<StudentUpcomingClassesProps> = ({ student
                   </div>
                   
                   <div className="ml-6">
-                    {!classItem.has_feedback ? (
-                      <Button
-                        size="sm"
-                        onClick={() => handleLeaveFeedback(classItem.id)}
-                        className="bg-gradient-to-r from-brand-orange to-brand-orange/80 hover:from-brand-orange/90 hover:to-brand-orange/70 text-white shadow-lg hover:shadow-xl transition-all duration-200 group-hover:scale-105"
-                      >
-                        <MessageSquare className="w-4 h-4 mr-2" />
-                        {t('feedback.submitFeedback')}
-                      </Button>
-                    ) : (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        disabled
-                        className="border-green-200 text-green-600 bg-green-50"
-                      >
-                        <CheckCircle className="w-4 h-4 mr-2" />
-                        Feedback Complete
-                      </Button>
-                    )}
+                    <Button
+                      size="sm"
+                      onClick={() => handleLeaveFeedback(classItem.id)}
+                      className="bg-gradient-to-r from-brand-orange to-brand-orange/80 hover:from-brand-orange/90 hover:to-brand-orange/70 text-white shadow-lg hover:shadow-xl transition-all duration-200 group-hover:scale-105"
+                    >
+                      <MessageSquare className="w-4 h-4 mr-2" />
+                      {t('feedback.submitFeedback')}
+                    </Button>
                   </div>
                 </div>
               </div>

@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Navigate, useSearchParams, useNavigate } from "react-router-dom";
@@ -7,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import StudentUpcomingClasses from "@/components/dashboard/student/StudentUpcomingClasses";
 import WeeklySummaryForm from "@/components/dashboard/student/WeeklySummaryForm";
 import MentalHealthSupportTab from "@/components/dashboard/MentalHealthSupportTab";
-import LessonFeedbackForm from "@/components/LessonFeedbackForm";
+import HistoricalFeedbackView from "@/components/HistoricalFeedbackView";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { LogOut } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -133,7 +132,7 @@ const StudentDashboard = () => {
           </TabsContent>
 
           <TabsContent value="feedback" className="space-y-4">
-            <LessonFeedbackForm />
+            <HistoricalFeedbackView />
           </TabsContent>
 
           <TabsContent value="weekly" className="space-y-4">
