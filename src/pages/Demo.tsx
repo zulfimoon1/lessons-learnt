@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -49,6 +48,23 @@ const Demo = () => {
 
   const handleStartFreeTrial = () => {
     navigate('/teacher-login');
+  };
+
+  const handleTeacherLogin = () => {
+    // Set demo teacher in auth context
+    const demoTeacher = {
+      id: 'demo-teacher-1',
+      name: 'Demo Teacher',
+      email: 'demo.teacher@demo.school.com',
+      school: 'Demo High School',
+      role: 'teacher'
+    };
+    
+    // Store in localStorage for demo purposes
+    localStorage.setItem('demoTeacher', JSON.stringify(demoTeacher));
+    
+    // Navigate to teacher dashboard
+    navigate('/teacher-dashboard');
   };
 
   return (

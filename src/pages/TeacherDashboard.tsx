@@ -6,6 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import ScheduleTab from "@/components/dashboard/teacher/ScheduleTab";
 import DoctorDashboard from "@/components/dashboard/doctor/DoctorDashboard";
+import DemoTeacherDashboard from "@/components/dashboard/teacher/DemoTeacherDashboard";
 import { LogOut, Calendar, Heart } from "lucide-react";
 
 const TeacherDashboard = () => {
@@ -27,8 +28,15 @@ const TeacherDashboard = () => {
     logout();
   };
 
+  // Check if this is a demo teacher (you can adjust this logic based on how demo teachers are identified)
+  const isDemoTeacher = teacher.school === 'Demo High School' || teacher.name.includes('Demo');
   const isDoctor = teacher.role === 'doctor';
   const isAdmin = teacher.role === 'admin';
+
+  // Render demo-specific dashboard for demo teachers
+  if (isDemoTeacher && !isDoctor) {
+    return <DemoTeacherDashboard teacher={teacher} />;
+  }
 
   return (
     <div className="min-h-screen bg-background">
