@@ -19,6 +19,13 @@ class ClassScheduleService {
     try {
       console.log('Creating class schedule:', scheduleData);
       
+      // Set platform admin context if we have admin email stored
+      const adminEmail = localStorage.getItem('platform_admin');
+      if (adminEmail) {
+        const adminData = JSON.parse(adminEmail);
+        await supabase.rpc('set_platform_admin_context', { admin_email: adminData.email });
+      }
+      
       const { data, error } = await supabase
         .from('class_schedules')
         .insert([scheduleData])
@@ -41,6 +48,13 @@ class ClassScheduleService {
   async getSchedulesByTeacher(teacherId: string) {
     try {
       console.log('Fetching schedules for teacher:', teacherId);
+      
+      // Set platform admin context if we have admin email stored
+      const adminEmail = localStorage.getItem('platform_admin');
+      if (adminEmail) {
+        const adminData = JSON.parse(adminEmail);
+        await supabase.rpc('set_platform_admin_context', { admin_email: adminData.email });
+      }
       
       const { data, error } = await supabase
         .from('class_schedules')
@@ -65,6 +79,13 @@ class ClassScheduleService {
     try {
       console.log('Fetching schedules for school:', school);
       
+      // Set platform admin context if we have admin email stored
+      const adminEmail = localStorage.getItem('platform_admin');
+      if (adminEmail) {
+        const adminData = JSON.parse(adminEmail);
+        await supabase.rpc('set_platform_admin_context', { admin_email: adminData.email });
+      }
+      
       const { data, error } = await supabase
         .from('class_schedules')
         .select('*')
@@ -87,6 +108,13 @@ class ClassScheduleService {
   async bulkCreateSchedules(schedules: Omit<ClassSchedule, 'id'>[]) {
     try {
       console.log('Creating bulk schedules:', schedules.length);
+      
+      // Set platform admin context if we have admin email stored
+      const adminEmail = localStorage.getItem('platform_admin');
+      if (adminEmail) {
+        const adminData = JSON.parse(adminEmail);
+        await supabase.rpc('set_platform_admin_context', { admin_email: adminData.email });
+      }
       
       const { data, error } = await supabase
         .from('class_schedules')
