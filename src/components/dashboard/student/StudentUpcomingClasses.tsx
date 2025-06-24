@@ -166,7 +166,7 @@ const StudentUpcomingClasses: React.FC<StudentUpcomingClassesProps> = ({ student
                     </div>
                     
                     <Badge variant="secondary" className="bg-brand-teal/10 text-brand-teal border-brand-teal/20">
-                      {classItem.duration_minutes} {t('common.minutes', { count: classItem.duration_minutes })}
+                      {classItem.duration_minutes} {classItem.duration_minutes === 1 ? t('common.minute') : t('common.minutes')}
                     </Badge>
                   </div>
                   
