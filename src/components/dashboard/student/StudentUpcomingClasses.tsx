@@ -90,13 +90,14 @@ const StudentUpcomingClasses: React.FC<StudentUpcomingClassesProps> = ({ student
         })
       );
 
-      // Filter: Only show upcoming classes OR past classes without feedback
+      // Updated filtering logic: Show upcoming classes OR past classes WITHOUT feedback
+      // Exclude past classes that already have feedback
       const filteredClasses = classesWithTeachers.filter(classItem => {
-        // Show if it's upcoming (not past)
+        // Always show upcoming classes (not past)
         if (!classItem.is_past) {
           return true;
         }
-        // For past classes, only show if no feedback has been submitted
+        // For past classes, only show if NO feedback has been submitted
         return !classItem.has_feedback;
       });
 
