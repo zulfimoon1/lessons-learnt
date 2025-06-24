@@ -1,10 +1,10 @@
 
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useState } from "react";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const LanguageSwitcher = () => {
-  const [language, setLanguage] = useState<'en' | 'lt'>('en');
+  const { language, setLanguage } = useLanguage();
 
   return (
     <div className="flex items-center gap-2">
