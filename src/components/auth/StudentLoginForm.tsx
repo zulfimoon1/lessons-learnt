@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { LogInIcon, UserIcon, SchoolIcon, GraduationCapIcon } from "lucide-react";
-import { useSafeLanguage } from "@/contexts/SafeLanguageContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface StudentLoginFormProps {
   onLogin: (fullName: string, school: string, grade: string, password: string) => Promise<void>;
@@ -12,7 +12,7 @@ interface StudentLoginFormProps {
 }
 
 const StudentLoginForm: React.FC<StudentLoginFormProps> = ({ onLogin, isLoading }) => {
-  const { t } = useSafeLanguage();
+  const { t } = useLanguage();
   const [loginData, setLoginData] = useState({
     fullName: "",
     school: "",

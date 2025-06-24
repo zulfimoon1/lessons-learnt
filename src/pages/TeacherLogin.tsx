@@ -5,17 +5,17 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { GraduationCapIcon } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
-import { useSafeLanguage } from "@/contexts/SafeLanguageContext";
-import { useSafeAuth } from "@/contexts/SafeAuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { useAuth } from "@/contexts/AuthContext";
 import AuthHeader from "@/components/auth/AuthHeader";
 import TeacherLoginForm from "@/components/auth/TeacherLoginForm";
 import TeacherSignupForm from "@/components/auth/TeacherSignupForm";
 
 const TeacherLogin = () => {
-  const { t, language } = useSafeLanguage();
+  const { t, language } = useLanguage();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { teacher, isLoading: authLoading, teacherLogin } = useSafeAuth();
+  const { teacher, isLoading: authLoading, teacherLogin } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
 
   console.log('🔍 TeacherLogin: Current state', { teacher, authLoading });

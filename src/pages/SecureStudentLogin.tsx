@@ -5,18 +5,18 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { UserIcon } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
-import { useSafeLanguage } from "@/contexts/SafeLanguageContext";
-import { useSafeAuth } from "@/contexts/SafeAuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { useAuth } from "@/contexts/AuthContext";
 import AuthHeader from "@/components/auth/AuthHeader";
 import SecureStudentLoginForm from "@/components/auth/SecureStudentLoginForm";
 import StudentSignupForm from "@/components/auth/StudentSignupForm";
 import SessionSecurityMonitor from "@/components/security/SessionSecurityMonitor";
 
 const SecureStudentLogin = () => {
-  const { t } = useSafeLanguage();
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { student, isLoading: authLoading, studentLogin, studentSignup } = useSafeAuth();
+  const { student, isLoading: authLoading, studentLogin, studentSignup } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
