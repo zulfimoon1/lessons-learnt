@@ -146,7 +146,7 @@ const DoctorDashboard: React.FC<DoctorDashboardProps> = ({ teacher }) => {
     return (
       <div className="min-h-screen bg-gradient-to-br from-brand-teal/10 via-white to-brand-orange/10 flex items-center justify-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-teal"></div>
-        <span className="ml-3 text-brand-dark">Loading...</span>
+        <span className="ml-3 text-brand-dark">{t('common.loading') || 'Loading'}...</span>
       </div>
     );
   }
@@ -157,6 +157,31 @@ const DoctorDashboard: React.FC<DoctorDashboardProps> = ({ teacher }) => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-brand-teal/10 via-white to-brand-orange/10">
       <div className="container mx-auto px-4 py-6 max-w-6xl">
+        {/* Header - matching teacher dashboard style exactly */}
+        <div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-lg border border-gray-200/50 mb-6 p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold text-brand-dark mb-2">
+                {t('dashboard.doctorOverview') || 'Doctor Overview'}
+              </h1>
+              <p className="text-brand-dark/70 text-lg">
+                {t('teacher.dashboard.welcome') || 'Welcome'}, {teacher.name} - {t('teacher.dashboard.teacherAt') || 'Doctor at'} {teacher.school}
+              </p>
+            </div>
+            <div className="flex gap-3">
+              <LanguageSwitcher />
+              <Button 
+                variant="outline" 
+                onClick={handleLogout}
+                className="border-brand-orange/30 hover:bg-brand-orange/10"
+              >
+                <LogOut className="w-4 h-4 mr-2" />
+                {t('logout') || 'Log out'}
+              </Button>
+            </div>
+          </div>
+        </div>
+
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
           <Card className="bg-white/90 backdrop-blur-sm border-gray-200/50 shadow-lg">
@@ -166,7 +191,7 @@ const DoctorDashboard: React.FC<DoctorDashboardProps> = ({ teacher }) => {
                   <Calendar className="w-6 h-6 text-brand-teal" />
                 </div>
                 <div>
-                  <p className="text-sm text-gray-600">Weekly Summaries</p>
+                  <p className="text-sm text-gray-600">{t('dashboard.weeklySummaries') || 'Weekly Summaries'}</p>
                   <p className="text-2xl font-bold text-brand-dark">{weeklySummaries.length}</p>
                 </div>
               </div>
@@ -180,7 +205,7 @@ const DoctorDashboard: React.FC<DoctorDashboardProps> = ({ teacher }) => {
                   <AlertTriangle className="w-6 h-6 text-brand-orange" />
                 </div>
                 <div>
-                  <p className="text-sm text-gray-600">Mental Health Alerts</p>
+                  <p className="text-sm text-gray-600">{t('dashboard.mentalHealthAlerts') || 'Mental Health Alerts'}</p>
                   <p className="text-2xl font-bold text-brand-dark">{mentalHealthAlerts.length}</p>
                 </div>
               </div>
@@ -194,7 +219,7 @@ const DoctorDashboard: React.FC<DoctorDashboardProps> = ({ teacher }) => {
                   <Eye className="w-6 h-6 text-red-600" />
                 </div>
                 <div>
-                  <p className="text-sm text-gray-600">Unreviewed</p>
+                  <p className="text-sm text-gray-600">{t('dashboard.unreviewed') || 'Unreviewed'}</p>
                   <p className="text-2xl font-bold text-red-600">{unreviewed.length}</p>
                 </div>
               </div>
@@ -208,7 +233,7 @@ const DoctorDashboard: React.FC<DoctorDashboardProps> = ({ teacher }) => {
                   <AlertTriangle className="w-6 h-6 text-red-600" />
                 </div>
                 <div>
-                  <p className="text-sm text-gray-600">High Risk</p>
+                  <p className="text-sm text-gray-600">{t('dashboard.highRisk') || 'High Risk'}</p>
                   <p className="text-2xl font-bold text-red-600">{highRiskAlerts.length}</p>
                 </div>
               </div>
@@ -227,14 +252,14 @@ const DoctorDashboard: React.FC<DoctorDashboardProps> = ({ teacher }) => {
                   className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-brand-orange data-[state=active]:to-brand-teal data-[state=active]:text-white data-[state=inactive]:text-gray-600 data-[state=inactive]:hover:text-brand-dark border-b-2 border-transparent data-[state=active]:border-brand-teal rounded-none px-6 py-4 font-medium transition-all duration-200"
                 >
                   <AlertTriangle className="w-4 h-4 mr-2" />
-                  Mental Health Alerts
+                  {t('dashboard.mentalHealthAlerts') || 'Mental Health Alerts'}
                 </TabsTrigger>
                 <TabsTrigger 
                   value="summaries" 
                   className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-brand-orange data-[state=active]:to-brand-teal data-[state=active]:text-white data-[state=inactive]:text-gray-600 data-[state=inactive]:hover:text-brand-dark border-b-2 border-transparent data-[state=active]:border-brand-teal rounded-none px-6 py-4 font-medium transition-all duration-200"
                 >
                   <Calendar className="w-4 h-4 mr-2" />
-                  Weekly Summaries
+                  {t('dashboard.weeklySummaries') || 'Weekly Summaries'}
                 </TabsTrigger>
               </TabsList>
             </div>
@@ -246,14 +271,14 @@ const DoctorDashboard: React.FC<DoctorDashboardProps> = ({ teacher }) => {
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2 text-brand-dark">
                       <AlertTriangle className="w-5 h-5 text-red-500" />
-                      Mental Health Alerts
+                      {t('dashboard.mentalHealthAlerts') || 'Mental Health Alerts'}
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
                     {mentalHealthAlerts.length === 0 ? (
                       <div className="text-center py-8">
                         <Heart className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                        <p className="text-gray-600">No alerts at this time</p>
+                        <p className="text-gray-600">{t('dashboard.noAlerts') || 'No alerts at this time'}</p>
                       </div>
                     ) : (
                       <div className="space-y-4">
@@ -268,14 +293,14 @@ const DoctorDashboard: React.FC<DoctorDashboardProps> = ({ teacher }) => {
                                   </Badge>
                                   {alert.is_reviewed && (
                                     <Badge variant="outline" className="border-green-200 text-green-800 bg-green-50">
-                                      Reviewed
+                                      {t('dashboard.reviewed') || 'Reviewed'}
                                     </Badge>
                                   )}
                                 </div>
                                 <div className="flex items-center gap-4 text-sm text-gray-600 mb-2">
                                   <span className="flex items-center gap-1">
                                     <User className="w-3 h-3" />
-                                    Grade {alert.grade}
+                                    {t('dashboard.grade') || 'Grade'} {alert.grade}
                                   </span>
                                   <span className="flex items-center gap-1">
                                     <Calendar className="w-3 h-3" />
@@ -291,7 +316,7 @@ const DoctorDashboard: React.FC<DoctorDashboardProps> = ({ teacher }) => {
                                   className="border-brand-teal text-brand-teal hover:bg-brand-teal hover:text-white"
                                 >
                                   <Eye className="w-4 h-4 mr-2" />
-                                  Mark as Reviewed
+                                  {t('dashboard.markAsReviewed') || 'Mark as Reviewed'}
                                 </Button>
                               )}
                             </div>
@@ -309,14 +334,14 @@ const DoctorDashboard: React.FC<DoctorDashboardProps> = ({ teacher }) => {
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2 text-brand-dark">
                       <Calendar className="w-5 h-5 text-brand-teal" />
-                      Weekly Summaries
+                      {t('dashboard.weeklySummaries') || 'Weekly Summaries'}
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
                     {weeklySummaries.length === 0 ? (
                       <div className="text-center py-8">
                         <MessageSquare className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                        <p className="text-gray-600">No summaries yet</p>
+                        <p className="text-gray-600">{t('dashboard.noSummaries') || 'No summaries yet'}</p>
                       </div>
                     ) : (
                       <div className="space-y-4">
@@ -326,16 +351,16 @@ const DoctorDashboard: React.FC<DoctorDashboardProps> = ({ teacher }) => {
                               <div>
                                 <h3 className="font-semibold text-brand-dark">{summary.student_name}</h3>
                                 <div className="flex items-center gap-4 text-sm text-gray-600">
-                                  <span>Grade {summary.grade}</span>
-                                  <span>Week from {new Date(summary.week_start_date).toLocaleDateString()}</span>
-                                  <span>Submitted {new Date(summary.submitted_at).toLocaleDateString()}</span>
+                                  <span>{t('dashboard.grade') || 'Grade'} {summary.grade}</span>
+                                  <span>{t('dashboard.weekFrom') || 'Week from'} {new Date(summary.week_start_date).toLocaleDateString()}</span>
+                                  <span>{t('dashboard.submitted') || 'Submitted'} {new Date(summary.submitted_at).toLocaleDateString()}</span>
                                 </div>
                               </div>
                             </div>
                             
                             {summary.emotional_concerns && (
                               <div className="mb-3">
-                                <h4 className="text-sm font-medium text-gray-700 mb-1">Emotional Concerns:</h4>
+                                <h4 className="text-sm font-medium text-gray-700 mb-1">{t('dashboard.emotionalConcerns') || 'Emotional Concerns'}:</h4>
                                 <p className="text-sm bg-red-50 p-3 rounded border-l-4 border-red-200 text-brand-dark">
                                   {summary.emotional_concerns}
                                 </p>
@@ -344,7 +369,7 @@ const DoctorDashboard: React.FC<DoctorDashboardProps> = ({ teacher }) => {
                             
                             {summary.academic_concerns && (
                               <div>
-                                <h4 className="text-sm font-medium text-gray-700 mb-1">Academic Concerns:</h4>
+                                <h4 className="text-sm font-medium text-gray-700 mb-1">{t('dashboard.academicConcerns') || 'Academic Concerns'}:</h4>
                                 <p className="text-sm bg-blue-50 p-3 rounded border-l-4 border-blue-200 text-brand-dark">
                                   {summary.academic_concerns}
                                 </p>
