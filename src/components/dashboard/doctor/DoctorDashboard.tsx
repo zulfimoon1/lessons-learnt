@@ -157,8 +157,8 @@ const DoctorDashboard: React.FC<DoctorDashboardProps> = ({ teacher }) => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-brand-teal/10 via-white to-brand-orange/10">
       <DashboardHeader 
-        title="Doctor Overview"
-        userName={`${teacher.name} - Doctor at ${teacher.school}`}
+        title={t('dashboard.doctorOverview') || 'Doctor Overview'}
+        userName={`${teacher.name} - ${t('dashboard.doctorAt') || 'Doctor at'} ${teacher.school}`}
         onLogout={handleLogout}
       />
 
