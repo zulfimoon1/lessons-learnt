@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -50,21 +51,14 @@ const Demo = () => {
     navigate('/teacher-login');
   };
 
-  const handleTeacherLogin = () => {
-    // Set demo teacher in localStorage with full permissions
-    const demoTeacher = {
-      id: 'demo-teacher-1',
-      name: 'Demo Teacher',
-      email: 'demo.teacher@demo.school.com',
-      school: 'Demo High School',
-      role: 'teacher'
-    };
-    
-    // Store in localStorage for demo purposes
-    localStorage.setItem('demoTeacher', JSON.stringify(demoTeacher));
-    
-    // Navigate to teacher dashboard
-    navigate('/teacher-dashboard');
+  const handleTeacherDemo = () => {
+    // Navigate to real teacher login - no bypass
+    navigate('/teacher-login');
+  };
+
+  const handleStudentDemo = () => {
+    // Navigate to real student login - no bypass
+    navigate('/student-login');
   };
 
   return (
@@ -117,9 +111,9 @@ const Demo = () => {
 
         {!activeDemo ? (
           <>
-            {/* Demo Selection Cards with Play Buttons */}
+            {/* Demo Selection Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
-              {/* Interactive Student Journey */}
+              {/* Student Experience */}
               <Card className="cursor-pointer hover:shadow-lg transition-shadow border-2 hover:border-blue-500 relative">
                 <CardHeader>
                   <div className="flex items-center gap-3">
@@ -139,24 +133,22 @@ const Demo = () => {
                     {t('demo.simulation.student.description')}
                   </CardDescription>
                   <div className="space-y-2 text-sm text-gray-600 mb-4">
-                    <p>{t('demo.features.student.1')}</p>
-                    <p>{t('demo.features.student.2')}</p>
-                    <p>{t('demo.features.student.3')}</p>
-                    <p>{t('demo.features.student.4')}</p>
-                    <p>{t('demo.features.student.5')}</p>
-                    <p>{t('demo.features.student.6')}</p>
+                    <p>• Experience the complete student dashboard</p>
+                    <p>• Submit real feedback on lessons</p>
+                    <p>• Access mental health support features</p>
+                    <p>• Track your learning progress</p>
                   </div>
                   <Button 
-                    onClick={() => handleDemoSelect('student')}
+                    onClick={handleStudentDemo}
                     className="w-full bg-brand-teal hover:bg-brand-dark text-white"
                   >
                     <Play className="w-4 h-4 mr-2" />
-                    {t('demo.page.playDemo')}
+                    Try Student Experience
                   </Button>
                 </CardContent>
               </Card>
 
-              {/* Interactive Teacher Journey */}
+              {/* Teacher Experience */}
               <Card className="cursor-pointer hover:shadow-lg transition-shadow border-2 hover:border-green-500 relative">
                 <CardHeader>
                   <div className="flex items-center gap-3">
@@ -176,26 +168,22 @@ const Demo = () => {
                     {t('demo.simulation.teacher.description')}
                   </CardDescription>
                   <div className="space-y-2 text-sm text-gray-600 mb-4">
-                    <p>{t('demo.features.teacher.1')}</p>
-                    <p>{t('demo.features.teacher.2')}</p>
-                    <p>{t('demo.features.teacher.3')}</p>
-                    <p>{t('demo.features.teacher.4')}</p>
-                    <p>{t('demo.features.teacher.5')}</p>
-                    <p>{t('demo.features.teacher.6')}</p>
-                    <p>{t('demo.features.teacher.7')}</p>
-                    <p>{t('demo.features.teacher.8')}</p>
+                    <p>• Create and manage class schedules</p>
+                    <p>• View real-time student feedback</p>
+                    <p>• Access comprehensive analytics</p>
+                    <p>• Monitor student well-being</p>
                   </div>
                   <Button 
-                    onClick={() => handleDemoSelect('teacher')}
+                    onClick={handleTeacherDemo}
                     className="w-full bg-brand-teal hover:bg-brand-dark text-white"
                   >
                     <Play className="w-4 h-4 mr-2" />
-                    {t('demo.page.playDemo')}
+                    Try Teacher Experience
                   </Button>
                 </CardContent>
               </Card>
 
-              {/* Mental Health Support Hub */}
+              {/* Mental Health Professional Experience */}
               <Card className="cursor-pointer hover:shadow-lg transition-shadow border-2 hover:border-purple-500 relative">
                 <CardHeader>
                   <div className="flex items-center gap-3">
@@ -215,19 +203,17 @@ const Demo = () => {
                     {t('demo.simulation.mentalHealth.description')}
                   </CardDescription>
                   <div className="space-y-2 text-sm text-gray-600 mb-4">
-                    <p>{t('demo.features.mentalHealth.1')}</p>
-                    <p>{t('demo.features.mentalHealth.2')}</p>
-                    <p>{t('demo.features.mentalHealth.3')}</p>
-                    <p>{t('demo.features.mentalHealth.4')}</p>
-                    <p>{t('demo.features.mentalHealth.5')}</p>
-                    <p>{t('demo.features.mentalHealth.6')}</p>
+                    <p>• Monitor student mental health alerts</p>
+                    <p>• Access confidential support tools</p>
+                    <p>• Create intervention strategies</p>
+                    <p>• Collaborate with teaching staff</p>
                   </div>
                   <Button 
-                    onClick={() => handleDemoSelect('mentalHealth')}
+                    onClick={() => navigate('/teacher-login')}
                     className="w-full bg-brand-teal hover:bg-brand-dark text-white"
                   >
                     <Play className="w-4 h-4 mr-2" />
-                    {t('demo.page.playDemo')}
+                    Try Mental Health Tools
                   </Button>
                 </CardContent>
               </Card>
@@ -242,49 +228,48 @@ const Demo = () => {
                 {t('demo.discoverDescription')}
               </p>
               
-              {/* Enhanced visibility for the features section */}
               <div className="bg-brand-gradient text-white rounded-lg p-8 max-w-md mx-auto mb-12 shadow-xl">
                 <p className="text-4xl font-black tracking-wide drop-shadow-lg text-center">
-                  {t('demo.featuresUserTypes')}
+                  Real User Experience
                 </p>
                 <p className="text-xl font-bold mt-3 opacity-95 drop-shadow-md text-center">
-                  {t('demo.experienceComplete')}
+                  Sign up and test all features
                 </p>
               </div>
             </div>
 
             {/* Key Features */}
             <div className="mt-16 bg-white rounded-lg p-8 shadow-sm">
-              <h3 className="text-2xl font-bold text-center mb-8">{t('demo.keyFeaturesShown')}</h3>
+              <h3 className="text-2xl font-bold text-center mb-8">Experience the Complete Platform</h3>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                 <div className="text-center">
                   <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
                     <Play className="h-8 w-8 text-blue-600" />
                   </div>
-                  <h4 className="text-lg font-semibold mb-2">{t('demo.interactiveSimulation')}</h4>
-                  <p className="text-gray-600">{t('demo.interactive.student')}</p>
+                  <h4 className="text-lg font-semibold mb-2">Real Authentication</h4>
+                  <p className="text-gray-600">Sign up with real accounts and experience actual security flows</p>
                 </div>
                 <div className="text-center">
                   <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
                     <Users className="h-8 w-8 text-green-600" />
                   </div>
-                  <h4 className="text-lg font-semibold mb-2">{t('demo.teacherWorkflow')}</h4>
-                  <p className="text-gray-600">{t('demo.interactive.teacher')}</p>
+                  <h4 className="text-lg font-semibold mb-2">Complete Workflows</h4>
+                  <p className="text-gray-600">Test the full teacher and student experience with real data</p>
                 </div>
                 <div className="text-center">
                   <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
                     <Heart className="h-8 w-8 text-purple-600" />
                   </div>
-                  <h4 className="text-lg font-semibold mb-2">{t('demo.fullIntegration')}</h4>
-                  <p className="text-gray-600">{t('demo.interactive.integration')}</p>
+                  <h4 className="text-lg font-semibold mb-2">Actual Integration</h4>
+                  <p className="text-gray-600">Experience how all components work together in practice</p>
                 </div>
               </div>
             </div>
 
-            {/* Call to Action - Updated with working button matching homepage styling */}
+            {/* Call to Action */}
             <div className="mt-16 bg-brand-gradient text-white rounded-lg p-8 text-center">
-              <h3 className="text-2xl font-bold mb-4">{t('demo.experienceFullPlatform')}</h3>
-              <p className="text-lg mb-6 opacity-90">{t('demo.experienceDescription')}</p>
+              <h3 className="text-2xl font-bold mb-4">Ready to Experience the Real Platform?</h3>
+              <p className="text-lg mb-6 opacity-90">Sign up now and test all features with real authentication and data flows.</p>
               <Button 
                 size="lg" 
                 className="text-xl px-12 py-4 bg-brand-orange hover:bg-brand-orange/90 text-white transform scale-125"
