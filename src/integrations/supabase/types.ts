@@ -797,6 +797,7 @@ export type Database = {
           emotional_concerns: string | null
           grade: string
           id: string
+          is_anonymous: boolean
           school: string
           student_id: string | null
           student_name: string
@@ -808,6 +809,7 @@ export type Database = {
           emotional_concerns?: string | null
           grade: string
           id?: string
+          is_anonymous?: boolean
           school: string
           student_id?: string | null
           student_name: string
@@ -819,6 +821,7 @@ export type Database = {
           emotional_concerns?: string | null
           grade?: string
           id?: string
+          is_anonymous?: boolean
           school?: string
           student_id?: string | null
           student_name?: string
