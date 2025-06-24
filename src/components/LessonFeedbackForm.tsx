@@ -47,7 +47,7 @@ const LessonFeedbackForm = () => {
 
     try {
       const { error } = await supabase
-        .from('lesson_feedback')
+        .from('feedback')
         .insert({
           student_id: isAnonymous ? null : student?.id,
           student_name: isAnonymous ? t('demo.mockup.anonymousStudent') : student?.full_name || '',
