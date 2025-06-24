@@ -12,6 +12,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { securityPatchService } from "@/services/securityPatchService";
 
 interface Teacher {
   id: string;
@@ -88,6 +89,11 @@ const ClassScheduleForm = ({ teacher }: ClassScheduleFormProps) => {
     setIsSubmitting(true);
     
     try {
+      console.log('Scheduling class with teacher:', teacher);
+      
+      // Use security service for authenticated operations
+      await securityPatchService.validateTableAccess('class_schedules', 'INSERT', teacher.email);
+      
       if (formData.is_recurring) {
         // Generate recurring schedule entries
         const dates = generateRecurringDates(
@@ -109,11 +115,18 @@ const ClassScheduleForm = ({ teacher }: ClassScheduleFormProps) => {
           teacher_id: teacher.id
         }));
 
+        console.log('Inserting recurring schedules:', schedules);
+
         const { error } = await supabase
           .from('class_schedules')
           .insert(schedules);
 
-        if (error) throw error;
+        if (error) {
+          console.error('Database error inserting recurring schedules:', error);
+          throw error;
+        }
+
+        console.log('Successfully inserted recurring schedules');
 
         toast({
           title: t('common.success'),
@@ -121,21 +134,30 @@ const ClassScheduleForm = ({ teacher }: ClassScheduleFormProps) => {
         });
       } else {
         // Single schedule entry
+        const scheduleData = {
+          subject: formData.subject,
+          lesson_topic: formData.lesson_topic,
+          class_date: formData.class_date,
+          class_time: formData.class_time,
+          duration_minutes: formData.duration_minutes,
+          school: formData.school,
+          grade: formData.grade,
+          description: formData.description,
+          teacher_id: teacher.id
+        };
+
+        console.log('Inserting single schedule:', scheduleData);
+
         const { error } = await supabase
           .from('class_schedules')
-          .insert({
-            subject: formData.subject,
-            lesson_topic: formData.lesson_topic,
-            class_date: formData.class_date,
-            class_time: formData.class_time,
-            duration_minutes: formData.duration_minutes,
-            school: formData.school,
-            grade: formData.grade,
-            description: formData.description,
-            teacher_id: teacher.id
-          });
+          .insert(scheduleData);
 
-        if (error) throw error;
+        if (error) {
+          console.error('Database error inserting schedule:', error);
+          throw error;
+        }
+
+        console.log('Successfully inserted schedule');
 
         toast({
           title: t('common.success'),
@@ -162,7 +184,7 @@ const ClassScheduleForm = ({ teacher }: ClassScheduleFormProps) => {
       console.error('Error scheduling class:', error);
       toast({
         title: t('common.error'),
-        description: "Failed to schedule class. Please try again.",
+        description: `Failed to schedule class: ${error.message}`,
         variant: "destructive",
       });
     } finally {
@@ -193,7 +215,7 @@ const ClassScheduleForm = ({ teacher }: ClassScheduleFormProps) => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="subject" className="text-gray-700 font-medium">{t('teacher.subjectLabel')}</Label>
-                <Select onValueChange={(value) => setFormData(prev => ({ ...prev, subject: value }))}>
+                <Select value={formData.subject} onValueChange={(value) => setFormData(prev => ({ ...prev, subject: value }))}>
                   <SelectTrigger>
                     <SelectValue placeholder={t('teacher.selectSubject')} />
                   </SelectTrigger>
@@ -269,7 +291,7 @@ const ClassScheduleForm = ({ teacher }: ClassScheduleFormProps) => {
               </div>
               <div>
                 <Label htmlFor="duration_minutes" className="text-gray-700 font-medium">{t('teacher.durationLabel')}</Label>
-                <Select onValueChange={(value) => setFormData(prev => ({ ...prev, duration_minutes: parseInt(value) }))}>
+                <Select value={formData.duration_minutes.toString()} onValueChange={(value) => setFormData(prev => ({ ...prev, duration_minutes: parseInt(value) }))}>
                   <SelectTrigger>
                     <SelectValue placeholder="60" />
                   </SelectTrigger>
