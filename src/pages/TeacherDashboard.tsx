@@ -12,6 +12,10 @@ import { LogOut, Calendar, Heart } from "lucide-react";
 const TeacherDashboard = () => {
   const { teacher, logout, isLoading } = useAuth();
 
+  // Check for demo teacher in localStorage
+  const demoTeacher = localStorage.getItem('demoTeacher');
+  const parsedDemoTeacher = demoTeacher ? JSON.parse(demoTeacher) : null;
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -20,7 +24,10 @@ const TeacherDashboard = () => {
     );
   }
 
-  if (!teacher) {
+  // Use demo teacher if available, otherwise require authenticated teacher
+  const currentTeacher = parsedDemoTeacher || teacher;
+  
+  if (!currentTeacher) {
     return <Navigate to="/teacher-login" replace />;
   }
 
@@ -28,14 +35,14 @@ const TeacherDashboard = () => {
     logout();
   };
 
-  // Check if this is a demo teacher (you can adjust this logic based on how demo teachers are identified)
-  const isDemoTeacher = teacher.school === 'Demo High School' || teacher.name.includes('Demo');
-  const isDoctor = teacher.role === 'doctor';
-  const isAdmin = teacher.role === 'admin';
+  // Check if this is a demo teacher
+  const isDemoTeacher = parsedDemoTeacher || (teacher && (teacher.school === 'Demo High School' || teacher.name.includes('Demo')));
+  const isDoctor = currentTeacher.role === 'doctor';
+  const isAdmin = currentTeacher.role === 'admin';
 
   // Render demo-specific dashboard for demo teachers
   if (isDemoTeacher && !isDoctor) {
-    return <DemoTeacherDashboard teacher={teacher} />;
+    return <DemoTeacherDashboard teacher={currentTeacher} />;
   }
 
   return (
@@ -47,7 +54,7 @@ const TeacherDashboard = () => {
               {isDoctor ? 'Doctor Dashboard' : isAdmin ? 'School Admin Dashboard' : 'Teacher Dashboard'}
             </h1>
             <p className="text-muted-foreground">
-              Welcome, {teacher.name} - {teacher.role.charAt(0).toUpperCase() + teacher.role.slice(1)} at {teacher.school}
+              Welcome, {currentTeacher.name} - {currentTeacher.role.charAt(0).toUpperCase() + currentTeacher.role.slice(1)} at {currentTeacher.school}
             </p>
           </div>
           <div className="flex gap-2">
@@ -64,7 +71,7 @@ const TeacherDashboard = () => {
         </div>
 
         {isDoctor ? (
-          <DoctorDashboard teacher={teacher} />
+          <DoctorDashboard teacher={currentTeacher} />
         ) : (
           <Tabs defaultValue="schedules" className="space-y-4">
             <TabsList>
@@ -81,7 +88,7 @@ const TeacherDashboard = () => {
             </TabsList>
 
             <TabsContent value="schedules" className="space-y-4">
-              <ScheduleTab teacher={teacher} />
+              <ScheduleTab teacher={currentTeacher} />
             </TabsContent>
 
             {isAdmin && (

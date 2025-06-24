@@ -51,7 +51,7 @@ const Demo = () => {
   };
 
   const handleTeacherLogin = () => {
-    // Set demo teacher in auth context
+    // Set demo teacher in localStorage with full permissions
     const demoTeacher = {
       id: 'demo-teacher-1',
       name: 'Demo Teacher',
