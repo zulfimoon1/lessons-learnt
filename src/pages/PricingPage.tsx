@@ -259,24 +259,24 @@ const PricingPage = () => {
               <div className="space-y-2">
                 <div className="flex justify-between">
                   <span>{t('pricing.teachers')} ({teacherCount})</span>
-                  <span>${basePrice} {t('pricing.each')}</span>
+                  <span>€{basePrice} {t('pricing.each')}</span>
                 </div>
                 <div className="flex justify-between text-lg">
                   <span>{t('pricing.subtotal')}</span>
-                  <span>${subtotal.toFixed(2)}</span>
+                  <span>€{subtotal.toFixed(2)}</span>
                 </div>
                 
                 {discount > 0 && (
                   <div className="flex justify-between text-green-600">
                     <span>{t('pricing.discount')} ({discount}%)</span>
-                    <span>-${discountAmount.toFixed(2)}</span>
+                    <span>-€{discountAmount.toFixed(2)}</span>
                   </div>
                 )}
                 
                 <hr className="my-2" />
                 <div className="flex justify-between text-xl font-bold">
                   <span>{t('pricing.totalMonthly')}</span>
-                  <span>${total.toFixed(2)}</span>
+                  <span>€{total.toFixed(2)}</span>
                 </div>
               </div>
 

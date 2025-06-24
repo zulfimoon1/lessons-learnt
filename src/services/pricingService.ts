@@ -21,7 +21,7 @@ export const PRICING_TIERS: PricingTier[] = [
     name: 'Teacher',
     description: 'Perfect for individual teachers',
     basePrice: 999, // $9.99 in cents
-    annualPrice: 9900, // $99/year (save $20)
+    annualPrice: 7990, // $79.90/year (save 20%)
     features: [
       'Unlimited class scheduling',
       'Student feedback collection',
@@ -34,7 +34,7 @@ export const PRICING_TIERS: PricingTier[] = [
     name: 'School Admin',
     description: 'For principals and administrators',
     basePrice: 1499, // $14.99 in cents
-    annualPrice: 14900, // $149/year (save $30)
+    annualPrice: 11990, // $119.90/year (save 20%)
     features: [
       'Everything in Teacher plan',
       'Principal/Admin dashboard',

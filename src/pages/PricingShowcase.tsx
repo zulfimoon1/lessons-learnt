@@ -44,7 +44,7 @@ const PricingShowcase = () => {
           <h1 className="text-5xl font-bold mb-6 text-white drop-shadow-lg">
             {t('pricing.transformSchoolLess')}
           </h1>
-          <div className="text-6xl font-black text-white mb-2 drop-shadow-lg">€ 10 {t('pricing.perTeacherMonth')}</div>
+          <div className="text-6xl font-black text-white mb-2 drop-shadow-lg">€ 9.99 {t('pricing.perTeacherMonth')}</div>
           <p className="text-xl text-white/90 mb-8 drop-shadow-md">
             {t('pricing.worldClass')}
           </p>
@@ -83,26 +83,21 @@ const PricingShowcase = () => {
           </div>
 
           <div className="bg-white rounded-2xl p-8 shadow-lg border border-gray-200">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div className="text-center">
                 <div className="text-brand-dark font-semibold text-lg mb-2">1-4 {t('pricing.teachers')}</div>
-                <div className="text-3xl font-bold text-brand-dark">€10</div>
+                <div className="text-3xl font-bold text-brand-dark">€9.99</div>
                 <div className="text-gray-600">{t('pricing.standardPrice')}</div>
               </div>
               <div className="text-center bg-brand-teal/5 rounded-lg p-4">
-                <div className="text-brand-dark font-semibold text-lg mb-2">5-19 {t('pricing.teachers')}</div>
-                <div className="text-3xl font-bold text-brand-teal">€8.50</div>
-                <div className="text-brand-teal font-semibold">15% {t('pricing.discount')}</div>
+                <div className="text-brand-dark font-semibold text-lg mb-2">5-10 {t('pricing.teachers')}</div>
+                <div className="text-3xl font-bold text-brand-teal">€8.99</div>
+                <div className="text-brand-teal font-semibold">10% {t('pricing.discount')}</div>
               </div>
               <div className="text-center bg-brand-orange/5 rounded-lg p-4">
-                <div className="text-brand-dark font-semibold text-lg mb-2">20-49 {t('pricing.teachers')}</div>
-                <div className="text-3xl font-bold text-brand-orange">€7.50</div>
-                <div className="text-brand-orange font-semibold">25% {t('pricing.discount')}</div>
-              </div>
-              <div className="text-center bg-brand-dark/5 rounded-lg p-4">
-                <div className="text-brand-dark font-semibold text-lg mb-2">50+ {t('pricing.teachers')}</div>
-                <div className="text-3xl font-bold text-brand-dark">€6.50</div>
-                <div className="text-brand-dark font-semibold">35% {t('pricing.discount')}</div>
+                <div className="text-brand-dark font-semibold text-lg mb-2">10-20 {t('pricing.teachers')}</div>
+                <div className="text-3xl font-bold text-brand-orange">€7.99</div>
+                <div className="text-brand-orange font-semibold">20% {t('pricing.discount')}</div>
               </div>
             </div>
           </div>
@@ -135,7 +130,7 @@ const PricingShowcase = () => {
                 </CardDescription>
                 <div className="mt-4">
                   <div className="text-4xl font-bold text-brand-dark">
-                    €{isAnnual ? '9.99' : '12.99'}
+                    €{isAnnual ? '7.99' : '9.99'}
                   </div>
                   <div className="text-gray-600">{t('pricing.perTeacherMonth')}</div>
                   {isAnnual && (
@@ -186,7 +181,7 @@ const PricingShowcase = () => {
                 </CardDescription>
                 <div className="mt-4">
                   <div className="text-4xl font-bold text-brand-dark">
-                    €{isAnnual ? '14.99' : '19.99'}
+                    €{isAnnual ? '11.99' : '14.99'}
                   </div>
                   <div className="text-gray-600">{t('pricing.perTeacherMonth')}</div>
                   {isAnnual && (
