@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -5,10 +6,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { AlertTriangle, Calendar, Heart, MessageSquare, User, Eye, LogOut } from "lucide-react";
+import { AlertTriangle, Calendar, Heart, MessageSquare, User, Eye } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
-import LanguageSwitcher from "@/components/LanguageSwitcher";
-import { useNavigate } from "react-router-dom";
 
 interface WeeklySummary {
   id: string;
@@ -48,7 +47,6 @@ const DoctorDashboard: React.FC<DoctorDashboardProps> = ({ teacher }) => {
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
   const { t } = useLanguage();
-  const navigate = useNavigate();
 
   useEffect(() => {
     fetchDoctorData();
@@ -119,11 +117,6 @@ const DoctorDashboard: React.FC<DoctorDashboardProps> = ({ teacher }) => {
     }
   };
 
-  const handleLogout = () => {
-    // Navigate to homepage after logout
-    navigate('/', { replace: true });
-  };
-
   const getSeverityColor = (level: number) => {
     if (level >= 5) return 'destructive';
     if (level >= 3) return 'secondary';
@@ -151,37 +144,9 @@ const DoctorDashboard: React.FC<DoctorDashboardProps> = ({ teacher }) => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-brand-teal/10 via-white to-brand-orange/10">
       <div className="container mx-auto px-4 py-6 max-w-6xl">
-        {/* Header - copied from TeacherDashboard */}
-        <div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-lg border border-gray-200/50 mb-6 p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-brand-dark mb-2">
-                {t('dashboard.doctorOverview')}
-              </h1>
-              <p className="text-brand-dark/70 text-lg">
-                {t('teacher.dashboard.welcome')}, {teacher.name} - {t('teacher.dashboard.teacherAt', { 
-                  role: teacher.role.charAt(0).toUpperCase() + teacher.role.slice(1),
-                  school: teacher.school
-                })}
-              </p>
-            </div>
-            <div className="flex gap-3">
-              <LanguageSwitcher />
-              <Button 
-                variant="outline" 
-                onClick={handleLogout}
-                className="border-brand-orange/30 hover:bg-brand-orange/10"
-              >
-                <LogOut className="w-4 h-4 mr-2" />
-                {t('logout')}
-              </Button>
-            </div>
-          </div>
-        </div>
-
-        {/* Overview Cards - solid white background for better contrast */}
+        {/* Overview Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
-          <Card className="bg-white/90 backdrop-blur-sm border-gray-200/50 shadow-lg">
+          <Card className="bg-white border-gray-200 shadow-lg">
             <CardContent className="p-6">
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 bg-brand-teal/10 rounded-lg flex items-center justify-center">
@@ -195,7 +160,7 @@ const DoctorDashboard: React.FC<DoctorDashboardProps> = ({ teacher }) => {
             </CardContent>
           </Card>
 
-          <Card className="bg-white/90 backdrop-blur-sm border-gray-200/50 shadow-lg">
+          <Card className="bg-white border-gray-200 shadow-lg">
             <CardContent className="p-6">
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 bg-brand-orange/10 rounded-lg flex items-center justify-center">
@@ -209,7 +174,7 @@ const DoctorDashboard: React.FC<DoctorDashboardProps> = ({ teacher }) => {
             </CardContent>
           </Card>
 
-          <Card className="bg-white/90 backdrop-blur-sm border-gray-200/50 shadow-lg">
+          <Card className="bg-white border-gray-200 shadow-lg">
             <CardContent className="p-6">
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center">
@@ -223,7 +188,7 @@ const DoctorDashboard: React.FC<DoctorDashboardProps> = ({ teacher }) => {
             </CardContent>
           </Card>
 
-          <Card className="bg-white/90 backdrop-blur-sm border-gray-200/50 shadow-lg">
+          <Card className="bg-white border-gray-200 shadow-lg">
             <CardContent className="p-6">
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center">
@@ -238,10 +203,10 @@ const DoctorDashboard: React.FC<DoctorDashboardProps> = ({ teacher }) => {
           </Card>
         </div>
 
-        {/* Main Content with Tabs - matching teacher dashboard style */}
-        <div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-lg border border-gray-200/50 overflow-hidden">
+        {/* Main Content with Tabs */}
+        <div className="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
           <Tabs defaultValue="alerts" className="w-full">
-            {/* Tab Navigation - clean white background */}
+            {/* Tab Navigation */}
             <div className="bg-white border-b border-gray-200">
               <TabsList className="h-auto p-0 bg-transparent rounded-none w-full justify-start">
                 <TabsTrigger 
