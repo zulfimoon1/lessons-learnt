@@ -152,6 +152,13 @@ export const enTeacherTranslations = {
   // Dashboard navigation
   'teacher.dashboard': 'Teacher Dashboard',
   
+  // Subscription related
+  'teacher.subscriptionDescription': 'Access all teacher features with an active subscription.',
+  'teacher.doctorSubscriptionDescription': 'Access mental health tools and student support features.',
+  'teacher.subscribeToContinue': 'Subscribe to Continue',
+  'teacher.subscriptionRequiredForSummaries': 'Subscription required to view weekly summaries.',
+  'teacher.activePlan': 'Active {planType} plan - renews {date}',
+  
   // Common actions
   'common.play': 'Play',
   'common.pause': 'Pause',

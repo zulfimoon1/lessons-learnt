@@ -48,6 +48,7 @@ export const ltTranslations = {
   'nav.contact': 'Kontaktai',
 
   // Dashboard
+  'dashboard.title': 'Studento skydelis',
   'dashboard.overview': 'Apžvalga',
   'dashboard.teacherOverview': 'Mokytojo apžvalga',
   'dashboard.doctorOverview': 'Daktaro apžvalga',
@@ -55,7 +56,11 @@ export const ltTranslations = {
   'dashboard.feedback': 'Atsiliepimai',
   'dashboard.feedbackDescription': 'Peržiūrėkite ir tvarkykite studentų atsiliepimus apie pamokas ir klases.',
   'dashboard.weeklySummaries': 'Savaitės santraukos',
+  'dashboard.weeklySummary': 'Savaitės santrauka',
   'dashboard.mentalHealthSupport': 'Psichikos sveikatos pagalba',
+  'dashboard.grade': 'Klasė',
+  'dashboard.upcomingClasses': 'Artėjančios pamokos',
+  'dashboard.subscribeNow': 'Užsisakyti dabar',
 
   // Feedback
   'feedback.title': 'Pamokos atsiliepimas',
@@ -82,11 +87,17 @@ export const ltTranslations = {
   'feedback.submitError': 'Nepavyko pateikti atsiliepimo. Bandykite dar kartą.',
 
   // Admin
+  'admin.title': 'Administratoriaus skydelis',
   'admin.welcome': 'Sveiki',
   'admin.subscription': 'Prenumerata',
+  'admin.subscribe': 'Užsisakyti dabar',
+  'admin.loading': 'Kraunama...',
+  'admin.error.title': 'Klaida',
+  'admin.error.description': 'Nepavyko įkelti duomenų',
 
   // Class
   'class.schedule': 'Tvarkaraštis',
+  'class.upcomingClasses': 'Artėjančios pamokos',
 
   // Upload
   'upload.bulkUpload': 'Masinis įkėlimas',
@@ -94,9 +105,13 @@ export const ltTranslations = {
 
   // Articles
   'articles.mentalHealth': 'Psichikos sveikatos straipsniai',
+  'articles.subscriptionRequired': 'Šiai funkcijai reikalinga prenumerata.',
 
   // Pricing
   'pricing.processing': 'Apdorojama...',
+
+  // Student
+  'student.failedToLoadClasses': 'Nepavyko įkelti pamokų',
 
   // Merge all sub-translations
   ...ltAuthTranslations,

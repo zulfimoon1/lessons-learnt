@@ -48,6 +48,7 @@ export const enTranslations = {
   'nav.contact': 'Contact',
 
   // Dashboard
+  'dashboard.title': 'Student Dashboard',
   'dashboard.overview': 'Overview',
   'dashboard.teacherOverview': 'Teacher Overview',
   'dashboard.doctorOverview': 'Doctor Overview',
@@ -55,7 +56,11 @@ export const enTranslations = {
   'dashboard.feedback': 'Feedback',
   'dashboard.feedbackDescription': 'View and manage student feedback for your lessons and classes.',
   'dashboard.weeklySummaries': 'Weekly Summaries',
+  'dashboard.weeklySummary': 'Weekly Summary',
   'dashboard.mentalHealthSupport': 'Mental Health Support',
+  'dashboard.grade': 'Grade',
+  'dashboard.upcomingClasses': 'Upcoming Classes',
+  'dashboard.subscribeNow': 'Subscribe Now',
 
   // Feedback
   'feedback.title': 'Lesson Feedback',
@@ -82,11 +87,17 @@ export const enTranslations = {
   'feedback.submitError': 'Failed to submit feedback. Please try again.',
 
   // Admin
+  'admin.title': 'Admin Dashboard',
   'admin.welcome': 'Welcome',
   'admin.subscription': 'Subscription',
+  'admin.subscribe': 'Subscribe Now',
+  'admin.loading': 'Loading...',
+  'admin.error.title': 'Error',
+  'admin.error.description': 'Failed to load data',
 
   // Class
   'class.schedule': 'Schedule',
+  'class.upcomingClasses': 'Upcoming Classes',
 
   // Upload
   'upload.bulkUpload': 'Bulk Upload',
@@ -94,9 +105,13 @@ export const enTranslations = {
 
   // Articles
   'articles.mentalHealth': 'Mental Health Articles',
+  'articles.subscriptionRequired': 'Subscription required to access this feature.',
 
   // Pricing
   'pricing.processing': 'Processing...',
+
+  // Student
+  'student.failedToLoadClasses': 'Failed to load classes',
 
   // Merge all sub-translations
   ...enAuthTranslations,

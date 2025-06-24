@@ -152,6 +152,13 @@ export const ltTeacherTranslations = {
   // Dashboard navigation
   'teacher.dashboard': 'Mokytojo skydelis',
   
+  // Subscription related
+  'teacher.subscriptionDescription': 'Pasiekite visas mokytojo funkcijas su aktyviu prenumeratos planu.',
+  'teacher.doctorSubscriptionDescription': 'Pasiekite psichinės sveikatos įrankius ir studentų pagalbos funkcijas.',
+  'teacher.subscribeToContinue': 'Prenumeruoti, kad tęstumėte',
+  'teacher.subscriptionRequiredForSummaries': 'Prenumerata reikalinga peržiūrėti savaitės santraukas.',
+  'teacher.activePlan': 'Aktyvus {planType} planas - atsinaujina {date}',
+  
   // Common actions
   'common.play': 'Paleisti',
   'common.pause': 'Pristabdyti',
