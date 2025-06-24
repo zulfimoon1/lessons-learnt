@@ -40,6 +40,7 @@ class ClassScheduleService {
 
   async getSchedulesByTeacher(teacherId: string) {
     try {
+      // Direct query to class_schedules without joining teachers table
       const { data, error } = await supabase
         .from('class_schedules')
         .select('*')
