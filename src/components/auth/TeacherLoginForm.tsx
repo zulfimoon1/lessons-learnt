@@ -30,7 +30,7 @@ const TeacherLoginForm: React.FC<TeacherLoginFormProps> = ({ onLogin, isLoading 
         <Input
           id="email"
           type="email"
-          placeholder="Enter your email"
+          placeholder="teacher@school.com"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
@@ -44,7 +44,7 @@ const TeacherLoginForm: React.FC<TeacherLoginFormProps> = ({ onLogin, isLoading 
           <Input
             id="password"
             type={showPassword ? "text" : "password"}
-            placeholder="Enter your password"
+            placeholder="••••••••"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
