@@ -4,7 +4,7 @@ import ClassScheduleForm from "@/components/ClassScheduleForm";
 import BulkScheduleUpload from "@/components/BulkScheduleUpload";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { classScheduleService } from "@/services/classScheduleService";
-import { Calendar, Clock, BookOpen } from "lucide-react";
+import { Calendar, Clock, BookOpen, Plus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
 
@@ -62,19 +62,7 @@ const ScheduleTab: React.FC<ScheduleTabProps> = ({ teacher }) => {
 
   return (
     <div className="space-y-6">
-      {/* Create Single Schedule Form */}
-      <ClassScheduleForm 
-        teacher={teacher} 
-        onScheduleCreated={handleScheduleCreated}
-      />
-
-      {/* Bulk Upload Section */}
-      <BulkScheduleUpload 
-        teacher={teacher} 
-        onUploadComplete={handleScheduleCreated} 
-      />
-
-      {/* Existing Schedules */}
+      {/* My Classes Section - Now at the top */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -131,6 +119,28 @@ const ScheduleTab: React.FC<ScheduleTabProps> = ({ teacher }) => {
           )}
         </CardContent>
       </Card>
+
+      {/* Create Class Section - Now below My Classes */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Plus className="w-5 h-5" />
+            {t('schedule.createTitle')}
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ClassScheduleForm 
+            teacher={teacher} 
+            onScheduleCreated={handleScheduleCreated}
+          />
+        </CardContent>
+      </Card>
+
+      {/* Bulk Upload Section */}
+      <BulkScheduleUpload 
+        teacher={teacher} 
+        onUploadComplete={handleScheduleCreated} 
+      />
     </div>
   );
 };
