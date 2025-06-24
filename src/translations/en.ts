@@ -1,4 +1,3 @@
-
 import { enAuthTranslations } from './en/auth';
 import { enTeacherTranslations } from './en/teacher';
 import { enWeeklyTranslations } from './en/weekly';
@@ -139,6 +138,24 @@ export const enTranslations = {
   // Upload
   'upload.bulkUpload': 'Bulk Upload',
   'upload.uploadComplete': 'Upload Complete',
+  'upload.bulkUploadDescription': 'Upload multiple class schedules using a CSV file. Download the template to see the required format.',
+  'upload.downloadTemplate': 'Download Template',
+  'upload.selectCsvFile': 'Select CSV File',
+  'upload.selectedFile': 'Selected file',
+  'upload.uploading': 'Uploading...',
+  'upload.uploadSchedules': 'Upload Schedules',
+  'upload.successfullyUploaded': 'Successfully uploaded {count} class schedules',
+  'upload.invalidFileType': 'Invalid file type',
+  'upload.selectCsvFileError': 'Please select a CSV file',
+  'upload.noValidSchedules': 'No valid schedules found',
+  'upload.checkCsvFormat': 'Please check your CSV format',
+  'upload.uploadFailed': 'Upload failed',
+  'upload.uploadFailedDescription': 'Failed to upload schedules. Please check your file format.',
+  'upload.csvFormatRequirements': 'CSV Format Requirements:',
+  'upload.csvHeaders': 'Headers: grade, subject, lesson_topic, class_date, class_time, duration_minutes, description',
+  'upload.dateFormat': 'Date format: YYYY-MM-DD (e.g., 2024-07-01)',
+  'upload.timeFormat': 'Time format: HH:MM (e.g., 09:00)',
+  'upload.durationFormat': 'Duration in minutes (e.g., 60)',
 
   // Articles
   'articles.mentalHealth': 'Mental Health Articles',

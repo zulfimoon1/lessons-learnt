@@ -1,4 +1,3 @@
-
 import { ltAuthTranslations } from './lt/auth';
 import { ltTeacherTranslations } from './lt/teacher';
 import { ltWeeklyTranslations } from './lt/weekly';
@@ -139,6 +138,24 @@ export const ltTranslations = {
   // Upload
   'upload.bulkUpload': 'Masinis įkėlimas',
   'upload.uploadComplete': 'Įkėlimas baigtas',
+  'upload.bulkUploadDescription': 'Įkelkite kelis pamokų tvarkaraščius naudodami CSV failą. Atsisiųskite šabloną, kad pamatytumėte reikalingą formatą.',
+  'upload.downloadTemplate': 'Atsisiųsti šabloną',
+  'upload.selectCsvFile': 'Pasirinkite CSV failą',
+  'upload.selectedFile': 'Pasirinktas failas',
+  'upload.uploading': 'Įkeliama...',
+  'upload.uploadSchedules': 'Įkelti tvarkaraščius',
+  'upload.successfullyUploaded': 'Sėkmingai įkelti {count} pamokų tvarkaraščiai',
+  'upload.invalidFileType': 'Netinkamas failo tipas',
+  'upload.selectCsvFileError': 'Prašome pasirinkti CSV failą',
+  'upload.noValidSchedules': 'Nerasta tinkamų tvarkaraščių',
+  'upload.checkCsvFormat': 'Patikrinkite CSV formato tinkamumą',
+  'upload.uploadFailed': 'Įkėlimas nepavyko',
+  'upload.uploadFailedDescription': 'Nepavyko įkelti tvarkaraščių. Patikrinkite failo formatą.',
+  'upload.csvFormatRequirements': 'CSV formato reikalavimai:',
+  'upload.csvHeaders': 'Antraštės: grade, subject, lesson_topic, class_date, class_time, duration_minutes, description',
+  'upload.dateFormat': 'Datos formatas: YYYY-MM-DD (pvz., 2024-07-01)',
+  'upload.timeFormat': 'Laiko formatas: HH:MM (pvz., 09:00)',
+  'upload.durationFormat': 'Trukmė minutėmis (pvz., 60)',
 
   // Articles
   'articles.mentalHealth': 'Psichikos sveikatos straipsniai',

@@ -31,8 +31,8 @@ const BulkScheduleUpload = ({ teacher, onUploadComplete }: BulkScheduleUploadPro
       setUploadResult(null);
     } else {
       toast({
-        title: "Invalid file type",
-        description: "Please select a CSV file",
+        title: t('upload.invalidFileType'),
+        description: t('upload.selectCsvFileError'),
         variant: "destructive",
       });
     }
@@ -78,8 +78,8 @@ const BulkScheduleUpload = ({ teacher, onUploadComplete }: BulkScheduleUploadPro
 
       if (schedules.length === 0) {
         toast({
-          title: "No valid schedules found",
-          description: "Please check your CSV format",
+          title: t('upload.noValidSchedules'),
+          description: t('upload.checkCsvFormat'),
           variant: "destructive",
         });
         return;
@@ -92,7 +92,7 @@ const BulkScheduleUpload = ({ teacher, onUploadComplete }: BulkScheduleUploadPro
         setUploadResult({ success: result.data.length, errors: [] });
         toast({
           title: t('upload.uploadComplete'),
-          description: `Successfully uploaded ${result.data.length} class schedules`,
+          description: t('upload.successfullyUploaded', { count: result.data.length.toString() }),
         });
         onUploadComplete();
       } else {
@@ -101,8 +101,8 @@ const BulkScheduleUpload = ({ teacher, onUploadComplete }: BulkScheduleUploadPro
     } catch (error) {
       console.error('Upload error:', error);
       toast({
-        title: "Upload failed",
-        description: "Failed to upload schedules. Please check your file format.",
+        title: t('upload.uploadFailed'),
+        description: t('upload.uploadFailedDescription'),
         variant: "destructive",
       });
     } finally {
@@ -133,19 +133,19 @@ const BulkScheduleUpload = ({ teacher, onUploadComplete }: BulkScheduleUploadPro
           {t('upload.bulkUpload')}
         </CardTitle>
         <CardDescription>
-          Upload multiple class schedules using a CSV file. Download the template to see the required format.
+          {t('upload.bulkUploadDescription')}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="flex gap-4">
           <Button variant="outline" onClick={downloadTemplate}>
             <FileTextIcon className="w-4 h-4 mr-2" />
-            Download Template
+            {t('upload.downloadTemplate')}
           </Button>
         </div>
 
         <div>
-          <Label htmlFor="csv-file">Select CSV File</Label>
+          <Label htmlFor="csv-file">{t('upload.selectCsvFile')}</Label>
           <Input
             id="csv-file"
             type="file"
@@ -158,7 +158,7 @@ const BulkScheduleUpload = ({ teacher, onUploadComplete }: BulkScheduleUploadPro
         {file && (
           <div className="p-4 bg-muted rounded-lg">
             <p className="text-sm">
-              <strong>Selected file:</strong> {file.name} ({(file.size / 1024).toFixed(1)} KB)
+              <strong>{t('upload.selectedFile')}:</strong> {file.name} ({(file.size / 1024).toFixed(1)} KB)
             </p>
           </div>
         )}
@@ -170,7 +170,7 @@ const BulkScheduleUpload = ({ teacher, onUploadComplete }: BulkScheduleUploadPro
               <span className="font-medium">{t('upload.uploadComplete')}</span>
             </div>
             <p className="text-sm text-green-700 mt-1">
-              Successfully uploaded {uploadResult.success} class schedules
+              {t('upload.successfullyUploaded', { count: uploadResult.success.toString() })}
             </p>
           </div>
         )}
@@ -180,16 +180,16 @@ const BulkScheduleUpload = ({ teacher, onUploadComplete }: BulkScheduleUploadPro
           disabled={!file || isUploading}
           className="w-full"
         >
-          {isUploading ? "Uploading..." : "Upload Schedules"}
+          {isUploading ? t('upload.uploading') : t('upload.uploadSchedules')}
         </Button>
 
         <div className="text-sm text-muted-foreground space-y-1">
-          <p><strong>CSV Format Requirements:</strong></p>
+          <p><strong>{t('upload.csvFormatRequirements')}</strong></p>
           <ul className="list-disc list-inside space-y-1">
-            <li>Headers: grade, subject, lesson_topic, class_date, class_time, duration_minutes, description</li>
-            <li>Date format: YYYY-MM-DD (e.g., 2024-07-01)</li>
-            <li>Time format: HH:MM (e.g., 09:00)</li>
-            <li>Duration in minutes (e.g., 60)</li>
+            <li>{t('upload.csvHeaders')}</li>
+            <li>{t('upload.dateFormat')}</li>
+            <li>{t('upload.timeFormat')}</li>
+            <li>{t('upload.durationFormat')}</li>
           </ul>
         </div>
       </CardContent>
