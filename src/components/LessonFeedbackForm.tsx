@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -48,99 +49,76 @@ const LessonFeedbackForm = () => {
     setIsSubmitting(true);
 
     try {
-      // For demo students, create a simplified feedback entry without requiring class schedules
+      console.log('Feedback submission for:', { 
+        isDemoStudent, 
+        studentId: student?.id, 
+        studentName: student?.full_name 
+      });
+
+      // For demo students, show success without database operations
       if (isDemoStudent) {
-        console.log('Demo student feedback submission');
+        console.log('Demo student feedback - showing success without database operation');
         
-        // Create a simple demo class schedule entry
-        const { data: scheduleData, error: scheduleError } = await supabase
-          .from('class_schedules')
-          .insert({
-            teacher_id: '00000000-0000-0000-0000-000000000000', // Demo placeholder
-            subject: 'Demo Subject',
-            lesson_topic: lessonTitle.trim(),
-            description: lessonDescription.trim() || null,
-            grade: student?.grade || 'Demo Grade',
-            school: student?.school || 'Demo School',
-            class_date: new Date().toISOString().split('T')[0],
-            class_time: '00:00:00'
-          })
-          .select()
-          .single();
-
-        if (scheduleError) {
-          console.log('Demo schedule creation failed, using fallback');
-          // For demo, we'll create feedback without a valid class schedule
-        }
-
-        // Create the feedback entry for demo student
-        const { error } = await supabase
-          .from('feedback')
-          .insert({
-            student_id: null, // Demo students don't have real IDs in the database
-            student_name: isAnonymous ? t('demo.mockup.anonymousStudent') : student?.full_name || 'Demo Student',
-            class_schedule_id: scheduleData?.id || '00000000-0000-0000-0000-000000000000', // Fallback for demo
-            understanding: understanding,
-            interest: interest,
-            educational_growth: growth,
-            emotional_state: emotionalState || 'neutral',
-            what_went_well: whatWentWell.trim() || null,
-            suggestions: suggestions.trim() || null,
-            additional_comments: additionalComments.trim() || null,
-            is_anonymous: isAnonymous
-          });
-
-        if (error) {
-          // For demo students, if database insertion fails, we'll show success anyway
-          console.log('Demo feedback database error (expected):', error);
-        }
-
         toast({
           title: t('feedback.submitted'),
           description: t('feedback.submittedDescription'),
         });
-      } else {
-        // Regular student feedback submission
-        const { data: scheduleData, error: scheduleError } = await supabase
-          .from('class_schedules')
-          .insert({
-            teacher_id: '00000000-0000-0000-0000-000000000000', // Placeholder for feedback-only submissions
-            subject: 'Student Feedback',
-            lesson_topic: lessonTitle.trim(),
-            description: lessonDescription.trim() || null,
-            grade: student?.grade || 'Unknown',
-            school: student?.school || 'Unknown',
-            class_date: new Date().toISOString().split('T')[0],
-            class_time: '00:00:00'
-          })
-          .select()
-          .single();
 
-        if (scheduleError) throw scheduleError;
-
-        const { error } = await supabase
-          .from('feedback')
-          .insert({
-            student_id: isAnonymous ? null : student?.id,
-            student_name: isAnonymous ? t('demo.mockup.anonymousStudent') : student?.full_name || '',
-            class_schedule_id: scheduleData.id,
-            understanding: understanding,
-            interest: interest,
-            educational_growth: growth,
-            emotional_state: emotionalState || 'neutral',
-            what_went_well: whatWentWell.trim() || null,
-            suggestions: suggestions.trim() || null,
-            additional_comments: additionalComments.trim() || null,
-            is_anonymous: isAnonymous
-          });
-
-        if (error) throw error;
-
-        toast({
-          title: t('feedback.submitted'),
-          description: t('feedback.submittedDescription'),
-        });
+        // Reset form
+        setLessonTitle("");
+        setLessonDescription("");
+        setUnderstanding(0);
+        setInterest(0);
+        setGrowth(0);
+        setEmotionalState("");
+        setWhatWentWell("");
+        setSuggestions("");
+        setAdditionalComments("");
+        setIsAnonymous(false);
+        
+        return;
       }
+
+      // Regular student feedback submission
+      const { data: scheduleData, error: scheduleError } = await supabase
+        .from('class_schedules')
+        .insert({
+          teacher_id: '00000000-0000-0000-0000-000000000000', // Placeholder for feedback-only submissions
+          subject: 'Student Feedback',
+          lesson_topic: lessonTitle.trim(),
+          description: lessonDescription.trim() || null,
+          grade: student?.grade || 'Unknown',
+          school: student?.school || 'Unknown',
+          class_date: new Date().toISOString().split('T')[0],
+          class_time: '00:00:00'
+        })
+        .select()
+        .single();
+
+      if (scheduleError) throw scheduleError;
+
+      const { error } = await supabase
+        .from('feedback')
+        .insert({
+          student_id: isAnonymous ? null : student?.id,
+          student_name: isAnonymous ? t('demo.mockup.anonymousStudent') : student?.full_name || '',
+          class_schedule_id: scheduleData.id,
+          understanding: understanding,
+          interest: interest,
+          educational_growth: growth,
+          emotional_state: emotionalState || 'neutral',
+          what_went_well: whatWentWell.trim() || null,
+          suggestions: suggestions.trim() || null,
+          additional_comments: additionalComments.trim() || null,
+          is_anonymous: isAnonymous
+        });
+
+      if (error) throw error;
+
+      toast({
+        title: t('feedback.submitted'),
+        description: t('feedback.submittedDescription'),
+      });
 
       // Reset form
       setLessonTitle("");
