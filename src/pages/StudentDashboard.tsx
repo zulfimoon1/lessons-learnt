@@ -1,229 +1,91 @@
-import { useState, useEffect, Suspense, lazy } from "react";
+
+import React, { useState } from "react";
+import { useAuth } from "@/contexts/AuthContext";
+import { Navigate, useSearchParams } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useAuthStorage } from "@/hooks/useAuthStorage";
-import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
-import { 
-  SchoolIcon, 
-  CalendarIcon,
-  BookOpenIcon
-} from "lucide-react";
-import { useNavigate } from "react-router-dom";
-import { useLanguage } from "@/contexts/LanguageContext";
-import ComplianceFooter from "@/components/ComplianceFooter";
-import CookieConsent from "@/components/CookieConsent";
-import DashboardHeader from "@/components/dashboard/DashboardHeader";
-import StatsCard from "@/components/dashboard/StatsCard";
-import UpcomingClassesTab from "@/components/dashboard/UpcomingClassesTab";
+import { Button } from "@/components/ui/button";
+import StudentUpcomingClasses from "@/components/dashboard/student/StudentUpcomingClasses";
+import WeeklySummaryForm from "@/components/dashboard/student/WeeklySummaryForm";
 import MentalHealthSupportTab from "@/components/dashboard/MentalHealthSupportTab";
-import { DashboardSkeleton, TabContentSkeleton } from "@/components/ui/loading-skeleton";
-
-// Lazy load tab components
-const FeedbackTab = lazy(() => import("@/components/dashboard/FeedbackTab"));
-const WeeklySummaryTab = lazy(() => import("@/components/dashboard/WeeklySummaryTab"));
-
-interface ClassSchedule {
-  id: string;
-  subject: string;
-  grade: string;
-  lesson_topic: string;
-  class_date: string;
-  class_time: string;
-  duration_minutes: number;
-  teacher_id: string;
-  school: string;
-}
-
-interface SchoolPsychologist {
-  id: string;
-  name: string;
-  email: string;
-  phone?: string;
-  office_location?: string;
-  availability_hours?: string;
-}
+import FeedbackForm from "@/components/FeedbackForm";
+import { LogOut } from "lucide-react";
 
 const StudentDashboard = () => {
-  const { student, clearAuth } = useAuthStorage();
-  const { toast } = useToast();
-  const navigate = useNavigate();
-  const { t } = useLanguage();
-  const [upcomingClasses, setUpcomingClasses] = useState<ClassSchedule[]>([]);
-  const [psychologists, setPsychologists] = useState<SchoolPsychologist[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    console.log('StudentDashboard: Component mounted, checking auth state', { student });
-    if (!student) {
-      console.log('StudentDashboard: No student found, redirecting to login');
-      navigate('/student-login', { replace: true });
-      return;
-    }
-    console.log('StudentDashboard: Student authenticated, loading data');
-    loadData();
-  }, [student, navigate]);
-
-  const loadData = async () => {
-    console.log('StudentDashboard: Starting to load data');
-    await Promise.all([loadUpcomingClasses(), loadPsychologists()]);
-    setIsLoading(false);
-    console.log('StudentDashboard: Data loading complete');
-  };
-
-  const loadUpcomingClasses = async () => {
-    if (!student?.school || !student?.grade) {
-      console.log('StudentDashboard: Missing school or grade data', { school: student?.school, grade: student?.grade });
-      return;
-    }
-    
-    try {
-      console.log('StudentDashboard: Loading upcoming classes for', { school: student.school, grade: student.grade });
-      const today = new Date().toISOString().split('T')[0];
-      
-      const { data, error } = await supabase
-        .from('class_schedules')
-        .select('*')
-        .eq('school', student.school)
-        .eq('grade', student.grade)
-        .gte('class_date', today)
-        .order('class_date', { ascending: true })
-        .order('class_time', { ascending: true })
-        .limit(5);
-
-      if (error) throw error;
-      console.log('StudentDashboard: Loaded classes successfully', data);
-      setUpcomingClasses(data || []);
-    } catch (error) {
-      console.error('StudentDashboard: Error loading classes:', error);
-      toast({
-        title: t('common.error'),
-        description: t('student.failedToLoadClasses'),
-        variant: "destructive",
-      });
-    }
-  };
-
-  const loadPsychologists = async () => {
-    if (!student?.school) {
-      console.log('StudentDashboard: Missing school data for psychologists');
-      return;
-    }
-    
-    try {
-      console.log('StudentDashboard: Loading psychologists for school:', student.school);
-      const { data, error } = await supabase
-        .from('school_psychologists')
-        .select('*')
-        .eq('school', student.school)
-        .order('name', { ascending: true });
-
-      if (error) {
-        console.log('StudentDashboard: No psychologists found or error loading:', error);
-        setPsychologists([]);
-        return;
-      }
-      
-      console.log('StudentDashboard: Loaded psychologists successfully', data);
-      setPsychologists(data || []);
-    } catch (error) {
-      console.log('StudentDashboard: Error loading psychologists (non-critical):', error);
-      setPsychologists([]);
-    }
-  };
-
-  const handleLogout = () => {
-    console.log('StudentDashboard: Logging out student');
-    clearAuth();
-    // Navigation is handled by DashboardHeader
-  };
+  const { student, logout, isLoading } = useAuth();
+  const [searchParams] = useSearchParams();
+  const activeTab = searchParams.get('tab') || 'classes';
+  const classId = searchParams.get('classId');
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-brand-gradient-soft">
-        <CookieConsent />
-        <DashboardHeader 
-          title={t('dashboard.title')}
-          userName=""
-          onLogout={handleLogout}
-        />
-        <main className="max-w-7xl mx-auto p-6">
-          <DashboardSkeleton />
-        </main>
-        <ComplianceFooter />
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
       </div>
     );
   }
 
+  if (!student) {
+    return <Navigate to="/student-login" replace />;
+  }
+
+  const handleLogout = () => {
+    logout();
+  };
+
   return (
-    <div className="min-h-screen bg-brand-gradient-soft">
-      <CookieConsent />
-      <DashboardHeader 
-        title={t('dashboard.title')}
-        userName={student?.full_name || ""}
-        onLogout={handleLogout}
-      />
-
-      <main className="max-w-7xl mx-auto p-6 space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <StatsCard 
-            title={t('auth.school')}
-            value={student?.school || ""}
-            icon={SchoolIcon}
-          />
-          
-          <StatsCard 
-            title={t('dashboard.grade')}
-            value={student?.grade || ""}
-            icon={BookOpenIcon}
-          />
-
-          <StatsCard 
-            title={t('dashboard.upcomingClasses')}
-            value={upcomingClasses.length}
-            icon={CalendarIcon}
-          />
+    <div className="min-h-screen bg-background">
+      <div className="container mx-auto py-6">
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h1 className="text-2xl font-bold">Student Dashboard</h1>
+            <p className="text-muted-foreground">
+              Welcome, {student.full_name} - Grade {student.grade} at {student.school}
+            </p>
+          </div>
+          <Button variant="outline" onClick={handleLogout}>
+            <LogOut className="w-4 h-4 mr-2" />
+            Logout
+          </Button>
         </div>
 
-        <Tabs defaultValue="feedback" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4 bg-white/90">
-            <TabsTrigger value="feedback" className="data-[state=active]:bg-brand-teal data-[state=active]:text-white text-brand-dark">{t('dashboard.feedback')}</TabsTrigger>
-            <TabsTrigger value="classes" className="data-[state=active]:bg-brand-teal data-[state=active]:text-white text-brand-dark">{t('class.upcomingClasses')}</TabsTrigger>
-            <TabsTrigger value="weekly" className="data-[state=active]:bg-brand-teal data-[state=active]:text-white text-brand-dark">{t('dashboard.weeklySummary')}</TabsTrigger>
-            <TabsTrigger value="support" className="data-[state=active]:bg-brand-teal data-[state=active]:text-white text-brand-dark">{t('dashboard.mentalHealthSupport')}</TabsTrigger>
+        <Tabs value={activeTab} className="space-y-4">
+          <TabsList className="grid w-full grid-cols-4">
+            <TabsTrigger value="classes">Upcoming Classes</TabsTrigger>
+            <TabsTrigger value="feedback">Leave Feedback</TabsTrigger>
+            <TabsTrigger value="weekly">Weekly Summary</TabsTrigger>
+            <TabsTrigger value="support">Mental Health Support</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="feedback" className="space-y-6">
-            <Suspense fallback={<TabContentSkeleton />}>
-              <FeedbackTab />
-            </Suspense>
+          <TabsContent value="classes" className="space-y-4">
+            <StudentUpcomingClasses student={student} />
           </TabsContent>
 
-          <TabsContent value="classes" className="space-y-6">
-            <UpcomingClassesTab 
-              classes={upcomingClasses}
-              studentGrade={student?.grade}
-              studentSchool={student?.school}
+          <TabsContent value="feedback" className="space-y-4">
+            <FeedbackForm 
+              student={student} 
+              classScheduleId={classId}
+              onFeedbackSubmitted={() => {
+                // Redirect back to classes tab after feedback submission
+                window.location.href = '/student-dashboard?tab=classes';
+              }}
             />
           </TabsContent>
 
-          <TabsContent value="weekly" className="space-y-6">
-            <Suspense fallback={<TabContentSkeleton />}>
-              <WeeklySummaryTab student={student} />
-            </Suspense>
+          <TabsContent value="weekly" className="space-y-4">
+            <WeeklySummaryForm student={student} />
           </TabsContent>
 
-          <TabsContent value="support" className="space-y-6">
-            <MentalHealthSupportTab 
-              psychologists={psychologists}
-              studentId={student?.id}
-              studentName={student?.full_name}
-              studentSchool={student?.school}
-              studentGrade={student?.grade}
+          <TabsContent value="support" className="space-y-4">
+            <MentalHealthSupportTab
+              psychologists={[]} // Will be fetched based on school
+              studentId={student.id}
+              studentName={student.full_name}
+              studentSchool={student.school}
+              studentGrade={student.grade}
             />
           </TabsContent>
         </Tabs>
-      </main>
-      <ComplianceFooter />
+      </div>
     </div>
   );
 };
