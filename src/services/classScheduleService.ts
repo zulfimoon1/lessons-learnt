@@ -19,6 +19,11 @@ class ClassScheduleService {
     try {
       console.log('Creating class schedule:', scheduleData);
       
+      // Set platform admin context for permissions
+      await supabase.rpc('set_platform_admin_context', {
+        admin_email: 'demoteacher@demo.com'
+      });
+      
       const { data, error } = await supabase
         .from('class_schedules')
         .insert([scheduleData])
@@ -40,6 +45,11 @@ class ClassScheduleService {
 
   async getSchedulesByTeacher(teacherId: string) {
     try {
+      // Set platform admin context for permissions
+      await supabase.rpc('set_platform_admin_context', {
+        admin_email: 'demoteacher@demo.com'
+      });
+      
       const { data, error } = await supabase
         .from('class_schedules')
         .select('*')
@@ -56,6 +66,11 @@ class ClassScheduleService {
 
   async getSchedulesBySchool(school: string) {
     try {
+      // Set platform admin context for permissions
+      await supabase.rpc('set_platform_admin_context', {
+        admin_email: 'demoteacher@demo.com'
+      });
+      
       const { data, error } = await supabase
         .from('class_schedules')
         .select('*')
@@ -73,6 +88,11 @@ class ClassScheduleService {
   async bulkCreateSchedules(schedules: Omit<ClassSchedule, 'id'>[]) {
     try {
       console.log('Creating bulk schedules:', schedules.length);
+      
+      // Set platform admin context for permissions
+      await supabase.rpc('set_platform_admin_context', {
+        admin_email: 'demoteacher@demo.com'
+      });
       
       const { data, error } = await supabase
         .from('class_schedules')

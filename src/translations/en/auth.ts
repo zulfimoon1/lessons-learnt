@@ -1,77 +1,56 @@
 
-export const auth = {
-  'auth.studentLogin': 'Student Login',
-  'auth.teacherLogin': 'Teacher Login',
-  'auth.adminLogin': 'Admin Login',
-  'auth.signUpNow': 'Sign Up Now',
+export const enAuthTranslations = {
+  // Login/Logout
   'auth.login': 'Login',
+  'auth.logout': 'Logout',
   'auth.signup': 'Sign Up',
-  'auth.forgotPassword': 'Forgot Password?',
-  'auth.rememberMe': 'Remember me',
-  'auth.dontHaveAccount': 'Don\'t have an account?',
-  'auth.alreadyHaveAccount': 'Already have an account?',
-  'auth.createAccount': 'Create Account',
-  'auth.backToLogin': 'Back to Login',
+  'auth.signin': 'Sign In',
+  'auth.signout': 'Sign Out',
+  'auth.forgotPassword': 'Forgot Password',
   'auth.resetPassword': 'Reset Password',
-  'auth.sendResetEmail': 'Send Reset Email',
-  'auth.checkEmail': 'Check your email for reset instructions',
-  'auth.passwordResetSent': 'Password reset email sent',
+  'auth.confirmPassword': 'Confirm Password',
+  'auth.newPassword': 'New Password',
+  'auth.currentPassword': 'Current Password',
+  'auth.changePassword': 'Change Password',
+  
+  // Form fields
+  'auth.email': 'Email',
+  'auth.password': 'Password',
+  'auth.name': 'Name',
+  'auth.fullName': 'Full Name',
+  'auth.school': 'School',
+  'auth.grade': 'Grade',
+  'auth.role': 'Role',
+  
+  // Messages
+  'auth.loginSuccess': 'Login successful',
+  'auth.logoutSuccess': 'Logout successful',
+  'auth.loginError': 'Login failed',
   'auth.invalidCredentials': 'Invalid credentials',
   'auth.accountCreated': 'Account created successfully',
-  'auth.loginSuccessful': 'Login successful',
-  'auth.logoutSuccessful': 'Logout successful',
-  'auth.sessionExpired': 'Session expired',
-  'auth.unauthorizedAccess': 'Unauthorized access',
-  'auth.accountLocked': 'Account locked',
-  'auth.tooManyAttempts': 'Too many login attempts',
+  'auth.passwordResetSent': 'Password reset email sent',
+  
+  // Validation
   'auth.emailRequired': 'Email is required',
   'auth.passwordRequired': 'Password is required',
   'auth.nameRequired': 'Name is required',
   'auth.schoolRequired': 'School is required',
   'auth.gradeRequired': 'Grade is required',
-  'auth.invalidEmail': 'Invalid email format',
-  'auth.passwordTooShort': 'Password must be at least 8 characters',
-  'auth.passwordsDoNotMatch': 'Passwords do not match',
-  'auth.email': 'Email',
-  'auth.password': 'Password',
-  'auth.confirmPassword': 'Confirm Password',
-  'auth.fullName': 'Full Name',
-  'auth.school': 'School',
-  'auth.gradeClass': 'Class/Grade',
-  'auth.loggingIn': 'Logging in...',
-  'auth.creatingAccount': 'Creating account...',
-  'auth.loginSuccess': 'Login successful',
-  'auth.loginFailed': 'Login failed',
-  'auth.signUp': 'Sign Up',
-  'auth.logout': 'Logout',
   
-  // Teacher login specific
-  'login.teacher.title': 'Teacher Portal',
-  'login.teacher.subtitle': 'Log in to your teaching dashboard',
-  'login.teacher.role': 'Role',
-  'login.teacher.roleTeacher': 'Teacher',
-  'login.teacher.roleAdmin': 'School Administrator',
-  'login.teacher.adminHint': 'School administrators can manage teachers and view all feedback',
+  // Navigation
+  'auth.goToLogin': 'Go to Login',
+  'auth.goToSignup': 'Go to Sign Up',
+  'auth.alreadyHaveAccount': 'Already have an account?',
+  'auth.dontHaveAccount': "Don't have an account?",
   
-  // Student login specific
-  'login.student.title': 'Student Portal',
-  'login.student.subtitle': 'Log in to your learning dashboard',
+  // Buttons
+  'auth.submit': 'Submit',
+  'auth.cancel': 'Cancel',
+  'auth.continue': 'Continue',
+  'auth.back': 'Back',
   
-  // Basic auth fields (without duplicates)
-  emailPlaceholder: "Enter your email",
-  passwordPlaceholder: "Enter your password",
-  confirmPasswordPlaceholder: "Confirm your password",
-  fullNamePlaceholder: "Enter your full name",
-  schoolPlaceholder: "Enter your school name",
-  gradePlaceholder: "Enter your grade",
-  signIn: "Sign In",
-  signingIn: "Signing In...",
-  signingUp: "Signing Up...",
-  teacher: "Teacher",
-  admin: "Admin",
-  doctor: "Doctor",
-  grade: "Grade",
-  role: "Role"
+  // Status
+  'auth.loading': 'Loading...',
+  'auth.authenticating': 'Authenticating...',
+  'auth.signingOut': 'Signing out...',
 };
-
-export const enAuthTranslations = auth;
