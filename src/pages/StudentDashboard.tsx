@@ -25,12 +25,25 @@ interface SchoolPsychologist {
   availability_hours?: string;
 }
 
+interface ClassSchedule {
+  id: string;
+  subject: string;
+  grade: string;
+  lesson_topic: string;
+  class_date: string;
+  class_time: string;
+  duration_minutes: number;
+  teacher_id: string;
+  school: string;
+}
+
 const StudentDashboard = () => {
   const { student, clearAuth } = useAuthStorage();
   const { toast } = useToast();
   const navigate = useNavigate();
   const { t } = useLanguage();
   const [psychologists, setPsychologists] = useState<SchoolPsychologist[]>([]);
+  const [classes, setClasses] = useState<ClassSchedule[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -39,6 +52,7 @@ const StudentDashboard = () => {
       return;
     }
     loadPsychologists();
+    loadClasses();
   }, [student, navigate]);
 
   const loadPsychologists = async () => {
@@ -57,7 +71,7 @@ const StudentDashboard = () => {
         console.error('Error loading school psychologists:', schoolError);
       }
 
-      // Also try teachers with doctor role - fix the SQL syntax
+      // Also try teachers with doctor role
       const { data: doctorTeachers, error: doctorError } = await supabase
         .from('teachers')
         .select('id, name, email, specialization, role')
@@ -85,6 +99,32 @@ const StudentDashboard = () => {
       setPsychologists(allPsychologists);
     } catch (error) {
       console.error('Error loading psychologists:', error);
+    }
+  };
+
+  const loadClasses = async () => {
+    if (!student?.school || !student?.grade) return;
+    
+    try {
+      console.log('Loading classes for school:', student.school, 'grade:', student.grade);
+      
+      const { data: classData, error: classError } = await supabase
+        .from('class_schedules')
+        .select('*')
+        .eq('school', student.school)
+        .eq('grade', student.grade)
+        .gte('class_date', new Date().toISOString().split('T')[0])
+        .order('class_date', { ascending: true })
+        .order('class_time', { ascending: true });
+
+      if (classError) {
+        console.error('Error loading classes:', classError);
+      } else {
+        console.log('Found classes:', classData);
+        setClasses(classData || []);
+      }
+    } catch (error) {
+      console.error('Error loading classes:', error);
     } finally {
       setIsLoading(false);
     }
@@ -132,7 +172,7 @@ const StudentDashboard = () => {
 
           <StatsCard
             title="Upcoming Classes"
-            value="0"
+            value={classes.length.toString()}
             icon={CalendarIcon}
           />
         </div>
@@ -147,7 +187,11 @@ const StudentDashboard = () => {
           </TabsList>
 
           <TabsContent value="upcoming-classes">
-            <UpcomingClassesTab />
+            <UpcomingClassesTab 
+              classes={classes}
+              studentGrade={student?.grade}
+              studentSchool={student?.school}
+            />
           </TabsContent>
 
           <TabsContent value="feedback">

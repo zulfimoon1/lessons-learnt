@@ -100,7 +100,8 @@ const SecureTeacherLogin = () => {
     setIsLoading(true);
 
     try {
-      const result = await signupTeacher(name.trim(), email.trim(), school.trim(), password, role);
+      const validRole = role as 'teacher' | 'admin' | 'doctor';
+      const result = await signupTeacher(name.trim(), email.trim(), school.trim(), password, validRole);
 
       if (result.error) {
         toast({

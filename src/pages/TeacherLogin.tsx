@@ -129,7 +129,8 @@ const TeacherLogin = () => {
     setIsLoading(true);
 
     try {
-      const result = await signupTeacher(name, email, school, password, role);
+      const validRole = role as 'teacher' | 'admin' | 'doctor';
+      const result = await signupTeacher(name, email, school, password, validRole);
 
       if (result.error) {
         toast({
