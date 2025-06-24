@@ -19,7 +19,7 @@ const Index = () => {
           <div className="flex justify-between items-center">
             <div className="flex items-center gap-2">
               <GraduationCapIcon className="w-8 h-8 text-brand-teal" />
-              <h1 className="text-2xl font-bold text-brand-dark">Lesson Lens</h1>
+              <h1 className="text-2xl font-bold text-brand-dark">{t('welcome.title') || 'Lessons Learnt'}</h1>
             </div>
             <div className="flex items-center gap-4">
               <Link to="/pricing-showcase">
@@ -45,13 +45,13 @@ const Index = () => {
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <div className="max-w-3xl mx-auto">
             <h2 className="text-5xl font-bold text-white mb-2">
-              {t('welcome.heroTitle1') || 'Transform Education'}
+              {t('welcome.heroTitle1') || 'Collaborative classrooms'}
             </h2>
             <h2 className="text-5xl font-bold text-white mb-6">
-              {t('welcome.heroTitle2') || 'With Real Insights'}
+              {t('welcome.heroTitle2') || 'Unstoppable minds'}
             </h2>
             <p className="text-xl text-white/90 mb-12">
-              {t('welcome.subtitle') || 'Get meaningful feedback from students and improve teaching effectiveness'}
+              {t('welcome.subtitle') || 'Empower students, support teachers, and enhance learning with our comprehensive education platform'}
             </p>
             
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-md mx-auto">
@@ -79,7 +79,7 @@ const Index = () => {
             
             <div className="max-w-2xl mx-auto mt-6">
               <p className="text-5xl font-bold text-brand-orange mt-2">
-                {t('welcome.freeForStudents') || 'Free for Students!'}
+                {t('welcome.freeForStudents') || 'Always free for students!'}
               </p>
             </div>
           </div>
@@ -97,9 +97,9 @@ const Index = () => {
               <div className="w-12 h-12 bg-brand-teal/20 rounded-lg flex items-center justify-center mb-4">
                 <UsersIcon className="w-6 h-6 text-brand-teal" />
               </div>
-              <CardTitle className="text-xl text-brand-dark">{t('features.studentFeedback.title') || 'Student Feedback'}</CardTitle>
+              <CardTitle className="text-xl text-brand-dark">{t('features.studentFeedback.title') || 'Student Feedback Collection'}</CardTitle>
               <CardDescription className="text-gray-600">
-                {t('features.studentFeedback.description') || 'Collect anonymous feedback from students about lessons and teaching methods'}
+                {t('features.studentFeedback.description') || 'Collect direct feedback on lessons and experiences'}
               </CardDescription>
             </CardHeader>
           </Card>
@@ -109,9 +109,9 @@ const Index = () => {
               <div className="w-12 h-12 bg-brand-teal/20 rounded-lg flex items-center justify-center mb-4">
                 <BookOpenIcon className="w-6 h-6 text-brand-teal" />
               </div>
-              <CardTitle className="text-xl text-brand-dark">{t('features.teacherInsights.title') || 'Teacher Insights'}</CardTitle>
+              <CardTitle className="text-xl text-brand-dark">{t('features.teacherInsights.title') || 'Teacher Analytics Dashboard'}</CardTitle>
               <CardDescription className="text-gray-600">
-                {t('features.teacherInsights.description') || 'Get detailed analytics and insights to improve your teaching approach'}
+                {t('features.teacherInsights.description') || 'Monitor student progress and classroom dynamics'}
               </CardDescription>
             </CardHeader>
           </Card>
@@ -123,7 +123,7 @@ const Index = () => {
               </div>
               <CardTitle className="text-xl text-brand-dark">{t('features.mentalHealth.title') || 'Mental Health Support'}</CardTitle>
               <CardDescription className="text-gray-600">
-                {t('features.mentalHealth.description') || 'Monitor student wellbeing and provide timely support when needed'}
+                {t('features.mentalHealth.description') || 'Anonymous chat with school psychologists'}
               </CardDescription>
             </CardHeader>
           </Card>
@@ -135,17 +135,17 @@ const Index = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-4xl font-bold text-brand-dark mb-6">
-              {t('platform.whySchools') || 'Why Schools Choose Us'}
+              {t('platform.whySchools') || 'Why Schools Choose Lessons Learnt'}
             </h2>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              {t('platform.whySchoolsSubtitle') || 'Transform your educational environment with data-driven insights and real-time feedback'}
+              {t('platform.whySchoolsSubtitle') || 'Comprehensive education technology that puts student wellbeing first'}
             </p>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center mb-16">
             <div>
               <h3 className="text-3xl font-bold text-brand-dark mb-6">
-                {t('platform.studentInsights') || 'Student Insights'}
+                {t('platform.studentInsights') || 'Real-time Student Insights'}
               </h3>
               <div className="space-y-6">
                 <div className="flex items-start gap-4">
@@ -153,7 +153,7 @@ const Index = () => {
                   <div>
                     <h4 className="font-semibold text-lg mb-2 text-brand-dark">{t('platform.realTimeAnalytics') || 'Real-time Analytics'}</h4>
                     <p className="text-gray-600">
-                      {t('platform.realTimeAnalyticsDesc') || 'Get instant insights into student engagement and understanding'}
+                      {t('platform.realTimeAnalyticsDesc') || 'Get instant feedback on lesson effectiveness and student understanding'}
                     </p>
                   </div>
                 </div>
@@ -162,7 +162,7 @@ const Index = () => {
                   <div>
                     <h4 className="font-semibold text-lg mb-2 text-brand-dark">{t('platform.mentalHealthMonitoring') || 'Mental Health Monitoring'}</h4>
                     <p className="text-gray-600">
-                      {t('platform.mentalHealthMonitoringDesc') || 'Early detection of student wellbeing concerns'}
+                      {t('platform.mentalHealthMonitoringDesc') || 'Early identification of students who may need additional support'}
                     </p>
                   </div>
                 </div>
@@ -171,7 +171,7 @@ const Index = () => {
                   <div>
                     <h4 className="font-semibold text-lg mb-2 text-brand-dark">{t('platform.privacySecurity') || 'Privacy & Security'}</h4>
                     <p className="text-gray-600">
-                      {t('platform.privacySecurityDesc') || 'GDPR compliant with advanced security measures'}
+                      {t('platform.privacySecurityDesc') || 'GDPR compliant with enterprise-grade security measures'}
                     </p>
                   </div>
                 </div>
@@ -179,10 +179,10 @@ const Index = () => {
             </div>
             <div className="bg-brand-gradient p-8 rounded-2xl text-white">
               <div className="text-center">
-                <div className="text-6xl font-bold mb-4">{t('platform.improvementPercent') || '85%'}</div>
-                <p className="text-xl font-semibold mb-2">{t('platform.improvementTitle') || 'Improvement in Teaching'}</p>
+                <div className="text-6xl font-bold mb-4">{t('platform.improvementPercent') || '25%+'}</div>
+                <p className="text-xl font-semibold mb-2">{t('platform.improvementTitle') || 'Improvement in Student Engagement'}</p>
                 <p className="text-white/90">
-                  {t('platform.improvementDesc') || 'Teachers report significant improvements in their teaching effectiveness'}
+                  {t('platform.improvementDesc') || 'Schools report significant improvements within the first month'}
                 </p>
               </div>
             </div>

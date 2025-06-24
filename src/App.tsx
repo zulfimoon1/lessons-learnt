@@ -14,6 +14,8 @@ import StudentDashboard from "./pages/StudentDashboard";
 import SecureAuth from "./pages/SecureAuth";
 import SecureTeacherLogin from "./pages/SecureTeacherLogin";
 import SecureStudentLogin from "./pages/SecureStudentLogin";
+import Demo from "./pages/Demo";
+import PricingShowcase from "./pages/PricingShowcase";
 
 const queryClient = new QueryClient();
 
@@ -35,6 +37,8 @@ function App() {
                 <Route path="/secure-auth" element={<SecureAuth />} />
                 <Route path="/secure-teacher-login" element={<SecureTeacherLogin />} />
                 <Route path="/secure-student-login" element={<SecureStudentLogin />} />
+                <Route path="/demo" element={<Demo />} />
+                <Route path="/pricing-showcase" element={<PricingShowcase />} />
               </Routes>
             </BrowserRouter>
           </LanguageProvider>
