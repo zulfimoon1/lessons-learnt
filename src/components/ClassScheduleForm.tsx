@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -88,12 +87,23 @@ const ClassScheduleForm = ({ teacher }: ClassScheduleFormProps) => {
     setIsSubmitting(true);
     
     try {
-      console.log('Scheduling class with teacher:', teacher);
+      console.log('🔄 Starting class scheduling process...');
+      console.log('📧 Teacher email:', teacher.email);
+      console.log('🏫 Teacher school:', teacher.school);
+      console.log('📝 Form data:', formData);
       
       // Set platform admin context for the current user
-      await supabase.rpc('set_platform_admin_context', { 
+      console.log('🔐 Setting platform admin context...');
+      const { error: contextError } = await supabase.rpc('set_platform_admin_context', { 
         admin_email: teacher.email 
       });
+      
+      if (contextError) {
+        console.error('❌ Failed to set admin context:', contextError);
+        throw new Error(`Failed to set admin context: ${contextError.message}`);
+      }
+      
+      console.log('✅ Platform admin context set successfully');
       
       if (formData.is_recurring) {
         // Generate recurring schedule entries
@@ -116,18 +126,19 @@ const ClassScheduleForm = ({ teacher }: ClassScheduleFormProps) => {
           teacher_id: teacher.id
         }));
 
-        console.log('Inserting recurring schedules:', schedules);
+        console.log('📅 Inserting recurring schedules:', schedules.length, 'classes');
 
-        const { error } = await supabase
+        const { data, error } = await supabase
           .from('class_schedules')
-          .insert(schedules);
+          .insert(schedules)
+          .select();
 
         if (error) {
-          console.error('Database error inserting recurring schedules:', error);
-          throw error;
+          console.error('❌ Database error inserting recurring schedules:', error);
+          throw new Error(`Failed to create recurring schedules: ${error.message}`);
         }
 
-        console.log('Successfully inserted recurring schedules');
+        console.log('✅ Successfully inserted recurring schedules:', data?.length);
 
         toast({
           title: t('common.success'),
@@ -147,18 +158,19 @@ const ClassScheduleForm = ({ teacher }: ClassScheduleFormProps) => {
           teacher_id: teacher.id
         };
 
-        console.log('Inserting single schedule:', scheduleData);
+        console.log('📅 Inserting single schedule:', scheduleData);
 
-        const { error } = await supabase
+        const { data, error } = await supabase
           .from('class_schedules')
-          .insert(scheduleData);
+          .insert(scheduleData)
+          .select();
 
         if (error) {
-          console.error('Database error inserting schedule:', error);
-          throw error;
+          console.error('❌ Database error inserting schedule:', error);
+          throw new Error(`Failed to create schedule: ${error.message}`);
         }
 
-        console.log('Successfully inserted schedule');
+        console.log('✅ Successfully inserted schedule:', data);
 
         toast({
           title: t('common.success'),
@@ -182,7 +194,7 @@ const ClassScheduleForm = ({ teacher }: ClassScheduleFormProps) => {
         number_of_occurrences: 4
       });
     } catch (error) {
-      console.error('Error scheduling class:', error);
+      console.error('💥 Error scheduling class:', error);
       toast({
         title: t('common.error'),
         description: `Failed to schedule class: ${error.message}`,
@@ -203,6 +215,21 @@ const ClassScheduleForm = ({ teacher }: ClassScheduleFormProps) => {
   return (
     <div className="space-y-8">
       <form onSubmit={handleSubmit} className="space-y-8">
+        {/* Testing Panel - Only visible in development */}
+        {process.env.NODE_ENV === 'development' && (
+          <Card className="bg-yellow-50 border-yellow-200">
+            <CardHeader>
+              <CardTitle className="text-yellow-800">🧪 Testing Panel</CardTitle>
+            </CardHeader>
+            <CardContent className="text-sm text-yellow-700">
+              <p><strong>Teacher ID:</strong> {teacher.id}</p>
+              <p><strong>Teacher Email:</strong> {teacher.email}</p>
+              <p><strong>Teacher School:</strong> {teacher.school}</p>
+              <p><strong>Form Valid:</strong> {isFormValid ? '✅' : '❌'}</p>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Basic Information */}
         <Card className="bg-white/80 backdrop-blur-sm border-blue-100">
           <CardHeader>
