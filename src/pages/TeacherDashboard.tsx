@@ -35,15 +35,14 @@ const TeacherDashboard = () => {
     logout();
   };
 
-  // Check if this is a demo teacher
-  const isDemoTeacher = parsedDemoTeacher || (teacher && (teacher.school === 'Demo High School' || teacher.name.includes('Demo')));
+  // Check if this is a demo teacher - render demo dashboard
+  if (parsedDemoTeacher) {
+    return <DemoTeacherDashboard teacher={parsedDemoTeacher} />;
+  }
+
+  // Check for special roles
   const isDoctor = currentTeacher.role === 'doctor';
   const isAdmin = currentTeacher.role === 'admin';
-
-  // Render demo-specific dashboard for demo teachers
-  if (isDemoTeacher && !isDoctor) {
-    return <DemoTeacherDashboard teacher={currentTeacher} />;
-  }
 
   return (
     <div className="min-h-screen bg-background">
