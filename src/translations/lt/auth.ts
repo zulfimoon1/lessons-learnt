@@ -1,6 +1,6 @@
+
 export const auth = {
   login: "Prisijungti",
-  signUp: "Registruotis",
   email: "El. paštas",
   password: "Slaptažodis",
   confirmPassword: "Patvirtinti slaptažodį",
@@ -24,3 +24,5 @@ export const auth = {
   forgotPassword: "Pamiršote slaptažodį?",
   logout: "Atsijungti"
 };
+
+export const ltAuthTranslations = auth;

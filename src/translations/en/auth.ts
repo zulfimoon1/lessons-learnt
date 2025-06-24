@@ -1,3 +1,4 @@
+
 export const auth = {
   'auth.studentLogin': 'Student Login',
   'auth.teacherLogin': 'Teacher Login',
@@ -56,15 +57,7 @@ export const auth = {
   'login.student.title': 'Student Portal',
   'login.student.subtitle': 'Log in to your learning dashboard',
   
-  login: "Login",
-  signUp: "Sign Up",
-  email: "Email",
-  password: "Password",
-  confirmPassword: "Confirm Password",
-  fullName: "Full Name",
-  school: "School",
-  grade: "Grade",
-  role: "Role",
+  // Basic auth fields (without duplicates)
   emailPlaceholder: "Enter your email",
   passwordPlaceholder: "Enter your password",
   confirmPasswordPlaceholder: "Confirm your password",
@@ -72,12 +65,13 @@ export const auth = {
   schoolPlaceholder: "Enter your school name",
   gradePlaceholder: "Enter your grade",
   signIn: "Sign In",
-  signUp: "Sign Up",
   signingIn: "Signing In...",
   signingUp: "Signing Up...",
   teacher: "Teacher",
   admin: "Admin",
   doctor: "Doctor",
-  forgotPassword: "Forgot Password?",
-  logout: "Logout"
+  grade: "Grade",
+  role: "Role"
 };
+
+export const enAuthTranslations = auth;
