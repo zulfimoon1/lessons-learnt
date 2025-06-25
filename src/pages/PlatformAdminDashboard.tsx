@@ -19,6 +19,7 @@ import StudentManagement from "@/components/platform-admin/StudentManagement";
 import DoctorManagement from "@/components/platform-admin/DoctorManagement";
 import SecurityMonitoring from "@/components/platform-admin/SecurityMonitoring";
 import DiscountNotifications from "@/components/platform-admin/DiscountNotifications";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { securePlatformAdminService } from "@/services/securePlatformAdminService";
 
 interface DashboardStats {
@@ -199,11 +200,9 @@ const PlatformAdminDashboard = () => {
 
   if (adminLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <div className="text-lg">Loading admin session...</div>
-        </div>
+      <div className="min-h-screen bg-gradient-to-br from-brand-teal/10 via-white to-brand-orange/10 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-teal"></div>
+        <span className="ml-3 text-brand-dark">Loading admin session...</span>
       </div>
     );
   }
@@ -211,7 +210,7 @@ const PlatformAdminDashboard = () => {
   if (!isAuthenticated || !admin) {
     console.log('📊 Access denied', { isAuthenticated, admin: !!admin });
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-brand-teal/10 via-white to-brand-orange/10 flex items-center justify-center">
         <div className="text-center">
           <div className="text-lg text-red-600 mb-4">Admin Access Denied</div>
           <p className="text-gray-600">Please log in as an administrator</p>
@@ -224,48 +223,56 @@ const PlatformAdminDashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50" key={`dashboard-${refreshKey}`}>
-      {/* Header */}
-      <header className="bg-white border-b border-gray-200 px-6 py-4">
-        <div className="max-w-7xl mx-auto flex justify-between items-center">
-          <div className="flex items-center gap-4">
-            <SchoolIcon className="w-8 h-8 text-blue-600" />
-            <h1 className="text-2xl font-bold text-gray-900">Platform Admin Dashboard</h1>
-            <Button
-              onClick={handleRefresh}
-              disabled={isRefreshing}
-              variant="outline"
-              size="sm"
-              className="flex items-center gap-2"
-            >
-              <RefreshCwIcon className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-              {isRefreshing ? 'Loading...' : 'Refresh'}
-            </Button>
-            <Button
-              onClick={handleCleanupDemoData}
-              disabled={isCleaningUp}
-              variant="outline"
-              size="sm"
-              className="flex items-center gap-2 text-red-600 hover:text-red-700"
-            >
-              <TrashIcon className="w-4 h-4" />
-              {isCleaningUp ? 'Cleaning...' : 'Cleanup Demo Data'}
-            </Button>
-          </div>
-          <div className="flex items-center gap-4">
-            <span className="text-sm text-gray-600">Welcome, {admin?.email}</span>
-            <Button onClick={handleLogout} variant="outline" size="sm">
-              <LogOutIcon className="w-4 h-4 mr-2" />
-              Logout
-            </Button>
+    <div className="min-h-screen bg-gradient-to-br from-brand-teal/10 via-white to-brand-orange/10" key={`dashboard-${refreshKey}`}>
+      <div className="container mx-auto px-4 py-6 max-w-6xl">
+        {/* Header - matching teacher dashboard style */}
+        <div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-lg border border-gray-200/50 mb-6 p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold text-brand-dark mb-2">
+                Platform Admin Dashboard
+              </h1>
+              <p className="text-brand-dark/70 text-lg">
+                Welcome, {admin?.email} - Platform Administrator
+              </p>
+            </div>
+            <div className="flex gap-3">
+              <Button
+                onClick={handleRefresh}
+                disabled={isRefreshing}
+                variant="outline"
+                size="sm"
+                className="border-brand-orange/30 hover:bg-brand-orange/10 flex items-center gap-2"
+              >
+                <RefreshCwIcon className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+                {isRefreshing ? 'Loading...' : 'Refresh'}
+              </Button>
+              <Button
+                onClick={handleCleanupDemoData}
+                disabled={isCleaningUp}
+                variant="outline"
+                size="sm"
+                className="border-red-300 hover:bg-red-50 text-red-600 hover:text-red-700 flex items-center gap-2"
+              >
+                <TrashIcon className="w-4 h-4" />
+                {isCleaningUp ? 'Cleaning...' : 'Cleanup Demo Data'}
+              </Button>
+              <LanguageSwitcher />
+              <Button 
+                variant="outline" 
+                onClick={handleLogout}
+                className="border-brand-orange/30 hover:bg-brand-orange/10"
+              >
+                <LogOutIcon className="w-4 h-4 mr-2" />
+                Logout
+              </Button>
+            </div>
           </div>
         </div>
-      </header>
 
-      <div className="max-w-7xl mx-auto px-6 py-8">
         {/* Error Display */}
         {fetchError && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+          <div className="bg-red-50/90 backdrop-blur-sm border border-red-200 rounded-xl p-4 mb-6">
             <div className="text-red-800 font-medium">Error loading data:</div>
             <div className="text-red-600 text-sm mt-1">{fetchError}</div>
           </div>
@@ -273,120 +280,176 @@ const PlatformAdminDashboard = () => {
 
         {/* Loading State */}
         {isRefreshing && !hasDataLoaded && (
-          <div className="text-center py-8">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-            <p className="text-gray-600">Loading dashboard data...</p>
+          <div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-lg border border-gray-200/50 p-8 mb-6">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-teal mx-auto mb-4"></div>
+              <p className="text-brand-dark/70">Loading dashboard data...</p>
+            </div>
           </div>
         )}
 
-        {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <StatsCard 
-            title="Total Students" 
-            value={stats.totalStudents} 
-            icon={UsersIcon} 
-          />
-          <StatsCard 
-            title="Total Schools" 
-            value={stats.totalSchools} 
-            icon={SchoolIcon} 
-          />
-          <StatsCard 
-            title="Total Teachers" 
-            value={stats.totalTeachers} 
-            icon={UsersIcon} 
-          />
-          <StatsCard 
-            title="Total Responses" 
-            value={stats.totalResponses} 
-            icon={MessageSquareIcon} 
-          />
+        {/* Stats Cards - matching student dashboard */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+          <Card className="bg-white/90 backdrop-blur-sm border-gray-200/50 shadow-lg">
+            <CardContent className="p-6">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-brand-teal/10 rounded-lg flex items-center justify-center">
+                  <UsersIcon className="w-6 h-6 text-brand-teal" />
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600">Total Students</p>
+                  <p className="text-lg font-semibold text-brand-dark">{stats.totalStudents}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-white/90 backdrop-blur-sm border-gray-200/50 shadow-lg">
+            <CardContent className="p-6">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-brand-orange/10 rounded-lg flex items-center justify-center">
+                  <SchoolIcon className="w-6 h-6 text-brand-orange" />
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600">Total Schools</p>
+                  <p className="text-lg font-semibold text-brand-dark">{stats.totalSchools}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-white/90 backdrop-blur-sm border-gray-200/50 shadow-lg">
+            <CardContent className="p-6">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-brand-teal/10 rounded-lg flex items-center justify-center">
+                  <Users className="w-6 h-6 text-brand-teal" />
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600">Total Teachers</p>
+                  <p className="text-lg font-semibold text-brand-dark">{stats.totalTeachers}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-white/90 backdrop-blur-sm border-gray-200/50 shadow-lg">
+            <CardContent className="p-6">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-brand-orange/10 rounded-lg flex items-center justify-center">
+                  <MessageSquareIcon className="w-6 h-6 text-brand-orange" />
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600">Total Responses</p>
+                  <p className="text-lg font-semibold text-brand-dark">{stats.totalResponses}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
-        {/* Main Content Tabs */}
-        <Tabs defaultValue="management" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="management" className="flex items-center gap-2">
-              <Settings className="w-4 h-4" />
-              User Management
-            </TabsTrigger>
-            <TabsTrigger value="analytics" className="flex items-center gap-2">
-              <MessageSquareIcon className="w-4 h-4" />
-              Analytics & Reports
-            </TabsTrigger>
-            <TabsTrigger value="security" className="flex items-center gap-2">
-              <Shield className="w-4 h-4" />
-              Security
-            </TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="management" className="space-y-6">
-            <Tabs defaultValue="schools" className="space-y-4">
-              <TabsList>
-                <TabsTrigger value="schools">Schools</TabsTrigger>
-                <TabsTrigger value="teachers">Teachers</TabsTrigger>
-                <TabsTrigger value="students">Students</TabsTrigger>
-                <TabsTrigger value="doctors">Doctors</TabsTrigger>
+        {/* Main Content with Tabs - matching student dashboard style */}
+        <div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-lg border border-gray-200/50 overflow-hidden">
+          <Tabs defaultValue="management" className="w-full">
+            {/* Tab Navigation - clean white background */}
+            <div className="bg-white border-b border-gray-200">
+              <TabsList className="h-auto p-0 bg-transparent rounded-none w-full justify-start overflow-x-auto">
+                <TabsTrigger 
+                  value="management" 
+                  className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-brand-orange data-[state=active]:to-brand-teal data-[state=active]:text-white data-[state=inactive]:text-gray-600 data-[state=inactive]:hover:text-brand-dark border-b-2 border-transparent data-[state=active]:border-brand-teal rounded-none px-6 py-4 font-medium transition-all duration-200 whitespace-nowrap"
+                >
+                  <Settings className="w-4 h-4 mr-2" />
+                  User Management
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="analytics" 
+                  className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-brand-orange data-[state=active]:to-brand-teal data-[state=active]:text-white data-[state=inactive]:text-gray-600 data-[state=inactive]:hover:text-brand-dark border-b-2 border-transparent data-[state=active]:border-brand-teal rounded-none px-6 py-4 font-medium transition-all duration-200 whitespace-nowrap"
+                >
+                  <MessageSquareIcon className="w-4 h-4 mr-2" />
+                  Analytics & Reports
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="security" 
+                  className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-brand-orange data-[state=active]:to-brand-teal data-[state=active]:text-white data-[state=inactive]:text-gray-600 data-[state=inactive]:hover:text-brand-dark border-b-2 border-transparent data-[state=active]:border-brand-teal rounded-none px-6 py-4 font-medium transition-all duration-200 whitespace-nowrap"
+                >
+                  <Shield className="w-4 h-4 mr-2" />
+                  Security
+                </TabsTrigger>
               </TabsList>
+            </div>
 
-              <TabsContent value="schools">
-                <SchoolManagement onDataChange={handleDataChange} />
+            {/* Tab Content */}
+            <div className="p-6">
+              <TabsContent value="management" className="mt-0">
+                <Tabs defaultValue="schools" className="space-y-4">
+                  <TabsList className="bg-gray-100/50">
+                    <TabsTrigger value="schools">Schools</TabsTrigger>
+                    <TabsTrigger value="teachers">Teachers</TabsTrigger>
+                    <TabsTrigger value="students">Students</TabsTrigger>
+                    <TabsTrigger value="doctors">Doctors</TabsTrigger>
+                  </TabsList>
+
+                  <TabsContent value="schools">
+                    <SchoolManagement onDataChange={handleDataChange} />
+                  </TabsContent>
+
+                  <TabsContent value="teachers">
+                    <TeacherManagement />
+                  </TabsContent>
+
+                  <TabsContent value="students">
+                    <StudentManagement />
+                  </TabsContent>
+
+                  <TabsContent value="doctors">
+                    <DoctorManagement />
+                  </TabsContent>
+                </Tabs>
               </TabsContent>
 
-              <TabsContent value="teachers">
-                <TeacherManagement />
+              <TabsContent value="analytics" className="mt-0">
+                <div className="space-y-6">
+                  <DiscountNotifications adminEmail={admin?.email} />
+                  <SubscriptionManagement />
+                  <TransactionManagement />
+                  <DiscountCodeManagement />
+                  <ResponsesManagement />
+                  <SchoolOverview schoolStats={schoolStats} />
+                  <FeedbackAnalytics feedbackStats={feedbackStats} />
+                </div>
               </TabsContent>
 
-              <TabsContent value="students">
-                <StudentManagement />
+              <TabsContent value="security" className="mt-0">
+                <SecurityMonitoring />
               </TabsContent>
+            </div>
+          </Tabs>
+        </div>
 
-              <TabsContent value="doctors">
-                <DoctorManagement />
-              </TabsContent>
-            </Tabs>
-          </TabsContent>
-
-          <TabsContent value="analytics" className="space-y-6">
-            <DiscountNotifications adminEmail={admin?.email} />
-            <SubscriptionManagement />
-            <TransactionManagement />
-            <DiscountCodeManagement />
-            <ResponsesManagement />
-            <SchoolOverview schoolStats={schoolStats} />
-            <FeedbackAnalytics feedbackStats={feedbackStats} />
-          </TabsContent>
-
-          <TabsContent value="security" className="space-y-6">
-            <SecurityMonitoring />
-          </TabsContent>
-        </Tabs>
-
-        {/* Dashboard Footer with Status */}
+        {/* Dashboard Footer with Status - matching style */}
         <div className="mt-8">
-          <Card>
+          <Card className="bg-white/90 backdrop-blur-sm border-gray-200/50 shadow-lg">
             <CardContent className="pt-6">
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-brand-dark/70 mb-4">
                 Last updated: {lastUpdated || 'Never'} 
                 <span className={`ml-2 ${hasDataLoaded ? 'text-green-600' : 'text-yellow-600'}`}>
                   {hasDataLoaded ? '✓ Data loaded' : '⏳ Loading...'}
                 </span>
               </p>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm mt-4">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                 <div>
-                  <span className="font-medium text-gray-700">Monthly Revenue:</span>
+                  <span className="font-medium text-brand-dark">Monthly Revenue:</span>
                   <span className="ml-2 text-green-600">€{stats.monthlyRevenue.toFixed(2)}</span>
                 </div>
                 <div>
-                  <span className="font-medium text-gray-700">Active Subscriptions:</span>
-                  <span className="ml-2 text-blue-600">{stats.totalSubscriptions}</span>
+                  <span className="font-medium text-brand-dark">Active Subscriptions:</span>
+                  <span className="ml-2 text-brand-teal">{stats.totalSubscriptions}</span>
                 </div>
                 <div>
-                  <span className="font-medium text-gray-700">Total Users:</span>
-                  <span className="ml-2 text-purple-600">{stats.totalStudents + stats.totalTeachers}</span>
+                  <span className="font-medium text-brand-dark">Total Users:</span>
+                  <span className="ml-2 text-brand-orange">{stats.totalStudents + stats.totalTeachers}</span>
                 </div>
                 <div>
-                  <span className="font-medium text-gray-700">System Status:</span>
+                  <span className="font-medium text-brand-dark">System Status:</span>
                   <span className="ml-2 text-green-600">✅ Online</span>
                 </div>
               </div>
