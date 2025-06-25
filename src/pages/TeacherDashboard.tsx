@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Navigate } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -20,6 +20,33 @@ const TeacherDashboard = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const { t } = useLanguage();
+  const [upcomingClassesCount, setUpcomingClassesCount] = useState(0);
+
+  useEffect(() => {
+    const fetchUpcomingClasses = async () => {
+      if (teacher?.id) {
+        try {
+          const result = await classScheduleService.getSchedulesByTeacher(teacher.id);
+          if (result.data) {
+            // Filter for upcoming classes (future dates only)
+            const now = new Date();
+            const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            
+            const upcoming = result.data.filter(schedule => {
+              const scheduleDate = new Date(schedule.class_date);
+              return scheduleDate >= today;
+            });
+            
+            setUpcomingClassesCount(upcoming.length);
+          }
+        } catch (error) {
+          console.error('Error fetching upcoming classes:', error);
+        }
+      }
+    };
+
+    fetchUpcomingClasses();
+  }, [teacher?.id]);
 
   if (isLoading) {
     return (
@@ -162,7 +189,7 @@ const TeacherDashboard = () => {
                 </div>
                 <div>
                   <p className="text-sm text-gray-600">{t('dashboard.upcomingClasses')}</p>
-                  <p className="text-lg font-semibold text-brand-dark">0</p>
+                  <p className="text-lg font-semibold text-brand-dark">{upcomingClassesCount}</p>
                 </div>
               </div>
             </CardContent>
