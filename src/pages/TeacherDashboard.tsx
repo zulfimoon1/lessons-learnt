@@ -1,309 +1,126 @@
 
-import React, { useState, useEffect } from "react";
-import { useAuth } from "@/contexts/AuthContext";
-import { Navigate } from "react-router-dom";
+import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { CalendarIcon, MessageSquareIcon, FileTextIcon, BookOpenIcon, UsersIcon, BarChartIcon, BrainIcon } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { Navigate } from "react-router-dom";
+import { toast } from "sonner";
+import DashboardHeader from "@/components/dashboard/DashboardHeader";
 import ScheduleTab from "@/components/dashboard/teacher/ScheduleTab";
 import FeedbackDashboard from "@/components/dashboard/teacher/FeedbackDashboard";
-import DoctorDashboard from "@/components/dashboard/doctor/DoctorDashboard";
 import WeeklySummariesTab from "@/components/dashboard/teacher/WeeklySummariesTab";
-import SchoolAdminDashboard from "@/components/dashboard/admin/SchoolAdminDashboard";
-import SchoolSubscriptionManagement from "@/components/dashboard/admin/SchoolSubscriptionManagement";
+import BulkUploadTab from "@/components/dashboard/teacher/BulkUploadTab";
+import MentalHealthTab from "@/components/dashboard/teacher/MentalHealthTab";
+import ArticlesTab from "@/components/dashboard/teacher/ArticlesTab";
 import AnalyticsTab from "@/components/dashboard/teacher/AnalyticsTab";
-import AdminAnalyticsTab from "@/components/dashboard/admin/AdminAnalyticsTab";
-import LanguageSwitcher from "@/components/LanguageSwitcher";
-import { LogOut, Calendar, MessageSquare, FileText, Heart, School, GraduationCap, Users, CreditCard, BarChart } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
-import { useNavigate } from "react-router-dom";
-import { useLanguage } from "@/contexts/LanguageContext";
-import { classScheduleService } from "@/services/classScheduleService";
+import AIInsightsTab from "@/components/dashboard/teacher/AIInsightsTab";
 
-const TeacherDashboard = () => {
-  const { teacher, logout, isLoading } = useAuth();
-  const { toast } = useToast();
-  const navigate = useNavigate();
+const TeacherDashboard: React.FC = () => {
+  const { teacher, logout } = useAuth();
   const { t } = useLanguage();
-  const [upcomingClassesCount, setUpcomingClassesCount] = useState(0);
+  const [activeTab, setActiveTab] = useState('schedule');
 
-  // Debug: Log teacher role
-  console.log('Teacher role:', teacher?.role);
-  console.log('Is admin?', teacher?.role === 'admin');
+  const handleLogout = async () => {
+    try {
+      logout();
+      toast.success(t('auth.logoutSuccess') || 'Logged out successfully');
+    } catch (error) {
+      toast.error(t('auth.logoutError') || 'Logout failed');
+    }
+  };
 
-  useEffect(() => {
-    const fetchUpcomingClasses = async () => {
-      if (teacher?.id) {
-        try {
-          const result = await classScheduleService.getSchedulesByTeacher(teacher.id);
-          if (result.data) {
-            // Filter for upcoming classes (future dates only)
-            const now = new Date();
-            const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-            
-            const upcoming = result.data.filter(schedule => {
-              const scheduleDate = new Date(schedule.class_date);
-              return scheduleDate >= today;
-            });
-            
-            setUpcomingClassesCount(upcoming.length);
-          }
-        } catch (error) {
-          console.error('Error fetching upcoming classes:', error);
-        }
-      }
-    };
-
-    fetchUpcomingClasses();
-  }, [teacher?.id]);
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-brand-teal/10 via-white to-brand-orange/10 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-teal"></div>
-        <span className="ml-3 text-brand-dark">{t('common.loading')}</span>
-      </div>
-    );
-  }
-
-  // Require authenticated teacher - no demo bypasses
   if (!teacher) {
     return <Navigate to="/teacher-login" replace />;
   }
 
-  const handleLogout = () => {
-    logout();
-    toast({
-      title: t('teacher.logout.success'),
-      description: t('teacher.logout.description'),
-    });
-    // Navigate to homepage after a short delay to show the toast
-    setTimeout(() => {
-      navigate('/');
-    }, 1500);
-  };
-
-  // Check for special roles
-  const isDoctor = teacher.role === 'doctor';
-  const isAdmin = teacher.role === 'admin';
-
-  if (isDoctor) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-brand-teal/10 via-white to-brand-orange/10">
-        <div className="container mx-auto px-4 py-6 max-w-6xl">
-          {/* Header - matching teacher dashboard style */}
-          <div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-lg border border-gray-200/50 mb-6 p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <h1 className="text-3xl font-bold text-brand-dark mb-2">
-                  {t('dashboard.doctorOverview')}
-                </h1>
-                <p className="text-brand-dark/70 text-lg">
-                  {t('doctor.dashboard.welcome')}, {teacher.name} - {teacher.role.charAt(0).toUpperCase() + teacher.role.slice(1)} at {teacher.school}
-                </p>
-              </div>
-              <div className="flex gap-3">
-                <LanguageSwitcher />
-                <Button 
-                  variant="outline" 
-                  onClick={handleLogout}
-                  className="border-brand-orange/30 hover:bg-brand-orange/10"
-                >
-                  <LogOut className="w-4 h-4 mr-2" />
-                  {t('logout')}
-                </Button>
-              </div>
-            </div>
-          </div>
-          <DoctorDashboard teacher={teacher} />
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-brand-teal/10 via-white to-brand-orange/10">
-      <div className="container mx-auto px-4 py-6 max-w-6xl">
-        {/* Header - matching student dashboard style */}
-        <div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-lg border border-gray-200/50 mb-6 p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-brand-dark mb-2">
-                {isAdmin ? t('dashboard.schoolAdmin') : t('teacher.dashboard.title')}
-              </h1>
-              <p className="text-brand-dark/70 text-lg">
-                {t('teacher.dashboard.welcome')}, {teacher.name} - {teacher.role.charAt(0).toUpperCase() + teacher.role.slice(1)} at {teacher.school}
-              </p>
-            </div>
-            <div className="flex gap-3">
-              <LanguageSwitcher />
-              <Button 
-                variant="outline" 
-                onClick={handleLogout}
-                className="border-brand-orange/30 hover:bg-brand-orange/10"
-              >
-                <LogOut className="w-4 h-4 mr-2" />
-                {t('logout')}
-              </Button>
-            </div>
-          </div>
+    <div className="min-h-screen bg-background">
+      <DashboardHeader
+        title={t('dashboard.teacherDashboard') || 'Teacher Dashboard'}
+        userName={teacher.name}
+        onLogout={handleLogout}
+      />
+
+      <main className="max-w-7xl mx-auto p-6">
+        <div className="mb-6">
+          <h1 className="text-3xl font-bold text-brand-dark mb-2">
+            {t('admin.welcome') || 'Welcome'}, {teacher.name}!
+          </h1>
+          <p className="text-brand-dark/70">
+            {teacher.school} • {teacher.role === 'admin' ? t('admin.role') || 'School Administrator' : t('teacher.role') || 'Teacher'}
+          </p>
         </div>
 
-        {/* Stats Cards - matching student dashboard */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-          <Card className="bg-white/90 backdrop-blur-sm border-gray-200/50 shadow-lg">
-            <CardContent className="p-6">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-brand-teal/10 rounded-lg flex items-center justify-center">
-                  <School className="w-6 h-6 text-brand-teal" />
-                </div>
-                <div>
-                  <p className="text-sm text-gray-600">School</p>
-                  <p className="text-lg font-semibold text-brand-dark">{teacher.school}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+          <TabsList className="grid w-full grid-cols-8">
+            <TabsTrigger value="schedule" className="flex items-center gap-2">
+              <CalendarIcon className="w-4 h-4" />
+              {t('teacher.schedule') || 'Schedule'}
+            </TabsTrigger>
+            <TabsTrigger value="feedback" className="flex items-center gap-2">
+              <MessageSquareIcon className="w-4 h-4" />
+              {t('dashboard.feedback') || 'Feedback'}
+            </TabsTrigger>
+            <TabsTrigger value="summaries" className="flex items-center gap-2">
+              <FileTextIcon className="w-4 h-4" />
+              {t('weekly.summaries') || 'Summaries'}
+            </TabsTrigger>
+            <TabsTrigger value="bulk" className="flex items-center gap-2">
+              <BookOpenIcon className="w-4 h-4" />
+              {t('teacher.bulkUpload') || 'Bulk Upload'}
+            </TabsTrigger>
+            <TabsTrigger value="mental-health" className="flex items-center gap-2">
+              <UsersIcon className="w-4 h-4" />
+              {t('features.mentalHealth.title') || 'Mental Health'}
+            </TabsTrigger>
+            <TabsTrigger value="articles" className="flex items-center gap-2">
+              <FileTextIcon className="w-4 h-4" />
+              {t('teacher.articles') || 'Articles'}
+            </TabsTrigger>
+            <TabsTrigger value="analytics" className="flex items-center gap-2">
+              <BarChartIcon className="w-4 h-4" />
+              {t('analytics.title') || 'Analytics'}
+            </TabsTrigger>
+            <TabsTrigger value="ai-insights" className="flex items-center gap-2">
+              <BrainIcon className="w-4 h-4" />
+              {t('ai.insights') || 'AI Insights'}
+            </TabsTrigger>
+          </TabsList>
 
-          <Card className="bg-white/90 backdrop-blur-sm border-gray-200/50 shadow-lg">
-            <CardContent className="p-6">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-brand-orange/10 rounded-lg flex items-center justify-center">
-                  <GraduationCap className="w-6 h-6 text-brand-orange" />
-                </div>
-                <div>
-                  <p className="text-sm text-gray-600">Role</p>
-                  <p className="text-lg font-semibold text-brand-dark">
-                    {teacher.role.charAt(0).toUpperCase() + teacher.role.slice(1)}
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <TabsContent value="schedule">
+            <ScheduleTab teacher={teacher} />
+          </TabsContent>
 
-          <Card className="bg-white/90 backdrop-blur-sm border-gray-200/50 shadow-lg">
-            <CardContent className="p-6">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-brand-teal/10 rounded-lg flex items-center justify-center">
-                  <Calendar className="w-6 h-6 text-brand-teal" />
-                </div>
-                <div>
-                  <p className="text-sm text-gray-600">{t('dashboard.upcomingClasses')}</p>
-                  <p className="text-lg font-semibold text-brand-dark">{upcomingClassesCount}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+          <TabsContent value="feedback">
+            <FeedbackDashboard teacher={teacher} />
+          </TabsContent>
 
-        {/* Main Content with Tabs - enhanced with analytics */}
-        <div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-lg border border-gray-200/50 overflow-hidden">
-          <Tabs defaultValue="classes" className="w-full">
-            {/* Tab Navigation - clean white background */}
-            <div className="bg-white border-b border-gray-200">
-              <TabsList className="h-auto p-0 bg-transparent rounded-none w-full justify-start overflow-x-auto">
-                <TabsTrigger 
-                  value="classes" 
-                  className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-brand-orange data-[state=active]:to-brand-teal data-[state=active]:text-white data-[state=inactive]:text-gray-600 data-[state=inactive]:hover:text-brand-dark border-b-2 border-transparent data-[state=active]:border-brand-teal rounded-none px-6 py-4 font-medium transition-all duration-200 whitespace-nowrap"
-                >
-                  <Calendar className="w-4 h-4 mr-2" />
-                  {t('dashboard.upcomingClasses')}
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="feedback" 
-                  className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-brand-orange data-[state=active]:to-brand-teal data-[state=active]:text-white data-[state=inactive]:text-gray-600 data-[state=inactive]:hover:text-brand-dark border-b-2 border-transparent data-[state=active]:border-brand-teal rounded-none px-6 py-4 font-medium transition-all duration-200 whitespace-nowrap"
-                >
-                  <MessageSquare className="w-4 h-4 mr-2" />
-                  {t('dashboard.feedback')}
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="analytics" 
-                  className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-brand-orange data-[state=active]:to-brand-teal data-[state=active]:text-white data-[state=inactive]:text-gray-600 data-[state=inactive]:hover:text-brand-dark border-b-2 border-transparent data-[state=active]:border-brand-teal rounded-none px-6 py-4 font-medium transition-all duration-200 whitespace-nowrap"
-                >
-                  <BarChart className="w-4 h-4 mr-2" />
-                  {t('analytics.title') || 'Analytics'}
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="weekly-summaries" 
-                  className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-brand-orange data-[state=active]:to-brand-teal data-[state=active]:text-white data-[state=inactive]:text-gray-600 data-[state=inactive]:hover:text-brand-dark border-b-2 border-transparent data-[state=active]:border-brand-teal rounded-none px-6 py-4 font-medium transition-all duration-200 whitespace-nowrap"
-                >
-                  <FileText className="w-4 h-4 mr-2" />
-                  {t('dashboard.weeklySummaries')}
-                </TabsTrigger>
-                {isAdmin && (
-                  <TabsTrigger 
-                    value="school-admin" 
-                    className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-brand-orange data-[state=active]:to-brand-teal data-[state=active]:text-white data-[state=inactive]:text-gray-600 data-[state=inactive]:hover:text-brand-dark border-b-2 border-transparent data-[state=active]:border-brand-teal rounded-none px-6 py-4 font-medium transition-all duration-200 whitespace-nowrap"
-                  >
-                    <Users className="w-4 h-4 mr-2" />
-                    {t('dashboard.schoolAdmin')}
-                  </TabsTrigger>
-                )}
-                {isAdmin && (
-                  <TabsTrigger 
-                    value="admin-analytics" 
-                    className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-brand-orange data-[state=active]:to-brand-teal data-[state=active]:text-white data-[state=inactive]:text-gray-600 data-[state=inactive]:hover:text-brand-dark border-b-2 border-transparent data-[state=active]:border-brand-teal rounded-none px-6 py-4 font-medium transition-all duration-200 whitespace-nowrap"
-                  >
-                    <BarChart className="w-4 h-4 mr-2" />
-                    {t('analytics.schoolAnalytics') || 'School Analytics'}
-                  </TabsTrigger>
-                )}
-                {isAdmin && (
-                  <TabsTrigger 
-                    value="subscription" 
-                    className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-brand-orange data-[state=active]:to-brand-teal data-[state=active]:text-white data-[state=inactive]:text-gray-600 data-[state=inactive]:hover:text-brand-dark border-b-2 border-transparent data-[state=active]:border-brand-teal rounded-none px-6 py-4 font-medium transition-all duration-200 whitespace-nowrap"
-                  >
-                    <CreditCard className="w-4 h-4 mr-2" />
-                    {t('dashboard.subscription')}
-                  </TabsTrigger>
-                )}
-              </TabsList>
-            </div>
+          <TabsContent value="summaries">
+            <WeeklySummariesTab teacher={teacher} />
+          </TabsContent>
 
-            {/* Tab Content */}
-            <div className="p-6">
-              <TabsContent value="classes" className="mt-0">
-                <ScheduleTab teacher={teacher} />
-              </TabsContent>
+          <TabsContent value="bulk">
+            <BulkUploadTab teacher={teacher} />
+          </TabsContent>
 
-              <TabsContent value="feedback" className="mt-0">
-                <FeedbackDashboard teacher={teacher} />
-              </TabsContent>
+          <TabsContent value="mental-health">
+            <MentalHealthTab teacher={teacher} />
+          </TabsContent>
 
-              <TabsContent value="analytics" className="mt-0">
-                <AnalyticsTab teacher={teacher} />
-              </TabsContent>
+          <TabsContent value="articles">
+            <ArticlesTab teacher={teacher} />
+          </TabsContent>
 
-              <TabsContent value="weekly-summaries" className="mt-0">
-                <WeeklySummariesTab 
-                  school={teacher.school}
-                  subscription={{ active: true }} // Remove subscription requirement
-                  onCreateCheckout={() => {}}
-                  isCreatingCheckout={false}
-                />
-              </TabsContent>
+          <TabsContent value="analytics">
+            <AnalyticsTab teacher={teacher} />
+          </TabsContent>
 
-              {isAdmin && (
-                <TabsContent value="school-admin" className="mt-0">
-                  <SchoolAdminDashboard teacher={teacher} />
-                </TabsContent>
-              )}
-
-              {isAdmin && (
-                <TabsContent value="admin-analytics" className="mt-0">
-                  <AdminAnalyticsTab teacher={teacher} />
-                </TabsContent>
-              )}
-
-              {isAdmin && (
-                <TabsContent value="subscription" className="mt-0">
-                  <SchoolSubscriptionManagement teacher={teacher} />
-                </TabsContent>
-              )}
-            </div>
-          </Tabs>
-        </div>
-      </div>
+          <TabsContent value="ai-insights">
+            <AIInsightsTab teacher={teacher} />
+          </TabsContent>
+        </Tabs>
+      </main>
     </div>
   );
 };

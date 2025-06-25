@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -16,6 +15,7 @@ import QuickActionsCard from "@/components/dashboard/student/QuickActionsCard";
 import WellnessTracker from "@/components/dashboard/student/WellnessTracker";
 import StudentAnalyticsDashboard from "@/components/analytics/StudentAnalyticsDashboard";
 import { classScheduleService } from "@/services/classScheduleService";
+import AIStudentInsights from "@/components/dashboard/student/AIStudentInsights";
 
 const StudentDashboard: React.FC = () => {
   const { student, logout } = useAuth();
@@ -96,7 +96,14 @@ const StudentDashboard: React.FC = () => {
         {/* Quick Actions Card - New Enhancement */}
         <QuickActionsCard {...handleQuickActions} />
 
-        {/* Enhanced Tabs with Analytics */}
+        {/* AI Personal Insights - New */}
+        <AIStudentInsights
+          studentId={student.id}
+          school={student.school}
+          grade={student.grade}
+        />
+
+        {/* Enhanced Tabs with Analytics and AI */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="classes" className="flex items-center gap-2">
