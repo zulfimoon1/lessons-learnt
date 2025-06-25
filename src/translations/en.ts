@@ -290,15 +290,6 @@ export const enTranslations = {
   // Mental Health Support
   'mentalHealth.loading': 'Loading mental health support...',
 
-  // Admin
-  'admin.title': 'Admin Dashboard',
-  'admin.welcome': 'Welcome',
-  'admin.subscription': 'Subscription',
-  'admin.subscribe': 'Subscribe Now',
-  'admin.loading': 'Loading...',
-  'admin.error.title': 'Error',
-  'admin.error.description': 'Failed to load data',
-
   // Upload
   'upload.bulkUpload': 'Bulk Upload',
   'upload.uploadComplete': 'Upload Complete',
