@@ -1,26 +1,9 @@
-import { enhancedSecurityValidationService } from './enhancedSecurityValidationService';
+
+import { authenticationSecurityService } from './security/authenticationSecurityService';
+import { formSecurityService } from './security/formSecurityService';
+import { dataAccessSecurityService } from './security/dataAccessSecurityService';
 import { securityValidationService } from './securityValidationService';
 import { securityMonitoringService } from './securityMonitoringService';
-import { supabase } from '@/integrations/supabase/client';
-
-interface AuthenticationResult {
-  success: boolean;
-  user?: any;
-  error?: string;
-  requiresMFA?: boolean;
-}
-
-interface RateLimitResult {
-  allowed: boolean;
-  message?: string;
-  delay?: number;
-}
-
-interface ValidationResult {
-  isValid: boolean;
-  message?: string;
-  sanitized?: string;
-}
 
 interface SecurityDashboardData {
   totalEvents: number;
@@ -32,12 +15,52 @@ interface SecurityDashboardData {
 }
 
 class EnhancedSecurityService {
-  private sessionTokens = new Map<string, string>();
+  // Delegate authentication to focused service
+  async authenticateUser(
+    userType: 'student' | 'teacher' | 'admin',
+    credentials: any,
+    requestContext: {
+      userAgent: string;
+      ipAddress?: string;
+    }
+  ) {
+    return authenticationSecurityService.authenticateUser(userType, credentials, requestContext);
+  }
 
-  // Add missing methods that components expect
+  // Delegate form validation to focused service
+  async validateSecureForm(formData: Record<string, any>, formType: string) {
+    return formSecurityService.validateSecureForm(formData, formType);
+  }
+
+  async checkRateLimit(identifier: string, action: string) {
+    return formSecurityService.checkRateLimit(identifier, action);
+  }
+
+  validateAndSanitizeInput(input: string, fieldType: string) {
+    return formSecurityService.validateAndSanitizeInput(input, fieldType);
+  }
+
+  // Delegate data access validation to focused service
+  async validateDataAccess(
+    tableName: string,
+    operation: 'SELECT' | 'INSERT' | 'UPDATE' | 'DELETE',
+    userContext: {
+      userId?: string;
+      userRole?: string;
+      userSchool?: string;
+    },
+    filters?: any
+  ) {
+    return dataAccessSecurityService.validateDataAccess(tableName, operation, userContext, filters);
+  }
+
+  async validateSecureAccess(table: string, operation: string) {
+    return dataAccessSecurityService.validateSecureAccess(table, operation);
+  }
+
+  // Core security monitoring methods
   async monitorSecurityViolations(): Promise<void> {
     console.log('🔐 Security monitoring initialized');
-    // Initialize security monitoring
     try {
       await this.logSecurityEvent({
         type: 'security_monitoring_started',
@@ -51,29 +74,6 @@ class EnhancedSecurityService {
 
   async enhanceFormValidation(): Promise<void> {
     console.log('🔐 Form validation enhanced');
-    // Enhance form validation security
-  }
-
-  async validateSecureAccess(table: string, operation: string): Promise<boolean> {
-    try {
-      // Basic validation - in production this would be more sophisticated
-      const validTables = ['teachers', 'students', 'mental_health_alerts'];
-      const validOperations = ['SELECT', 'INSERT', 'UPDATE', 'DELETE'];
-      
-      if (!validTables.includes(table) || !validOperations.includes(operation)) {
-        await this.logSecurityEvent({
-          type: 'invalid_access_attempt',
-          details: `Invalid access to ${table} with ${operation}`,
-          severity: 'medium'
-        });
-        return false;
-      }
-      
-      return true;
-    } catch (error) {
-      console.error('Security access validation failed:', error);
-      return false;
-    }
   }
 
   async logSecurityViolation(violation: {
@@ -98,8 +98,6 @@ class EnhancedSecurityService {
 
   async getSecurityDashboardData(): Promise<SecurityDashboardData> {
     try {
-      // In a real implementation, this would query actual security events
-      // For now, return mock data that represents a secure state
       return {
         totalEvents: 0,
         highSeverityEvents: 0,
@@ -122,34 +120,13 @@ class EnhancedSecurityService {
   }
 
   clearSecurityLogs(): void {
-    // Clear any stored security logs
     localStorage.removeItem('security_events');
     localStorage.removeItem('security_violations');
     console.log('Security logs cleared');
   }
 
-  // Add missing methods that other services expect
-  async checkRateLimit(identifier: string, action: string): Promise<RateLimitResult> {
-    const allowed = securityValidationService.checkRateLimit(identifier);
-    return {
-      allowed,
-      message: allowed ? undefined : 'Rate limit exceeded. Please try again later.',
-      delay: allowed ? undefined : 1000
-    };
-  }
-
-  validateAndSanitizeInput(input: string, fieldType: string): ValidationResult {
-    const isValid = securityValidationService.validateInput(input);
-    
-    return {
-      isValid,
-      message: isValid ? undefined : 'Invalid input detected',
-      sanitized: isValid ? input.trim() : undefined
-    };
-  }
-
   async recordAttempt(identifier: string, action: string, success: boolean): Promise<void> {
-    const eventType = success ? 'unauthorized_access' : 'unauthorized_access'; // Map both to valid type
+    const eventType = success ? 'unauthorized_access' : 'unauthorized_access';
     securityValidationService.logSecurityEvent({
       type: eventType,
       userId: identifier,
@@ -172,21 +149,6 @@ class EnhancedSecurityService {
       'suspicious_activity': 'suspicious_activity',
       'form_validation_failed': 'form_validation_failed',
       'rate_limit_exceeded': 'rate_limit_exceeded',
-      'admin_rate_limit_exceeded': 'rate_limit_exceeded',
-      'admin_invalid_email_format': 'form_validation_failed',
-      'admin_invalid_password_format': 'form_validation_failed',
-      'admin_login_user_not_found': 'unauthorized_access',
-      'admin_login_invalid_password': 'unauthorized_access',
-      'admin_login_system_error': 'suspicious_activity',
-      'admin_password_updated': 'unauthorized_access',
-      'login_attempt': 'unauthorized_access',
-      'login_failed': 'unauthorized_access',
-      'login_success': 'unauthorized_access',
-      'login_error': 'suspicious_activity',
-      'signup_attempt': 'unauthorized_access',
-      'signup_failed': 'unauthorized_access',
-      'signup_success': 'unauthorized_access',
-      'signup_error': 'suspicious_activity',
       'security_monitoring_started': 'unauthorized_access',
       'invalid_access_attempt': 'suspicious_activity'
     };
@@ -202,7 +164,6 @@ class EnhancedSecurityService {
   }
 
   getSecurityMetrics() {
-    // Return basic metrics that can be used by SecurityMonitoring
     return {
       failedLogins: 0,
       blockedIPs: 0,
@@ -210,184 +171,6 @@ class EnhancedSecurityService {
     };
   }
 
-  // Enhanced authentication with security validation
-  async authenticateUser(
-    userType: 'student' | 'teacher' | 'admin',
-    credentials: any,
-    requestContext: {
-      userAgent: string;
-      ipAddress?: string;
-    }
-  ): Promise<AuthenticationResult> {
-    
-    // Rate limiting check
-    const identifier = `${requestContext.ipAddress || 'unknown'}:${credentials.email || credentials.fullName}`;
-    if (!securityValidationService.checkRateLimit(identifier)) {
-      await securityValidationService.logSecurityEvent({
-        type: 'rate_limit_exceeded',
-        userId: undefined,
-        details: `Authentication rate limit exceeded for ${identifier}`,
-        severity: 'medium'
-      });
-      return { success: false, error: 'Too many login attempts. Please try again later.' };
-    }
-
-    // Input validation using simplified approach
-    const emailValid = credentials.email ? credentials.email.includes('@') && credentials.email.length < 254 : true;
-    const nameValid = credentials.fullName ? credentials.fullName.length < 100 : true;
-
-    if (!emailValid || !nameValid) {
-      await securityValidationService.logSecurityEvent({
-        type: 'form_validation_failed',
-        userId: undefined,
-        details: 'Authentication validation failed: Invalid input format',
-        severity: 'medium'
-      });
-      return { success: false, error: 'Invalid input provided' };
-    }
-
-    // Session security validation
-    if (!securityValidationService.validateSessionSecurity()) {
-      return { success: false, error: 'Session security validation failed' };
-    }
-
-    // Generate session token
-    const sessionId = crypto.randomUUID();
-    const csrfToken = this.generateSecureToken();
-    this.sessionTokens.set(sessionId, csrfToken);
-    
-    try {
-      await securityValidationService.logSecurityEvent({
-        type: 'unauthorized_access', // Using valid type for successful authentication
-        userId: sessionId,
-        details: `Successful ${userType} authentication`,
-        severity: 'low'
-      });
-
-      return { 
-        success: true, 
-        user: { 
-          sessionId, 
-          csrfToken,
-          userType 
-        } 
-      };
-    } catch (error) {
-      await securityValidationService.logSecurityEvent({
-        type: 'unauthorized_access',
-        userId: undefined,
-        details: `Authentication error: ${error}`,
-        severity: 'medium'
-      });
-      return { success: false, error: 'Authentication failed' };
-    }
-  }
-
-  private generateSecureToken(): string {
-    const array = new Uint8Array(32);
-    crypto.getRandomValues(array);
-    return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
-  }
-
-  // Secure form validation with comprehensive checks
-  async validateSecureForm(formData: Record<string, any>, formType: string): Promise<{
-    isValid: boolean;
-    errors: string[];
-    sanitizedData: Record<string, any>;
-  }> {
-    const errors: string[] = [];
-    const sanitizedData: Record<string, any> = {};
-
-    for (const [key, value] of Object.entries(formData)) {
-      if (typeof value === 'string') {
-        const isValid = securityValidationService.validateInput(value);
-
-        if (!isValid) {
-          errors.push(`Invalid content in field: ${key}`);
-        } else {
-          // Basic sanitization
-          sanitizedData[key] = value.trim();
-        }
-
-        // Log high-risk content detection
-        if (value.includes('<script') || value.includes('javascript:')) {
-          await securityValidationService.logSecurityEvent({
-            type: 'suspicious_activity',
-            userId: undefined,
-            details: `High-risk content detected in ${formType} form field ${key}`,
-            severity: 'high'
-          });
-        }
-      } else {
-        sanitizedData[key] = value;
-      }
-    }
-
-    // Audit form submission
-    await securityMonitoringService.auditDataAccess('form_submission', formType, 1);
-
-    return {
-      isValid: errors.length === 0,
-      errors,
-      sanitizedData
-    };
-  }
-
-  // Enhanced data access validation
-  async validateDataAccess(
-    tableName: string,
-    operation: 'SELECT' | 'INSERT' | 'UPDATE' | 'DELETE',
-    userContext: {
-      userId?: string;
-      userRole?: string;
-      userSchool?: string;
-    },
-    filters?: any
-  ): Promise<{ allowed: boolean; reason?: string }> {
-    
-    // Critical table protection
-    const criticalTables = ['mental_health_alerts', 'students', 'teachers'];
-    
-    if (criticalTables.includes(tableName) && !userContext.userId) {
-      await securityValidationService.logSecurityEvent({
-        type: 'unauthorized_access',
-        userId: undefined,
-        details: `Attempted ${operation} on ${tableName} without authentication`,
-        severity: 'high'
-      });
-      return { allowed: false, reason: 'Authentication required for sensitive data' };
-    }
-
-    // Role-based access control
-    if (tableName === 'mental_health_alerts' && userContext.userRole !== 'doctor' && userContext.userRole !== 'admin') {
-      await securityValidationService.logSecurityEvent({
-        type: 'unauthorized_access',
-        userId: userContext.userId,
-        details: `Attempted access to mental health alerts without proper role: ${userContext.userRole}`,
-        severity: 'high'
-      });
-      return { allowed: false, reason: 'Insufficient privileges for mental health data' };
-    }
-
-    // School-based isolation
-    if (['students', 'teachers', 'class_schedules'].includes(tableName) && 
-        filters?.school && filters.school !== userContext.userSchool) {
-      await securityValidationService.logSecurityEvent({
-        type: 'unauthorized_access',
-        userId: userContext.userId,
-        details: `Attempted cross-school data access: ${filters.school} != ${userContext.userSchool}`,
-        severity: 'medium'
-      });
-      return { allowed: false, reason: 'Cross-school data access not permitted' };
-    }
-
-    // Log successful access
-    await securityMonitoringService.auditDataAccess(operation, tableName, 1);
-
-    return { allowed: true };
-  }
-
-  // Security dashboard data
   async getSecurityDashboard() {
     const metrics = await securityMonitoringService.getSecurityMetrics();
     const alerts = securityMonitoringService.getActiveAlerts();
@@ -421,13 +204,8 @@ class EnhancedSecurityService {
     return recommendations;
   }
 
-  // Cleanup expired sessions and security data
   cleanup(): void {
-    // Clean up expired CSRF tokens
-    // In a real implementation, you'd check timestamps
-    if (this.sessionTokens.size > 1000) {
-      this.sessionTokens.clear();
-    }
+    authenticationSecurityService.cleanup();
   }
 }
 
