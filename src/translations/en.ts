@@ -1,3 +1,4 @@
+
 import { enAuthTranslations } from './en/auth';
 import { enTeacherTranslations } from './en/teacher';
 import { enWeeklyTranslations } from './en/weekly';
@@ -234,10 +235,6 @@ export const enTranslations = {
   'admin.loading': 'Loading...',
   'admin.error.title': 'Error',
   'admin.error.description': 'Failed to load data',
-
-  // Class
-  'class.schedule': 'Schedule',
-  'class.upcomingClasses': 'Upcoming Classes',
 
   // Upload
   'upload.bulkUpload': 'Bulk Upload',

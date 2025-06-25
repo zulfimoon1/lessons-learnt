@@ -173,22 +173,6 @@ export const ltTranslations = {
   'admin.loading': 'Kraunama...',
   'admin.error.title': 'Klaida',
   'admin.error.description': 'Nepavyko įkelti duomenų',
-  'admin.role': 'Mokyklos administratorius',
-
-  // Teacher
-  'teacher.role': 'Mokytojas',
-  'teacher.schedule': 'Tvarkaraštis',
-  'teacher.bulkUpload': 'Grupinis įkėlimas',
-  'teacher.articles': 'Straipsniai',
-
-  // Features
-  'features.mentalHealth.title': 'Psichikos sveikatos parama',
-  'features.mentalHealth.description': 'Prieiga prie gerovės išteklių ir psichikos sveikatos paramos, kai to reikia.',
-
-  // Auth
-  'auth.logoutSuccess': 'Sėkmingai atsijungėte',
-  'auth.logoutError': 'Atsijungimas nepavyko',
-  'auth.school': 'Mokykla',
 
   // Merge all sub-translations
   ...ltAuthTranslations,
