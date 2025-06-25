@@ -18,7 +18,11 @@ interface WeeklySummary {
   submitted_at: string;
 }
 
-const WeeklySummaryReview = () => {
+interface WeeklySummaryReviewProps {
+  teacher?: any;
+}
+
+const WeeklySummaryReview: React.FC<WeeklySummaryReviewProps> = ({ teacher }) => {
   const [summaries, setSummaries] = useState<WeeklySummary[]>([]);
   const [selectedSummary, setSelectedSummary] = useState<WeeklySummary | null>(null);
   const [isLoading, setIsLoading] = useState(false);
