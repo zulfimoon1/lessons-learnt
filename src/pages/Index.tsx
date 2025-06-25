@@ -6,7 +6,6 @@ import LanguageSwitcher from "@/components/LanguageSwitcher";
 import DemoSection from "@/components/DemoSection";
 import ComplianceFooter from "@/components/ComplianceFooter";
 import CookieConsent from "@/components/CookieConsent";
-import PrivacyLinks from "@/components/privacy/PrivacyLinks";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 const Index = () => {
@@ -49,11 +48,6 @@ const Index = () => {
               </Link>
               <LanguageSwitcher />
             </div>
-          </div>
-          
-          {/* Privacy Links Section */}
-          <div className="mt-4 pt-4 border-t border-gray-200/50">
-            <PrivacyLinks />
           </div>
         </div>
       </header>

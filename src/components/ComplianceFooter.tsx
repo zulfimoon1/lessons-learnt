@@ -3,6 +3,7 @@ import React from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Shield, Lock, FileText, Eye } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import PrivacyLinks from '@/components/privacy/PrivacyLinks';
 
 const ComplianceFooter: React.FC = () => {
   const { t } = useLanguage();
@@ -37,7 +38,12 @@ const ComplianceFooter: React.FC = () => {
         </div>
         
         <div className="border-t pt-6">
-          <div className="mt-4 flex items-center space-x-2 text-xs text-gray-500">
+          {/* Privacy Links Section */}
+          <div className="mb-4">
+            <PrivacyLinks />
+          </div>
+          
+          <div className="flex items-center space-x-2 text-xs text-gray-500">
             <Eye className="w-4 h-4" />
             <span>All data is encrypted in transit and at rest. Full audit logging enabled.</span>
           </div>
