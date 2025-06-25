@@ -13,6 +13,7 @@ import SOC2ComplianceControls from './SOC2ComplianceControls';
 import SOC2AccessControlPanel from './SOC2AccessControlPanel';
 import SOC2DataProtectionPanel from './SOC2DataProtectionPanel';
 import SOC2SystemMonitoringPanel from './SOC2SystemMonitoringPanel';
+import SOC2ChangeControlPanel from './SOC2ChangeControlPanel';
 
 const SOC2Dashboard: React.FC = () => {
   const [dashboardData, setDashboardData] = useState<SOC2DashboardData | null>(null);
@@ -120,6 +121,7 @@ const SOC2Dashboard: React.FC = () => {
           <TabsTrigger value="access-control">Access Control</TabsTrigger>
           <TabsTrigger value="data-protection">Data Protection</TabsTrigger>
           <TabsTrigger value="system-monitoring">System Monitoring</TabsTrigger>
+          <TabsTrigger value="change-control">Change Control</TabsTrigger>
           <TabsTrigger value="audit">Audit Events</TabsTrigger>
           <TabsTrigger value="security">Security Events</TabsTrigger>
           <TabsTrigger value="compliance">Compliance Controls</TabsTrigger>
@@ -135,6 +137,10 @@ const SOC2Dashboard: React.FC = () => {
 
         <TabsContent value="system-monitoring" className="space-y-4">
           <SOC2SystemMonitoringPanel />
+        </TabsContent>
+
+        <TabsContent value="change-control" className="space-y-4">
+          <SOC2ChangeControlPanel />
         </TabsContent>
 
         <TabsContent value="audit" className="space-y-4">
