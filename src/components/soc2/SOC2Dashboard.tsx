@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -11,6 +12,7 @@ import SOC2SecurityEvents from './SOC2SecurityEvents';
 import SOC2ComplianceControls from './SOC2ComplianceControls';
 import SOC2AccessControlPanel from './SOC2AccessControlPanel';
 import SOC2DataProtectionPanel from './SOC2DataProtectionPanel';
+import SOC2SystemMonitoringPanel from './SOC2SystemMonitoringPanel';
 
 const SOC2Dashboard: React.FC = () => {
   const [dashboardData, setDashboardData] = useState<SOC2DashboardData | null>(null);
@@ -117,6 +119,7 @@ const SOC2Dashboard: React.FC = () => {
         <TabsList>
           <TabsTrigger value="access-control">Access Control</TabsTrigger>
           <TabsTrigger value="data-protection">Data Protection</TabsTrigger>
+          <TabsTrigger value="system-monitoring">System Monitoring</TabsTrigger>
           <TabsTrigger value="audit">Audit Events</TabsTrigger>
           <TabsTrigger value="security">Security Events</TabsTrigger>
           <TabsTrigger value="compliance">Compliance Controls</TabsTrigger>
@@ -128,6 +131,10 @@ const SOC2Dashboard: React.FC = () => {
 
         <TabsContent value="data-protection" className="space-y-4">
           <SOC2DataProtectionPanel />
+        </TabsContent>
+
+        <TabsContent value="system-monitoring" className="space-y-4">
+          <SOC2SystemMonitoringPanel />
         </TabsContent>
 
         <TabsContent value="audit" className="space-y-4">
