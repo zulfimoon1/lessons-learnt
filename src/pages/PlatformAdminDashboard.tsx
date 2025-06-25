@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { usePlatformAdmin } from "@/contexts/PlatformAdminContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -61,7 +60,6 @@ const PlatformAdminDashboard = () => {
     monthlyRevenue: 0,
   });
   const [schoolStats, setSchoolStats] = useState<SchoolStats[]>([]);
-  const [feedbackStats, setFeedbackStats] = useState<FeedbackStats[]>([]);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isCleaningUp, setIsCleaningUp] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<string>("");
@@ -414,7 +412,7 @@ const PlatformAdminDashboard = () => {
                   <DiscountCodeManagement />
                   <ResponsesManagement />
                   <SchoolOverview schoolStats={schoolStats} />
-                  <FeedbackAnalytics feedbackStats={feedbackStats} />
+                  <FeedbackAnalytics />
                 </div>
               </TabsContent>
 
