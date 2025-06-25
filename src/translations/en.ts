@@ -1,5 +1,4 @@
 
-
 import { enAuthTranslations } from './en/auth';
 import { enTeacherTranslations } from './en/teacher';
 import { enWeeklyTranslations } from './en/weekly';
@@ -119,6 +118,14 @@ export const enTranslations = {
   'teacher.logout.description': 'You have been logged out.',
   'teacher.subscriptionRequiredForSummaries': 'A subscription is required to view weekly summaries',
   'teacher.subscribeToContinue': 'Subscribe to Continue',
+
+  // Doctor Dashboard
+  'doctor.dashboard.title': 'Doctor Dashboard',
+  'doctor.dashboard.welcome': 'Welcome, Dr. {name}',
+  'doctor.dashboard.mentalHealthAlerts': 'Mental Health Alerts',
+  'doctor.dashboard.noAlerts': 'No mental health alerts at this time',
+  'doctor.dashboard.reviewed': 'Reviewed',
+  'doctor.dashboard.markReviewed': 'Mark as Reviewed',
 
   // Class Schedule Form
   'schedule.createTitle': 'Create Class Schedule',
@@ -292,6 +299,9 @@ export const enTranslations = {
 
   // Auth
   'auth.grade': 'Grade',
+  'auth.school': 'School',
+  'auth.logoutSuccess': 'Logged out successfully',
+  'auth.logoutError': 'Logout failed',
 
   // Features
   'features.studentFeedback.title': 'Student Feedback Collection',
@@ -310,6 +320,25 @@ export const enTranslations = {
   'student.gradePlaceholder': '10A, Grade 9',
   'student.classGrade': 'Class/Grade',
   'student.school': 'School',
+
+  // Chat
+  'chat.chatWithDoctor': 'Chat with Doctor',
+  'chat.startLiveChatWithDoctor': 'Start Live Chat with Doctor',
+  'chat.chatPreferences': 'Chat Preferences',
+  'chat.connectWithDoctor': 'Connect with a medical professional for confidential support',
+  'chat.anonymousChat': 'Anonymous Chat',
+  'chat.identityProtected': 'Your identity will be protected',
+  'chat.nameVisible': 'Your name will be visible to the doctor',
+  'chat.privacyProtected': 'Privacy Protected',
+  'chat.conversationConfidential': 'This conversation is confidential and secure',
+  'chat.creatingSession': 'Creating session...',
+  'chat.startChatWithDoctor': 'Start Chat with Doctor',
+  'chat.connectionFailed': 'Connection failed',
+  'chat.chatStarted': 'Chat session started',
+  'chat.doctorWillJoin': 'A doctor will join the chat shortly',
+
+  // Demo
+  'demo.title': 'Demo',
 
   // Merge all sub-translations
   ...enAuthTranslations,
