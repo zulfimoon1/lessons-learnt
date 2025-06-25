@@ -21,10 +21,20 @@ import {
   CalculatorIcon,
   TrashIcon
 } from "lucide-react";
-import type { Database } from "@/integrations/supabase/types";
 import { calculatePricing } from "@/services/pricingService";
 
-type Transaction = Database['public']['Tables']['transactions']['Row'];
+interface Transaction {
+  id: string;
+  amount: number;
+  currency: string;
+  description: string;
+  school_name: string;
+  status: string;
+  transaction_type: string;
+  created_at: string;
+  updated_at: string;
+  created_by: string | null;
+}
 
 const TransactionManagement = () => {
   const { toast } = useToast();
@@ -64,8 +74,15 @@ const TransactionManagement = () => {
 
       // Use the secure admin service instead of direct Supabase calls
       const result = await securePlatformAdminService.getTransactions(admin.email);
-      setTransactions(result || []);
-      console.log('Transactions loaded successfully:', result?.length || 0);
+      
+      // Map the result to match our interface, adding updated_at if missing
+      const mappedTransactions: Transaction[] = (result || []).map(transaction => ({
+        ...transaction,
+        updated_at: transaction.updated_at || transaction.created_at
+      }));
+      
+      setTransactions(mappedTransactions);
+      console.log('Transactions loaded successfully:', mappedTransactions.length);
       
     } catch (error) {
       console.error('Error loading transactions:', error);
@@ -133,26 +150,28 @@ const TransactionManagement = () => {
         description = description ? `${description} (${subscriptionDetails})` : subscriptionDetails;
       }
 
+      // Convert amount to cents (as number)
+      const amountInCents = Math.round(parseFloat(formData.amount) * 100);
+
       // Use the secure admin service to create transaction
-      const result = await securePlatformAdminService.createTransaction(admin.email, {
+      await securePlatformAdminService.createTransaction(admin.email, {
         school_name: formData.school_name.trim(),
-        amount: formData.amount,
+        amount: amountInCents,
         currency: formData.currency,
         transaction_type: formData.transaction_type,
         status: formData.status,
         description: description
       });
 
-      if (result) {
-        toast({
-          title: "Success",
-          description: "Manual transaction created successfully. School admins can view this in their subscription management section.",
-        });
+      toast({
+        title: "Success",
+        description: "Manual transaction created successfully. School admins can view this in their subscription management section.",
+      });
 
-        resetForm();
-        setIsCreateDialogOpen(false);
-        loadTransactions();
-      }
+      resetForm();
+      setIsCreateDialogOpen(false);
+      loadTransactions();
+      
     } catch (error) {
       console.error('Error creating transaction:', error);
       toast({

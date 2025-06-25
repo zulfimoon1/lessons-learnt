@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { centralizedValidationService } from './centralizedValidationService';
 
@@ -36,6 +35,7 @@ interface Transaction {
   status: string;
   transaction_type: string;
   created_at: string;
+  updated_at: string;
   created_by: string | null;
 }
 
