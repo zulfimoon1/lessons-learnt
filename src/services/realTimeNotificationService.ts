@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { DistressAnalysis } from './multiLanguageDistressService';
 
@@ -27,25 +28,9 @@ export interface RealTimeAlert {
 class RealTimeNotificationService {
   private subscriptions: NotificationSubscription[] = [];
   private activeChannel: any = null;
-  private isInitialized: boolean = false;
-  private currentContext: string = '';
 
   async initializeNotifications(userId: string, role: string, school: string) {
-    const contextKey = `${userId}-${role}-${school}`;
-    
-    // Prevent duplicate initialization
-    if (this.isInitialized && this.currentContext === contextKey) {
-      console.log('🔔 Notifications already initialized for:', contextKey);
-      return;
-    }
-
     try {
-      // Cleanup existing connection if we're switching context
-      if (this.activeChannel && this.currentContext !== contextKey) {
-        console.log('🔔 Cleaning up previous notification context');
-        this.cleanup();
-      }
-
       // Subscribe to real-time notifications
       this.activeChannel = supabase
         .channel(`notifications_${school}`)
@@ -64,14 +49,9 @@ class RealTimeNotificationService {
       // Load user notification preferences
       await this.loadNotificationPreferences(userId, role, school);
       
-      this.isInitialized = true;
-      this.currentContext = contextKey;
-      
       console.log('🔔 Real-time notifications initialized for:', { userId, role, school });
     } catch (error) {
       console.error('Failed to initialize notifications:', error);
-      this.isInitialized = false;
-      this.currentContext = '';
     }
   }
 
@@ -290,12 +270,9 @@ class RealTimeNotificationService {
 
   cleanup() {
     if (this.activeChannel) {
-      console.log('🔔 Cleaning up notification service');
       supabase.removeChannel(this.activeChannel);
       this.activeChannel = null;
     }
-    this.isInitialized = false;
-    this.currentContext = '';
   }
 }
 
