@@ -1,0 +1,340 @@
+
+export interface LanguageResource {
+  common: {
+    edit: string;
+    delete: string;
+    save: string;
+    cancel: string;
+    confirm: string;
+    back: string;
+    success: string;
+    error: string;
+    loading: string;
+    retry: string;
+    name: string;
+    email: string;
+    password: string;
+    logout: string;
+    search: string;
+    create: string;
+    view: string;
+    next: string;
+    previous: string;
+    finish: string;
+    close: string;
+    january: string;
+    february: string;
+    march: string;
+    april: string;
+    may: string;
+    june: string;
+    july: string;
+    august: string;
+    september: string;
+    october: string;
+    november: string;
+    december: string;
+    monday: string;
+    tuesday: string;
+    wednesday: string;
+    thursday: string;
+    friday: string;
+    saturday: string;
+    sunday: string;
+    today: string;
+    clear: string;
+    all: string;
+    select: string;
+    somethingWentWrong: string;
+    areYouSure: string;
+    yes: string;
+    no: string;
+    home: string;
+    settings: string;
+    information: string;
+  };
+  auth: {
+    login: string;
+    register: string;
+    logoutError: string;
+    loginError: string;
+    registerError: string;
+    resetPassword: string;
+    resetPasswordError: string;
+    resetPasswordSuccess: string;
+    newPassword: string;
+    confirmNewPassword: string;
+    updatePassword: string;
+    updatePasswordError: string;
+    updatePasswordSuccess: string;
+    invalidEmail: string;
+    passwordMismatch: string;
+    passwordRequired: string;
+    emailRequired: string;
+  };
+  dashboard: {
+    title: string;
+    teacherDashboard: string;
+    studentDashboard: string;
+    feedback: string;
+    feedbackDescription: string;
+    welcome: string;
+    role: string;
+    grade: string;
+    lesson: string;
+    schedule: string;
+    weeklySummaries: string;
+    weeklySummaryDescription: string;
+    articles: string;
+    articlesDescription: string;
+    settings: string;
+    settingsDescription: string;
+  };
+  teacher: {
+    role: string;
+    logout: {
+      success: string;
+    };
+    schedule: string;
+    bulkUpload: string;
+    articles: string;
+  };
+  student: {
+    role: string;
+    submitFeedback: string;
+    viewSchedule: string;
+    accessResources: string;
+  };
+  weekly: {
+    summaries: string;
+    noSummaries: string;
+    submitSummary: string;
+    viewSummary: string;
+    editSummary: string;
+    deleteSummary: string;
+    summarySubmitted: string;
+    summaryUpdated: string;
+    summaryDeleted: string;
+    submitError: string;
+    updateError: string;
+    deleteError: string;
+    date: string;
+    content: string;
+    submit: string;
+    summary: string;
+    studentFeedback: string;
+    overallMood: string;
+    teacherActions: string;
+    studentSupport: string;
+    additionalNotes: string;
+    positive: string;
+    neutrali: string;
+    negative: string;
+    veryPositive: string;
+    veryNegative: string;
+  };
+  feedback: {
+    submitFeedback: string;
+    viewFeedback: string;
+    editFeedback: string;
+    deleteFeedback: string;
+    feedbackSubmitted: string;
+    feedbackUpdated: string;
+    feedbackDeleted: string;
+    submitError: string;
+    updateError: string;
+    deleteError: string;
+    lessonRating: string;
+    teacherRating: string;
+    comments: string;
+    submit: string;
+    feedback: string;
+    studentName: string;
+    lessonDate: string;
+    overallExperience: string;
+    teacherEffectiveness: string;
+    clarityOfExplanation: string;
+    engagement: string;
+    supportiveness: string;
+    className: string;
+  };
+  settings: {
+    accountSettings: string;
+    profileInformation: string;
+    updatePassword: string;
+    languagePreferences: string;
+    notifications: string;
+    privacy: string;
+    security: string;
+    help: string;
+    about: string;
+    termsOfService: string;
+    privacyPolicy: string;
+    contactUs: string;
+    deleteAccount: string;
+    deleteAccountConfirmation: string;
+    accountDeleted: string;
+    deletionError: string;
+    updateSuccess: string;
+    updateError: string;
+  };
+  articles: {
+    title: string;
+    noArticles: string;
+    readMore: string;
+    publishDate: string;
+    author: string;
+  };
+  admin: {
+    role: string;
+    userManagement: string;
+    schoolManagement: string;
+    analyticsDashboard: string;
+    createUser: string;
+    editUser: string;
+    deleteUser: string;
+    createSchool: string;
+    editSchool: string;
+    deleteSchool: string;
+    userCreated: string;
+    userUpdated: string;
+    userDeleted: string;
+    schoolCreated: string;
+    schoolUpdated: string;
+    schoolDeleted: string;
+    creationError: string;
+    updateError: string;
+    deletionError: string;
+    users: string;
+    schools: string;
+    name: string;
+    address: string;
+    city: string;
+    country: string;
+    zipCode: string;
+    contactEmail: string;
+    contactPhone: string;
+    description: string;
+    noUsers: string;
+    noSchools: string;
+  };
+  demo: {
+    page: {
+      title: string;
+      subtitle: string;
+      backToHome: string;
+      pauseDemo: string;
+      studentExperience: string;
+      teacherWorkflow: string;
+      fullIntegration: string;
+      interactiveSimulation: string;
+      cta: {
+        title: string;
+        description: string;
+        startTrial: string;
+        studentAccess: string;
+      };
+    };
+    simulation: {
+      student: {
+        title: string;
+        description: string;
+      };
+      teacher: {
+        title: string;
+        description: string;
+      };
+      mentalHealth: {
+        title: string;
+        description: string;
+      };
+      play: string;
+      pause: string;
+      reset: string;
+    };
+    userType: {
+      student: string;
+      teacher: string;
+      psychologist: string;
+    };
+    features: {
+      student: {
+        1: string;
+        2: string;
+        3: string;
+        4: string;
+        5: string;
+        6: string;
+      };
+      teacher: {
+        1: string;
+        2: string;
+        3: string;
+        4: string;
+        5: string;
+        6: string;
+        7: string;
+        8: string;
+      };
+      mentalHealth: {
+        1: string;
+        2: string;
+        3: string;
+        4: string;
+        5: string;
+        6: string;
+      };
+    };
+    interactive: {
+      student: string;
+      teacher: string;
+      integration: string;
+    };
+  };
+  features: {
+    mentalHealth: {
+      title: string;
+      description: string;
+    };
+  };
+  analytics: {
+    title: string;
+    description: string;
+  };
+  ai: {
+    insights: string;
+  };
+  doctor: {
+    dashboard: {
+      title: string;
+      liveChat: string;
+      weeklySummaries: string;
+      selfHarmAlerts: string;
+      aiInsights: string;
+      loading: string;
+      selfHarmAlertsTitle: string;
+      confidentialData: string;
+      reviewed: string;
+      immediateAttention: string;
+      noAlerts: string;
+      unreviewed: string;
+      highRiskLevel: string;
+      mediumRiskLevel: string;
+      lowRiskLevel: string;
+      markReviewed: string;
+      alertsLoadError: string;
+      markReviewedError: string;
+      noAlertsDescription: string;
+      insightsError: string;
+      criticalInsights: string;
+      actionableInsights: string;
+      studentsAnalyzed: string;
+      lastUpdated: string;
+      noInsights: string;
+      noInsightsDescription: string;
+      generateInsights: string;
+      confidence: string;
+      recommendedActions: string;
+    };
+  };
+}
