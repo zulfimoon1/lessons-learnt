@@ -45,6 +45,7 @@ const SchoolAdminDashboard: React.FC<SchoolAdminDashboardProps> = ({ teacher }) 
   const fetchSchoolData = async () => {
     try {
       setIsLoading(true);
+      console.log('SchoolAdminDashboard: Fetching data for school:', teacher.school);
 
       // Fetch feedback analytics per teacher per lesson
       const { data: feedbackAnalytics, error: feedbackError } = await supabase
@@ -62,11 +63,17 @@ const SchoolAdminDashboard: React.FC<SchoolAdminDashboardProps> = ({ teacher }) 
         `)
         .eq('class_schedules.school', teacher.school);
 
-      if (feedbackError) throw feedbackError;
+      if (feedbackError) {
+        console.error('SchoolAdminDashboard: Feedback error:', feedbackError);
+        throw feedbackError;
+      }
+
+      console.log('SchoolAdminDashboard: Raw feedback data:', feedbackAnalytics);
 
       // Process feedback data to get averages per teacher per lesson
       const processedFeedback = processFeedbackData(feedbackAnalytics || []);
       setFeedbackData(processedFeedback);
+      console.log('SchoolAdminDashboard: Processed feedback:', processedFeedback);
 
       // Fetch school statistics
       const [teachersResult, studentsResult, classesResult] = await Promise.all([
@@ -74,6 +81,12 @@ const SchoolAdminDashboard: React.FC<SchoolAdminDashboardProps> = ({ teacher }) 
         supabase.from('students').select('id', { count: 'exact' }).eq('school', teacher.school),
         supabase.from('class_schedules').select('id', { count: 'exact' }).eq('school', teacher.school)
       ]);
+
+      console.log('SchoolAdminDashboard: Stats results:', {
+        teachers: teachersResult,
+        students: studentsResult,
+        classes: classesResult
+      });
 
       setSchoolStats({
         totalTeachers: teachersResult.count || 0,
@@ -83,7 +96,7 @@ const SchoolAdminDashboard: React.FC<SchoolAdminDashboardProps> = ({ teacher }) 
       });
 
     } catch (error) {
-      console.error('Error fetching school data:', error);
+      console.error('SchoolAdminDashboard: Error fetching school data:', error);
       toast({
         title: "Error",
         description: "Failed to fetch school analytics",
@@ -95,6 +108,8 @@ const SchoolAdminDashboard: React.FC<SchoolAdminDashboardProps> = ({ teacher }) 
   };
 
   const processFeedbackData = (rawData: any[]): FeedbackAnalytics[] => {
+    console.log('SchoolAdminDashboard: Processing feedback data:', rawData);
+    
     const groupedData = rawData.reduce((acc, item) => {
       const key = `${item.class_schedules.teacher_id}-${item.class_schedules.lesson_topic}-${item.class_schedules.class_date}`;
       
@@ -119,7 +134,7 @@ const SchoolAdminDashboard: React.FC<SchoolAdminDashboardProps> = ({ teacher }) 
       return acc;
     }, {});
 
-    return Object.values(groupedData).map((group: any) => ({
+    const result = Object.values(groupedData).map((group: any) => ({
       teacher_name: group.teacher_name,
       lesson_topic: group.lesson_topic,
       class_date: group.class_date,
@@ -129,11 +144,16 @@ const SchoolAdminDashboard: React.FC<SchoolAdminDashboardProps> = ({ teacher }) 
       avg_growth: group.growth_scores.reduce((a: number, b: number) => a + b, 0) / group.growth_scores.length,
       total_responses: group.total_responses
     }));
+
+    console.log('SchoolAdminDashboard: Final processed data:', result);
+    return result;
   };
 
   if (isLoading) {
     return <div className="flex items-center justify-center p-8">Loading school analytics...</div>;
   }
+
+  console.log('SchoolAdminDashboard: Rendering with stats:', schoolStats, 'and feedback:', feedbackData);
 
   return (
     <div className="space-y-6">
@@ -146,6 +166,9 @@ const SchoolAdminDashboard: React.FC<SchoolAdminDashboardProps> = ({ teacher }) 
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{schoolStats.totalTeachers}</div>
+            <p className="text-xs text-muted-foreground">
+              In {teacher.school}
+            </p>
           </CardContent>
         </Card>
 
@@ -156,6 +179,9 @@ const SchoolAdminDashboard: React.FC<SchoolAdminDashboardProps> = ({ teacher }) 
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{schoolStats.totalStudents}</div>
+            <p className="text-xs text-muted-foreground">
+              Enrolled students
+            </p>
           </CardContent>
         </Card>
 
@@ -166,6 +192,9 @@ const SchoolAdminDashboard: React.FC<SchoolAdminDashboardProps> = ({ teacher }) 
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{schoolStats.totalClasses}</div>
+            <p className="text-xs text-muted-foreground">
+              Scheduled classes
+            </p>
           </CardContent>
         </Card>
 
@@ -176,6 +205,9 @@ const SchoolAdminDashboard: React.FC<SchoolAdminDashboardProps> = ({ teacher }) 
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{schoolStats.totalFeedback}</div>
+            <p className="text-xs text-muted-foreground">
+              Student responses
+            </p>
           </CardContent>
         </Card>
       </div>
@@ -196,17 +228,24 @@ const SchoolAdminDashboard: React.FC<SchoolAdminDashboardProps> = ({ teacher }) 
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={feedbackData.slice(0, 10)}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="teacher_name" />
-                  <YAxis />
-                  <Tooltip />
-                  <Bar dataKey="avg_understanding" fill="#8884d8" name="Understanding" />
-                  <Bar dataKey="avg_interest" fill="#82ca9d" name="Interest" />
-                  <Bar dataKey="avg_growth" fill="#ffc658" name="Growth" />
-                </BarChart>
-              </ResponsiveContainer>
+              {feedbackData.length > 0 ? (
+                <ResponsiveContainer width="100%" height={300}>
+                  <BarChart data={feedbackData.slice(0, 10)}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="teacher_name" />
+                    <YAxis />
+                    <Tooltip />
+                    <Bar dataKey="avg_understanding" fill="#8884d8" name="Understanding" />
+                    <Bar dataKey="avg_interest" fill="#82ca9d" name="Interest" />
+                    <Bar dataKey="avg_growth" fill="#ffc658" name="Growth" />
+                  </BarChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="text-center py-8">
+                  <p className="text-muted-foreground">No feedback data available yet.</p>
+                  <p className="text-xs text-muted-foreground mt-2">Charts will appear here as students submit feedback.</p>
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
