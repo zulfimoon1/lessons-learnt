@@ -3,6 +3,8 @@ import React from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Shield, Lock, FileText, Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Link } from 'react-router-dom';
+import PrivacyLinks from '@/components/privacy/PrivacyLinks';
 
 const ComplianceFooter: React.FC = () => {
   const { t } = useLanguage();
@@ -38,9 +40,11 @@ const ComplianceFooter: React.FC = () => {
         
         <div className="border-t pt-6">
           <div className="flex flex-wrap gap-4 text-xs text-gray-500 mb-4">
-            <Button variant="link" className="h-auto p-0 text-xs">
-              {t('compliance.privacyPolicy')}
-            </Button>
+            <Link to="/privacy-policy">
+              <Button variant="link" className="h-auto p-0 text-xs">
+                {t('compliance.privacyPolicy')}
+              </Button>
+            </Link>
             <Button variant="link" className="h-auto p-0 text-xs">
               {t('compliance.cookiePolicy')}
             </Button>
@@ -53,6 +57,10 @@ const ComplianceFooter: React.FC = () => {
             <Button variant="link" className="h-auto p-0 text-xs">
               {t('compliance.rightToDelete')}
             </Button>
+          </div>
+          
+          <div className="mb-4">
+            <PrivacyLinks />
           </div>
           
           <div className="mt-4 flex items-center space-x-2 text-xs text-gray-500">

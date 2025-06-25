@@ -1,11 +1,12 @@
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { GraduationCapIcon, UsersIcon, BookOpenIcon, HeartIcon, BarChart3Icon, ShieldCheckIcon, PlayCircleIcon } from "lucide-react";
+import { GraduationCapIcon, UsersIcon, BookOpenIcon, HeartIcon, BarChart3Icon, ShieldCheckIcon, PlayCircleIcon, Shield } from "lucide-react";
 import { Link } from "react-router-dom";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import DemoSection from "@/components/DemoSection";
 import ComplianceFooter from "@/components/ComplianceFooter";
+import CookieConsent from "@/components/CookieConsent";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 const Index = () => {
@@ -24,6 +25,8 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <CookieConsent />
+      
       {/* Header */}
       <header className="bg-white/80 backdrop-blur-sm border-b border-border shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
@@ -42,6 +45,12 @@ const Index = () => {
                 <Button variant="outline" size="sm" className="flex items-center gap-2 border-brand-teal text-brand-teal hover:bg-brand-teal hover:text-white">
                   <PlayCircleIcon className="w-4 h-4" />
                   {t('demo.title')}
+                </Button>
+              </Link>
+              <Link to="/privacy-policy">
+                <Button variant="ghost" size="sm" className="flex items-center gap-1 text-gray-600 hover:text-brand-teal">
+                  <Shield className="w-3 h-3" />
+                  <span className="hidden md:inline">{t('privacy.title')}</span>
                 </Button>
               </Link>
               <LanguageSwitcher />
