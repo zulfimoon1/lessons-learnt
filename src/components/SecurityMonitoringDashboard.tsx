@@ -1,11 +1,12 @@
 
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { AlertTriangle, Shield, Activity, Users, Database, Lock } from "lucide-react";
+import { Shield } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-import { securityService } from "@/services/securityService";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import SecurityMetricsCards from "@/components/security/SecurityMetricsCards";
+import SecurityEventsLog from "@/components/security/SecurityEventsLog";
+import SecurityStatusPanel from "@/components/security/SecurityStatusPanel";
 
 interface SecurityMetrics {
   totalEvents: number;
@@ -71,7 +72,7 @@ const SecurityMonitoringDashboard: React.FC = () => {
     };
 
     loadMetrics();
-    const interval = setInterval(loadMetrics, 30000); // Update every 30 seconds
+    const interval = setInterval(loadMetrics, 30000);
     
     return () => clearInterval(interval);
   }, []);
@@ -86,21 +87,6 @@ const SecurityMonitoringDashboard: React.FC = () => {
       csrfViolations: 0,
       recentEvents: []
     });
-  };
-
-  const getSeverityColor = (type: string) => {
-    switch (type) {
-      case 'unauthorized_access':
-      case 'csrf_violation':
-        return 'destructive';
-      case 'suspicious_activity':
-      case 'rate_limit_exceeded':
-        return 'secondary';
-      case 'login_failed':
-        return 'outline';
-      default:
-        return 'default';
-    }
   };
 
   return (
@@ -118,135 +104,16 @@ const SecurityMonitoringDashboard: React.FC = () => {
         </Button>
       </div>
 
-      {/* Security Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Events</CardTitle>
-            <Activity className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{metrics.totalEvents}</div>
-            <p className="text-xs text-muted-foreground">All security events</p>
-          </CardContent>
-        </Card>
+      <SecurityMetricsCards
+        totalEvents={metrics.totalEvents}
+        criticalEvents={metrics.criticalEvents}
+        suspiciousActivities={metrics.suspiciousActivities}
+        rateLimitViolations={metrics.rateLimitViolations}
+      />
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Critical Events</CardTitle>
-            <AlertTriangle className="h-4 w-4 text-red-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-red-600">{metrics.criticalEvents}</div>
-            <p className="text-xs text-muted-foreground">Require immediate attention</p>
-          </CardContent>
-        </Card>
+      <SecurityEventsLog recentEvents={metrics.recentEvents} />
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Suspicious Activities</CardTitle>
-            <Users className="h-4 w-4 text-orange-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-orange-600">{metrics.suspiciousActivities}</div>
-            <p className="text-xs text-muted-foreground">Potential threats detected</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Rate Limit Violations</CardTitle>
-            <Lock className="h-4 w-4 text-yellow-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-yellow-600">{metrics.rateLimitViolations}</div>
-            <p className="text-xs text-muted-foreground">Blocked attempts</p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Recent Security Events */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Database className="w-5 h-5" />
-            Recent Security Events
-          </CardTitle>
-          <CardDescription>
-            Latest security events and alerts from the system
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-3">
-            {metrics.recentEvents.length === 0 ? (
-              <p className="text-gray-500 text-center py-4">No security events recorded</p>
-            ) : (
-              metrics.recentEvents.map((event, index) => (
-                <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
-                  <div className="flex items-center space-x-3">
-                    <Badge variant={getSeverityColor(event.type)}>
-                      {event.type.replace('_', ' ').toUpperCase()}
-                    </Badge>
-                    <div>
-                      <p className="font-medium">{event.details}</p>
-                      <p className="text-sm text-gray-500">
-                        {new Date(event.timestamp).toLocaleString()}
-                      </p>
-                    </div>
-                  </div>
-                  {event.userId && (
-                    <Badge variant="outline">
-                      User: {event.userId.substring(0, 8)}...
-                    </Badge>
-                  )}
-                </div>
-              ))
-            )}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Security Status */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Shield className="w-5 h-5 text-green-500" />
-            Security Status
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <span>Rate Limiting</span>
-                <Badge variant="default" className="bg-green-100 text-green-800">Active</Badge>
-              </div>
-              <div className="flex items-center justify-between">
-                <span>CSRF Protection</span>
-                <Badge variant="default" className="bg-green-100 text-green-800">Active</Badge>
-              </div>
-              <div className="flex items-center justify-between">
-                <span>Input Validation</span>
-                <Badge variant="default" className="bg-green-100 text-green-800">Active</Badge>
-              </div>
-            </div>
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <span>Session Security</span>
-                <Badge variant="default" className="bg-green-100 text-green-800">Enhanced</Badge>
-              </div>
-              <div className="flex items-center justify-between">
-                <span>Password Security</span>
-                <Badge variant="default" className="bg-green-100 text-green-800">Strong</Badge>
-              </div>
-              <div className="flex items-center justify-between">
-                <span>Database Security</span>
-                <Badge variant="default" className="bg-green-100 text-green-800">RLS Enabled</Badge>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      <SecurityStatusPanel />
     </div>
   );
 };
