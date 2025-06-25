@@ -77,6 +77,18 @@ const DemoSection = () => {
                 </p>
               </div>
             </div>
+
+            <div className="flex items-start gap-4">
+              <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                <HeartIcon className="w-6 h-6 text-purple-600" />
+              </div>
+              <div>
+                <h3 className="text-xl font-semibold text-brand-dark mb-2">{t('demo.schoolPsychologist')}</h3>
+                <p className="text-gray-600">
+                  {t('demo.schoolPsychologistDesc')}
+                </p>
+              </div>
+            </div>
           </div>
 
           <div className="bg-brand-gradient-soft rounded-2xl p-8">

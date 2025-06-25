@@ -371,6 +371,8 @@ export const enTranslations = {
   'demo.teacherDashboardDesc': 'Monitor student engagement, track learning progress, and identify students who need additional support.',
   'demo.adminOverview': 'Admin Overview',
   'demo.adminOverviewDesc': 'School-wide analytics, teacher management, and comprehensive insights into educational outcomes.',
+  'demo.schoolPsychologist': 'School Psychologist',
+  'demo.schoolPsychologistDesc': 'Provide mental health support, conduct counseling sessions, and maintain student wellbeing through anonymous communication.',
   'demo.demoFeatures': 'Demo Features',
   'demo.tryBeforeCommit': 'Try before you commit',
   'demo.noRegistrationRequired': 'No registration required',

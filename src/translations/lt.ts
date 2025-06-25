@@ -369,6 +369,8 @@ export const ltTranslations = {
   'demo.teacherDashboardDesc': 'Stebėkite mokinių įsitraukimą, sekite mokymosi pažangą ir identifikuokite mokinius, kuriems reikia papildomos paramos.',
   'demo.adminOverview': 'Administratoriaus apžvalga',
   'demo.adminOverviewDesc': 'Mokyklos apimties analitika, mokytojų valdymas ir išsamūs švietimo rezultatų įžvalgos.',
+  'demo.schoolPsychologist': 'Mokyklos psichologas',
+  'demo.schoolPsychologistDesc': 'Teikite psichikos sveikatos paramą, veskite konsultacijas ir palaikykite mokinių gerovę per anoniminį bendravimą.',
   'demo.demoFeatures': 'Demonstracijos funkcijos',
   'demo.tryBeforeCommit': 'Išbandykite prieš įsipareigojant',
   'demo.noRegistrationRequired': 'Registracija nereikalinga',
