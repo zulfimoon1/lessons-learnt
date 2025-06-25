@@ -1,4 +1,6 @@
-export const en = {
+import { LanguageResource } from './types';
+
+export const enTranslations: LanguageResource = {
   common: {
     edit: "Edit",
     delete: "Delete",
@@ -502,5 +504,18 @@ export const en = {
       confidence: "Confidence",
       recommendedActions: "Recommended Actions"
     }
-  }
+  },
+  features: {
+    mentalHealth: {
+      title: "Mental Health",
+      description: "Support student wellbeing with AI-powered insights and resources.",
+    },
+  },
+  analytics: {
+    title: "Analytics",
+    description: "Track student progress and wellbeing with our analytics dashboard.",
+  },
+  ai: {
+    insights: "AI Insights",
+  },
 };
