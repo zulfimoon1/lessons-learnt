@@ -5,7 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { Users, BookOpen, MessageSquare, TrendingUp } from "lucide-react";
+import { Users, BookOpen, MessageSquare, TrendingUp, BarChart3, Percent } from "lucide-react";
 
 interface FeedbackAnalytics {
   teacher_name: string;
@@ -33,7 +33,9 @@ const SchoolAdminDashboard: React.FC<SchoolAdminDashboardProps> = ({ teacher }) 
     totalTeachers: 0,
     totalStudents: 0,
     totalClasses: 0,
-    totalFeedback: 0
+    totalFeedback: 0,
+    activeClasses: 0,
+    responseRate: 0
   });
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
@@ -47,59 +49,96 @@ const SchoolAdminDashboard: React.FC<SchoolAdminDashboardProps> = ({ teacher }) 
       setIsLoading(true);
       console.log('SchoolAdminDashboard: Fetching data for school:', teacher.school);
 
-      // Fetch feedback analytics per teacher per lesson
-      const { data: feedbackAnalytics, error: feedbackError } = await supabase
-        .from('feedback')
-        .select(`
-          *,
-          class_schedules!inner(
-            teacher_id,
-            lesson_topic,
-            class_date,
-            subject,
-            school,
-            teachers!inner(name)
-          )
-        `)
-        .eq('class_schedules.school', teacher.school);
+      // Fetch all statistics in parallel
+      const [
+        { data: teachers, error: teachersError },
+        { data: students, error: studentsError },
+        { data: classes, error: classesError },
+        { data: feedback, error: feedbackError }
+      ] = await Promise.all([
+        supabase.from('teachers').select('id').eq('school', teacher.school),
+        supabase.from('students').select('id').eq('school', teacher.school),
+        supabase.from('class_schedules').select('id, class_date').eq('school', teacher.school),
+        supabase
+          .from('feedback')
+          .select(`
+            *,
+            class_schedules!inner(
+              teacher_id,
+              lesson_topic,
+              class_date,
+              subject,
+              school,
+              teachers!inner(name)
+            )
+          `)
+          .eq('class_schedules.school', teacher.school)
+      ]);
 
+      // Handle errors
+      if (teachersError) {
+        console.error('Teachers fetch error:', teachersError);
+        throw teachersError;
+      }
+      if (studentsError) {
+        console.error('Students fetch error:', studentsError);
+        throw studentsError;
+      }
+      if (classesError) {
+        console.error('Classes fetch error:', classesError);
+        throw classesError;
+      }
       if (feedbackError) {
-        console.error('SchoolAdminDashboard: Feedback error:', feedbackError);
+        console.error('Feedback fetch error:', feedbackError);
         throw feedbackError;
       }
 
-      console.log('SchoolAdminDashboard: Raw feedback data:', feedbackAnalytics);
+      console.log('Raw data received:', {
+        teachers: teachers?.length || 0,
+        students: students?.length || 0,
+        classes: classes?.length || 0,
+        feedback: feedback?.length || 0
+      });
 
-      // Process feedback data to get averages per teacher per lesson
-      const processedFeedback = processFeedbackData(feedbackAnalytics || []);
+      // Calculate active classes (classes scheduled for today or in the future)
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      
+      const activeClassesCount = classes?.filter(cls => {
+        const classDate = new Date(cls.class_date);
+        classDate.setHours(0, 0, 0, 0);
+        return classDate >= today;
+      }).length || 0;
+
+      // Calculate response rate
+      const totalPossibleResponses = classes?.length || 0;
+      const actualResponses = feedback?.length || 0;
+      const responseRate = totalPossibleResponses > 0 
+        ? Math.round((actualResponses / totalPossibleResponses) * 100) 
+        : 0;
+
+      // Process feedback data
+      const processedFeedback = processFeedbackData(feedback || []);
       setFeedbackData(processedFeedback);
-      console.log('SchoolAdminDashboard: Processed feedback:', processedFeedback);
 
-      // Fetch school statistics
-      const [teachersResult, studentsResult, classesResult] = await Promise.all([
-        supabase.from('teachers').select('id', { count: 'exact' }).eq('school', teacher.school),
-        supabase.from('students').select('id', { count: 'exact' }).eq('school', teacher.school),
-        supabase.from('class_schedules').select('id', { count: 'exact' }).eq('school', teacher.school)
-      ]);
+      // Update stats
+      const newStats = {
+        totalTeachers: teachers?.length || 0,
+        totalStudents: students?.length || 0,
+        totalClasses: classes?.length || 0,
+        totalFeedback: feedback?.length || 0,
+        activeClasses: activeClassesCount,
+        responseRate: responseRate
+      };
 
-      console.log('SchoolAdminDashboard: Stats results:', {
-        teachers: teachersResult,
-        students: studentsResult,
-        classes: classesResult
-      });
-
-      setSchoolStats({
-        totalTeachers: teachersResult.count || 0,
-        totalStudents: studentsResult.count || 0,
-        totalClasses: classesResult.count || 0,
-        totalFeedback: feedbackAnalytics?.length || 0
-      });
+      console.log('Setting school stats:', newStats);
+      setSchoolStats(newStats);
 
     } catch (error) {
       console.error('SchoolAdminDashboard: Error fetching school data:', error);
       toast({
         title: "Error",
-        description: "Failed to fetch school analytics",
+        description: "Failed to fetch school analytics. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -108,7 +147,7 @@ const SchoolAdminDashboard: React.FC<SchoolAdminDashboardProps> = ({ teacher }) 
   };
 
   const processFeedbackData = (rawData: any[]): FeedbackAnalytics[] => {
-    console.log('SchoolAdminDashboard: Processing feedback data:', rawData);
+    console.log('SchoolAdminDashboard: Processing feedback data:', rawData.length, 'items');
     
     const groupedData = rawData.reduce((acc, item) => {
       const key = `${item.class_schedules.teacher_id}-${item.class_schedules.lesson_topic}-${item.class_schedules.class_date}`;
@@ -145,68 +184,99 @@ const SchoolAdminDashboard: React.FC<SchoolAdminDashboardProps> = ({ teacher }) 
       total_responses: group.total_responses
     }));
 
-    console.log('SchoolAdminDashboard: Final processed data:', result);
+    console.log('SchoolAdminDashboard: Processed feedback result:', result.length, 'grouped items');
     return result;
   };
 
   if (isLoading) {
-    return <div className="flex items-center justify-center p-8">Loading school analytics...</div>;
+    return (
+      <div className="flex items-center justify-center p-8">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-teal mr-3"></div>
+        Loading school analytics...
+      </div>
+    );
   }
 
-  console.log('SchoolAdminDashboard: Rendering with stats:', schoolStats, 'and feedback:', feedbackData);
+  console.log('SchoolAdminDashboard: Rendering with stats:', schoolStats);
 
   return (
     <div className="space-y-6">
       {/* School Statistics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card>
+      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
+        <Card className="bg-white/90 backdrop-blur-sm border-gray-200/50 shadow-lg">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Teachers</CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{schoolStats.totalTeachers}</div>
+            <div className="text-2xl font-bold text-brand-dark">{schoolStats.totalTeachers}</div>
             <p className="text-xs text-muted-foreground">
-              In {teacher.school}
+              Active staff members
             </p>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="bg-white/90 backdrop-blur-sm border-gray-200/50 shadow-lg">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Students</CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{schoolStats.totalStudents}</div>
+            <div className="text-2xl font-bold text-brand-dark">{schoolStats.totalStudents}</div>
             <p className="text-xs text-muted-foreground">
               Enrolled students
             </p>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="bg-white/90 backdrop-blur-sm border-gray-200/50 shadow-lg">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Classes</CardTitle>
             <BookOpen className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{schoolStats.totalClasses}</div>
+            <div className="text-2xl font-bold text-brand-dark">{schoolStats.totalClasses}</div>
             <p className="text-xs text-muted-foreground">
-              Scheduled classes
+              All scheduled classes
             </p>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="bg-white/90 backdrop-blur-sm border-gray-200/50 shadow-lg">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Active Classes</CardTitle>
+            <BarChart3 className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-brand-dark">{schoolStats.activeClasses}</div>
+            <p className="text-xs text-muted-foreground">
+              Scheduled this week
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-white/90 backdrop-blur-sm border-gray-200/50 shadow-lg">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Feedback</CardTitle>
             <MessageSquare className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{schoolStats.totalFeedback}</div>
+            <div className="text-2xl font-bold text-brand-dark">{schoolStats.totalFeedback}</div>
             <p className="text-xs text-muted-foreground">
-              Student responses
+              This month
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-white/90 backdrop-blur-sm border-gray-200/50 shadow-lg">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Response Rate</CardTitle>
+            <Percent className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-brand-dark">{schoolStats.responseRate}%</div>
+            <p className="text-xs text-muted-foreground">
+              Average feedback rate
             </p>
           </CardContent>
         </Card>
@@ -214,13 +284,13 @@ const SchoolAdminDashboard: React.FC<SchoolAdminDashboardProps> = ({ teacher }) 
 
       {/* Feedback Analytics */}
       <Tabs defaultValue="overview" className="space-y-4">
-        <TabsList>
+        <TabsList className="bg-white/90 backdrop-blur-sm border border-gray-200/50">
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="detailed">Detailed Feedback</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="space-y-4">
-          <Card>
+          <Card className="bg-white/90 backdrop-blur-sm border-gray-200/50 shadow-lg">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <TrendingUp className="w-5 h-5" />
@@ -251,7 +321,7 @@ const SchoolAdminDashboard: React.FC<SchoolAdminDashboardProps> = ({ teacher }) 
         </TabsContent>
 
         <TabsContent value="detailed" className="space-y-4">
-          <Card>
+          <Card className="bg-white/90 backdrop-blur-sm border-gray-200/50 shadow-lg">
             <CardHeader>
               <CardTitle>Feedback per Teacher per Lesson</CardTitle>
             </CardHeader>
