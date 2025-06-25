@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -16,7 +15,6 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { useNavigate } from "react-router-dom";
 import StudentSimulation from "@/components/StudentSimulation";
 import TeacherSimulation from "@/components/TeacherSimulation";
-import DemoSection from "@/components/DemoSection";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 
 const Demo = () => {
@@ -52,13 +50,11 @@ const Demo = () => {
   };
 
   const handleTeacherDemo = () => {
-    // Navigate to real teacher login - no bypass
-    navigate('/teacher-login');
+    setActiveDemo('teacher');
   };
 
   const handleStudentDemo = () => {
-    // Navigate to real student login - no bypass
-    navigate('/student-login');
+    setActiveDemo('student');
   };
 
   return (
@@ -209,7 +205,7 @@ const Demo = () => {
                     <p>• Collaborate with teaching staff</p>
                   </div>
                   <Button 
-                    onClick={() => navigate('/teacher-login')}
+                    onClick={() => setActiveDemo('mentalHealth')}
                     className="w-full bg-brand-teal hover:bg-brand-dark text-white"
                   >
                     <Play className="w-4 h-4 mr-2" />
