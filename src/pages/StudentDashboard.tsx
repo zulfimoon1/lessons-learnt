@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -15,6 +16,7 @@ import WelcomeSection from "@/components/dashboard/student/WelcomeSection";
 import QuickActionsCard from "@/components/dashboard/student/QuickActionsCard";
 import WellnessTracker from "@/components/dashboard/student/WellnessTracker";
 import StudentAnalyticsDashboard from "@/components/analytics/StudentAnalyticsDashboard";
+import MentalHealthSupportTab from "@/components/dashboard/MentalHealthSupportTab";
 import { classScheduleService } from "@/services/classScheduleService";
 import AIStudentInsights from "@/components/dashboard/student/AIStudentInsights";
 
@@ -94,7 +96,7 @@ const StudentDashboard: React.FC = () => {
     {
       value: 'feedback',
       icon: MessageSquareIcon,
-      label: t('dashboard.feedback') || 'Feedback',
+      label: t('feedback.title') || 'Feedback',
       component: <FeedbackTab />
     },
     {
@@ -106,25 +108,15 @@ const StudentDashboard: React.FC = () => {
     {
       value: 'wellness',
       icon: HeartIcon,
-      label: t('features.mentalHealth.title') || 'Wellness',
+      label: t('wellness.title') || 'Mental Health',
       component: (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <WellnessTracker
-            onMoodSubmit={handleMoodSubmit}
-            recentEntries={[]} // Would be loaded from database
-          />
-          <div className="space-y-4">
-            <div className="text-center py-8">
-              <HeartIcon className="w-16 h-16 text-brand-orange mx-auto mb-4" />
-              <h3 className="text-xl font-semibold mb-2">
-                {t('features.mentalHealth.title') || 'Mental Health Support'}
-              </h3>
-              <p className="text-muted-foreground max-w-md mx-auto">
-                {t('features.mentalHealth.description') || 'Access wellness resources and mental health support when you need it.'}
-              </p>
-            </div>
-          </div>
-        </div>
+        <MentalHealthSupportTab
+          psychologists={[]}
+          studentId={student.id}
+          studentName={student.full_name}
+          studentSchool={student.school}
+          studentGrade={student.grade}
+        />
       )
     },
     {
@@ -144,7 +136,7 @@ const StudentDashboard: React.FC = () => {
   return (
     <div className="min-h-screen bg-background">
       <DashboardHeader
-        title={t('dashboard.studentDashboard') || 'Student Dashboard'}
+        title={t('student.dashboard') || 'Student Dashboard'}
         userName={student.full_name}
         onLogout={handleLogout}
       />
