@@ -13,8 +13,8 @@ import ComplianceFooter from "@/components/ComplianceFooter";
 import CookieConsent from "@/components/CookieConsent";
 
 const PlatformAdminLogin = () => {
-  const [email, setEmail] = useState("zulfimoon1@gmail.com");
-  const [password, setPassword] = useState("admin123");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState("login");
   const { login, admin, isAuthenticated } = usePlatformAdmin();
@@ -85,7 +85,7 @@ const PlatformAdminLogin = () => {
           <div className="text-center mb-6">
             <ShieldIcon className="w-12 h-12 text-brand-teal mx-auto mb-4" />
             <h1 className="text-2xl font-bold text-brand-dark">Platform Console</h1>
-            <p className="text-gray-600">Admin access to platform management dashboard</p>
+            <p className="text-gray-600">Secure admin access to platform management dashboard</p>
           </div>
 
           <Card className="shadow-xl border-brand-teal/20 bg-white/90">
@@ -125,7 +125,7 @@ const PlatformAdminLogin = () => {
                       <Input
                         id="password"
                         type="password"
-                        placeholder="Enter secure password"
+                        placeholder="Enter your secure password"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         required
@@ -136,10 +136,10 @@ const PlatformAdminLogin = () => {
                     <div className="bg-brand-teal/10 border border-brand-teal/30 rounded-lg p-3">
                       <div className="flex items-center gap-2 text-brand-teal text-sm">
                         <ShieldIcon className="w-4 h-4" />
-                        <span className="font-medium">Ready to Login</span>
+                        <span className="font-medium">Secure Authentication</span>
                       </div>
                       <p className="text-xs text-brand-dark mt-1">
-                        Default credentials: zulfimoon1@gmail.com / admin123
+                        Contact your system administrator for credentials
                       </p>
                     </div>
 

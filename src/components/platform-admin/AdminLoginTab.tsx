@@ -136,7 +136,7 @@ const AdminLoginTab = ({
           <Input
             id="password"
             type="password"
-            placeholder="Enter password (default: admin123)"
+            placeholder="Enter your secure password"
             value={password}
             onChange={(e) => onPasswordChange(e.target.value)}
             required
@@ -159,7 +159,7 @@ const AdminLoginTab = ({
           onClick={handlePasswordReset}
           disabled={!email}
         >
-          🔄 Reset Password to 'admin123'
+          🔄 Reset Password (Admin Only)
         </Button>
         
         <Button 
@@ -173,7 +173,7 @@ const AdminLoginTab = ({
         </Button>
         
         <p className="text-xs text-gray-500 text-center">
-          Use these tools if you're having trouble logging in
+          Contact your system administrator for password assistance
         </p>
       </div>
     </div>
