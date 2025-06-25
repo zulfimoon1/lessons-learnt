@@ -110,11 +110,11 @@ const MentalHealthSupportTab: React.FC<MentalHealthSupportTabProps> = React.memo
           <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
             <HeartHandshakeIcon className="w-5 h-5" />
           </div>
-          {t('features.mentalHealth.title')}
+          {t('dashboard.mentalHealthSupport')}
           <Shield className="w-4 h-4 ml-2 opacity-80" />
         </CardTitle>
         <CardDescription className="text-white/80">
-          {t('student.accessMentalHealthResources', { school: studentSchool || 'your school' })}
+          {t('student.accessMentalHealthResources', { school: studentSchool })}
         </CardDescription>
       </CardHeader>
       <CardContent className="p-6">
@@ -133,7 +133,7 @@ const MentalHealthSupportTab: React.FC<MentalHealthSupportTabProps> = React.memo
             <div className="flex justify-end">
               <LiveChatWidget
                 studentId={studentId}
-                studentName={studentName || "Student"}
+                studentName={studentName || t('student.defaultName')}
                 school={studentSchool || ""}
                 grade={studentGrade || ""}
               />
@@ -168,7 +168,7 @@ const MentalHealthSupportTab: React.FC<MentalHealthSupportTabProps> = React.memo
             <div className="mt-4">
               <LiveChatWidget
                 studentId={studentId}
-                studentName={studentName || "Student"}
+                studentName={studentName || t('student.defaultName')}
                 school={studentSchool || ""}
                 grade={studentGrade || ""}
               />
