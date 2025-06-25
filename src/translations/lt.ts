@@ -1,6 +1,6 @@
 import { LanguageResource } from './types';
 
-export const lt: LanguageResource = {
+export const ltTranslations: LanguageResource = {
   common: {
     edit: 'Redaguoti',
     delete: 'Ištrinti',
@@ -339,3 +339,6 @@ export const lt: LanguageResource = {
     }
   }
 };
+
+// Add the correct export name that the index file expects
+export const lt = ltTranslations;
