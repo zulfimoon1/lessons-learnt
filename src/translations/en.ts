@@ -79,6 +79,7 @@ export const enTranslations = {
   'dashboard.analytics': 'School Analytics',
   'dashboard.adminPanel': 'Admin Panel',
   'dashboard.accessAnalytics': 'Access detailed school analytics in the',
+  'dashboard.subscription': 'Subscription',
 
   // Teacher Dashboard
   'teacher.dashboard.title': 'Teacher Dashboard',
