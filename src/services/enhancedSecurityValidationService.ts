@@ -134,7 +134,7 @@ class EnhancedSecurityValidationService {
     return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
   }
 
-  checkRateLimit(key: string, maxRequests: number, windowMs: number): boolean {
+  checkRateLimit(key: string, maxRequests: number = 10, windowMs: number = 60000): boolean {
     const now = Date.now();
     const entry = this.rateLimitMap.get(key);
 
@@ -176,7 +176,9 @@ class EnhancedSecurityValidationService {
 
   async logSecurityEvent(event: SecurityEvent): Promise<void> {
     try {
-      await supabase.rpc('log_security_event', {
+      console.log('Security Event Logged:', event);
+      // In production, this would send to proper logging service
+      await supabase.rpc('log_security_event_safe', {
         event_type: event.type,
         user_id: event.userId || null,
         details: event.details,
