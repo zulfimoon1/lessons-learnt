@@ -118,63 +118,60 @@ const MentalHealthSupportTab: React.FC<MentalHealthSupportTabProps> = React.memo
         </CardDescription>
       </CardHeader>
       <CardContent className="p-6">
-        {doctors.length > 0 ? (
-          <div className="space-y-6">
-            <div className="bg-blue-50/50 p-4 rounded-lg border-l-4 border-blue-200">
-              <div className="flex items-center gap-2 mb-2">
-                <Shield className="w-4 h-4 text-blue-600" />
-                <span className="font-medium text-blue-800">Confidential Support</span>
-              </div>
-              <p className="text-sm text-blue-700">
-                All conversations with mental health professionals are strictly confidential and secure.
-              </p>
+        {/* Always show live chat - this is the main mental health support feature */}
+        <div className="space-y-6">
+          <div className="bg-blue-50/50 p-4 rounded-lg border-l-4 border-blue-200">
+            <div className="flex items-center gap-2 mb-2">
+              <Shield className="w-4 h-4 text-blue-600" />
+              <span className="font-medium text-blue-800">{t('chat.privacyProtected')}</span>
             </div>
-            
-            <div className="flex justify-end">
-              <LiveChatWidget
-                studentId={studentId}
-                studentName={studentName || t('student.defaultName')}
-                school={studentSchool || ""}
-                grade={studentGrade || ""}
-              />
-            </div>
-            
+            <p className="text-sm text-blue-700">
+              {t('chat.conversationConfidential')}
+            </p>
+          </div>
+          
+          {/* Live Chat Widget - Always Available */}
+          <div className="flex justify-center">
+            <LiveChatWidget
+              studentId={studentId}
+              studentName={studentName || t('student.defaultName')}
+              school={studentSchool || ""}
+              grade={studentGrade || ""}
+            />
+          </div>
+          
+          {/* Show doctor information if available */}
+          {doctors.length > 0 ? (
             <div className="space-y-4">
+              <h3 className="text-lg font-semibold text-brand-dark">
+                {t('features.mentalHealth.title')} {t('admin.subscription')}
+              </h3>
               {doctors.map((doctor) => (
                 <PsychologistInfo key={doctor.id} psychologist={doctor} />
               ))}
             </div>
-          </div>
-        ) : (
-          <div className="text-center py-8">
-            <div className="w-16 h-16 bg-brand-teal/10 rounded-full mx-auto mb-4 flex items-center justify-center">
-              <HeartHandshakeIcon className="w-8 h-8 text-brand-teal" />
-            </div>
-            <p className="text-brand-dark font-medium mb-2">{t('dashboard.noPsychologists')}</p>
-            <p className="text-brand-dark/60 text-sm mb-4">
-              {t('dashboard.contactAdmin')}
-            </p>
-            
-            <div className="bg-yellow-50/50 p-4 rounded-lg border-l-4 border-yellow-200 mb-4">
-              <div className="flex items-center gap-2 mb-2">
-                <Shield className="w-4 h-4 text-yellow-600" />
-                <span className="font-medium text-yellow-800">Emergency Support Available</span>
+          ) : (
+            <div className="text-center py-4">
+              <div className="w-16 h-16 bg-brand-teal/10 rounded-full mx-auto mb-4 flex items-center justify-center">
+                <HeartHandshakeIcon className="w-8 h-8 text-brand-teal" />
               </div>
-              <p className="text-sm text-yellow-700">
-                Even without school psychologists, you can still access confidential chat support.
+              <p className="text-brand-dark font-medium mb-2">{t('dashboard.noPsychologists')}</p>
+              <p className="text-brand-dark/60 text-sm mb-4">
+                {t('dashboard.contactAdmin')}
               </p>
+              
+              <div className="bg-green-50/50 p-4 rounded-lg border-l-4 border-green-200">
+                <div className="flex items-center gap-2 mb-2">
+                  <Shield className="w-4 h-4 text-green-600" />
+                  <span className="font-medium text-green-800">{t('chat.chatStarted')}</span>
+                </div>
+                <p className="text-sm text-green-700">
+                  {t('chat.doctorWillJoin')}
+                </p>
+              </div>
             </div>
-            
-            <div className="mt-4">
-              <LiveChatWidget
-                studentId={studentId}
-                studentName={studentName || t('student.defaultName')}
-                school={studentSchool || ""}
-                grade={studentGrade || ""}
-              />
-            </div>
-          </div>
-        )}
+          )}
+        </div>
       </CardContent>
     </Card>
   );

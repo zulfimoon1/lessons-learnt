@@ -152,6 +152,22 @@ export const ltTranslations = {
   'schedule.mySchedules': 'Mano pamokų tvarkaraščiai',
   'schedule.noSchedules': 'Dar nesukurtas joks pamokos tvarkaraštis. Sukurkite pirmąjį tvarkaraštį aukščiau.',
 
+  // Chat translations - New
+  'chat.chatWithDoctor': 'Kalbėtis su gydytoju',
+  'chat.startLiveChatWithDoctor': 'Pradėti tiesioginį pokalbį su gydytoju',
+  'chat.chatPreferences': 'Pokalbio nustatymai',
+  'chat.connectWithDoctor': 'Susisiekite su mokyklos gydytoju dėl konfidencialios paramos',
+  'chat.anonymousChat': 'Anoniminis pokalbis',
+  'chat.identityProtected': 'Jūsų tapatybė bus apsaugota',
+  'chat.nameVisible': 'Jūsų vardas bus matomas gydytojui',
+  'chat.privacyProtected': 'Privatumas apsaugotas',
+  'chat.conversationConfidential': 'Visi pokalbiai yra konfidencialūs ir saugūs',
+  'chat.creatingSession': 'Kuriama sesija...',
+  'chat.startChatWithDoctor': 'Pradėti pokalbį su gydytoju',
+  'chat.connectionFailed': 'Ryšio klaida',
+  'chat.chatStarted': 'Pokalbis pradėtas',
+  'chat.doctorWillJoin': 'Gydytojas netrukus prisijungs prie pokalbio',
+
   // Student
   'student.failedToLoadClasses': 'Nepavyko įkelti pamokų',
   'student.accessMentalHealthResources': 'Prieiga prie psichikos sveikatos išteklių mokykloje {school}',
@@ -161,6 +177,14 @@ export const ltTranslations = {
   'student.gradePlaceholder': '10A, 9 klasė',
   'student.classGrade': 'Klasė',
   'student.school': 'Mokykla',
+
+  // Features
+  'features.studentFeedback.title': 'Mokinių atsiliepimų rinkimas',
+  'features.studentFeedback.description': 'Rinkti tiesioginius atsiliepimus apie pamokas ir patirtis',
+  'features.teacherInsights.title': 'Mokytojų analitikos skydelis',
+  'features.teacherInsights.description': 'Stebėti mokinių pažangą ir klasės dinamiką',
+  'features.mentalHealth.title': 'Psichikos sveikatos parama',
+  'features.mentalHealth.description': 'Anoniminis pokalbis su mokyklos psichologais',
 
   // Mental Health Support
   'mentalHealth.loading': 'Kraunama psichikos sveikatos parama...',

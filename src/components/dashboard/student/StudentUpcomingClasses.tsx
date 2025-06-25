@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -55,13 +54,15 @@ const StudentUpcomingClasses: React.FC<StudentUpcomingClassesProps> = ({ student
       setIsLoading(true);
       
       const today = new Date();
+      const todayString = today.toISOString().split('T')[0]; // Get YYYY-MM-DD format
       
-      // Fetch classes for the student's school and grade
+      // Fetch classes for the student's school and grade - only future classes
       const { data: classData, error } = await supabase
         .from('class_schedules')
         .select('*')
         .eq('school', student.school)
         .eq('grade', student.grade)
+        .gte('class_date', todayString) // Only get classes from today onwards
         .order('class_date', { ascending: true })
         .order('class_time', { ascending: true });
 
@@ -96,16 +97,8 @@ const StudentUpcomingClasses: React.FC<StudentUpcomingClassesProps> = ({ student
         })
       );
 
-      // Updated filtering logic: Show upcoming classes OR past classes WITHOUT feedback
-      // Exclude past classes that already have feedback
-      const filteredClasses = classesWithTeachers.filter(classItem => {
-        // Always show upcoming classes (not past)
-        if (!classItem.is_past) {
-          return true;
-        }
-        // For past classes, only show if NO feedback has been submitted
-        return !classItem.has_feedback;
-      });
+      // Only show upcoming classes (not past classes)
+      const filteredClasses = classesWithTeachers.filter(classItem => !classItem.is_past);
 
       setUpcomingClasses(filteredClasses);
     } catch (error) {
@@ -176,11 +169,6 @@ const StudentUpcomingClasses: React.FC<StudentUpcomingClassesProps> = ({ student
                       <Badge variant="outline" className="border-brand-teal text-brand-teal">
                         {classItem.grade}
                       </Badge>
-                      {classItem.is_past && !classItem.has_feedback && (
-                        <Badge variant="secondary" className="bg-orange-100 text-orange-800 border-orange-200">
-                          {t('feedback.pending')}
-                        </Badge>
-                      )}
                     </div>
                     
                     <p className="text-brand-dark/80 mb-3 font-medium">{classItem.lesson_topic}</p>

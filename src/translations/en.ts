@@ -1,4 +1,3 @@
-
 import { enAuthTranslations } from './en/auth';
 import { enTeacherTranslations } from './en/teacher';
 import { enWeeklyTranslations } from './en/weekly';
@@ -151,6 +150,22 @@ export const enTranslations = {
   'schedule.error': 'Failed to create class schedule. Please try again.',
   'schedule.mySchedules': 'My Class Schedules',
   'schedule.noSchedules': 'No class schedules created yet. Create your first schedule above.',
+
+  // Chat translations - New
+  'chat.chatWithDoctor': 'Chat with Doctor',
+  'chat.startLiveChatWithDoctor': 'Start Live Chat with Doctor',
+  'chat.chatPreferences': 'Chat Preferences',
+  'chat.connectWithDoctor': 'Connect with a school doctor for confidential support',
+  'chat.anonymousChat': 'Anonymous Chat',
+  'chat.identityProtected': 'Your identity will be protected',
+  'chat.nameVisible': 'Your name will be visible to the doctor',
+  'chat.privacyProtected': 'Privacy Protected',
+  'chat.conversationConfidential': 'All conversations are confidential and secure',
+  'chat.creatingSession': 'Creating session...',
+  'chat.startChatWithDoctor': 'Start Chat with Doctor',
+  'chat.connectionFailed': 'Connection Failed',
+  'chat.chatStarted': 'Chat Started',
+  'chat.doctorWillJoin': 'A doctor will join the conversation soon',
 
   // Feedback
   'feedback.title': 'Lesson Feedback',
