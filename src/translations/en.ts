@@ -1,4 +1,5 @@
 
+
 import { enAuthTranslations } from './en/auth';
 import { enTeacherTranslations } from './en/teacher';
 import { enWeeklyTranslations } from './en/weekly';
@@ -56,6 +57,32 @@ export const enTranslations = {
 
   // Logout (direct key for simple access)
   'logout': 'Logout',
+
+  // Welcome/Homepage
+  'welcome.title': 'Lessons Learnt',
+  'welcome.heroTitle1': 'Transform Education with',
+  'welcome.heroTitle2': 'Real-Time Student Insights',
+  'welcome.subtitle': 'Empower teachers and support student wellbeing with our comprehensive feedback and analytics platform.',
+  'welcome.freeForStudents': 'FREE FOR STUDENTS',
+
+  // Platform
+  'platform.whySchools': 'Why Schools Choose Our Platform',
+  'platform.whySchoolsSubtitle': 'Discover how our platform is revolutionizing education through data-driven insights and comprehensive student support.',
+  'platform.studentInsights': 'Comprehensive Student Insights',
+  'platform.realTimeAnalytics': 'Real-Time Analytics',
+  'platform.realTimeAnalyticsDesc': 'Monitor student progress and engagement as it happens, enabling immediate interventions when needed.',
+  'platform.mentalHealthMonitoring': 'Mental Health Monitoring',
+  'platform.mentalHealthMonitoringDesc': 'Advanced AI-powered detection of emotional distress with multilingual support and crisis intervention protocols.',
+  'platform.privacySecurity': 'Privacy & Security First',
+  'platform.privacySecurityDesc': 'Enterprise-grade security with GDPR compliance and SOC 2 certification to protect sensitive student data.',
+  'platform.improvementPercent': '85%',
+  'platform.improvementTitle': 'Student Engagement Improvement',
+  'platform.improvementDesc': 'Schools report significant improvements in student participation and academic outcomes.',
+  'platform.readyToTransform': 'Ready to Transform Your School?',
+  'platform.readyToTransformDesc': 'Join thousands of educators already using our platform to create better learning experiences.',
+
+  // Pricing
+  'pricing.title': 'Pricing',
 
   // Dashboard
   'dashboard.title': 'Student Dashboard',
@@ -291,3 +318,4 @@ export const enTranslations = {
   ...enChatTranslations,
   ...enDemoTranslations,
 };
+
