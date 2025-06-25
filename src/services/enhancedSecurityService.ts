@@ -129,27 +129,23 @@ class EnhancedSecurityService {
   }
 
   validateAndSanitizeInput(input: string, fieldType: string): ValidationResult {
-    const validation = securityValidationService.validateInput(input, fieldType, {
-      maxLength: fieldType === 'email' ? 254 : 1000,
-      allowHtml: false,
-      requireAlphanumeric: ['name', 'school', 'grade'].includes(fieldType)
-    });
-
+    const isValid = securityValidationService.validateInput(input);
+    
     return {
-      isValid: validation.isValid,
-      message: validation.isValid ? undefined : validation.errors.join(', '),
-      sanitized: validation.isValid ? input.trim() : undefined
+      isValid,
+      message: isValid ? undefined : 'Invalid input detected',
+      sanitized: isValid ? input.trim() : undefined
     };
   }
 
   async recordAttempt(identifier: string, action: string, success: boolean): Promise<void> {
     const eventType = success ? 'unauthorized_access' : 'unauthorized_access'; // Map both to valid type
-    await securityValidationService.logSecurityEvent(
-      eventType,
-      identifier,
-      `${action}: ${success ? 'success' : 'failed'}`,
-      success ? 'low' : 'medium'
-    );
+    securityValidationService.logSecurityEvent({
+      type: eventType,
+      userId: identifier,
+      details: `${action}: ${success ? 'success' : 'failed'}`,
+      severity: success ? 'low' : 'medium'
+    });
   }
 
   async logSecurityEvent(event: {
@@ -187,12 +183,12 @@ class EnhancedSecurityService {
 
     const mappedType = eventTypeMap[event.type] || 'suspicious_activity';
     
-    await securityValidationService.logSecurityEvent(
-      mappedType,
-      event.userId,
-      event.details,
-      event.severity
-    );
+    securityValidationService.logSecurityEvent({
+      type: mappedType,
+      userId: event.userId,
+      details: event.details,
+      severity: event.severity
+    });
   }
 
   getSecurityMetrics() {
@@ -217,32 +213,26 @@ class EnhancedSecurityService {
     // Rate limiting check
     const identifier = `${requestContext.ipAddress || 'unknown'}:${credentials.email || credentials.fullName}`;
     if (!securityValidationService.checkRateLimit(identifier)) {
-      await securityValidationService.logSecurityEvent(
-        'rate_limit_exceeded',
-        undefined,
-        `Authentication rate limit exceeded for ${identifier}`,
-        'medium'
-      );
+      await securityValidationService.logSecurityEvent({
+        type: 'rate_limit_exceeded',
+        userId: undefined,
+        details: `Authentication rate limit exceeded for ${identifier}`,
+        severity: 'medium'
+      });
       return { success: false, error: 'Too many login attempts. Please try again later.' };
     }
 
-    // Input validation
-    const emailValidation = credentials.email ? 
-      securityValidationService.validateInput(credentials.email, 'email', { maxLength: 254 }) : 
-      { isValid: true, errors: [], riskLevel: 'low' as const };
-    
-    const nameValidation = credentials.fullName ? 
-      securityValidationService.validateInput(credentials.fullName, 'name', { maxLength: 100, requireAlphanumeric: true }) : 
-      { isValid: true, errors: [], riskLevel: 'low' as const };
+    // Input validation using simplified approach
+    const emailValid = credentials.email ? credentials.email.includes('@') && credentials.email.length < 254 : true;
+    const nameValid = credentials.fullName ? credentials.fullName.length < 100 : true;
 
-    if (!emailValidation.isValid || !nameValidation.isValid) {
-      const errors = [...emailValidation.errors, ...nameValidation.errors];
-      await securityValidationService.logSecurityEvent(
-        'form_validation_failed',
-        undefined,
-        `Authentication validation failed: ${errors.join(', ')}`,
-        emailValidation.riskLevel === 'high' || nameValidation.riskLevel === 'high' ? 'high' : 'medium'
-      );
+    if (!emailValid || !nameValid) {
+      await securityValidationService.logSecurityEvent({
+        type: 'form_validation_failed',
+        userId: undefined,
+        details: 'Authentication validation failed: Invalid input format',
+        severity: 'medium'
+      });
       return { success: false, error: 'Invalid input provided' };
     }
 
@@ -251,22 +241,18 @@ class EnhancedSecurityService {
       return { success: false, error: 'Session security validation failed' };
     }
 
-    // Generate CSRF token for session
-    const csrfToken = securityValidationService.generateCSRFToken();
+    // Generate session token
+    const sessionId = crypto.randomUUID();
+    const csrfToken = this.generateSecureToken();
+    this.sessionTokens.set(sessionId, csrfToken);
     
     try {
-      // The actual authentication would happen here
-      // For now, this is a placeholder that integrates with existing auth
-      
-      const sessionId = crypto.randomUUID();
-      this.sessionTokens.set(sessionId, csrfToken);
-      
-      await securityValidationService.logSecurityEvent(
-        'unauthorized_access', // Using valid type for successful authentication
-        sessionId,
-        `Successful ${userType} authentication`,
-        'low'
-      );
+      await securityValidationService.logSecurityEvent({
+        type: 'unauthorized_access', // Using valid type for successful authentication
+        userId: sessionId,
+        details: `Successful ${userType} authentication`,
+        severity: 'low'
+      });
 
       return { 
         success: true, 
@@ -277,14 +263,20 @@ class EnhancedSecurityService {
         } 
       };
     } catch (error) {
-      await securityValidationService.logSecurityEvent(
-        'unauthorized_access',
-        undefined,
-        `Authentication error: ${error}`,
-        'medium'
-      );
+      await securityValidationService.logSecurityEvent({
+        type: 'unauthorized_access',
+        userId: undefined,
+        details: `Authentication error: ${error}`,
+        severity: 'medium'
+      });
       return { success: false, error: 'Authentication failed' };
     }
+  }
+
+  private generateSecureToken(): string {
+    const array = new Uint8Array(32);
+    crypto.getRandomValues(array);
+    return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
   }
 
   // Secure form validation with comprehensive checks
@@ -298,27 +290,23 @@ class EnhancedSecurityService {
 
     for (const [key, value] of Object.entries(formData)) {
       if (typeof value === 'string') {
-        const validation = securityValidationService.validateInput(value, key, {
-          maxLength: key === 'email' ? 254 : 1000,
-          allowHtml: false,
-          requireAlphanumeric: ['name', 'school', 'grade'].includes(key)
-        });
+        const isValid = securityValidationService.validateInput(value);
 
-        if (!validation.isValid) {
-          errors.push(...validation.errors);
+        if (!isValid) {
+          errors.push(`Invalid content in field: ${key}`);
         } else {
           // Basic sanitization
           sanitizedData[key] = value.trim();
         }
 
-        // Log high-risk content
-        if (validation.riskLevel === 'high') {
-          await securityValidationService.logSecurityEvent(
-            'suspicious_activity',
-            undefined,
-            `High-risk content detected in ${formType} form field ${key}`,
-            'high'
-          );
+        // Log high-risk content detection
+        if (value.includes('<script') || value.includes('javascript:')) {
+          await securityValidationService.logSecurityEvent({
+            type: 'suspicious_activity',
+            userId: undefined,
+            details: `High-risk content detected in ${formType} form field ${key}`,
+            severity: 'high'
+          });
         }
       } else {
         sanitizedData[key] = value;
@@ -351,35 +339,35 @@ class EnhancedSecurityService {
     const criticalTables = ['mental_health_alerts', 'students', 'teachers'];
     
     if (criticalTables.includes(tableName) && !userContext.userId) {
-      await securityValidationService.logSecurityEvent(
-        'unauthorized_access',
-        undefined,
-        `Attempted ${operation} on ${tableName} without authentication`,
-        'high'
-      );
+      await securityValidationService.logSecurityEvent({
+        type: 'unauthorized_access',
+        userId: undefined,
+        details: `Attempted ${operation} on ${tableName} without authentication`,
+        severity: 'high'
+      });
       return { allowed: false, reason: 'Authentication required for sensitive data' };
     }
 
     // Role-based access control
     if (tableName === 'mental_health_alerts' && userContext.userRole !== 'doctor' && userContext.userRole !== 'admin') {
-      await securityValidationService.logSecurityEvent(
-        'unauthorized_access',
-        userContext.userId,
-        `Attempted access to mental health alerts without proper role: ${userContext.userRole}`,
-        'high'
-      );
+      await securityValidationService.logSecurityEvent({
+        type: 'unauthorized_access',
+        userId: userContext.userId,
+        details: `Attempted access to mental health alerts without proper role: ${userContext.userRole}`,
+        severity: 'high'
+      });
       return { allowed: false, reason: 'Insufficient privileges for mental health data' };
     }
 
     // School-based isolation
     if (['students', 'teachers', 'class_schedules'].includes(tableName) && 
         filters?.school && filters.school !== userContext.userSchool) {
-      await securityValidationService.logSecurityEvent(
-        'unauthorized_access',
-        userContext.userId,
-        `Attempted cross-school data access: ${filters.school} != ${userContext.userSchool}`,
-        'medium'
-      );
+      await securityValidationService.logSecurityEvent({
+        type: 'unauthorized_access',
+        userId: userContext.userId,
+        details: `Attempted cross-school data access: ${filters.school} != ${userContext.userSchool}`,
+        severity: 'medium'
+      });
       return { allowed: false, reason: 'Cross-school data access not permitted' };
     }
 
