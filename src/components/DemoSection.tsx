@@ -147,66 +147,6 @@ const DemoSection = () => {
             </Card>
           </div>
         </div>
-
-        {/* Platform Features Section */}
-        <div className="mt-16 bg-white rounded-lg p-8 shadow-sm">
-          <h3 className="text-3xl font-bold text-center mb-4 text-brand-dark">
-            {t('demo.discoverFuture')}
-          </h3>
-          <p className="text-lg text-center text-gray-600 mb-8 max-w-4xl mx-auto">
-            {t('demo.discoverDescription')}
-          </p>
-          
-          <div className="bg-brand-gradient text-white rounded-lg p-8 max-w-md mx-auto mb-12 shadow-xl">
-            <p className="text-4xl font-black tracking-wide drop-shadow-lg text-center">
-              {t('demo.realUserExperience')}
-            </p>
-            <p className="text-xl font-bold mt-3 opacity-95 drop-shadow-md text-center">
-              {t('demo.signUpTestFeatures')}
-            </p>
-          </div>
-        </div>
-
-        {/* Key Features */}
-        <div className="mt-16 bg-white rounded-lg p-8 shadow-sm">
-          <h3 className="text-2xl font-bold text-center mb-8">{t('demo.experienceCompletePlatform')}</h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="text-center">
-              <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <PlayIcon className="h-8 w-8 text-blue-600" />
-              </div>
-              <h4 className="text-lg font-semibold mb-2">{t('demo.realAuthentication')}</h4>
-              <p className="text-gray-600">{t('demo.realAuthDescription')}</p>
-            </div>
-            <div className="text-center">
-              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <UserIcon className="h-8 w-8 text-green-600" />
-              </div>
-              <h4 className="text-lg font-semibold mb-2">{t('demo.completeWorkflows')}</h4>
-              <p className="text-gray-600">{t('demo.completeWorkflowsDescription')}</p>
-            </div>
-            <div className="text-center">
-              <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <HeartIcon className="h-8 w-8 text-purple-600" />
-              </div>
-              <h4 className="text-lg font-semibold mb-2">{t('demo.actualIntegration')}</h4>
-              <p className="text-gray-600">{t('demo.actualIntegrationDescription')}</p>
-            </div>
-          </div>
-        </div>
-
-        {/* Call to Action */}
-        <div className="mt-16 bg-brand-gradient text-white rounded-lg p-8 text-center">
-          <h3 className="text-2xl font-bold mb-4">{t('demo.readyToExperience')}</h3>
-          <p className="text-lg mb-6 opacity-90">{t('demo.signUpNowTest')}</p>
-          <Button 
-            size="lg" 
-            className="text-xl px-12 py-4 bg-brand-orange hover:bg-brand-orange/90 text-white transform scale-125"
-            onClick={handleRegisterNow}
-          >
-            {t('pricing.startFreeTrial')}
-          </Button>
-        </div>
       </div>
     </section>
   );
