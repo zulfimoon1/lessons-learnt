@@ -1,4 +1,3 @@
-
 import { LanguageResource } from './types';
 
 export const lt: LanguageResource = {
@@ -340,5 +339,3 @@ export const lt: LanguageResource = {
     }
   }
 };
-
-export const ltTranslations = lt;
