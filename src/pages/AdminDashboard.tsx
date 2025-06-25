@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Navigate } from "react-router-dom";
@@ -38,19 +39,19 @@ const AdminDashboard = () => {
           <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="overview" className="flex items-center gap-2">
               <BarChart3 className="w-4 h-4" />
-              Overview
+              {t('admin.overview')}
             </TabsTrigger>
             <TabsTrigger value="feedback" className="flex items-center gap-2">
               <MessageSquare className="w-4 h-4" />
-              Feedback Analytics
+              {t('admin.feedbackAnalytics')}
             </TabsTrigger>
             <TabsTrigger value="staff" className="flex items-center gap-2">
               <Users className="w-4 h-4" />
-              Staff Management
+              {t('admin.staffManagement')}
             </TabsTrigger>
             <TabsTrigger value="settings" className="flex items-center gap-2">
               <Settings className="w-4 h-4" />
-              Settings
+              {t('admin.settings')}
             </TabsTrigger>
           </TabsList>
 
@@ -58,57 +59,56 @@ const AdminDashboard = () => {
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Total Teachers</CardTitle>
+                  <CardTitle className="text-sm font-medium">{t('admin.totalTeachers')}</CardTitle>
                   <Users className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">-</div>
-                  <p className="text-xs text-muted-foreground">Active staff members</p>
+                  <p className="text-xs text-muted-foreground">{t('admin.activeStaffMembers')}</p>
                 </CardContent>
               </Card>
               
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Total Feedback</CardTitle>
+                  <CardTitle className="text-sm font-medium">{t('admin.totalFeedback')}</CardTitle>
                   <MessageSquare className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">-</div>
-                  <p className="text-xs text-muted-foreground">This month</p>
+                  <p className="text-xs text-muted-foreground">{t('admin.thisMonth')}</p>
                 </CardContent>
               </Card>
               
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Active Classes</CardTitle>
+                  <CardTitle className="text-sm font-medium">{t('admin.activeClasses')}</CardTitle>
                   <BarChart3 className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">-</div>
-                  <p className="text-xs text-muted-foreground">Scheduled this week</p>
+                  <p className="text-xs text-muted-foreground">{t('admin.scheduledThisWeek')}</p>
                 </CardContent>
               </Card>
               
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Response Rate</CardTitle>
+                  <CardTitle className="text-sm font-medium">{t('admin.responseRate')}</CardTitle>
                   <BarChart3 className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">-</div>
-                  <p className="text-xs text-muted-foreground">Average feedback rate</p>
+                  <p className="text-xs text-muted-foreground">{t('admin.averageFeedbackRate')}</p>
                 </CardContent>
               </Card>
             </div>
             
             <Card>
               <CardHeader>
-                <CardTitle>School Overview</CardTitle>
+                <CardTitle>{t('admin.schoolOverview')}</CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-muted-foreground">
-                  Welcome to your school administration dashboard. Here you can manage staff, 
-                  view feedback analytics, and monitor the overall performance of your school.
+                  {t('admin.schoolOverviewDesc')}
                 </p>
               </CardContent>
             </Card>
@@ -125,11 +125,11 @@ const AdminDashboard = () => {
           <TabsContent value="settings" className="space-y-4">
             <Card>
               <CardHeader>
-                <CardTitle>School Settings</CardTitle>
+                <CardTitle>{t('admin.schoolSettings')}</CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-muted-foreground">
-                  School configuration and administrative settings will be available here.
+                  {t('admin.schoolSettingsDesc')}
                 </p>
               </CardContent>
             </Card>
