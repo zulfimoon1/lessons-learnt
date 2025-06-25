@@ -79,7 +79,7 @@ const PlatformAdminLogin = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-brand-gradient-soft">
       <CookieConsent />
       
       {/* Header similar to dashboard */}
@@ -95,8 +95,8 @@ const PlatformAdminLogin = () => {
               Back to Home
             </Button>
             <div className="flex items-center gap-2">
-              <ShieldIcon className="w-6 h-6 text-primary" />
-              <h1 className="text-xl font-semibold text-foreground">Platform Console</h1>
+              <ShieldIcon className="w-6 h-6 text-brand-teal" />
+              <h1 className="text-xl font-semibold text-brand-dark">Platform Console</h1>
             </div>
           </div>
           <LanguageSwitcher />
@@ -105,11 +105,11 @@ const PlatformAdminLogin = () => {
 
       <div className="flex items-center justify-center p-6">
         <div className="w-full max-w-md">
-          <Card className="shadow-xl border bg-card/90">
+          <Card className="shadow-xl border bg-white/95 backdrop-blur-sm border-brand-teal/30">
             <CardContent className="p-6">
               <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-                <TabsList className="grid w-full grid-cols-1">
-                  <TabsTrigger value="login" className="flex items-center gap-2">
+                <TabsList className="grid w-full grid-cols-1 bg-gray-100">
+                  <TabsTrigger value="login" className="flex items-center gap-2 data-[state=active]:bg-brand-gradient data-[state=active]:text-white text-brand-dark">
                     <LockIcon className="w-4 h-4" />
                     Secure Admin Login
                   </TabsTrigger>
@@ -117,18 +117,18 @@ const PlatformAdminLogin = () => {
 
                 <TabsContent value="login" className="space-y-4">
                   <CardHeader className="px-0 pb-4">
-                    <CardTitle className="text-lg text-foreground flex items-center gap-2">
-                      <ShieldIcon className="w-5 h-5 text-primary" />
+                    <CardTitle className="text-lg text-brand-dark flex items-center gap-2">
+                      <ShieldIcon className="w-5 h-5 text-brand-teal" />
                       Platform Administrator
                     </CardTitle>
-                    <div className="text-sm text-muted-foreground">
+                    <div className="text-sm text-gray-600">
                       Enhanced security authentication required
                     </div>
                   </CardHeader>
 
                   <form onSubmit={handleSubmit} className="space-y-4">
                     <div className="space-y-2">
-                      <Label htmlFor="email" className="text-foreground">Admin Email</Label>
+                      <Label htmlFor="email" className="text-brand-dark">Admin Email</Label>
                       <Input
                         id="email"
                         type="email"
@@ -136,12 +136,12 @@ const PlatformAdminLogin = () => {
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         required
-                        className="border-input focus:border-primary focus:ring-primary"
+                        className="border-input focus:border-brand-teal focus:ring-brand-teal"
                       />
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="password" className="text-foreground">Password</Label>
+                      <Label htmlFor="password" className="text-brand-dark">Password</Label>
                       <Input
                         id="password"
                         type="password"
@@ -149,28 +149,28 @@ const PlatformAdminLogin = () => {
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         required
-                        className="border-input focus:border-primary focus:ring-primary"
+                        className="border-input focus:border-brand-teal focus:ring-brand-teal"
                       />
                     </div>
 
-                    <div className="bg-primary/10 border border-primary/30 rounded-lg p-3">
-                      <div className="flex items-center gap-2 text-primary text-sm">
+                    <div className="bg-brand-teal/10 border border-brand-teal/30 rounded-lg p-3">
+                      <div className="flex items-center gap-2 text-brand-teal text-sm">
                         <ShieldIcon className="w-4 h-4" />
                         <span className="font-medium">Secure Authentication</span>
                       </div>
-                      <p className="text-xs text-muted-foreground mt-1">
+                      <p className="text-xs text-gray-600 mt-1">
                         Contact your system administrator for credentials
                       </p>
                     </div>
 
                     <Button 
                       type="submit" 
-                      className="w-full"
+                      className="w-full bg-brand-gradient hover:opacity-90 text-white"
                       disabled={isLoading}
                     >
                       {isLoading ? (
                         <div className="flex items-center gap-2">
-                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary-foreground"></div>
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
                           Authenticating...
                         </div>
                       ) : (
@@ -186,7 +186,7 @@ const PlatformAdminLogin = () => {
             </CardContent>
           </Card>
 
-          <div className="text-center mt-4 text-sm text-muted-foreground">
+          <div className="text-center mt-4 text-sm text-gray-600">
             <p>Protected by enhanced security protocols</p>
           </div>
         </div>
