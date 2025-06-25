@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -14,6 +13,7 @@ import SOC2AccessControlPanel from './SOC2AccessControlPanel';
 import SOC2DataProtectionPanel from './SOC2DataProtectionPanel';
 import SOC2SystemMonitoringPanel from './SOC2SystemMonitoringPanel';
 import SOC2ChangeControlPanel from './SOC2ChangeControlPanel';
+import SOC2SystemTest from './SOC2SystemTest';
 
 const SOC2Dashboard: React.FC = () => {
   const [dashboardData, setDashboardData] = useState<SOC2DashboardData | null>(null);
@@ -86,6 +86,7 @@ const SOC2Dashboard: React.FC = () => {
 
   return (
     <div className="space-y-6 p-6">
+      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold flex items-center gap-2">
@@ -122,6 +123,7 @@ const SOC2Dashboard: React.FC = () => {
           <TabsTrigger value="data-protection">Data Protection</TabsTrigger>
           <TabsTrigger value="system-monitoring">System Monitoring</TabsTrigger>
           <TabsTrigger value="change-control">Change Control</TabsTrigger>
+          <TabsTrigger value="system-test">System Test</TabsTrigger>
           <TabsTrigger value="audit">Audit Events</TabsTrigger>
           <TabsTrigger value="security">Security Events</TabsTrigger>
           <TabsTrigger value="compliance">Compliance Controls</TabsTrigger>
@@ -141,6 +143,10 @@ const SOC2Dashboard: React.FC = () => {
 
         <TabsContent value="change-control" className="space-y-4">
           <SOC2ChangeControlPanel />
+        </TabsContent>
+
+        <TabsContent value="system-test" className="space-y-4">
+          <SOC2SystemTest />
         </TabsContent>
 
         <TabsContent value="audit" className="space-y-4">

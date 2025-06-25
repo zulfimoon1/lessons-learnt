@@ -2,7 +2,7 @@
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { CheckCircle, XCircle, Clock } from 'lucide-react';
+import { CheckCircle, XCircle, Clock, PlayCircle } from 'lucide-react';
 
 interface TestResult {
   name: string;
@@ -17,40 +17,49 @@ interface TestResultCardProps {
 }
 
 const TestResultCard: React.FC<TestResultCardProps> = ({ test, index }) => {
-  const getStatusIcon = (status: TestResult['status']) => {
-    switch (status) {
-      case 'passed': return <CheckCircle className="w-4 h-4 text-green-500" />;
-      case 'failed': return <XCircle className="w-4 h-4 text-red-500" />;
-      case 'running': return <Clock className="w-4 h-4 text-blue-500 animate-spin" />;
-      default: return <Clock className="w-4 h-4 text-gray-400" />;
+  const getStatusIcon = () => {
+    switch (test.status) {
+      case 'passed':
+        return <CheckCircle className="w-5 h-5 text-green-600" />;
+      case 'failed':
+        return <XCircle className="w-5 h-5 text-red-600" />;
+      case 'running':
+        return <PlayCircle className="w-5 h-5 text-blue-600 animate-pulse" />;
+      default:
+        return <Clock className="w-5 h-5 text-gray-400" />;
     }
   };
 
-  const getStatusColor = (status: TestResult['status']) => {
-    switch (status) {
-      case 'passed': return 'border-green-200 bg-green-50';
-      case 'failed': return 'border-red-200 bg-red-50';
-      case 'running': return 'border-blue-200 bg-blue-50';
-      default: return 'border-gray-200 bg-gray-50';
+  const getStatusColor = () => {
+    switch (test.status) {
+      case 'passed': return 'default';
+      case 'failed': return 'destructive';
+      case 'running': return 'secondary';
+      default: return 'outline';
     }
   };
 
   return (
-    <Card className={`${getStatusColor(test.status)} transition-colors`}>
-      <CardContent className="pt-4">
+    <Card className={`transition-all duration-200 ${
+      test.status === 'running' ? 'border-blue-300 shadow-md' : ''
+    }`}>
+      <CardContent className="p-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            {getStatusIcon(test.status)}
+            {getStatusIcon()}
             <div>
-              <h4 className="font-medium">{test.name}</h4>
+              <h4 className="font-medium">Test {index + 1}: {test.name}</h4>
               <p className="text-sm text-muted-foreground">{test.message}</p>
+              {test.duration && (
+                <p className="text-xs text-muted-foreground mt-1">
+                  Completed in {test.duration}ms
+                </p>
+              )}
             </div>
           </div>
-          {test.duration && (
-            <Badge variant="outline" className="text-xs">
-              {test.duration}ms
-            </Badge>
-          )}
+          <Badge variant={getStatusColor()}>
+            {test.status}
+          </Badge>
         </div>
       </CardContent>
     </Card>
