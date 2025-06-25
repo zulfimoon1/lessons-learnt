@@ -87,6 +87,7 @@ export const enTranslations = {
   'dashboard.wellnessCheck': 'Wellness Check',
   'dashboard.studentDashboard': 'Student Dashboard',
   'dashboard.teacherDashboard': 'Teacher Dashboard',
+  'dashboard.doctorDashboard': 'Doctor Dashboard',
   'dashboard.studentWelcomeMessage': 'Ready to share your feedback and help improve your learning experience!',
 
   // Class translations - Enhanced
@@ -140,7 +141,8 @@ export const enTranslations = {
   'weekly.summary': 'Weekly Summary',
   'weekly.summaries': 'Weekly Summaries',
 
-  // Doctor Dashboard translations - New
+  // Doctor Dashboard translations - Enhanced for demo
+  'doctor.dashboard.title': 'Doctor Dashboard',
   'doctor.dashboard.loading': 'Loading...',
   'doctor.dashboard.weeklySummaries': 'Weekly Summaries',
   'doctor.dashboard.mentalHealthAlerts': 'Mental Health Alerts',
@@ -155,6 +157,25 @@ export const enTranslations = {
   'doctor.dashboard.markReviewed': 'Mark as Reviewed',
   'doctor.dashboard.emotionalConcerns': 'Emotional Concerns',
   'doctor.dashboard.academicConcerns': 'Academic Concerns',
+  'doctor.dashboard.liveChat': 'Live Chat',
+  'doctor.dashboard.chatDashboard': 'Chat Dashboard',
+  'doctor.dashboard.waitingForDoctor': 'Waiting for Doctor',
+  'doctor.dashboard.yourActiveChats': 'Your Active Chats',
+  'doctor.dashboard.noStudentsWaiting': 'No students waiting for chat',
+  'doctor.dashboard.noActiveChats': 'No active chat sessions',
+  'doctor.dashboard.anonymousStudent': 'Anonymous Student',
+  'doctor.dashboard.waitingSince': 'Waiting since',
+  'doctor.dashboard.started': 'Started',
+  'doctor.dashboard.joinChat': 'Join Chat',
+  'doctor.dashboard.continueChat': 'Continue Chat',
+  'doctor.dashboard.selfHarmAlerts': 'Self-Harm Alerts',
+  'doctor.dashboard.aiInsights': 'AI Insights',
+  'doctor.dashboard.riskAssessment': 'Risk Assessment',
+  'doctor.dashboard.immediateAttention': 'Requires Immediate Attention',
+  'doctor.dashboard.confidentialData': 'Confidential Medical Data',
+  'doctor.dashboard.secureAccess': 'Secure Access',
+  'doctor.dashboard.accessRequired': 'Access to mental health alerts requires proper authorization',
+  'doctor.dashboard.contactAdmin': 'Contact your system administrator for medical data access',
 
   // Teacher Dashboard
   'teacher.dashboard.title': 'Teacher Dashboard',
@@ -199,7 +220,6 @@ export const enTranslations = {
   'schedule.mySchedules': 'My Class Schedules',
   'schedule.noSchedules': 'No class schedules created yet. Create your first schedule above.',
 
-  // Chat translations - New
   'chat.chatWithDoctor': 'Chat with Doctor',
   'chat.startLiveChatWithDoctor': 'Start Live Chat with Doctor',
   'chat.chatPreferences': 'Chat Preferences',
@@ -215,7 +235,6 @@ export const enTranslations = {
   'chat.chatStarted': 'Chat Started',
   'chat.doctorWillJoin': 'A doctor will join the conversation soon',
 
-  // Feedback
   'feedback.title': 'Lesson Feedback',
   'feedback.description': 'Share your thoughts about today\'s lesson to help improve the learning experience.',
   'feedback.classFeedbackTitle': 'Class Feedback',
@@ -268,7 +287,6 @@ export const enTranslations = {
   'feedback.suggestionsLabel': 'Suggestions:',
   'feedback.additionalCommentsLabel': 'Additional Comments:',
 
-  // Weekly Summary
   'weeklySummary.title': 'Weekly Summary',
   'weeklySummary.description': 'Share your thoughts about this week to help us provide better support.',
   'weeklySummary.emotionalRoute': 'Emotional concerns → School Doctor',
@@ -287,10 +305,8 @@ export const enTranslations = {
   'weeklySummary.fillAtLeastOne': 'Please fill in at least one section',
   'weeklySummary.fillAtLeastOneDescription': 'Add either emotional or academic concerns to submit your weekly summary',
 
-  // Mental Health Support
   'mentalHealth.loading': 'Loading mental health support...',
 
-  // Upload
   'upload.bulkUpload': 'Bulk Upload',
   'upload.uploadComplete': 'Upload Complete',
   'upload.bulkUploadDescription': 'Upload multiple class schedules using a CSV file. Download the template to see the required format.',
@@ -312,11 +328,9 @@ export const enTranslations = {
   'upload.timeFormat': 'Time format: HH:MM (e.g., 09:00)',
   'upload.durationFormat': 'Duration in minutes (e.g., 60)',
 
-  // Articles
   'articles.mentalHealth': 'Mental Health Articles',
   'articles.subscriptionRequired': 'A subscription is required for this feature.',
 
-  // Pricing - Adding comprehensive pricing translations
   'pricing.processing': 'Processing...',
   'pricing.title': 'Pricing',
   'pricing.choosePlan': 'Choose Your Plan',
@@ -398,7 +412,6 @@ export const enTranslations = {
   'pricing.privacyCompliant': 'Privacy compliant',
   'pricing.maximumImpact': 'Maximum impact',
 
-  // Student
   'student.failedToLoadClasses': 'Failed to load classes',
   'student.accessMentalHealthResources': 'Access mental health resources at {school}',
   'student.defaultName': 'Student',
@@ -449,7 +462,6 @@ export const enTranslations = {
   'compliance.dataRetention': 'Data Retention',
   'compliance.rightToDelete': 'Right to Delete',
 
-  // Demo section - only keys used on homepage
   'demo.featureDemo': 'Feature Demo',
   'demo.title': 'Demo',
   'demo.subtitle': 'Try our platform features',
@@ -472,7 +484,6 @@ export const enTranslations = {
   'demo.sampleDataIncluded': 'Sample data included',
   'demo.enterDemo': 'Enter Demo',
 
-  // GDPR & Privacy - New translations added
   'privacy.title': 'Privacy Policy',
   'privacy.cookieConsent': 'Cookie Consent',
   'privacy.essential': 'Essential Cookies',
@@ -507,7 +518,6 @@ export const enTranslations = {
   'privacy.consentGiven': 'Consent Given',
   'privacy.lastUpdated': 'Last Updated',
 
-  // Merge all sub-translations
   ...enAuthTranslations,
   ...enTeacherTranslations,
   ...enWeeklyTranslations,

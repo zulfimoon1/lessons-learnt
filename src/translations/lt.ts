@@ -1,4 +1,3 @@
-
 import { ltAuthTranslations } from './lt/auth';
 import { ltTeacherTranslations } from './lt/teacher';
 import { ltWeeklyTranslations } from './lt/weekly';
@@ -87,6 +86,7 @@ export const ltTranslations = {
   'dashboard.wellnessCheck': 'Gerovės patikrinimas',
   'dashboard.studentDashboard': 'Mokinio valdymo skydas',
   'dashboard.teacherDashboard': 'Mokytojo valdymo skydas',
+  'dashboard.doctorDashboard': 'Gydytojo valdymo skydas',
   'dashboard.studentWelcomeMessage': 'Pasiruošę dalintis atsiliepimais ir padėti pagerinti mokymosi patirtį!',
 
   // Class translations - Enhanced
@@ -140,7 +140,8 @@ export const ltTranslations = {
   'weekly.summary': 'Savaitės santrauka',
   'weekly.summaries': 'Savaitės santraukos',
 
-  // Doctor Dashboard translations - New
+  // Doctor Dashboard translations - Enhanced for demo
+  'doctor.dashboard.title': 'Gydytojo valdymo skydas',
   'doctor.dashboard.loading': 'Kraunama...',
   'doctor.dashboard.weeklySummaries': 'Savaitės santraukos',
   'doctor.dashboard.mentalHealthAlerts': 'Psichikos sveikatos įspėjimai',
@@ -155,6 +156,25 @@ export const ltTranslations = {
   'doctor.dashboard.markReviewed': 'Pažymėti kaip peržiūrėtą',
   'doctor.dashboard.emotionalConcerns': 'Emociniai rūpesčiai',
   'doctor.dashboard.academicConcerns': 'Akademiniai rūpesčiai',
+  'doctor.dashboard.liveChat': 'Tiesioginiai pokalbiai',
+  'doctor.dashboard.chatDashboard': 'Pokalbių valdymo skydas',
+  'doctor.dashboard.waitingForDoctor': 'Laukia gydytojo',
+  'doctor.dashboard.yourActiveChats': 'Jūsų aktyvūs pokalbiai',
+  'doctor.dashboard.noStudentsWaiting': 'Nėra mokinių laukiančių pokalbio',
+  'doctor.dashboard.noActiveChats': 'Nėra aktyvių pokalbių sesijų',
+  'doctor.dashboard.anonymousStudent': 'Anoniminis mokinys',
+  'doctor.dashboard.waitingSince': 'Laukia nuo',
+  'doctor.dashboard.started': 'Pradėta',
+  'doctor.dashboard.joinChat': 'Prisijungti prie pokalbio',
+  'doctor.dashboard.continueChat': 'Tęsti pokalbį',
+  'doctor.dashboard.selfHarmAlerts': 'Savižudybės rizikos įspėjimai',
+  'doctor.dashboard.aiInsights': 'AI įžvalgos',
+  'doctor.dashboard.riskAssessment': 'Rizikos vertinimas',
+  'doctor.dashboard.immediateAttention': 'Reikia skubaus dėmesio',
+  'doctor.dashboard.confidentialData': 'Konfidencialūs medicinos duomenys',
+  'doctor.dashboard.secureAccess': 'Saugus priėjimas',
+  'doctor.dashboard.accessRequired': 'Prieiga prie psichikos sveikatos įspėjimų reikalauja tinkamos autorizacijos',
+  'doctor.dashboard.contactAdmin': 'Kreipkitės į sistemos administratorių dėl medicinos duomenų prieigos',
 
   // Teacher Dashboard
   'teacher.dashboard.title': 'Mokytojo valdymo skydas',
@@ -169,7 +189,6 @@ export const ltTranslations = {
   'teacher.articles': 'Straipsniai',
   'teacher.role': 'Mokytojas',
 
-  // Admin
   'admin.title': 'Administratoriaus valdymo skydas',
   'admin.welcome': 'Sveiki',
   'admin.subscription': 'Prenumerata',
@@ -179,7 +198,6 @@ export const ltTranslations = {
   'admin.error.description': 'Nepavyko įkelti duomenų',
   'admin.role': 'Mokyklos administratorius',
 
-  // Class Schedule Form
   'schedule.createTitle': 'Sukurti pamokos tvarkaraštį',
   'schedule.gradeClass': 'Klasė',
   'schedule.gradePlaceholder': 'pvz., 5A, 10 klasė',
@@ -199,7 +217,6 @@ export const ltTranslations = {
   'schedule.mySchedules': 'Mano pamokų tvarkaraščiai',
   'schedule.noSchedules': 'Dar nesukurtas joks pamokos tvarkaraštis. Sukurkite pirmąjį tvarkaraštį aukščiau.',
 
-  // Chat translations - New
   'chat.chatWithDoctor': 'Kalbėtis su gydytoju',
   'chat.startLiveChatWithDoctor': 'Pradėti tiesioginį pokalbį su gydytoju',
   'chat.chatPreferences': 'Pokalbio nustatymai',
@@ -215,7 +232,6 @@ export const ltTranslations = {
   'chat.chatStarted': 'Pokalbis pradėtas',
   'chat.doctorWillJoin': 'Gydytojas netrukus prisijungs prie pokalbio',
 
-  // Feedback
   'feedback.title': 'Pamokos atsiliepimas',
   'feedback.description': 'Pasidalykite savo mintimis apie šiandienos pamoką, kad padėtumėte pagerinti mokymosi patirtį.',
   'feedback.classFeedbackTitle': 'Klasės atsiliepimas',
@@ -268,7 +284,6 @@ export const ltTranslations = {
   'feedback.suggestionsLabel': 'Pasiūlymai:',
   'feedback.additionalCommentsLabel': 'Papildomi komentarai:',
 
-  // Weekly Summary
   'weeklySummary.title': 'Savaitės santrauka',
   'weeklySummary.description': 'Pasidalykite savo mintimis apie šią savaitę, kad padėtumėte mums suteikti geresnę paramą.',
   'weeklySummary.emotionalRoute': 'Emociniai rūpesčiai → Mokyklos gydytojas',
@@ -287,10 +302,8 @@ export const ltTranslations = {
   'weeklySummary.fillAtLeastOne': 'Prašome užpildyti bent vieną skyrių',
   'weeklySummary.fillAtLeastOneDescription': 'Pridėkite emocinius ar akademinius rūpesčius, kad pateiktumėte savaitės santrauką',
 
-  // Mental Health Support
   'mentalHealth.loading': 'Kraunama psichikos sveikatos parama...',
 
-  // Upload
   'upload.bulkUpload': 'Masinis įkėlimas',
   'upload.uploadComplete': 'Įkėlimas baigtas',
   'upload.bulkUploadDescription': 'Įkelkite keletą pamokų tvarkaraščių naudodami CSV failą. Atsisiųskite šabloną, kad pamatytumėte reikalingą formatą.',
@@ -312,11 +325,9 @@ export const ltTranslations = {
   'upload.timeFormat': 'Laiko formatas: HH:MM (pvz., 09:00)',
   'upload.durationFormat': 'Trukmė minutėmis (pvz., 60)',
 
-  // Articles
   'articles.mentalHealth': 'Psichikos sveikatos straipsniai',
   'articles.subscriptionRequired': 'Šiai funkcijai reikalinga prenumerata.',
 
-  // Pricing
   'pricing.processing': 'Apdorojama...',
   'pricing.title': 'Kainodara',
   'pricing.choosePlan': 'Pasirinkite savo planą',
@@ -398,7 +409,6 @@ export const ltTranslations = {
   'pricing.privacyCompliant': 'Privatumo atitiktis',
   'pricing.maximumImpact': 'Maksimalus poveikis',
 
-  // Student
   'student.failedToLoadClasses': 'Nepavyko įkelti pamokų',
   'student.accessMentalHealthResources': 'Prieiga prie psichikos sveikatos išteklių mokykloje {school}',
   'student.defaultName': 'Mokinys',
@@ -449,7 +459,6 @@ export const ltTranslations = {
   'compliance.dataRetention': 'Duomenų išsaugojimas',
   'compliance.rightToDelete': 'Teisė ištrinti',
 
-  // Demo section - only keys used on homepage
   'demo.featureDemo': 'Funkcijų demonstracija',
   'demo.title': 'Demonstracija',
   'demo.subtitle': 'Išbandykite mūsų platformos funkcijas',
@@ -472,7 +481,6 @@ export const ltTranslations = {
   'demo.sampleDataIncluded': 'Įtraukti pavyzdiniai duomenys',
   'demo.enterDemo': 'Įeiti į demonstraciją',
 
-  // GDPR & Privacy
   'privacy.title': 'Privatumo politika',
   'privacy.cookieConsent': 'Slapukų sutikimas',
   'privacy.essential': 'Būtini slapukai',
@@ -507,7 +515,6 @@ export const ltTranslations = {
   'privacy.consentGiven': 'Sutikimas suteiktas',
   'privacy.lastUpdated': 'Paskutinį kartą atnaujinta',
 
-  // Merge all sub-translations
   ...ltAuthTranslations,
   ...ltTeacherTranslations,
   ...ltWeeklyTranslations,
