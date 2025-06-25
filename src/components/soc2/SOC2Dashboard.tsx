@@ -10,6 +10,7 @@ import SOC2OverviewCards from './SOC2OverviewCards';
 import SOC2AuditEvents from './SOC2AuditEvents';
 import SOC2SecurityEvents from './SOC2SecurityEvents';
 import SOC2ComplianceControls from './SOC2ComplianceControls';
+import SOC2AccessControlPanel from './SOC2AccessControlPanel';
 
 const SOC2Dashboard: React.FC = () => {
   const [dashboardData, setDashboardData] = useState<SOC2DashboardData | null>(null);
@@ -112,12 +113,17 @@ const SOC2Dashboard: React.FC = () => {
       )}
 
       {/* Detailed Tabs */}
-      <Tabs defaultValue="audit" className="space-y-4">
+      <Tabs defaultValue="access-control" className="space-y-4">
         <TabsList>
+          <TabsTrigger value="access-control">Access Control</TabsTrigger>
           <TabsTrigger value="audit">Audit Events</TabsTrigger>
           <TabsTrigger value="security">Security Events</TabsTrigger>
           <TabsTrigger value="compliance">Compliance Controls</TabsTrigger>
         </TabsList>
+
+        <TabsContent value="access-control" className="space-y-4">
+          <SOC2AccessControlPanel />
+        </TabsContent>
 
         <TabsContent value="audit" className="space-y-4">
           <SOC2AuditEvents auditEvents={auditEvents} />
