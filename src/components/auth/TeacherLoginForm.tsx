@@ -26,7 +26,7 @@ const TeacherLoginForm: React.FC<TeacherLoginFormProps> = ({ onLogin, isLoading 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="space-y-2">
-        <Label htmlFor="email" className="text-brand-dark">Email</Label>
+        <Label htmlFor="email" className="bg-brand-gradient bg-clip-text text-transparent font-medium">Email</Label>
         <SecurityEnhancedInput
           id="email"
           type="email"
@@ -41,7 +41,7 @@ const TeacherLoginForm: React.FC<TeacherLoginFormProps> = ({ onLogin, isLoading 
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="password" className="text-brand-dark">Password</Label>
+        <Label htmlFor="password" className="bg-brand-gradient bg-clip-text text-transparent font-medium">Password</Label>
         <div className="relative">
           <SecurityEnhancedInput
             id="password"
@@ -68,7 +68,7 @@ const TeacherLoginForm: React.FC<TeacherLoginFormProps> = ({ onLogin, isLoading 
         <ForgotPasswordDialog>
           <button
             type="button"
-            className="text-sm text-brand-teal hover:text-brand-dark transition-colors"
+            className="text-sm bg-brand-gradient bg-clip-text text-transparent hover:opacity-80 transition-opacity font-medium"
           >
             Forgot Password?
           </button>
@@ -77,7 +77,7 @@ const TeacherLoginForm: React.FC<TeacherLoginFormProps> = ({ onLogin, isLoading 
 
       <Button 
         type="submit" 
-        className="w-full bg-brand-teal hover:bg-brand-dark text-white"
+        className="w-full bg-brand-gradient hover:opacity-90 text-white"
         disabled={isLoading}
       >
         {isLoading ? (

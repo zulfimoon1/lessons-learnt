@@ -28,8 +28,8 @@ const StudentLoginForm: React.FC<StudentLoginFormProps> = ({ onLogin, isLoading 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="space-y-2">
-        <Label htmlFor="loginFullName" className="flex items-center gap-2">
-          <UserIcon className="w-4 h-4" />
+        <Label htmlFor="loginFullName" className="flex items-center gap-2 bg-brand-gradient bg-clip-text text-transparent font-medium">
+          <UserIcon className="w-4 h-4 text-brand-teal" />
           {t('auth.fullName')}
         </Label>
         <SecurityEnhancedInput
@@ -45,8 +45,8 @@ const StudentLoginForm: React.FC<StudentLoginFormProps> = ({ onLogin, isLoading 
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="loginSchool" className="flex items-center gap-2">
-          <SchoolIcon className="w-4 h-4" />
+        <Label htmlFor="loginSchool" className="flex items-center gap-2 bg-brand-gradient bg-clip-text text-transparent font-medium">
+          <SchoolIcon className="w-4 h-4 text-brand-teal" />
           {t('student.school')}
         </Label>
         <SecurityEnhancedInput
@@ -62,8 +62,8 @@ const StudentLoginForm: React.FC<StudentLoginFormProps> = ({ onLogin, isLoading 
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="loginGrade" className="flex items-center gap-2">
-          <GraduationCapIcon className="w-4 h-4" />
+        <Label htmlFor="loginGrade" className="flex items-center gap-2 bg-brand-gradient bg-clip-text text-transparent font-medium">
+          <GraduationCapIcon className="w-4 h-4 text-brand-teal" />
           {t('student.classGrade')}
         </Label>
         <SecurityEnhancedInput
@@ -79,7 +79,7 @@ const StudentLoginForm: React.FC<StudentLoginFormProps> = ({ onLogin, isLoading 
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="loginPassword">{t('auth.password')}</Label>
+        <Label htmlFor="loginPassword" className="bg-brand-gradient bg-clip-text text-transparent font-medium">{t('auth.password')}</Label>
         <SecurityEnhancedInput
           id="loginPassword"
           type="password"
@@ -94,7 +94,7 @@ const StudentLoginForm: React.FC<StudentLoginFormProps> = ({ onLogin, isLoading 
 
       <Button 
         type="submit" 
-        className="w-full"
+        className="w-full bg-brand-gradient hover:opacity-90 text-white"
         disabled={isLoading}
       >
         {isLoading ? t('auth.loggingIn') : (
