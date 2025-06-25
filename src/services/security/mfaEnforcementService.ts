@@ -1,4 +1,3 @@
-
 interface MFARequirement {
   userId: string;
   userRole: string;
@@ -29,7 +28,7 @@ class MFAEnforcementService {
       userRole,
       isRequired,
       lastVerified: storedMFA?.lastVerified || null,
-      verificationMethod: storedMFA?.method || null
+      verificationMethod: storedMFA?.method as 'totp' | 'sms' | 'email' || null
     };
   }
 
@@ -119,7 +118,7 @@ class MFAEnforcementService {
     }
   }
 
-  private getStoredMFAStatus(userId: string): { lastVerified: Date; method: string } | null {
+  private getStoredMFAStatus(userId: string): { lastVerified: Date; method: 'totp' | 'sms' | 'email' } | null {
     try {
       const stored = localStorage.getItem(`mfa_${userId}`);
       if (!stored) return null;
@@ -127,7 +126,7 @@ class MFAEnforcementService {
       const data = JSON.parse(stored);
       return {
         lastVerified: new Date(data.lastVerified),
-        method: data.method
+        method: data.method as 'totp' | 'sms' | 'email'
       };
     } catch (error) {
       return null;
