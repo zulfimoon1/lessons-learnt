@@ -129,7 +129,7 @@ export const lt: LanguageResource = {
     studentSupport: 'Mokinių palaikymas',
     additionalNotes: 'Papildomos pastabos',
     positive: 'Teigiama',
-    neutrali: 'Neutrali',
+    neutral: 'Neutrali',
     negative: 'Neigiama',
     veryPositive: 'Labai teigiama',
     veryNegative: 'Labai neigiama',
