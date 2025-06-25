@@ -3,9 +3,6 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Calendar, User, School, BookOpen, Heart, Brain } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -24,7 +21,6 @@ interface WeeklySummary {
 const WeeklySummaryReview = () => {
   const [summaries, setSummaries] = useState<WeeklySummary[]>([]);
   const [selectedSummary, setSelectedSummary] = useState<WeeklySummary | null>(null);
-  const [responseText, setResponseText] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
@@ -57,55 +53,6 @@ const WeeklySummaryReview = () => {
 
   const handleSummarySelect = (summary: WeeklySummary) => {
     setSelectedSummary(summary);
-    setResponseText(''); // Clear response text when selecting a new summary
-  };
-
-  const handleResponseChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setResponseText(e.target.value);
-  };
-
-  const handleSubmitResponse = async () => {
-    if (!selectedSummary) {
-      toast({
-        title: "Error",
-        description: "No summary selected",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (!responseText.trim()) {
-      toast({
-        title: "Error",
-        description: "Response cannot be empty",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setIsLoading(true);
-    try {
-      // Simulate sending a response (replace with actual logic)
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      toast({
-        title: "Response Sent",
-        description: `Response sent to ${selectedSummary.student_name}`,
-      });
-
-      // Clear selected summary and response text
-      setSelectedSummary(null);
-      setResponseText('');
-    } catch (error) {
-      console.error("Error sending response:", error);
-      toast({
-        title: "Error",
-        description: "Failed to send response",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
   };
 
   return (
@@ -117,7 +64,7 @@ const WeeklySummaryReview = () => {
             Weekly Summary Review
           </CardTitle>
           <CardDescription>
-            Review and respond to weekly summaries submitted by students
+            Review weekly summaries submitted by students
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -142,6 +89,9 @@ const WeeklySummaryReview = () => {
                         <div className="flex items-center gap-2">
                           <User className="w-4 h-4" />
                           {summary.student_name}
+                          <Badge variant="outline" className="ml-auto">
+                            {new Date(summary.week_start_date).toLocaleDateString()}
+                          </Badge>
                         </div>
                       </Button>
                     ))
@@ -150,52 +100,65 @@ const WeeklySummaryReview = () => {
               )}
             </div>
 
-            {/* Response Form */}
+            {/* Summary Details */}
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold">Response</h3>
+              <h3 className="text-lg font-semibold">Summary Details</h3>
               {selectedSummary ? (
-                <div className="space-y-2">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                    <div>
-                      <span className="text-sm font-medium">Student:</span>
-                      <p className="text-sm">{selectedSummary.student_name}</p>
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <div>
+                        <span className="text-sm font-medium text-gray-600">Student:</span>
+                        <p className="text-sm">{selectedSummary.student_name}</p>
+                      </div>
+                      <div>
+                        <span className="text-sm font-medium text-gray-600">School:</span>
+                        <p className="text-sm">{selectedSummary.school}</p>
+                      </div>
                     </div>
-                    <div>
-                      <span className="text-sm font-medium">School:</span>
-                      <p className="text-sm">{selectedSummary.school}</p>
-                    </div>
-                    <div>
-                      <span className="text-sm font-medium">Grade:</span>
-                      <p className="text-sm">{selectedSummary.grade}</p>
-                    </div>
-                    <div>
-                      <span className="text-sm font-medium">Week Start:</span>
-                      <p className="text-sm">{selectedSummary.week_start_date}</p>
+                    <div className="space-y-2">
+                      <div>
+                        <span className="text-sm font-medium text-gray-600">Grade:</span>
+                        <p className="text-sm">{selectedSummary.grade}</p>
+                      </div>
+                      <div>
+                        <span className="text-sm font-medium text-gray-600">Week Start:</span>
+                        <p className="text-sm">{new Date(selectedSummary.week_start_date).toLocaleDateString()}</p>
+                      </div>
                     </div>
                   </div>
-                  <div>
-                    <span className="text-sm font-medium">Academic Concerns:</span>
-                    <p className="text-sm">{selectedSummary.academic_concerns || 'None'}</p>
+                  
+                  <div className="space-y-3">
+                    <div className="p-3 bg-blue-50 rounded-lg">
+                      <span className="text-sm font-medium text-blue-800 flex items-center gap-2">
+                        <BookOpen className="w-4 h-4" />
+                        Academic Concerns:
+                      </span>
+                      <p className="text-sm text-blue-700 mt-1">
+                        {selectedSummary.academic_concerns || 'None reported'}
+                      </p>
+                    </div>
+                    
+                    <div className="p-3 bg-purple-50 rounded-lg">
+                      <span className="text-sm font-medium text-purple-800 flex items-center gap-2">
+                        <Heart className="w-4 h-4" />
+                        Emotional Concerns:
+                      </span>
+                      <p className="text-sm text-purple-700 mt-1">
+                        {selectedSummary.emotional_concerns || 'None reported'}
+                      </p>
+                    </div>
+                    
+                    <div className="text-xs text-gray-500">
+                      Submitted: {new Date(selectedSummary.submitted_at).toLocaleString()}
+                    </div>
                   </div>
-                  <div>
-                    <span className="text-sm font-medium">Emotional Concerns:</span>
-                    <p className="text-sm">{selectedSummary.emotional_concerns || 'None'}</p>
-                  </div>
-                  <div>
-                    <Label htmlFor="response">Your Response</Label>
-                    <Textarea
-                      id="response"
-                      placeholder="Enter your response here"
-                      value={responseText}
-                      onChange={handleResponseChange}
-                    />
-                  </div>
-                  <Button onClick={handleSubmitResponse} disabled={isLoading} className="w-full">
-                    {isLoading ? "Sending..." : "Send Response"}
-                  </Button>
                 </div>
               ) : (
-                <p>Select a summary to view and respond.</p>
+                <div className="text-center py-8">
+                  <BookOpen className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                  <p className="text-gray-500">Select a summary to view details</p>
+                </div>
               )}
             </div>
           </div>
