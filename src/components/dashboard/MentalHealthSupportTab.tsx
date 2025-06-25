@@ -97,7 +97,7 @@ const MentalHealthSupportTab: React.FC<MentalHealthSupportTabProps> = React.memo
       <Card className="bg-white/80 backdrop-blur-sm border-brand-teal/20 shadow-lg">
         <CardContent className="flex items-center justify-center p-8">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-teal"></div>
-          <span className="ml-3 text-brand-dark">Loading mental health support...</span>
+          <span className="ml-3 text-brand-dark">{t('mentalHealth.loading')}</span>
         </CardContent>
       </Card>
     );
@@ -110,11 +110,11 @@ const MentalHealthSupportTab: React.FC<MentalHealthSupportTabProps> = React.memo
           <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
             <HeartHandshakeIcon className="w-5 h-5" />
           </div>
-          Mental Health Support
+          {t('features.mentalHealth.title')}
           <Shield className="w-4 h-4 ml-2 opacity-80" />
         </CardTitle>
         <CardDescription className="text-white/80">
-          Access mental health resources at {studentSchool}
+          {t('student.accessMentalHealthResources', { school: studentSchool || 'your school' })}
         </CardDescription>
       </CardHeader>
       <CardContent className="p-6">
@@ -150,9 +150,9 @@ const MentalHealthSupportTab: React.FC<MentalHealthSupportTabProps> = React.memo
             <div className="w-16 h-16 bg-brand-teal/10 rounded-full mx-auto mb-4 flex items-center justify-center">
               <HeartHandshakeIcon className="w-8 h-8 text-brand-teal" />
             </div>
-            <p className="text-brand-dark font-medium mb-2">No psychologists available at your school</p>
+            <p className="text-brand-dark font-medium mb-2">{t('dashboard.noPsychologists')}</p>
             <p className="text-brand-dark/60 text-sm mb-4">
-              Contact your school administrator for mental health support
+              {t('dashboard.contactAdmin')}
             </p>
             
             <div className="bg-yellow-50/50 p-4 rounded-lg border-l-4 border-yellow-200 mb-4">
