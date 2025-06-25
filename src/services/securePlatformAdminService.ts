@@ -1,7 +1,6 @@
-
 import { supabase } from '@/integrations/supabase/client';
-import { secureAuthenticationService } from './secureAuthenticationService';
-import { securityValidationService } from './securityValidationService';
+import { secureAdminAuthService } from './secureAdminAuthService';
+import { centralizedValidationService } from './centralizedValidationService';
 
 interface AdminUser {
   id: string;
@@ -18,146 +17,14 @@ interface AuthResult {
 }
 
 class SecurePlatformAdminService {
-  // Enhanced admin authentication with fallback for platform admin
+  // Enhanced admin authentication using the new secure service
   async authenticateAdmin(credentials: { email: string; password: string }): Promise<AuthResult> {
-    console.log('🔐 Secure admin authentication attempt:', credentials.email);
-    
-    try {
-      // Log authentication attempt
-      securityValidationService.logSecurityEvent({
-        type: 'unauthorized_access',
-        details: `Admin login attempt for ${credentials.email}`,
-        severity: 'medium'
-      });
-
-      // Special handling for platform admin
-      if (credentials.email.toLowerCase().trim() === 'zulfimoon1@gmail.com' && credentials.password === 'admin123') {
-        console.log('✅ Platform admin authenticated via hardcoded credentials');
-        
-        // Set platform admin context
-        await this.setPlatformAdminContext(credentials.email);
-        
-        // Log successful authentication
-        securityValidationService.logSecurityEvent({
-          type: 'unauthorized_access',
-          details: `Successful platform admin login for ${credentials.email}`,
-          severity: 'low'
-        });
-        
-        return {
-          success: true,
-          admin: {
-            id: 'platform-admin',
-            email: credentials.email,
-            name: 'Platform Administrator',
-            role: 'admin',
-            school: 'Platform Administration'
-          }
-        };
-      }
-
-      // For other admins, use the secure authentication service
-      const result = await secureAuthenticationService.authenticateAdmin(
-        credentials.email, 
-        credentials.password
-      );
-
-      if (result.success && result.user) {
-        // Set platform admin context
-        await this.setPlatformAdminContext(credentials.email);
-        
-        // Log successful authentication
-        securityValidationService.logSecurityEvent({
-          type: 'unauthorized_access',
-          userId: result.user.id,
-          details: `Successful admin login for ${credentials.email}`,
-          severity: 'low'
-        });
-        
-        return {
-          success: true,
-          admin: result.user
-        };
-      } else {
-        // Log failed authentication
-        securityValidationService.logSecurityEvent({
-          type: 'unauthorized_access',
-          details: `Failed admin login for ${credentials.email}: ${result.error}`,
-          severity: 'high'
-        });
-        
-        return {
-          success: false,
-          error: result.error || 'Authentication failed'
-        };
-      }
-    } catch (error) {
-      console.error('Platform admin authentication error:', error);
-      
-      // Log system error
-      securityValidationService.logSecurityEvent({
-        type: 'suspicious_activity',
-        details: `Authentication system error: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        severity: 'high'
-      });
-      
-      return {
-        success: false,
-        error: 'Authentication system error'
-      };
-    }
+    return await secureAdminAuthService.authenticateAdmin(credentials);
   }
 
-  // Validate admin session - simplified for platform admin
+  // Validate admin session using the new secure service
   async validateAdminSession(email: string): Promise<{ valid: boolean; admin?: AdminUser }> {
-    try {
-      console.log('🔍 Validating admin session for:', email);
-      
-      // Special handling for platform admin
-      if (email.toLowerCase().trim() === 'zulfimoon1@gmail.com') {
-        await this.setPlatformAdminContext(email);
-        
-        return {
-          valid: true,
-          admin: {
-            id: 'platform-admin',
-            email: email,
-            name: 'Platform Administrator',
-            role: 'admin',
-            school: 'Platform Administration'
-          }
-        };
-      }
-
-      // Query database to verify other admin exists and is active
-      const { data: adminData, error } = await supabase
-        .from('teachers')
-        .select('id, name, email, school, role')
-        .eq('email', email.toLowerCase().trim())
-        .eq('role', 'admin')
-        .single();
-
-      if (error || !adminData) {
-        console.log('❌ Admin session validation failed - user not found');
-        return { valid: false };
-      }
-
-      await this.setPlatformAdminContext(email);
-      
-      return {
-        valid: true,
-        admin: {
-          id: adminData.id,
-          email: adminData.email,
-          name: adminData.name,
-          school: adminData.school,
-          role: adminData.role
-        }
-      };
-    } catch (error) {
-      console.error('Admin session validation error:', error);
-      return { valid: false };
-    }
+    return await secureAdminAuthService.validateAdminSession(email);
   }
 
   // Enhanced platform admin context setting with security logging
@@ -169,14 +36,14 @@ class SecurePlatformAdminService {
 
       if (error) {
         console.error('Failed to set platform admin context:', error);
-        securityValidationService.logSecurityEvent({
+        centralizedValidationService.logSecurityEvent({
           type: 'suspicious_activity',
           details: `Failed to set admin context for ${adminEmail}`,
           severity: 'high'
         });
       } else {
         console.log('✅ Platform admin context set successfully');
-        securityValidationService.logSecurityEvent({
+        centralizedValidationService.logSecurityEvent({
           type: 'unauthorized_access',
           details: `Platform admin context set for ${adminEmail}`,
           severity: 'low'
@@ -184,7 +51,7 @@ class SecurePlatformAdminService {
       }
     } catch (error) {
       console.error('Error setting platform admin context:', error);
-      securityValidationService.logSecurityEvent({
+      centralizedValidationService.logSecurityEvent({
         type: 'suspicious_activity',
         details: `System error setting admin context: ${error instanceof Error ? error.message : 'Unknown error'}`,
         severity: 'high'
@@ -234,7 +101,6 @@ class SecurePlatformAdminService {
         return acc;
       }, {});
 
-      // Get student counts for each school
       const { data: studentData, error: studentError } = await supabase
         .from('students')
         .select('school')
@@ -282,8 +148,6 @@ class SecurePlatformAdminService {
     await this.setPlatformAdminContext(adminEmail);
     
     try {
-      // For now, we'll just return success since schools are created implicitly
-      // when teachers or students are added with a school name
       console.log('School creation requested:', schoolName);
       return { success: true, schoolName };
     } catch (error) {
@@ -296,7 +160,6 @@ class SecurePlatformAdminService {
     await this.setPlatformAdminContext(adminEmail);
     
     try {
-      // Use the existing platform_admin_delete_school function
       const { data, error } = await supabase.rpc('platform_admin_delete_school', {
         school_name_param: schoolName,
         admin_email_param: adminEmail
@@ -325,7 +188,7 @@ class SecurePlatformAdminService {
         .from('transactions')
         .insert({
           school_name: transactionData.school_name,
-          amount: Math.round(parseFloat(transactionData.amount) * 100), // Convert to cents
+          amount: Math.round(parseFloat(transactionData.amount) * 100),
           currency: transactionData.currency,
           transaction_type: transactionData.transaction_type,
           status: transactionData.status,
@@ -377,9 +240,7 @@ class SecurePlatformAdminService {
     await this.setPlatformAdminContext(adminEmail);
     
     try {
-      // Clean up demo/test data - implement as needed
       console.log('Demo data cleanup requested by:', adminEmail);
-      // Implementation would go here based on specific requirements
     } catch (error) {
       console.error('Error cleaning up demo data:', error);
       throw error;
