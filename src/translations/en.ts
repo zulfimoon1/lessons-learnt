@@ -1,4 +1,3 @@
-import { LanguageResource } from './types';
 
 export const en = {
   common: {

@@ -1,3 +1,4 @@
+
 import { LanguageResource } from './types';
 
 export const lt: LanguageResource = {
