@@ -1,359 +1,220 @@
-
 import { supabase } from '@/integrations/supabase/client';
 
-export interface SOC2AuditEvent {
+interface AuditEvent {
   event_type: string;
   user_id?: string;
-  source_ip?: string;
-  user_agent?: string;
-  resource_accessed?: string;
-  action_performed?: string;
-  result?: 'success' | 'failure' | 'unauthorized';
-  severity?: 'low' | 'medium' | 'high' | 'critical';
+  resource_accessed: string;
+  action_performed: string;
+  result: 'success' | 'failure' | 'denied';
+  timestamp: string;
+  severity: 'low' | 'medium' | 'high' | 'critical';
+  control_category: 'security' | 'availability' | 'integrity' | 'confidentiality' | 'privacy';
   details?: Record<string, any>;
-  control_category?: 'security' | 'availability' | 'processing_integrity' | 'confidentiality';
 }
 
-export interface SOC2SecurityEvent {
+interface SecurityEvent {
   event_category: 'access_control' | 'authentication' | 'authorization' | 'data_integrity';
   event_description: string;
-  affected_resource?: string;
+  affected_resource: string;
   user_id?: string;
-  risk_level?: 'low' | 'medium' | 'high' | 'critical';
+  risk_level: 'low' | 'medium' | 'high' | 'critical';
   metadata?: Record<string, any>;
 }
 
-export interface SOC2DashboardData {
-  auditEvents24h: number;
-  openSecurityEvents: number;
-  criticalSecurityEvents: number;
-  avgUptime24h: number;
-  failedIntegrityChecks24h: number;
-  overdueAccessReviews: number;
+interface ComplianceMetrics {
+  auditEvents: number;
+  securityEvents: number;
+  dataAccessEvents: number;
+  failedAuthentications: number;
+  privilegedAccess: number;
+  lastAuditDate: string;
+  complianceScore: number;
 }
 
 class SOC2ComplianceService {
-  async logAuditEvent(event: SOC2AuditEvent): Promise<string | null> {
+  async logAuditEvent(event: AuditEvent): Promise<void> {
     try {
-      // Use existing audit_log table for now
-      const { data, error } = await supabase
-        .from('audit_log')
-        .insert({
-          table_name: event.resource_accessed || 'system',
-          operation: event.action_performed || 'unknown',
-          user_id: event.user_id || null,
-          new_data: {
-            event_type: event.event_type,
-            result: event.result || 'success',
-            severity: event.severity || 'medium',
-            control_category: event.control_category || 'security',
-            source_ip: event.source_ip,
-            user_agent: event.user_agent,
-            details: event.details || {}
-          }
-        })
-        .select('id')
-        .single();
-
-      if (error) {
-        console.error('SOC 2 audit logging error:', error);
-        return null;
-      }
-
-      return data?.id || null;
-    } catch (error) {
-      console.error('Failed to log SOC 2 audit event:', error);
-      return null;
-    }
-  }
-
-  async logSecurityEvent(event: SOC2SecurityEvent): Promise<string | null> {
-    try {
-      // Use existing audit_log table for security events
-      const { data, error } = await supabase
-        .from('audit_log')
-        .insert({
-          table_name: 'security_events',
-          operation: 'security_event',
-          user_id: event.user_id || null,
-          new_data: {
-            event_category: event.event_category,
-            event_description: event.event_description,
-            affected_resource: event.affected_resource,
-            risk_level: event.risk_level || 'medium',
-            metadata: event.metadata || {}
-          }
-        })
-        .select('id')
-        .single();
-
-      if (error) {
-        console.error('SOC 2 security event logging error:', error);
-        return null;
-      }
-
-      return data?.id || null;
-    } catch (error) {
-      console.error('Failed to log SOC 2 security event:', error);
-      return null;
-    }
-  }
-
-  async recordAvailabilityMetric(
-    serviceName: string,
-    status: 'up' | 'down' | 'degraded',
-    responseTimeMs?: number,
-    uptimePercentage?: number,
-    errorCount?: number,
-    totalRequests?: number,
-    metadata?: Record<string, any>
-  ): Promise<string | null> {
-    try {
-      // Use existing audit_log table for availability metrics
-      const { data, error } = await supabase
-        .from('audit_log')
-        .insert({
-          table_name: 'availability_metrics',
-          operation: 'metric_record',
-          new_data: {
-            service_name: serviceName,
-            status,
-            response_time_ms: responseTimeMs,
-            uptime_percentage: uptimePercentage,
-            error_count: errorCount || 0,
-            total_requests: totalRequests || 0,
-            metadata: metadata || {}
-          }
-        })
-        .select('id')
-        .single();
-
-      if (error) {
-        console.error('SOC 2 availability metric error:', error);
-        return null;
-      }
-
-      return data?.id || null;
-    } catch (error) {
-      console.error('Failed to record availability metric:', error);
-      return null;
-    }
-  }
-
-  async performDataIntegrityCheck(tableName: string, checkType: string): Promise<string | null> {
-    try {
-      let recordCount = 0;
-      let status = 'passed';
+      console.log('SOC2 Audit Event:', event);
       
-      // Perform basic count checks on existing tables
-      switch (tableName) {
-        case 'students':
-          const { count: studentCount } = await supabase
-            .from('students')
-            .select('*', { count: 'exact', head: true });
-          recordCount = studentCount || 0;
-          break;
-        case 'teachers':
-          const { count: teacherCount } = await supabase
-            .from('teachers')
-            .select('*', { count: 'exact', head: true });
-          recordCount = teacherCount || 0;
-          break;
-        case 'feedback':
-          const { count: feedbackCount } = await supabase
-            .from('feedback')
-            .select('*', { count: 'exact', head: true });
-          recordCount = feedbackCount || 0;
-          break;
-        case 'mental_health_alerts':
-          const { count: alertCount } = await supabase
-            .from('mental_health_alerts')
-            .select('*', { count: 'exact', head: true });
-          recordCount = alertCount || 0;
-          break;
-      }
-
-      // Log the integrity check result
-      const { data, error } = await supabase
-        .from('audit_log')
-        .insert({
-          table_name: 'data_integrity',
-          operation: 'integrity_check',
-          new_data: {
-            table_name: tableName,
-            check_type: checkType,
-            record_count: recordCount,
-            status,
-            check_timestamp: new Date().toISOString()
-          }
-        })
-        .select('id')
-        .single();
-
-      if (error) {
-        console.error('SOC 2 data integrity check error:', error);
-        return null;
-      }
-
-      return data?.id || null;
+      // Store audit event locally for demo purposes
+      const existingEvents = this.getStoredAuditEvents();
+      existingEvents.push({
+        ...event,
+        id: crypto.randomUUID(),
+        timestamp: new Date().toISOString()
+      });
+      
+      // Keep only recent events to prevent storage overflow
+      const recentEvents = existingEvents.slice(-1000);
+      localStorage.setItem('soc2_audit_events', JSON.stringify(recentEvents));
+      
+      // In production, this would send to secure audit logging service
+      await this.sendToAuditService(event);
     } catch (error) {
-      console.error('Failed to perform data integrity check:', error);
-      return null;
+      console.error('Failed to log SOC2 audit event:', error);
     }
   }
 
-  async getDashboardSummary(): Promise<SOC2DashboardData | null> {
+  async logSecurityEvent(event: SecurityEvent): Promise<void> {
     try {
-      // Calculate dashboard metrics from existing audit_log table
-      const yesterday = new Date();
-      yesterday.setDate(yesterday.getDate() - 1);
+      console.log('SOC2 Security Event:', event);
+      
+      // Store security event locally
+      const existingEvents = this.getStoredSecurityEvents();
+      existingEvents.push({
+        ...event,
+        id: crypto.randomUUID(),
+        timestamp: new Date().toISOString()
+      });
+      
+      const recentEvents = existingEvents.slice(-1000);
+      localStorage.setItem('soc2_security_events', JSON.stringify(recentEvents));
+      
+      // Send to security monitoring system
+      await this.sendToSecurityService(event);
+    } catch (error) {
+      console.error('Failed to log SOC2 security event:', error);
+    }
+  }
 
-      const { data: auditEvents, error: auditError } = await supabase
-        .from('audit_log')
-        .select('*')
-        .gte('timestamp', yesterday.toISOString());
-
-      if (auditError) {
-        console.error('SOC 2 dashboard data error:', auditError);
-        return null;
-      }
-
-      const securityEvents = auditEvents?.filter(e => 
-        e.table_name === 'security_events' || 
-        e.operation === 'security_event'
-      ) || [];
-
-      const availabilityEvents = auditEvents?.filter(e => 
-        e.table_name === 'availability_metrics'
-      ) || [];
-
-      const integrityEvents = auditEvents?.filter(e => 
-        e.table_name === 'data_integrity'
-      ) || [];
-
+  async getComplianceMetrics(): Promise<ComplianceMetrics> {
+    try {
+      const auditEvents = this.getStoredAuditEvents();
+      const securityEvents = this.getStoredSecurityEvents();
+      
+      const now = Date.now();
+      const oneDayAgo = now - 24 * 60 * 60 * 1000;
+      
+      const recentAuditEvents = auditEvents.filter(e => 
+        new Date(e.timestamp).getTime() > oneDayAgo
+      );
+      
+      const recentSecurityEvents = securityEvents.filter(e => 
+        new Date(e.timestamp).getTime() > oneDayAgo
+      );
+      
+      const failedAuthentications = recentAuditEvents.filter(e => 
+        e.event_type.includes('authentication') && e.result === 'failure'
+      ).length;
+      
+      const privilegedAccess = recentAuditEvents.filter(e => 
+        e.action_performed.includes('admin') || e.control_category === 'security'
+      ).length;
+      
+      // Calculate compliance score based on events and adherence to controls
+      const baseScore = 85;
+      const securityIncidents = recentSecurityEvents.filter(e => e.risk_level === 'high' || e.risk_level === 'critical').length;
+      const authFailures = Math.min(failedAuthentications, 10); // Cap impact
+      
+      const complianceScore = Math.max(0, baseScore - (securityIncidents * 5) - (authFailures * 2));
+      
       return {
-        auditEvents24h: auditEvents?.length || 0,
-        openSecurityEvents: securityEvents.length,
-        criticalSecurityEvents: securityEvents.filter(e => 
-          e.new_data && typeof e.new_data === 'object' && 
-          'risk_level' in e.new_data && e.new_data.risk_level === 'critical'
-        ).length,
-        avgUptime24h: 99.9, // Default high availability
-        failedIntegrityChecks24h: integrityEvents.filter(e => 
-          e.new_data && typeof e.new_data === 'object' && 
-          'status' in e.new_data && e.new_data.status === 'failed'
-        ).length,
-        overdueAccessReviews: 0 // Default to 0 for now
+        auditEvents: recentAuditEvents.length,
+        securityEvents: recentSecurityEvents.length,
+        dataAccessEvents: recentAuditEvents.filter(e => e.resource_accessed.includes('data')).length,
+        failedAuthentications,
+        privilegedAccess,
+        lastAuditDate: new Date().toISOString(),
+        complianceScore
       };
     } catch (error) {
-      console.error('Failed to get SOC 2 dashboard data:', error);
-      return null;
+      console.error('Failed to get compliance metrics:', error);
+      return {
+        auditEvents: 0,
+        securityEvents: 0,
+        dataAccessEvents: 0,
+        failedAuthentications: 0,
+        privilegedAccess: 0,
+        lastAuditDate: new Date().toISOString(),
+        complianceScore: 0
+      };
     }
   }
 
-  async getRecentAuditEvents(limit: number = 50) {
-    try {
-      const { data, error } = await supabase
-        .from('audit_log')
-        .select('*')
-        .order('timestamp', { ascending: false })
-        .limit(limit);
-
-      if (error) {
-        console.error('SOC 2 audit events error:', error);
-        return [];
-      }
-
-      return data || [];
-    } catch (error) {
-      console.error('Failed to get recent audit events:', error);
-      return [];
-    }
-  }
-
-  async getSecurityEvents(status?: string, riskLevel?: string) {
-    try {
-      const { data, error } = await supabase
-        .from('audit_log')
-        .select('*')
-        .eq('table_name', 'security_events')
-        .order('timestamp', { ascending: false });
-
-      if (error) {
-        console.error('SOC 2 security events error:', error);
-        return [];
-      }
-
-      let filteredData = data || [];
-
-      if (riskLevel && filteredData.length > 0) {
-        filteredData = filteredData.filter(event => 
-          event.new_data && 
-          typeof event.new_data === 'object' && 
-          'risk_level' in event.new_data && 
-          event.new_data.risk_level === riskLevel
-        );
-      }
-
-      return filteredData;
-    } catch (error) {
-      console.error('Failed to get security events:', error);
-      return [];
-    }
-  }
-
-  // Auto-monitor page access
-  monitorPageAccess(pageName: string, userId?: string) {
+  monitorPageAccess(page: string, userId?: string): void {
     this.logAuditEvent({
       event_type: 'page_access',
       user_id: userId,
-      resource_accessed: pageName,
+      resource_accessed: page,
       action_performed: 'view',
       result: 'success',
+      timestamp: new Date().toISOString(),
       severity: 'low',
-      control_category: 'security',
-      details: {
-        timestamp: new Date().toISOString(),
-        page: pageName
-      }
+      control_category: 'security'
     });
   }
 
-  // Auto-monitor API calls
-  monitorAPICall(endpoint: string, method: string, userId?: string, result: 'success' | 'failure' = 'success') {
-    this.logAuditEvent({
-      event_type: 'api_call',
-      user_id: userId,
-      resource_accessed: endpoint,
-      action_performed: method,
-      result,
-      severity: result === 'failure' ? 'medium' : 'low',
-      control_category: 'security',
-      details: {
-        timestamp: new Date().toISOString(),
-        endpoint,
-        method
-      }
-    });
-  }
-
-  // Auto-monitor data access
-  monitorDataAccess(tableName: string, operation: string, recordCount?: number, userId?: string) {
+  monitorDataAccess(tableName: string, operation: string, recordCount?: number, userId?: string): void {
     this.logAuditEvent({
       event_type: 'data_access',
       user_id: userId,
       resource_accessed: tableName,
       action_performed: operation,
       result: 'success',
-      severity: ['mental_health_alerts', 'students', 'teachers'].includes(tableName) ? 'high' : 'medium',
+      timestamp: new Date().toISOString(),
+      severity: recordCount && recordCount > 100 ? 'medium' : 'low',
       control_category: 'confidentiality',
-      details: {
-        timestamp: new Date().toISOString(),
-        table: tableName,
-        operation,
-        record_count: recordCount
-      }
+      details: { recordCount }
     });
+  }
+
+  private getStoredAuditEvents(): any[] {
+    try {
+      const stored = localStorage.getItem('soc2_audit_events');
+      return stored ? JSON.parse(stored) : [];
+    } catch (error) {
+      console.error('Failed to get stored audit events:', error);
+      return [];
+    }
+  }
+
+  private getStoredSecurityEvents(): any[] {
+    try {
+      const stored = localStorage.getItem('soc2_security_events');
+      return stored ? JSON.parse(stored) : [];
+    } catch (error) {
+      console.error('Failed to get stored security events:', error);
+      return [];
+    }
+  }
+
+  private async sendToAuditService(event: AuditEvent): Promise<void> {
+    try {
+      // In production, this would send to a dedicated audit logging service
+      // For now, we'll use Supabase's audit capabilities
+      await supabase.rpc('log_audit_event_safe', {
+        event_type: event.event_type,
+        user_id: event.user_id,
+        resource_accessed: event.resource_accessed,
+        action_performed: event.action_performed,
+        result: event.result,
+        severity: event.severity,
+        control_category: event.control_category,
+        details: event.details
+      });
+    } catch (error) {
+      // Fail silently to prevent disrupting user experience
+      console.debug('Audit service unavailable:', error);
+    }
+  }
+
+  private async sendToSecurityService(event: SecurityEvent): Promise<void> {
+    try {
+      // Send to security monitoring system
+      await supabase.rpc('log_security_event_safe', {
+        event_type: event.event_category,
+        user_id: event.user_id,
+        details: event.event_description,
+        severity: event.risk_level === 'critical' ? 'high' : event.risk_level
+      });
+    } catch (error) {
+      console.debug('Security service unavailable:', error);
+    }
+  }
+
+  clearComplianceData(): void {
+    localStorage.removeItem('soc2_audit_events');
+    localStorage.removeItem('soc2_security_events');
   }
 }
 

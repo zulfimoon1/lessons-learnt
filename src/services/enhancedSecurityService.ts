@@ -1,4 +1,4 @@
-
+import { enhancedSecurityValidationService } from './enhancedSecurityValidationService';
 import { securityValidationService } from './securityValidationService';
 import { securityMonitoringService } from './securityMonitoringService';
 import { supabase } from '@/integrations/supabase/client';
