@@ -1,412 +1,482 @@
 
 import { supabase } from '@/integrations/supabase/client';
+import { aiRecommendationService } from './aiRecommendationService';
 
-export interface PersonalizationProfile {
+interface PersonalizationProfile {
   studentId: string;
   learningStyle: 'visual' | 'auditory' | 'kinesthetic' | 'reading';
-  preferredLanguage: 'en' | 'lt';
-  difficultyPreference: 'easy' | 'medium' | 'hard' | 'adaptive';
-  interactionPatterns: {
-    avgSessionDuration: number;
-    preferredTimeOfDay: string;
-    responseSpeed: 'fast' | 'medium' | 'slow';
-  };
-  strengthAreas: string[];
+  preferredDifficulty: 'basic' | 'intermediate' | 'advanced';
+  interestAreas: string[];
+  strengths: string[];
   improvementAreas: string[];
-  emotionalPatterns: {
-    positiveIndicators: string[];
-    stressIndicators: string[];
-    engagementLevel: number;
+  engagementPatterns: {
+    timeOfDay: string;
+    subjectPreferences: Record<string, number>;
+    feedbackFrequency: number;
   };
-  lastUpdated: string;
 }
 
-export interface PredictiveInsight {
-  id: string;
+interface PredictiveInsight {
   type: 'performance' | 'engagement' | 'wellbeing' | 'learning_path';
   confidence: number;
-  timeframe: 'immediate' | 'short_term' | 'long_term';
   prediction: string;
-  recommendedActions: string[];
-  impactLevel: 'low' | 'medium' | 'high';
-  metadata: Record<string, any>;
+  reasoning: string;
+  recommendations: string[];
+  timeframe: 'immediate' | 'short_term' | 'long_term';
 }
 
-export interface ContentRecommendation {
+interface LearningPathStep {
   id: string;
-  type: 'lesson' | 'exercise' | 'resource' | 'support';
-  title: string;
-  description: string;
-  difficulty: 'easy' | 'medium' | 'hard';
+  subject: string;
+  topic: string;
+  difficulty: 'basic' | 'intermediate' | 'advanced';
   estimatedDuration: number;
-  language: 'en' | 'lt';
-  relevanceScore: number;
-  tags: string[];
-  adaptationReason: string;
+  prerequisites: string[];
+  resources: {
+    type: 'video' | 'reading' | 'exercise' | 'interactive';
+    url?: string;
+    description: string;
+  }[];
 }
 
 class AdvancedAIService {
-  
+  // Enhanced personalization based on learning patterns
   async generatePersonalizationProfile(studentId: string): Promise<PersonalizationProfile> {
     try {
-      // Get student's feedback history
-      const { data: feedbackData, error: feedbackError } = await supabase
+      console.log('🤖 Generating personalization profile for student:', studentId);
+      
+      // Get comprehensive student data
+      const { data: feedbackData } = await supabase
         .from('feedback')
-        .select('*')
+        .select(`
+          *,
+          class_schedules!inner(subject, lesson_topic, class_date)
+        `)
         .eq('student_id', studentId)
         .order('submitted_at', { ascending: false })
         .limit(50);
 
-      if (feedbackError) throw feedbackError;
+      if (!feedbackData || feedbackData.length === 0) {
+        return this.getDefaultProfile(studentId);
+      }
 
-      // Get student's weekly summaries
-      const { data: summaryData, error: summaryError } = await supabase
-        .from('weekly_summaries')
-        .select('*')
-        .eq('student_id', studentId)
-        .order('submitted_at', { ascending: false })
-        .limit(20);
+      // Analyze learning patterns
+      const learningStyle = this.detectLearningStyle(feedbackData);
+      const preferredDifficulty = this.analyzeDifficultyPreference(feedbackData);
+      const interestAreas = this.identifyInterestAreas(feedbackData);
+      const strengths = this.identifyStrengths(feedbackData);
+      const improvementAreas = this.identifyImprovementAreas(feedbackData);
+      const engagementPatterns = this.analyzeEngagementPatterns(feedbackData);
 
-      if (summaryError) throw summaryError;
+      const profile: PersonalizationProfile = {
+        studentId,
+        learningStyle,
+        preferredDifficulty,
+        interestAreas,
+        strengths,
+        improvementAreas,
+        engagementPatterns
+      };
 
-      // Analyze patterns to build profile
-      const profile = this.buildPersonalizationProfile(studentId, feedbackData || [], summaryData || []);
+      // Store profile for future use
+      await this.storePersonalizationProfile(profile);
       
-      console.log('🎯 Generated personalization profile for student:', studentId);
       return profile;
     } catch (error) {
       console.error('Error generating personalization profile:', error);
-      throw new Error('Failed to generate personalization profile');
+      return this.getDefaultProfile(studentId);
     }
   }
 
-  async generatePredictiveInsights(
-    studentId: string, 
-    timeframe: 'week' | 'month' | 'semester' = 'week'
-  ): Promise<PredictiveInsight[]> {
+  // Advanced predictive analytics
+  async generatePredictiveInsights(studentId: string, timeframe: 'week' | 'month' | 'semester' = 'week'): Promise<PredictiveInsight[]> {
     try {
+      console.log('🔮 Generating predictive insights for student:', studentId);
+      
+      const profile = await this.generatePersonalizationProfile(studentId);
       const insights: PredictiveInsight[] = [];
 
-      // Get recent data for analysis
-      const [feedbackData, summaryData, alertData] = await Promise.all([
-        supabase.from('feedback').select('*').eq('student_id', studentId).order('submitted_at', { ascending: false }).limit(30),
-        supabase.from('weekly_summaries').select('*').eq('student_id', studentId).order('submitted_at', { ascending: false }).limit(10),
-        supabase.from('mental_health_alerts').select('*').eq('student_id', studentId).order('created_at', { ascending: false }).limit(20)
-      ]);
-
-      // Generate performance predictions
-      const performanceInsight = this.predictPerformance(feedbackData.data || [], timeframe);
+      // Performance prediction
+      const performanceInsight = await this.predictPerformance(studentId, profile, timeframe);
       if (performanceInsight) insights.push(performanceInsight);
 
-      // Generate engagement predictions
-      const engagementInsight = this.predictEngagement(feedbackData.data || [], timeframe);
+      // Engagement prediction
+      const engagementInsight = await this.predictEngagement(studentId, profile, timeframe);
       if (engagementInsight) insights.push(engagementInsight);
 
-      // Generate wellbeing predictions
-      const wellbeingInsight = this.predictWellbeing(summaryData.data || [], alertData.data || [], timeframe);
+      // Wellbeing prediction
+      const wellbeingInsight = await this.predictWellbeing(studentId, profile, timeframe);
       if (wellbeingInsight) insights.push(wellbeingInsight);
 
-      console.log('🔮 Generated predictive insights for student:', studentId);
-      return insights;
+      // Learning path recommendation
+      const learningPathInsight = await this.recommendLearningPath(studentId, profile);
+      if (learningPathInsight) insights.push(learningPathInsight);
+
+      return insights.sort((a, b) => b.confidence - a.confidence);
     } catch (error) {
       console.error('Error generating predictive insights:', error);
-      throw new Error('Failed to generate predictive insights');
+      return [];
     }
   }
 
-  async generateContentRecommendations(
-    studentId: string, 
-    subject?: string
-  ): Promise<ContentRecommendation[]> {
+  // Intelligent content recommendation
+  async generateContentRecommendations(studentId: string, subject?: string): Promise<LearningPathStep[]> {
     try {
-      // Get personalization profile first
+      console.log('📚 Generating content recommendations for student:', studentId);
+      
       const profile = await this.generatePersonalizationProfile(studentId);
-      
-      // Generate recommendations based on profile
-      const recommendations = this.buildContentRecommendations(profile, subject);
-      
-      console.log('📚 Generated content recommendations for student:', studentId);
-      return recommendations;
+      const recommendations: LearningPathStep[] = [];
+
+      // Get recent performance data
+      const { data: recentFeedback } = await supabase
+        .from('feedback')
+        .select(`
+          *,
+          class_schedules!inner(subject, lesson_topic)
+        `)
+        .eq('student_id', studentId)
+        .eq('class_schedules.subject', subject || '')
+        .order('submitted_at', { ascending: false })
+        .limit(10);
+
+      // Generate personalized learning path
+      const learningPath = this.createPersonalizedLearningPath(
+        profile,
+        recentFeedback || [],
+        subject
+      );
+
+      return learningPath;
     } catch (error) {
       console.error('Error generating content recommendations:', error);
-      throw new Error('Failed to generate content recommendations');
+      return [];
     }
   }
 
-  async analyzeTextFeedback(text: string): Promise<any> {
+  // Natural language processing for feedback analysis
+  async analyzeTextFeedback(textFeedback: string): Promise<{
+    sentiment: 'positive' | 'neutral' | 'negative';
+    emotions: string[];
+    topics: string[];
+    concerns: string[];
+    suggestions: string[];
+  }> {
     try {
-      const analysis = {
-        sentiment: this.analyzeSentiment(text),
-        emotionalState: this.detectEmotionalState(text),
-        learningIndicators: this.extractLearningIndicators(text),
-        language: this.detectLanguage(text),
-        keyTopics: this.extractKeyTopics(text),
-        riskFactors: this.assessRiskFactors(text),
-        confidence: this.calculateAnalysisConfidence(text)
-      };
+      console.log('📝 Analyzing text feedback with NLP');
+      
+      // Simple NLP analysis (in production, would use proper NLP service)
+      const sentiment = this.analyzeSentiment(textFeedback);
+      const emotions = this.extractEmotions(textFeedback);
+      const topics = this.extractTopics(textFeedback);
+      const concerns = this.extractConcerns(textFeedback);
+      const suggestions = this.generateSuggestions(textFeedback, sentiment);
 
-      console.log('📝 Analyzed text feedback');
-      return analysis;
+      return {
+        sentiment,
+        emotions,
+        topics,
+        concerns,
+        suggestions
+      };
     } catch (error) {
       console.error('Error analyzing text feedback:', error);
-      throw new Error('Failed to analyze text feedback');
+      return {
+        sentiment: 'neutral',
+        emotions: [],
+        topics: [],
+        concerns: [],
+        suggestions: []
+      };
     }
   }
 
-  private buildPersonalizationProfile(
-    studentId: string, 
-    feedbackData: any[], 
-    summaryData: any[]
-  ): PersonalizationProfile {
-    // Analyze learning style from feedback patterns
-    const learningStyle = this.determineLearningStyle(feedbackData);
-    
-    // Determine preferred language
-    const preferredLanguage = this.determinePreferredLanguage(feedbackData, summaryData);
-    
-    // Calculate interaction patterns
-    const interactionPatterns = this.analyzeInteractionPatterns(feedbackData);
-    
-    // Identify strength and improvement areas
-    const { strengthAreas, improvementAreas } = this.identifyLearningAreas(feedbackData);
-    
-    // Analyze emotional patterns
-    const emotionalPatterns = this.analyzeEmotionalPatterns(feedbackData, summaryData);
+  // Private helper methods
+  private detectLearningStyle(feedbackData: any[]): 'visual' | 'auditory' | 'kinesthetic' | 'reading' {
+    // Analyze patterns in feedback to detect learning style
+    const interestByType = feedbackData.reduce((acc, feedback) => {
+      // Simple heuristic based on lesson topics and interest levels
+      const topic = feedback.class_schedules?.lesson_topic?.toLowerCase() || '';
+      if (topic.includes('visual') || topic.includes('diagram') || topic.includes('chart')) {
+        acc.visual += feedback.interest || 0;
+      } else if (topic.includes('discussion') || topic.includes('presentation')) {
+        acc.auditory += feedback.interest || 0;
+      } else if (topic.includes('hands-on') || topic.includes('experiment')) {
+        acc.kinesthetic += feedback.interest || 0;
+      } else {
+        acc.reading += feedback.interest || 0;
+      }
+      return acc;
+    }, { visual: 0, auditory: 0, kinesthetic: 0, reading: 0 });
 
-    return {
-      studentId,
-      learningStyle,
-      preferredLanguage,
-      difficultyPreference: 'adaptive',
-      interactionPatterns,
-      strengthAreas,
-      improvementAreas,
-      emotionalPatterns,
-      lastUpdated: new Date().toISOString()
-    };
-  }
-
-  private determineLearningStyle(feedbackData: any[]): 'visual' | 'auditory' | 'kinesthetic' | 'reading' {
-    // Simple heuristic based on feedback patterns
-    const avgUnderstanding = feedbackData.length > 0 
-      ? feedbackData.reduce((sum, f) => sum + f.understanding, 0) / feedbackData.length 
-      : 3;
-    
-    if (avgUnderstanding >= 4) return 'visual';
-    if (avgUnderstanding >= 3) return 'reading';
-    return 'kinesthetic';
-  }
-
-  private determinePreferredLanguage(feedbackData: any[], summaryData: any[]): 'en' | 'lt' {
-    // Check for Lithuanian characters in recent feedback
-    const allText = [...feedbackData, ...summaryData]
-      .map(item => (item.what_went_well || '') + (item.suggestions || '') + (item.emotional_concerns || '') + (item.academic_concerns || ''))
-      .join(' ');
-    
-    const lithuanianChars = /[ąčęėįšųūž]/i;
-    return lithuanianChars.test(allText) ? 'lt' : 'en';
-  }
-
-  private analyzeInteractionPatterns(feedbackData: any[]) {
-    const recentFeedback = feedbackData.slice(0, 10);
-    
-    return {
-      avgSessionDuration: 15, // minutes - placeholder
-      preferredTimeOfDay: 'morning', // placeholder
-      responseSpeed: 'medium' as const
-    };
-  }
-
-  private identifyLearningAreas(feedbackData: any[]) {
-    const strengthAreas: string[] = [];
-    const improvementAreas: string[] = [];
-    
-    // Analyze subject performance patterns
-    if (feedbackData.length > 0) {
-      const avgGrowth = feedbackData.reduce((sum, f) => sum + f.educational_growth, 0) / feedbackData.length;
-      const avgInterest = feedbackData.reduce((sum, f) => sum + f.interest, 0) / feedbackData.length;
-      
-      if (avgGrowth >= 4) strengthAreas.push('Fast Learning');
-      if (avgInterest >= 4) strengthAreas.push('High Engagement');
-      if (avgGrowth < 3) improvementAreas.push('Learning Speed');
-      if (avgInterest < 3) improvementAreas.push('Subject Interest');
-    }
-    
-    return { strengthAreas, improvementAreas };
-  }
-
-  private analyzeEmotionalPatterns(feedbackData: any[], summaryData: any[]) {
-    const positiveIndicators: string[] = [];
-    const stressIndicators: string[] = [];
-    
-    // Analyze emotional states from feedback
-    const positiveStates = feedbackData.filter(f => 
-      ['excited', 'focused', 'happy', 'calm'].includes(f.emotional_state)
+    const maxStyle = Object.entries(interestByType).reduce((a, b) => 
+      interestByType[a[0] as keyof typeof interestByType] > interestByType[b[0] as keyof typeof interestByType] ? a : b
     );
+
+    return maxStyle[0] as 'visual' | 'auditory' | 'kinesthetic' | 'reading';
+  }
+
+  private analyzeDifficultyPreference(feedbackData: any[]): 'basic' | 'intermediate' | 'advanced' {
+    const avgUnderstanding = feedbackData.reduce((sum, f) => sum + (f.understanding || 0), 0) / feedbackData.length;
+    const avgInterest = feedbackData.reduce((sum, f) => sum + (f.interest || 0), 0) / feedbackData.length;
     
-    const stressStates = feedbackData.filter(f => 
-      ['stressed', 'frustrated', 'confused'].includes(f.emotional_state)
-    );
+    const combinedScore = (avgUnderstanding + avgInterest) / 2;
     
-    if (positiveStates.length > stressStates.length) {
-      positiveIndicators.push('Generally Positive');
-    }
+    if (combinedScore >= 4.5) return 'advanced';
+    if (combinedScore >= 3.5) return 'intermediate';
+    return 'basic';
+  }
+
+  private identifyInterestAreas(feedbackData: any[]): string[] {
+    const subjectInterest = new Map();
     
-    if (stressStates.length > positiveStates.length) {
-      stressIndicators.push('Frequent Stress');
-    }
+    feedbackData.forEach(feedback => {
+      const subject = feedback.class_schedules?.subject;
+      if (subject) {
+        const currentInterest = subjectInterest.get(subject) || { total: 0, count: 0 };
+        currentInterest.total += feedback.interest || 0;
+        currentInterest.count += 1;
+        subjectInterest.set(subject, currentInterest);
+      }
+    });
+
+    return Array.from(subjectInterest.entries())
+      .map(([subject, data]) => ({ subject, avg: data.total / data.count }))
+      .filter(item => item.avg >= 4.0)
+      .sort((a, b) => b.avg - a.avg)
+      .slice(0, 3)
+      .map(item => item.subject);
+  }
+
+  private identifyStrengths(feedbackData: any[]): string[] {
+    const subjectPerformance = new Map();
     
-    const engagementLevel = feedbackData.length > 0 
-      ? feedbackData.reduce((sum, f) => sum + f.interest, 0) / feedbackData.length / 5
-      : 0.5;
+    feedbackData.forEach(feedback => {
+      const subject = feedback.class_schedules?.subject;
+      if (subject) {
+        const current = subjectPerformance.get(subject) || { total: 0, count: 0 };
+        current.total += feedback.understanding || 0;
+        current.count += 1;
+        subjectPerformance.set(subject, current);
+      }
+    });
+
+    return Array.from(subjectPerformance.entries())
+      .map(([subject, data]) => ({ subject, avg: data.total / data.count }))
+      .filter(item => item.avg >= 4.0)
+      .sort((a, b) => b.avg - a.avg)
+      .slice(0, 2)
+      .map(item => item.subject);
+  }
+
+  private identifyImprovementAreas(feedbackData: any[]): string[] {
+    const subjectPerformance = new Map();
     
+    feedbackData.forEach(feedback => {
+      const subject = feedback.class_schedules?.subject;
+      if (subject) {
+        const current = subjectPerformance.get(subject) || { total: 0, count: 0 };
+        current.total += feedback.understanding || 0;
+        current.count += 1;
+        subjectPerformance.set(subject, current);
+      }
+    });
+
+    return Array.from(subjectPerformance.entries())
+      .map(([subject, data]) => ({ subject, avg: data.total / data.count }))
+      .filter(item => item.avg < 3.5)
+      .sort((a, b) => a.avg - b.avg)
+      .slice(0, 2)
+      .map(item => item.subject);
+  }
+
+  private analyzeEngagementPatterns(feedbackData: any[]): PersonalizationProfile['engagementPatterns'] {
+    const timePattern = this.analyzeTimePatterns(feedbackData);
+    const subjectPreferences = this.analyzeSubjectPreferences(feedbackData);
+    const feedbackFrequency = feedbackData.length / 30; // Feedback per month estimate
+
     return {
-      positiveIndicators,
-      stressIndicators,
-      engagementLevel
+      timeOfDay: timePattern,
+      subjectPreferences,
+      feedbackFrequency
     };
   }
 
-  private predictPerformance(feedbackData: any[], timeframe: string): PredictiveInsight | null {
-    if (feedbackData.length < 3) return null;
+  private analyzeTimePatterns(feedbackData: any[]): string {
+    // Simple time analysis - in production would be more sophisticated
+    const hours = feedbackData.map(f => new Date(f.submitted_at).getHours());
+    const avgHour = hours.reduce((sum, h) => sum + h, 0) / hours.length;
     
-    const recentPerformance = feedbackData.slice(0, 5);
-    const avgGrowth = recentPerformance.reduce((sum, f) => sum + f.educational_growth, 0) / recentPerformance.length;
-    const trend = this.calculateTrend(recentPerformance.map(f => f.educational_growth));
+    if (avgHour < 12) return 'morning';
+    if (avgHour < 17) return 'afternoon';
+    return 'evening';
+  }
+
+  private analyzeSubjectPreferences(feedbackData: any[]): Record<string, number> {
+    const preferences: Record<string, number> = {};
+    
+    feedbackData.forEach(feedback => {
+      const subject = feedback.class_schedules?.subject;
+      if (subject) {
+        const score = ((feedback.understanding || 0) + (feedback.interest || 0)) / 2;
+        preferences[subject] = (preferences[subject] || 0) + score;
+      }
+    });
+
+    // Normalize scores
+    const maxScore = Math.max(...Object.values(preferences));
+    Object.keys(preferences).forEach(subject => {
+      preferences[subject] = preferences[subject] / maxScore;
+    });
+
+    return preferences;
+  }
+
+  private async predictPerformance(studentId: string, profile: PersonalizationProfile, timeframe: string): Promise<PredictiveInsight | null> {
+    // Simple performance prediction logic
+    const avgStrengthScore = 4.2; // Would calculate from actual data
+    const improvementFactor = profile.improvementAreas.length > 0 ? 0.8 : 1.0;
+    const engagementFactor = profile.engagementPatterns.feedbackFrequency > 0.5 ? 1.1 : 0.9;
+    
+    const predictedScore = avgStrengthScore * improvementFactor * engagementFactor;
     
     return {
-      id: crypto.randomUUID(),
       type: 'performance',
       confidence: 0.75,
-      timeframe: timeframe === 'week' ? 'short_term' : 'long_term',
-      prediction: trend > 0 
-        ? `Performance trending upward - expect ${Math.round(trend * 20)}% improvement`
-        : `Performance needs attention - risk of ${Math.round(Math.abs(trend) * 20)}% decline`,
-      recommendedActions: trend > 0 
-        ? ['Continue current learning approach', 'Consider advanced materials']
-        : ['Provide additional support', 'Review learning strategy'],
-      impactLevel: Math.abs(trend) > 0.5 ? 'high' : 'medium',
-      metadata: { avgGrowth, trend }
+      prediction: `Predicted academic performance: ${predictedScore.toFixed(1)}/5.0`,
+      reasoning: `Based on current strengths in ${profile.strengths.join(', ')} and consistent engagement patterns`,
+      recommendations: [
+        'Continue focusing on strength areas',
+        'Allocate extra time for improvement areas',
+        'Maintain regular feedback submission'
+      ],
+      timeframe: timeframe === 'week' ? 'short_term' : 'long_term'
     };
   }
 
-  private predictEngagement(feedbackData: any[], timeframe: string): PredictiveInsight | null {
-    if (feedbackData.length < 3) return null;
-    
-    const recentEngagement = feedbackData.slice(0, 5);
-    const avgInterest = recentEngagement.reduce((sum, f) => sum + f.interest, 0) / recentEngagement.length;
+  private async predictEngagement(studentId: string, profile: PersonalizationProfile, timeframe: string): Promise<PredictiveInsight | null> {
+    const engagementScore = Math.min(5.0, profile.engagementPatterns.feedbackFrequency * 5);
     
     return {
-      id: crypto.randomUUID(),
       type: 'engagement',
-      confidence: 0.7,
-      timeframe: 'short_term',
-      prediction: avgInterest >= 4 
-        ? 'High engagement likely to continue'
-        : 'Engagement may decline without intervention',
-      recommendedActions: avgInterest >= 4 
-        ? ['Maintain current teaching style', 'Introduce challenges']
-        : ['Vary teaching methods', 'Increase interactive elements'],
-      impactLevel: avgInterest < 3 ? 'high' : 'medium',
-      metadata: { avgInterest }
+      confidence: 0.68,
+      prediction: `Predicted engagement level: ${engagementScore.toFixed(1)}/5.0`,
+      reasoning: `Based on feedback frequency and subject preferences`,
+      recommendations: [
+        'Focus on high-interest subjects during optimal times',
+        'Introduce variety in learning methods',
+        'Set small, achievable goals'
+      ],
+      timeframe: 'short_term'
     };
   }
 
-  private predictWellbeing(summaryData: any[], alertData: any[], timeframe: string): PredictiveInsight | null {
-    const recentConcerns = summaryData.filter(s => s.emotional_concerns && s.emotional_concerns.trim().length > 0);
-    const recentAlerts = alertData.filter(a => new Date(a.created_at) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000));
-    
-    const riskLevel = recentAlerts.length > 0 ? 'high' : recentConcerns.length > 2 ? 'medium' : 'low';
+  private async predictWellbeing(studentId: string, profile: PersonalizationProfile, timeframe: string): Promise<PredictiveInsight | null> {
+    // Check for mental health indicators
+    const { data: alertsData } = await supabase
+      .from('mental_health_alerts')
+      .select('*')
+      .eq('student_id', studentId)
+      .gte('created_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString());
+
+    const recentAlerts = alertsData?.length || 0;
+    const wellbeingScore = Math.max(1.0, 5.0 - (recentAlerts * 0.5));
     
     return {
-      id: crypto.randomUUID(),
       type: 'wellbeing',
-      confidence: 0.8,
-      timeframe: 'immediate',
-      prediction: riskLevel === 'high' 
-        ? 'Mental health support needed immediately'
-        : riskLevel === 'medium'
-        ? 'Monitor emotional wellbeing closely'
-        : 'Emotional wellbeing appears stable',
-      recommendedActions: riskLevel === 'high'
-        ? ['Contact school counselor', 'Immediate check-in required']
-        : riskLevel === 'medium'
-        ? ['Schedule wellness check', 'Provide emotional support resources']
-        : ['Continue positive reinforcement'],
-      impactLevel: riskLevel === 'high' ? 'high' : riskLevel === 'medium' ? 'medium' : 'low',
-      metadata: { riskLevel, recentConcerns: recentConcerns.length, recentAlerts: recentAlerts.length }
+      confidence: 0.65,
+      prediction: `Predicted wellbeing level: ${wellbeingScore.toFixed(1)}/5.0`,
+      reasoning: `Based on recent mental health indicators and engagement patterns`,
+      recommendations: [
+        'Monitor stress levels during peak study times',
+        'Encourage regular breaks and physical activity',
+        'Provide access to support resources'
+      ],
+      timeframe: 'immediate'
     };
   }
 
-  private buildContentRecommendations(profile: PersonalizationProfile, subject?: string): ContentRecommendation[] {
-    const recommendations: ContentRecommendation[] = [];
+  private async recommendLearningPath(studentId: string, profile: PersonalizationProfile): Promise<PredictiveInsight | null> {
+    const nextSteps = profile.improvementAreas.slice(0, 2);
     
-    // Base recommendations on learning style
-    if (profile.learningStyle === 'visual') {
-      recommendations.push({
-        id: crypto.randomUUID(),
-        type: 'lesson',
-        title: 'Visual Learning Materials',
-        description: 'Interactive diagrams and visual presentations',
-        difficulty: 'medium',
+    return {
+      type: 'learning_path',
+      confidence: 0.82,
+      prediction: `Recommended focus areas: ${nextSteps.join(', ')}`,
+      reasoning: `Tailored to learning style (${profile.learningStyle}) and current performance gaps`,
+      recommendations: [
+        `Start with ${profile.preferredDifficulty} level content`,
+        `Use ${profile.learningStyle} learning methods`,
+        'Build on existing strengths while addressing gaps'
+      ],
+      timeframe: 'long_term'
+    };
+  }
+
+  private createPersonalizedLearningPath(profile: PersonalizationProfile, recentFeedback: any[], subject?: string): LearningPathStep[] {
+    // Create a basic learning path based on profile
+    const steps: LearningPathStep[] = [];
+    
+    // Add steps based on improvement areas and learning style
+    profile.improvementAreas.forEach((area, index) => {
+      steps.push({
+        id: `step-${index + 1}`,
+        subject: area,
+        topic: `Foundation concepts in ${area}`,
+        difficulty: profile.preferredDifficulty,
         estimatedDuration: 30,
-        language: profile.preferredLanguage,
-        relevanceScore: 0.9,
-        tags: ['visual', 'interactive'],
-        adaptationReason: 'Matches visual learning style preference'
-      });
-    }
-    
-    // Add wellbeing-focused content if needed
-    if (profile.emotionalPatterns.stressIndicators.length > 0) {
-      recommendations.push({
-        id: crypto.randomUUID(),
-        type: 'support',
-        title: 'Stress Management Techniques',
-        description: 'Helpful strategies for managing academic stress',
-        difficulty: 'easy',
-        estimatedDuration: 15,
-        language: profile.preferredLanguage,
-        relevanceScore: 0.8,
-        tags: ['wellbeing', 'stress'],
-        adaptationReason: 'Addresses detected stress indicators'
-      });
-    }
-    
-    // Add content for improvement areas
-    profile.improvementAreas.forEach(area => {
-      recommendations.push({
-        id: crypto.randomUUID(),
-        type: 'exercise',
-        title: `${area} Practice Exercises`,
-        description: `Targeted exercises to improve ${area.toLowerCase()}`,
-        difficulty: 'medium',
-        estimatedDuration: 25,
-        language: profile.preferredLanguage,
-        relevanceScore: 0.75,
-        tags: [area.toLowerCase().replace(' ', '_'), 'practice'],
-        adaptationReason: `Targets improvement area: ${area}`
+        prerequisites: index > 0 ? [`step-${index}`] : [],
+        resources: this.generateResourcesForLearningStyle(profile.learningStyle, area)
       });
     });
-    
-    return recommendations;
+
+    return steps;
   }
 
-  private calculateTrend(values: number[]): number {
-    if (values.length < 2) return 0;
-    
-    const recent = values.slice(0, Math.ceil(values.length / 2));
-    const older = values.slice(Math.ceil(values.length / 2));
-    
-    const recentAvg = recent.reduce((sum, v) => sum + v, 0) / recent.length;
-    const olderAvg = older.reduce((sum, v) => sum + v, 0) / older.length;
-    
-    return (recentAvg - olderAvg) / olderAvg;
+  private generateResourcesForLearningStyle(learningStyle: string, subject: string): LearningPathStep['resources'] {
+    const baseResources = [
+      {
+        type: 'reading' as const,
+        description: `Introduction to ${subject} concepts`
+      },
+      {
+        type: 'exercise' as const,
+        description: `Practice exercises for ${subject}`
+      }
+    ];
+
+    switch (learningStyle) {
+      case 'visual':
+        return [
+          {
+            type: 'interactive' as const,
+            description: `Visual diagrams and charts for ${subject}`
+          },
+          ...baseResources
+        ];
+      case 'auditory':
+        return [
+          {
+            type: 'video' as const,
+            description: `Audio lectures on ${subject}`
+          },
+          ...baseResources
+        ];
+      case 'kinesthetic':
+        return [
+          {
+            type: 'interactive' as const,
+            description: `Hands-on activities for ${subject}`
+          },
+          ...baseResources
+        ];
+      default:
+        return baseResources;
+    }
   }
 
   private analyzeSentiment(text: string): 'positive' | 'neutral' | 'negative' {
-    const positiveWords = ['good', 'great', 'excellent', 'love', 'enjoy', 'fun', 'happy', 'geras', 'puikus', 'smagu'];
-    const negativeWords = ['bad', 'terrible', 'hate', 'difficult', 'boring', 'sad', 'blogas', 'sunkus', 'nuobodus'];
+    const positiveWords = ['good', 'great', 'excellent', 'love', 'like', 'enjoy', 'fun', 'interesting', 'helpful'];
+    const negativeWords = ['bad', 'terrible', 'hate', 'dislike', 'boring', 'difficult', 'confusing', 'hard'];
     
     const words = text.toLowerCase().split(/\s+/);
     const positiveCount = words.filter(word => positiveWords.includes(word)).length;
@@ -417,98 +487,85 @@ class AdvancedAIService {
     return 'neutral';
   }
 
-  private detectEmotionalState(text: string): string {
-    const emotionKeywords = {
-      excited: ['excited', 'thrilled', 'enthusiastic', 'susijaudinęs'],
-      stressed: ['stressed', 'overwhelmed', 'anxious', 'įtemptas'],
-      confused: ['confused', 'lost', 'unclear', 'sumišęs'],
-      happy: ['happy', 'joyful', 'pleased', 'laimingas'],
-      frustrated: ['frustrated', 'annoyed', 'irritated', 'frustrated']
+  private extractEmotions(text: string): string[] {
+    const emotionWords = {
+      'happy': ['happy', 'joy', 'excited', 'pleased'],
+      'frustrated': ['frustrated', 'annoyed', 'irritated'],
+      'confused': ['confused', 'puzzled', 'lost'],
+      'motivated': ['motivated', 'inspired', 'encouraged'],
+      'anxious': ['anxious', 'worried', 'nervous']
     };
+
+    const emotions: string[] = [];
+    const words = text.toLowerCase().split(/\s+/);
     
-    const lowerText = text.toLowerCase();
-    
-    for (const [emotion, keywords] of Object.entries(emotionKeywords)) {
-      if (keywords.some(keyword => lowerText.includes(keyword))) {
-        return emotion;
+    Object.entries(emotionWords).forEach(([emotion, keywords]) => {
+      if (keywords.some(keyword => words.includes(keyword))) {
+        emotions.push(emotion);
       }
-    }
-    
-    return 'neutral';
+    });
+
+    return emotions;
   }
 
-  private extractLearningIndicators(text: string): string[] {
-    const indicators: string[] = [];
+  private extractTopics(text: string): string[] {
+    const topicWords = ['math', 'science', 'english', 'history', 'assignment', 'test', 'homework', 'project'];
+    const words = text.toLowerCase().split(/\s+/);
+    return topicWords.filter(topic => words.some(word => word.includes(topic)));
+  }
+
+  private extractConcerns(text: string): string[] {
+    const concernIndicators = ['too hard', 'too fast', 'dont understand', 'need help', 'struggling'];
+    const concerns: string[] = [];
     const lowerText = text.toLowerCase();
     
-    if (lowerText.includes('understand') || lowerText.includes('suprantu')) {
-      indicators.push('comprehension');
-    }
-    if (lowerText.includes('practice') || lowerText.includes('praktika')) {
-      indicators.push('practice_need');
-    }
-    if (lowerText.includes('help') || lowerText.includes('pagalba')) {
-      indicators.push('support_request');
-    }
-    
-    return indicators;
+    concernIndicators.forEach(indicator => {
+      if (lowerText.includes(indicator)) {
+        concerns.push(`Student mentions: "${indicator}"`);
+      }
+    });
+
+    return concerns;
   }
 
-  private detectLanguage(text: string): 'en' | 'lt' | 'unknown' {
-    const lithuanianChars = /[ąčęėįšųūž]/i;
-    const englishWords = /\b(the|and|that|have|for|not|with|you|this|but|his|from|they)\b/i;
+  private generateSuggestions(text: string, sentiment: string): string[] {
+    const suggestions: string[] = [];
     
-    if (lithuanianChars.test(text)) return 'lt';
-    if (englishWords.test(text)) return 'en';
-    return 'unknown';
+    if (sentiment === 'negative') {
+      suggestions.push('Consider additional support resources');
+      suggestions.push('Schedule one-on-one discussion');
+    } else if (sentiment === 'positive') {
+      suggestions.push('Continue with current teaching approach');
+      suggestions.push('Consider introducing more advanced concepts');
+    }
+    
+    suggestions.push('Monitor progress in upcoming lessons');
+    return suggestions;
   }
 
-  private extractKeyTopics(text: string): string[] {
-    const topics: string[] = [];
-    const lowerText = text.toLowerCase();
-    
-    const topicKeywords = {
-      mathematics: ['math', 'algebra', 'geometry', 'matematika'],
-      science: ['science', 'physics', 'chemistry', 'gamtos'],
-      language: ['english', 'lithuanian', 'kalba', 'anglų'],
-      history: ['history', 'istorija'],
-      art: ['art', 'drawing', 'menas']
+  private async storePersonalizationProfile(profile: PersonalizationProfile): Promise<void> {
+    try {
+      // Store in localStorage for now (in production, would use database)
+      localStorage.setItem(`ai_profile_${profile.studentId}`, JSON.stringify(profile));
+    } catch (error) {
+      console.error('Error storing personalization profile:', error);
+    }
+  }
+
+  private getDefaultProfile(studentId: string): PersonalizationProfile {
+    return {
+      studentId,
+      learningStyle: 'reading',
+      preferredDifficulty: 'intermediate',
+      interestAreas: [],
+      strengths: [],
+      improvementAreas: [],
+      engagementPatterns: {
+        timeOfDay: 'morning',
+        subjectPreferences: {},
+        feedbackFrequency: 0.5
+      }
     };
-    
-    for (const [topic, keywords] of Object.entries(topicKeywords)) {
-      if (keywords.some(keyword => lowerText.includes(keyword))) {
-        topics.push(topic);
-      }
-    }
-    
-    return topics;
-  }
-
-  private assessRiskFactors(text: string): string[] {
-    const riskFactors: string[] = [];
-    const lowerText = text.toLowerCase();
-    
-    const riskKeywords = {
-      'academic_struggle': ['difficult', 'hard', 'cannot understand', 'sunku', 'nesuprantu'],
-      'emotional_distress': ['sad', 'depressed', 'alone', 'liūdnas', 'vienas'],
-      'social_issues': ['bullying', 'friends', 'lonely', 'patyčios', 'draugų'],
-      'family_stress': ['home', 'family', 'parents', 'namie', 'šeima']
-    };
-    
-    for (const [risk, keywords] of Object.entries(riskKeywords)) {
-      if (keywords.some(keyword => lowerText.includes(keyword))) {
-        riskFactors.push(risk);
-      }
-    }
-    
-    return riskFactors;
-  }
-
-  private calculateAnalysisConfidence(text: string): number {
-    const wordCount = text.split(/\s+/).length;
-    const baseConfidence = Math.min(0.9, wordCount / 50); // More words = higher confidence
-    
-    return Math.max(0.3, baseConfidence); // Minimum 30% confidence
   }
 }
 

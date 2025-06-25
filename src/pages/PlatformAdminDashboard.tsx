@@ -21,7 +21,6 @@ import DiscountNotifications from "@/components/platform-admin/DiscountNotificat
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import GDPRAdminDashboard from "@/components/platform-admin/GDPRAdminDashboard";
 import { securePlatformAdminService } from "@/services/securePlatformAdminService";
-import { useLanguage } from "@/contexts/LanguageContext";
 
 interface DashboardStats {
   totalStudents: number;
@@ -39,8 +38,6 @@ interface SchoolStats {
 
 const PlatformAdminDashboard = () => {
   const { admin, isLoading: adminLoading, logout, isAuthenticated } = usePlatformAdmin();
-  const { t } = useLanguage();
-  
   const [stats, setStats] = useState<DashboardStats>({
     totalStudents: 0,
     totalTeachers: 0,
@@ -189,7 +186,7 @@ const PlatformAdminDashboard = () => {
     return (
       <div className="min-h-screen bg-gradient-to-br from-brand-teal/10 via-white to-brand-orange/10 flex items-center justify-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-teal"></div>
-        <span className="ml-3 text-brand-dark">{t('platformAdmin.loadingAdminSession')}</span>
+        <span className="ml-3 text-brand-dark">Loading admin session...</span>
       </div>
     );
   }
@@ -199,10 +196,10 @@ const PlatformAdminDashboard = () => {
     return (
       <div className="min-h-screen bg-gradient-to-br from-brand-teal/10 via-white to-brand-orange/10 flex items-center justify-center">
         <div className="text-center">
-          <div className="text-lg text-red-600 mb-4">{t('platformAdmin.adminAccessDenied')}</div>
-          <p className="text-gray-600">{t('platformAdmin.pleaseLoginAdmin')}</p>
+          <div className="text-lg text-red-600 mb-4">Admin Access Denied</div>
+          <p className="text-gray-600">Please log in as an administrator</p>
           <a href="/console" className="text-blue-500 hover:text-blue-700 underline mt-4 inline-block">
-            {t('platformAdmin.goToAdminLogin')}
+            Go to Admin Login
           </a>
         </div>
       </div>
@@ -217,10 +214,10 @@ const PlatformAdminDashboard = () => {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-3xl font-bold text-brand-dark mb-2">
-                {t('platformAdmin.title')}
+                Platform Admin Dashboard
               </h1>
               <p className="text-brand-dark/70 text-lg">
-                {t('platformAdmin.welcome')}, {admin?.email} - {t('platformAdmin.platformAdministrator')}
+                Welcome, {admin?.email} - Platform Administrator
               </p>
             </div>
             <div className="flex gap-3">
@@ -232,7 +229,7 @@ const PlatformAdminDashboard = () => {
                 className="border-brand-orange/30 hover:bg-brand-orange/10 flex items-center gap-2"
               >
                 <RefreshCwIcon className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-                {isRefreshing ? t('platformAdmin.loading') : t('platformAdmin.refresh')}
+                {isRefreshing ? 'Loading...' : 'Refresh'}
               </Button>
               <Button
                 onClick={handleCleanupDemoData}
@@ -242,7 +239,7 @@ const PlatformAdminDashboard = () => {
                 className="border-red-300 hover:bg-red-50 text-red-600 hover:text-red-700 flex items-center gap-2"
               >
                 <TrashIcon className="w-4 h-4" />
-                {isCleaningUp ? t('platformAdmin.cleaning') : t('platformAdmin.cleanupDemoData')}
+                {isCleaningUp ? 'Cleaning...' : 'Cleanup Demo Data'}
               </Button>
               <LanguageSwitcher />
               <Button 
@@ -251,7 +248,7 @@ const PlatformAdminDashboard = () => {
                 className="border-brand-orange/30 hover:bg-brand-orange/10"
               >
                 <LogOutIcon className="w-4 h-4 mr-2" />
-                {t('platformAdmin.logout')}
+                Logout
               </Button>
             </div>
           </div>
@@ -260,7 +257,7 @@ const PlatformAdminDashboard = () => {
         {/* Error Display */}
         {fetchError && (
           <div className="bg-red-50/90 backdrop-blur-sm border border-red-200 rounded-xl p-4 mb-6">
-            <div className="text-red-800 font-medium">{t('platformAdmin.errorLoadingData')}</div>
+            <div className="text-red-800 font-medium">Error loading data:</div>
             <div className="text-red-600 text-sm mt-1">{fetchError}</div>
           </div>
         )}
@@ -270,7 +267,7 @@ const PlatformAdminDashboard = () => {
           <div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-lg border border-gray-200/50 p-8 mb-6">
             <div className="text-center">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-teal mx-auto mb-4"></div>
-              <p className="text-brand-dark/70">{t('platformAdmin.loadingDashboardData')}</p>
+              <p className="text-brand-dark/70">Loading dashboard data...</p>
             </div>
           </div>
         )}
@@ -284,7 +281,7 @@ const PlatformAdminDashboard = () => {
                   <UsersIcon className="w-6 h-6 text-brand-teal" />
                 </div>
                 <div>
-                  <p className="text-sm text-gray-600">{t('platformAdmin.totalStudents')}</p>
+                  <p className="text-sm text-gray-600">Total Students</p>
                   <p className="text-lg font-semibold text-brand-dark">{stats.totalStudents}</p>
                 </div>
               </div>
@@ -298,7 +295,7 @@ const PlatformAdminDashboard = () => {
                   <SchoolIcon className="w-6 h-6 text-brand-orange" />
                 </div>
                 <div>
-                  <p className="text-sm text-gray-600">{t('platformAdmin.totalSchools')}</p>
+                  <p className="text-sm text-gray-600">Total Schools</p>
                   <p className="text-lg font-semibold text-brand-dark">{stats.totalSchools}</p>
                 </div>
               </div>
@@ -312,7 +309,7 @@ const PlatformAdminDashboard = () => {
                   <Users className="w-6 h-6 text-brand-teal" />
                 </div>
                 <div>
-                  <p className="text-sm text-gray-600">{t('admin.totalTeachers')}</p>
+                  <p className="text-sm text-gray-600">Total Teachers</p>
                   <p className="text-lg font-semibold text-brand-dark">{stats.totalTeachers}</p>
                 </div>
               </div>
@@ -326,7 +323,7 @@ const PlatformAdminDashboard = () => {
                   <MessageSquareIcon className="w-6 h-6 text-brand-orange" />
                 </div>
                 <div>
-                  <p className="text-sm text-gray-600">{t('platformAdmin.totalResponses')}</p>
+                  <p className="text-sm text-gray-600">Total Responses</p>
                   <p className="text-lg font-semibold text-brand-dark">{stats.totalResponses}</p>
                 </div>
               </div>
@@ -345,28 +342,28 @@ const PlatformAdminDashboard = () => {
                   className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-brand-orange data-[state=active]:to-brand-teal data-[state=active]:text-white data-[state=inactive]:text-gray-600 data-[state=inactive]:hover:text-brand-dark border-b-2 border-transparent data-[state=active]:border-brand-teal rounded-none px-6 py-4 font-medium transition-all duration-200 whitespace-nowrap"
                 >
                   <Settings className="w-4 h-4 mr-2" />
-                  {t('platformAdmin.userManagement')}
+                  User Management
                 </TabsTrigger>
                 <TabsTrigger 
                   value="analytics" 
                   className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-brand-orange data-[state=active]:to-brand-teal data-[state=active]:text-white data-[state=inactive]:text-gray-600 data-[state=inactive]:hover:text-brand-dark border-b-2 border-transparent data-[state=active]:border-brand-teal rounded-none px-6 py-4 font-medium transition-all duration-200 whitespace-nowrap"
                 >
                   <MessageSquareIcon className="w-4 h-4 mr-2" />
-                  {t('platformAdmin.analyticsReports')}
+                  Analytics & Reports
                 </TabsTrigger>
                 <TabsTrigger 
                   value="gdpr" 
                   className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-brand-orange data-[state=active]:to-brand-teal data-[state=active]:text-white data-[state=inactive]:text-gray-600 data-[state=inactive]:hover:text-brand-dark border-b-2 border-transparent data-[state=active]:border-brand-teal rounded-none px-6 py-4 font-medium transition-all duration-200 whitespace-nowrap"
                 >
                   <Shield className="w-4 h-4 mr-2" />
-                  {t('platformAdmin.gdprPrivacy')}
+                  GDPR & Privacy
                 </TabsTrigger>
                 <TabsTrigger 
                   value="security" 
                   className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-brand-orange data-[state=active]:to-brand-teal data-[state=active]:text-white data-[state=inactive]:text-gray-600 data-[state=inactive]:hover:text-brand-dark border-b-2 border-transparent data-[state=active]:border-brand-teal rounded-none px-6 py-4 font-medium transition-all duration-200 whitespace-nowrap"
                 >
                   <Shield className="w-4 h-4 mr-2" />
-                  {t('platformAdmin.security')}
+                  Security
                 </TabsTrigger>
               </TabsList>
             </div>
@@ -377,10 +374,10 @@ const PlatformAdminDashboard = () => {
               <TabsContent value="management" className="mt-0">
                 <Tabs defaultValue="schools" className="space-y-4">
                   <TabsList className="bg-gray-100/50">
-                    <TabsTrigger value="schools">{t('platformAdmin.schools')}</TabsTrigger>
-                    <TabsTrigger value="teachers">{t('admin.totalTeachers')}</TabsTrigger>
-                    <TabsTrigger value="students">{t('platformAdmin.students')}</TabsTrigger>
-                    <TabsTrigger value="doctors">{t('platformAdmin.doctors')}</TabsTrigger>
+                    <TabsTrigger value="schools">Schools</TabsTrigger>
+                    <TabsTrigger value="teachers">Teachers</TabsTrigger>
+                    <TabsTrigger value="students">Students</TabsTrigger>
+                    <TabsTrigger value="doctors">Doctors</TabsTrigger>
                   </TabsList>
 
                   <TabsContent value="schools">
@@ -430,27 +427,27 @@ const PlatformAdminDashboard = () => {
           <Card className="bg-white/90 backdrop-blur-sm border-gray-200/50 shadow-lg">
             <CardContent className="pt-6">
               <p className="text-sm text-brand-dark/70 mb-4">
-                {t('platformAdmin.lastUpdated')} {lastUpdated || t('platformAdmin.never')} 
+                Last updated: {lastUpdated || 'Never'} 
                 <span className={`ml-2 ${hasDataLoaded ? 'text-green-600' : 'text-yellow-600'}`}>
-                  {hasDataLoaded ? t('platformAdmin.dataLoaded') : t('platformAdmin.loadingStatus')}
+                  {hasDataLoaded ? '✓ Data loaded' : '⏳ Loading...'}
                 </span>
               </p>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                 <div>
-                  <span className="font-medium text-brand-dark">{t('platformAdmin.monthlyRevenue')}</span>
+                  <span className="font-medium text-brand-dark">Monthly Revenue:</span>
                   <span className="ml-2 text-green-600">€{stats.monthlyRevenue.toFixed(2)}</span>
                 </div>
                 <div>
-                  <span className="font-medium text-brand-dark">{t('platformAdmin.activeSubscriptions')}</span>
+                  <span className="font-medium text-brand-dark">Active Subscriptions:</span>
                   <span className="ml-2 text-brand-teal">{stats.totalSubscriptions}</span>
                 </div>
                 <div>
-                  <span className="font-medium text-brand-dark">{t('platformAdmin.totalUsers')}</span>
+                  <span className="font-medium text-brand-dark">Total Users:</span>
                   <span className="ml-2 text-brand-orange">{stats.totalStudents + stats.totalTeachers}</span>
                 </div>
                 <div>
-                  <span className="font-medium text-brand-dark">{t('platformAdmin.systemStatus')}</span>
-                  <span className="ml-2 text-green-600">{t('platformAdmin.online')}</span>
+                  <span className="font-medium text-brand-dark">System Status:</span>
+                  <span className="ml-2 text-green-600">✅ Online</span>
                 </div>
               </div>
             </CardContent>

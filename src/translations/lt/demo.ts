@@ -241,21 +241,6 @@ export const ltDemoTranslations = {
   'demo.teacher.planningComplete': 'Planavimas baigtas',
   'demo.teacher.readyForNextWeek': 'Pasiruošę kitai mokymo savaitei',
 
-  // Missing translations for hardcoded English text
-  'demo.discoverFuture': 'Atraskite ateities švietimą',
-  'demo.discoverDescription': 'Transformuokite mokymosi patirtį su mūsų inovatyvia platforma, skirta studentų sėkmei ir gerovei.',
-  'demo.realUserExperience': 'Tikra vartotojo patirtis',
-  'demo.signUpTestFeatures': 'Užsiregistruokite ir išbandykite visas funkcijas',
-  'demo.experienceCompletePlatform': 'Patirkite visą platformą',
-  'demo.realAuthentication': 'Tikras autentifikavimas',
-  'demo.realAuthDescription': 'Užsiregistruokite su tikromis paskyromis ir patirkite tikrus saugumo srautus',
-  'demo.completeWorkflows': 'Išbaigtos darbo eigos',
-  'demo.completeWorkflowsDescription': 'Išbandykite visą mokytojų ir studentų patirtį su tikrais duomenimis',
-  'demo.actualIntegration': 'Tikra integracija',
-  'demo.actualIntegrationDescription': 'Patirkite, kaip visi komponentai veikia kartu praktikoje',
-  'demo.readyToExperience': 'Pasiruošę patirti tikrą platformą?',
-  'demo.signUpNowTest': 'Užsiregistruokite dabar ir išbandykite visas funkcijas su tikru autentifikavimu ir duomenų srautais.',
-
   // Key features and other demo-related translations
   'demo.keyFeaturesShown': 'Rodomos pagrindinės funkcijos',
   'demo.interactiveSimulation': 'Interaktyvus modeliavimas',

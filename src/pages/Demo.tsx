@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -71,7 +70,7 @@ const Demo = () => {
                 className="flex items-center gap-2 text-gray-600 hover:text-gray-900"
               >
                 <ArrowLeft className="h-4 w-4" />
-                {t('demo.page.backToHome')}
+                {t('navigation.backToHome')}
               </Button>
               <div className="flex items-center gap-2">
                 <GraduationCap className="h-6 w-6 text-primary" />
@@ -130,17 +129,17 @@ const Demo = () => {
                     {t('demo.simulation.student.description')}
                   </CardDescription>
                   <div className="space-y-2 text-sm text-gray-600 mb-4">
-                    <p>{t('demo.features.student.1')}</p>
-                    <p>{t('demo.features.student.2')}</p>
-                    <p>{t('demo.features.student.6')}</p>
-                    <p>• {t('demo.interactive.student')}</p>
+                    <p>• Experience the complete student dashboard</p>
+                    <p>• Submit real feedback on lessons</p>
+                    <p>• Access mental health support features</p>
+                    <p>• Track your learning progress</p>
                   </div>
                   <Button 
                     onClick={handleStudentDemo}
                     className="w-full bg-brand-teal hover:bg-brand-dark text-white"
                   >
                     <Play className="w-4 h-4 mr-2" />
-                    {t('demo.cta.studentAccess')}
+                    Try Student Experience
                   </Button>
                 </CardContent>
               </Card>
@@ -165,17 +164,17 @@ const Demo = () => {
                     {t('demo.simulation.teacher.description')}
                   </CardDescription>
                   <div className="space-y-2 text-sm text-gray-600 mb-4">
-                    <p>{t('demo.features.teacher.1')}</p>
-                    <p>{t('demo.features.teacher.2')}</p>
-                    <p>{t('demo.features.teacher.3')}</p>
-                    <p>{t('demo.features.teacher.4')}</p>
+                    <p>• Create and manage class schedules</p>
+                    <p>• View real-time student feedback</p>
+                    <p>• Access comprehensive analytics</p>
+                    <p>• Monitor student well-being</p>
                   </div>
                   <Button 
                     onClick={handleTeacherDemo}
                     className="w-full bg-brand-teal hover:bg-brand-dark text-white"
                   >
                     <Play className="w-4 h-4 mr-2" />
-                    {t('demo.interactive.teacher')}
+                    Try Teacher Experience
                   </Button>
                 </CardContent>
               </Card>
@@ -200,17 +199,17 @@ const Demo = () => {
                     {t('demo.simulation.mentalHealth.description')}
                   </CardDescription>
                   <div className="space-y-2 text-sm text-gray-600 mb-4">
-                    <p>{t('demo.features.mentalHealth.3')}</p>
-                    <p>{t('demo.features.mentalHealth.2')}</p>
-                    <p>{t('demo.features.mentalHealth.4')}</p>
-                    <p>{t('demo.features.mentalHealth.5')}</p>
+                    <p>• Monitor student mental health alerts</p>
+                    <p>• Access confidential support tools</p>
+                    <p>• Create intervention strategies</p>
+                    <p>• Collaborate with teaching staff</p>
                   </div>
                   <Button 
                     onClick={() => setActiveDemo('mentalHealth')}
                     className="w-full bg-brand-teal hover:bg-brand-dark text-white"
                   >
                     <Play className="w-4 h-4 mr-2" />
-                    {t('demo.features.mentalHealth.1')}
+                    Try Mental Health Tools
                   </Button>
                 </CardContent>
               </Card>
@@ -227,52 +226,52 @@ const Demo = () => {
               
               <div className="bg-brand-gradient text-white rounded-lg p-8 max-w-md mx-auto mb-12 shadow-xl">
                 <p className="text-4xl font-black tracking-wide drop-shadow-lg text-center">
-                  {t('demo.realUserExperience')}
+                  Real User Experience
                 </p>
                 <p className="text-xl font-bold mt-3 opacity-95 drop-shadow-md text-center">
-                  {t('demo.signUpTestFeatures')}
+                  Sign up and test all features
                 </p>
               </div>
             </div>
 
             {/* Key Features */}
             <div className="mt-16 bg-white rounded-lg p-8 shadow-sm">
-              <h3 className="text-2xl font-bold text-center mb-8">{t('demo.experienceCompletePlatform')}</h3>
+              <h3 className="text-2xl font-bold text-center mb-8">Experience the Complete Platform</h3>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                 <div className="text-center">
                   <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
                     <Play className="h-8 w-8 text-blue-600" />
                   </div>
-                  <h4 className="text-lg font-semibold mb-2">{t('demo.realAuthentication')}</h4>
-                  <p className="text-gray-600">{t('demo.realAuthDescription')}</p>
+                  <h4 className="text-lg font-semibold mb-2">Real Authentication</h4>
+                  <p className="text-gray-600">Sign up with real accounts and experience actual security flows</p>
                 </div>
                 <div className="text-center">
                   <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
                     <Users className="h-8 w-8 text-green-600" />
                   </div>
-                  <h4 className="text-lg font-semibold mb-2">{t('demo.completeWorkflows')}</h4>
-                  <p className="text-gray-600">{t('demo.completeWorkflowsDescription')}</p>
+                  <h4 className="text-lg font-semibold mb-2">Complete Workflows</h4>
+                  <p className="text-gray-600">Test the full teacher and student experience with real data</p>
                 </div>
                 <div className="text-center">
                   <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
                     <Heart className="h-8 w-8 text-purple-600" />
                   </div>
-                  <h4 className="text-lg font-semibold mb-2">{t('demo.actualIntegration')}</h4>
-                  <p className="text-gray-600">{t('demo.actualIntegrationDescription')}</p>
+                  <h4 className="text-lg font-semibold mb-2">Actual Integration</h4>
+                  <p className="text-gray-600">Experience how all components work together in practice</p>
                 </div>
               </div>
             </div>
 
             {/* Call to Action */}
             <div className="mt-16 bg-brand-gradient text-white rounded-lg p-8 text-center">
-              <h3 className="text-2xl font-bold mb-4">{t('demo.readyToExperience')}</h3>
-              <p className="text-lg mb-6 opacity-90">{t('demo.signUpNowTest')}</p>
+              <h3 className="text-2xl font-bold mb-4">Ready to Experience the Real Platform?</h3>
+              <p className="text-lg mb-6 opacity-90">Sign up now and test all features with real authentication and data flows.</p>
               <Button 
                 size="lg" 
                 className="text-xl px-12 py-4 bg-brand-orange hover:bg-brand-orange/90 text-white transform scale-125"
                 onClick={handleStartFreeTrial}
               >
-                {t('demo.cta.startTrial')}
+                {t('pricing.startFreeTrial')}
               </Button>
             </div>
           </>
@@ -290,7 +289,7 @@ const Demo = () => {
                       className="flex items-center gap-2"
                     >
                       <ArrowLeft className="h-4 w-4" />
-                      {t('demo.page.backToHome')}
+                      Back to Demos
                     </Button>
                     <h2 className="text-2xl font-bold">
                       {activeDemo === 'student' && t('demo.simulation.student.title')}
@@ -312,7 +311,7 @@ const Demo = () => {
                       className="flex items-center gap-2"
                     >
                       <RotateCcw className="h-4 w-4" />
-                      {t('demo.simulation.reset')}
+                      Reset
                     </Button>
                   </div>
                 </div>
@@ -334,8 +333,8 @@ const Demo = () => {
                     {activeDemo === 'mentalHealth' && (
                       <div className="text-center py-12">
                         <Heart className="h-16 w-16 text-purple-600 mx-auto mb-4" />
-                        <h3 className="text-xl font-semibold mb-2">{t('demo.simulation.mentalHealth.title')}</h3>
-                        <p className="text-gray-600">{t('demo.simulation.mentalHealth.description')}</p>
+                        <h3 className="text-xl font-semibold mb-2">Mental Health Support Demo</h3>
+                        <p className="text-gray-600">Coming soon...</p>
                       </div>
                     )}
                   </CardContent>
@@ -346,7 +345,7 @@ const Demo = () => {
               <div className="lg:col-span-4">
                 <Card className="h-full">
                   <CardHeader>
-                    <CardTitle>{t('demo.keyFeaturesShown')}</CardTitle>
+                    <CardTitle>Demo Information</CardTitle>
                   </CardHeader>
                   <CardContent>
                     {activeDemo === 'student' && (
@@ -355,12 +354,12 @@ const Demo = () => {
                           {t('demo.simulation.student.description')}
                         </p>
                         <div className="space-y-2">
-                          <h4 className="font-semibold">{t('demo.keyFeaturesShown')}:</h4>
+                          <h4 className="font-semibold">Key Features:</h4>
                           <ul className="text-sm text-gray-600 space-y-1">
-                            <li>{t('demo.features.student.1')}</li>
-                            <li>{t('demo.features.student.2')}</li>
-                            <li>{t('demo.features.student.6')}</li>
-                            <li>• {t('demo.interactive.student')}</li>
+                            <li>• Complete dashboard experience</li>
+                            <li>• Interactive feedback forms</li>
+                            <li>• Mental health support access</li>
+                            <li>• Real-time progress tracking</li>
                           </ul>
                         </div>
                       </div>
@@ -371,12 +370,12 @@ const Demo = () => {
                           {t('demo.simulation.teacher.description')}
                         </p>
                         <div className="space-y-2">
-                          <h4 className="font-semibold">{t('demo.keyFeaturesShown')}:</h4>
+                          <h4 className="font-semibold">Key Features:</h4>
                           <ul className="text-sm text-gray-600 space-y-1">
-                            <li>{t('demo.features.teacher.1')}</li>
-                            <li>{t('demo.features.teacher.2')}</li>
-                            <li>{t('demo.features.teacher.3')}</li>
-                            <li>{t('demo.features.teacher.4')}</li>
+                            <li>• Comprehensive analytics dashboard</li>
+                            <li>• Student progress monitoring</li>
+                            <li>• Mental health alerts</li>
+                            <li>• Performance insights</li>
                           </ul>
                         </div>
                       </div>
