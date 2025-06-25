@@ -158,10 +158,14 @@ class AdvancedAIAnalyticsService {
     // Predict potential risk escalation
     const riskPrediction = this.predictRiskEscalation(alerts);
     if (riskPrediction.probability > 0.6) {
+      const severity: 'info' | 'warning' | 'critical' = 
+        riskPrediction.probability > 0.8 ? 'critical' : 
+        riskPrediction.probability > 0.6 ? 'warning' : 'info';
+        
       insights.push({
         id: crypto.randomUUID(),
         type: 'prediction',
-        severity: riskPrediction.severity,
+        severity,
         title: 'Risk Escalation Prediction',
         description: `${Math.round(riskPrediction.probability * 100)}% probability of increased mental health concerns in the next week.`,
         confidence: riskPrediction.confidence,
@@ -207,11 +211,11 @@ class AdvancedAIAnalyticsService {
     }, {} as Record<string, any[]>);
     
     const significantFindings = Object.entries(languagePatterns)
-      .filter(([_, alerts]) => alerts.length >= 3)
-      .map(([lang, alerts]) => ({
+      .filter(([_, alertsForLang]) => Array.isArray(alertsForLang) && alertsForLang.length >= 3)
+      .map(([lang, alertsForLang]) => ({
         language: lang,
-        avgSeverity: alerts.reduce((sum, a) => sum + a.severity_level, 0) / alerts.length,
-        count: alerts.length
+        avgSeverity: alertsForLang.reduce((sum, a) => sum + a.severity_level, 0) / alertsForLang.length,
+        count: alertsForLang.length
       }));
     
     return {
@@ -259,7 +263,6 @@ class AdvancedAIAnalyticsService {
     
     return {
       probability,
-      severity: probability > 0.8 ? 'critical' : probability > 0.6 ? 'warning' : 'info',
       confidence: Math.min(0.9, alerts.length / 30),
       atRiskStudents: recentWeek
         .filter(a => a.severity_level >= 4)

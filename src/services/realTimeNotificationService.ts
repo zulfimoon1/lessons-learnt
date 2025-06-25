@@ -102,12 +102,13 @@ class RealTimeNotificationService {
 
   async acknowledgeAlert(alertId: string, userId: string) {
     try {
+      // Store acknowledgment in mental_health_alerts table instead
       await supabase
-        .from('notification_alerts')
+        .from('mental_health_alerts')
         .update({ 
-          acknowledged: true,
-          acknowledged_by: userId,
-          acknowledged_at: new Date().toISOString()
+          is_reviewed: true,
+          reviewed_by: userId,
+          reviewed_at: new Date().toISOString()
         })
         .eq('id', alertId);
     } catch (error) {
@@ -131,15 +132,15 @@ class RealTimeNotificationService {
         this.subscriptions.push({
           id: crypto.randomUUID(),
           userId,
-          role: preferences.role || 'teacher',
+          role: (preferences.role || 'teacher') as 'teacher' | 'admin' | 'counselor',
           school: preferences.school || '',
           alertTypes: preferences.alertTypes || ['distress', 'crisis'],
           isActive: preferences.isActive ?? true
         });
       }
 
-      // Save to database
-      await this.saveNotificationPreferences(userId);
+      // Save to local storage for persistence
+      this.saveToLocalStorage(userId);
     } catch (error) {
       console.error('Failed to update notification preferences:', error);
     }
@@ -189,19 +190,21 @@ class RealTimeNotificationService {
 
   private async storeAlert(alert: RealTimeAlert) {
     try {
+      // Store in mental_health_alerts table instead
       await supabase
-        .from('notification_alerts')
+        .from('mental_health_alerts')
         .insert({
-          id: alert.id,
-          type: alert.type,
-          priority: alert.priority,
-          title: alert.title,
-          message: alert.message,
           student_id: alert.studentId,
-          student_name: alert.studentName,
+          student_name: alert.studentName || 'Unknown',
           school: alert.school,
-          analysis_data: alert.analysis,
-          acknowledged: alert.acknowledged
+          grade: 'Unknown',
+          content: alert.message,
+          source_table: 'real_time_alerts',
+          source_id: crypto.randomUUID(),
+          severity_level: alert.priority === 'critical' ? 5 : 
+                         alert.priority === 'high' ? 4 : 
+                         alert.priority === 'medium' ? 3 : 2,
+          alert_type: alert.type
         });
     } catch (error) {
       console.error('Failed to store alert:', error);
@@ -237,27 +240,17 @@ class RealTimeNotificationService {
 
   private async loadNotificationPreferences(userId: string, role: string, school: string) {
     try {
-      const { data, error } = await supabase
-        .from('notification_preferences')
-        .select('*')
-        .eq('user_id', userId)
-        .single();
-
-      if (data && !error) {
-        this.subscriptions.push({
-          id: data.id,
-          userId,
-          role: data.role || role,
-          school: data.school || school,
-          alertTypes: data.alert_types || ['distress', 'crisis'],
-          isActive: data.is_active ?? true
-        });
+      // Load from local storage for now
+      const stored = localStorage.getItem(`notification_preferences_${userId}`);
+      if (stored) {
+        const preferences = JSON.parse(stored);
+        this.subscriptions.push(preferences);
       } else {
         // Create default subscription
         this.subscriptions.push({
           id: crypto.randomUUID(),
           userId,
-          role,
+          role: role as 'teacher' | 'admin' | 'counselor',
           school,
           alertTypes: ['distress', 'crisis'],
           isActive: true
@@ -268,22 +261,10 @@ class RealTimeNotificationService {
     }
   }
 
-  private async saveNotificationPreferences(userId: string) {
+  private saveToLocalStorage(userId: string) {
     const subscription = this.subscriptions.find(sub => sub.userId === userId);
-    if (!subscription) return;
-
-    try {
-      await supabase
-        .from('notification_preferences')
-        .upsert({
-          user_id: userId,
-          role: subscription.role,
-          school: subscription.school,
-          alert_types: subscription.alertTypes,
-          is_active: subscription.isActive
-        });
-    } catch (error) {
-      console.error('Failed to save notification preferences:', error);
+    if (subscription) {
+      localStorage.setItem(`notification_preferences_${userId}`, JSON.stringify(subscription));
     }
   }
 
