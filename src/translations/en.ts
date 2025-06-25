@@ -1,4 +1,3 @@
-
 import { enAuthTranslations } from './en/auth';
 import { enTeacherTranslations } from './en/teacher';
 import { enWeeklyTranslations } from './en/weekly';
@@ -272,7 +271,7 @@ export const enTranslations = {
   'pricing.bestValue': 'Best Value',
   'pricing.annual': 'Annual',
   'pricing.saveExclamation': 'Save 20%!',
-  'pricing.saveThirty': 'Save 30%',
+  'pricing.saveThirty': 'Save 20%',
   'pricing.volumeDiscountsDetails': 'Volume discounts available for 5+ teachers',
   'pricing.schoolAdmin': 'School Admin',
   'pricing.completeTransformation': 'Complete school transformation',
@@ -365,6 +364,7 @@ export const enTranslations = {
   'demo.featuresLine1': '5+ Features',
   'demo.featuresLine2': '3+ User Types',
   'demo.experienceComplete': 'Experience the Complete Platform',
+  'demo.registerNow': 'Register Now',
   'demo.studentExperience': 'Student Experience',
   'demo.studentExperienceDesc': 'Submit lesson feedback, share weekly summaries, and access mental health support - all in a safe, anonymous environment.',
   'demo.teacherDashboard': 'Teacher Dashboard',

@@ -1,12 +1,17 @@
-
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { BookOpenIcon, UserIcon, BarChart3Icon, HeartIcon, PlayIcon, ShieldCheckIcon } from "lucide-react";
+import { BookOpenIcon, UserIcon, BarChart3Icon, HeartIcon, PlayIcon, ShieldCheckIcon, UserPlusIcon } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useNavigate } from "react-router-dom";
 
 const DemoSection = () => {
   const { t } = useLanguage();
+  const navigate = useNavigate();
+
+  const handleRegisterNow = () => {
+    navigate('/teacher-login');
+  };
 
   return (
     <section className="bg-white py-20">
@@ -37,6 +42,17 @@ const DemoSection = () => {
             <p className="text-xl font-bold mt-3 opacity-95 drop-shadow-md">
               {t('demo.experienceComplete')}
             </p>
+            
+            {/* Register Now Button */}
+            <div className="mt-6">
+              <Button 
+                onClick={handleRegisterNow}
+                className="bg-brand-orange hover:bg-brand-orange/90 text-white px-8 py-3 text-lg font-semibold shadow-lg hover:shadow-xl transition-all transform hover:scale-105"
+              >
+                <UserPlusIcon className="w-5 h-5 mr-2" />
+                {t('demo.registerNow')}
+              </Button>
+            </div>
           </div>
         </div>
 
