@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -8,9 +9,10 @@ import { Navigate, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { useIsMobile } from "@/hooks/use-mobile";
 import DashboardHeader from "@/components/dashboard/DashboardHeader";
-import UpcomingClassesTab from "@/components/dashboard/UpcomingClassesTab";
+import StudentUpcomingClasses from "@/components/dashboard/student/StudentUpcomingClasses";
 import FeedbackTab from "@/components/dashboard/FeedbackTab";
 import WeeklySummaryTab from "@/components/dashboard/WeeklySummaryTab";
+import MentalHealthSupportTab from "@/components/dashboard/MentalHealthSupportTab";
 import WelcomeSection from "@/components/dashboard/student/WelcomeSection";
 import QuickActionsCard from "@/components/dashboard/student/QuickActionsCard";
 import WellnessTracker from "@/components/dashboard/student/WellnessTracker";
@@ -55,9 +57,9 @@ const StudentDashboard: React.FC = () => {
   const handleLogout = async () => {
     try {
       logout();
-      toast.success(t('auth.logoutSuccess') || 'Logged out successfully');
+      toast.success(t('teacher.logout.success'));
     } catch (error) {
-      toast.error(t('auth.logoutError') || 'Logout failed');
+      toast.error(t('auth.logoutError'));
     }
   };
 
@@ -70,7 +72,7 @@ const StudentDashboard: React.FC = () => {
 
   const handleMoodSubmit = (entry: any) => {
     console.log('Mood entry submitted:', entry);
-    toast.success(t('wellness.submitted') || 'Wellness check submitted successfully');
+    toast.success(t('wellness.submitted'));
     // Here you would typically save to database
   };
 
@@ -82,55 +84,44 @@ const StudentDashboard: React.FC = () => {
     {
       value: 'classes',
       icon: CalendarIcon,
-      label: t('class.upcomingClasses') || 'Classes',
+      label: t('dashboard.upcomingClasses'),
       component: (
-        <UpcomingClassesTab
-          classes={upcomingClasses}
-          studentGrade={student.grade}
-          studentSchool={student.school}
+        <StudentUpcomingClasses
+          student={student}
+          onClassCountChange={(count) => console.log('Class count:', count)}
         />
       )
     },
     {
       value: 'feedback',
       icon: MessageSquareIcon,
-      label: t('dashboard.feedback') || 'Feedback',
+      label: t('dashboard.feedback'),
       component: <FeedbackTab />
     },
     {
       value: 'summary',
       icon: FileTextIcon,
-      label: t('weekly.summary') || 'Summary',
+      label: t('dashboard.weeklySummary'),
       component: <WeeklySummaryTab student={student} />
     },
     {
       value: 'wellness',
       icon: HeartIcon,
-      label: t('features.mentalHealth.title') || 'Wellness',
+      label: t('dashboard.mentalHealthSupport'),
       component: (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <WellnessTracker
-            onMoodSubmit={handleMoodSubmit}
-            recentEntries={[]} // Would be loaded from database
-          />
-          <div className="space-y-4">
-            <div className="text-center py-8">
-              <HeartIcon className="w-16 h-16 text-brand-orange mx-auto mb-4" />
-              <h3 className="text-xl font-semibold mb-2">
-                {t('features.mentalHealth.title') || 'Mental Health Support'}
-              </h3>
-              <p className="text-muted-foreground max-w-md mx-auto">
-                {t('features.mentalHealth.description') || 'Access wellness resources and mental health support when you need it.'}
-              </p>
-            </div>
-          </div>
-        </div>
+        <MentalHealthSupportTab
+          psychologists={[]}
+          studentId={student.id}
+          studentName={student.full_name}
+          studentSchool={student.school}
+          studentGrade={student.grade}
+        />
       )
     },
     {
       value: 'analytics',
       icon: BarChartIcon,
-      label: t('analytics.title') || 'Analytics',
+      label: t('analytics.title'),
       component: (
         <StudentAnalyticsDashboard
           studentId={student.id}
@@ -144,13 +135,13 @@ const StudentDashboard: React.FC = () => {
   return (
     <div className="min-h-screen bg-background">
       <DashboardHeader
-        title={t('dashboard.studentDashboard') || 'Student Dashboard'}
+        title={t('dashboard.studentDashboard')}
         userName={student.full_name}
         onLogout={handleLogout}
       />
 
       <main className="max-w-7xl mx-auto p-3 md:p-6 space-y-4 md:space-y-6">
-        {/* Welcome Section - Preserved */}
+        {/* Welcome Section */}
         <WelcomeSection
           studentName={student.full_name}
           school={student.school}
@@ -158,17 +149,17 @@ const StudentDashboard: React.FC = () => {
           upcomingClassesCount={upcomingClasses.length}
         />
 
-        {/* Quick Actions Card - New Enhancement */}
+        {/* Quick Actions Card */}
         <QuickActionsCard {...handleQuickActions} />
 
-        {/* AI Personal Insights - New */}
+        {/* AI Personal Insights */}
         <AIStudentInsights
           studentId={student.id}
           school={student.school}
           grade={student.grade}
         />
 
-        {/* Enhanced Tabs with Analytics and AI */}
+        {/* Enhanced Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 md:space-y-6">
           <TabsList className={`grid w-full ${isMobile ? 'grid-cols-3 gap-1 h-auto p-1' : 'grid-cols-5'}`}>
             {tabItems.map((item) => {

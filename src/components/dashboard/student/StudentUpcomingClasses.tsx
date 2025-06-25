@@ -55,18 +55,16 @@ const StudentUpcomingClasses: React.FC<StudentUpcomingClassesProps> = ({ student
       setIsLoading(true);
       
       const now = new Date();
-      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-      const todayString = today.toISOString().split('T')[0]; // Get YYYY-MM-DD format
+      const currentDateTime = now.toISOString();
       
-      console.log('Fetching classes from date:', todayString);
+      console.log('Current date/time for filtering:', currentDateTime);
       
-      // Fetch classes for the student's school and grade - only future classes
+      // Fetch classes for the student's school and grade
       const { data: classData, error } = await supabase
         .from('class_schedules')
         .select('*')
         .eq('school', student.school)
         .eq('grade', student.grade)
-        .gte('class_date', todayString) // Only get classes from today onwards
         .order('class_date', { ascending: true })
         .order('class_time', { ascending: true });
 
@@ -92,33 +90,34 @@ const StudentUpcomingClasses: React.FC<StudentUpcomingClassesProps> = ({ student
 
           // Create proper datetime object for comparison
           const classDateTime = new Date(`${classItem.class_date}T${classItem.class_time}`);
-          const isPast = classDateTime < now;
           const hasFeedback = feedbackClassIds.has(classItem.id);
 
-          console.log(`Class ${classItem.subject} on ${classItem.class_date} at ${classItem.class_time}:`, {
+          console.log(`Class ${classItem.subject} datetime check:`, {
+            classDate: classItem.class_date,
+            classTime: classItem.class_time,
             classDateTime: classDateTime.toISOString(),
-            now: now.toISOString(),
-            isPast
+            currentDateTime,
+            isUpcoming: classDateTime > now
           });
 
           return {
             ...classItem,
             teacher_name: teacherData?.name || t('student.defaultName'),
             has_feedback: hasFeedback,
-            is_past: isPast
+            is_past: classDateTime <= now
           };
         })
       );
 
-      // Filter out past classes more strictly
+      // Filter to only show upcoming classes (future classes only)
       const filteredClasses = classesWithTeachers.filter(classItem => {
         const classDateTime = new Date(`${classItem.class_date}T${classItem.class_time}`);
-        const isUpcoming = classDateTime >= now;
-        console.log(`Filtering ${classItem.subject}: isUpcoming=${isUpcoming}`);
+        const isUpcoming = classDateTime > now;
+        console.log(`${classItem.subject} - isUpcoming: ${isUpcoming}`);
         return isUpcoming;
       });
 
-      console.log('Filtered upcoming classes:', filteredClasses);
+      console.log('Final filtered upcoming classes:', filteredClasses);
       setUpcomingClasses(filteredClasses);
     } catch (error) {
       console.error('Error fetching upcoming classes:', error);
