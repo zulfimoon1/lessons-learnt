@@ -45,14 +45,29 @@ class CentralizedValidationService {
     return enhancedSecurityValidationService.checkRateLimit(identifier);
   }
 
-  // Log security events
+  // Log security events with proper type mapping
   async logSecurityEvent(event: {
     type: 'unauthorized_access' | 'suspicious_activity' | 'rate_limit_exceeded' | 'form_validation_failed';
     userId?: string;
     details: string;
     severity: 'low' | 'medium' | 'high';
   }): Promise<void> {
-    await enhancedSecurityValidationService.logSecurityEvent(event);
+    // Map to valid security event types
+    const eventTypeMap: Record<string, 'suspicious_activity' | 'rate_limit_exceeded' | 'session_error'> = {
+      'unauthorized_access': 'session_error',
+      'suspicious_activity': 'suspicious_activity',
+      'rate_limit_exceeded': 'rate_limit_exceeded',
+      'form_validation_failed': 'suspicious_activity'
+    };
+
+    const mappedType = eventTypeMap[event.type] || 'suspicious_activity';
+    
+    await enhancedSecurityValidationService.logSecurityEvent({
+      type: mappedType,
+      userId: event.userId,
+      details: event.details,
+      severity: event.severity
+    });
   }
 }
 
