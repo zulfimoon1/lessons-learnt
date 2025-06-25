@@ -15,6 +15,7 @@ import StudentDashboard from "./pages/StudentDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
 import PlatformAdminDashboard from "./pages/PlatformAdminDashboard";
 import DemoPage from "./pages/DemoPage";
+import PricingShowcase from "./pages/PricingShowcase";
 
 const queryClient = new QueryClient();
 
@@ -36,6 +37,7 @@ const App = () => (
                 <Route path="/admin-dashboard" element={<AdminDashboard />} />
                 <Route path="/platform-admin" element={<PlatformAdminDashboard />} />
                 <Route path="/demo" element={<DemoPage />} />
+                <Route path="/pricing-showcase" element={<PricingShowcase />} />
               </Routes>
             </PlatformAdminProvider>
           </AuthProvider>
