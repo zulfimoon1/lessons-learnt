@@ -34,7 +34,16 @@ const StudentDashboard = () => {
   }
 
   const handleLogout = () => {
-    logout();
+    console.log('🚪 Student logout initiated');
+    try {
+      logout();
+      console.log('✅ Student logout called, navigating to home');
+      navigate('/', { replace: true });
+    } catch (error) {
+      console.error('❌ Student logout error:', error);
+      // Still try to navigate home even if logout fails
+      navigate('/', { replace: true });
+    }
   };
 
   const handleTabChange = (value: string) => {

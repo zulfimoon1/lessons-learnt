@@ -17,9 +17,17 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({ title, userName, onLo
   const navigate = useNavigate();
 
   const handleLogout = () => {
-    onLogout();
-    // Always redirect to homepage after logout
-    navigate('/', { replace: true });
+    console.log('🚪 Logout button clicked');
+    try {
+      onLogout();
+      console.log('✅ Logout function called, navigating to home');
+      // Force navigation to home page
+      navigate('/', { replace: true });
+    } catch (error) {
+      console.error('❌ Logout error:', error);
+      // Still try to navigate home even if logout fails
+      navigate('/', { replace: true });
+    }
   };
 
   return (
@@ -35,11 +43,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({ title, userName, onLo
             {t('admin.welcome') || 'Welcome'}, {userName}
           </span>
           <Button
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              handleLogout();
-            }}
+            onClick={handleLogout}
             variant="outline"
             className="flex items-center gap-2"
             type="button"
