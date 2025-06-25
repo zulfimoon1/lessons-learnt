@@ -1,3 +1,4 @@
+
 import { ltAuthTranslations } from './lt/auth';
 import { ltTeacherTranslations } from './lt/teacher';
 import { ltWeeklyTranslations } from './lt/weekly';
@@ -110,6 +111,16 @@ export const ltTranslations = {
   'analytics.excellent': 'Puiku',
   'analytics.improving': 'Gerinasi',
   'analytics.noData': 'Analitikos duomenų dar nėra. Užbaikite keletą pamokų, kad matytumėte savo pažangą!',
+  'analytics.feedbackAnalytics': 'Atsiliepimų analitika',
+  'analytics.mentalHealthTrends': 'Psichikos sveikatos tendencijos',
+  'analytics.classEngagement': 'Klasės įsitraukimas',
+  'analytics.weeklyProgress': 'Savaitės pažanga',
+  'analytics.overallSatisfaction': 'Bendras pasitenkinimas',
+  'analytics.improvementAreas': 'Gerinimo sritys',
+  'analytics.positiveOutcomes': 'Teigiami rezultatai',
+  'analytics.studentParticipation': 'Mokinių dalyvavimas',
+  'analytics.learningObjectives': 'Mokymosi tikslai',
+  'analytics.courseCompletion': 'Kurso užbaigimas',
 
   // Wellness translations - New
   'wellness.tracker': 'Gerovės sekimas',

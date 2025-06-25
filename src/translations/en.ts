@@ -111,6 +111,16 @@ export const enTranslations = {
   'analytics.excellent': 'Excellent',
   'analytics.improving': 'Improving',
   'analytics.noData': 'No analytics data available yet. Complete some classes to see your progress!',
+  'analytics.feedbackAnalytics': 'Feedback Analytics',
+  'analytics.mentalHealthTrends': 'Mental Health Trends',
+  'analytics.classEngagement': 'Class Engagement',
+  'analytics.weeklyProgress': 'Weekly Progress',
+  'analytics.overallSatisfaction': 'Overall Satisfaction',
+  'analytics.improvementAreas': 'Improvement Areas',
+  'analytics.positiveOutcomes': 'Positive Outcomes',
+  'analytics.studentParticipation': 'Student Participation',
+  'analytics.learningObjectives': 'Learning Objectives',
+  'analytics.courseCompletion': 'Course Completion',
 
   // Wellness translations - New
   'wellness.tracker': 'Wellness Tracker',
