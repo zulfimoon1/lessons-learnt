@@ -1,3 +1,5 @@
+import { LanguageResource } from './types';
+
 export const en = {
   common: {
     edit: "Edit",
@@ -504,3 +506,5 @@ export const en = {
     }
   }
 };
+
+export const enTranslations = en;

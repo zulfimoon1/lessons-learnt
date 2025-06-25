@@ -339,3 +339,5 @@ export const lt: LanguageResource = {
     }
   }
 };
+
+export const ltTranslations = lt;
