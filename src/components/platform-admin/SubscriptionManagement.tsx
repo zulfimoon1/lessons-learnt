@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -6,7 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { usePlatformAdmin } from "@/contexts/PlatformAdminContext";
-import { securePlatformAdminService } from "@/services/securePlatformAdminService";
+import { supabase } from "@/integrations/supabase/client";
 import { 
   TrendingUpIcon,
   FilterIcon,
@@ -15,7 +16,8 @@ import {
   AlertTriangleIcon,
   SchoolIcon,
   CalendarIcon,
-  DollarSignIcon
+  DollarSignIcon,
+  RefreshCwIcon
 } from "lucide-react";
 
 interface Subscription {
@@ -33,25 +35,14 @@ interface Subscription {
   updated_at: string;
 }
 
-interface PaymentNotification {
-  id: string;
-  subscription_id: string;
-  school_name: string;
-  admin_email: string;
-  notification_type: string;
-  scheduled_for: string;
-  sent_at: string | null;
-  created_at: string;
-}
-
 const SubscriptionManagement = () => {
   const { toast } = useToast();
   const { isAuthenticated, admin } = usePlatformAdmin();
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
-  const [paymentNotifications, setPaymentNotifications] = useState<PaymentNotification[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedSchool, setSelectedSchool] = useState<string>("all");
   const [renewalWarnings, setRenewalWarnings] = useState<Subscription[]>([]);
+  const [error, setError] = useState<string>("");
 
   useEffect(() => {
     if (isAuthenticated && admin) {
@@ -61,17 +52,24 @@ const SubscriptionManagement = () => {
 
   const loadSubscriptionData = async () => {
     try {
-      console.log('=== LOADING SUBSCRIPTION DATA ===');
-      console.log('Platform admin:', admin);
+      console.log('📊 Loading subscription data...');
+      setIsLoading(true);
+      setError("");
 
-      // Load subscriptions via edge function
-      const subscriptionsData = await securePlatformAdminService.callAdminFunction('getSubscriptions');
+      // Load subscriptions directly from Supabase
+      const { data: subscriptionsData, error: subscriptionsError } = await supabase
+        .from('subscriptions')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (subscriptionsError) {
+        console.error('Error loading subscriptions:', subscriptionsError);
+        throw subscriptionsError;
+      }
+
+      console.log('✅ Subscriptions loaded:', subscriptionsData?.length || 0);
       
-      // Load payment notifications via edge function
-      const notificationsData = await securePlatformAdminService.callAdminFunction('getPaymentNotifications');
-
       setSubscriptions(subscriptionsData || []);
-      setPaymentNotifications(notificationsData || []);
 
       // Check for renewal warnings (subscriptions ending in next 30 days)
       const thirtyDaysFromNow = new Date();
@@ -85,14 +83,13 @@ const SubscriptionManagement = () => {
       
       setRenewalWarnings(warnings);
       
-      console.log('Subscriptions loaded successfully:', subscriptionsData?.length || 0);
-      console.log('Payment notifications loaded successfully:', notificationsData?.length || 0);
-      
     } catch (error) {
       console.error('Error loading subscription data:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to load subscription data';
+      setError(errorMessage);
       toast({
         title: "Error",
-        description: "Failed to load subscription management data",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
@@ -102,14 +99,11 @@ const SubscriptionManagement = () => {
 
   const handlePauseSubscription = async (subscriptionId: string) => {
     try {
-      await securePlatformAdminService.callAdminFunction('pauseSubscription', { subscriptionId });
-
+      // For now, show a message that this feature is coming soon
       toast({
-        title: "Success",
-        description: "Subscription paused successfully",
+        title: "Feature Coming Soon",
+        description: "Subscription pause functionality will be available soon. Please contact support for assistance.",
       });
-      
-      loadSubscriptionData();
     } catch (error) {
       console.error('Error pausing subscription:', error);
       toast({
@@ -122,14 +116,11 @@ const SubscriptionManagement = () => {
 
   const handleResumeSubscription = async (subscriptionId: string) => {
     try {
-      await securePlatformAdminService.callAdminFunction('resumeSubscription', { subscriptionId });
-
+      // For now, show a message that this feature is coming soon
       toast({
-        title: "Success",
-        description: "Subscription resumed successfully",
+        title: "Feature Coming Soon",
+        description: "Subscription resume functionality will be available soon. Please contact support for assistance.",
       });
-      
-      loadSubscriptionData();
     } catch (error) {
       console.error('Error resuming subscription:', error);
       toast({
@@ -171,16 +162,6 @@ const SubscriptionManagement = () => {
     );
   }
 
-  if (isLoading) {
-    return (
-      <Card>
-        <CardContent className="flex items-center justify-center p-8">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-        </CardContent>
-      </Card>
-    );
-  }
-
   return (
     <Card>
       <CardHeader>
@@ -195,159 +176,177 @@ const SubscriptionManagement = () => {
             </CardDescription>
           </div>
           <div className="flex items-center gap-2">
-            <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">
-              <AlertTriangleIcon className="w-3 h-3 mr-1" />
-              {renewalWarnings.length} renewals due
-            </Badge>
+            <Button
+              onClick={loadSubscriptionData}
+              disabled={isLoading}
+              variant="outline"
+              size="sm"
+            >
+              <RefreshCwIcon className={`w-4 h-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+              Refresh
+            </Button>
+            {renewalWarnings.length > 0 && (
+              <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">
+                <AlertTriangleIcon className="w-3 h-3 mr-1" />
+                {renewalWarnings.length} renewals due
+              </Badge>
+            )}
           </div>
         </div>
       </CardHeader>
       
       <CardContent>
-        {/* Payment Notifications Section */}
-        {paymentNotifications.length > 0 && (
-          <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-            <h4 className="font-medium text-blue-800 mb-2 flex items-center gap-2">
-              🔔 Recent Payment Notifications
-            </h4>
-            <div className="space-y-2">
-              {paymentNotifications.slice(0, 5).map((notification) => (
-                <div key={notification.id} className="text-sm text-blue-700">
-                  <strong>{notification.school_name}</strong> - {notification.notification_type} 
-                  {notification.sent_at ? ' (Sent)' : ' (Pending)'}
-                </div>
-              ))}
-            </div>
+        {/* Error Display */}
+        {error && (
+          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+            <div className="text-red-800 font-medium">Error:</div>
+            <div className="text-red-600 text-sm mt-1">{error}</div>
           </div>
         )}
 
-        {/* Filters */}
-        <div className="flex flex-wrap gap-4 mb-6 p-4 bg-gray-50 rounded-lg">
-          <div className="flex items-center gap-2">
-            <FilterIcon className="w-4 h-4" />
-            <Select value={selectedSchool} onValueChange={setSelectedSchool}>
-              <SelectTrigger className="w-48">
-                <SelectValue placeholder="All Schools" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Schools</SelectItem>
-                {uniqueSchools.map((school) => (
-                  <SelectItem key={school} value={school}>
-                    {school}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-
-        {/* Renewal Warnings */}
-        {renewalWarnings.length > 0 && (
-          <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-            <h4 className="font-medium text-yellow-800 mb-2 flex items-center gap-2">
-              <AlertTriangleIcon className="w-4 h-4" />
-              Subscription Renewal Warnings
-            </h4>
-            <div className="space-y-2">
-              {renewalWarnings.map((sub) => (
-                <div key={sub.id} className="text-sm text-yellow-700">
-                  <strong>{sub.school_name}</strong> - {sub.plan_type} plan expires on {formatDate(sub.current_period_end)}
-                </div>
-              ))}
-            </div>
+        {/* Loading State */}
+        {isLoading && (
+          <div className="flex items-center justify-center p-8">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mr-3"></div>
+            <span>Loading subscription data...</span>
           </div>
         )}
 
-        {/* Subscriptions Table */}
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>School</TableHead>
-              <TableHead>Plan</TableHead>
-              <TableHead>Amount</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Period</TableHead>
-              <TableHead>Next Renewal</TableHead>
-              <TableHead>Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filteredSubscriptions.map((subscription) => (
-              <TableRow key={subscription.id}>
-                <TableCell>
-                  <div className="flex items-center gap-2">
-                    <SchoolIcon className="w-4 h-4" />
-                    {subscription.school_name}
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <Badge variant="outline">
-                    {subscription.plan_type}
-                  </Badge>
-                </TableCell>
-                <TableCell>
-                  <div className="flex items-center gap-1">
-                    <DollarSignIcon className="w-3 h-3" />
-                    {formatCurrency(subscription.amount, subscription.currency)}
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <Badge 
-                    variant={subscription.status === 'active' ? 'default' : 
-                           subscription.status === 'paused' ? 'secondary' : 'destructive'}
-                  >
-                    {subscription.status}
-                  </Badge>
-                </TableCell>
-                <TableCell>
-                  <div className="flex items-center gap-1 text-sm">
-                    <CalendarIcon className="w-3 h-3" />
-                    {formatDate(subscription.current_period_start)} - {formatDate(subscription.current_period_end)}
-                  </div>
-                </TableCell>
-                <TableCell>
-                  {subscription.current_period_end && (
-                    <span className={`text-sm ${
-                      new Date(subscription.current_period_end) <= new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) 
-                        ? 'text-yellow-600 font-medium' 
-                        : 'text-gray-600'
-                    }`}>
-                      {formatDate(subscription.current_period_end)}
-                    </span>
-                  )}
-                </TableCell>
-                <TableCell>
-                  <div className="flex items-center gap-2">
-                    {subscription.status === 'active' ? (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handlePauseSubscription(subscription.id)}
-                      >
-                        <PauseIcon className="w-3 h-3 mr-1" />
-                        Pause
-                      </Button>
-                    ) : subscription.status === 'paused' ? (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleResumeSubscription(subscription.id)}
-                      >
-                        <PlayIcon className="w-3 h-3 mr-1" />
-                        Resume
-                      </Button>
-                    ) : null}
-                  </div>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-        
-        {filteredSubscriptions.length === 0 && (
-          <div className="text-center py-8 text-muted-foreground">
-            No subscriptions found matching the current filters.
-          </div>
+        {/* Content when loaded */}
+        {!isLoading && !error && (
+          <>
+            {/* Filters */}
+            <div className="flex flex-wrap gap-4 mb-6 p-4 bg-gray-50 rounded-lg">
+              <div className="flex items-center gap-2">
+                <FilterIcon className="w-4 h-4" />
+                <Select value={selectedSchool} onValueChange={setSelectedSchool}>
+                  <SelectTrigger className="w-48">
+                    <SelectValue placeholder="All Schools" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Schools</SelectItem>
+                    {uniqueSchools.map((school) => (
+                      <SelectItem key={school} value={school}>
+                        {school}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {/* Renewal Warnings */}
+            {renewalWarnings.length > 0 && (
+              <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                <h4 className="font-medium text-yellow-800 mb-2 flex items-center gap-2">
+                  <AlertTriangleIcon className="w-4 h-4" />
+                  Subscription Renewal Warnings
+                </h4>
+                <div className="space-y-2">
+                  {renewalWarnings.map((sub) => (
+                    <div key={sub.id} className="text-sm text-yellow-700">
+                      <strong>{sub.school_name}</strong> - {sub.plan_type} plan expires on {formatDate(sub.current_period_end)}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Subscriptions Table */}
+            {filteredSubscriptions.length > 0 ? (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>School</TableHead>
+                    <TableHead>Plan</TableHead>
+                    <TableHead>Amount</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Period</TableHead>
+                    <TableHead>Next Renewal</TableHead>
+                    <TableHead>Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredSubscriptions.map((subscription) => (
+                    <TableRow key={subscription.id}>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <SchoolIcon className="w-4 h-4" />
+                          {subscription.school_name}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="outline">
+                          {subscription.plan_type}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-1">
+                          <DollarSignIcon className="w-3 h-3" />
+                          {formatCurrency(subscription.amount, subscription.currency)}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge 
+                          variant={subscription.status === 'active' ? 'default' : 
+                                 subscription.status === 'paused' ? 'secondary' : 'destructive'}
+                        >
+                          {subscription.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-1 text-sm">
+                          <CalendarIcon className="w-3 h-3" />
+                          {formatDate(subscription.current_period_start)} - {formatDate(subscription.current_period_end)}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        {subscription.current_period_end && (
+                          <span className={`text-sm ${
+                            new Date(subscription.current_period_end) <= new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) 
+                              ? 'text-yellow-600 font-medium' 
+                              : 'text-gray-600'
+                          }`}>
+                            {formatDate(subscription.current_period_end)}
+                          </span>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          {subscription.status === 'active' ? (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handlePauseSubscription(subscription.id)}
+                            >
+                              <PauseIcon className="w-3 h-3 mr-1" />
+                              Pause
+                            </Button>
+                          ) : subscription.status === 'paused' ? (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleResumeSubscription(subscription.id)}
+                            >
+                              <PlayIcon className="w-3 h-3 mr-1" />
+                              Resume
+                            </Button>
+                          ) : null}
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            ) : (
+              <div className="text-center py-8 text-muted-foreground">
+                {subscriptions.length === 0 
+                  ? "No subscriptions found in the system."
+                  : "No subscriptions found matching the current filters."
+                }
+              </div>
+            )}
+          </>
         )}
       </CardContent>
     </Card>
