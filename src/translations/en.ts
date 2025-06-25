@@ -1,7 +1,7 @@
 
 import { enAuthTranslations } from './en/auth';
 import { enTeacherTranslations } from './en/teacher';
-import { enWeeklySummaryTranslations } from './en/weekly';
+import { enWeeklyTranslations } from './en/weekly';
 import { enChatTranslations } from './en/chat';
 import { enDemoTranslations } from './en/demo';
 
@@ -391,7 +391,7 @@ export const enTranslations = {
   // Merge all sub-translations
   ...enAuthTranslations,
   ...enTeacherTranslations,
-  ...enWeeklySummaryTranslations,
+  ...enWeeklyTranslations,
   ...enChatTranslations,
   ...enDemoTranslations,
 };
