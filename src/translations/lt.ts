@@ -1,6 +1,6 @@
 import { LanguageResource } from './types';
 
-export const ltTranslations: LanguageResource = {
+export const lt: LanguageResource = {
   common: {
     edit: 'Redaguoti',
     delete: 'Ištrinti',
