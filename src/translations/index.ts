@@ -1,11 +1,11 @@
 
-import { en } from './en';
-import { lt } from './lt';
+import { enTranslations } from './en';
+import { ltTranslations } from './lt';
 
 export const translations = {
-  en: en,
-  lt: lt,
+  en: enTranslations,
+  lt: ltTranslations,
 } as const;
 
-export type TranslationKey = keyof typeof en;
+export type TranslationKey = keyof typeof enTranslations;
 export type Language = keyof typeof translations;

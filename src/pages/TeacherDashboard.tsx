@@ -16,7 +16,6 @@ import MentalHealthTab from "@/components/dashboard/teacher/MentalHealthTab";
 import ArticlesTab from "@/components/dashboard/teacher/ArticlesTab";
 import AnalyticsTab from "@/components/dashboard/teacher/AnalyticsTab";
 import AIInsightsTab from "@/components/dashboard/teacher/AIInsightsTab";
-import DemoDoctorDashboard from "@/components/dashboard/doctor/DemoDoctorDashboard";
 
 const TeacherDashboard: React.FC = () => {
   const { teacher, logout } = useAuth();
@@ -27,9 +26,9 @@ const TeacherDashboard: React.FC = () => {
   const handleLogout = async () => {
     try {
       logout();
-      toast.success(t('teacher.logout.success'));
+      toast.success(t('auth.logoutSuccess') || 'Logged out successfully');
     } catch (error) {
-      toast.error(t('auth.logoutError'));
+      toast.error(t('auth.logoutError') || 'Logout failed');
     }
   };
 
@@ -37,58 +36,53 @@ const TeacherDashboard: React.FC = () => {
     return <Navigate to="/teacher-login" replace />;
   }
 
-  // If teacher is a doctor, show the specialized doctor dashboard
-  if (teacher.role === 'doctor') {
-    return <DemoDoctorDashboard teacher={teacher} onLogout={handleLogout} />;
-  }
-
   const tabItems = [
     {
       value: 'schedule',
       icon: CalendarIcon,
-      label: t('teacher.schedule'),
+      label: t('teacher.schedule') || 'Schedule',
       component: <ScheduleTab teacher={teacher} />
     },
     {
       value: 'feedback',
       icon: MessageSquareIcon,
-      label: t('dashboard.feedback'),
+      label: t('dashboard.feedback') || 'Feedback',
       component: <FeedbackDashboard teacher={teacher} />
     },
     {
       value: 'summaries',
       icon: FileTextIcon,
-      label: t('weekly.summaries'),
+      label: t('weekly.summaries') || 'Summaries',
       component: <WeeklySummariesTab teacher={teacher} />
     },
     {
       value: 'bulk',
       icon: BookOpenIcon,
-      label: t('teacher.bulkUpload'),
+      label: t('teacher.bulkUpload') || 'Bulk Upload',
       component: <BulkUploadTab teacher={teacher} />
     },
     {
       value: 'mental-health',
       icon: UsersIcon,
-      label: t('features.mentalHealth.title'),
+      label: t('features.mentalHealth.title') || 'Mental Health',
       component: <MentalHealthTab teacher={teacher} />
     },
     {
       value: 'articles',
       icon: FileTextIcon,
-      label: t('teacher.articles'),
+      label: t('teacher.articles') || 'Articles',
       component: <ArticlesTab teacher={teacher} />
     },
     {
       value: 'analytics',
       icon: BarChartIcon,
-      label: t('analytics.title'),
+      label: t('analytics.title') || 'Analytics',
       component: <AnalyticsTab teacher={teacher} />
     },
     {
       value: 'ai-insights',
       icon: BrainIcon,
-      label: t('ai.insights'),
+      label: t('ai.insights') || 'AI Insights',
       component: <AIInsightsTab teacher={teacher} />
     }
   ];
@@ -96,7 +90,7 @@ const TeacherDashboard: React.FC = () => {
   return (
     <div className="min-h-screen bg-background">
       <DashboardHeader
-        title={t('dashboard.teacherDashboard')}
+        title={t('dashboard.teacherDashboard') || 'Teacher Dashboard'}
         userName={teacher.name}
         onLogout={handleLogout}
       />
@@ -104,10 +98,10 @@ const TeacherDashboard: React.FC = () => {
       <main className="max-w-7xl mx-auto p-3 md:p-6">
         <div className="mb-4 md:mb-6">
           <h1 className="text-2xl md:text-3xl font-bold text-brand-dark mb-2">
-            {t('dashboard.welcome')}, {teacher.name}!
+            {t('admin.welcome') || 'Welcome'}, {teacher.name}!
           </h1>
           <p className="text-sm md:text-base text-brand-dark/70">
-            {teacher.school} • {teacher.role === 'admin' ? t('admin.role') : t('teacher.role')}
+            {teacher.school} • {teacher.role === 'admin' ? t('admin.role') || 'School Administrator' : t('teacher.role') || 'Teacher'}
           </p>
         </div>
 

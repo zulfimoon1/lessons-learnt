@@ -54,10 +54,7 @@ const StudentUpcomingClasses: React.FC<StudentUpcomingClassesProps> = ({ student
     try {
       setIsLoading(true);
       
-      const now = new Date();
-      const currentDateTime = now.toISOString();
-      
-      console.log('Current date/time for filtering:', currentDateTime);
+      const today = new Date();
       
       // Fetch classes for the student's school and grade
       const { data: classData, error } = await supabase
@@ -69,8 +66,6 @@ const StudentUpcomingClasses: React.FC<StudentUpcomingClassesProps> = ({ student
         .order('class_time', { ascending: true });
 
       if (error) throw error;
-
-      console.log('Raw class data:', classData);
 
       // Get existing feedback for this student
       const { data: feedbackData } = await supabase
@@ -88,36 +83,30 @@ const StudentUpcomingClasses: React.FC<StudentUpcomingClassesProps> = ({ student
             .eq('id', classItem.teacher_id)
             .single();
 
-          // Create proper datetime object for comparison
           const classDateTime = new Date(`${classItem.class_date}T${classItem.class_time}`);
+          const isPast = classDateTime < today;
           const hasFeedback = feedbackClassIds.has(classItem.id);
-
-          console.log(`Class ${classItem.subject} datetime check:`, {
-            classDate: classItem.class_date,
-            classTime: classItem.class_time,
-            classDateTime: classDateTime.toISOString(),
-            currentDateTime,
-            isUpcoming: classDateTime > now
-          });
 
           return {
             ...classItem,
             teacher_name: teacherData?.name || t('student.defaultName'),
             has_feedback: hasFeedback,
-            is_past: classDateTime <= now
+            is_past: isPast
           };
         })
       );
 
-      // Filter to only show upcoming classes (future classes only)
+      // Updated filtering logic: Show upcoming classes OR past classes WITHOUT feedback
+      // Exclude past classes that already have feedback
       const filteredClasses = classesWithTeachers.filter(classItem => {
-        const classDateTime = new Date(`${classItem.class_date}T${classItem.class_time}`);
-        const isUpcoming = classDateTime > now;
-        console.log(`${classItem.subject} - isUpcoming: ${isUpcoming}`);
-        return isUpcoming;
+        // Always show upcoming classes (not past)
+        if (!classItem.is_past) {
+          return true;
+        }
+        // For past classes, only show if NO feedback has been submitted
+        return !classItem.has_feedback;
       });
 
-      console.log('Final filtered upcoming classes:', filteredClasses);
       setUpcomingClasses(filteredClasses);
     } catch (error) {
       console.error('Error fetching upcoming classes:', error);
@@ -187,6 +176,11 @@ const StudentUpcomingClasses: React.FC<StudentUpcomingClassesProps> = ({ student
                       <Badge variant="outline" className="border-brand-teal text-brand-teal">
                         {classItem.grade}
                       </Badge>
+                      {classItem.is_past && !classItem.has_feedback && (
+                        <Badge variant="secondary" className="bg-orange-100 text-orange-800 border-orange-200">
+                          {t('feedback.pending')}
+                        </Badge>
+                      )}
                     </div>
                     
                     <p className="text-brand-dark/80 mb-3 font-medium">{classItem.lesson_topic}</p>
