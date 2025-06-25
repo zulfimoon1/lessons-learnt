@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -6,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Mail, CheckCircle, AlertCircle, Clock } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
-import { emailNotificationService } from '@/services/emailNotificationService';
+import { emailNotificationService } from '@/services/email/emailNotificationService';
 
 interface PrivacyRequestConfirmationDialogProps {
   open: boolean;
