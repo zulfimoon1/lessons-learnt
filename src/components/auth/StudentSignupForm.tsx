@@ -35,7 +35,7 @@ const StudentSignupForm: React.FC<StudentSignupFormProps> = ({ onSignup, isLoadi
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="space-y-2">
-        <Label htmlFor="signupFullName" className="flex items-center gap-2 bg-brand-gradient bg-clip-text text-transparent font-medium">
+        <Label htmlFor="signupFullName" className="flex items-center gap-2 text-black font-medium">
           <UserIcon className="w-4 h-4 text-brand-teal" />
           {t('auth.fullName')}
         </Label>
@@ -52,7 +52,7 @@ const StudentSignupForm: React.FC<StudentSignupFormProps> = ({ onSignup, isLoadi
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="signupSchool" className="flex items-center gap-2 bg-brand-gradient bg-clip-text text-transparent font-medium">
+        <Label htmlFor="signupSchool" className="flex items-center gap-2 text-black font-medium">
           <School className="w-4 h-4 text-brand-teal" />
           {t('auth.school')}
         </Label>
@@ -69,7 +69,7 @@ const StudentSignupForm: React.FC<StudentSignupFormProps> = ({ onSignup, isLoadi
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="signupGrade" className="flex items-center gap-2 bg-brand-gradient bg-clip-text text-transparent font-medium">
+        <Label htmlFor="signupGrade" className="flex items-center gap-2 text-black font-medium">
           <GraduationCap className="w-4 h-4 text-brand-teal" />
           {t('student.classGrade') || "Class/Grade"}
         </Label>
@@ -86,7 +86,7 @@ const StudentSignupForm: React.FC<StudentSignupFormProps> = ({ onSignup, isLoadi
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="signupPassword" className="bg-brand-gradient bg-clip-text text-transparent font-medium">{t('auth.password')}</Label>
+        <Label htmlFor="signupPassword" className="text-black font-medium">{t('auth.password')}</Label>
         <SecurityEnhancedInput
           id="signupPassword"
           type="password"
@@ -100,7 +100,7 @@ const StudentSignupForm: React.FC<StudentSignupFormProps> = ({ onSignup, isLoadi
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="confirmPassword" className="bg-brand-gradient bg-clip-text text-transparent font-medium">{t('auth.confirmPassword')}</Label>
+        <Label htmlFor="confirmPassword" className="text-black font-medium">{t('auth.confirmPassword')}</Label>
         <SecurityEnhancedInput
           id="confirmPassword"
           type="password"

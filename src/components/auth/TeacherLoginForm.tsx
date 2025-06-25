@@ -26,7 +26,7 @@ const TeacherLoginForm: React.FC<TeacherLoginFormProps> = ({ onLogin, isLoading 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="space-y-2">
-        <Label htmlFor="email" className="bg-brand-gradient bg-clip-text text-transparent font-medium">Email</Label>
+        <Label htmlFor="email" className="text-black font-medium">Email</Label>
         <SecurityEnhancedInput
           id="email"
           type="email"
@@ -41,7 +41,7 @@ const TeacherLoginForm: React.FC<TeacherLoginFormProps> = ({ onLogin, isLoading 
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="password" className="bg-brand-gradient bg-clip-text text-transparent font-medium">Password</Label>
+        <Label htmlFor="password" className="text-black font-medium">Password</Label>
         <div className="relative">
           <SecurityEnhancedInput
             id="password"

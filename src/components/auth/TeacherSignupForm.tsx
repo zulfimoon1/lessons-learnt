@@ -31,7 +31,7 @@ const TeacherSignupForm: React.FC<TeacherSignupFormProps> = ({ onSignup, isLoadi
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="space-y-2">
-        <Label htmlFor="signupName" className="flex items-center gap-2 bg-brand-gradient bg-clip-text text-transparent font-medium">
+        <Label htmlFor="signupName" className="flex items-center gap-2 text-black font-medium">
           <UserIcon className="w-4 h-4 text-brand-teal" />
           {t('auth.fullName')}
         </Label>
@@ -46,7 +46,7 @@ const TeacherSignupForm: React.FC<TeacherSignupFormProps> = ({ onSignup, isLoadi
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="signupEmail" className="flex items-center gap-2 bg-brand-gradient bg-clip-text text-transparent font-medium">
+        <Label htmlFor="signupEmail" className="flex items-center gap-2 text-black font-medium">
           <Mail className="w-4 h-4 text-brand-teal" />
           {t('auth.email')}
         </Label>
@@ -61,7 +61,7 @@ const TeacherSignupForm: React.FC<TeacherSignupFormProps> = ({ onSignup, isLoadi
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="signupSchool" className="flex items-center gap-2 bg-brand-gradient bg-clip-text text-transparent font-medium">
+        <Label htmlFor="signupSchool" className="flex items-center gap-2 text-black font-medium">
           <School className="w-4 h-4 text-brand-teal" />
           {t('auth.school')}
         </Label>
@@ -76,7 +76,7 @@ const TeacherSignupForm: React.FC<TeacherSignupFormProps> = ({ onSignup, isLoadi
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="role" className="flex items-center gap-2 bg-brand-gradient bg-clip-text text-transparent font-medium">
+        <Label htmlFor="role" className="flex items-center gap-2 text-black font-medium">
           <ShieldIcon className="w-4 h-4 text-brand-teal" />
           {t('login.teacher.role')}
         </Label>
@@ -100,7 +100,7 @@ const TeacherSignupForm: React.FC<TeacherSignupFormProps> = ({ onSignup, isLoadi
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="signupPassword" className="bg-brand-gradient bg-clip-text text-transparent font-medium">{t('auth.password')}</Label>
+        <Label htmlFor="signupPassword" className="text-black font-medium">{t('auth.password')}</Label>
         <Input
           id="signupPassword"
           type="password"
@@ -112,7 +112,7 @@ const TeacherSignupForm: React.FC<TeacherSignupFormProps> = ({ onSignup, isLoadi
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="confirmPassword" className="bg-brand-gradient bg-clip-text text-transparent font-medium">{t('auth.confirmPassword')}</Label>
+        <Label htmlFor="confirmPassword" className="text-black font-medium">{t('auth.confirmPassword')}</Label>
         <Input
           id="confirmPassword"
           type="password"
