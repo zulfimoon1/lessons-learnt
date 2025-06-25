@@ -68,10 +68,8 @@ const BulkClassActions: React.FC<BulkClassActionsProps> = ({
           <Checkbox
             id="select-all"
             checked={allSelected}
-            ref={(el) => {
-              if (el) el.indeterminate = someSelected;
-            }}
             onCheckedChange={handleSelectAll}
+            className={someSelected ? 'data-[state=checked]:bg-primary/50' : ''}
           />
           <label htmlFor="select-all" className="text-sm font-medium">
             {t('teacher.selectAll') || 'Select All Classes'}
