@@ -25,6 +25,7 @@ import SecureAuth from "./pages/SecureAuth";
 import ResetPassword from "./pages/ResetPassword";
 import PlatformAdminLogin from "./pages/PlatformAdminLogin";
 import PlatformAdminDashboard from "./pages/PlatformAdminDashboard";
+import PrivacyPolicyPage from "./pages/PrivacyPolicyPage";
 import NotFound from "./pages/NotFound";
 import React from "react";
 
@@ -67,6 +68,7 @@ const App = () => {
                     <Route path="/accept-invitation" element={<AcceptInvitation />} />
                     <Route path="/secure-auth" element={<SecureAuth />} />
                     <Route path="/reset-password" element={<ResetPassword />} />
+                    <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
                     
                     {/* Platform Admin Routes with Enhanced Security */}
                     <Route 
