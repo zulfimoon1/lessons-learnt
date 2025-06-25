@@ -6,6 +6,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Navigate } from "react-router-dom";
 import { toast } from "sonner";
+import { useIsMobile } from "@/hooks/use-mobile";
 import DashboardHeader from "@/components/dashboard/DashboardHeader";
 import ScheduleTab from "@/components/dashboard/teacher/ScheduleTab";
 import FeedbackDashboard from "@/components/dashboard/teacher/FeedbackDashboard";
@@ -20,6 +21,7 @@ const TeacherDashboard: React.FC = () => {
   const { teacher, logout } = useAuth();
   const { t } = useLanguage();
   const [activeTab, setActiveTab] = useState('schedule');
+  const isMobile = useIsMobile();
 
   const handleLogout = async () => {
     try {
@@ -34,6 +36,57 @@ const TeacherDashboard: React.FC = () => {
     return <Navigate to="/teacher-login" replace />;
   }
 
+  const tabItems = [
+    {
+      value: 'schedule',
+      icon: CalendarIcon,
+      label: t('teacher.schedule') || 'Schedule',
+      component: <ScheduleTab teacher={teacher} />
+    },
+    {
+      value: 'feedback',
+      icon: MessageSquareIcon,
+      label: t('dashboard.feedback') || 'Feedback',
+      component: <FeedbackDashboard teacher={teacher} />
+    },
+    {
+      value: 'summaries',
+      icon: FileTextIcon,
+      label: t('weekly.summaries') || 'Summaries',
+      component: <WeeklySummariesTab teacher={teacher} />
+    },
+    {
+      value: 'bulk',
+      icon: BookOpenIcon,
+      label: t('teacher.bulkUpload') || 'Bulk Upload',
+      component: <BulkUploadTab teacher={teacher} />
+    },
+    {
+      value: 'mental-health',
+      icon: UsersIcon,
+      label: t('features.mentalHealth.title') || 'Mental Health',
+      component: <MentalHealthTab teacher={teacher} />
+    },
+    {
+      value: 'articles',
+      icon: FileTextIcon,
+      label: t('teacher.articles') || 'Articles',
+      component: <ArticlesTab teacher={teacher} />
+    },
+    {
+      value: 'analytics',
+      icon: BarChartIcon,
+      label: t('analytics.title') || 'Analytics',
+      component: <AnalyticsTab teacher={teacher} />
+    },
+    {
+      value: 'ai-insights',
+      icon: BrainIcon,
+      label: t('ai.insights') || 'AI Insights',
+      component: <AIInsightsTab teacher={teacher} />
+    }
+  ];
+
   return (
     <div className="min-h-screen bg-background">
       <DashboardHeader
@@ -42,83 +95,38 @@ const TeacherDashboard: React.FC = () => {
         onLogout={handleLogout}
       />
 
-      <main className="max-w-7xl mx-auto p-6">
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold text-brand-dark mb-2">
+      <main className="max-w-7xl mx-auto p-3 md:p-6">
+        <div className="mb-4 md:mb-6">
+          <h1 className="text-2xl md:text-3xl font-bold text-brand-dark mb-2">
             {t('admin.welcome') || 'Welcome'}, {teacher.name}!
           </h1>
-          <p className="text-brand-dark/70">
+          <p className="text-sm md:text-base text-brand-dark/70">
             {teacher.school} • {teacher.role === 'admin' ? t('admin.role') || 'School Administrator' : t('teacher.role') || 'Teacher'}
           </p>
         </div>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-8">
-            <TabsTrigger value="schedule" className="flex items-center gap-2">
-              <CalendarIcon className="w-4 h-4" />
-              {t('teacher.schedule') || 'Schedule'}
-            </TabsTrigger>
-            <TabsTrigger value="feedback" className="flex items-center gap-2">
-              <MessageSquareIcon className="w-4 h-4" />
-              {t('dashboard.feedback') || 'Feedback'}
-            </TabsTrigger>
-            <TabsTrigger value="summaries" className="flex items-center gap-2">
-              <FileTextIcon className="w-4 h-4" />
-              {t('weekly.summaries') || 'Summaries'}
-            </TabsTrigger>
-            <TabsTrigger value="bulk" className="flex items-center gap-2">
-              <BookOpenIcon className="w-4 h-4" />
-              {t('teacher.bulkUpload') || 'Bulk Upload'}
-            </TabsTrigger>
-            <TabsTrigger value="mental-health" className="flex items-center gap-2">
-              <UsersIcon className="w-4 h-4" />
-              {t('features.mentalHealth.title') || 'Mental Health'}
-            </TabsTrigger>
-            <TabsTrigger value="articles" className="flex items-center gap-2">
-              <FileTextIcon className="w-4 h-4" />
-              {t('teacher.articles') || 'Articles'}
-            </TabsTrigger>
-            <TabsTrigger value="analytics" className="flex items-center gap-2">
-              <BarChartIcon className="w-4 h-4" />
-              {t('analytics.title') || 'Analytics'}
-            </TabsTrigger>
-            <TabsTrigger value="ai-insights" className="flex items-center gap-2">
-              <BrainIcon className="w-4 h-4" />
-              {t('ai.insights') || 'AI Insights'}
-            </TabsTrigger>
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 md:space-y-6">
+          <TabsList className={`grid w-full ${isMobile ? 'grid-cols-2 gap-1 h-auto p-1' : 'grid-cols-8'}`}>
+            {tabItems.map((item) => {
+              const Icon = item.icon;
+              return (
+                <TabsTrigger 
+                  key={item.value}
+                  value={item.value} 
+                  className={`flex items-center gap-1 md:gap-2 ${isMobile ? 'flex-col py-2 px-1 text-xs' : 'flex-row'}`}
+                >
+                  <Icon className={`${isMobile ? 'w-4 h-4' : 'w-4 h-4'}`} />
+                  <span className={isMobile ? 'text-[10px] leading-tight' : ''}>{item.label}</span>
+                </TabsTrigger>
+              );
+            })}
           </TabsList>
 
-          <TabsContent value="schedule">
-            <ScheduleTab teacher={teacher} />
-          </TabsContent>
-
-          <TabsContent value="feedback">
-            <FeedbackDashboard teacher={teacher} />
-          </TabsContent>
-
-          <TabsContent value="summaries">
-            <WeeklySummariesTab teacher={teacher} />
-          </TabsContent>
-
-          <TabsContent value="bulk">
-            <BulkUploadTab teacher={teacher} />
-          </TabsContent>
-
-          <TabsContent value="mental-health">
-            <MentalHealthTab teacher={teacher} />
-          </TabsContent>
-
-          <TabsContent value="articles">
-            <ArticlesTab teacher={teacher} />
-          </TabsContent>
-
-          <TabsContent value="analytics">
-            <AnalyticsTab teacher={teacher} />
-          </TabsContent>
-
-          <TabsContent value="ai-insights">
-            <AIInsightsTab teacher={teacher} />
-          </TabsContent>
+          {tabItems.map((item) => (
+            <TabsContent key={item.value} value={item.value}>
+              {item.component}
+            </TabsContent>
+          ))}
         </Tabs>
       </main>
     </div>

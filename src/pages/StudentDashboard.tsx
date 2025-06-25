@@ -6,6 +6,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Navigate, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import { useIsMobile } from "@/hooks/use-mobile";
 import DashboardHeader from "@/components/dashboard/DashboardHeader";
 import UpcomingClassesTab from "@/components/dashboard/UpcomingClassesTab";
 import FeedbackTab from "@/components/dashboard/FeedbackTab";
@@ -21,6 +22,7 @@ const StudentDashboard: React.FC = () => {
   const { student, logout } = useAuth();
   const { t } = useLanguage();
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
   const [upcomingClasses, setUpcomingClasses] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('classes');
@@ -76,6 +78,69 @@ const StudentDashboard: React.FC = () => {
     return <Navigate to="/student-login" replace />;
   }
 
+  const tabItems = [
+    {
+      value: 'classes',
+      icon: CalendarIcon,
+      label: t('class.upcomingClasses') || 'Classes',
+      component: (
+        <UpcomingClassesTab
+          classes={upcomingClasses}
+          studentGrade={student.grade}
+          studentSchool={student.school}
+        />
+      )
+    },
+    {
+      value: 'feedback',
+      icon: MessageSquareIcon,
+      label: t('dashboard.feedback') || 'Feedback',
+      component: <FeedbackTab />
+    },
+    {
+      value: 'summary',
+      icon: FileTextIcon,
+      label: t('weekly.summary') || 'Summary',
+      component: <WeeklySummaryTab student={student} />
+    },
+    {
+      value: 'wellness',
+      icon: HeartIcon,
+      label: t('features.mentalHealth.title') || 'Wellness',
+      component: (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <WellnessTracker
+            onMoodSubmit={handleMoodSubmit}
+            recentEntries={[]} // Would be loaded from database
+          />
+          <div className="space-y-4">
+            <div className="text-center py-8">
+              <HeartIcon className="w-16 h-16 text-brand-orange mx-auto mb-4" />
+              <h3 className="text-xl font-semibold mb-2">
+                {t('features.mentalHealth.title') || 'Mental Health Support'}
+              </h3>
+              <p className="text-muted-foreground max-w-md mx-auto">
+                {t('features.mentalHealth.description') || 'Access wellness resources and mental health support when you need it.'}
+              </p>
+            </div>
+          </div>
+        </div>
+      )
+    },
+    {
+      value: 'analytics',
+      icon: BarChartIcon,
+      label: t('analytics.title') || 'Analytics',
+      component: (
+        <StudentAnalyticsDashboard
+          studentId={student.id}
+          school={student.school}
+          grade={student.grade}
+        />
+      )
+    }
+  ];
+
   return (
     <div className="min-h-screen bg-background">
       <DashboardHeader
@@ -84,7 +149,7 @@ const StudentDashboard: React.FC = () => {
         onLogout={handleLogout}
       />
 
-      <main className="max-w-7xl mx-auto p-6 space-y-6">
+      <main className="max-w-7xl mx-auto p-3 md:p-6 space-y-4 md:space-y-6">
         {/* Welcome Section - Preserved */}
         <WelcomeSection
           studentName={student.full_name}
@@ -104,73 +169,28 @@ const StudentDashboard: React.FC = () => {
         />
 
         {/* Enhanced Tabs with Analytics and AI */}
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5">
-            <TabsTrigger value="classes" className="flex items-center gap-2">
-              <CalendarIcon className="w-4 h-4" />
-              {t('class.upcomingClasses') || 'Classes'}
-            </TabsTrigger>
-            <TabsTrigger value="feedback" className="flex items-center gap-2">
-              <MessageSquareIcon className="w-4 h-4" />
-              {t('dashboard.feedback') || 'Feedback'}
-            </TabsTrigger>
-            <TabsTrigger value="summary" className="flex items-center gap-2">
-              <FileTextIcon className="w-4 h-4" />
-              {t('weekly.summary') || 'Summary'}
-            </TabsTrigger>
-            <TabsTrigger value="wellness" className="flex items-center gap-2">
-              <HeartIcon className="w-4 h-4" />
-              {t('features.mentalHealth.title') || 'Wellness'}
-            </TabsTrigger>
-            <TabsTrigger value="analytics" className="flex items-center gap-2">
-              <BarChartIcon className="w-4 h-4" />
-              {t('analytics.title') || 'Analytics'}
-            </TabsTrigger>
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 md:space-y-6">
+          <TabsList className={`grid w-full ${isMobile ? 'grid-cols-3 gap-1 h-auto p-1' : 'grid-cols-5'}`}>
+            {tabItems.map((item) => {
+              const Icon = item.icon;
+              return (
+                <TabsTrigger 
+                  key={item.value}
+                  value={item.value} 
+                  className={`flex items-center gap-1 md:gap-2 ${isMobile ? 'flex-col py-2 px-1 text-xs' : 'flex-row'}`}
+                >
+                  <Icon className="w-4 h-4" />
+                  <span className={isMobile ? 'text-[10px] leading-tight text-center' : ''}>{item.label}</span>
+                </TabsTrigger>
+              );
+            })}
           </TabsList>
 
-          <TabsContent value="classes">
-            <UpcomingClassesTab
-              classes={upcomingClasses}
-              studentGrade={student.grade}
-              studentSchool={student.school}
-            />
-          </TabsContent>
-
-          <TabsContent value="feedback">
-            <FeedbackTab />
-          </TabsContent>
-
-          <TabsContent value="summary">
-            <WeeklySummaryTab student={student} />
-          </TabsContent>
-
-          <TabsContent value="wellness">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <WellnessTracker
-                onMoodSubmit={handleMoodSubmit}
-                recentEntries={[]} // Would be loaded from database
-              />
-              <div className="space-y-4">
-                <div className="text-center py-8">
-                  <HeartIcon className="w-16 h-16 text-brand-orange mx-auto mb-4" />
-                  <h3 className="text-xl font-semibold mb-2">
-                    {t('features.mentalHealth.title') || 'Mental Health Support'}
-                  </h3>
-                  <p className="text-muted-foreground max-w-md mx-auto">
-                    {t('features.mentalHealth.description') || 'Access wellness resources and mental health support when you need it.'}
-                  </p>
-                </div>
-              </div>
-            </div>
-          </TabsContent>
-
-          <TabsContent value="analytics">
-            <StudentAnalyticsDashboard
-              studentId={student.id}
-              school={student.school}
-              grade={student.grade}
-            />
-          </TabsContent>
+          {tabItems.map((item) => (
+            <TabsContent key={item.value} value={item.value}>
+              {item.component}
+            </TabsContent>
+          ))}
         </Tabs>
       </main>
     </div>
