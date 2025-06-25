@@ -23,35 +23,33 @@ import SOC2Monitor from "./components/soc2/SOC2Monitor";
 const queryClient = new QueryClient();
 
 const App = () => (
-  <QueryClient>
-    <QueryClientProvider client={queryClient}>
-      <LanguageProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <SOC2Monitor>
-              <Routes>
-                <Route path="/" element={<Index />} />
-                <Route path="/student-login" element={<StudentLogin />} />
-                <Route path="/teacher-login" element={<TeacherLogin />} />
-                <Route path="/student-dashboard" element={<StudentDashboard />} />
-                <Route path="/teacher-dashboard" element={<TeacherDashboard />} />
-                <Route path="/weekly-summary" element={<WeeklySummary />} />
-                <Route path="/feedback/:scheduleId" element={<ClassFeedback />} />
-                <Route path="/platform-admin" element={<PlatformAdmin />} />
-                <Route path="/demo" element={<Demo />} />
-                <Route path="/pricing-showcase" element={<PricingShowcase />} />
-                <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-                <Route path="/privacy-dashboard" element={<PrivacyDashboard />} />
-                <Route path="/soc2-compliance" element={<SOC2CompliancePage />} />
-              </Routes>
-            </SOC2Monitor>
-          </BrowserRouter>
-        </TooltipProvider>
-      </LanguageProvider>
-    </QueryClientProvider>
-  </QueryClient>
+  <QueryClientProvider client={queryClient}>
+    <LanguageProvider>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <SOC2Monitor>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/student-login" element={<StudentLogin />} />
+              <Route path="/teacher-login" element={<TeacherLogin />} />
+              <Route path="/student-dashboard" element={<StudentDashboard />} />
+              <Route path="/teacher-dashboard" element={<TeacherDashboard />} />
+              <Route path="/weekly-summary" element={<WeeklySummary />} />
+              <Route path="/feedback/:scheduleId" element={<ClassFeedback />} />
+              <Route path="/platform-admin" element={<PlatformAdmin />} />
+              <Route path="/demo" element={<Demo />} />
+              <Route path="/pricing-showcase" element={<PricingShowcase />} />
+              <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+              <Route path="/privacy-dashboard" element={<PrivacyDashboard />} />
+              <Route path="/soc2-compliance" element={<SOC2CompliancePage />} />
+            </Routes>
+          </SOC2Monitor>
+        </BrowserRouter>
+      </TooltipProvider>
+    </LanguageProvider>
+  </QueryClientProvider>
 );
 
 export default App;
