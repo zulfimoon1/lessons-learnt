@@ -1,3 +1,4 @@
+
 export const en = {
   common: {
     edit: "Edit",
@@ -462,6 +463,26 @@ export const en = {
       startTrial: "Start Free Trial",
       studentAccess: "Student Access",
     },
+    featureDemo: "Try Live Demo",
+    subtitle: "Experience the platform with live demonstrations",
+    featuresLine1: "100% FREE",
+    featuresLine2: "FOR STUDENTS",
+    experienceComplete: "Experience the complete platform",
+    registerNow: "Register Now",
+    studentExperience: "Student Experience",
+    studentExperienceDesc: "Submit feedback, view schedules, and track your progress in a safe and supportive environment.",
+    teacherDashboard: "Teacher Dashboard",
+    teacherDashboardDesc: "Manage classes, analyze feedback, and monitor student wellbeing with powerful analytics tools.",
+    adminOverview: "Admin Overview",
+    adminOverviewDesc: "Get comprehensive insights into school performance and student engagement metrics.",
+    schoolPsychologist: "Mental Health Support",
+    schoolPsychologistDesc: "AI-powered tools help identify students who may need additional support and resources.",
+    demoFeatures: "Demo Features",
+    tryBeforeCommit: "Try our platform before committing",
+    noRegistrationRequired: "No registration required",
+    fullFeatureAccess: "Full feature access",
+    sampleDataIncluded: "Sample data included",
+    enterDemo: "Enter Demo"
   },
   doctor: {
     title: "Doctor",
@@ -500,7 +521,53 @@ export const en = {
       noInsightsDescription: "AI insights will be generated based on student data and mental health patterns.",
       generateInsights: "Generate Insights",
       confidence: "Confidence",
-      recommendedActions: "Recommended Actions"
+      recommendedActions: "Recommended Actions",
+      unreviewed: "Unreviewed"
     }
+  },
+  welcome: {
+    title: "Lessons Learnt",
+    heroTitle1: "Empowering Education",
+    heroTitle2: "Through AI-Driven Insights",
+    subtitle: "Transform your educational experience with our comprehensive platform that combines student feedback, teacher analytics, and mental health support.",
+    freeForStudents: "100% FREE FOR STUDENTS"
+  },
+  navigation: {
+    studentLogin: "Student Access",
+    teacherLogin: "Teacher Portal",
+    signUpNow: "Sign Up Now"
+  },
+  features: {
+    studentFeedback: {
+      title: "Student Feedback",
+      description: "Collect real-time feedback from students to improve teaching methods and classroom experiences."
+    },
+    teacherInsights: {
+      title: "Teacher Insights",
+      description: "Advanced analytics and AI-powered recommendations to enhance teaching effectiveness."
+    },
+    mentalHealth: {
+      title: "Mental Health Support",
+      description: "AI-powered monitoring and support systems to ensure student wellbeing and early intervention."
+    }
+  },
+  platform: {
+    whySchools: "Why Schools Choose Our Platform",
+    whySchoolsSubtitle: "Discover how our AI-powered platform transforms educational experiences and improves student outcomes.",
+    studentInsights: "Comprehensive Student Insights",
+    realTimeAnalytics: "Real-Time Analytics",
+    realTimeAnalyticsDesc: "Get instant insights into student engagement, performance, and wellbeing with our advanced analytics dashboard.",
+    mentalHealthMonitoring: "Mental Health Monitoring",
+    mentalHealthMonitoringDesc: "AI-powered early detection systems help identify students who may need additional support.",
+    privacySecurity: "Privacy & Security",
+    privacySecurityDesc: "GDPR compliant with enterprise-grade security to protect sensitive student data.",
+    improvementPercent: "85%",
+    improvementTitle: "Improvement in Student Engagement",
+    improvementDesc: "Schools report significant improvements in student participation and wellbeing.",
+    readyToTransform: "Ready to Transform Your School?",
+    readyToTransformDesc: "Join thousands of educators already using our platform to create better learning experiences."
+  },
+  pricing: {
+    title: "Pricing"
   }
 };
