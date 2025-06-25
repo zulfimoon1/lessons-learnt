@@ -1,6 +1,6 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { secureAuthenticationService } from './secureAuthenticationService';
+import { securityValidationService } from './securityValidationService';
 
 interface AdminUser {
   id: string;
@@ -17,11 +17,18 @@ interface AuthResult {
 }
 
 class SecurePlatformAdminService {
-  // Remove hardcoded credentials and use database authentication
+  // Enhanced admin authentication with security logging
   async authenticateAdmin(credentials: { email: string; password: string }): Promise<AuthResult> {
     console.log('🔐 Secure admin authentication attempt:', credentials.email);
     
     try {
+      // Log authentication attempt
+      securityValidationService.logSecurityEvent({
+        type: 'admin_login_attempt',
+        details: `Admin login attempt for ${credentials.email}`,
+        severity: 'medium'
+      });
+
       // Use the secure authentication service
       const result = await secureAuthenticationService.authenticateAdmin(
         credentials.email, 
@@ -32,11 +39,26 @@ class SecurePlatformAdminService {
         // Set platform admin context in database
         await this.setPlatformAdminContext(credentials.email);
         
+        // Log successful authentication
+        securityValidationService.logSecurityEvent({
+          type: 'admin_login_success',
+          userId: result.user.id,
+          details: `Successful admin login for ${credentials.email}`,
+          severity: 'low'
+        });
+        
         return {
           success: true,
           admin: result.user
         };
       } else {
+        // Log failed authentication
+        securityValidationService.logSecurityEvent({
+          type: 'admin_login_failure',
+          details: `Failed admin login for ${credentials.email}: ${result.error}`,
+          severity: 'high'
+        });
+        
         return {
           success: false,
           error: result.error || 'Authentication failed'
@@ -44,6 +66,14 @@ class SecurePlatformAdminService {
       }
     } catch (error) {
       console.error('Platform admin authentication error:', error);
+      
+      // Log system error
+      securityValidationService.logSecurityEvent({
+        type: 'admin_auth_system_error',
+        details: `Authentication system error: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        severity: 'high'
+      });
+      
       return {
         success: false,
         error: 'Authentication system error'
@@ -87,7 +117,7 @@ class SecurePlatformAdminService {
     }
   }
 
-  // Set secure platform admin context
+  // Enhanced platform admin context setting with security logging
   private async setPlatformAdminContext(adminEmail: string): Promise<void> {
     try {
       const { error } = await supabase.rpc('set_platform_admin_context', {
@@ -96,11 +126,26 @@ class SecurePlatformAdminService {
 
       if (error) {
         console.error('Failed to set platform admin context:', error);
+        securityValidationService.logSecurityEvent({
+          type: 'admin_context_failure',
+          details: `Failed to set admin context for ${adminEmail}`,
+          severity: 'high'
+        });
       } else {
         console.log('✅ Platform admin context set successfully');
+        securityValidationService.logSecurityEvent({
+          type: 'admin_context_set',
+          details: `Platform admin context set for ${adminEmail}`,
+          severity: 'low'
+        });
       }
     } catch (error) {
       console.error('Error setting platform admin context:', error);
+      securityValidationService.logSecurityEvent({
+        type: 'admin_context_error',
+        details: `System error setting admin context: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        severity: 'high'
+      });
     }
   }
 

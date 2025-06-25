@@ -961,6 +961,10 @@ export type Database = {
         Args: { target_school: string }
         Returns: boolean
       }
+      is_verified_platform_admin: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
       is_zulfimoon_admin: {
         Args: Record<PropertyKey, never>
         Returns: boolean

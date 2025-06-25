@@ -25,7 +25,7 @@ class SecureAuthenticationService {
     }
   }
 
-  // Validate password strength according to security standards
+  // Enhanced password strength validation - standardized to 12+ characters
   validatePasswordStrength(password: string): { isValid: boolean; errors: string[] } {
     const errors: string[] = [];
     
@@ -55,7 +55,37 @@ class SecureAuthenticationService {
     };
   }
 
-  // Secure admin authentication - NO hardcoded credentials
+  // Rate limiting check
+  private rateLimitStore = new Map<string, { count: number; lastAttempt: number }>();
+  
+  checkRateLimit(identifier: string, maxAttempts: number = 5, windowMs: number = 300000): boolean {
+    const now = Date.now();
+    const key = `auth_${identifier}`;
+    const record = this.rateLimitStore.get(key);
+    
+    if (!record) {
+      this.rateLimitStore.set(key, { count: 1, lastAttempt: now });
+      return true;
+    }
+    
+    // Reset if window has passed
+    if (now - record.lastAttempt > windowMs) {
+      this.rateLimitStore.set(key, { count: 1, lastAttempt: now });
+      return true;
+    }
+    
+    // Check if limit exceeded
+    if (record.count >= maxAttempts) {
+      return false;
+    }
+    
+    // Increment counter
+    record.count++;
+    record.lastAttempt = now;
+    return true;
+  }
+
+  // Secure admin authentication with enhanced validation
   async authenticateAdmin(email: string, password: string): Promise<AuthResult> {
     try {
       // Validate input
@@ -63,10 +93,16 @@ class SecureAuthenticationService {
         return { success: false, error: 'Email and password are required' };
       }
 
-      // Validate password strength for new accounts
+      // Rate limiting
+      if (!this.checkRateLimit(email)) {
+        return { success: false, error: 'Too many login attempts. Please try again later.' };
+      }
+
+      // Validate password strength for security awareness
       const passwordValidation = this.validatePasswordStrength(password);
       if (!passwordValidation.isValid) {
         console.warn('Weak password attempt for admin:', email);
+        // Continue with authentication but log the warning
       }
 
       // Query database for admin user
@@ -90,7 +126,7 @@ class SecureAuthenticationService {
         return { success: false, error: 'Invalid credentials' };
       }
 
-      // Successful authentication
+      // Log successful authentication
       console.log('Admin authenticated successfully:', email);
       return {
         success: true,
@@ -109,11 +145,16 @@ class SecureAuthenticationService {
     }
   }
 
-  // Secure teacher authentication
+  // Secure teacher authentication with enhanced validation
   async authenticateTeacher(email: string, password: string): Promise<AuthResult> {
     try {
       if (!email || !password) {
         return { success: false, error: 'Email and password are required' };
+      }
+
+      // Rate limiting
+      if (!this.checkRateLimit(email)) {
+        return { success: false, error: 'Too many login attempts. Please try again later.' };
       }
 
       const { data: teacherData, error: queryError } = await supabase
@@ -149,11 +190,17 @@ class SecureAuthenticationService {
     }
   }
 
-  // Secure student authentication
+  // Secure student authentication with enhanced validation
   async authenticateStudent(fullName: string, school: string, grade: string, password: string): Promise<AuthResult> {
     try {
       if (!fullName || !school || !grade || !password) {
         return { success: false, error: 'All fields are required' };
+      }
+
+      // Rate limiting
+      const identifier = `${fullName}_${school}_${grade}`;
+      if (!this.checkRateLimit(identifier)) {
+        return { success: false, error: 'Too many login attempts. Please try again later.' };
       }
 
       const { data: studentData, error: queryError } = await supabase
@@ -188,6 +235,33 @@ class SecureAuthenticationService {
       console.error('Student authentication error:', error);
       return { success: false, error: 'Authentication system error' };
     }
+  }
+
+  // Session validation method
+  async validateSession(sessionToken: string): Promise<{ valid: boolean; user?: any }> {
+    try {
+      // This would typically validate a JWT or session token
+      // For now, we'll implement basic validation
+      if (!sessionToken || sessionToken.length < 10) {
+        return { valid: false };
+      }
+
+      // In a real implementation, you would:
+      // 1. Decode the session token
+      // 2. Verify its signature
+      // 3. Check expiration
+      // 4. Return user data if valid
+
+      return { valid: true };
+    } catch (error) {
+      console.error('Session validation error:', error);
+      return { valid: false };
+    }
+  }
+
+  // Clear rate limiting for testing
+  clearRateLimit(identifier: string): void {
+    this.rateLimitStore.delete(`auth_${identifier}`);
   }
 }
 

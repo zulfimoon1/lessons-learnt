@@ -1,160 +1,165 @@
+interface SecurityEvent {
+  type: string;
+  userId?: string;
+  details: string;
+  severity: 'low' | 'medium' | 'high';
+  timestamp?: number;
+}
 
-export class SecurityValidationService {
-  private rateLimitMap = new Map<string, { count: number; lastReset: number }>();
+class SecurityValidationService {
+  private eventLog: SecurityEvent[] = [];
+  private readonly MAX_LOG_SIZE = 1000;
 
-  validateInput(input: string, type: string, options: { 
-    maxLength?: number; 
-    allowHtml?: boolean; 
-    requireAlphanumeric?: boolean 
-  } = {}): { 
-    isValid: boolean; 
-    sanitizedValue: string; 
-    errors: string[];
-    riskLevel: 'low' | 'medium' | 'high';
-  } {
-    const errors: string[] = [];
-    let sanitizedValue = input?.trim() || '';
-    let riskLevel: 'low' | 'medium' | 'high' = 'low';
+  // Log security events (now using in-memory storage instead of localStorage)
+  logSecurityEvent(event: SecurityEvent): void {
+    try {
+      const logEvent = {
+        ...event,
+        timestamp: event.timestamp || Date.now()
+      };
 
-    // Convert dynamic type to known types for validation
-    const validationType = this.mapToValidationType(type);
+      this.eventLog.push(logEvent);
+      
+      // Keep log size manageable
+      if (this.eventLog.length > this.MAX_LOG_SIZE) {
+        this.eventLog = this.eventLog.slice(-this.MAX_LOG_SIZE);
+      }
 
-    switch (validationType) {
-      case 'email':
-        if (!sanitizedValue) {
-          errors.push('Email is required');
-        } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(sanitizedValue)) {
-          errors.push('Invalid email format');
-          riskLevel = 'medium';
-        }
-        sanitizedValue = sanitizedValue.toLowerCase();
-        break;
+      // Log to console for development
+      console.log('Security Event:', logEvent);
 
-      case 'name':
-        if (!sanitizedValue) {
-          errors.push('Name is required');
-        } else if (sanitizedValue.length < 2) {
-          errors.push('Name must be at least 2 characters');
-        } else if (sanitizedValue.length > 100) {
-          errors.push('Name must be less than 100 characters');
-        }
-        break;
-
-      case 'school':
-        if (!sanitizedValue) {
-          errors.push('School is required');
-        }
-        break;
-
-      case 'grade':
-        if (!sanitizedValue) {
-          errors.push('Grade is required');
-        }
-        break;
-
-      case 'password':
-        if (!sanitizedValue) {
-          errors.push('Password is required');
-        } else if (sanitizedValue.length < 8) {
-          errors.push('Password must be at least 8 characters');
-        }
-        break;
-
-      default:
-        // Generic text validation
-        if (options.maxLength && sanitizedValue.length > options.maxLength) {
-          errors.push(`Input must be less than ${options.maxLength} characters`);
-        }
-        break;
-    }
-
-    return {
-      isValid: errors.length === 0,
-      sanitizedValue,
-      errors,
-      riskLevel
-    };
-  }
-
-  private mapToValidationType(type: string): 'email' | 'name' | 'school' | 'grade' | 'password' | 'text' {
-    switch (type.toLowerCase()) {
-      case 'email':
-        return 'email';
-      case 'name':
-      case 'full_name':
-      case 'fullname':
-        return 'name';
-      case 'school':
-        return 'school';
-      case 'grade':
-        return 'grade';
-      case 'password':
-        return 'password';
-      default:
-        return 'text';
+      // In production, you would send high-severity events to your logging service
+      if (event.severity === 'high') {
+        console.error('HIGH SEVERITY SECURITY EVENT:', logEvent);
+      }
+    } catch (error) {
+      console.error('Failed to log security event:', error);
     }
   }
 
-  checkRateLimit(key: string, maxRequests: number = 5, windowMs: number = 60000): boolean {
+  // Get recent security events
+  getRecentEvents(limit: number = 50): SecurityEvent[] {
+    return this.eventLog.slice(-limit);
+  }
+
+  // Rate limiting implementation
+  private rateLimitStore = new Map<string, { count: number; firstAttempt: number }>();
+
+  checkRateLimit(
+    identifier: string, 
+    maxAttempts: number = 10, 
+    windowMs: number = 60000
+  ): boolean {
     const now = Date.now();
-    const entry = this.rateLimitMap.get(key);
+    const record = this.rateLimitStore.get(identifier);
 
-    if (!entry || now - entry.lastReset > windowMs) {
-      this.rateLimitMap.set(key, { count: 1, lastReset: now });
+    if (!record) {
+      this.rateLimitStore.set(identifier, { count: 1, firstAttempt: now });
       return true;
     }
 
-    if (entry.count >= maxRequests) {
+    // Reset if window has passed
+    if (now - record.firstAttempt > windowMs) {
+      this.rateLimitStore.set(identifier, { count: 1, firstAttempt: now });
+      return true;
+    }
+
+    // Check if limit exceeded
+    if (record.count >= maxAttempts) {
+      this.logSecurityEvent({
+        type: 'rate_limit_exceeded',
+        details: `Rate limit exceeded for ${identifier}`,
+        severity: 'medium'
+      });
       return false;
     }
 
-    entry.count++;
+    // Increment counter
+    record.count++;
     return true;
   }
 
-  generateCSRFToken(): string {
-    const array = new Uint8Array(32);
-    crypto.getRandomValues(array);
-    return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
-  }
-
+  // Validate session security
   validateSessionSecurity(): boolean {
     try {
-      const hasSecureContext = window.isSecureContext;
-      const hasSessionStorage = typeof sessionStorage !== 'undefined';
-      return hasSecureContext && hasSessionStorage;
+      // Check if running in secure context (HTTPS in production)
+      if (typeof window !== 'undefined') {
+        const isSecure = window.location.protocol === 'https:' || 
+                        window.location.hostname === 'localhost';
+        
+        if (!isSecure) {
+          this.logSecurityEvent({
+            type: 'insecure_context',
+            details: 'Application not running in secure context',
+            severity: 'high'
+          });
+          return false;
+        }
+      }
+
+      return true;
     } catch (error) {
       console.error('Session security validation failed:', error);
       return false;
     }
   }
 
-  async logSecurityEvent(
-    eventType: string,
-    userId: string | undefined,
-    details: string,
-    severity: 'low' | 'medium' | 'high' | 'critical' = 'medium'
-  ): Promise<void> {
-    try {
-      const existingLogs = JSON.parse(localStorage.getItem('security_logs') || '[]');
-      const newEvent = {
-        type: eventType,
-        userId,
-        timestamp: new Date().toISOString(),
-        details,
-        severity
-      };
-      existingLogs.push(newEvent);
-      
-      if (existingLogs.length > 1000) {
-        existingLogs.splice(0, existingLogs.length - 1000);
-      }
-      
-      localStorage.setItem('security_logs', JSON.stringify(existingLogs));
-      console.log(`🔒 Security event logged: ${eventType} - ${severity} - ${details}`);
-    } catch (error) {
-      console.error('Failed to log security event:', error);
+  // Input validation
+  validateInput(input: string, maxLength: number = 1000): boolean {
+    if (!input || typeof input !== 'string') {
+      return false;
     }
+
+    if (input.length > maxLength) {
+      this.logSecurityEvent({
+        type: 'input_too_long',
+        details: `Input exceeds maximum length: ${input.length}/${maxLength}`,
+        severity: 'medium'
+      });
+      return false;
+    }
+
+    // Check for potentially malicious patterns
+    const maliciousPatterns = [
+      /<script[^>]*>.*?<\/script>/gi,
+      /javascript:/gi,
+      /on\w+\s*=/gi,
+      /data:text\/html/gi
+    ];
+
+    for (const pattern of maliciousPatterns) {
+      if (pattern.test(input)) {
+        this.logSecurityEvent({
+          type: 'malicious_input_detected',
+          details: `Potentially malicious input pattern detected`,
+          severity: 'high'
+        });
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  // Clear rate limiting for specific identifier
+  clearRateLimit(identifier: string): void {
+    this.rateLimitStore.delete(identifier);
+  }
+
+  // Get security statistics
+  getSecurityStats(): {
+    totalEvents: number;
+    highSeverityEvents: number;
+    recentEvents: number;
+  } {
+    const now = Date.now();
+    const oneHourAgo = now - (60 * 60 * 1000);
+
+    return {
+      totalEvents: this.eventLog.length,
+      highSeverityEvents: this.eventLog.filter(e => e.severity === 'high').length,
+      recentEvents: this.eventLog.filter(e => (e.timestamp || 0) > oneHourAgo).length
+    };
   }
 }
 
