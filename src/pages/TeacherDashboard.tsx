@@ -11,8 +11,10 @@ import DoctorDashboard from "@/components/dashboard/doctor/DoctorDashboard";
 import WeeklySummariesTab from "@/components/dashboard/teacher/WeeklySummariesTab";
 import SchoolAdminDashboard from "@/components/dashboard/admin/SchoolAdminDashboard";
 import SchoolSubscriptionManagement from "@/components/dashboard/admin/SchoolSubscriptionManagement";
+import AnalyticsTab from "@/components/dashboard/teacher/AnalyticsTab";
+import AdminAnalyticsTab from "@/components/dashboard/admin/AdminAnalyticsTab";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
-import { LogOut, Calendar, MessageSquare, FileText, Heart, School, GraduationCap, Users, CreditCard } from "lucide-react";
+import { LogOut, Calendar, MessageSquare, FileText, Heart, School, GraduationCap, Users, CreditCard, BarChart } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -194,7 +196,7 @@ const TeacherDashboard = () => {
           </Card>
         </div>
 
-        {/* Main Content with Tabs - matching student dashboard style */}
+        {/* Main Content with Tabs - enhanced with analytics */}
         <div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-lg border border-gray-200/50 overflow-hidden">
           <Tabs defaultValue="classes" className="w-full">
             {/* Tab Navigation - clean white background */}
@@ -215,6 +217,13 @@ const TeacherDashboard = () => {
                   {t('dashboard.feedback')}
                 </TabsTrigger>
                 <TabsTrigger 
+                  value="analytics" 
+                  className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-brand-orange data-[state=active]:to-brand-teal data-[state=active]:text-white data-[state=inactive]:text-gray-600 data-[state=inactive]:hover:text-brand-dark border-b-2 border-transparent data-[state=active]:border-brand-teal rounded-none px-6 py-4 font-medium transition-all duration-200 whitespace-nowrap"
+                >
+                  <BarChart className="w-4 h-4 mr-2" />
+                  {t('analytics.title') || 'Analytics'}
+                </TabsTrigger>
+                <TabsTrigger 
                   value="weekly-summaries" 
                   className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-brand-orange data-[state=active]:to-brand-teal data-[state=active]:text-white data-[state=inactive]:text-gray-600 data-[state=inactive]:hover:text-brand-dark border-b-2 border-transparent data-[state=active]:border-brand-teal rounded-none px-6 py-4 font-medium transition-all duration-200 whitespace-nowrap"
                 >
@@ -228,6 +237,15 @@ const TeacherDashboard = () => {
                   >
                     <Users className="w-4 h-4 mr-2" />
                     {t('dashboard.schoolAdmin')}
+                  </TabsTrigger>
+                )}
+                {isAdmin && (
+                  <TabsTrigger 
+                    value="admin-analytics" 
+                    className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-brand-orange data-[state=active]:to-brand-teal data-[state=active]:text-white data-[state=inactive]:text-gray-600 data-[state=inactive]:hover:text-brand-dark border-b-2 border-transparent data-[state=active]:border-brand-teal rounded-none px-6 py-4 font-medium transition-all duration-200 whitespace-nowrap"
+                  >
+                    <BarChart className="w-4 h-4 mr-2" />
+                    {t('analytics.schoolAnalytics') || 'School Analytics'}
                   </TabsTrigger>
                 )}
                 {isAdmin && (
@@ -252,6 +270,10 @@ const TeacherDashboard = () => {
                 <FeedbackDashboard teacher={teacher} />
               </TabsContent>
 
+              <TabsContent value="analytics" className="mt-0">
+                <AnalyticsTab teacher={teacher} />
+              </TabsContent>
+
               <TabsContent value="weekly-summaries" className="mt-0">
                 <WeeklySummariesTab 
                   school={teacher.school}
@@ -264,6 +286,12 @@ const TeacherDashboard = () => {
               {isAdmin && (
                 <TabsContent value="school-admin" className="mt-0">
                   <SchoolAdminDashboard teacher={teacher} />
+                </TabsContent>
+              )}
+
+              {isAdmin && (
+                <TabsContent value="admin-analytics" className="mt-0">
+                  <AdminAnalyticsTab teacher={teacher} />
                 </TabsContent>
               )}
 

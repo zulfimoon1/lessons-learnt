@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { LogOut, MessageSquareIcon, CalendarIcon, FileTextIcon, HeartIcon } from "lucide-react";
+import { LogOut, MessageSquareIcon, CalendarIcon, FileTextIcon, HeartIcon, BarChartIcon } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Navigate, useNavigate } from "react-router-dom";
@@ -14,6 +14,7 @@ import WeeklySummaryTab from "@/components/dashboard/WeeklySummaryTab";
 import WelcomeSection from "@/components/dashboard/student/WelcomeSection";
 import QuickActionsCard from "@/components/dashboard/student/QuickActionsCard";
 import WellnessTracker from "@/components/dashboard/student/WellnessTracker";
+import StudentAnalyticsDashboard from "@/components/analytics/StudentAnalyticsDashboard";
 import { classScheduleService } from "@/services/classScheduleService";
 
 const StudentDashboard: React.FC = () => {
@@ -95,9 +96,9 @@ const StudentDashboard: React.FC = () => {
         {/* Quick Actions Card - New Enhancement */}
         <QuickActionsCard {...handleQuickActions} />
 
-        {/* Enhanced Tabs */}
+        {/* Enhanced Tabs with Analytics */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="classes" className="flex items-center gap-2">
               <CalendarIcon className="w-4 h-4" />
               {t('class.upcomingClasses') || 'Classes'}
@@ -113,6 +114,10 @@ const StudentDashboard: React.FC = () => {
             <TabsTrigger value="wellness" className="flex items-center gap-2">
               <HeartIcon className="w-4 h-4" />
               {t('features.mentalHealth.title') || 'Wellness'}
+            </TabsTrigger>
+            <TabsTrigger value="analytics" className="flex items-center gap-2">
+              <BarChartIcon className="w-4 h-4" />
+              {t('analytics.title') || 'Analytics'}
             </TabsTrigger>
           </TabsList>
 
@@ -150,6 +155,14 @@ const StudentDashboard: React.FC = () => {
                 </div>
               </div>
             </div>
+          </TabsContent>
+
+          <TabsContent value="analytics">
+            <StudentAnalyticsDashboard
+              studentId={student.id}
+              school={student.school}
+              grade={student.grade}
+            />
           </TabsContent>
         </Tabs>
       </main>
