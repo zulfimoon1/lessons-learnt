@@ -1,6 +1,7 @@
 
 import React from 'react';
 import SOC2Dashboard from '@/components/soc2/SOC2Dashboard';
+import SecurityGuard from '@/components/auth/SecurityGuard';
 import { useSOC2Monitoring } from '@/hooks/useSOC2Monitoring';
 
 const SOC2CompliancePage: React.FC = () => {
@@ -13,9 +14,15 @@ const SOC2CompliancePage: React.FC = () => {
   }, [logUserAction]);
 
   return (
-    <div className="min-h-screen bg-background">
-      <SOC2Dashboard />
-    </div>
+    <SecurityGuard 
+      requireAuth={true} 
+      userType="admin" 
+      redirectTo="/teacher-login"
+    >
+      <div className="min-h-screen bg-background">
+        <SOC2Dashboard />
+      </div>
+    </SecurityGuard>
   );
 };
 

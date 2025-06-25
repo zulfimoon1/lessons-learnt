@@ -3,11 +3,18 @@ import React from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Shield, Lock, FileText, Eye, CheckCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useAuth } from '@/contexts/AuthContext';
+import { usePlatformAdmin } from '@/contexts/PlatformAdminContext';
 import PrivacyLinks from '@/components/privacy/PrivacyLinks';
 import SOC2ComplianceIndicator from '@/components/security/SOC2ComplianceIndicator';
 
 const ComplianceFooter: React.FC = () => {
   const { t } = useLanguage();
+  const { teacher } = useAuth();
+  const { admin } = usePlatformAdmin();
+
+  // Only show SOC 2 dashboard link to platform admins or teachers with admin role
+  const canViewSOC2Dashboard = admin || (teacher && teacher.role === 'admin');
 
   return (
     <footer className="bg-slate-50 border-t mt-16">
@@ -31,12 +38,14 @@ const ComplianceFooter: React.FC = () => {
             <div>
               <h3 className="font-semibold text-sm mb-2">{t('compliance.soc2.title')}</h3>
               <p className="text-xs text-gray-600">{t('compliance.soc2.description')}</p>
-              <Link 
-                to="/soc2-compliance" 
-                className="text-xs text-blue-600 hover:text-blue-800 underline mt-1 block"
-              >
-                View SOC 2 Dashboard
-              </Link>
+              {canViewSOC2Dashboard && (
+                <Link 
+                  to="/soc2-compliance" 
+                  className="text-xs text-blue-600 hover:text-blue-800 underline mt-1 block"
+                >
+                  View SOC 2 Dashboard
+                </Link>
+              )}
             </div>
           </div>
           
