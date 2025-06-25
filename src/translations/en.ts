@@ -1,4 +1,3 @@
-
 import { enAuthTranslations } from './en/auth';
 import { enTeacherTranslations } from './en/teacher';
 import { enWeeklyTranslations } from './en/weekly';
@@ -98,8 +97,19 @@ export const enTranslations = {
   'ai.personalInsights': 'AI Personal Insights',
   'ai.insights': 'AI Insights',
 
-  // Analytics translations - New
+  // Analytics translations - Enhanced with missing keys
   'analytics.title': 'Analytics',
+  'analytics.totalClasses': 'Total Classes',
+  'analytics.classesAvailable': 'Classes available',
+  'analytics.feedbackSubmitted': 'Feedback Submitted',
+  'analytics.averageUnderstanding': 'Average Understanding',
+  'analytics.wellnessChecks': 'Wellness Checks',
+  'analytics.thisMonth': 'This month',
+  'analytics.performanceTrends': 'Performance Trends',
+  'analytics.subjectPerformance': 'Subject Performance',
+  'analytics.excellent': 'Excellent',
+  'analytics.improving': 'Improving',
+  'analytics.noData': 'No analytics data available yet. Complete some classes to see your progress!',
 
   // Wellness translations - New
   'wellness.tracker': 'Wellness Tracker',

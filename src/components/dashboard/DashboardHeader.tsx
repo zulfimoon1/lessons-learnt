@@ -22,7 +22,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({ title, userName, onLo
         <div className="flex items-center gap-2 md:gap-4">
           <SchoolIcon className="w-6 h-6 md:w-8 md:h-8 text-primary" />
           <h1 className={`font-bold text-foreground ${isMobile ? 'text-lg' : 'text-2xl'}`}>
-            {isMobile ? 'Dashboard' : title}
+            {isMobile ? t('nav.dashboard') : title}
           </h1>
         </div>
         
@@ -30,7 +30,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({ title, userName, onLo
           <LanguageSwitcher />
           {!isMobile && (
             <span className="text-sm text-muted-foreground hidden sm:block">
-              {t('admin.welcome') || 'Welcome'}, {userName}
+              {t('dashboard.welcome')}, {userName}
             </span>
           )}
           <Button
@@ -41,7 +41,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({ title, userName, onLo
             type="button"
           >
             <LogOut className="w-3 h-3 md:w-4 md:h-4" />
-            {!isMobile && (t('auth.logout') || 'Logout')}
+            {!isMobile && t('logout')}
           </Button>
         </div>
       </div>

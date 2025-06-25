@@ -1,4 +1,3 @@
-
 import { ltAuthTranslations } from './lt/auth';
 import { ltTeacherTranslations } from './lt/teacher';
 import { ltWeeklyTranslations } from './lt/weekly';
@@ -98,8 +97,19 @@ export const ltTranslations = {
   'ai.personalInsights': 'AI asmeninės įžvalgos',
   'ai.insights': 'AI įžvalgos',
 
-  // Analytics translations - New
+  // Analytics translations - Enhanced with missing keys
   'analytics.title': 'Analitika',
+  'analytics.totalClasses': 'Iš viso pamokų',
+  'analytics.classesAvailable': 'Pamokos prieinamos',
+  'analytics.feedbackSubmitted': 'Atsiliepimų pateikta',
+  'analytics.averageUnderstanding': 'Vidutinis supratimas',
+  'analytics.wellnessChecks': 'Gerovės patikrinimai',
+  'analytics.thisMonth': 'Šį mėnesį',
+  'analytics.performanceTrends': 'Rezultatų tendencijos',
+  'analytics.subjectPerformance': 'Dalykų rezultatai',
+  'analytics.excellent': 'Puiku',
+  'analytics.improving': 'Gerinasi',
+  'analytics.noData': 'Analitikos duomenų dar nėra. Užbaikite keletą pamokų, kad matytumėte savo pažangą!',
 
   // Wellness translations - New
   'wellness.tracker': 'Gerovės sekimas',
