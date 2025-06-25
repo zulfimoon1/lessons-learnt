@@ -1,4 +1,3 @@
-
 import { enAuthTranslations } from './en/auth';
 import { enTeacherTranslations } from './en/teacher';
 import { enWeeklyTranslations } from './en/weekly';
@@ -358,35 +357,17 @@ export const enTranslations = {
   'compliance.dataRetention': 'Data Retention',
   'compliance.rightToDelete': 'Right to Delete',
 
+  // Demo section
   'demo.featureDemo': 'Feature Demo',
   'demo.title': 'Demo',
   'demo.subtitle': 'Try our platform features',
-  'demo.featuresUserTypes': '5+ Features, 3 User Types',
+  'demo.featuresLine1': '5+ Features',
+  'demo.featuresLine2': '3+ User Types',
   'demo.experienceComplete': 'Experience the Complete Platform',
-  'demo.studentExperience': 'Student Experience',
-  'demo.studentExperienceDesc': 'Submit lesson feedback, share weekly summaries, and access mental health support - all in a safe, anonymous environment.',
-  'demo.teacherDashboard': 'Teacher Dashboard',
-  'demo.teacherDashboardDesc': 'Monitor student engagement, track learning progress, and identify students who need additional support.',
-  'demo.adminOverview': 'Admin Overview',
-  'demo.adminOverviewDesc': 'School-wide analytics, teacher management, and comprehensive insights into educational outcomes.',
-  'demo.demoFeatures': 'Demo Features',
-  'demo.tryBeforeCommit': 'Try before you commit',
-  'demo.noRegistrationRequired': 'No registration required',
-  'demo.fullFeatureAccess': 'Full feature access',
-  'demo.sampleDataIncluded': 'Sample data included',
-  'demo.discoverFuture': 'Discover the future of education in action',
-  'demo.discoverDescription': 'Explore our innovative platform designed to transform learning for students, empower educators, and support mental health.',
-  'demo.experienceFullPlatform': 'Experience the Full Platform',
-  'demo.experienceDescription': 'From interactive student simulations to comprehensive teacher analytics - see how our platform creates a supportive and engaging learning environment.',
-  'demo.mockup.anonymousStudent': 'Anonymous Student',
-  'demo.enterDemo': 'Enter Demo',
-  'demo.keyFeaturesShown': 'Key Features Shown in Demo',
-  'demo.interactiveSimulation': 'Interactive Simulation',
-  'demo.teacherWorkflow': 'Teacher Workflow',
-  'demo.fullIntegration': 'Full Integration',
-  'demo.interactive.student': 'Complete student experience walkthrough',
-  'demo.interactive.teacher': 'Teacher dashboard and analytics',
-  'demo.interactive.integration': 'Platform-wide feature integration',
+
+  // Articles
+  'articles.mentalHealth': 'Mental Health Articles',
+  'articles.subscriptionRequired': 'A subscription is required for this feature.',
 
   // Merge all sub-translations
   ...enAuthTranslations,

@@ -1,4 +1,3 @@
-
 import { ltAuthTranslations } from './lt/auth';
 import { ltTeacherTranslations } from './lt/teacher';
 import { ltWeeklyTranslations } from './lt/weekly';
@@ -357,6 +356,13 @@ export const ltTranslations = {
   'compliance.dataProcessing': 'Duomenų apdorojimas',
   'compliance.dataRetention': 'Duomenų saugojimas',
   'compliance.rightToDelete': 'Teisė ištrinti',
+
+  'demo.featureDemo': 'Funkcijų demonstracija',
+  'demo.title': 'Demonstracija',
+  'demo.subtitle': 'Išbandykite mūsų platformos funkcijas',
+  'demo.featuresLine1': '5+ funkcijos',
+  'demo.featuresLine2': '3+ vartotojų tipai',
+  'demo.experienceComplete': 'Patirkite visą platformą',
 
   'demo.featureDemo': 'Funkcijų demonstracija',
   'demo.title': 'Demonstracija',

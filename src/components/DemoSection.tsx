@@ -29,7 +29,10 @@ const DemoSection = () => {
           {/* Enhanced visibility for the features section */}
           <div className="bg-brand-gradient text-white rounded-lg p-8 max-w-md mx-auto mb-12 shadow-xl">
             <p className="text-4xl font-black tracking-wide drop-shadow-lg">
-              {t('demo.featuresUserTypes')}
+              {t('demo.featuresLine1')}
+            </p>
+            <p className="text-4xl font-black tracking-wide drop-shadow-lg mt-2">
+              {t('demo.featuresLine2')}
             </p>
             <p className="text-xl font-bold mt-3 opacity-95 drop-shadow-md">
               {t('demo.experienceComplete')}
