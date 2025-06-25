@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -53,8 +54,11 @@ const StudentUpcomingClasses: React.FC<StudentUpcomingClassesProps> = ({ student
     try {
       setIsLoading(true);
       
-      const today = new Date();
+      const now = new Date();
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
       const todayString = today.toISOString().split('T')[0]; // Get YYYY-MM-DD format
+      
+      console.log('Fetching classes from date:', todayString);
       
       // Fetch classes for the student's school and grade - only future classes
       const { data: classData, error } = await supabase
@@ -67,6 +71,8 @@ const StudentUpcomingClasses: React.FC<StudentUpcomingClassesProps> = ({ student
         .order('class_time', { ascending: true });
 
       if (error) throw error;
+
+      console.log('Raw class data:', classData);
 
       // Get existing feedback for this student
       const { data: feedbackData } = await supabase
@@ -84,9 +90,16 @@ const StudentUpcomingClasses: React.FC<StudentUpcomingClassesProps> = ({ student
             .eq('id', classItem.teacher_id)
             .single();
 
+          // Create proper datetime object for comparison
           const classDateTime = new Date(`${classItem.class_date}T${classItem.class_time}`);
-          const isPast = classDateTime < today;
+          const isPast = classDateTime < now;
           const hasFeedback = feedbackClassIds.has(classItem.id);
+
+          console.log(`Class ${classItem.subject} on ${classItem.class_date} at ${classItem.class_time}:`, {
+            classDateTime: classDateTime.toISOString(),
+            now: now.toISOString(),
+            isPast
+          });
 
           return {
             ...classItem,
@@ -97,9 +110,15 @@ const StudentUpcomingClasses: React.FC<StudentUpcomingClassesProps> = ({ student
         })
       );
 
-      // Only show upcoming classes (not past classes)
-      const filteredClasses = classesWithTeachers.filter(classItem => !classItem.is_past);
+      // Filter out past classes more strictly
+      const filteredClasses = classesWithTeachers.filter(classItem => {
+        const classDateTime = new Date(`${classItem.class_date}T${classItem.class_time}`);
+        const isUpcoming = classDateTime >= now;
+        console.log(`Filtering ${classItem.subject}: isUpcoming=${isUpcoming}`);
+        return isUpcoming;
+      });
 
+      console.log('Filtered upcoming classes:', filteredClasses);
       setUpcomingClasses(filteredClasses);
     } catch (error) {
       console.error('Error fetching upcoming classes:', error);

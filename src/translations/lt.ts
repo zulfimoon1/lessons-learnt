@@ -1,3 +1,4 @@
+
 import { ltAuthTranslations } from './lt/auth';
 import { ltTeacherTranslations } from './lt/teacher';
 import { ltWeeklyTranslations } from './lt/weekly';
@@ -86,6 +87,7 @@ export const ltTranslations = {
   'dashboard.wellnessCheck': 'Gerovės patikrinimas',
   'dashboard.studentDashboard': 'Mokinio valdymo skydas',
   'dashboard.teacherDashboard': 'Mokytojo valdymo skydas',
+  'dashboard.studentWelcomeMessage': 'Pasiruošę dalintis atsiliepimais ir padėti pagerinti mokymosi patirtį!',
 
   // Class translations - Enhanced
   'class.schedule': 'Tvarkaraštis',
