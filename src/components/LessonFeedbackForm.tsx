@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -67,7 +68,7 @@ const LessonFeedbackForm: React.FC = () => {
 
     try {
       const { error } = await supabase
-        .from('lesson_feedback')
+        .from('feedback')
         .insert({
           student_id: student.id,
           student_name: student.full_name,
@@ -198,7 +199,6 @@ const LessonFeedbackForm: React.FC = () => {
                 <StarRating
                   rating={understanding}
                   onRatingChange={setUnderstanding}
-                  size="md"
                 />
               </div>
 
@@ -209,7 +209,6 @@ const LessonFeedbackForm: React.FC = () => {
                 <StarRating
                   rating={interest}
                   onRatingChange={setInterest}
-                  size="md"
                 />
               </div>
 
@@ -220,7 +219,6 @@ const LessonFeedbackForm: React.FC = () => {
                 <StarRating
                   rating={growth}
                   onRatingChange={setGrowth}
-                  size="md"
                 />
               </div>
             </div>

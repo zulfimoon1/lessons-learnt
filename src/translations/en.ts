@@ -1,3 +1,4 @@
+
 export const enTranslations = {
   nav: {
     dashboard: 'Dashboard',
@@ -248,26 +249,19 @@ export const enTranslations = {
       title: 'Mental Health'
     }
   },
-  ai: {
-    insights: 'AI Insights'
+  aiInsights: {
+    title: 'AI Personal Insights',
+    personalizedInsights: 'Personalized insights about your learning journey',
+    exploreLearningMethods: 'Explore New Learning Methods',
+    tryDifferentTechniques: 'Try different study techniques or ask your teacher about more engaging activities.',
+    increaseParticipation: 'Increase Participation',
+    regularFeedbackHelps: 'Regular feedback helps both you and your teachers understand your learning needs better.',
+    declining: 'Declining'
   },
   admin: {
     role: 'Admin'
   },
-  analytics: {
-    title: 'Analytics'
-  },
-  ai: {
-    insights: {
-      title: 'AI Personal Insights',
-      personalizedInsights: 'Personalized insights about your learning journey',
-      exploreLearningMethods: 'Explore New Learning Methods',
-      tryDifferentTechniques: 'Try different study techniques or ask your teacher about more engaging activities.',
-      increaseParticipation: 'Increase Participation',
-      regularFeedbackHelps: 'Regular feedback helps both you and your teachers understand your learning needs better.',
-      declining: 'Declining'
-    }
-  },
+  analyticsTitle: 'Analytics',
 
   // Feedback form translations
   feedback: {
@@ -293,7 +287,7 @@ export const enTranslations = {
     suggestionsImprovement: 'Suggestions for improvement',
     suggestionsPlaceholder: 'What could be improved? (Class session?)',
     additionalComments: 'Additional comments',
-    additionalCommentsPlaceholder: 'Do you have anything thoughts or feedback you\'d like to share?',
+    additionalCommentsPlaceholder: 'Do you have any thoughts or feedback you would like to share?',
     submitFeedback: 'Submit Feedback',
     submitting: 'Submitting...',
     submitSuccess: 'Feedback submitted successfully!',
@@ -302,6 +296,7 @@ export const enTranslations = {
 
   // Analytics translations
   analytics: {
+    title: 'Analytics',
     week1: 'Week 1',
     week2: 'Week 2',
     week3: 'Week 3',
