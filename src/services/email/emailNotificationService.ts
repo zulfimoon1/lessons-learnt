@@ -1,4 +1,5 @@
 
+import { supabase } from '@/integrations/supabase/client';
 import { EmailLogger } from './emailLogger';
 import { 
   generateDataExportConfirmationTemplate,
@@ -40,24 +41,30 @@ class EmailNotificationService {
         requestId: request.requestId
       });
 
-      const template = this.generateEmailTemplate(request);
-      
-      // For now, we'll simulate sending the email
-      // In a real implementation, this would call a Supabase Edge Function with Resend
-      console.log('📧 Email would be sent:', {
-        to: request.userEmail,
-        subject: template.subject,
-        html: template.htmlContent.substring(0, 100) + '...'
+      // Call the Supabase Edge Function for real email sending
+      const { data, error } = await supabase.functions.invoke('send-privacy-email', {
+        body: request
       });
 
-      // Simulate email sending delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      if (error) {
+        console.error('❌ Edge function error:', error);
+        EmailLogger.showErrorToast();
+        return false;
+      }
+
+      if (!data?.success) {
+        console.error('❌ Email sending failed:', data);
+        EmailLogger.showErrorToast();
+        return false;
+      }
+
+      console.log('✅ Email sent successfully:', data);
       
-      // Log the email
+      // Log the email locally
       EmailLogger.logEmail({
         type: request.type,
         recipient: request.userEmail,
-        subject: template.subject,
+        subject: this.generateEmailTemplate(request).subject,
       });
 
       // Show success notification
