@@ -37,6 +37,18 @@ export interface TrendAnalysis {
   }>;
 }
 
+interface MentalHealthAlert {
+  id: string;
+  student_id: string;
+  student_name: string;
+  school: string;
+  grade: string;
+  content: string;
+  severity_level: number;
+  created_at: string;
+  alert_type: string;
+}
+
 class AdvancedAIAnalyticsService {
   
   async generateInsights(
@@ -77,7 +89,7 @@ class AdvancedAIAnalyticsService {
     }
   }
 
-  async analyzeTrends(alerts: any[], school: string): Promise<AnalyticsInsight[]> {
+  async analyzeTrends(alerts: MentalHealthAlert[], school: string): Promise<AnalyticsInsight[]> {
     const insights: AnalyticsInsight[] = [];
     
     // Analyze severity trends
@@ -125,7 +137,7 @@ class AdvancedAIAnalyticsService {
     return insights;
   }
 
-  async analyzePatterns(alerts: any[], school: string): Promise<AnalyticsInsight[]> {
+  async analyzePatterns(alerts: MentalHealthAlert[], school: string): Promise<AnalyticsInsight[]> {
     const insights: AnalyticsInsight[] = [];
     
     // Time-based pattern analysis
@@ -152,7 +164,7 @@ class AdvancedAIAnalyticsService {
     return insights;
   }
 
-  async generatePredictions(alerts: any[], school: string): Promise<AnalyticsInsight[]> {
+  async generatePredictions(alerts: MentalHealthAlert[], school: string): Promise<AnalyticsInsight[]> {
     const insights: AnalyticsInsight[] = [];
     
     // Predict potential risk escalation
@@ -183,14 +195,16 @@ class AdvancedAIAnalyticsService {
     return insights;
   }
 
-  private calculateSeverityTrend(alerts: any[]) {
+  private calculateSeverityTrend(alerts: MentalHealthAlert[]) {
     const recent = alerts.slice(0, Math.floor(alerts.length / 2));
     const older = alerts.slice(Math.floor(alerts.length / 2));
     
-    const recentAvgSeverity = recent.reduce((sum, alert) => sum + alert.severity_level, 0) / recent.length;
-    const olderAvgSeverity = older.reduce((sum, alert) => sum + alert.severity_level, 0) / older.length;
+    const recentAvgSeverity = recent.length > 0 ? 
+      recent.reduce((sum, alert) => sum + alert.severity_level, 0) / recent.length : 0;
+    const olderAvgSeverity = older.length > 0 ? 
+      older.reduce((sum, alert) => sum + alert.severity_level, 0) / older.length : 0;
     
-    const increase = (recentAvgSeverity - olderAvgSeverity) / olderAvgSeverity;
+    const increase = olderAvgSeverity > 0 ? (recentAvgSeverity - olderAvgSeverity) / olderAvgSeverity : 0;
     const confidence = Math.min(0.9, alerts.length / 20); // Higher confidence with more data
     
     return {
@@ -201,20 +215,21 @@ class AdvancedAIAnalyticsService {
     };
   }
 
-  private analyzeLanguageSpecificTrends(alerts: any[]) {
+  private analyzeLanguageSpecificTrends(alerts: MentalHealthAlert[]) {
     // Simulate language detection from alert content
     const languagePatterns = alerts.reduce((acc, alert) => {
       const language = this.detectLanguageFromContent(alert.content);
       if (!acc[language]) acc[language] = [];
       acc[language].push(alert);
       return acc;
-    }, {} as Record<string, any[]>);
+    }, {} as Record<string, MentalHealthAlert[]>);
     
     const significantFindings = Object.entries(languagePatterns)
       .filter(([_, alertsForLang]) => Array.isArray(alertsForLang) && alertsForLang.length >= 3)
       .map(([lang, alertsForLang]) => ({
         language: lang,
-        avgSeverity: alertsForLang.reduce((sum, a) => sum + a.severity_level, 0) / alertsForLang.length,
+        avgSeverity: alertsForLang.length > 0 ? 
+          alertsForLang.reduce((sum, a) => sum + a.severity_level, 0) / alertsForLang.length : 0,
         count: alertsForLang.length
       }));
     
@@ -224,7 +239,7 @@ class AdvancedAIAnalyticsService {
     };
   }
 
-  private analyzeTimePatterns(alerts: any[]) {
+  private analyzeTimePatterns(alerts: MentalHealthAlert[]) {
     const hourCounts = alerts.reduce((acc, alert) => {
       const hour = new Date(alert.created_at).getHours();
       acc[hour] = (acc[hour] || 0) + 1;
@@ -243,7 +258,7 @@ class AdvancedAIAnalyticsService {
     };
   }
 
-  private predictRiskEscalation(alerts: any[]) {
+  private predictRiskEscalation(alerts: MentalHealthAlert[]) {
     const recentWeek = alerts.filter(alert => 
       new Date(alert.created_at) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
     );
