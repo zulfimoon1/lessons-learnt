@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Navigate } from "react-router-dom";
@@ -9,8 +10,9 @@ import FeedbackDashboard from "@/components/dashboard/teacher/FeedbackDashboard"
 import DoctorDashboard from "@/components/dashboard/doctor/DoctorDashboard";
 import WeeklySummariesTab from "@/components/dashboard/teacher/WeeklySummariesTab";
 import SchoolAdminDashboard from "@/components/dashboard/admin/SchoolAdminDashboard";
+import SubscriptionManagement from "@/components/platform-admin/SubscriptionManagement";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
-import { LogOut, Calendar, MessageSquare, FileText, Heart, School, GraduationCap, Users } from "lucide-react";
+import { LogOut, Calendar, MessageSquare, FileText, Heart, School, GraduationCap, Users, CreditCard } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -224,6 +226,15 @@ const TeacherDashboard = () => {
                     {t('dashboard.schoolAdmin')}
                   </TabsTrigger>
                 )}
+                {isAdmin && (
+                  <TabsTrigger 
+                    value="subscription" 
+                    className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-brand-orange data-[state=active]:to-brand-teal data-[state=active]:text-white data-[state=inactive]:text-gray-600 data-[state=inactive]:hover:text-brand-dark border-b-2 border-transparent data-[state=active]:border-brand-teal rounded-none px-6 py-4 font-medium transition-all duration-200"
+                  >
+                    <CreditCard className="w-4 h-4 mr-2" />
+                    Subscription
+                  </TabsTrigger>
+                )}
               </TabsList>
             </div>
 
@@ -249,6 +260,12 @@ const TeacherDashboard = () => {
               {isAdmin && (
                 <TabsContent value="school-admin" className="mt-0">
                   <SchoolAdminDashboard teacher={teacher} />
+                </TabsContent>
+              )}
+
+              {isAdmin && (
+                <TabsContent value="subscription" className="mt-0">
+                  <SubscriptionManagement />
                 </TabsContent>
               )}
             </div>
