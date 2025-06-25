@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Navigate, useSearchParams, useNavigate } from "react-router-dom";
@@ -33,19 +32,6 @@ const StudentDashboard = () => {
     return <Navigate to="/student-login" replace />;
   }
 
-  const handleLogout = () => {
-    console.log('🚪 Student logout initiated');
-    try {
-      logout();
-      console.log('✅ Student logout called, navigating to home');
-      navigate('/', { replace: true });
-    } catch (error) {
-      console.error('❌ Student logout error:', error);
-      // Still try to navigate home even if logout fails
-      navigate('/', { replace: true });
-    }
-  };
-
   const handleTabChange = (value: string) => {
     const params = new URLSearchParams(searchParams);
     params.set('tab', value);
@@ -64,7 +50,7 @@ const StudentDashboard = () => {
           </div>
           <div className="flex items-center gap-4">
             <LanguageSwitcher />
-            <Button variant="outline" onClick={handleLogout} className="border-brand-teal text-brand-teal hover:bg-brand-teal hover:text-white">
+            <Button variant="outline" onClick={logout} className="border-brand-teal text-brand-teal hover:bg-brand-teal hover:text-white">
               <LogOut className="w-4 h-4 mr-2" />
               {t('logout')}
             </Button>

@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { SchoolIcon, LogOut } from "lucide-react";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { useNavigate } from "react-router-dom";
 
 interface DashboardHeaderProps {
   title: string;
@@ -14,21 +13,6 @@ interface DashboardHeaderProps {
 
 const DashboardHeader: React.FC<DashboardHeaderProps> = ({ title, userName, onLogout }) => {
   const { t } = useLanguage();
-  const navigate = useNavigate();
-
-  const handleLogout = () => {
-    console.log('🚪 Logout button clicked');
-    try {
-      onLogout();
-      console.log('✅ Logout function called, navigating to home');
-      // Force navigation to home page
-      navigate('/', { replace: true });
-    } catch (error) {
-      console.error('❌ Logout error:', error);
-      // Still try to navigate home even if logout fails
-      navigate('/', { replace: true });
-    }
-  };
 
   return (
     <header className="bg-card/80 backdrop-blur-sm border-b border-border p-4">
@@ -43,7 +27,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({ title, userName, onLo
             {t('admin.welcome') || 'Welcome'}, {userName}
           </span>
           <Button
-            onClick={handleLogout}
+            onClick={onLogout}
             variant="outline"
             className="flex items-center gap-2"
             type="button"

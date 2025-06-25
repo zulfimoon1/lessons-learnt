@@ -1,7 +1,7 @@
-
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { Teacher, Student, AuthContextType } from '@/types/auth';
 import { loginTeacher, signupTeacher, loginStudent, signupStudent } from '@/services/authIntegrationService';
+import { useNavigate } from 'react-router-dom';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -13,11 +13,13 @@ export const useAuth = () => {
   return context;
 };
 
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+// Create a wrapper component that has access to useNavigate
+const AuthProviderInner: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [teacher, setTeacher] = useState<Teacher | null>(null);
   const [student, setStudent] = useState<Student | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [csrfToken] = useState(() => Math.random().toString(36).substring(2));
+  const navigate = useNavigate();
 
   // Restore session from localStorage on mount
   useEffect(() => {
@@ -118,12 +120,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const logout = () => {
-    console.log('AuthContext: Logging out');
-    setTeacher(null);
-    setStudent(null);
-    localStorage.removeItem('teacher');
-    localStorage.removeItem('student');
-    localStorage.removeItem('platformAdmin');
+    console.log('AuthContext: Centralized logout initiated');
+    try {
+      // Clear authentication state
+      setTeacher(null);
+      setStudent(null);
+      localStorage.removeItem('teacher');
+      localStorage.removeItem('student');
+      localStorage.removeItem('platformAdmin');
+      
+      console.log('AuthContext: Logout successful, navigating to home');
+      
+      // Centralized navigation handling
+      navigate('/', { replace: true });
+    } catch (error) {
+      console.error('AuthContext: Logout error:', error);
+      // Still navigate home even if there's an error
+      navigate('/', { replace: true });
+    }
   };
 
   const value: AuthContextType = {
@@ -140,4 +154,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+};
+
+// Main provider component that wraps the inner component
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  return <AuthProviderInner>{children}</AuthProviderInner>;
 };
