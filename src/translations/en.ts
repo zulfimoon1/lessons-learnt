@@ -1,6 +1,7 @@
+
 import { enAuthTranslations } from './en/auth';
 import { enTeacherTranslations } from './en/teacher';
-import { enWeeklyTranslations } from './en/weekly';
+import { enWeeklySummaryTranslations } from './en/weekly';
 import { enChatTranslations } from './en/chat';
 import { enDemoTranslations } from './en/demo';
 
@@ -319,7 +320,7 @@ export const enTranslations = {
   'welcome.title': 'Lessons Learnt',
   'welcome.heroTitle1': 'Collaborative Classrooms',
   'welcome.heroTitle2': 'Unstoppable Minds',
-  'welcome.subtitle': 'Students feedback, teachers transform, wellbeing thrives—the game-changing platform where every student becomes a co-creator of their educational journey',
+  'welcome.subtitle': 'Students rate lessons, access counselors instantly—the only platform giving teachers game-changing insights while ensuring no student struggles alone!',
   'welcome.freeForStudents': 'Always free for students!',
   'tagline.studentLead': 'Where every student voice shapes the future of learning',
 
@@ -390,7 +391,7 @@ export const enTranslations = {
   // Merge all sub-translations
   ...enAuthTranslations,
   ...enTeacherTranslations,
-  ...enWeeklyTranslations,
+  ...enWeeklySummaryTranslations,
   ...enChatTranslations,
   ...enDemoTranslations,
 };
