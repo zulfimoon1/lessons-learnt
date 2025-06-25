@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Navigate } from "react-router-dom";
@@ -232,7 +231,7 @@ const TeacherDashboard = () => {
                     className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-brand-orange data-[state=active]:to-brand-teal data-[state=active]:text-white data-[state=inactive]:text-gray-600 data-[state=inactive]:hover:text-brand-dark border-b-2 border-transparent data-[state=active]:border-brand-teal rounded-none px-6 py-4 font-medium transition-all duration-200"
                   >
                     <CreditCard className="w-4 h-4 mr-2" />
-                    Subscription
+                    {t('dashboard.subscription')}
                   </TabsTrigger>
                 )}
               </TabsList>

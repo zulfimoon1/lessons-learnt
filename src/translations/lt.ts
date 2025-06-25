@@ -79,6 +79,7 @@ export const ltTranslations = {
   'dashboard.analytics': 'Mokyklos analitika',
   'dashboard.adminPanel': 'Administratoriaus skydas',
   'dashboard.accessAnalytics': 'Prieiga prie detalios mokyklos analitikos',
+  'dashboard.subscription': 'Prenumerata',
 
   // Teacher Dashboard
   'teacher.dashboard.title': 'Mokytojo valdymo skydas',
