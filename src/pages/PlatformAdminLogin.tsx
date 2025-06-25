@@ -153,7 +153,7 @@ const PlatformAdminLogin = () => {
                       />
                     </div>
 
-                    <div className="bg-brand-teal/10 border border-brand-teal/30 rounded-lg p-3">
+                    <div className="bg-brand-gradient/10 border border-brand-teal/30 rounded-lg p-3">
                       <div className="flex items-center gap-2 text-brand-teal text-sm">
                         <ShieldIcon className="w-4 h-4" />
                         <span className="font-medium">Secure Authentication</span>
