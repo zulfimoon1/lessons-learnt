@@ -5,10 +5,9 @@ import { Navigate } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { BarChart3, Users, MessageSquare, Settings, LogOut, Shield } from "lucide-react";
+import { BarChart3, Users, MessageSquare, Settings, LogOut } from "lucide-react";
 import FeedbackAnalytics from "@/components/dashboard/admin/FeedbackAnalytics";
 import TeacherManagement from "@/components/dashboard/admin/TeacherManagement";
-import SecurityAdvisorStatus from "@/components/admin/SecurityAdvisorStatus";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 const AdminDashboard = () => {
@@ -48,7 +47,7 @@ const AdminDashboard = () => {
         </div>
 
         <Tabs defaultValue="overview" className="space-y-4">
-          <TabsList className="grid w-full grid-cols-5">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="overview" className="flex items-center gap-2">
               <BarChart3 className="w-4 h-4" />
               Overview
@@ -60,10 +59,6 @@ const AdminDashboard = () => {
             <TabsTrigger value="staff" className="flex items-center gap-2">
               <Users className="w-4 h-4" />
               Staff Management
-            </TabsTrigger>
-            <TabsTrigger value="security" className="flex items-center gap-2">
-              <Shield className="w-4 h-4" />
-              Security Status
             </TabsTrigger>
             <TabsTrigger value="settings" className="flex items-center gap-2">
               <Settings className="w-4 h-4" />
@@ -137,18 +132,6 @@ const AdminDashboard = () => {
 
           <TabsContent value="staff" className="space-y-4">
             <TeacherManagement school={teacher.school} />
-          </TabsContent>
-
-          <TabsContent value="security" className="space-y-4">
-            <div className="space-y-6">
-              <div>
-                <h2 className="text-xl font-semibold mb-4">Security Advisor Status</h2>
-                <p className="text-muted-foreground mb-4">
-                  Real-time security analysis and recommendations for your Supabase configuration.
-                </p>
-              </div>
-              <SecurityAdvisorStatus />
-            </div>
           </TabsContent>
 
           <TabsContent value="settings" className="space-y-4">

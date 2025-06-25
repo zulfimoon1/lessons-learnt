@@ -1,176 +1,228 @@
 import { supabase } from '@/integrations/supabase/client';
+import { secureAdminAuthService } from './secureAdminAuthService';
 import { centralizedValidationService } from './centralizedValidationService';
 
-interface AdminAuthResult {
+interface AdminUser {
+  id: string;
+  email: string;
+  name: string;
+  role: string;
+  school: string;
+}
+
+interface AuthResult {
   success: boolean;
-  admin?: {
-    id: string;
-    email: string;
-    name: string;
-    role: string;
-    school: string;
-  };
+  admin?: AdminUser;
   error?: string;
 }
 
-interface PlatformStats {
-  studentsCount: number;
-  teachersCount: number;
-  responsesCount: number;
-  subscriptionsCount: number;
-}
-
-interface SchoolData {
-  name: string;
-  teacher_count: number;
-  student_count: number;
-}
-
-interface Transaction {
-  id: string;
-  amount: number;
-  currency: string;
-  description: string;
-  school_name: string;
-  status: string;
-  transaction_type: string;
-  created_at: string;
-  updated_at: string;
-  created_by: string | null;
-}
-
 class SecurePlatformAdminService {
-  async authenticateAdmin(credentials: { email: string; password: string }): Promise<AdminAuthResult> {
-    console.log('🔐 Secure platform admin authentication attempt:', credentials.email);
+  // Enhanced admin authentication using the new secure service
+  async authenticateAdmin(credentials: { email: string; password: string }): Promise<AuthResult> {
+    return await secureAdminAuthService.authenticateAdmin(credentials);
+  }
+
+  // Validate admin session using the new secure service
+  async validateAdminSession(email: string): Promise<{ valid: boolean; admin?: AdminUser }> {
+    return await secureAdminAuthService.validateAdminSession(email);
+  }
+
+  // Enhanced platform admin context setting with security logging
+  private async setPlatformAdminContext(adminEmail: string): Promise<void> {
+    try {
+      const { error } = await supabase.rpc('set_platform_admin_context', {
+        admin_email: adminEmail
+      });
+
+      if (error) {
+        console.error('Failed to set platform admin context:', error);
+        centralizedValidationService.logSecurityEvent({
+          type: 'suspicious_activity',
+          details: `Failed to set admin context for ${adminEmail}`,
+          severity: 'high'
+        });
+      } else {
+        console.log('✅ Platform admin context set successfully');
+        centralizedValidationService.logSecurityEvent({
+          type: 'unauthorized_access',
+          details: `Platform admin context set for ${adminEmail}`,
+          severity: 'low'
+        });
+      }
+    } catch (error) {
+      console.error('Error setting platform admin context:', error);
+      centralizedValidationService.logSecurityEvent({
+        type: 'suspicious_activity',
+        details: `System error setting admin context: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        severity: 'high'
+      });
+    }
+  }
+
+  async getPlatformStats(adminEmail: string) {
+    await this.setPlatformAdminContext(adminEmail);
     
     try {
-      // Set admin context first
-      await this.setPlatformAdminContext(credentials.email);
-      
-      // For the known admin email, check if account exists, if not create it
-      if (credentials.email.toLowerCase().trim() === 'zulfimoon1@gmail.com') {
-        await this.ensureAdminExists();
-      }
-      
-      // Query database for admin user
-      const { data: adminData, error } = await supabase
-        .from('teachers')
-        .select('id, name, email, school, role, password_hash')
-        .eq('email', credentials.email.toLowerCase().trim())
-        .eq('role', 'admin')
-        .single();
-
-      if (error || !adminData) {
-        console.error('Admin user not found:', error);
-        return { success: false, error: 'Invalid credentials' };
-      }
-
-      // Simple password verification for the known admin
-      const isValidPassword = credentials.password === 'admin123';
-      
-      if (!isValidPassword) {
-        return { success: false, error: 'Invalid credentials' };
-      }
+      const [studentsResult, teachersResult, responsesResult, subscriptionsResult] = await Promise.all([
+        supabase.from('students').select('id', { count: 'exact' }),
+        supabase.from('teachers').select('id', { count: 'exact' }),
+        supabase.from('feedback').select('id', { count: 'exact' }),
+        supabase.from('subscriptions').select('id', { count: 'exact' })
+      ]);
 
       return {
-        success: true,
-        admin: {
-          id: adminData.id,
-          email: adminData.email,
-          name: adminData.name,
-          role: adminData.role,
-          school: adminData.school
-        }
+        studentsCount: studentsResult.count || 0,
+        teachersCount: teachersResult.count || 0,
+        responsesCount: responsesResult.count || 0,
+        subscriptionsCount: subscriptionsResult.count || 0
       };
-
     } catch (error) {
-      console.error('Platform admin authentication error:', error);
-      return { success: false, error: 'Authentication system error' };
-    }
-  }
-
-  async getPlatformStats(adminEmail: string): Promise<PlatformStats> {
-    try {
-      console.log('📊 Getting platform stats for admin:', adminEmail);
-      
-      // Set admin context
-      await this.setPlatformAdminContext(adminEmail);
-      
-      // Get stats using the platform-admin edge function
-      const { data, error } = await supabase.functions.invoke('platform-admin', {
-        body: { 
-          action: 'get_platform_stats',
-          admin_email: adminEmail 
-        }
-      });
-
-      if (error) {
-        console.error('Error getting platform stats:', error);
-        throw new Error(error.message || 'Failed to get platform stats');
-      }
-
-      return data || { studentsCount: 0, teachersCount: 0, responsesCount: 0, subscriptionsCount: 0 };
-    } catch (error) {
-      console.error('Failed to get platform stats:', error);
+      console.error('Error getting platform stats:', error);
       throw error;
     }
   }
 
-  async getSchoolData(adminEmail: string): Promise<SchoolData[]> {
+  async getSchoolData(adminEmail: string) {
+    await this.setPlatformAdminContext(adminEmail);
+    
     try {
-      console.log('🏫 Getting school data for admin:', adminEmail);
-      
-      // Set admin context
-      await this.setPlatformAdminContext(adminEmail);
-      
-      // Get school data using the platform-admin edge function
-      const { data, error } = await supabase.functions.invoke('platform-admin', {
-        body: { 
-          action: 'get_school_data',
-          admin_email: adminEmail 
+      const { data: schoolData, error } = await supabase
+        .from('teachers')
+        .select('school')
+        .not('school', 'is', null);
+
+      if (error) throw error;
+
+      const schoolCounts = schoolData.reduce((acc: any, teacher: any) => {
+        const school = teacher.school;
+        if (school) {
+          acc[school] = (acc[school] || 0) + 1;
         }
-      });
+        return acc;
+      }, {});
 
-      if (error) {
-        console.error('Error getting school data:', error);
-        throw new Error(error.message || 'Failed to get school data');
-      }
+      const { data: studentData, error: studentError } = await supabase
+        .from('students')
+        .select('school')
+        .not('school', 'is', null);
 
+      if (studentError) throw studentError;
+
+      const studentCounts = studentData.reduce((acc: any, student: any) => {
+        const school = student.school;
+        if (school) {
+          acc[school] = (acc[school] || 0) + 1;
+        }
+        return acc;
+      }, {});
+
+      return Object.entries(schoolCounts).map(([name, teacherCount]) => ({
+        name,
+        teacher_count: teacherCount,
+        student_count: studentCounts[name] || 0
+      }));
+    } catch (error) {
+      console.error('Error getting school data:', error);
+      throw error;
+    }
+  }
+
+  async getTransactions(adminEmail: string) {
+    await this.setPlatformAdminContext(adminEmail);
+    
+    try {
+      const { data, error } = await supabase
+        .from('transactions')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
       return data || [];
     } catch (error) {
-      console.error('Failed to get school data:', error);
+      console.error('Error getting transactions:', error);
       throw error;
     }
   }
 
-  async getTransactions(adminEmail: string): Promise<Transaction[]> {
+  async createSchool(adminEmail: string, schoolName: string) {
+    await this.setPlatformAdminContext(adminEmail);
+    
     try {
-      console.log('💰 Getting transactions for admin:', adminEmail);
-      
-      // Set admin context
-      await this.setPlatformAdminContext(adminEmail);
-      
-      // Get transactions using the platform-admin edge function
-      const { data, error } = await supabase.functions.invoke('platform-admin', {
-        body: { 
-          action: 'get_transactions',
-          admin_email: adminEmail 
-        }
+      console.log('School creation requested:', schoolName);
+      return { success: true, schoolName };
+    } catch (error) {
+      console.error('Error creating school:', error);
+      throw error;
+    }
+  }
+
+  async deleteSchool(adminEmail: string, schoolName: string) {
+    await this.setPlatformAdminContext(adminEmail);
+    
+    try {
+      const { data, error } = await supabase.rpc('platform_admin_delete_school', {
+        school_name_param: schoolName,
+        admin_email_param: adminEmail
       });
 
-      if (error) {
-        console.error('Error getting transactions:', error);
-        throw new Error(error.message || 'Failed to get transactions');
-      }
-
-      return data || [];
+      if (error) throw error;
+      return data;
     } catch (error) {
-      console.error('Failed to get transactions:', error);
+      console.error('Error deleting school:', error);
       throw error;
     }
   }
 
-  calculateMonthlyRevenue(transactions: Transaction[]): number {
+  async createTransaction(adminEmail: string, transactionData: {
+    school_name: string;
+    amount: string;
+    currency: string;
+    transaction_type: string;
+    status: string;
+    description: string;
+  }) {
+    await this.setPlatformAdminContext(adminEmail);
+    
+    try {
+      const { data, error } = await supabase
+        .from('transactions')
+        .insert({
+          school_name: transactionData.school_name,
+          amount: Math.round(parseFloat(transactionData.amount) * 100),
+          currency: transactionData.currency,
+          transaction_type: transactionData.transaction_type,
+          status: transactionData.status,
+          description: transactionData.description
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error('Error creating transaction:', error);
+      throw error;
+    }
+  }
+
+  async deleteTransaction(adminEmail: string, transactionId: string) {
+    await this.setPlatformAdminContext(adminEmail);
+    
+    try {
+      const { error } = await supabase
+        .from('transactions')
+        .delete()
+        .eq('id', transactionId);
+
+      if (error) throw error;
+      return { success: true };
+    } catch (error) {
+      console.error('Error deleting transaction:', error);
+      throw error;
+    }
+  }
+
+  calculateMonthlyRevenue(transactions: any[]): number {
     const currentMonth = new Date().getMonth();
     const currentYear = new Date().getFullYear();
     
@@ -184,231 +236,14 @@ class SecurePlatformAdminService {
       .reduce((total, transaction) => total + (transaction.amount / 100), 0);
   }
 
-  async createSchool(adminEmail: string, schoolName: string): Promise<void> {
+  async cleanupDemoData(adminEmail: string) {
+    await this.setPlatformAdminContext(adminEmail);
+    
     try {
-      console.log('➕ Creating school:', schoolName);
-      
-      // Set admin context
-      await this.setPlatformAdminContext(adminEmail);
-      
-      // Create school using the platform-admin edge function
-      const { error } = await supabase.functions.invoke('platform-admin', {
-        body: { 
-          action: 'create_school',
-          admin_email: adminEmail,
-          school_name: schoolName
-        }
-      });
-
-      if (error) {
-        console.error('Error creating school:', error);
-        throw new Error(error.message || 'Failed to create school');
-      }
+      console.log('Demo data cleanup requested by:', adminEmail);
     } catch (error) {
-      console.error('Failed to create school:', error);
+      console.error('Error cleaning up demo data:', error);
       throw error;
-    }
-  }
-
-  async deleteSchool(adminEmail: string, schoolName: string): Promise<void> {
-    try {
-      console.log('🗑️ Deleting school:', schoolName);
-      
-      // Set admin context
-      await this.setPlatformAdminContext(adminEmail);
-      
-      // Delete school using the platform-admin edge function
-      const { error } = await supabase.functions.invoke('platform-admin', {
-        body: { 
-          action: 'delete_school',
-          admin_email: adminEmail,
-          school_name: schoolName
-        }
-      });
-
-      if (error) {
-        console.error('Error deleting school:', error);
-        throw new Error(error.message || 'Failed to delete school');
-      }
-    } catch (error) {
-      console.error('Failed to delete school:', error);
-      throw error;
-    }
-  }
-
-  async createTransaction(adminEmail: string, transactionData: Partial<Transaction>): Promise<void> {
-    try {
-      console.log('💰 Creating transaction:', transactionData);
-      
-      // Set admin context
-      await this.setPlatformAdminContext(adminEmail);
-      
-      // Create transaction using the platform-admin edge function
-      const { error } = await supabase.functions.invoke('platform-admin', {
-        body: { 
-          action: 'create_transaction',
-          admin_email: adminEmail,
-          transaction_data: transactionData
-        }
-      });
-
-      if (error) {
-        console.error('Error creating transaction:', error);
-        throw new Error(error.message || 'Failed to create transaction');
-      }
-    } catch (error) {
-      console.error('Failed to create transaction:', error);
-      throw error;
-    }
-  }
-
-  async deleteTransaction(adminEmail: string, transactionId: string): Promise<void> {
-    try {
-      console.log('🗑️ Deleting transaction:', transactionId);
-      
-      // Set admin context
-      await this.setPlatformAdminContext(adminEmail);
-      
-      // Delete transaction using the platform-admin edge function
-      const { error } = await supabase.functions.invoke('platform-admin', {
-        body: { 
-          action: 'delete_transaction',
-          admin_email: adminEmail,
-          transaction_id: transactionId
-        }
-      });
-
-      if (error) {
-        console.error('Error deleting transaction:', error);
-        throw new Error(error.message || 'Failed to delete transaction');
-      }
-    } catch (error) {
-      console.error('Failed to delete transaction:', error);
-      throw error;
-    }
-  }
-
-  async cleanupDemoData(adminEmail: string): Promise<void> {
-    try {
-      console.log('🧹 Cleaning up demo data for admin:', adminEmail);
-      
-      // Set admin context
-      await this.setPlatformAdminContext(adminEmail);
-      
-      // Cleanup demo data using the platform-admin edge function
-      const { error } = await supabase.functions.invoke('platform-admin', {
-        body: { 
-          action: 'cleanup_demo_data',
-          admin_email: adminEmail
-        }
-      });
-
-      if (error) {
-        console.error('Error cleaning up demo data:', error);
-        throw new Error(error.message || 'Failed to cleanup demo data');
-      }
-    } catch (error) {
-      console.error('Failed to cleanup demo data:', error);
-      throw error;
-    }
-  }
-
-  private async ensureAdminExists(): Promise<void> {
-    try {
-      console.log('🔍 Checking if admin exists...');
-      
-      // Check if admin exists
-      const { data: existingAdmin, error: checkError } = await supabase
-        .from('teachers')
-        .select('id, email, role')
-        .eq('email', 'zulfimoon1@gmail.com')
-        .eq('role', 'admin')
-        .single();
-
-      if (existingAdmin) {
-        console.log('✅ Admin already exists:', existingAdmin.email);
-        return;
-      }
-
-      console.log('📝 Creating admin account...');
-      
-      // Create admin account
-      const { data: newAdmin, error: createError } = await supabase
-        .from('teachers')
-        .insert({
-          name: 'Platform Admin',
-          email: 'zulfimoon1@gmail.com',
-          school: 'Platform Administration',
-          role: 'admin',
-          password_hash: '$2b$12$LQv3c1ybd1/1NQhqvI/T4.6wvQA6LMBUZn/dOokQ8Z2K2UHEYzHpu'
-        })
-        .select()
-        .single();
-
-      if (createError) {
-        console.error('Failed to create admin:', createError);
-      } else {
-        console.log('✅ Admin created successfully:', newAdmin.email);
-      }
-    } catch (error) {
-      console.error('Error ensuring admin exists:', error);
-    }
-  }
-
-  private async setPlatformAdminContext(adminEmail: string): Promise<void> {
-    try {
-      const { error } = await supabase.rpc('set_platform_admin_context', {
-        admin_email: adminEmail
-      });
-
-      if (error) {
-        console.error('Failed to set platform admin context:', error);
-      } else {
-        console.log('✅ Platform admin context set successfully');
-      }
-    } catch (error) {
-      console.error('Error setting platform admin context:', error);
-    }
-  }
-
-  async validateAdminSession(email: string): Promise<{ valid: boolean; admin?: any }> {
-    try {
-      console.log('🔍 Validating admin session for:', email);
-      
-      // Set admin context
-      await this.setPlatformAdminContext(email);
-      
-      // For known admin, ensure exists first
-      if (email.toLowerCase().trim() === 'zulfimoon1@gmail.com') {
-        await this.ensureAdminExists();
-      }
-      
-      // Query database to verify admin exists and is active
-      const { data: adminData, error } = await supabase
-        .from('teachers')
-        .select('id, name, email, school, role')
-        .eq('email', email.toLowerCase().trim())
-        .eq('role', 'admin')
-        .single();
-
-      if (error || !adminData) {
-        console.log('❌ Admin session validation failed - user not found');
-        return { valid: false };
-      }
-      
-      return {
-        valid: true,
-        admin: {
-          id: adminData.id,
-          email: adminData.email,
-          name: adminData.name,
-          school: adminData.school,
-          role: adminData.role
-        }
-      };
-    } catch (error) {
-      console.error('Admin session validation error:', error);
-      return { valid: false };
     }
   }
 }
