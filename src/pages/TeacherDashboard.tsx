@@ -8,8 +8,9 @@ import ScheduleTab from "@/components/dashboard/teacher/ScheduleTab";
 import FeedbackDashboard from "@/components/dashboard/teacher/FeedbackDashboard";
 import DoctorDashboard from "@/components/dashboard/doctor/DoctorDashboard";
 import WeeklySummariesTab from "@/components/dashboard/teacher/WeeklySummariesTab";
+import SchoolAdminDashboard from "@/components/dashboard/admin/SchoolAdminDashboard";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
-import { LogOut, Calendar, MessageSquare, FileText, Heart, School, GraduationCap } from "lucide-react";
+import { LogOut, Calendar, MessageSquare, FileText, Heart, School, GraduationCap, Users } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -128,15 +129,6 @@ const TeacherDashboard = () => {
             </div>
             <div className="flex gap-3">
               <LanguageSwitcher />
-              {isAdmin && (
-                <Button 
-                  variant="outline" 
-                  onClick={() => window.location.href = '/admin-dashboard'}
-                  className="border-brand-teal/30 hover:bg-brand-teal/10"
-                >
-                  {t('dashboard.adminPanel')}
-                </Button>
-              )}
               <Button 
                 variant="outline" 
                 onClick={handleLogout}
@@ -225,11 +217,11 @@ const TeacherDashboard = () => {
                 </TabsTrigger>
                 {isAdmin && (
                   <TabsTrigger 
-                    value="analytics" 
+                    value="school-admin" 
                     className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-brand-orange data-[state=active]:to-brand-teal data-[state=active]:text-white data-[state=inactive]:text-gray-600 data-[state=inactive]:hover:text-brand-dark border-b-2 border-transparent data-[state=active]:border-brand-teal rounded-none px-6 py-4 font-medium transition-all duration-200"
                   >
-                    <Heart className="w-4 h-4 mr-2" />
-                    {t('dashboard.analytics')}
+                    <Users className="w-4 h-4 mr-2" />
+                    {t('dashboard.schoolAdmin')}
                   </TabsTrigger>
                 )}
               </TabsList>
@@ -255,22 +247,8 @@ const TeacherDashboard = () => {
               </TabsContent>
 
               {isAdmin && (
-                <TabsContent value="analytics" className="mt-0">
-                  <div className="text-center py-12">
-                    <div className="w-20 h-20 bg-brand-teal/10 rounded-full mx-auto mb-4 flex items-center justify-center">
-                      <Heart className="w-10 h-10 text-brand-teal" />
-                    </div>
-                    <p className="text-brand-dark/60 mb-4">
-                      {t('dashboard.accessAnalytics')}
-                    </p>
-                    <Button 
-                      variant="outline" 
-                      onClick={() => window.location.href = '/admin-dashboard'}
-                      className="border-brand-teal text-brand-teal hover:bg-brand-teal hover:text-white"
-                    >
-                      {t('dashboard.adminPanel')}
-                    </Button>
-                  </div>
+                <TabsContent value="school-admin" className="mt-0">
+                  <SchoolAdminDashboard teacher={teacher} />
                 </TabsContent>
               )}
             </div>
