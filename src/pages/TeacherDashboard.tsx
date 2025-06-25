@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Navigate } from "react-router-dom";
@@ -23,6 +24,10 @@ const TeacherDashboard = () => {
   const navigate = useNavigate();
   const { t } = useLanguage();
   const [upcomingClassesCount, setUpcomingClassesCount] = useState(0);
+
+  // Debug: Log teacher role
+  console.log('Teacher role:', teacher?.role);
+  console.log('Is admin?', teacher?.role === 'admin');
 
   useEffect(() => {
     const fetchUpcomingClasses = async () => {
@@ -194,24 +199,24 @@ const TeacherDashboard = () => {
           <Tabs defaultValue="classes" className="w-full">
             {/* Tab Navigation - clean white background */}
             <div className="bg-white border-b border-gray-200">
-              <TabsList className="h-auto p-0 bg-transparent rounded-none w-full justify-start">
+              <TabsList className="h-auto p-0 bg-transparent rounded-none w-full justify-start overflow-x-auto">
                 <TabsTrigger 
                   value="classes" 
-                  className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-brand-orange data-[state=active]:to-brand-teal data-[state=active]:text-white data-[state=inactive]:text-gray-600 data-[state=inactive]:hover:text-brand-dark border-b-2 border-transparent data-[state=active]:border-brand-teal rounded-none px-6 py-4 font-medium transition-all duration-200"
+                  className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-brand-orange data-[state=active]:to-brand-teal data-[state=active]:text-white data-[state=inactive]:text-gray-600 data-[state=inactive]:hover:text-brand-dark border-b-2 border-transparent data-[state=active]:border-brand-teal rounded-none px-6 py-4 font-medium transition-all duration-200 whitespace-nowrap"
                 >
                   <Calendar className="w-4 h-4 mr-2" />
                   {t('dashboard.upcomingClasses')}
                 </TabsTrigger>
                 <TabsTrigger 
                   value="feedback" 
-                  className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-brand-orange data-[state=active]:to-brand-teal data-[state=active]:text-white data-[state=inactive]:text-gray-600 data-[state=inactive]:hover:text-brand-dark border-b-2 border-transparent data-[state=active]:border-brand-teal rounded-none px-6 py-4 font-medium transition-all duration-200"
+                  className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-brand-orange data-[state=active]:to-brand-teal data-[state=active]:text-white data-[state=inactive]:text-gray-600 data-[state=inactive]:hover:text-brand-dark border-b-2 border-transparent data-[state=active]:border-brand-teal rounded-none px-6 py-4 font-medium transition-all duration-200 whitespace-nowrap"
                 >
                   <MessageSquare className="w-4 h-4 mr-2" />
                   {t('dashboard.feedback')}
                 </TabsTrigger>
                 <TabsTrigger 
                   value="weekly-summaries" 
-                  className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-brand-orange data-[state=active]:to-brand-teal data-[state=active]:text-white data-[state=inactive]:text-gray-600 data-[state=inactive]:hover:text-brand-dark border-b-2 border-transparent data-[state=active]:border-brand-teal rounded-none px-6 py-4 font-medium transition-all duration-200"
+                  className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-brand-orange data-[state=active]:to-brand-teal data-[state=active]:text-white data-[state=inactive]:text-gray-600 data-[state=inactive]:hover:text-brand-dark border-b-2 border-transparent data-[state=active]:border-brand-teal rounded-none px-6 py-4 font-medium transition-all duration-200 whitespace-nowrap"
                 >
                   <FileText className="w-4 h-4 mr-2" />
                   {t('dashboard.weeklySummaries')}
@@ -219,7 +224,7 @@ const TeacherDashboard = () => {
                 {isAdmin && (
                   <TabsTrigger 
                     value="school-admin" 
-                    className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-brand-orange data-[state=active]:to-brand-teal data-[state=active]:text-white data-[state=inactive]:text-gray-600 data-[state=inactive]:hover:text-brand-dark border-b-2 border-transparent data-[state=active]:border-brand-teal rounded-none px-6 py-4 font-medium transition-all duration-200"
+                    className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-brand-orange data-[state=active]:to-brand-teal data-[state=active]:text-white data-[state=inactive]:text-gray-600 data-[state=inactive]:hover:text-brand-dark border-b-2 border-transparent data-[state=active]:border-brand-teal rounded-none px-6 py-4 font-medium transition-all duration-200 whitespace-nowrap"
                   >
                     <Users className="w-4 h-4 mr-2" />
                     {t('dashboard.schoolAdmin')}
@@ -228,7 +233,7 @@ const TeacherDashboard = () => {
                 {isAdmin && (
                   <TabsTrigger 
                     value="subscription" 
-                    className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-brand-orange data-[state=active]:to-brand-teal data-[state=active]:text-white data-[state=inactive]:text-gray-600 data-[state=inactive]:hover:text-brand-dark border-b-2 border-transparent data-[state=active]:border-brand-teal rounded-none px-6 py-4 font-medium transition-all duration-200"
+                    className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-brand-orange data-[state=active]:to-brand-teal data-[state=active]:text-white data-[state=inactive]:text-gray-600 data-[state=inactive]:hover:text-brand-dark border-b-2 border-transparent data-[state=active]:border-brand-teal rounded-none px-6 py-4 font-medium transition-all duration-200 whitespace-nowrap"
                   >
                     <CreditCard className="w-4 h-4 mr-2" />
                     {t('dashboard.subscription')}
