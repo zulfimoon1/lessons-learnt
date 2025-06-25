@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -8,6 +7,7 @@ import { Switch } from '@/components/ui/switch';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Shield, Download, Trash2, FileText, Calendar, Check, X, Clock } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import DataExportDialog from './DataExportDialog';
 
 interface PrivacySettings {
   analytics_enabled: boolean;
@@ -30,6 +30,7 @@ const PrivacyDashboard: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [settings, setSettings] = useState<PrivacySettings | null>(null);
   const [requests, setRequests] = useState<DataSubjectRequest[]>([]);
+  const [exportDialogOpen, setExportDialogOpen] = useState(false);
 
   useEffect(() => {
     loadPrivacyData();
@@ -288,13 +289,13 @@ const PrivacyDashboard: React.FC = () => {
 
             <Button
               variant="outline"
-              onClick={() => submitDataRequest('portability')}
-              className="flex items-center gap-2 h-auto p-4 justify-start"
+              onClick={() => setExportDialogOpen(true)}
+              className="flex items-center gap-2 h-auto p-4 justify-start bg-blue-50 border-blue-200 hover:bg-blue-100"
             >
-              <Download className="w-4 h-4" />
+              <Download className="w-4 h-4 text-blue-600" />
               <div className="text-left">
-                <div className="font-medium">{t('privacy.rightToPortability')}</div>
-                <div className="text-sm text-gray-600">Export your data</div>
+                <div className="font-medium text-blue-700">{t('privacy.rightToPortability')}</div>
+                <div className="text-sm text-blue-600">Export your data</div>
               </div>
             </Button>
           </div>
@@ -338,6 +339,12 @@ const PrivacyDashboard: React.FC = () => {
           </CardContent>
         </Card>
       )}
+
+      {/* Data Export Dialog */}
+      <DataExportDialog 
+        open={exportDialogOpen} 
+        onOpenChange={setExportDialogOpen} 
+      />
     </div>
   );
 };
