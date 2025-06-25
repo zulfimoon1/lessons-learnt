@@ -521,6 +521,21 @@ export const enTranslations = {
   'privacy.consentGiven': 'Consent Given',
   'privacy.lastUpdated': 'Last Updated',
 
+  // Demo section - Missing keys that are used in Demo.tsx
+  'demo.discoverFuture': 'Discover the Future of Education',
+  'demo.discoverDescription': 'Transform the learning experience with our innovative platform designed for student success and wellbeing.',
+  'demo.realUserExperience': 'Real User Experience',
+  'demo.signUpTestFeatures': 'Sign up and test all features',
+  'demo.experienceCompletePlatform': 'Experience the Complete Platform',
+  'demo.realAuthentication': 'Real Authentication',
+  'demo.realAuthDescription': 'Sign up with real accounts and experience real security flows',
+  'demo.completeWorkflows': 'Complete Workflows',
+  'demo.completeWorkflowsDescription': 'Test the full teacher and student experience with real data',
+  'demo.actualIntegration': 'Actual Integration',
+  'demo.actualIntegrationDescription': 'Experience how all components work together in practice',
+  'demo.readyToExperience': 'Ready to Experience the Real Platform?',
+  'demo.signUpNowTest': 'Sign up now and test all features with real authentication and data flows.',
+
   // Merge all sub-translations
   ...enAuthTranslations,
   ...enTeacherTranslations,
