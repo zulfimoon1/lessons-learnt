@@ -1,19 +1,7 @@
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 import { multiLanguageDistressService, DistressAnalysis } from '@/services/multiLanguageDistressService';
 import { supabase } from '@/integrations/supabase/client';
-
-interface DistressAlert {
-  id: string;
-  student_id: string;
-  text_analyzed: string;
-  risk_level: string;
-  confidence: number;
-  detected_language: string;
-  indicators: string[];
-  recommendations: string[];
-  created_at: string;
-}
 
 export const useDistressDetection = () => {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -53,18 +41,21 @@ export const useDistressDetection = () => {
     }
 
     try {
+      // Use existing mental_health_alerts table instead of distress_alerts
       const { error } = await supabase
-        .from('distress_alerts')
+        .from('mental_health_alerts')
         .insert({
           student_id: studentId,
-          text_analyzed: originalText,
-          risk_level: analysis.riskLevel,
-          confidence: analysis.confidence,
-          detected_language: analysis.detectedLanguage,
-          indicators: analysis.indicators,
-          recommendations: analysis.recommendations,
-          cultural_context: analysis.culturalContext,
-          emotional_markers: analysis.emotionalMarkers
+          content: originalText,
+          severity_level: analysis.riskLevel === 'critical' ? 5 : 
+                         analysis.riskLevel === 'high' ? 4 :
+                         analysis.riskLevel === 'medium' ? 3 : 1,
+          alert_type: 'distress_detected',
+          student_name: 'Student', // Default name
+          school: 'Unknown', // Default school
+          grade: 'Unknown', // Default grade
+          source_table: 'distress_analysis',
+          source_id: crypto.randomUUID(), // Generate a source ID
         });
 
       if (error) {
@@ -82,10 +73,10 @@ export const useDistressDetection = () => {
   const getRecentAlerts = useCallback(async (
     studentId?: string,
     limit: number = 10
-  ): Promise<DistressAlert[]> => {
+  ) => {
     try {
       let query = supabase
-        .from('distress_alerts')
+        .from('mental_health_alerts')
         .select('*')
         .order('created_at', { ascending: false })
         .limit(limit);

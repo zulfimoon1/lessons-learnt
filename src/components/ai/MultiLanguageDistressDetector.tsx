@@ -97,7 +97,10 @@ const MultiLanguageDistressDetector: React.FC<MultiLanguageDistressDetectorProps
     return null;
   }
 
-  const crisisResources = multiLanguageDistressService.getCrisisResources(analysis.detectedLanguage);
+  // Fix: Only get crisis resources for known languages
+  const crisisResources = (analysis.detectedLanguage === 'en' || analysis.detectedLanguage === 'lt') 
+    ? multiLanguageDistressService.getCrisisResources(analysis.detectedLanguage)
+    : null;
 
   return (
     <div className={`space-y-4 ${className}`}>
@@ -227,7 +230,7 @@ const MultiLanguageDistressDetector: React.FC<MultiLanguageDistressDetectorProps
       </Card>
 
       {/* Crisis Resources */}
-      {showCrisisResources && (analysis.riskLevel === 'critical' || analysis.riskLevel === 'high') && (
+      {showCrisisResources && crisisResources && (analysis.riskLevel === 'critical' || analysis.riskLevel === 'high') && (
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-red-600">

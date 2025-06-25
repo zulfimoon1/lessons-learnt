@@ -31,7 +31,7 @@ const EnhancedSmartFeedbackAnalyzer: React.FC<EnhancedSmartFeedbackAnalyzerProps
   const [distressAnalysis, setDistressAnalysis] = useState<DistressAnalysis | null>(null);
   const [activeTab, setActiveTab] = useState('combined');
   
-  const { analyzeAndSave, isAnalyzing, error } = useDistressDetection();
+  const { analyzeAndSave, analyzeText, isAnalyzing, error } = useDistressDetection();
 
   useEffect(() => {
     // Auto-analyze when text changes (debounced)
@@ -53,7 +53,6 @@ const EnhancedSmartFeedbackAnalyzer: React.FC<EnhancedSmartFeedbackAnalyzerProps
         distressResult = await analyzeAndSave(textFeedback, studentId);
       } else {
         // For demo purposes without student ID
-        const { analyzeText } = require('@/hooks/useDistressDetection');
         distressResult = await analyzeText(textFeedback);
       }
 
