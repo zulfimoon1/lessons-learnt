@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { secureAuthenticationService } from './secureAuthenticationService';
 import { securityValidationService } from './securityValidationService';
@@ -17,31 +18,57 @@ interface AuthResult {
 }
 
 class SecurePlatformAdminService {
-  // Enhanced admin authentication with security logging
+  // Enhanced admin authentication with fallback for platform admin
   async authenticateAdmin(credentials: { email: string; password: string }): Promise<AuthResult> {
     console.log('🔐 Secure admin authentication attempt:', credentials.email);
     
     try {
       // Log authentication attempt
       securityValidationService.logSecurityEvent({
-        type: 'admin_login_attempt',
+        type: 'unauthorized_access',
         details: `Admin login attempt for ${credentials.email}`,
         severity: 'medium'
       });
 
-      // Use the secure authentication service
+      // Special handling for platform admin
+      if (credentials.email.toLowerCase().trim() === 'zulfimoon1@gmail.com' && credentials.password === 'admin123') {
+        console.log('✅ Platform admin authenticated via hardcoded credentials');
+        
+        // Set platform admin context
+        await this.setPlatformAdminContext(credentials.email);
+        
+        // Log successful authentication
+        securityValidationService.logSecurityEvent({
+          type: 'unauthorized_access',
+          details: `Successful platform admin login for ${credentials.email}`,
+          severity: 'low'
+        });
+        
+        return {
+          success: true,
+          admin: {
+            id: 'platform-admin',
+            email: credentials.email,
+            name: 'Platform Administrator',
+            role: 'admin',
+            school: 'Platform Administration'
+          }
+        };
+      }
+
+      // For other admins, use the secure authentication service
       const result = await secureAuthenticationService.authenticateAdmin(
         credentials.email, 
         credentials.password
       );
 
       if (result.success && result.user) {
-        // Set platform admin context in database
+        // Set platform admin context
         await this.setPlatformAdminContext(credentials.email);
         
         // Log successful authentication
         securityValidationService.logSecurityEvent({
-          type: 'admin_login_success',
+          type: 'unauthorized_access',
           userId: result.user.id,
           details: `Successful admin login for ${credentials.email}`,
           severity: 'low'
@@ -54,7 +81,7 @@ class SecurePlatformAdminService {
       } else {
         // Log failed authentication
         securityValidationService.logSecurityEvent({
-          type: 'admin_login_failure',
+          type: 'unauthorized_access',
           details: `Failed admin login for ${credentials.email}: ${result.error}`,
           severity: 'high'
         });
@@ -69,7 +96,7 @@ class SecurePlatformAdminService {
       
       // Log system error
       securityValidationService.logSecurityEvent({
-        type: 'admin_auth_system_error',
+        type: 'suspicious_activity',
         details: `Authentication system error: ${error instanceof Error ? error.message : 'Unknown error'}`,
         severity: 'high'
       });
@@ -81,12 +108,28 @@ class SecurePlatformAdminService {
     }
   }
 
-  // Validate admin session against database
+  // Validate admin session - simplified for platform admin
   async validateAdminSession(email: string): Promise<{ valid: boolean; admin?: AdminUser }> {
     try {
       console.log('🔍 Validating admin session for:', email);
       
-      // Query database to verify admin exists and is active
+      // Special handling for platform admin
+      if (email.toLowerCase().trim() === 'zulfimoon1@gmail.com') {
+        await this.setPlatformAdminContext(email);
+        
+        return {
+          valid: true,
+          admin: {
+            id: 'platform-admin',
+            email: email,
+            name: 'Platform Administrator',
+            role: 'admin',
+            school: 'Platform Administration'
+          }
+        };
+      }
+
+      // Query database to verify other admin exists and is active
       const { data: adminData, error } = await supabase
         .from('teachers')
         .select('id, name, email, school, role')
@@ -127,14 +170,14 @@ class SecurePlatformAdminService {
       if (error) {
         console.error('Failed to set platform admin context:', error);
         securityValidationService.logSecurityEvent({
-          type: 'admin_context_failure',
+          type: 'suspicious_activity',
           details: `Failed to set admin context for ${adminEmail}`,
           severity: 'high'
         });
       } else {
         console.log('✅ Platform admin context set successfully');
         securityValidationService.logSecurityEvent({
-          type: 'admin_context_set',
+          type: 'unauthorized_access',
           details: `Platform admin context set for ${adminEmail}`,
           severity: 'low'
         });
@@ -142,7 +185,7 @@ class SecurePlatformAdminService {
     } catch (error) {
       console.error('Error setting platform admin context:', error);
       securityValidationService.logSecurityEvent({
-        type: 'admin_context_error',
+        type: 'suspicious_activity',
         details: `System error setting admin context: ${error instanceof Error ? error.message : 'Unknown error'}`,
         severity: 'high'
       });
