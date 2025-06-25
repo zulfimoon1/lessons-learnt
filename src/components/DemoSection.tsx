@@ -1,10 +1,8 @@
-
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { BookOpenIcon, UserIcon, BarChart3Icon, HeartIcon, PlayIcon, ShieldCheckIcon } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { Link } from "react-router-dom";
 
 const DemoSection = () => {
   const { t } = useLanguage();
@@ -14,12 +12,10 @@ const DemoSection = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
           <div className="flex justify-center items-center gap-3 mb-6">
-            <Link to="/demo">
-              <Badge variant="outline" className="bg-brand-teal/10 border-brand-teal text-brand-teal px-6 py-3 cursor-pointer hover:bg-brand-teal hover:text-white transition-colors text-lg font-semibold">
-                <PlayIcon className="w-5 h-5 mr-2" />
-                {t('demo.featureDemo')}
-              </Badge>
-            </Link>
+            <Badge variant="outline" className="bg-brand-teal/10 border-brand-teal text-brand-teal px-6 py-3 cursor-pointer hover:bg-brand-teal hover:text-white transition-colors text-lg font-semibold">
+              <PlayIcon className="w-5 h-5 mr-2" />
+              {t('demo.featureDemo')}
+            </Badge>
           </div>
           <h2 className="text-4xl font-bold text-brand-dark mb-6">
             {t('demo.subtitle')}
