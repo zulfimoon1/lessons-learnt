@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -7,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { PlatformAdminProvider } from "@/contexts/PlatformAdminContext";
 import Index from "./pages/Index";
 import StudentLogin from "./pages/StudentLogin";
 import TeacherLogin from "./pages/TeacherLogin";
@@ -46,35 +46,37 @@ function App() {
           <LanguageProvider>
             <BrowserRouter>
               <AuthProvider>
-                <Routes>
-                  <Route path="/" element={<Index />} />
-                  <Route path="/student-login" element={<StudentLogin />} />
-                  <Route path="/teacher-login" element={<TeacherLogin />} />
-                  <Route path="/student-dashboard" element={<StudentDashboard />} />
-                  <Route path="/teacher-dashboard" element={<TeacherDashboard />} />
-                  <Route path="/class-feedback/:teacherId/:classId" element={<ClassFeedback />} />
-                  <Route path="/weekly-summary" element={<WeeklySummary />} />
-                  <Route path="/admin-dashboard" element={<AdminDashboard />} />
-                  <Route path="/platform-admin" element={<PlatformAdmin />} />
-                  <Route path="/platform-admin-login" element={<PlatformAdminLogin />} />
-                  <Route path="/platform-admin-dashboard" element={<PlatformAdminDashboard />} />
-                  <Route path="/accept-invitation" element={<AcceptInvitation />} />
-                  <Route path="/reset-password" element={<ResetPassword />} />
-                  <Route path="/secure-auth" element={<SecureAuth />} />
-                  <Route path="/secure-student-login" element={<SecureStudentLogin />} />
-                  <Route path="/secure-teacher-login" element={<SecureTeacherLogin />} />
-                  <Route path="/demo" element={<Demo />} />
-                  <Route path="/how-it-works" element={<HowItWorks />} />
-                  <Route path="/pricing" element={<PricingPage />} />
-                  <Route path="/enhanced-pricing" element={<EnhancedPricingPage />} />
-                  <Route path="/pricing-showcase" element={<PricingShowcase />} />
-                  <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-                  <Route path="/privacy-policy-page" element={<PrivacyPolicyPage />} />
-                  <Route path="/privacy-dashboard" element={<PrivacyDashboard />} />
-                  <Route path="/soc2-compliance" element={<SOC2CompliancePage />} />
-                  <Route path="/soc2-test" element={<SOC2TestPage />} />
-                  <Route path="*" element={<NotFound />} />
-                </Routes>
+                <PlatformAdminProvider>
+                  <Routes>
+                    <Route path="/" element={<Index />} />
+                    <Route path="/student-login" element={<StudentLogin />} />
+                    <Route path="/teacher-login" element={<TeacherLogin />} />
+                    <Route path="/student-dashboard" element={<StudentDashboard />} />
+                    <Route path="/teacher-dashboard" element={<TeacherDashboard />} />
+                    <Route path="/class-feedback/:teacherId/:classId" element={<ClassFeedback />} />
+                    <Route path="/weekly-summary" element={<WeeklySummary />} />
+                    <Route path="/admin-dashboard" element={<AdminDashboard />} />
+                    <Route path="/platform-admin" element={<PlatformAdmin />} />
+                    <Route path="/platform-admin-login" element={<PlatformAdminLogin />} />
+                    <Route path="/platform-admin-dashboard" element={<PlatformAdminDashboard />} />
+                    <Route path="/accept-invitation" element={<AcceptInvitation />} />
+                    <Route path="/reset-password" element={<ResetPassword />} />
+                    <Route path="/secure-auth" element={<SecureAuth />} />
+                    <Route path="/secure-student-login" element={<SecureStudentLogin />} />
+                    <Route path="/secure-teacher-login" element={<SecureTeacherLogin />} />
+                    <Route path="/demo" element={<Demo />} />
+                    <Route path="/how-it-works" element={<HowItWorks />} />
+                    <Route path="/pricing" element={<PricingPage />} />
+                    <Route path="/enhanced-pricing" element={<EnhancedPricingPage />} />
+                    <Route path="/pricing-showcase" element={<PricingShowcase />} />
+                    <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+                    <Route path="/privacy-policy-page" element={<PrivacyPolicyPage />} />
+                    <Route path="/privacy-dashboard" element={<PrivacyDashboard />} />
+                    <Route path="/soc2-compliance" element={<SOC2CompliancePage />} />
+                    <Route path="/soc2-test" element={<SOC2TestPage />} />
+                    <Route path="*" element={<NotFound />} />
+                  </Routes>
+                </PlatformAdminProvider>
               </AuthProvider>
             </BrowserRouter>
           </LanguageProvider>
