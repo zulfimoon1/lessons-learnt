@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { usePlatformAdmin } from "@/contexts/PlatformAdminContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -33,20 +34,6 @@ interface DashboardStats {
 interface SchoolStats {
   school: string;
   total_teachers: number;
-}
-
-interface FeedbackStats {
-  school: string;
-  grade: string;
-  subject: string;
-  lesson_topic: string;
-  class_date: string;
-  total_responses: number;
-  avg_understanding: number;
-  avg_interest: number;
-  avg_growth: number;
-  anonymous_responses: number;
-  named_responses: number;
 }
 
 const PlatformAdminDashboard = () => {
@@ -134,7 +121,6 @@ const PlatformAdminDashboard = () => {
       
       setStats(newStats);
       setSchoolStats(schoolStatsProcessed);
-      setFeedbackStats([]);
       setLastUpdated(new Date().toLocaleString());
       setRefreshKey(Date.now());
       setHasDataLoaded(true);
