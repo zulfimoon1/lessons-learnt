@@ -17,6 +17,9 @@ interface SyncStatus {
   isSyncing: boolean;
 }
 
+// Define valid table names that we support for offline operations
+type ValidTableName = 'feedback' | 'weekly_summaries' | 'mental_health_alerts' | 'class_schedules' | 'students' | 'teachers';
+
 class OfflineDataService {
   private readonly STORAGE_KEY = 'offline_data';
   private readonly SYNC_STATUS_KEY = 'sync_status';
@@ -153,22 +156,129 @@ class OfflineDataService {
     };
   }
 
-  // Sync a single operation
+  // Sync a single operation with proper type safety
   private async syncSingleOperation(operation: OfflineData): Promise<void> {
     const { table, data, operation: op } = operation;
 
-    switch (op) {
-      case 'insert':
-        await supabase.from(table).insert(data);
+    // Type-safe table operations
+    switch (table as ValidTableName) {
+      case 'feedback':
+        await this.syncFeedbackOperation(op, data);
         break;
-      case 'update':
-        await supabase.from(table).update(data).eq('id', data.id);
+      case 'weekly_summaries':
+        await this.syncWeeklySummariesOperation(op, data);
         break;
-      case 'delete':
-        await supabase.from(table).delete().eq('id', data.id);
+      case 'mental_health_alerts':
+        await this.syncMentalHealthAlertsOperation(op, data);
+        break;
+      case 'class_schedules':
+        await this.syncClassSchedulesOperation(op, data);
+        break;
+      case 'students':
+        await this.syncStudentsOperation(op, data);
+        break;
+      case 'teachers':
+        await this.syncTeachersOperation(op, data);
         break;
       default:
-        throw new Error(`Unknown operation: ${op}`);
+        throw new Error(`Unsupported table for sync: ${table}`);
+    }
+  }
+
+  // Type-safe sync operations for each table
+  private async syncFeedbackOperation(operation: string, data: any): Promise<void> {
+    switch (operation) {
+      case 'insert':
+        await supabase.from('feedback').insert(data);
+        break;
+      case 'update':
+        await supabase.from('feedback').update(data).eq('id', data.id);
+        break;
+      case 'delete':
+        await supabase.from('feedback').delete().eq('id', data.id);
+        break;
+      default:
+        throw new Error(`Unknown operation: ${operation}`);
+    }
+  }
+
+  private async syncWeeklySummariesOperation(operation: string, data: any): Promise<void> {
+    switch (operation) {
+      case 'insert':
+        await supabase.from('weekly_summaries').insert(data);
+        break;
+      case 'update':
+        await supabase.from('weekly_summaries').update(data).eq('id', data.id);
+        break;
+      case 'delete':
+        await supabase.from('weekly_summaries').delete().eq('id', data.id);
+        break;
+      default:
+        throw new Error(`Unknown operation: ${operation}`);
+    }
+  }
+
+  private async syncMentalHealthAlertsOperation(operation: string, data: any): Promise<void> {
+    switch (operation) {
+      case 'insert':
+        await supabase.from('mental_health_alerts').insert(data);
+        break;
+      case 'update':
+        await supabase.from('mental_health_alerts').update(data).eq('id', data.id);
+        break;
+      case 'delete':
+        await supabase.from('mental_health_alerts').delete().eq('id', data.id);
+        break;
+      default:
+        throw new Error(`Unknown operation: ${operation}`);
+    }
+  }
+
+  private async syncClassSchedulesOperation(operation: string, data: any): Promise<void> {
+    switch (operation) {
+      case 'insert':
+        await supabase.from('class_schedules').insert(data);
+        break;
+      case 'update':
+        await supabase.from('class_schedules').update(data).eq('id', data.id);
+        break;
+      case 'delete':
+        await supabase.from('class_schedules').delete().eq('id', data.id);
+        break;
+      default:
+        throw new Error(`Unknown operation: ${operation}`);
+    }
+  }
+
+  private async syncStudentsOperation(operation: string, data: any): Promise<void> {
+    switch (operation) {
+      case 'insert':
+        await supabase.from('students').insert(data);
+        break;
+      case 'update':
+        await supabase.from('students').update(data).eq('id', data.id);
+        break;
+      case 'delete':
+        await supabase.from('students').delete().eq('id', data.id);
+        break;
+      default:
+        throw new Error(`Unknown operation: ${operation}`);
+    }
+  }
+
+  private async syncTeachersOperation(operation: string, data: any): Promise<void> {
+    switch (operation) {
+      case 'insert':
+        await supabase.from('teachers').insert(data);
+        break;
+      case 'update':
+        await supabase.from('teachers').update(data).eq('id', data.id);
+        break;
+      case 'delete':
+        await supabase.from('teachers').delete().eq('id', data.id);
+        break;
+      default:
+        throw new Error(`Unknown operation: ${operation}`);
     }
   }
 
