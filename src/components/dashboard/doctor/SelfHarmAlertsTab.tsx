@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { AlertTriangle, User, Calendar, Shield, Eye } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 interface SelfHarmAlert {
   id: string;
@@ -15,6 +16,7 @@ interface SelfHarmAlert {
   severity_level: number;
   created_at: string;
   is_reviewed: boolean;
+  school: string;
 }
 
 interface SelfHarmAlertsTabProps {
@@ -33,51 +35,78 @@ const SelfHarmAlertsTab: React.FC<SelfHarmAlertsTabProps> = ({ teacher }) => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Demo data for self-harm alerts
-    const demoAlerts: SelfHarmAlert[] = [
-      {
-        id: '1',
-        student_name: 'Anonymous Student A',
-        grade: '10A',
-        content: 'Student expressed feelings of hopelessness and mentioned self-harm thoughts in weekly summary.',
-        severity_level: 5,
-        created_at: new Date().toISOString(),
-        is_reviewed: false
-      },
-      {
-        id: '2',
-        student_name: 'Anonymous Student B',
-        grade: '9B',
-        content: 'AI detected concerning language patterns in lesson feedback indicating potential self-harm risk.',
-        severity_level: 4,
-        created_at: new Date(Date.now() - 86400000).toISOString(),
-        is_reviewed: true
-      },
-      {
-        id: '3',
-        student_name: 'Anonymous Student C',
-        grade: '11C',
-        content: 'Multiple instances of concerning emotional indicators detected across submissions.',
-        severity_level: 3,
-        created_at: new Date(Date.now() - 172800000).toISOString(),
-        is_reviewed: false
+    fetchAlerts();
+  }, [teacher.school]);
+
+  const fetchAlerts = async () => {
+    try {
+      setIsLoading(true);
+      const { data, error } = await supabase
+        .from('mental_health_alerts')
+        .select('*')
+        .eq('school', teacher.school)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching alerts:', error);
+        toast({
+          title: t('common.error'),
+          description: t('doctor.dashboard.alertsLoadError'),
+          variant: 'destructive'
+        });
+        return;
       }
-    ];
 
-    setTimeout(() => {
-      setAlerts(demoAlerts);
+      setAlerts(data || []);
+    } catch (error) {
+      console.error('Error fetching alerts:', error);
+      toast({
+        title: t('common.error'),
+        description: t('doctor.dashboard.alertsLoadError'),
+        variant: 'destructive'
+      });
+    } finally {
       setIsLoading(false);
-    }, 1000);
-  }, []);
+    }
+  };
 
-  const markAsReviewed = (alertId: string) => {
-    setAlerts(prev => prev.map(alert => 
-      alert.id === alertId ? { ...alert, is_reviewed: true } : alert
-    ));
-    toast({
-      title: t('common.success'),
-      description: t('doctor.dashboard.markReviewed'),
-    });
+  const markAsReviewed = async (alertId: string) => {
+    try {
+      const { error } = await supabase
+        .from('mental_health_alerts')
+        .update({ 
+          is_reviewed: true,
+          reviewed_by: teacher.name,
+          reviewed_at: new Date().toISOString()
+        })
+        .eq('id', alertId);
+
+      if (error) {
+        console.error('Error updating alert:', error);
+        toast({
+          title: t('common.error'),
+          description: t('doctor.dashboard.markReviewedError'),
+          variant: 'destructive'
+        });
+        return;
+      }
+
+      setAlerts(prev => prev.map(alert => 
+        alert.id === alertId ? { ...alert, is_reviewed: true } : alert
+      ));
+      
+      toast({
+        title: t('common.success'),
+        description: t('doctor.dashboard.markReviewed'),
+      });
+    } catch (error) {
+      console.error('Error updating alert:', error);
+      toast({
+        title: t('common.error'),
+        description: t('doctor.dashboard.markReviewedError'),
+        variant: 'destructive'
+      });
+    }
   };
 
   const getSeverityColor = (level: number) => {
@@ -168,6 +197,9 @@ const SelfHarmAlertsTab: React.FC<SelfHarmAlertsTabProps> = ({ teacher }) => {
             <div className="text-center py-8">
               <AlertTriangle className="w-12 h-12 text-gray-400 mx-auto mb-4" />
               <p className="text-gray-600">{t('doctor.dashboard.noAlerts')}</p>
+              <p className="text-sm text-gray-500 mt-2">
+                {t('doctor.dashboard.noAlertsDescription')}
+              </p>
             </div>
           ) : (
             <div className="space-y-4">

@@ -4,16 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { BrainIcon, TrendingUpIcon, AlertTriangleIcon, Users, Target, Activity } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
-
-interface AIInsight {
-  id: string;
-  type: 'pattern' | 'prediction' | 'recommendation';
-  title: string;
-  description: string;
-  confidence: number;
-  impact: 'high' | 'medium' | 'low';
-  created_at: string;
-}
+import { supabase } from "@/integrations/supabase/client";
+import { useAdvancedAIInsights } from "@/hooks/useAdvancedAIInsights";
 
 interface AIInsightsTabProps {
   teacher: {
@@ -26,59 +18,39 @@ interface AIInsightsTabProps {
 
 const AIInsightsTab: React.FC<AIInsightsTabProps> = ({ teacher }) => {
   const { t } = useLanguage();
-  const [insights, setInsights] = useState<AIInsight[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [studentsAnalyzed, setStudentsAnalyzed] = useState(0);
+  
+  const {
+    insights,
+    isLoading,
+    error,
+    lastUpdated,
+    refreshInsights,
+    getInsightsSummary
+  } = useAdvancedAIInsights(teacher.school, teacher.role);
 
   useEffect(() => {
-    // Demo AI insights data
-    const demoInsights: AIInsight[] = [
-      {
-        id: '1',
-        type: 'pattern',
-        title: 'Emotional Stress Pattern Detected',
-        description: 'AI has identified a pattern of increased emotional stress in Grade 10 students over the past 2 weeks. This may be related to upcoming exams.',
-        confidence: 87,
-        impact: 'high',
-        created_at: new Date().toISOString()
-      },
-      {
-        id: '2',
-        type: 'prediction',
-        title: 'At-Risk Student Prediction',
-        description: '3 students are predicted to need mental health support within the next week based on their feedback patterns and engagement metrics.',
-        confidence: 92,
-        impact: 'high',
-        created_at: new Date(Date.now() - 3600000).toISOString()
-      },
-      {
-        id: '3',
-        type: 'recommendation',
-        title: 'Intervention Recommendation',
-        description: 'Recommend implementing group counseling sessions for Grade 9 students showing similar stress indicators.',
-        confidence: 78,
-        impact: 'medium',
-        created_at: new Date(Date.now() - 7200000).toISOString()
-      },
-      {
-        id: '4',
-        type: 'pattern',
-        title: 'Language Analysis Insight',
-        description: 'Detected increased use of concerning language patterns in weekly summaries. Keywords related to isolation and helplessness are trending upward.',
-        confidence: 94,
-        impact: 'high',
-        created_at: new Date(Date.now() - 86400000).toISOString()
-      }
-    ];
+    fetchStudentCount();
+  }, [teacher.school]);
 
-    setTimeout(() => {
-      setInsights(demoInsights);
-      setIsLoading(false);
-    }, 1000);
-  }, []);
+  const fetchStudentCount = async () => {
+    try {
+      const { count, error } = await supabase
+        .from('students')
+        .select('*', { count: 'exact', head: true })
+        .eq('school', teacher.school);
+
+      if (!error && count !== null) {
+        setStudentsAnalyzed(count);
+      }
+    } catch (error) {
+      console.error('Error fetching student count:', error);
+    }
+  };
 
   const getTypeIcon = (type: string) => {
     switch (type) {
-      case 'pattern':
+      case 'trend':
         return <TrendingUpIcon className="w-4 h-4" />;
       case 'prediction':
         return <Target className="w-4 h-4" />;
@@ -91,7 +63,7 @@ const AIInsightsTab: React.FC<AIInsightsTabProps> = ({ teacher }) => {
 
   const getTypeColor = (type: string) => {
     switch (type) {
-      case 'pattern':
+      case 'trend':
         return 'bg-blue-100 text-blue-800';
       case 'prediction':
         return 'bg-orange-100 text-orange-800';
@@ -104,11 +76,11 @@ const AIInsightsTab: React.FC<AIInsightsTabProps> = ({ teacher }) => {
 
   const getImpactColor = (impact: string) => {
     switch (impact) {
-      case 'high':
+      case 'critical':
         return 'destructive';
-      case 'medium':
+      case 'warning':
         return 'secondary';
-      case 'low':
+      case 'info':
         return 'outline';
       default:
         return 'outline';
@@ -124,8 +96,22 @@ const AIInsightsTab: React.FC<AIInsightsTabProps> = ({ teacher }) => {
     );
   }
 
-  const highImpactInsights = insights.filter(insight => insight.impact === 'high');
-  const avgConfidence = insights.reduce((acc, insight) => acc + insight.confidence, 0) / insights.length;
+  if (error) {
+    return (
+      <div className="text-center py-8">
+        <AlertTriangleIcon className="w-12 h-12 text-red-400 mx-auto mb-4" />
+        <p className="text-red-600 mb-4">{t('doctor.dashboard.insightsError')}</p>
+        <button 
+          onClick={() => refreshInsights()}
+          className="px-4 py-2 bg-brand-teal text-white rounded hover:bg-brand-teal/90"
+        >
+          {t('common.retry')}
+        </button>
+      </div>
+    );
+  }
+
+  const summary = getInsightsSummary();
 
   return (
     <div className="space-y-6">
@@ -139,7 +125,7 @@ const AIInsightsTab: React.FC<AIInsightsTabProps> = ({ teacher }) => {
               </div>
               <div>
                 <p className="text-sm text-gray-600">{t('doctor.dashboard.aiInsights')}</p>
-                <p className="text-2xl font-bold text-purple-600">{insights.length}</p>
+                <p className="text-2xl font-bold text-purple-600">{summary.total}</p>
               </div>
             </div>
           </CardContent>
@@ -152,8 +138,8 @@ const AIInsightsTab: React.FC<AIInsightsTabProps> = ({ teacher }) => {
                 <AlertTriangleIcon className="w-6 h-6 text-red-600" />
               </div>
               <div>
-                <p className="text-sm text-gray-600">High Impact</p>
-                <p className="text-2xl font-bold text-red-600">{highImpactInsights.length}</p>
+                <p className="text-sm text-gray-600">{t('doctor.dashboard.criticalInsights')}</p>
+                <p className="text-2xl font-bold text-red-600">{summary.critical}</p>
               </div>
             </div>
           </CardContent>
@@ -166,8 +152,8 @@ const AIInsightsTab: React.FC<AIInsightsTabProps> = ({ teacher }) => {
                 <Target className="w-6 h-6 text-green-600" />
               </div>
               <div>
-                <p className="text-sm text-gray-600">Avg Confidence</p>
-                <p className="text-2xl font-bold text-green-600">{Math.round(avgConfidence)}%</p>
+                <p className="text-sm text-gray-600">{t('doctor.dashboard.actionableInsights')}</p>
+                <p className="text-2xl font-bold text-green-600">{summary.actionable}</p>
               </div>
             </div>
           </CardContent>
@@ -180,8 +166,8 @@ const AIInsightsTab: React.FC<AIInsightsTabProps> = ({ teacher }) => {
                 <Users className="w-6 h-6 text-blue-600" />
               </div>
               <div>
-                <p className="text-sm text-gray-600">Students Analyzed</p>
-                <p className="text-2xl font-bold text-blue-600">247</p>
+                <p className="text-sm text-gray-600">{t('doctor.dashboard.studentsAnalyzed')}</p>
+                <p className="text-2xl font-bold text-blue-600">{studentsAnalyzed}</p>
               </div>
             </div>
           </CardContent>
@@ -191,45 +177,80 @@ const AIInsightsTab: React.FC<AIInsightsTabProps> = ({ teacher }) => {
       {/* AI Insights List */}
       <Card className="bg-white/90 backdrop-blur-sm border-gray-200/50 shadow-lg">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-brand-dark">
-            <BrainIcon className="w-5 h-5 text-purple-500" />
-            {t('doctor.dashboard.aiInsights')}
-            <Badge variant="outline" className="ml-2 border-purple-200 text-purple-800 bg-purple-50">
-              AI-Powered
-            </Badge>
-          </CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle className="flex items-center gap-2 text-brand-dark">
+              <BrainIcon className="w-5 h-5 text-purple-500" />
+              {t('doctor.dashboard.aiInsights')}
+              <Badge variant="outline" className="ml-2 border-purple-200 text-purple-800 bg-purple-50">
+                AI-Powered
+              </Badge>
+            </CardTitle>
+            {lastUpdated && (
+              <div className="text-sm text-gray-500">
+                {t('doctor.dashboard.lastUpdated')}: {lastUpdated.toLocaleString()}
+              </div>
+            )}
+          </div>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            {insights.map((insight) => (
-              <div key={insight.id} className="border border-gray-200 rounded-lg p-4 bg-gradient-to-r from-purple-50/30 to-blue-50/30">
-                <div className="flex justify-between items-start mb-3">
-                  <div className="flex items-center gap-2">
-                    <div className={`p-2 rounded ${getTypeColor(insight.type)}`}>
-                      {getTypeIcon(insight.type)}
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-brand-dark">{insight.title}</h3>
-                      <div className="flex items-center gap-2 mt-1">
-                        <Badge variant={getImpactColor(insight.impact)} className="text-xs">
-                          {insight.impact.toUpperCase()} Impact
-                        </Badge>
-                        <Badge variant="outline" className="text-xs">
-                          {insight.confidence}% Confidence
-                        </Badge>
-                        <span className="text-xs text-gray-500">
-                          {new Date(insight.created_at).toLocaleDateString()}
-                        </span>
+          {insights.length === 0 ? (
+            <div className="text-center py-8">
+              <BrainIcon className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+              <p className="text-gray-600">{t('doctor.dashboard.noInsights')}</p>
+              <p className="text-sm text-gray-500 mt-2">
+                {t('doctor.dashboard.noInsightsDescription')}
+              </p>
+              <button 
+                onClick={() => refreshInsights()}
+                className="mt-4 px-4 py-2 bg-brand-teal text-white rounded hover:bg-brand-teal/90"
+              >
+                {t('doctor.dashboard.generateInsights')}
+              </button>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {insights.map((insight) => (
+                <div key={insight.id} className="border border-gray-200 rounded-lg p-4 bg-gradient-to-r from-purple-50/30 to-blue-50/30">
+                  <div className="flex justify-between items-start mb-3">
+                    <div className="flex items-center gap-2">
+                      <div className={`p-2 rounded ${getTypeColor(insight.type)}`}>
+                        {getTypeIcon(insight.type)}
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-brand-dark">{insight.title}</h3>
+                        <div className="flex items-center gap-2 mt-1">
+                          <Badge variant={getImpactColor(insight.severity)} className="text-xs">
+                            {insight.severity.toUpperCase()}
+                          </Badge>
+                          <Badge variant="outline" className="text-xs">
+                            {Math.round(insight.confidence * 100)}% {t('doctor.dashboard.confidence')}
+                          </Badge>
+                          <span className="text-xs text-gray-500">
+                            {new Date(insight.timestamp).toLocaleDateString()}
+                          </span>
+                        </div>
                       </div>
                     </div>
                   </div>
+                  <div className="bg-white/50 p-3 rounded border-l-4 border-purple-300">
+                    <p className="text-sm text-gray-700 mb-2">{insight.description}</p>
+                    {insight.recommendedActions.length > 0 && (
+                      <div className="mt-3">
+                        <p className="text-xs font-medium text-gray-600 mb-1">
+                          {t('doctor.dashboard.recommendedActions')}:
+                        </p>
+                        <ul className="text-xs text-gray-600 list-disc list-inside">
+                          {insight.recommendedActions.map((action, index) => (
+                            <li key={index}>{action}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
                 </div>
-                <div className="bg-white/50 p-3 rounded border-l-4 border-purple-300">
-                  <p className="text-sm text-gray-700">{insight.description}</p>
-                </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
