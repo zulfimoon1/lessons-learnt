@@ -1,32 +1,36 @@
 
-import React, { Suspense, memo } from 'react';
-import { Card, CardContent } from "@/components/ui/card";
+import React, { Suspense } from 'react';
+import { Skeleton } from '@/components/ui/skeleton';
+import { cn } from '@/lib/utils';
 
 interface LazyLoadWrapperProps {
   children: React.ReactNode;
   fallback?: React.ReactNode;
   className?: string;
+  height?: string;
 }
 
-const DefaultFallback = memo(() => (
-  <Card className="animate-pulse">
-    <CardContent className="flex items-center justify-center p-8">
-      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-teal"></div>
-      <span className="ml-3 text-brand-dark">Loading...</span>
-    </CardContent>
-  </Card>
-));
+const LazyLoadWrapper: React.FC<LazyLoadWrapperProps> = ({
+  children,
+  fallback,
+  className,
+  height = 'h-48'
+}) => {
+  const defaultFallback = (
+    <div className={cn('space-y-3', className)}>
+      <Skeleton className={cn('w-full', height)} />
+      <div className="space-y-2">
+        <Skeleton className="h-4 w-3/4" />
+        <Skeleton className="h-4 w-1/2" />
+      </div>
+    </div>
+  );
 
-DefaultFallback.displayName = "DefaultFallback";
-
-const LazyLoadWrapper = memo(({ children, fallback, className }: LazyLoadWrapperProps) => (
-  <div className={className}>
-    <Suspense fallback={fallback || <DefaultFallback />}>
+  return (
+    <Suspense fallback={fallback || defaultFallback}>
       {children}
     </Suspense>
-  </div>
-));
-
-LazyLoadWrapper.displayName = "LazyLoadWrapper";
+  );
+};
 
 export default LazyLoadWrapper;
