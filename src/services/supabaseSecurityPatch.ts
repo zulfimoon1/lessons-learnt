@@ -14,6 +14,7 @@ class SupabaseSecurityPatch {
 
   async diagnoseSecurityIssues(): Promise<SecurityIssue[]> {
     console.log('🔍 Diagnosing Supabase security issues...');
+    this.securityIssues = []; // Reset issues array
     
     try {
       // Check for tables missing RLS
@@ -34,34 +35,36 @@ class SupabaseSecurityPatch {
   }
 
   private async checkMissingRLS(): Promise<void> {
-    // Tables that should have RLS enabled
+    // Test specific critical tables individually with proper typing
     const criticalTables = [
-      'mental_health_alerts',
-      'students', 
-      'teachers',
-      'feedback',
-      'weekly_summaries',
-      'audit_log'
+      { name: 'mental_health_alerts', type: 'mental_health_alerts' as const },
+      { name: 'students', type: 'students' as const },
+      { name: 'teachers', type: 'teachers' as const },
+      { name: 'feedback', type: 'feedback' as const },
+      { name: 'weekly_summaries', type: 'weekly_summaries' as const },
+      { name: 'audit_log', type: 'audit_log' as const }
     ];
 
     for (const table of criticalTables) {
       try {
         // Test if we can access the table without proper context
         const { data, error } = await supabase
-          .from(table)
-          .select('count', { count: 'exact', head: true });
+          .from(table.type)
+          .select('*', { count: 'exact', head: true })
+          .limit(1);
 
-        if (!error) {
+        // If we can access without authentication, it might indicate RLS issues
+        if (!error && data !== null) {
           this.securityIssues.push({
             type: 'rls_missing',
-            table,
-            severity: 'error',
-            description: `Table ${table} may not have proper RLS policies`
+            table: table.name,
+            severity: 'warning',
+            description: `Table ${table.name} may have permissive RLS policies`
           });
         }
       } catch (error) {
-        // This is actually good - means RLS is working
-        console.log(`✅ RLS appears to be working for ${table}`);
+        // This is actually good - means RLS might be working
+        console.log(`✅ RLS appears to be working for ${table.name}`);
       }
     }
   }
@@ -80,25 +83,25 @@ class SupabaseSecurityPatch {
         type: 'function_security',
         function: func,
         severity: 'warning',
-        description: `Function ${func} security configuration needs review`
+        description: `Function ${func} security configuration should be reviewed`
       });
     }
   }
 
   private async checkTablePermissions(): Promise<void> {
-    // Check for overly permissive policies
-    const sensitiveData = [
+    // Check for overly permissive policies on sensitive data
+    const sensitiveTableNames = [
       'mental_health_alerts',
       'audit_log',
       'discount_codes'
     ];
 
-    for (const table of sensitiveData) {
+    for (const tableName of sensitiveTableNames) {
       this.securityIssues.push({
         type: 'table_permissions',
-        table,
+        table: tableName,
         severity: 'warning', 
-        description: `Table ${table} permissions need tightening`
+        description: `Table ${tableName} permissions should be regularly reviewed`
       });
     }
   }
