@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -280,7 +279,7 @@ const LessonFeedbackForm: React.FC = () => {
                 id="additional-comments"
                 value={additionalComments}
                 onChange={(e) => setAdditionalComments(e.target.value)}
-                placeholder={t('feedback.additionalCommentsPlaceholder') || 'Do you have anything thoughts or feedback you'd like to share?'}
+                placeholder={t('feedback.additionalCommentsPlaceholder') || 'Do you have any thoughts or feedback you would like to share?'}
                 className="min-h-[80px]"
               />
             </div>
