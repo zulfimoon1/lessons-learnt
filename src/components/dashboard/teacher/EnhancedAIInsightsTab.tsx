@@ -1,4 +1,5 @@
 
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -10,7 +11,8 @@ import {
   Zap, 
   TestTube, 
   Settings,
-  TrendingUp
+  TrendingUp,
+  Bell
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import AIRecommendationsCard from '@/components/ai/AIRecommendationsCard';
@@ -19,10 +21,12 @@ import MentalHealthAIAnalyzer from '@/components/ai/MentalHealthAIAnalyzer';
 import SmartFeedbackAnalyzer from '@/components/ai/SmartFeedbackAnalyzer';
 import EnhancedSmartFeedbackAnalyzer from '@/components/ai/EnhancedSmartFeedbackAnalyzer';
 import MobileDistressDetector from '@/components/mobile/MobileDistressDetector';
+import AdvancedInsightsDashboard from '@/components/ai/AdvancedInsightsDashboard';
 import { useAIIntegration } from '@/hooks/useAIIntegration';
 import { useOptimizedDistressAnalysis } from '@/hooks/useOptimizedDistressAnalysis';
 import { useAutomatedNotifications } from '@/hooks/useAutomatedNotifications';
 import { useDistressDetectionTesting } from '@/hooks/useDistressDetectionTesting';
+import { useRealTimeNotifications } from '@/hooks/useRealTimeNotifications';
 
 interface EnhancedAIInsightsTabProps {
   teacher: {
@@ -34,11 +38,12 @@ interface EnhancedAIInsightsTabProps {
 }
 
 const EnhancedAIInsightsTab: React.FC<EnhancedAIInsightsTabProps> = ({ teacher }) => {
-  const [activeTab, setActiveTab] = useState('overview');
+  const [activeTab, setActiveTab] = useState('advanced');
   const { getActionableInsights } = useAIIntegration();
   const { getCacheStats } = useOptimizedDistressAnalysis();
   const { pendingNotifications } = useAutomatedNotifications();
   const { getTestSummary } = useDistressDetectionTesting();
+  const { notificationStats } = useRealTimeNotifications(teacher.id, teacher.role, teacher.school);
 
   const actionableInsights = getActionableInsights();
   const cacheStats = getCacheStats; // Fixed: Remove function call - it's already an object
@@ -56,8 +61,12 @@ const EnhancedAIInsightsTab: React.FC<EnhancedAIInsightsTabProps> = ({ teacher }
         
         <div className="flex gap-2">
           <Badge variant="outline" className="flex items-center gap-1">
+            <Bell className="w-3 h-3" />
+            {notificationStats.unacknowledged} alerts
+          </Badge>
+          <Badge variant="outline" className="flex items-center gap-1">
             <Shield className="w-3 h-3" />
-            {pendingNotifications.length} alerts
+            {pendingNotifications.length} pending
           </Badge>
           <Badge variant="outline" className="flex items-center gap-1">
             <Zap className="w-3 h-3" />
@@ -67,7 +76,8 @@ const EnhancedAIInsightsTab: React.FC<EnhancedAIInsightsTabProps> = ({ teacher }
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid w-full grid-cols-6">
+          <TabsTrigger value="advanced">Advanced</TabsTrigger>
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="analysis">Analysis</TabsTrigger>
           <TabsTrigger value="mobile">Mobile</TabsTrigger>
@@ -75,9 +85,16 @@ const EnhancedAIInsightsTab: React.FC<EnhancedAIInsightsTabProps> = ({ teacher }
           <TabsTrigger value="testing">Testing</TabsTrigger>
         </TabsList>
 
+        <TabsContent value="advanced" className="space-y-6">
+          <AdvancedInsightsDashboard 
+            school={teacher.school}
+            userRole={teacher.role}
+          />
+        </TabsContent>
+
         <TabsContent value="overview" className="space-y-6">
           {/* Performance metrics */}
-          <div className="grid gap-4 md:grid-cols-3">
+          <div className="grid gap-4 md:grid-cols-4">
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-medium">Analysis Cache</CardTitle>
@@ -86,6 +103,18 @@ const EnhancedAIInsightsTab: React.FC<EnhancedAIInsightsTabProps> = ({ teacher }
                 <div className="text-2xl font-bold">{cacheStats.validEntries}</div>
                 <p className="text-xs text-muted-foreground">
                   {cacheStats.hitRate.toFixed(1)}% hit rate
+                </p>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium">Real-time Alerts</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{notificationStats.unacknowledged}</div>
+                <p className="text-xs text-muted-foreground">
+                  Unacknowledged notifications
                 </p>
               </CardContent>
             </Card>
@@ -252,3 +281,4 @@ const EnhancedAIInsightsTab: React.FC<EnhancedAIInsightsTabProps> = ({ teacher }
 };
 
 export default EnhancedAIInsightsTab;
+
