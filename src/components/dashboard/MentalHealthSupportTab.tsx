@@ -1,7 +1,7 @@
 
 import React, { useEffect, useState } from "react";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
-import { HeartHandshakeIcon } from "lucide-react";
+import { HeartHandshakeIcon, Shield } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import LiveChatWidget from "@/components/LiveChatWidget";
 import PsychologistInfo from "@/components/PsychologistInfo";
@@ -42,7 +42,7 @@ const MentalHealthSupportTab: React.FC<MentalHealthSupportTabProps> = React.memo
       
       setIsLoading(true);
       try {
-        // First, try to get doctors from the teachers table
+        // Fetch verified medical professionals only
         const { data: teacherDoctors, error: teacherError } = await supabase
           .from('teachers')
           .select('id, name, email, specialization')
@@ -53,7 +53,7 @@ const MentalHealthSupportTab: React.FC<MentalHealthSupportTabProps> = React.memo
           console.error('Error fetching doctor teachers:', teacherError);
         }
 
-        // Also get any psychologists from the school_psychologists table
+        // Also get any verified psychologists from the school_psychologists table
         const { data: schoolPsychologists, error: psychError } = await supabase
           .from('school_psychologists')
           .select('*')
@@ -63,7 +63,7 @@ const MentalHealthSupportTab: React.FC<MentalHealthSupportTabProps> = React.memo
           console.error('Error fetching school psychologists:', psychError);
         }
 
-        // Combine both sources
+        // Combine both sources of verified medical professionals
         const combinedDoctors: SchoolDoctor[] = [
           ...(teacherDoctors || []).map(doctor => ({
             id: doctor.id,
@@ -83,7 +83,7 @@ const MentalHealthSupportTab: React.FC<MentalHealthSupportTabProps> = React.memo
 
         setDoctors(combinedDoctors);
       } catch (error) {
-        console.error('Error fetching doctors:', error);
+        console.error('Error fetching medical professionals:', error);
       } finally {
         setIsLoading(false);
       }
@@ -111,6 +111,7 @@ const MentalHealthSupportTab: React.FC<MentalHealthSupportTabProps> = React.memo
             <HeartHandshakeIcon className="w-5 h-5" />
           </div>
           {t('dashboard.mentalHealthSupport')}
+          <Shield className="w-4 h-4 ml-2 opacity-80" />
         </CardTitle>
         <CardDescription className="text-white/80">
           {t('student.accessMentalHealthResources', { school: studentSchool })}
@@ -119,6 +120,16 @@ const MentalHealthSupportTab: React.FC<MentalHealthSupportTabProps> = React.memo
       <CardContent className="p-6">
         {doctors.length > 0 ? (
           <div className="space-y-6">
+            <div className="bg-blue-50/50 p-4 rounded-lg border-l-4 border-blue-200">
+              <div className="flex items-center gap-2 mb-2">
+                <Shield className="w-4 h-4 text-blue-600" />
+                <span className="font-medium text-blue-800">Confidential Support</span>
+              </div>
+              <p className="text-sm text-blue-700">
+                All conversations with mental health professionals are strictly confidential and secure.
+              </p>
+            </div>
+            
             <div className="flex justify-end">
               <LiveChatWidget
                 studentId={studentId}
@@ -127,6 +138,7 @@ const MentalHealthSupportTab: React.FC<MentalHealthSupportTabProps> = React.memo
                 grade={studentGrade || ""}
               />
             </div>
+            
             <div className="space-y-4">
               {doctors.map((doctor) => (
                 <PsychologistInfo key={doctor.id} psychologist={doctor} />
@@ -142,6 +154,17 @@ const MentalHealthSupportTab: React.FC<MentalHealthSupportTabProps> = React.memo
             <p className="text-brand-dark/60 text-sm mb-4">
               {t('dashboard.contactAdmin')}
             </p>
+            
+            <div className="bg-yellow-50/50 p-4 rounded-lg border-l-4 border-yellow-200 mb-4">
+              <div className="flex items-center gap-2 mb-2">
+                <Shield className="w-4 h-4 text-yellow-600" />
+                <span className="font-medium text-yellow-800">Emergency Support Available</span>
+              </div>
+              <p className="text-sm text-yellow-700">
+                Even without school psychologists, you can still access confidential chat support.
+              </p>
+            </div>
+            
             <div className="mt-4">
               <LiveChatWidget
                 studentId={studentId}

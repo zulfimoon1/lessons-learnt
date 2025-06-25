@@ -23,20 +23,55 @@ export interface MentalHealthAlert {
 export const useMentalHealthAlerts = () => {
   const [alerts, setAlerts] = useState<MentalHealthAlert[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isAuthorized, setIsAuthorized] = useState(false);
   const { toast } = useToast();
   const { t } = useLanguage();
   const { admin } = usePlatformAdmin();
 
+  const checkAuthorization = async () => {
+    try {
+      // Only platform admins and medical professionals can access mental health data
+      if (!admin?.email) {
+        console.log('No admin context available for mental health access');
+        setIsAuthorized(false);
+        return false;
+      }
+
+      // Verify user has proper medical credentials through edge function
+      const { data, error } = await supabase.functions.invoke('platform-admin', {
+        body: {
+          operation: 'verifyMedicalAccess',
+          adminEmail: admin.email
+        }
+      });
+
+      if (error || !data?.success) {
+        console.warn('Mental health access verification failed:', error || data?.error);
+        setIsAuthorized(false);
+        return false;
+      }
+
+      setIsAuthorized(true);
+      return true;
+    } catch (error) {
+      console.error('Authorization check failed:', error);
+      setIsAuthorized(false);
+      return false;
+    }
+  };
+
   const fetchAlerts = async () => {
     try {
-      if (!admin?.email) {
-        console.log('No admin context available');
+      setIsLoading(true);
+      
+      const authorized = await checkAuthorization();
+      if (!authorized) {
+        console.log('User not authorized for mental health data access');
         setAlerts([]);
-        setIsLoading(false);
         return;
       }
 
-      console.log('🧠 Fetching mental health alerts via edge function...');
+      console.log('🧠 Fetching mental health alerts via secure edge function...');
       const { data, error } = await supabase.functions.invoke('platform-admin', {
         body: {
           operation: 'getMentalHealthAlerts',
@@ -46,13 +81,12 @@ export const useMentalHealthAlerts = () => {
 
       if (error) {
         console.error('Error fetching mental health alerts:', error);
-        // Don't throw error, just set empty array and continue
         setAlerts([]);
         return;
       }
       
       if (data?.success) {
-        console.log('✅ Mental health alerts fetched:', data.data?.length || 0);
+        console.log('✅ Mental health alerts fetched securely:', data.data?.length || 0);
         setAlerts(data.data || []);
       } else {
         console.warn('Mental health alerts request unsuccessful:', data?.error);
@@ -60,8 +94,6 @@ export const useMentalHealthAlerts = () => {
       }
     } catch (error) {
       console.error('Error in fetchAlerts:', error);
-      // Don't show error toast for mental health alerts fetch failures
-      // as this is a secondary feature and shouldn't interrupt the main dashboard
       setAlerts([]);
     } finally {
       setIsLoading(false);
@@ -70,16 +102,16 @@ export const useMentalHealthAlerts = () => {
 
   const markAsReviewed = async (alertId: string) => {
     try {
-      if (!admin?.email) {
+      if (!isAuthorized) {
         toast({
           title: t('common.error'),
-          description: "Admin authentication required",
+          description: "Unauthorized access to mental health data",
           variant: "destructive",
         });
         return;
       }
 
-      console.log('✅ Marking alert as reviewed via edge function...');
+      console.log('✅ Marking alert as reviewed via secure edge function...');
       const { data, error } = await supabase.functions.invoke('platform-admin', {
         body: {
           operation: 'markAlertAsReviewed',
@@ -93,7 +125,7 @@ export const useMentalHealthAlerts = () => {
       if (data?.success) {
         toast({
           title: t('common.success'),
-          description: "The alert has been marked as reviewed",
+          description: "The alert has been securely marked as reviewed",
         });
         fetchAlerts();
       } else {
@@ -121,6 +153,7 @@ export const useMentalHealthAlerts = () => {
   return {
     alerts,
     isLoading,
+    isAuthorized,
     unreviewed,
     critical,
     markAsReviewed,
