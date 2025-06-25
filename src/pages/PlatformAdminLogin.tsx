@@ -8,9 +8,10 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { usePlatformAdmin } from "@/contexts/PlatformAdminContext";
-import { ShieldIcon, LockIcon } from "lucide-react";
+import { ShieldIcon, LockIcon, ArrowLeft } from "lucide-react";
 import ComplianceFooter from "@/components/ComplianceFooter";
 import CookieConsent from "@/components/CookieConsent";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
 
 const PlatformAdminLogin = () => {
   const [email, setEmail] = useState("");
@@ -78,21 +79,37 @@ const PlatformAdminLogin = () => {
   };
 
   return (
-    <div className="min-h-screen bg-brand-gradient-soft">
+    <div className="min-h-screen bg-background">
       <CookieConsent />
-      <div className="flex items-center justify-center p-4 min-h-screen">
-        <div className="w-full max-w-md">
-          <div className="text-center mb-6">
-            <ShieldIcon className="w-12 h-12 text-brand-teal mx-auto mb-4" />
-            <h1 className="text-2xl font-bold text-brand-dark">Platform Console</h1>
-            <p className="text-gray-600">Secure admin access to platform management dashboard</p>
+      
+      {/* Header similar to dashboard */}
+      <header className="bg-card/80 backdrop-blur-sm border-b border-border p-4">
+        <div className="max-w-7xl mx-auto flex justify-between items-center">
+          <div className="flex items-center gap-4">
+            <Button
+              variant="ghost"
+              onClick={() => navigate('/')}
+              className="flex items-center gap-2"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Back to Home
+            </Button>
+            <div className="flex items-center gap-2">
+              <ShieldIcon className="w-6 h-6 text-primary" />
+              <h1 className="text-xl font-semibold text-foreground">Platform Console</h1>
+            </div>
           </div>
+          <LanguageSwitcher />
+        </div>
+      </header>
 
-          <Card className="shadow-xl border-brand-teal/20 bg-white/90">
+      <div className="flex items-center justify-center p-6">
+        <div className="w-full max-w-md">
+          <Card className="shadow-xl border bg-card/90">
             <CardContent className="p-6">
               <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-                <TabsList className="grid w-full grid-cols-1 bg-gray-100">
-                  <TabsTrigger value="login" className="flex items-center gap-2 data-[state=active]:bg-brand-teal data-[state=active]:text-white">
+                <TabsList className="grid w-full grid-cols-1">
+                  <TabsTrigger value="login" className="flex items-center gap-2">
                     <LockIcon className="w-4 h-4" />
                     Secure Admin Login
                   </TabsTrigger>
@@ -100,15 +117,18 @@ const PlatformAdminLogin = () => {
 
                 <TabsContent value="login" className="space-y-4">
                   <CardHeader className="px-0 pb-4">
-                    <CardTitle className="text-lg text-brand-dark">Platform Administrator</CardTitle>
-                    <div className="text-sm text-gray-600">
+                    <CardTitle className="text-lg text-foreground flex items-center gap-2">
+                      <ShieldIcon className="w-5 h-5 text-primary" />
+                      Platform Administrator
+                    </CardTitle>
+                    <div className="text-sm text-muted-foreground">
                       Enhanced security authentication required
                     </div>
                   </CardHeader>
 
                   <form onSubmit={handleSubmit} className="space-y-4">
                     <div className="space-y-2">
-                      <Label htmlFor="email" className="text-brand-dark">Admin Email</Label>
+                      <Label htmlFor="email" className="text-foreground">Admin Email</Label>
                       <Input
                         id="email"
                         type="email"
@@ -116,12 +136,12 @@ const PlatformAdminLogin = () => {
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         required
-                        className="border-gray-300 focus:border-brand-teal focus:ring-brand-teal"
+                        className="border-input focus:border-primary focus:ring-primary"
                       />
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="password" className="text-brand-dark">Password</Label>
+                      <Label htmlFor="password" className="text-foreground">Password</Label>
                       <Input
                         id="password"
                         type="password"
@@ -129,28 +149,28 @@ const PlatformAdminLogin = () => {
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         required
-                        className="border-gray-300 focus:border-brand-teal focus:ring-brand-teal"
+                        className="border-input focus:border-primary focus:ring-primary"
                       />
                     </div>
 
-                    <div className="bg-brand-teal/10 border border-brand-teal/30 rounded-lg p-3">
-                      <div className="flex items-center gap-2 text-brand-teal text-sm">
+                    <div className="bg-primary/10 border border-primary/30 rounded-lg p-3">
+                      <div className="flex items-center gap-2 text-primary text-sm">
                         <ShieldIcon className="w-4 h-4" />
                         <span className="font-medium">Secure Authentication</span>
                       </div>
-                      <p className="text-xs text-brand-dark mt-1">
+                      <p className="text-xs text-muted-foreground mt-1">
                         Contact your system administrator for credentials
                       </p>
                     </div>
 
                     <Button 
                       type="submit" 
-                      className="w-full bg-brand-teal hover:bg-brand-dark text-white"
+                      className="w-full"
                       disabled={isLoading}
                     >
                       {isLoading ? (
                         <div className="flex items-center gap-2">
-                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary-foreground"></div>
                           Authenticating...
                         </div>
                       ) : (
@@ -166,7 +186,7 @@ const PlatformAdminLogin = () => {
             </CardContent>
           </Card>
 
-          <div className="text-center mt-4 text-sm text-gray-500">
+          <div className="text-center mt-4 text-sm text-muted-foreground">
             <p>Protected by enhanced security protocols</p>
           </div>
         </div>

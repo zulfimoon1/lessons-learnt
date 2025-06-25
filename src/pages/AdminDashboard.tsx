@@ -1,14 +1,13 @@
-
 import React, { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Navigate } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { BarChart3, Users, MessageSquare, Settings, LogOut } from "lucide-react";
+import { BarChart3, Users, MessageSquare, Settings } from "lucide-react";
 import FeedbackAnalytics from "@/components/dashboard/admin/FeedbackAnalytics";
 import TeacherManagement from "@/components/dashboard/admin/TeacherManagement";
 import { useLanguage } from "@/contexts/LanguageContext";
+import DashboardHeader from "@/components/dashboard/DashboardHeader";
 
 const AdminDashboard = () => {
   const { teacher, logout, isLoading } = useAuth();
@@ -17,7 +16,7 @@ const AdminDashboard = () => {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
       </div>
     );
   }
@@ -26,26 +25,15 @@ const AdminDashboard = () => {
     return <Navigate to="/teacher-login" replace />;
   }
 
-  const handleLogout = () => {
-    logout();
-  };
-
   return (
     <div className="min-h-screen bg-background">
-      <div className="container mx-auto py-6">
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h1 className="text-2xl font-bold">{t('admin.title')}</h1>
-            <p className="text-muted-foreground">
-              {t('admin.welcome')}, {teacher.name} - {teacher.school}
-            </p>
-          </div>
-          <Button variant="outline" onClick={handleLogout}>
-            <LogOut className="w-4 h-4 mr-2" />
-            Logout
-          </Button>
-        </div>
+      <DashboardHeader 
+        title={t('admin.title')}
+        userName={`${teacher.name} - ${teacher.school}`}
+        onLogout={logout}
+      />
 
+      <div className="container mx-auto py-6">
         <Tabs defaultValue="overview" className="space-y-4">
           <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="overview" className="flex items-center gap-2">

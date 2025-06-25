@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { SchoolIcon, LogOut } from "lucide-react";
@@ -17,7 +18,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({ title, userName, onLo
 
   const handleLogout = () => {
     onLogout();
-    // Redirect to homepage after logout
+    // Always redirect to homepage after logout
     navigate('/', { replace: true });
   };
 
