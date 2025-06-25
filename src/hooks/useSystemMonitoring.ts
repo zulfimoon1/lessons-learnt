@@ -33,7 +33,7 @@ export const useSystemMonitoring = () => {
           // Log critical alerts as security events
           if (alert.severity === 'critical') {
             soc2ComplianceService.logSecurityEvent({
-              event_category: 'availability',
+              event_category: 'data_integrity',
               event_description: alert.message,
               affected_resource: 'system_availability',
               risk_level: 'high',
@@ -61,7 +61,7 @@ export const useSystemMonitoring = () => {
           result: 'success',
           timestamp: new Date().toISOString(),
           severity: 'low',
-          control_category: 'availability',
+          control_category: 'data_integrity',
           details: {
             availability: metrics.availability,
             responseTime: metrics.responseTime,
