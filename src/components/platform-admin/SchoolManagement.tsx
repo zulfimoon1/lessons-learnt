@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -35,8 +34,16 @@ const SchoolManagement: React.FC<SchoolManagementProps> = ({ onDataChange }) => 
       console.log('🏫 Fetching schools...');
       
       const schoolData = await securePlatformAdminService.getSchoolData(admin.email);
-      setSchools(schoolData);
-      console.log(`✅ Schools loaded: ${schoolData.length} schools`);
+      
+      // Ensure the data has the correct types
+      const typedSchoolData = schoolData.map((school: any) => ({
+        name: school.name,
+        teacher_count: Number(school.teacher_count) || 0,
+        student_count: Number(school.student_count) || 0
+      }));
+      
+      setSchools(typedSchoolData);
+      console.log(`✅ Schools loaded: ${typedSchoolData.length} schools`);
       
     } catch (error) {
       console.error('❌ Error fetching schools:', error);
