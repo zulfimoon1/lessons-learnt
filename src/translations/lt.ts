@@ -1,9 +1,5 @@
-
 import { ltAuthTranslations } from './lt/auth';
 import { ltDemoTranslations } from './lt/demo';
-import { ltTeacherTranslations } from './lt/teacher';
-import { ltWeeklyTranslations } from './lt/weekly';
-import { ltChatTranslations } from './lt/chat';
 
 export const ltTranslations = {
   // Common translations
@@ -81,7 +77,6 @@ export const ltTranslations = {
   'dashboard.adminPanel': 'Administratoriaus skydelis',
   'dashboard.accessAnalytics': 'Peržiūrėkite išsamią mokyklos analitiką',
   'dashboard.subscription': 'Prenumerata',
-  'dashboard.teacherDashboard': 'Mokytojo skydelis',
 
   // Teacher Dashboard
   'teacher.dashboard.title': 'Mokytojo skydelis',
@@ -195,107 +190,6 @@ export const ltTranslations = {
   'admin.loading': 'Kraunama...',
   'admin.error.title': 'Klaida',
   'admin.error.description': 'Nepavyko įkelti duomenų',
-  'admin.overview': 'Apžvalga',
-  'admin.analytics': 'Analitika',
-  'admin.feedbackAnalytics': 'Atsiliepimų analitika',
-  'admin.staffManagement': 'Personalo valdymas',
-  'admin.settings': 'Nustatymai',
-  'admin.totalTeachers': 'Iš viso mokytojų',
-  'admin.totalFeedback': 'Iš viso atsiliepimų',
-  'admin.activeClasses': 'Aktyvios pamokos',
-  'admin.responseRate': 'Atsakymų dažnis',
-  'admin.activeStaffMembers': 'Aktyvūs personalo nariai',
-  'admin.thisMonth': 'Šį mėnesį',
-  'admin.scheduledThisWeek': 'Suplanuota šią savaitę',
-  'admin.averageFeedbackRate': 'Vidutinis atsiliepimų dažnis',
-  'admin.schoolOverview': 'Mokyklos apžvalga',
-  'admin.schoolOverviewDesc': 'Sveiki atvykę į mokyklos administracijos skydelį. Čia galite valdyti personalą, peržiūrėti atsiliepimų analitiką ir stebėti bendrą mokyklos veiklą.',
-  'admin.schoolSettings': 'Mokyklos nustatymai',
-  'admin.schoolSettingsDesc': 'Mokyklos konfigūracija ir administraciniai nustatymai bus prieinami čia.',
-  'admin.role': 'Mokyklos administratorius',
-
-  // Platform Admin Dashboard translations
-  'platformAdmin.title': 'Platformos administratoriaus skydelis',
-  'platformAdmin.welcome': 'Sveiki atvykę',
-  'platformAdmin.platformAdministrator': 'Platformos administratorius',
-  'platformAdmin.refresh': 'Atnaujinti',
-  'platformAdmin.loading': 'Kraunama...',
-  'platformAdmin.cleanupDemoData': 'Išvalyti demo duomenis',
-  'platformAdmin.cleaning': 'Valoma...',
-  'platformAdmin.logout': 'Atsijungti',
-  'platformAdmin.errorLoadingData': 'Klaida kraunant duomenis:',
-  'platformAdmin.loadingDashboardData': 'Kraunami skydelio duomenys...',
-  'platformAdmin.totalStudents': 'Iš viso studentų',
-  'platformAdmin.totalSchools': 'Iš viso mokyklų',
-  'platformAdmin.totalResponses': 'Iš viso atsakymų',
-  'platformAdmin.userManagement': 'Vartotojų valdymas',
-  'platformAdmin.analyticsReports': 'Analitika ir ataskaitos',
-  'platformAdmin.gdprPrivacy': 'BDAR ir privatumas',
-  'platformAdmin.security': 'Saugumas',
-  'platformAdmin.schools': 'Mokyklos',
-  'platformAdmin.students': 'Studentai',
-  'platformAdmin.doctors': 'Daktarai',
-  'platformAdmin.lastUpdated': 'Paskutinį kartą atnaujinta:',
-  'platformAdmin.never': 'Niekada',
-  'platformAdmin.dataLoaded': '✓ Duomenys įkelti',
-  'platformAdmin.loadingStatus': '⏳ Kraunama...',
-  'platformAdmin.monthlyRevenue': 'Mėnesio pajamos:',
-  'platformAdmin.activeSubscriptions': 'Aktyvūs prenumeratos:',
-  'platformAdmin.totalUsers': 'Iš viso vartotojų:',
-  'platformAdmin.systemStatus': 'Sistemos būsena:',
-  'platformAdmin.online': '✅ Prisijungusi',
-  'platformAdmin.adminAccessDenied': 'Administratoriaus prieiga uždrausta',
-  'platformAdmin.pleaseLoginAdmin': 'Prašome prisijungti kaip administratorius',
-  'platformAdmin.goToAdminLogin': 'Eiti į administratoriaus prisijungimą',
-  'platformAdmin.loadingAdminSession': 'Kraunama administratoriaus sesija...',
-
-  // AI Insights translations
-  'ai.insights': 'AI įžvalgos',
-  'ai.insightsDescription': 'Gaukite AI paremtas įžvalgas ir rekomendacijas, pagrįstas studentų atsiliepimais ir įsitraukimo duomenimis.',
-  'ai.studentEngagement': 'Studentų įsitraukimo analizė',
-  'ai.engagementTrends': 'Įsitraukimo tendencijos',
-  'ai.recommendations': 'AI rekomendacijos',
-  'ai.classPerformance': 'Klasės veiklos įžvalgos',
-  'ai.improvementSuggestions': 'Tobulinimo pasiūlymai',
-  'ai.subscriptionRequired': 'AI įžvalgoms pasiekti reikalinga prenumerata.',
-  'ai.subscribeToUnlock': 'Prenumeruokite, kad atrakintumėte AI paremtą analitiką ir rekomendacijas.',
-  'ai.analyzingData': 'Analizuojami studentų atsiliepimų duomenys...',
-  'ai.noDataAvailable': 'Analizei duomenų dar nėra.',
-  'ai.generateInsights': 'Generuoti įžvalgas',
-  'ai.lastAnalysis': 'Paskutinė analizė:',
-  'ai.dataPoints': 'duomenų taškų išanalizuota',
-
-  // Analytics translations
-  'analytics.title': 'Analitika',
-  'analytics.overview': 'Analitikos apžvalga',
-  'analytics.studentFeedback': 'Studentų atsiliepimų analitika',
-  'analytics.classPerformance': 'Klasės veikla',
-  'analytics.engagementMetrics': 'Įsitraukimo metrikos',
-  'analytics.timeRange': 'Laiko intervalas',
-  'analytics.lastWeek': 'Paskutinė savaitė',
-  'analytics.lastMonth': 'Paskutinis mėnuo',
-  'analytics.lastQuarter': 'Paskutinis ketvirtis',
-  'analytics.exportData': 'Eksportuoti duomenis',
-
-  // Teacher role translation
-  'teacher.role': 'Mokytojas',
-
-  // Schedule translations
-  'teacher.schedule': 'Tvarkaraštis',
-
-  // Bulk upload translations
-  'teacher.bulkUpload': 'Masinis įkėlimas',
-
-  // Articles translations
-  'teacher.articles': 'Straipsniai',
-
-  // Mental Health tab translations
-  'teacher.mentalHealthTab': 'Psichinės sveikatos apžvalga',
-  'teacher.mentalHealthDescription': 'Stebėkite studentų gerovę ir pasiekite psichinės sveikatos išteklius.',
-
-  // Weekly summaries translations
-  'weekly.summaries': 'Savaitės santraukos',
-  'weekly.summariesDescription': 'Peržiūrėkite ir tvarkykite savaitės santraukas iš savo studentų.',
 
   // Class
   'class.schedule': 'Tvarkaraštis',
@@ -518,10 +412,109 @@ export const ltTranslations = {
   'privacy.consentGiven': 'Sutikimas suteiktas',
   'privacy.lastUpdated': 'Paskutinį kartą atnaujinta',
 
-  // Merge all sub-translations
-  ...ltAuthTranslations,
-  ...ltTeacherTranslations,
-  ...ltWeeklyTranslations,
-  ...ltChatTranslations,
-  ...ltDemoTranslations,
+  // Admin Dashboard translations
+  'admin.overview': 'Apžvalga',
+  'admin.analytics': 'Analitika',
+  'admin.feedbackAnalytics': 'Atsiliepimų analitika',
+  'admin.staffManagement': 'Personalo valdymas',
+  'admin.settings': 'Nustatymai',
+  'admin.totalTeachers': 'Iš viso mokytojų',
+  'admin.totalFeedback': 'Iš viso atsiliepimų',
+  'admin.activeClasses': 'Aktyvios pamokos',
+  'admin.responseRate': 'Atsakymų dažnis',
+  'admin.activeStaffMembers': 'Aktyvūs personalo nariai',
+  'admin.thisMonth': 'Šį mėnesį',
+  'admin.scheduledThisWeek': 'Suplanuota šią savaitę',
+  'admin.averageFeedbackRate': 'Vidutinis atsiliepimų dažnis',
+  'admin.schoolOverview': 'Mokyklos apžvalga',
+  'admin.schoolOverviewDesc': 'Sveiki atvykę į mokyklos administracijos skydelį. Čia galite valdyti personalą, peržiūrėti atsiliepimų analitiką ir stebėti bendrą mokyklos veiklą.',
+  'admin.schoolSettings': 'Mokyklos nustatymai',
+  'admin.schoolSettingsDesc': 'Mokyklos konfigūracija ir administraciniai nustatymai bus prieinami čia.',
+  'admin.role': 'Mokyklos administratorius',
+
+  // Platform Admin Dashboard translations
+  'platformAdmin.title': 'Platformos administratoriaus skydelis',
+  'platformAdmin.welcome': 'Sveiki atvykę',
+  'platformAdmin.platformAdministrator': 'Platformos administratorius',
+  'platformAdmin.refresh': 'Atnaujinti',
+  'platformAdmin.loading': 'Kraunama...',
+  'platformAdmin.cleanupDemoData': 'Išvalyti demo duomenis',
+  'platformAdmin.cleaning': 'Valoma...',
+  'platformAdmin.logout': 'Atsijungti',
+  'platformAdmin.errorLoadingData': 'Klaida kraunant duomenis:',
+  'platformAdmin.loadingDashboardData': 'Kraunami skydelio duomenys...',
+  'platformAdmin.totalStudents': 'Iš viso studentų',
+  'platformAdmin.totalSchools': 'Iš viso mokyklų',
+  'platformAdmin.totalResponses': 'Iš viso atsakymų',
+  'platformAdmin.userManagement': 'Vartotojų valdymas',
+  'platformAdmin.analyticsReports': 'Analitika ir ataskaitos',
+  'platformAdmin.gdprPrivacy': 'BDAR ir privatumas',
+  'platformAdmin.security': 'Saugumas',
+  'platformAdmin.schools': 'Mokyklos',
+  'platformAdmin.students': 'Studentai',
+  'platformAdmin.doctors': 'Daktarai',
+  'platformAdmin.lastUpdated': 'Paskutinį kartą atnaujinta:',
+  'platformAdmin.never': 'Niekada',
+  'platformAdmin.dataLoaded': '✓ Duomenys įkelti',
+  'platformAdmin.loadingStatus': '⏳ Kraunama...',
+  'platformAdmin.monthlyRevenue': 'Mėnesio pajamos:',
+  'platformAdmin.activeSubscriptions': 'Aktyvūs prenumeratos:',
+  'platformAdmin.totalUsers': 'Iš viso vartotojų:',
+  'platformAdmin.systemStatus': 'Sistemos būsena:',
+  'platformAdmin.online': '✅ Prisijungusi',
+  'platformAdmin.adminAccessDenied': 'Administratoriaus prieiga uždrausta',
+  'platformAdmin.pleaseLoginAdmin': 'Prašome prisijungti kaip administratorius',
+  'platformAdmin.goToAdminLogin': 'Eiti į administratoriaus prisijungimą',
+  'platformAdmin.loadingAdminSession': 'Kraunama administratoriaus sesija...',
+
+  // AI Insights translations
+  'ai.insights': 'AI įžvalgos',
+  'ai.insightsDescription': 'Gaukite AI paremtas įžvalgas ir rekomendacijas, pagrįstas studentų atsiliepimais ir įsitraukimo duomenimis.',
+  'ai.studentEngagement': 'Studentų įsitraukimo analizė',
+  'ai.engagementTrends': 'Įsitraukimo tendencijos',
+  'ai.recommendations': 'AI rekomendacijos',
+  'ai.classPerformance': 'Klasės veiklos įžvalgos',
+  'ai.improvementSuggestions': 'Tobulinimo pasiūlymai',
+  'ai.subscriptionRequired': 'AI įžvalgoms pasiekti reikalinga prenumerata.',
+  'ai.subscribeToUnlock': 'Prenumeruokite, kad atrakintumėte AI paremtą analitiką ir rekomendacijas.',
+  'ai.analyzingData': 'Analizuojami studentų atsiliepimų duomenys...',
+  'ai.noDataAvailable': 'Analizei duomenų dar nėra.',
+  'ai.generateInsights': 'Generuoti įžvalgas',
+  'ai.lastAnalysis': 'Paskutinė analizė:',
+  'ai.dataPoints': 'duomenų taškų išanalizuota',
+
+  // Analytics translations
+  'analytics.title': 'Analitika',
+  'analytics.overview': 'Analitikos apžvalga',
+  'analytics.studentFeedback': 'Studentų atsiliepimų analitika',
+  'analytics.classPerformance': 'Klasės veikla',
+  'analytics.engagementMetrics': 'Įsitraukimo metrikos',
+  'analytics.timeRange': 'Laiko intervalas',
+  'analytics.lastWeek': 'Paskutinė savaitė',
+  'analytics.lastMonth': 'Paskutinis mėnuo',
+  'analytics.lastQuarter': 'Paskutinis ketvirtis',
+  'analytics.exportData': 'Eksportuoti duomenis',
+
+  // Teacher role translation
+  'teacher.role': 'Mokytojas',
+
+  // Schedule translations
+  'teacher.schedule': 'Tvarkaraštis',
+
+  // Bulk upload translations
+  'teacher.bulkUpload': 'Masinis įkėlimas',
+
+  // Articles translations
+  'teacher.articles': 'Straipsniai',
+
+  // Mental Health tab translations
+  'teacher.mentalHealthTab': 'Psichinės sveikatos apžvalga',
+  'teacher.mentalHealthDescription': 'Stebėkite studentų gerovę ir pasiekite psichinės sveikatos išteklius.',
+
+  // Weekly summaries translations
+  'weekly.summaries': 'Savaitės santraukos',
+  'weekly.summariesDescription': 'Peržiūrėkite ir tvarkykite savaitės santraukas iš savo studentų.',
+
+  // Dashboard specific translations
+  'dashboard.teacherDashboard': 'Mokytojo skydelis',
 };
