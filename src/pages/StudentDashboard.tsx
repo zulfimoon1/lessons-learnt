@@ -45,14 +45,14 @@ const StudentDashboard: React.FC = () => {
         }
       } catch (error) {
         console.error('Error fetching upcoming classes:', error);
-        toast.error(t('student.failedToLoadClasses'));
+        toast.error('Failed to load upcoming classes');
       } finally {
         setIsLoading(false);
       }
     };
 
     fetchUpcomingClasses();
-  }, [student, t]);
+  }, [student]);
 
   const handleLogout = async () => {
     try {

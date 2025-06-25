@@ -1,5 +1,4 @@
-
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -23,10 +22,29 @@ const DoctorChatDashboard = ({ doctorId, doctorName, school }: DoctorChatDashboa
   const [activeSessions, setActiveSessions] = useState<LiveChatSession[]>([]);
   const [currentChatSession, setCurrentChatSession] = useState<LiveChatSession | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const subscriptionRef = useRef<any>(null);
+  const doctorIdRef = useRef<string>('');
 
   useEffect(() => {
+    // Prevent duplicate subscriptions for the same doctor/school combination
+    const subscriptionKey = `${doctorId}-${school}`;
+    if (doctorIdRef.current === subscriptionKey) return;
+    
+    // Cleanup previous subscription if exists
+    if (subscriptionRef.current) {
+      console.log('DoctorChatDashboard: Cleaning up previous subscription');
+      supabase.removeChannel(subscriptionRef.current);
+      subscriptionRef.current = null;
+    }
+    
+    doctorIdRef.current = subscriptionKey;
     loadSessions();
-    setupRealtimeSubscription();
+    const cleanup = setupRealtimeSubscription();
+    
+    return () => {
+      cleanup();
+      doctorIdRef.current = '';
+    };
   }, [school, doctorId]);
 
   const loadSessions = async () => {
@@ -81,6 +99,11 @@ const DoctorChatDashboard = ({ doctorId, doctorName, school }: DoctorChatDashboa
   };
 
   const setupRealtimeSubscription = () => {
+    if (subscriptionRef.current) {
+      console.log('DoctorChatDashboard: Subscription already exists, skipping');
+      return () => {};
+    }
+
     console.log('Setting up real-time subscription for doctor chat dashboard');
     
     const channel = supabase
@@ -102,8 +125,13 @@ const DoctorChatDashboard = ({ doctorId, doctorName, school }: DoctorChatDashboa
         console.log('Doctor chat subscription status:', status);
       });
 
+    subscriptionRef.current = channel;
+
     return () => {
-      supabase.removeChannel(channel);
+      if (subscriptionRef.current) {
+        supabase.removeChannel(subscriptionRef.current);
+        subscriptionRef.current = null;
+      }
     };
   };
 

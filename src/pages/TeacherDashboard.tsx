@@ -16,6 +16,7 @@ import MentalHealthTab from "@/components/dashboard/teacher/MentalHealthTab";
 import ArticlesTab from "@/components/dashboard/teacher/ArticlesTab";
 import AnalyticsTab from "@/components/dashboard/teacher/AnalyticsTab";
 import AIInsightsTab from "@/components/dashboard/teacher/AIInsightsTab";
+import DemoDoctorDashboard from "@/components/dashboard/doctor/DemoDoctorDashboard";
 
 const TeacherDashboard: React.FC = () => {
   const { teacher, logout } = useAuth();
@@ -34,6 +35,11 @@ const TeacherDashboard: React.FC = () => {
 
   if (!teacher) {
     return <Navigate to="/teacher-login" replace />;
+  }
+
+  // If teacher is a doctor, show the specialized doctor dashboard
+  if (teacher.role === 'doctor') {
+    return <DemoDoctorDashboard teacher={teacher} onLogout={handleLogout} />;
   }
 
   const tabItems = [
