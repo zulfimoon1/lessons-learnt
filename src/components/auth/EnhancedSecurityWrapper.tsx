@@ -1,6 +1,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useSecurityAuth } from '@/hooks/useSecurityAuth';
 import { logUserSecurityEvent } from '@/components/SecurityAuditLogger';
 
 interface EnhancedSecurityWrapperProps {
@@ -15,6 +16,7 @@ const EnhancedSecurityWrapper: React.FC<EnhancedSecurityWrapperProps> = ({
   allowedRoles = []
 }) => {
   const { student, teacher, isLoading } = useAuth();
+  const { sessionValid, securityScore } = useSecurityAuth();
   const [securityChecked, setSecurityChecked] = useState(false);
 
   useEffect(() => {
@@ -37,6 +39,16 @@ const EnhancedSecurityWrapper: React.FC<EnhancedSecurityWrapperProps> = ({
             window.location.href = '/teacher-login';
           }
           return;
+        }
+
+        // Check session security
+        if (requireAuth && !sessionValid) {
+          logUserSecurityEvent({
+            type: 'suspicious_activity',
+            timestamp: new Date().toISOString(),
+            details: `Session security validation failed, score: ${securityScore}`,
+            userAgent: navigator.userAgent
+          });
         }
 
         // Check role-based access
@@ -75,7 +87,7 @@ const EnhancedSecurityWrapper: React.FC<EnhancedSecurityWrapperProps> = ({
     if (!isLoading) {
       performSecurityCheck();
     }
-  }, [student, teacher, isLoading, requireAuth, allowedRoles]);
+  }, [student, teacher, isLoading, requireAuth, allowedRoles, sessionValid, securityScore]);
 
   // Show loading while security checks are in progress
   if (isLoading || !securityChecked) {
