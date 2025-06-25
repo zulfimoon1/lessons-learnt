@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -72,17 +71,13 @@ const LessonFeedbackForm: React.FC = () => {
         .insert({
           student_id: student.id,
           student_name: student.full_name,
-          school: student.school,
-          grade: student.grade,
           class_schedule_id: selectedClass || null,
-          subject: subject,
-          lesson_topic: lessonTopic,
-          understanding_rating: understanding,
-          interest_rating: interest,
-          growth_rating: growth,
+          understanding: understanding,
+          interest: interest,
+          educational_growth: growth,
           emotional_state: emotionalState,
           what_went_well: whatWentWell,
-          suggestions_for_improvement: suggestions,
+          suggestions: suggestions,
           additional_comments: additionalComments
         });
 
