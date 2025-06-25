@@ -18,6 +18,7 @@ import PricingShowcase from "./pages/PricingShowcase";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import PrivacyDashboard from "./pages/PrivacyDashboard";
 import SOC2CompliancePage from "./pages/SOC2CompliancePage";
+import SOC2TestPage from "./pages/SOC2TestPage";
 import SOC2Monitor from "./components/soc2/SOC2Monitor";
 
 const queryClient = new QueryClient();
@@ -44,6 +45,7 @@ const App = () => (
               <Route path="/privacy-policy" element={<PrivacyPolicy />} />
               <Route path="/privacy-dashboard" element={<PrivacyDashboard />} />
               <Route path="/soc2-compliance" element={<SOC2CompliancePage />} />
+              <Route path="/soc2-test" element={<SOC2TestPage />} />
             </Routes>
           </SOC2Monitor>
         </BrowserRouter>
