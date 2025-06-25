@@ -12,6 +12,8 @@ import HIPAABAAManagement from './HIPAABAAManagement';
 import HIPAABreachNotification from './HIPAABreachNotification';
 import HIPAAPatientRights from './HIPAAPatientRights';
 import HIPAATrainingTracking from './HIPAATrainingTracking';
+import HIPAAPHIProtectionPanel from './HIPAAPHIProtectionPanel';
+import HIPAAMinimumNecessaryControl from './HIPAAMinimumNecessaryControl';
 
 interface HIPAAMetrics {
   phiAccessEvents24h: number;
@@ -29,7 +31,7 @@ const HIPAADashboard: React.FC = () => {
 
   useEffect(() => {
     loadHIPAAData();
-    const interval = setInterval(loadHIPAAData, 60000); // Refresh every minute
+    const interval = setInterval(loadHIPAAData, 60000);
     return () => clearInterval(interval);
   }, []);
 
@@ -51,7 +53,6 @@ const HIPAADashboard: React.FC = () => {
 
   const runComplianceAudit = async () => {
     try {
-      // Simulate compliance audit
       await hipaaComplianceService.logPHIAccess({
         event_type: 'phi_access',
         resource_accessed: 'compliance_audit',
@@ -132,14 +133,24 @@ const HIPAADashboard: React.FC = () => {
       )}
 
       {/* Detailed Tabs */}
-      <Tabs defaultValue="risk-assessment" className="space-y-4">
+      <Tabs defaultValue="phi-protection" className="space-y-4">
         <TabsList>
+          <TabsTrigger value="phi-protection">PHI Protection</TabsTrigger>
+          <TabsTrigger value="minimum-necessary">Access Control</TabsTrigger>
           <TabsTrigger value="risk-assessment">Risk Assessment</TabsTrigger>
           <TabsTrigger value="baa-management">BAA Management</TabsTrigger>
           <TabsTrigger value="breach-notification">Breach Notification</TabsTrigger>
           <TabsTrigger value="patient-rights">Patient Rights</TabsTrigger>
           <TabsTrigger value="training">Training & Workforce</TabsTrigger>
         </TabsList>
+
+        <TabsContent value="phi-protection" className="space-y-4">
+          <HIPAAPHIProtectionPanel />
+        </TabsContent>
+
+        <TabsContent value="minimum-necessary" className="space-y-4">
+          <HIPAAMinimumNecessaryControl />
+        </TabsContent>
 
         <TabsContent value="risk-assessment" className="space-y-4">
           <HIPAARiskAssessment />
