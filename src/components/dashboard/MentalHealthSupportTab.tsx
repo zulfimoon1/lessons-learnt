@@ -118,8 +118,8 @@ const MentalHealthSupportTab: React.FC<MentalHealthSupportTabProps> = React.memo
         </CardDescription>
       </CardHeader>
       <CardContent className="p-6">
-        {/* Always show live chat - this is the main mental health support feature */}
         <div className="space-y-6">
+          {/* Privacy Notice */}
           <div className="bg-blue-50/50 p-4 rounded-lg border-l-4 border-blue-200">
             <div className="flex items-center gap-2 mb-2">
               <Shield className="w-4 h-4 text-blue-600" />
@@ -130,8 +130,8 @@ const MentalHealthSupportTab: React.FC<MentalHealthSupportTabProps> = React.memo
             </p>
           </div>
           
-          {/* Live Chat Widget - Always Available */}
-          <div className="flex justify-center">
+          {/* Live Chat Widget - Always Available and Centered */}
+          <div className="flex justify-center py-4">
             <LiveChatWidget
               studentId={studentId}
               studentName={studentName || t('student.defaultName')}
@@ -141,16 +141,19 @@ const MentalHealthSupportTab: React.FC<MentalHealthSupportTabProps> = React.memo
           </div>
           
           {/* Show doctor information if available */}
-          {doctors.length > 0 ? (
+          {doctors.length > 0 && (
             <div className="space-y-4">
               <h3 className="text-lg font-semibold text-brand-dark">
-                {t('features.mentalHealth.title')} {t('admin.subscription')}
+                {t('features.mentalHealth.title')} - {t('admin.subscription')}
               </h3>
               {doctors.map((doctor) => (
                 <PsychologistInfo key={doctor.id} psychologist={doctor} />
               ))}
             </div>
-          ) : (
+          )}
+          
+          {/* Information when no doctors available */}
+          {doctors.length === 0 && (
             <div className="text-center py-4">
               <div className="w-16 h-16 bg-brand-teal/10 rounded-full mx-auto mb-4 flex items-center justify-center">
                 <HeartHandshakeIcon className="w-8 h-8 text-brand-teal" />

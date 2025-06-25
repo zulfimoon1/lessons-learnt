@@ -100,6 +100,17 @@ export const enTranslations = {
   'analytics.title': 'Analytics',
 
   // Wellness translations - New
+  'wellness.tracker': 'Wellness Tracker',
+  'wellness.howAreYou': 'How are you feeling today?',
+  'wellness.great': 'Great',
+  'wellness.good': 'Good',
+  'wellness.okay': 'Okay',
+  'wellness.poor': 'Poor',
+  'wellness.terrible': 'Terrible',
+  'wellness.notes': 'Any additional thoughts? (Optional)',
+  'wellness.notesPlaceholder': 'Share what\'s on your mind...',
+  'wellness.submit': 'Submit Wellness Check',
+  'wellness.recent': 'Recent Entries',
   'wellness.submitted': 'Wellness check submitted successfully',
 
   // Weekly translations - Enhanced

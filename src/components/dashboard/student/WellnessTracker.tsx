@@ -6,6 +6,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Heart, Smile, Meh, Frown, AlertTriangle } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useToast } from '@/hooks/use-toast';
 
 interface MoodEntry {
   mood: 'great' | 'good' | 'okay' | 'poor' | 'terrible';
@@ -14,7 +15,7 @@ interface MoodEntry {
 }
 
 interface WellnessTrackerProps {
-  onMoodSubmit: (entry: MoodEntry) => void;
+  onMoodSubmit?: (entry: MoodEntry) => void;
   recentEntries?: MoodEntry[];
 }
 
@@ -25,13 +26,14 @@ const WellnessTracker: React.FC<WellnessTrackerProps> = ({
   const [selectedMood, setSelectedMood] = useState<MoodEntry['mood'] | null>(null);
   const [notes, setNotes] = useState('');
   const { t } = useLanguage();
+  const { toast } = useToast();
 
   const moods = [
-    { value: 'great', icon: Smile, label: t('wellness.great') || 'Great', color: 'text-green-500' },
-    { value: 'good', icon: Smile, label: t('wellness.good') || 'Good', color: 'text-blue-500' },
-    { value: 'okay', icon: Meh, label: t('wellness.okay') || 'Okay', color: 'text-yellow-500' },
-    { value: 'poor', icon: Frown, label: t('wellness.poor') || 'Poor', color: 'text-orange-500' },
-    { value: 'terrible', icon: AlertTriangle, label: t('wellness.terrible') || 'Terrible', color: 'text-red-500' }
+    { value: 'great', icon: Smile, label: t('wellness.great'), color: 'text-green-500' },
+    { value: 'good', icon: Smile, label: t('wellness.good'), color: 'text-blue-500' },
+    { value: 'okay', icon: Meh, label: t('wellness.okay'), color: 'text-yellow-500' },
+    { value: 'poor', icon: Frown, label: t('wellness.poor'), color: 'text-orange-500' },
+    { value: 'terrible', icon: AlertTriangle, label: t('wellness.terrible'), color: 'text-red-500' }
   ] as const;
 
   const handleSubmit = () => {
@@ -43,7 +45,17 @@ const WellnessTracker: React.FC<WellnessTrackerProps> = ({
       timestamp: new Date()
     };
 
-    onMoodSubmit(entry);
+    if (onMoodSubmit) {
+      onMoodSubmit(entry);
+    }
+    
+    // Show success toast
+    toast({
+      title: t('wellness.submitted'),
+      description: t('wellness.submitted'),
+    });
+
+    // Reset form
     setSelectedMood(null);
     setNotes('');
   };
@@ -63,14 +75,14 @@ const WellnessTracker: React.FC<WellnessTrackerProps> = ({
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Heart className="w-5 h-5 text-brand-orange" />
-          {t('wellness.tracker') || 'Wellness Tracker'}
+          {t('wellness.tracker')}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
         {/* Mood Selection */}
         <div>
           <h4 className="text-sm font-medium mb-3">
-            {t('wellness.howAreYou') || 'How are you feeling today?'}
+            {t('wellness.howAreYou')}
           </h4>
           <div className="grid grid-cols-5 gap-2">
             {moods.map((mood) => {
@@ -97,12 +109,12 @@ const WellnessTracker: React.FC<WellnessTrackerProps> = ({
         {selectedMood && (
           <div>
             <h4 className="text-sm font-medium mb-2">
-              {t('wellness.notes') || 'Any additional thoughts? (Optional)'}
+              {t('wellness.notes')}
             </h4>
             <Textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              placeholder={t('wellness.notesPlaceholder') || 'Share what\'s on your mind...'}
+              placeholder={t('wellness.notesPlaceholder')}
               className="resize-none"
               rows={3}
             />
@@ -115,14 +127,14 @@ const WellnessTracker: React.FC<WellnessTrackerProps> = ({
           disabled={!selectedMood}
           className="w-full"
         >
-          {t('wellness.submit') || 'Submit Wellness Check'}
+          {t('wellness.submit')}
         </Button>
 
         {/* Recent Entries */}
         {recentEntries.length > 0 && (
           <div>
             <h4 className="text-sm font-medium mb-3">
-              {t('wellness.recent') || 'Recent Entries'}
+              {t('wellness.recent')}
             </h4>
             <div className="space-y-2 max-h-32 overflow-y-auto">
               {recentEntries.slice(0, 5).map((entry, index) => {

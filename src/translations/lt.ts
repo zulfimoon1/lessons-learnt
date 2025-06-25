@@ -1,4 +1,3 @@
-
 import { ltAuthTranslations } from './lt/auth';
 import { ltTeacherTranslations } from './lt/teacher';
 import { ltWeeklyTranslations } from './lt/weekly';
@@ -101,6 +100,17 @@ export const ltTranslations = {
   'analytics.title': 'Analitika',
 
   // Wellness translations - New
+  'wellness.tracker': 'Gerovės sekimas',
+  'wellness.howAreYou': 'Kaip šiandien jaučiatės?',
+  'wellness.great': 'Puikiai',
+  'wellness.good': 'Gerai',
+  'wellness.okay': 'Normaliai',
+  'wellness.poor': 'Blogai',
+  'wellness.terrible': 'Siaubingai',
+  'wellness.notes': 'Papildomos mintys? (Neprivaloma)',
+  'wellness.notesPlaceholder': 'Pasidalykite savo mintimis...',
+  'wellness.submit': 'Pateikti gerovės patikrinimą',
+  'wellness.recent': 'Paskutiniai įrašai',
   'wellness.submitted': 'Gerovės patikrinimas sėkmingai pateiktas',
 
   // Weekly translations - Enhanced
