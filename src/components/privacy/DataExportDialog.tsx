@@ -7,8 +7,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Progress } from '@/components/ui/progress';
-import { Download, FileText, Shield, Clock, CheckCircle, AlertCircle } from 'lucide-react';
+import { Download, FileText, Shield, Clock, CheckCircle, AlertCircle, Mail } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import { emailNotificationService } from '@/services/emailNotificationService';
 
 interface DataExportDialogProps {
   open: boolean;
@@ -161,7 +162,8 @@ const DataExportDialog: React.FC<DataExportDialogProps> = ({ open, onOpenChange 
       link.href = url;
       
       const dateStr = new Date().toISOString().split('T')[0];
-      link.download = `lessonslearnt_${dataType}_export_${dateStr}.json`;
+      const fileName = `lessonslearnt_${dataType}_export_${dateStr}.json`;
+      link.download = fileName;
       
       document.body.appendChild(link);
       link.click();
@@ -184,12 +186,26 @@ const DataExportDialog: React.FC<DataExportDialogProps> = ({ open, onOpenChange 
         data_type: dataType,
         timestamp: timestamp,
         status: 'completed',
-        file_name: `lessonslearnt_${dataType}_export_${dateStr}.json`
+        file_name: fileName
       };
       
       const existingLogs = JSON.parse(localStorage.getItem('data-export-logs') || '[]');
       existingLogs.push(exportLog);
       localStorage.setItem('data-export-logs', JSON.stringify(existingLogs));
+
+      // NEW: Send email notification
+      updateProgress('Sending confirmation email...', 95);
+      const emailSent = await emailNotificationService.sendNotification({
+        type: 'data_export_ready',
+        userEmail: 'user@example.com', // In real app, this would come from auth context
+        userName: 'User Name',
+        requestId: exportId,
+        exportFileName: fileName
+      });
+
+      if (emailSent) {
+        console.log('✅ Email notification sent successfully');
+      }
 
     } catch (error) {
       console.error('Export failed:', error);
@@ -230,7 +246,7 @@ const DataExportDialog: React.FC<DataExportDialogProps> = ({ open, onOpenChange 
             <Shield className="h-4 w-4" />
             <AlertDescription>
               Your data will be exported in JSON format and downloaded to your device. 
-              No data is sent to external servers during this process.
+              A confirmation email will be sent once the export is complete.
             </AlertDescription>
           </Alert>
 
@@ -244,6 +260,12 @@ const DataExportDialog: React.FC<DataExportDialogProps> = ({ open, onOpenChange 
                     <span className="text-sm text-gray-600">{exportProgress.progress}%</span>
                   </div>
                   <Progress value={exportProgress.progress} className="w-full" />
+                  {exportProgress.progress > 90 && (
+                    <div className="flex items-center gap-2 text-sm text-blue-600">
+                      <Mail className="w-4 h-4" />
+                      <span>Sending confirmation email...</span>
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -254,7 +276,7 @@ const DataExportDialog: React.FC<DataExportDialogProps> = ({ open, onOpenChange 
             <Alert className="border-green-200 bg-green-50">
               <CheckCircle className="h-4 w-4 text-green-600" />
               <AlertDescription className="text-green-800">
-                Export completed successfully! Check your downloads folder for the exported file.
+                Export completed successfully! Check your downloads folder for the exported file and your email for confirmation.
               </AlertDescription>
             </Alert>
           )}
@@ -293,6 +315,10 @@ const DataExportDialog: React.FC<DataExportDialogProps> = ({ open, onOpenChange 
                   <Badge variant="outline" className="text-xs">
                     GDPR Art. 15
                   </Badge>
+                  <Badge variant="outline" className="text-xs">
+                    <Mail className="w-3 h-3 mr-1" />
+                    Email Confirmation
+                  </Badge>
                 </div>
                 <Button
                   onClick={() => generateDataExport('personal')}
@@ -314,7 +340,7 @@ const DataExportDialog: React.FC<DataExportDialogProps> = ({ open, onOpenChange 
               </CardContent>
             </Card>
 
-            {/* Feedback Data Export */}
+            {/* Educational Data Export */}
             <Card>
               <CardHeader>
                 <CardTitle className="text-lg flex items-center gap-2">
@@ -336,6 +362,10 @@ const DataExportDialog: React.FC<DataExportDialogProps> = ({ open, onOpenChange 
                   </Badge>
                   <Badge variant="outline" className="text-xs">
                     GDPR Art. 15
+                  </Badge>
+                  <Badge variant="outline" className="text-xs">
+                    <Mail className="w-3 h-3 mr-1" />
+                    Email Confirmation
                   </Badge>
                 </div>
                 <Button
@@ -384,6 +414,10 @@ const DataExportDialog: React.FC<DataExportDialogProps> = ({ open, onOpenChange 
                   </Badge>
                   <Badge variant="outline" className="text-xs">
                     GDPR Art. 15 & 20
+                  </Badge>
+                  <Badge variant="outline" className="text-xs">
+                    <Mail className="w-3 h-3 mr-1" />
+                    Email Confirmation
                   </Badge>
                 </div>
                 <Button
