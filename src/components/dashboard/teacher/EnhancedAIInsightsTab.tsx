@@ -1,5 +1,3 @@
-
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -46,7 +44,7 @@ const EnhancedAIInsightsTab: React.FC<EnhancedAIInsightsTabProps> = ({ teacher }
   const { notificationStats } = useRealTimeNotifications(teacher.id, teacher.role, teacher.school);
 
   const actionableInsights = getActionableInsights();
-  const cacheStats = getCacheStats; // Fixed: Remove function call - it's already an object
+  const cacheStats = getCacheStats;
   const testSummary = getTestSummary();
 
   return (
@@ -93,7 +91,6 @@ const EnhancedAIInsightsTab: React.FC<EnhancedAIInsightsTabProps> = ({ teacher }
         </TabsContent>
 
         <TabsContent value="overview" className="space-y-6">
-          {/* Performance metrics */}
           <div className="grid gap-4 md:grid-cols-4">
             <Card>
               <CardHeader className="pb-2">
@@ -146,7 +143,6 @@ const EnhancedAIInsightsTab: React.FC<EnhancedAIInsightsTabProps> = ({ teacher }
             </Card>
           </div>
 
-          {/* Existing AI components */}
           <div className="grid gap-6 md:grid-cols-1 lg:grid-cols-2">
             <AIRecommendationsCard teacherId={teacher.id} />
             <StudentEngagementPredictor school={teacher.school} />
@@ -281,4 +277,3 @@ const EnhancedAIInsightsTab: React.FC<EnhancedAIInsightsTabProps> = ({ teacher }
 };
 
 export default EnhancedAIInsightsTab;
-
