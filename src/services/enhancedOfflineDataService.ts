@@ -177,8 +177,8 @@ class EnhancedOfflineDataService {
 
   private async syncDataGroup(group: { table: string; entries: CachedDataEntry[] }): Promise<void> {
     try {
-      // Fetch fresh data from server
-      const { data: freshData, error } = await supabase
+      // Fetch fresh data from server using type assertion for dynamic table names
+      const { data: freshData, error } = await (supabase as any)
         .from(group.table)
         .select('*')
         .in('id', group.entries.map(e => e.data.id).filter(Boolean));
@@ -200,7 +200,7 @@ class EnhancedOfflineDataService {
 
     for (const table of tables) {
       try {
-        const { data, error } = await supabase
+        const { data, error } = await (supabase as any)
           .from(table)
           .select('*')
           .limit(100);
