@@ -128,7 +128,6 @@ class EnhancedOfflineDataService {
 
     const config = this.getConfig();
     const entries = this.getCachedEntries();
-    const now = Date.now();
 
     // Find entries that need syncing
     const staleEntries = entries.filter(entry => 
@@ -177,13 +176,62 @@ class EnhancedOfflineDataService {
 
   private async syncDataGroup(group: { table: string; entries: CachedDataEntry[] }): Promise<void> {
     try {
-      // Fetch fresh data from server
-      const { data: freshData, error } = await supabase
-        .from(group.table)
-        .select('*')
-        .in('id', group.entries.map(e => e.data.id).filter(Boolean));
+      // Type-safe table access - only sync known tables
+      const validTables = ['feedback', 'mental_health_alerts', 'class_schedules', 'weekly_summaries'];
+      
+      if (!validTables.includes(group.table)) {
+        console.warn(`Skipping sync for unknown table: ${group.table}`);
+        return;
+      }
 
-      if (error) throw error;
+      let freshData: any[] = [];
+
+      // Type-safe supabase queries for specific tables
+      switch (group.table) {
+        case 'feedback':
+          const { data: feedbackData, error: feedbackError } = await supabase
+            .from('feedback')
+            .select('*')
+            .in('id', group.entries.map(e => e.data.id).filter(Boolean));
+          
+          if (feedbackError) throw feedbackError;
+          freshData = feedbackData || [];
+          break;
+
+        case 'mental_health_alerts':
+          const { data: alertsData, error: alertsError } = await supabase
+            .from('mental_health_alerts')
+            .select('*')
+            .in('id', group.entries.map(e => e.data.id).filter(Boolean));
+          
+          if (alertsError) throw alertsError;
+          freshData = alertsData || [];
+          break;
+
+        case 'class_schedules':
+          const { data: schedulesData, error: schedulesError } = await supabase
+            .from('class_schedules')
+            .select('*')
+            .in('id', group.entries.map(e => e.data.id).filter(Boolean));
+          
+          if (schedulesError) throw schedulesError;
+          freshData = schedulesData || [];
+          break;
+
+        case 'weekly_summaries':
+          const { data: summariesData, error: summariesError } = await supabase
+            .from('weekly_summaries')
+            .select('*')
+            .in('id', group.entries.map(e => e.data.id).filter(Boolean));
+          
+          if (summariesError) throw summariesError;
+          freshData = summariesData || [];
+          break;
+
+        default:
+          console.warn(`No sync handler for table: ${group.table}`);
+          return;
+      }
 
       // Update cache with fresh data
       if (freshData && freshData.length > 0) {
@@ -200,12 +248,52 @@ class EnhancedOfflineDataService {
 
     for (const table of tables) {
       try {
-        const { data, error } = await supabase
-          .from(table)
-          .select('*')
-          .limit(100);
+        // Only prefetch known tables
+        const validTables = ['feedback', 'mental_health_alerts', 'class_schedules'];
+        
+        if (!validTables.includes(table)) {
+          console.warn(`Skipping prefetch for unknown table: ${table}`);
+          continue;
+        }
 
-        if (error) throw error;
+        let data: any[] = [];
+
+        // Type-safe prefetching
+        switch (table) {
+          case 'feedback':
+            const { data: feedbackData, error: feedbackError } = await supabase
+              .from('feedback')
+              .select('*')
+              .limit(100);
+            
+            if (feedbackError) throw feedbackError;
+            data = feedbackData || [];
+            break;
+
+          case 'mental_health_alerts':
+            const { data: alertsData, error: alertsError } = await supabase
+              .from('mental_health_alerts')
+              .select('*')
+              .limit(100);
+            
+            if (alertsError) throw alertsError;
+            data = alertsData || [];
+            break;
+
+          case 'class_schedules':
+            const { data: schedulesData, error: schedulesError } = await supabase
+              .from('class_schedules')
+              .select('*')
+              .limit(100);
+            
+            if (schedulesError) throw schedulesError;
+            data = schedulesData || [];
+            break;
+
+          default:
+            console.warn(`No prefetch handler for table: ${table}`);
+            continue;
+        }
 
         if (data) {
           await this.smartCacheData(table, data, 'high');
@@ -230,8 +318,8 @@ class EnhancedOfflineDataService {
       mediumPriority: entries.filter(e => e.priority === 'medium').length,
       lowPriority: entries.filter(e => e.priority === 'low').length,
       cacheSize: this.getCacheSize(),
-      oldestEntry: Math.min(...entries.map(e => e.timestamp)),
-      newestEntry: Math.max(...entries.map(e => e.timestamp))
+      oldestEntry: entries.length > 0 ? Math.min(...entries.map(e => e.timestamp)) : now,
+      newestEntry: entries.length > 0 ? Math.max(...entries.map(e => e.timestamp)) : now
     };
   }
 
