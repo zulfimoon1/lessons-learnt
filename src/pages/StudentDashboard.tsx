@@ -14,7 +14,7 @@ import WelcomeSection from "@/components/dashboard/student/WelcomeSection";
 import { classScheduleService } from "@/services/classScheduleService";
 
 const StudentDashboard: React.FC = () => {
-  const { student, studentLogout } = useAuth();
+  const { student, logout } = useAuth();
   const { t } = useLanguage();
   const [upcomingClasses, setUpcomingClasses] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -25,9 +25,13 @@ const StudentDashboard: React.FC = () => {
       
       try {
         setIsLoading(true);
-        const response = await classScheduleService.getUpcomingClasses(student.school, student.grade);
+        const response = await classScheduleService.getSchedulesBySchool(student.school);
         if (response.data) {
-          setUpcomingClasses(response.data);
+          // Filter classes for student's grade
+          const filteredClasses = response.data.filter(
+            (classItem: any) => classItem.grade === student.grade
+          );
+          setUpcomingClasses(filteredClasses);
         }
       } catch (error) {
         console.error('Error fetching upcoming classes:', error);
@@ -42,7 +46,7 @@ const StudentDashboard: React.FC = () => {
 
   const handleLogout = async () => {
     try {
-      await studentLogout();
+      logout();
       toast.success(t('auth.logoutSuccess') || 'Logged out successfully');
     } catch (error) {
       toast.error(t('auth.logoutError') || 'Logout failed');
@@ -57,14 +61,14 @@ const StudentDashboard: React.FC = () => {
     <div className="min-h-screen bg-background">
       <DashboardHeader
         title={t('dashboard.studentDashboard') || 'Student Dashboard'}
-        userName={student.name}
+        userName={student.full_name}
         onLogout={handleLogout}
       />
 
       <main className="max-w-7xl mx-auto p-6 space-y-6">
         {/* New Welcome Section - Incremental Enhancement */}
         <WelcomeSection
-          studentName={student.name}
+          studentName={student.full_name}
           school={student.school}
           grade={student.grade}
           upcomingClassesCount={upcomingClasses.length}
