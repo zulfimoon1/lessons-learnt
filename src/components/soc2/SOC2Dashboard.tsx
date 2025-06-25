@@ -1,24 +1,15 @@
 
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { 
-  Shield, 
-  Activity, 
-  AlertTriangle, 
-  CheckCircle, 
-  XCircle, 
-  Clock,
-  Database,
-  Users,
-  FileText,
-  TrendingUp
-} from 'lucide-react';
+import { Shield, Database, AlertTriangle } from 'lucide-react';
 import { soc2ComplianceService, SOC2DashboardData } from '@/services/soc2ComplianceService';
 import { toast } from '@/hooks/use-toast';
+import SOC2OverviewCards from './SOC2OverviewCards';
+import SOC2AuditEvents from './SOC2AuditEvents';
+import SOC2SecurityEvents from './SOC2SecurityEvents';
+import SOC2ComplianceControls from './SOC2ComplianceControls';
 
 const SOC2Dashboard: React.FC = () => {
   const [dashboardData, setDashboardData] = useState<SOC2DashboardData | null>(null);
@@ -78,25 +69,6 @@ const SOC2Dashboard: React.FC = () => {
     }
   };
 
-  const getSeverityColor = (severity: string) => {
-    switch (severity) {
-      case 'critical': return 'destructive';
-      case 'high': return 'destructive';
-      case 'medium': return 'secondary';
-      case 'low': return 'outline';
-      default: return 'outline';
-    }
-  };
-
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'success': return <CheckCircle className="w-4 h-4 text-green-500" />;
-      case 'failure': return <XCircle className="w-4 h-4 text-red-500" />;
-      case 'unauthorized': return <AlertTriangle className="w-4 h-4 text-yellow-500" />;
-      default: return <Clock className="w-4 h-4 text-gray-500" />;
-    }
-  };
-
   if (isLoading) {
     return (
       <div className="flex items-center justify-center p-8">
@@ -127,88 +99,7 @@ const SOC2Dashboard: React.FC = () => {
       </div>
 
       {/* Overview Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Audit Events (24h)</CardTitle>
-            <FileText className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{dashboardData?.auditEvents24h || 0}</div>
-            <p className="text-xs text-muted-foreground">
-              Security and compliance events logged
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Security Events (24h)</CardTitle>
-            <AlertTriangle className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{dashboardData?.securityEvents24h || 0}</div>
-            <p className="text-xs text-muted-foreground">
-              {dashboardData?.criticalAlerts || 0} critical alerts
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">System Health</CardTitle>
-            <Activity className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {dashboardData?.systemHealth === 'healthy' ? '✅ Healthy' : 
-               dashboardData?.systemHealth === 'warning' ? '⚠️ Warning' : '❌ Critical'}
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Overall system status
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Data Access Events</CardTitle>
-            <Database className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{dashboardData?.dataAccessEvents24h || 0}</div>
-            <p className="text-xs text-muted-foreground">
-              Database operations (24h)
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Compliance Score</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{dashboardData?.complianceScore || 0}%</div>
-            <p className="text-xs text-muted-foreground">
-              Overall compliance rating
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Recent Violations</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-green-600">{dashboardData?.recentViolations || 0}</div>
-            <p className="text-xs text-muted-foreground">
-              Security policy violations
-            </p>
-          </CardContent>
-        </Card>
-      </div>
+      <SOC2OverviewCards dashboardData={dashboardData} />
 
       {/* Critical Alerts */}
       {dashboardData?.criticalAlerts && dashboardData.criticalAlerts > 0 && (
@@ -229,133 +120,15 @@ const SOC2Dashboard: React.FC = () => {
         </TabsList>
 
         <TabsContent value="audit" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Recent Audit Events</CardTitle>
-              <CardDescription>
-                Comprehensive log of all system activities and user actions
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                {auditEvents.length === 0 ? (
-                  <p className="text-center text-muted-foreground py-4">No audit events found</p>
-                ) : (
-                  auditEvents.map((event) => (
-                    <div key={event.id} className="flex items-center justify-between p-3 border rounded-lg">
-                      <div className="flex items-center space-x-3">
-                        {getStatusIcon(event.result)}
-                        <div>
-                          <p className="font-medium">{event.event_type}</p>
-                          <p className="text-sm text-muted-foreground">
-                            {event.action_performed} on {event.resource_accessed}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <Badge variant={getSeverityColor(event.severity)}>{event.severity}</Badge>
-                        <p className="text-xs text-muted-foreground mt-1">
-                          {new Date(event.timestamp).toLocaleString()}
-                        </p>
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
-            </CardContent>
-          </Card>
+          <SOC2AuditEvents auditEvents={auditEvents} />
         </TabsContent>
 
         <TabsContent value="security" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Security Events</CardTitle>
-              <CardDescription>
-                Security incidents and anomalies requiring attention
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                {securityEvents.length === 0 ? (
-                  <p className="text-center text-muted-foreground py-4">No security events found</p>
-                ) : (
-                  securityEvents.map((event) => (
-                    <div key={event.id} className="flex items-center justify-between p-3 border rounded-lg">
-                      <div className="flex items-center space-x-3">
-                        <AlertTriangle className={`w-4 h-4 ${
-                          event.risk_level === 'critical' ? 'text-red-500' :
-                          event.risk_level === 'high' ? 'text-orange-500' :
-                          event.risk_level === 'medium' ? 'text-yellow-500' : 'text-blue-500'
-                        }`} />
-                        <div>
-                          <p className="font-medium">{event.event_category}</p>
-                          <p className="text-sm text-muted-foreground">{event.event_description}</p>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <Badge variant={getSeverityColor(event.risk_level)}>{event.risk_level}</Badge>
-                        <p className="text-xs text-muted-foreground mt-1">
-                          {new Date(event.timestamp).toLocaleString()}
-                        </p>
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
-            </CardContent>
-          </Card>
+          <SOC2SecurityEvents securityEvents={securityEvents} />
         </TabsContent>
 
         <TabsContent value="compliance" className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Security Controls</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <span>Access Control</span>
-                  <CheckCircle className="w-5 h-5 text-green-500" />
-                </div>
-                <div className="flex items-center justify-between">
-                  <span>Authentication</span>
-                  <CheckCircle className="w-5 h-5 text-green-500" />
-                </div>
-                <div className="flex items-center justify-between">
-                  <span>Audit Logging</span>
-                  <CheckCircle className="w-5 h-5 text-green-500" />
-                </div>
-                <div className="flex items-center justify-between">
-                  <span>Data Encryption</span>
-                  <CheckCircle className="w-5 h-5 text-green-500" />
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Availability Controls</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <span>System Monitoring</span>
-                  <CheckCircle className="w-5 h-5 text-green-500" />
-                </div>
-                <div className="flex items-center justify-between">
-                  <span>Backup Procedures</span>
-                  <CheckCircle className="w-5 h-5 text-green-500" />
-                </div>
-                <div className="flex items-center justify-between">
-                  <span>Incident Response</span>
-                  <CheckCircle className="w-5 h-5 text-green-500" />
-                </div>
-                <div className="flex items-center justify-between">
-                  <span>Change Management</span>
-                  <CheckCircle className="w-5 h-5 text-green-500" />
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+          <SOC2ComplianceControls />
         </TabsContent>
       </Tabs>
     </div>
