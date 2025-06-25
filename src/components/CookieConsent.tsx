@@ -4,7 +4,6 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Cookie, X, Settings, Shield } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
 
 interface CookiePreferences {
   essential: boolean;
@@ -39,16 +38,19 @@ const CookieConsent: React.FC = () => {
 
   const logConsent = async (consentType: string, given: boolean) => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        await supabase.rpc('log_user_consent', {
-          user_id_param: user.id,
-          consent_type_param: consentType,
-          consent_given_param: given,
-          ip_address_param: null, // Could be collected if needed
-          user_agent_param: navigator.userAgent
-        });
-      }
+      // Simple consent logging to localStorage for now
+      const consentLog = {
+        type: consentType,
+        given: given,
+        timestamp: new Date().toISOString(),
+        userAgent: navigator.userAgent
+      };
+      
+      const existingLogs = JSON.parse(localStorage.getItem('consent-logs') || '[]');
+      existingLogs.push(consentLog);
+      localStorage.setItem('consent-logs', JSON.stringify(existingLogs));
+      
+      console.log('Consent logged:', consentLog);
     } catch (error) {
       console.log('Failed to log consent:', error);
       // Non-blocking - consent still works without logging

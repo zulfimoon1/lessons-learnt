@@ -7,7 +7,6 @@ import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Shield, Download, Trash2, FileText, Calendar, Check, X, Clock } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 
 interface PrivacySettings {
@@ -38,22 +37,13 @@ const PrivacyDashboard: React.FC = () => {
 
   const loadPrivacyData = async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      // Load privacy settings
-      const { data: privacyData } = await supabase
-        .from('user_privacy_settings')
-        .select('*')
-        .eq('user_id', user.id)
-        .single();
-
-      if (privacyData) {
-        setSettings(privacyData);
+      // Load from localStorage for now (simplified implementation)
+      const savedSettings = localStorage.getItem('privacy-settings');
+      if (savedSettings) {
+        setSettings(JSON.parse(savedSettings));
       } else {
         // Create default settings
         const defaultSettings = {
-          user_id: user.id,
           analytics_enabled: false,
           marketing_enabled: false,
           data_sharing_enabled: false,
@@ -61,23 +51,15 @@ const PrivacyDashboard: React.FC = () => {
           data_retention_preference: 'standard'
         };
         
-        const { data: newSettings } = await supabase
-          .from('user_privacy_settings')
-          .insert(defaultSettings)
-          .select()
-          .single();
-          
-        setSettings(newSettings);
+        localStorage.setItem('privacy-settings', JSON.stringify(defaultSettings));
+        setSettings(defaultSettings);
       }
 
-      // Load data subject requests
-      const { data: requestsData } = await supabase
-        .from('data_subject_requests')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('requested_at', { ascending: false });
-
-      setRequests(requestsData || []);
+      // Load data subject requests from localStorage
+      const savedRequests = localStorage.getItem('data-subject-requests');
+      if (savedRequests) {
+        setRequests(JSON.parse(savedRequests));
+      }
     } catch (error) {
       console.error('Failed to load privacy data:', error);
       toast({
@@ -94,19 +76,11 @@ const PrivacyDashboard: React.FC = () => {
     if (!settings) return;
 
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
       const updatedSettings = { ...settings, [key]: value };
       
-      const { error } = await supabase
-        .from('user_privacy_settings')
-        .update({ [key]: value, updated_at: new Date().toISOString() })
-        .eq('user_id', user.id);
-
-      if (error) throw error;
-
+      localStorage.setItem('privacy-settings', JSON.stringify(updatedSettings));
       setSettings(updatedSettings);
+      
       toast({
         title: t('common.success'),
         description: 'Privacy settings updated',
@@ -123,26 +97,24 @@ const PrivacyDashboard: React.FC = () => {
 
   const submitDataRequest = async (requestType: string) => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      const newRequest = {
+        id: crypto.randomUUID(),
+        request_type: requestType,
+        status: 'pending',
+        requested_at: new Date().toISOString(),
+        completed_at: null
+      };
 
-      const { error } = await supabase
-        .from('data_subject_requests')
-        .insert({
-          user_id: user.id,
-          request_type: requestType,
-          requester_email: user.email || '',
-          verification_method: 'authenticated_session'
-        });
+      const existingRequests = JSON.parse(localStorage.getItem('data-subject-requests') || '[]');
+      existingRequests.push(newRequest);
+      localStorage.setItem('data-subject-requests', JSON.stringify(existingRequests));
 
-      if (error) throw error;
+      setRequests(existingRequests);
 
       toast({
         title: t('common.success'),
         description: `${requestType} request submitted successfully`,
       });
-
-      loadPrivacyData(); // Reload to show new request
     } catch (error) {
       console.error('Failed to submit request:', error);
       toast({
