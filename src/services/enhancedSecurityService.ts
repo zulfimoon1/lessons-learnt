@@ -28,6 +28,7 @@ interface SecurityDashboardData {
   mediumSeverityEvents: number;
   lowSeverityEvents: number;
   recentViolations: number;
+  criticalAlerts: number;
 }
 
 class EnhancedSecurityService {
@@ -104,7 +105,8 @@ class EnhancedSecurityService {
         highSeverityEvents: 0,
         mediumSeverityEvents: 0,
         lowSeverityEvents: 0,
-        recentViolations: 0
+        recentViolations: 0,
+        criticalAlerts: 0
       };
     } catch (error) {
       console.error('Failed to get security dashboard data:', error);
@@ -113,9 +115,17 @@ class EnhancedSecurityService {
         highSeverityEvents: 0,
         mediumSeverityEvents: 0,
         lowSeverityEvents: 0,
-        recentViolations: 0
+        recentViolations: 0,
+        criticalAlerts: 0
       };
     }
+  }
+
+  clearSecurityLogs(): void {
+    // Clear any stored security logs
+    localStorage.removeItem('security_events');
+    localStorage.removeItem('security_violations');
+    console.log('Security logs cleared');
   }
 
   // Add missing methods that other services expect

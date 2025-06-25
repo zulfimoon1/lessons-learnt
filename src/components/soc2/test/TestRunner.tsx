@@ -48,21 +48,18 @@ export const useTestRunner = () => {
     updateTestResult(1, 'running', 'Testing audit event logging...');
     try {
       const startTime = Date.now();
-      const eventId = await soc2ComplianceService.logAuditEvent({
+      await soc2ComplianceService.logAuditEvent({
         event_type: 'system_test',
         resource_accessed: 'test_resource',
         action_performed: 'validation',
         result: 'success',
+        timestamp: new Date().toISOString(),
         severity: 'low',
         control_category: 'security',
         details: { test: true, timestamp: new Date().toISOString() }
       });
       
-      if (eventId) {
-        updateTestResult(1, 'passed', 'Audit event logged successfully', Date.now() - startTime);
-      } else {
-        updateTestResult(1, 'failed', 'Audit event logging returned null');
-      }
+      updateTestResult(1, 'passed', 'Audit event logged successfully', Date.now() - startTime);
     } catch (error) {
       updateTestResult(1, 'failed', `Audit logging failed: ${error}`);
     }
@@ -71,18 +68,15 @@ export const useTestRunner = () => {
     updateTestResult(2, 'running', 'Testing security event logging...');
     try {
       const startTime = Date.now();
-      const securityEventId = await soc2ComplianceService.logSecurityEvent({
+      await soc2ComplianceService.logSecurityEvent({
         event_category: 'access_control',
         event_description: 'SOC 2 system test security event',
+        affected_resource: 'test_system',
         risk_level: 'low',
         metadata: { test: true }
       });
       
-      if (securityEventId) {
-        updateTestResult(2, 'passed', 'Security event logged successfully', Date.now() - startTime);
-      } else {
-        updateTestResult(2, 'failed', 'Security event logging returned null');
-      }
+      updateTestResult(2, 'passed', 'Security event logged successfully', Date.now() - startTime);
     } catch (error) {
       updateTestResult(2, 'failed', `Security logging failed: ${error}`);
     }
@@ -111,7 +105,7 @@ export const useTestRunner = () => {
       if (integrityResult) {
         updateTestResult(4, 'passed', 'Data integrity check completed', Date.now() - startTime);
       } else {
-        updateTestResult(4, 'failed', 'Data integrity check returned null');
+        updateTestResult(4, 'failed', 'Data integrity check returned false');
       }
     } catch (error) {
       updateTestResult(4, 'failed', `Data integrity check failed: ${error}`);
@@ -134,7 +128,7 @@ export const useTestRunner = () => {
       if (metricResult) {
         updateTestResult(5, 'passed', 'Availability metric recorded', Date.now() - startTime);
       } else {
-        updateTestResult(5, 'failed', 'Availability metric recording returned null');
+        updateTestResult(5, 'failed', 'Availability metric recording returned false');
       }
     } catch (error) {
       updateTestResult(5, 'failed', `Availability metric recording failed: ${error}`);

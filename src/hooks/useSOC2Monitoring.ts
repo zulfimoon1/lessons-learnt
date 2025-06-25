@@ -20,6 +20,7 @@ export const useSOC2Monitoring = () => {
       resource_accessed: resource,
       action_performed: action,
       result: 'success',
+      timestamp: new Date().toISOString(),
       severity: 'low',
       control_category: 'security',
       details: {
