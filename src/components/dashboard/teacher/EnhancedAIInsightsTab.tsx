@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -40,7 +41,7 @@ const EnhancedAIInsightsTab: React.FC<EnhancedAIInsightsTabProps> = ({ teacher }
   const { getTestSummary } = useDistressDetectionTesting();
 
   const actionableInsights = getActionableInsights();
-  const cacheStats = getCacheStats();
+  const cacheStats = getCacheStats; // Fixed: Remove function call - it's already an object
   const testSummary = getTestSummary();
 
   return (
