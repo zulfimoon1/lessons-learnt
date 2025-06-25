@@ -1,30 +1,26 @@
 
 import React from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import WeeklySummaryReview from "@/components/WeeklySummaryReview";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { FileText, Users } from "lucide-react";
 
 interface WeeklySummariesTabProps {
-  school?: string;
-  subscription: any;
-  onCreateCheckout: () => void;
-  isCreatingCheckout: boolean;
+  teacher: any;
 }
 
-const WeeklySummariesTab: React.FC<WeeklySummariesTabProps> = ({
-  school,
-  subscription,
-  onCreateCheckout,
-  isCreatingCheckout
-}) => {
+const WeeklySummariesTab: React.FC<WeeklySummariesTabProps> = ({ teacher }) => {
   const { t } = useLanguage();
 
-  // Always show the weekly summaries for teachers - remove subscription requirement
   return (
     <div className="space-y-6">
-      <WeeklySummaryReview />
+      <div className="bg-card p-6 rounded-lg border">
+        <h2 className="text-xl font-semibold mb-4">
+          {t('weekly.summaries') || 'Weekly Summaries'}
+        </h2>
+        <p className="text-muted-foreground mb-6">
+          {t('weekly.summariesDescription') || 'Review and manage weekly summaries from your students.'}
+        </p>
+        <WeeklySummaryReview teacher={teacher} />
+      </div>
     </div>
   );
 };

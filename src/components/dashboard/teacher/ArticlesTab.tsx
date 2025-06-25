@@ -7,20 +7,20 @@ import { useLanguage } from "@/contexts/LanguageContext";
 
 interface ArticlesTabProps {
   teacher: any;
-  subscription: any;
-  onCreateCheckout: () => void;
-  isCreatingCheckout: boolean;
+  subscription?: any;
+  onCreateCheckout?: () => void;
+  isCreatingCheckout?: boolean;
 }
 
 const ArticlesTab: React.FC<ArticlesTabProps> = ({
   teacher,
   subscription,
   onCreateCheckout,
-  isCreatingCheckout
+  isCreatingCheckout = false
 }) => {
   const { t } = useLanguage();
 
-  if (!subscription) {
+  if (!subscription && onCreateCheckout) {
     return (
       <Card>
         <CardHeader>
