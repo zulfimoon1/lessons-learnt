@@ -1,11 +1,11 @@
 
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Eye, EyeOff } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import ForgotPasswordDialog from "@/components/ForgotPasswordDialog";
+import SecurityEnhancedInput from "@/components/security/SecurityEnhancedInput";
 
 interface TeacherLoginFormProps {
   onLogin: (email: string, password: string) => void;
@@ -27,13 +27,15 @@ const TeacherLoginForm: React.FC<TeacherLoginFormProps> = ({ onLogin, isLoading 
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="space-y-2">
         <Label htmlFor="email" className="text-brand-dark">Email</Label>
-        <Input
+        <SecurityEnhancedInput
           id="email"
           type="email"
           placeholder="teacher@school.com"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
+          validateAs="email"
+          maxLength={254}
           className="border-gray-300 focus:border-brand-teal focus:ring-brand-teal"
         />
       </div>
@@ -41,13 +43,15 @@ const TeacherLoginForm: React.FC<TeacherLoginFormProps> = ({ onLogin, isLoading 
       <div className="space-y-2">
         <Label htmlFor="password" className="text-brand-dark">Password</Label>
         <div className="relative">
-          <Input
+          <SecurityEnhancedInput
             id="password"
             type={showPassword ? "text" : "password"}
             placeholder="••••••••"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
+            validateAs="password"
+            maxLength={128}
             className="border-gray-300 focus:border-brand-teal focus:ring-brand-teal pr-10"
           />
           <button
