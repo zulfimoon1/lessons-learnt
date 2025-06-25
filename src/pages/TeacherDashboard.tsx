@@ -26,9 +26,9 @@ const TeacherDashboard: React.FC = () => {
   const handleLogout = async () => {
     try {
       logout();
-      toast.success(t('auth.logoutSuccess') || 'Logged out successfully');
+      toast.success(t('teacher.logout.success'));
     } catch (error) {
-      toast.error(t('auth.logoutError') || 'Logout failed');
+      toast.error(t('auth.logoutError'));
     }
   };
 
@@ -40,49 +40,49 @@ const TeacherDashboard: React.FC = () => {
     {
       value: 'schedule',
       icon: CalendarIcon,
-      label: t('teacher.schedule') || 'Schedule',
+      label: t('teacher.schedule'),
       component: <ScheduleTab teacher={teacher} />
     },
     {
       value: 'feedback',
       icon: MessageSquareIcon,
-      label: t('dashboard.feedback') || 'Feedback',
+      label: t('dashboard.feedback'),
       component: <FeedbackDashboard teacher={teacher} />
     },
     {
       value: 'summaries',
       icon: FileTextIcon,
-      label: t('weekly.summaries') || 'Summaries',
+      label: t('weekly.summaries'),
       component: <WeeklySummariesTab teacher={teacher} />
     },
     {
       value: 'bulk',
       icon: BookOpenIcon,
-      label: t('teacher.bulkUpload') || 'Bulk Upload',
+      label: t('teacher.bulkUpload'),
       component: <BulkUploadTab teacher={teacher} />
     },
     {
       value: 'mental-health',
       icon: UsersIcon,
-      label: t('features.mentalHealth.title') || 'Mental Health',
+      label: t('features.mentalHealth.title'),
       component: <MentalHealthTab teacher={teacher} />
     },
     {
       value: 'articles',
       icon: FileTextIcon,
-      label: t('teacher.articles') || 'Articles',
+      label: t('teacher.articles'),
       component: <ArticlesTab teacher={teacher} />
     },
     {
       value: 'analytics',
       icon: BarChartIcon,
-      label: t('analytics.title') || 'Analytics',
+      label: t('analytics.title'),
       component: <AnalyticsTab teacher={teacher} />
     },
     {
       value: 'ai-insights',
       icon: BrainIcon,
-      label: t('ai.insights') || 'AI Insights',
+      label: t('ai.insights'),
       component: <AIInsightsTab teacher={teacher} />
     }
   ];
@@ -90,7 +90,7 @@ const TeacherDashboard: React.FC = () => {
   return (
     <div className="min-h-screen bg-background">
       <DashboardHeader
-        title={t('dashboard.teacherDashboard') || 'Teacher Dashboard'}
+        title={t('dashboard.teacherDashboard')}
         userName={teacher.name}
         onLogout={handleLogout}
       />
@@ -98,10 +98,10 @@ const TeacherDashboard: React.FC = () => {
       <main className="max-w-7xl mx-auto p-3 md:p-6">
         <div className="mb-4 md:mb-6">
           <h1 className="text-2xl md:text-3xl font-bold text-brand-dark mb-2">
-            {t('admin.welcome') || 'Welcome'}, {teacher.name}!
+            {t('dashboard.welcome')}, {teacher.name}!
           </h1>
           <p className="text-sm md:text-base text-brand-dark/70">
-            {teacher.school} • {teacher.role === 'admin' ? t('admin.role') || 'School Administrator' : t('teacher.role') || 'Teacher'}
+            {teacher.school} • {teacher.role === 'admin' ? t('admin.role') : t('teacher.role')}
           </p>
         </div>
 

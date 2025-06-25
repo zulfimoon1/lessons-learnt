@@ -1,3 +1,4 @@
+
 import { enAuthTranslations } from './en/auth';
 import { enTeacherTranslations } from './en/teacher';
 import { enWeeklyTranslations } from './en/weekly';
@@ -153,6 +154,20 @@ export const enTranslations = {
   'teacher.logout.description': 'You have been logged out.',
   'teacher.subscriptionRequiredForSummaries': 'A subscription is required to view weekly summaries',
   'teacher.subscribeToContinue': 'Subscribe to Continue',
+  'teacher.schedule': 'Schedule',
+  'teacher.bulkUpload': 'Bulk Upload',
+  'teacher.articles': 'Articles',
+  'teacher.role': 'Teacher',
+
+  // Admin
+  'admin.title': 'Admin Dashboard',
+  'admin.welcome': 'Welcome',
+  'admin.subscription': 'Subscription',
+  'admin.subscribe': 'Subscribe Now',
+  'admin.loading': 'Loading...',
+  'admin.error.title': 'Error',
+  'admin.error.description': 'Failed to load data',
+  'admin.role': 'School Administrator',
 
   // Class Schedule Form
   'schedule.createTitle': 'Create Class Schedule',

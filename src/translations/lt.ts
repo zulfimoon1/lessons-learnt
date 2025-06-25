@@ -153,6 +153,20 @@ export const ltTranslations = {
   'teacher.logout.description': 'Jūs buvote atsijungę.',
   'teacher.subscriptionRequiredForSummaries': 'Prenumerata reikalinga savaitės santraukų peržiūrai',
   'teacher.subscribeToContinue': 'Prenumeruokite norėdami tęsti',
+  'teacher.schedule': 'Tvarkaraštis',
+  'teacher.bulkUpload': 'Masinis įkėlimas',
+  'teacher.articles': 'Straipsniai',
+  'teacher.role': 'Mokytojas',
+
+  // Admin
+  'admin.title': 'Administratoriaus valdymo skydas',
+  'admin.welcome': 'Sveiki',
+  'admin.subscription': 'Prenumerata',
+  'admin.subscribe': 'Prenumeruoti dabar',
+  'admin.loading': 'Kraunama...',
+  'admin.error.title': 'Klaida',
+  'admin.error.description': 'Nepavyko įkelti duomenų',
+  'admin.role': 'Mokyklos administratorius',
 
   // Class Schedule Form
   'schedule.createTitle': 'Sukurti pamokos tvarkaraštį',

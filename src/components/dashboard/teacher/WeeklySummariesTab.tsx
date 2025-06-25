@@ -14,10 +14,10 @@ const WeeklySummariesTab: React.FC<WeeklySummariesTabProps> = ({ teacher }) => {
     <div className="space-y-6">
       <div className="bg-card p-6 rounded-lg border">
         <h2 className="text-xl font-semibold mb-4">
-          {t('weekly.summaries') || 'Weekly Summaries'}
+          {t('weekly.summaries')}
         </h2>
         <p className="text-muted-foreground mb-6">
-          {t('weekly.summariesDescription') || 'Review and manage weekly summaries from your students.'}
+          {t('dashboard.feedbackDescription')}
         </p>
         <WeeklySummaryReview teacher={teacher} />
       </div>
