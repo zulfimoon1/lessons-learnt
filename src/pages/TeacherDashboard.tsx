@@ -10,7 +10,7 @@ import FeedbackDashboard from "@/components/dashboard/teacher/FeedbackDashboard"
 import DoctorDashboard from "@/components/dashboard/doctor/DoctorDashboard";
 import WeeklySummariesTab from "@/components/dashboard/teacher/WeeklySummariesTab";
 import SchoolAdminDashboard from "@/components/dashboard/admin/SchoolAdminDashboard";
-import SubscriptionManagement from "@/components/platform-admin/SubscriptionManagement";
+import SchoolSubscriptionManagement from "@/components/dashboard/admin/SchoolSubscriptionManagement";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { LogOut, Calendar, MessageSquare, FileText, Heart, School, GraduationCap, Users, CreditCard } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -265,7 +265,7 @@ const TeacherDashboard = () => {
 
               {isAdmin && (
                 <TabsContent value="subscription" className="mt-0">
-                  <SubscriptionManagement />
+                  <SchoolSubscriptionManagement teacher={teacher} />
                 </TabsContent>
               )}
             </div>
