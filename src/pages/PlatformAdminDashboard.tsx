@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { usePlatformAdmin } from "@/contexts/PlatformAdminContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -20,6 +19,7 @@ import DoctorManagement from "@/components/platform-admin/DoctorManagement";
 import SecurityMonitoring from "@/components/platform-admin/SecurityMonitoring";
 import DiscountNotifications from "@/components/platform-admin/DiscountNotifications";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
+import GDPRAdminDashboard from "@/components/platform-admin/GDPRAdminDashboard";
 import { securePlatformAdminService } from "@/services/securePlatformAdminService";
 
 interface DashboardStats {
@@ -334,7 +334,7 @@ const PlatformAdminDashboard = () => {
         {/* Main Content with Tabs - matching student dashboard style */}
         <div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-lg border border-gray-200/50 overflow-hidden">
           <Tabs defaultValue="management" className="w-full">
-            {/* Tab Navigation - clean white background */}
+            {/* Tab Navigation - updated to include GDPR tab */}
             <div className="bg-white border-b border-gray-200">
               <TabsList className="h-auto p-0 bg-transparent rounded-none w-full justify-start overflow-x-auto">
                 <TabsTrigger 
@@ -352,6 +352,13 @@ const PlatformAdminDashboard = () => {
                   Analytics & Reports
                 </TabsTrigger>
                 <TabsTrigger 
+                  value="gdpr" 
+                  className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-brand-orange data-[state=active]:to-brand-teal data-[state=active]:text-white data-[state=inactive]:text-gray-600 data-[state=inactive]:hover:text-brand-dark border-b-2 border-transparent data-[state=active]:border-brand-teal rounded-none px-6 py-4 font-medium transition-all duration-200 whitespace-nowrap"
+                >
+                  <Shield className="w-4 h-4 mr-2" />
+                  GDPR & Privacy
+                </TabsTrigger>
+                <TabsTrigger 
                   value="security" 
                   className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-brand-orange data-[state=active]:to-brand-teal data-[state=active]:text-white data-[state=inactive]:text-gray-600 data-[state=inactive]:hover:text-brand-dark border-b-2 border-transparent data-[state=active]:border-brand-teal rounded-none px-6 py-4 font-medium transition-all duration-200 whitespace-nowrap"
                 >
@@ -363,6 +370,7 @@ const PlatformAdminDashboard = () => {
 
             {/* Tab Content */}
             <div className="p-6">
+              {/* Existing tabs - keep existing code */}
               <TabsContent value="management" className="mt-0">
                 <Tabs defaultValue="schools" className="space-y-4">
                   <TabsList className="bg-gray-100/50">
@@ -400,6 +408,11 @@ const PlatformAdminDashboard = () => {
                   <SchoolOverview schoolStats={schoolStats} />
                   <FeedbackAnalytics />
                 </div>
+              </TabsContent>
+
+              {/* New GDPR Tab */}
+              <TabsContent value="gdpr" className="mt-0">
+                <GDPRAdminDashboard />
               </TabsContent>
 
               <TabsContent value="security" className="mt-0">
