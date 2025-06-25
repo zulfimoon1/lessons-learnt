@@ -1,5 +1,4 @@
-
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { LiveChatSession } from "@/types/auth";
@@ -18,12 +17,26 @@ export const useChatSession = (session: LiveChatSession, isDoctorView: boolean, 
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isConnected, setIsConnected] = useState(false);
   const [doctorInfo, setDoctorInfo] = useState<any>(null);
+  const subscriptionRef = useRef<any>(null);
+  const sessionIdRef = useRef<string>('');
 
   useEffect(() => {
+    // Prevent duplicate subscriptions for the same session
+    if (sessionIdRef.current === session.id) return;
+    
     console.log('useChatSession: Setting up chat for session:', session.id);
+    
+    // Cleanup previous subscription if exists
+    if (subscriptionRef.current) {
+      console.log('useChatSession: Cleaning up previous subscription');
+      supabase.removeChannel(subscriptionRef.current);
+      subscriptionRef.current = null;
+    }
+    
+    sessionIdRef.current = session.id;
     loadMessages();
     
-    // Set up real-time subscription and store the cleanup function
+    // Set up real-time subscription
     const cleanup = setupRealtimeSubscription();
     
     if (session.status === 'active' && session.doctor_id) {
@@ -37,8 +50,11 @@ export const useChatSession = (session: LiveChatSession, isDoctorView: boolean, 
       notifyStudentDoctorJoined();
     }
 
-    // Return the cleanup function
-    return cleanup;
+    // Return cleanup function
+    return () => {
+      cleanup();
+      sessionIdRef.current = '';
+    };
   }, [session.id]);
 
   const loadMessages = async () => {
@@ -66,6 +82,11 @@ export const useChatSession = (session: LiveChatSession, isDoctorView: boolean, 
   };
 
   const setupRealtimeSubscription = () => {
+    if (subscriptionRef.current) {
+      console.log('useChatSession: Subscription already exists, skipping');
+      return () => {};
+    }
+
     console.log('useChatSession: Setting up real-time subscription');
     const channel = supabase
       .channel(`chat_${session.id}`)
@@ -108,10 +129,15 @@ export const useChatSession = (session: LiveChatSession, isDoctorView: boolean, 
         console.log('useChatSession: Subscription status:', status);
       });
 
-    // Return cleanup function that removes the channel
+    subscriptionRef.current = channel;
+
+    // Return cleanup function
     return () => {
       console.log('useChatSession: Cleaning up chat subscription');
-      supabase.removeChannel(channel);
+      if (subscriptionRef.current) {
+        supabase.removeChannel(subscriptionRef.current);
+        subscriptionRef.current = null;
+      }
     };
   };
 
