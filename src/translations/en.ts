@@ -56,7 +56,7 @@ export const enTranslations = {
   // Logout (direct key for simple access)
   'logout': 'Logout',
 
-  // Dashboard
+  // Dashboard - Enhanced with missing keys
   'dashboard.title': 'Student Dashboard',
   'dashboard.welcome': 'Welcome',
   'dashboard.overview': 'Overview',
@@ -80,6 +80,47 @@ export const enTranslations = {
   'dashboard.adminPanel': 'Admin Panel',
   'dashboard.accessAnalytics': 'Access detailed school analytics in the',
   'dashboard.subscription': 'Subscription',
+  'dashboard.quickActions': 'Quick Actions',
+  'dashboard.viewClasses': 'View Classes',
+  'dashboard.submitFeedback': 'Submit Feedback',
+  'dashboard.wellnessCheck': 'Wellness Check',
+  'dashboard.studentDashboard': 'Student Dashboard',
+  'dashboard.teacherDashboard': 'Teacher Dashboard',
+
+  // Class translations - Enhanced
+  'class.schedule': 'Schedule',
+  'class.upcomingClasses': 'Upcoming Classes',
+  'class.duration': 'min',
+
+  // AI translations - New
+  'ai.personalInsights': 'AI Personal Insights',
+  'ai.insights': 'AI Insights',
+
+  // Analytics translations - New
+  'analytics.title': 'Analytics',
+
+  // Wellness translations - New
+  'wellness.submitted': 'Wellness check submitted successfully',
+
+  // Weekly translations - Enhanced
+  'weekly.summary': 'Weekly Summary',
+  'weekly.summaries': 'Weekly Summaries',
+
+  // Doctor Dashboard translations - New
+  'doctor.dashboard.loading': 'Loading...',
+  'doctor.dashboard.weeklySummaries': 'Weekly Summaries',
+  'doctor.dashboard.mentalHealthAlerts': 'Mental Health Alerts',
+  'doctor.dashboard.unreviewed': 'Unreviewed',
+  'doctor.dashboard.highRisk': 'High Risk',
+  'doctor.dashboard.highRiskLevel': 'High Risk',
+  'doctor.dashboard.mediumRiskLevel': 'Medium Risk',
+  'doctor.dashboard.lowRiskLevel': 'Low Risk',
+  'doctor.dashboard.noAlerts': 'No mental health alerts at this time',
+  'doctor.dashboard.noSummaries': 'No weekly summaries available',
+  'doctor.dashboard.reviewed': 'Reviewed',
+  'doctor.dashboard.markReviewed': 'Mark as Reviewed',
+  'doctor.dashboard.emotionalConcerns': 'Emotional Concerns',
+  'doctor.dashboard.academicConcerns': 'Academic Concerns',
 
   // Teacher Dashboard
   'teacher.dashboard.title': 'Teacher Dashboard',
