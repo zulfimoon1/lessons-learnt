@@ -19,6 +19,7 @@ const SOC2Monitor: React.FC<SOC2MonitorProps> = ({ children }) => {
         resource_accessed: 'system',
         action_performed: 'initialize',
         result: 'success',
+        timestamp: new Date().toISOString(),
         severity: 'low',
         control_category: 'availability',
         details: {
@@ -50,6 +51,7 @@ const SOC2Monitor: React.FC<SOC2MonitorProps> = ({ children }) => {
           resource_accessed: 'application',
           action_performed: 'minimize',
           result: 'success',
+          timestamp: new Date().toISOString(),
           severity: 'low',
           control_category: 'security'
         });
@@ -60,6 +62,7 @@ const SOC2Monitor: React.FC<SOC2MonitorProps> = ({ children }) => {
           resource_accessed: 'application',
           action_performed: 'focus',
           result: 'success',
+          timestamp: new Date().toISOString(),
           severity: 'low',
           control_category: 'security'
         });
@@ -140,6 +143,7 @@ const SOC2Monitor: React.FC<SOC2MonitorProps> = ({ children }) => {
         resource_accessed: 'application',
         action_performed: 'terminate',
         result: 'success',
+        timestamp: new Date().toISOString(),
         severity: 'low',
         control_category: 'security'
       });

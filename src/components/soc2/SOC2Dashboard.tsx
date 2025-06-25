@@ -143,78 +143,79 @@ const SOC2Dashboard: React.FC = () => {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Open Security Events</CardTitle>
+            <CardTitle className="text-sm font-medium">Security Events (24h)</CardTitle>
             <AlertTriangle className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{dashboardData?.openSecurityEvents || 0}</div>
+            <div className="text-2xl font-bold">{dashboardData?.securityEvents24h || 0}</div>
             <p className="text-xs text-muted-foreground">
-              {dashboardData?.criticalSecurityEvents || 0} critical events
+              {dashboardData?.criticalAlerts || 0} critical alerts
             </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">System Uptime (24h)</CardTitle>
+            <CardTitle className="text-sm font-medium">System Health</CardTitle>
             <Activity className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {dashboardData?.avgUptime24h ? `${dashboardData.avgUptime24h.toFixed(2)}%` : 'N/A'}
+              {dashboardData?.systemHealth === 'healthy' ? '✅ Healthy' : 
+               dashboardData?.systemHealth === 'warning' ? '⚠️ Warning' : '❌ Critical'}
             </div>
             <p className="text-xs text-muted-foreground">
-              Average availability percentage
+              Overall system status
             </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Failed Integrity Checks</CardTitle>
+            <CardTitle className="text-sm font-medium">Data Access Events</CardTitle>
             <Database className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{dashboardData?.failedIntegrityChecks24h || 0}</div>
+            <div className="text-2xl font-bold">{dashboardData?.dataAccessEvents24h || 0}</div>
             <p className="text-xs text-muted-foreground">
-              Data validation failures (24h)
+              Database operations (24h)
             </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Access Reviews</CardTitle>
+            <CardTitle className="text-sm font-medium">Compliance Score</CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{dashboardData?.overdueAccessReviews || 0}</div>
+            <div className="text-2xl font-bold">{dashboardData?.complianceScore || 0}%</div>
             <p className="text-xs text-muted-foreground">
-              Overdue user access reviews
+              Overall compliance rating
             </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Compliance Status</CardTitle>
+            <CardTitle className="text-sm font-medium">Recent Violations</CardTitle>
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">Operational</div>
+            <div className="text-2xl font-bold text-green-600">{dashboardData?.recentViolations || 0}</div>
             <p className="text-xs text-muted-foreground">
-              SOC 2 controls actively monitored
+              Security policy violations
             </p>
           </CardContent>
         </Card>
       </div>
 
       {/* Critical Alerts */}
-      {dashboardData?.criticalSecurityEvents > 0 && (
+      {dashboardData?.criticalAlerts && dashboardData.criticalAlerts > 0 && (
         <Alert>
           <AlertTriangle className="h-4 w-4" />
           <AlertDescription>
-            You have {dashboardData.criticalSecurityEvents} critical security events that require immediate attention.
+            You have {dashboardData.criticalAlerts} critical security alerts that require immediate attention.
           </AlertDescription>
         </Alert>
       )}
@@ -294,7 +295,7 @@ const SOC2Dashboard: React.FC = () => {
                       <div className="text-right">
                         <Badge variant={getSeverityColor(event.risk_level)}>{event.risk_level}</Badge>
                         <p className="text-xs text-muted-foreground mt-1">
-                          Status: {event.status}
+                          {new Date(event.timestamp).toLocaleString()}
                         </p>
                       </div>
                     </div>
