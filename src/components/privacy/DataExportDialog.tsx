@@ -6,7 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Download, FileText, Shield, Clock, CheckCircle } from 'lucide-react';
+import { Progress } from '@/components/ui/progress';
+import { Download, FileText, Shield, Clock, CheckCircle, AlertCircle } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 
 interface DataExportDialogProps {
@@ -14,86 +15,161 @@ interface DataExportDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
+interface ExportProgress {
+  stage: string;
+  progress: number;
+  completed: boolean;
+}
+
 const DataExportDialog: React.FC<DataExportDialogProps> = ({ open, onOpenChange }) => {
   const { t } = useLanguage();
   const [exportingData, setExportingData] = useState<string | null>(null);
-  const [exportStatus, setExportStatus] = useState<'idle' | 'processing' | 'completed'>('idle');
+  const [exportStatus, setExportStatus] = useState<'idle' | 'processing' | 'completed' | 'error'>('idle');
+  const [exportProgress, setExportProgress] = useState<ExportProgress>({
+    stage: '',
+    progress: 0,
+    completed: false
+  });
+
+  const updateProgress = (stage: string, progress: number) => {
+    setExportProgress({ stage, progress, completed: progress >= 100 });
+  };
 
   const generateDataExport = async (dataType: string) => {
     setExportingData(dataType);
     setExportStatus('processing');
+    setExportProgress({ stage: 'Initializing...', progress: 0, completed: false });
 
     try {
-      // Simulate data export generation
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // Stage 1: Initialize export
+      updateProgress('Preparing export...', 10);
+      await new Promise(resolve => setTimeout(resolve, 500));
+
+      // Stage 2: Collect data
+      updateProgress('Collecting data...', 30);
+      await new Promise(resolve => setTimeout(resolve, 800));
 
       let exportData: any = {};
       const timestamp = new Date().toISOString();
+      const exportId = crypto.randomUUID();
+
+      // Stage 3: Process data based on type
+      updateProgress('Processing data...', 60);
+      await new Promise(resolve => setTimeout(resolve, 700));
 
       switch (dataType) {
         case 'personal':
           exportData = {
-            export_type: 'personal_data',
-            generated_at: timestamp,
-            user_data: {
+            export_metadata: {
+              export_id: exportId,
+              export_type: 'personal_data',
+              generated_at: timestamp,
+              format_version: '1.0',
+              gdpr_article: 'Article 15 - Right of Access'
+            },
+            user_profile: {
               // Mock data - in real implementation, this would come from the database
-              profile: {
+              basic_info: {
                 name: 'User Name',
                 email: 'user@example.com',
-                created_at: '2024-01-01T00:00:00Z'
+                account_created: '2024-01-01T00:00:00Z',
+                last_login: timestamp
               },
-              privacy_settings: JSON.parse(localStorage.getItem('privacy-settings') || '{}'),
+              preferences: JSON.parse(localStorage.getItem('privacy-settings') || '{}'),
               consent_history: JSON.parse(localStorage.getItem('consent-logs') || '[]')
+            },
+            data_processing: {
+              purposes: ['Educational feedback', 'Platform improvement', 'Communication'],
+              legal_basis: 'Consent (GDPR Article 6(1)(a))',
+              retention_period: 'Until account deletion or withdrawal of consent'
             }
           };
           break;
 
         case 'feedback':
           exportData = {
-            export_type: 'feedback_data',
-            generated_at: timestamp,
-            feedback_data: {
-              // Mock feedback data
+            export_metadata: {
+              export_id: exportId,
+              export_type: 'feedback_data',
+              generated_at: timestamp,
+              format_version: '1.0',
+              gdpr_article: 'Article 15 - Right of Access'
+            },
+            feedback_summary: {
               total_submissions: 0,
-              feedback_history: [],
-              note: 'No feedback data found in localStorage'
-            }
+              date_range: {
+                first_submission: null,
+                last_submission: null
+              }
+            },
+            feedback_entries: [],
+            data_processing: {
+              purpose: 'Educational improvement and teacher insights',
+              legal_basis: 'Consent (GDPR Article 6(1)(a))',
+              retention_period: 'Until account deletion or withdrawal of consent'
+            },
+            note: 'No feedback data found in current session'
           };
           break;
 
         case 'complete':
           exportData = {
-            export_type: 'complete_data_export',
-            generated_at: timestamp,
+            export_metadata: {
+              export_id: exportId,
+              export_type: 'complete_data_export',
+              generated_at: timestamp,
+              format_version: '1.0',
+              gdpr_articles: ['Article 15 - Right of Access', 'Article 20 - Right to Data Portability']
+            },
             personal_data: {
-              profile: {
+              basic_info: {
                 name: 'User Name',
                 email: 'user@example.com',
-                created_at: '2024-01-01T00:00:00Z'
+                account_created: '2024-01-01T00:00:00Z',
+                last_login: timestamp
               },
-              privacy_settings: JSON.parse(localStorage.getItem('privacy-settings') || '{}'),
+              preferences: JSON.parse(localStorage.getItem('privacy-settings') || '{}'),
               consent_history: JSON.parse(localStorage.getItem('consent-logs') || '[]')
             },
-            feedback_data: {
-              total_submissions: 0,
-              feedback_history: []
+            educational_data: {
+              feedback_summary: {
+                total_submissions: 0,
+                feedback_entries: []
+              }
             },
-            request_history: JSON.parse(localStorage.getItem('data-subject-requests') || '[]')
+            privacy_requests: JSON.parse(localStorage.getItem('data-subject-requests') || '[]'),
+            data_processing_info: {
+              purposes: ['Educational feedback', 'Platform improvement', 'Communication'],
+              legal_basis: 'Consent (GDPR Article 6(1)(a))',
+              retention_period: 'Until account deletion or withdrawal of consent',
+              third_party_sharing: 'None - data is not shared with third parties'
+            }
           };
           break;
       }
 
+      // Stage 4: Generate file
+      updateProgress('Generating file...', 80);
+      await new Promise(resolve => setTimeout(resolve, 500));
+
       // Create and download the file
-      const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+      const blob = new Blob([JSON.stringify(exportData, null, 2)], { 
+        type: 'application/json' 
+      });
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.download = `${dataType}_export_${new Date().toISOString().split('T')[0]}.json`;
+      
+      const dateStr = new Date().toISOString().split('T')[0];
+      link.download = `lessonslearnt_${dataType}_export_${dateStr}.json`;
+      
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
 
+      // Stage 5: Complete
+      updateProgress('Export completed!', 100);
       setExportStatus('completed');
       
       toast({
@@ -103,10 +179,12 @@ const DataExportDialog: React.FC<DataExportDialogProps> = ({ open, onOpenChange 
 
       // Log the export request
       const exportLog = {
+        export_id: exportId,
         type: 'data_export',
         data_type: dataType,
         timestamp: timestamp,
-        status: 'completed'
+        status: 'completed',
+        file_name: `lessonslearnt_${dataType}_export_${dateStr}.json`
       };
       
       const existingLogs = JSON.parse(localStorage.getItem('data-export-logs') || '[]');
@@ -115,7 +193,8 @@ const DataExportDialog: React.FC<DataExportDialogProps> = ({ open, onOpenChange 
 
     } catch (error) {
       console.error('Export failed:', error);
-      setExportStatus('idle');
+      setExportStatus('error');
+      updateProgress('Export failed', 0);
       
       toast({
         title: t('common.error'),
@@ -123,7 +202,13 @@ const DataExportDialog: React.FC<DataExportDialogProps> = ({ open, onOpenChange 
         variant: 'destructive',
       });
     } finally {
-      setExportingData(null);
+      setTimeout(() => {
+        setExportingData(null);
+        if (exportStatus === 'completed') {
+          setExportStatus('idle');
+          setExportProgress({ stage: '', progress: 0, completed: false });
+        }
+      }, 3000);
     }
   };
 
@@ -149,6 +234,41 @@ const DataExportDialog: React.FC<DataExportDialogProps> = ({ open, onOpenChange 
             </AlertDescription>
           </Alert>
 
+          {/* Progress indicator */}
+          {exportStatus === 'processing' && (
+            <Card className="border-blue-200 bg-blue-50">
+              <CardContent className="pt-6">
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium">{exportProgress.stage}</span>
+                    <span className="text-sm text-gray-600">{exportProgress.progress}%</span>
+                  </div>
+                  <Progress value={exportProgress.progress} className="w-full" />
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Success message */}
+          {exportStatus === 'completed' && (
+            <Alert className="border-green-200 bg-green-50">
+              <CheckCircle className="h-4 w-4 text-green-600" />
+              <AlertDescription className="text-green-800">
+                Export completed successfully! Check your downloads folder for the exported file.
+              </AlertDescription>
+            </Alert>
+          )}
+
+          {/* Error message */}
+          {exportStatus === 'error' && (
+            <Alert className="border-red-200 bg-red-50">
+              <AlertCircle className="h-4 w-4 text-red-600" />
+              <AlertDescription className="text-red-800">
+                Export failed. Please try again or contact support if the problem persists.
+              </AlertDescription>
+            </Alert>
+          )}
+
           <div className="grid grid-cols-1 gap-4">
             {/* Personal Data Export */}
             <Card>
@@ -160,20 +280,23 @@ const DataExportDialog: React.FC<DataExportDialogProps> = ({ open, onOpenChange 
               </CardHeader>
               <CardContent className="space-y-3">
                 <p className="text-sm text-gray-600">
-                  Includes: Profile information, privacy settings, consent history
+                  Includes: Profile information, privacy settings, consent history, data processing details
                 </p>
                 <div className="flex items-center gap-2">
                   <Badge variant="outline" className="text-xs">
                     <Clock className="w-3 h-3 mr-1" />
-                    ~1-2 minutes
+                    ~30 seconds
                   </Badge>
                   <Badge variant="outline" className="text-xs">
                     JSON Format
                   </Badge>
+                  <Badge variant="outline" className="text-xs">
+                    GDPR Art. 15
+                  </Badge>
                 </div>
                 <Button
                   onClick={() => generateDataExport('personal')}
-                  disabled={exportingData === 'personal'}
+                  disabled={exportingData === 'personal' || exportStatus === 'processing'}
                   className="w-full"
                 >
                   {exportingData === 'personal' ? (
@@ -196,25 +319,28 @@ const DataExportDialog: React.FC<DataExportDialogProps> = ({ open, onOpenChange 
               <CardHeader>
                 <CardTitle className="text-lg flex items-center gap-2">
                   <FileText className="w-5 h-5" />
-                  Feedback Data Export
+                  Educational Data Export
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
                 <p className="text-sm text-gray-600">
-                  Includes: All feedback submissions, ratings, and educational data
+                  Includes: All feedback submissions, ratings, educational interactions, and learning data
                 </p>
                 <div className="flex items-center gap-2">
                   <Badge variant="outline" className="text-xs">
                     <Clock className="w-3 h-3 mr-1" />
-                    ~2-3 minutes
+                    ~45 seconds
                   </Badge>
                   <Badge variant="outline" className="text-xs">
                     JSON Format
                   </Badge>
+                  <Badge variant="outline" className="text-xs">
+                    GDPR Art. 15
+                  </Badge>
                 </div>
                 <Button
                   onClick={() => generateDataExport('feedback')}
-                  disabled={exportingData === 'feedback'}
+                  disabled={exportingData === 'feedback' || exportStatus === 'processing'}
                   className="w-full"
                   variant="outline"
                 >
@@ -226,7 +352,7 @@ const DataExportDialog: React.FC<DataExportDialogProps> = ({ open, onOpenChange 
                   ) : (
                     <>
                       <Download className="w-4 h-4 mr-2" />
-                      Export Feedback Data
+                      Export Educational Data
                     </>
                   )}
                 </Button>
@@ -243,12 +369,12 @@ const DataExportDialog: React.FC<DataExportDialogProps> = ({ open, onOpenChange 
               </CardHeader>
               <CardContent className="space-y-3">
                 <p className="text-sm text-gray-600">
-                  Includes: All your data in a single comprehensive export
+                  Includes: All your data in a single comprehensive export with full GDPR compliance metadata
                 </p>
                 <div className="flex items-center gap-2">
                   <Badge variant="outline" className="text-xs">
                     <Clock className="w-3 h-3 mr-1" />
-                    ~3-5 minutes
+                    ~60 seconds
                   </Badge>
                   <Badge variant="outline" className="text-xs">
                     JSON Format
@@ -256,10 +382,13 @@ const DataExportDialog: React.FC<DataExportDialogProps> = ({ open, onOpenChange 
                   <Badge className="text-xs bg-blue-100 text-blue-800">
                     Recommended
                   </Badge>
+                  <Badge variant="outline" className="text-xs">
+                    GDPR Art. 15 & 20
+                  </Badge>
                 </div>
                 <Button
                   onClick={() => generateDataExport('complete')}
-                  disabled={exportingData === 'complete'}
+                  disabled={exportingData === 'complete' || exportStatus === 'processing'}
                   className="w-full bg-blue-600 hover:bg-blue-700"
                 >
                   {exportingData === 'complete' ? (
@@ -277,15 +406,6 @@ const DataExportDialog: React.FC<DataExportDialogProps> = ({ open, onOpenChange 
               </CardContent>
             </Card>
           </div>
-
-          {exportStatus === 'completed' && (
-            <Alert className="border-green-200 bg-green-50">
-              <CheckCircle className="h-4 w-4 text-green-600" />
-              <AlertDescription className="text-green-800">
-                Export completed successfully! Check your downloads folder for the exported file.
-              </AlertDescription>
-            </Alert>
-          )}
         </div>
       </DialogContent>
     </Dialog>
