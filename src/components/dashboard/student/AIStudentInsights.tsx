@@ -1,19 +1,11 @@
 
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
-import { Brain, TrendingUp, Target, BookOpen, Lightbulb } from 'lucide-react';
+import { Brain, TrendingUp, BookOpen, Heart, Loader2, Sparkles } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { supabase } from '@/integrations/supabase/client';
-
-interface StudentInsight {
-  type: 'strength' | 'improvement' | 'trend';
-  title: string;
-  description: string;
-  value?: number;
-  trend?: 'up' | 'down' | 'stable';
-}
+import useAdvancedAI from '@/hooks/useAdvancedAI';
 
 interface AIStudentInsightsProps {
   studentId: string;
@@ -21,240 +13,172 @@ interface AIStudentInsightsProps {
   grade: string;
 }
 
-const AIStudentInsights: React.FC<AIStudentInsightsProps> = ({
-  studentId,
-  school,
-  grade
-}) => {
+const AIStudentInsights: React.FC<AIStudentInsightsProps> = ({ studentId, school, grade }) => {
   const { t } = useLanguage();
-  const [insights, setInsights] = useState<StudentInsight[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isExpanded, setIsExpanded] = useState(false);
+  const { 
+    personalizationProfile, 
+    contentRecommendations, 
+    predictiveInsights,
+    generatePersonalizationProfile,
+    generateContentRecommendations,
+    generatePredictiveInsights,
+    isAnyLoading,
+    hasProfile,
+    hasRecommendations,
+    hasInsights
+  } = useAdvancedAI(studentId);
 
-  useEffect(() => {
-    generateInsights();
-  }, [studentId]);
-
-  const generateInsights = async () => {
-    try {
-      setIsLoading(true);
-      
-      // Get student's recent feedback
-      const { data: feedbackData } = await supabase
-        .from('feedback')
-        .select(`
-          *,
-          class_schedules(subject, lesson_topic)
-        `)
-        .eq('student_id', studentId)
-        .order('submitted_at', { ascending: false })
-        .limit(20);
-
-      if (!feedbackData || feedbackData.length === 0) {
-        setInsights([
-          {
-            type: 'improvement',
-            title: 'Start Your Learning Journey',
-            description: 'Submit feedback for your classes to unlock personalized AI insights about your learning progress!'
-          }
-        ]);
-        return;
-      }
-
-      const generatedInsights: StudentInsight[] = [];
-
-      // Analyze understanding trends
-      const avgUnderstanding = feedbackData.reduce((sum, f) => sum + (f.understanding || 0), 0) / feedbackData.length;
-      const recentUnderstanding = feedbackData.slice(0, 5).reduce((sum, f) => sum + (f.understanding || 0), 0) / Math.min(5, feedbackData.length);
-      
-      if (avgUnderstanding >= 4) {
-        generatedInsights.push({
-          type: 'strength',
-          title: 'Strong Academic Performance',
-          description: `Your average understanding score is ${avgUnderstanding.toFixed(1)}/5. You're grasping concepts well!`,
-          value: avgUnderstanding,
-          trend: recentUnderstanding > avgUnderstanding ? 'up' : recentUnderstanding < avgUnderstanding ? 'down' : 'stable'
-        });
-      } else if (avgUnderstanding < 3) {
-        generatedInsights.push({
-          type: 'improvement',
-          title: 'Focus on Understanding',
-          description: `Your understanding scores suggest you might benefit from additional support or different learning approaches.`,
-          value: avgUnderstanding
-        });
-      }
-
-      // Analyze interest levels
-      const avgInterest = feedbackData.reduce((sum, f) => sum + (f.interest || 0), 0) / feedbackData.length;
-      if (avgInterest >= 4) {
-        generatedInsights.push({
-          type: 'strength',
-          title: 'High Engagement Level',
-          description: `You show strong interest in your subjects with an average score of ${avgInterest.toFixed(1)}/5.`,
-          value: avgInterest
-        });
-      } else if (avgInterest < 3) {
-        generatedInsights.push({
-          type: 'improvement',
-          title: 'Explore New Learning Methods',
-          description: 'Try different study techniques or ask your teacher about more engaging activities.',
-          value: avgInterest
-        });
-      }
-
-      // Subject analysis
-      const subjectMap = new Map();
-      feedbackData.forEach(feedback => {
-        const subject = feedback.class_schedules?.subject;
-        if (subject) {
-          if (!subjectMap.has(subject)) {
-            subjectMap.set(subject, { understanding: [], interest: [] });
-          }
-          subjectMap.get(subject).understanding.push(feedback.understanding || 0);
-          subjectMap.get(subject).interest.push(feedback.interest || 0);
-        }
-      });
-
-      // Find strongest subject
-      let strongestSubject = '';
-      let highestScore = 0;
-      for (const [subject, scores] of subjectMap.entries()) {
-        const avgScore = (scores.understanding.reduce((a: number, b: number) => a + b, 0) / scores.understanding.length +
-                         scores.interest.reduce((a: number, b: number) => a + b, 0) / scores.interest.length) / 2;
-        if (avgScore > highestScore) {
-          highestScore = avgScore;
-          strongestSubject = subject;
-        }
-      }
-
-      if (strongestSubject && highestScore >= 3.5) {
-        generatedInsights.push({
-          type: 'strength',
-          title: `Excelling in ${strongestSubject}`,
-          description: `${strongestSubject} appears to be your strongest subject. Consider exploring advanced topics!`,
-          value: highestScore
-        });
-      }
-
-      // Participation trend
-      const participationRate = feedbackData.length >= 10 ? 'high' : feedbackData.length >= 5 ? 'moderate' : 'low';
-      if (participationRate === 'high') {
-        generatedInsights.push({
-          type: 'strength',
-          title: 'Active Participation',
-          description: 'You consistently provide feedback, which shows great engagement with your learning process.',
-          trend: 'up'
-        });
-      } else if (participationRate === 'low') {
-        generatedInsights.push({
-          type: 'improvement',
-          title: 'Increase Participation',
-          description: 'Regular feedback helps both you and your teachers understand your learning needs better.',
-          trend: 'down'
-        });
-      }
-
-      setInsights(generatedInsights);
-    } catch (error) {
-      console.error('Error generating student insights:', error);
-      setInsights([
-        {
-          type: 'improvement',
-          title: 'Insights Unavailable',
-          description: 'Unable to generate insights at this time. Please try again later.'
-        }
-      ]);
-    } finally {
-      setIsLoading(false);
+  const handleGenerateInsights = async () => {
+    if (!hasProfile) {
+      await generatePersonalizationProfile(studentId);
+    }
+    if (!hasRecommendations) {
+      await generateContentRecommendations(studentId);
+    }
+    if (!hasInsights) {
+      await generatePredictiveInsights(studentId);
     }
   };
-
-  const getInsightIcon = (type: string) => {
-    switch (type) {
-      case 'strength': return <Target className="w-5 h-5 text-green-600" />;
-      case 'improvement': return <TrendingUp className="w-5 h-5 text-blue-600" />;
-      case 'trend': return <BookOpen className="w-5 h-5 text-purple-600" />;
-      default: return <Lightbulb className="w-5 h-5" />;
-    }
-  };
-
-  const getInsightColor = (type: string) => {
-    switch (type) {
-      case 'strength': return 'bg-green-50 border-green-200';
-      case 'improvement': return 'bg-blue-50 border-blue-200';
-      case 'trend': return 'bg-purple-50 border-purple-200';
-      default: return 'bg-gray-50 border-gray-200';
-    }
-  };
-
-  if (isLoading) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Brain className="w-5 h-5" />
-            {t('ai.personalInsights') || 'AI Personal Insights'}
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-3">
-            {[1, 2, 3].map(i => (
-              <div key={i} className="animate-pulse">
-                <div className="h-16 bg-gray-200 rounded-lg"></div>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Brain className="w-5 h-5" />
-          {t('ai.personalInsights') || 'AI Personal Insights'}
+    <Card className="bg-gradient-to-br from-blue-50 to-purple-50 border-2 border-blue-200/50 shadow-lg">
+      <CardHeader className="bg-gradient-to-r from-brand-teal to-purple-600 text-white rounded-t-lg">
+        <CardTitle className="flex items-center gap-3">
+          <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
+            <Brain className="w-5 h-5" />
+          </div>
+          <div>
+            <span className="text-lg font-bold">{t('ai.personalInsights') || 'AI Personal Insights'}</span>
+            <div className="text-sm opacity-90">
+              {t('ai.poweredByAI') || 'Powered by Advanced AI'}
+            </div>
+          </div>
+          <Sparkles className="w-5 h-5 ml-auto text-yellow-300" />
         </CardTitle>
-        <p className="text-sm text-muted-foreground">
-          Personalized insights about your learning journey
-        </p>
       </CardHeader>
-      <CardContent>
-        <div className="space-y-4">
-          {insights.map((insight, index) => (
-            <div
-              key={index}
-              className={`p-4 rounded-lg border ${getInsightColor(insight.type)}`}
-            >
-              <div className="flex items-start gap-3">
-                {getInsightIcon(insight.type)}
-                <div className="flex-1">
-                  <h4 className="font-medium mb-1">{insight.title}</h4>
-                  <p className="text-sm text-muted-foreground mb-2">
-                    {insight.description}
-                  </p>
-                  
-                  {insight.value && (
-                    <div className="flex items-center gap-2">
-                      <Progress value={(insight.value / 5) * 100} className="flex-1 h-2" />
-                      <span className="text-sm font-medium">
-                        {insight.value.toFixed(1)}/5
-                      </span>
-                    </div>
-                  )}
-                  
-                  {insight.trend && (
-                    <Badge variant="outline" className="mt-2">
-                      {insight.trend === 'up' ? '↗ Improving' : 
-                       insight.trend === 'down' ? '↘ Declining' : 
-                       '→ Stable'}
-                    </Badge>
-                  )}
+      
+      <CardContent className="p-6">
+        {!isExpanded ? (
+          <div className="text-center space-y-4">
+            <div className="flex justify-center space-x-4">
+              <div className="text-center">
+                <div className="w-12 h-12 bg-gradient-to-br from-emerald-400 to-teal-600 rounded-full flex items-center justify-center mx-auto mb-2">
+                  <TrendingUp className="w-6 h-6 text-white" />
                 </div>
+                <div className="text-sm font-medium text-emerald-700">{t('ai.learningProgress') || 'Learning Progress'}</div>
+              </div>
+              <div className="text-center">
+                <div className="w-12 h-12 bg-gradient-to-br from-orange-400 to-red-500 rounded-full flex items-center justify-center mx-auto mb-2">
+                  <BookOpen className="w-6 h-6 text-white" />
+                </div>
+                <div className="text-sm font-medium text-orange-700">{t('ai.recommendations') || 'Recommendations'}</div>
+              </div>
+              <div className="text-center">
+                <div className="w-12 h-12 bg-gradient-to-br from-purple-400 to-pink-500 rounded-full flex items-center justify-center mx-auto mb-2">
+                  <Heart className="w-6 h-6 text-white" />
+                </div>
+                <div className="text-sm font-medium text-purple-700">{t('ai.wellnessInsights') || 'Wellness Insights'}</div>
               </div>
             </div>
-          ))}
-        </div>
+            
+            <Button 
+              onClick={() => setIsExpanded(true)}
+              className="bg-gradient-to-r from-brand-teal to-purple-600 hover:from-brand-teal/90 hover:to-purple-600/90 text-white px-6 py-2 rounded-full transform transition-all hover:scale-105"
+            >
+              <Sparkles className="w-4 h-4 mr-2" />
+              {t('ai.exploreInsights') || 'Explore Your Insights'}
+            </Button>
+          </div>
+        ) : (
+          <div className="space-y-6">
+            {/* Personalization Profile */}
+            <div className="bg-gradient-to-r from-emerald-50 to-teal-50 border-2 border-emerald-200 rounded-lg p-4">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-8 h-8 bg-gradient-to-br from-emerald-400 to-teal-600 rounded-full flex items-center justify-center">
+                  <TrendingUp className="w-4 h-4 text-white" />
+                </div>
+                <h3 className="font-semibold text-emerald-800">{t('ai.learningProfile') || 'Learning Profile'}</h3>
+                {hasProfile && <Badge className="bg-emerald-100 text-emerald-800 border-emerald-300">{t('common.ready') || 'Ready'}</Badge>}
+              </div>
+              {personalizationProfile ? (
+                <div className="space-y-2">
+                  <p className="text-sm text-emerald-700">{personalizationProfile.learning_style || t('ai.analyzingLearningStyle') || 'Analyzing your learning style...'}</p>
+                  <p className="text-sm text-emerald-600">{personalizationProfile.strengths || t('ai.identifyingStrengths') || 'Identifying your strengths...'}</p>
+                </div>
+              ) : (
+                <p className="text-sm text-emerald-600">{t('ai.generateProfilePrompt') || 'Generate your personalized learning profile'}</p>
+              )}
+            </div>
+
+            {/* Content Recommendations */}
+            <div className="bg-gradient-to-r from-orange-50 to-red-50 border-2 border-orange-200 rounded-lg p-4">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-8 h-8 bg-gradient-to-br from-orange-400 to-red-500 rounded-full flex items-center justify-center">
+                  <BookOpen className="w-4 h-4 text-white" />
+                </div>
+                <h3 className="font-semibold text-orange-800">{t('ai.smartRecommendations') || 'Smart Recommendations'}</h3>
+                {hasRecommendations && <Badge className="bg-orange-100 text-orange-800 border-orange-300">{t('common.ready') || 'Ready'}</Badge>}
+              </div>
+              {contentRecommendations ? (
+                <div className="space-y-2">
+                  {contentRecommendations.slice(0, 2).map((rec: any, index: number) => (
+                    <p key={index} className="text-sm text-orange-700">• {rec.title || rec}</p>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-orange-600">{t('ai.generateRecommendationsPrompt') || 'Get personalized study recommendations'}</p>
+              )}
+            </div>
+
+            {/* Predictive Insights */}
+            <div className="bg-gradient-to-r from-purple-50 to-pink-50 border-2 border-purple-200 rounded-lg p-4">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-8 h-8 bg-gradient-to-br from-purple-400 to-pink-500 rounded-full flex items-center justify-center">
+                  <Heart className="w-4 h-4 text-white" />
+                </div>
+                <h3 className="font-semibold text-purple-800">{t('ai.wellnessInsights') || 'Wellness & Growth Insights'}</h3>
+                {hasInsights && <Badge className="bg-purple-100 text-purple-800 border-purple-300">{t('common.ready') || 'Ready'}</Badge>}
+              </div>
+              {predictiveInsights ? (
+                <div className="space-y-2">
+                  <p className="text-sm text-purple-700">{predictiveInsights.mental_health_score ? `Wellness Score: ${predictiveInsights.mental_health_score}/10` : t('ai.analyzingWellness') || 'Analyzing your wellness patterns...'}</p>
+                  <p className="text-sm text-purple-600">{predictiveInsights.recommendations?.[0] || t('ai.generatingWellnessAdvice') || 'Generating personalized wellness advice...'}</p>
+                </div>
+              ) : (
+                <p className="text-sm text-purple-600">{t('ai.generateInsightsPrompt') || 'Discover insights about your learning journey'}</p>
+              )}
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-gray-200">
+              <Button 
+                onClick={handleGenerateInsights}
+                disabled={isAnyLoading}
+                className="flex-1 bg-gradient-to-r from-brand-teal to-purple-600 text-white hover:from-brand-teal/90 hover:to-purple-600/90"
+              >
+                {isAnyLoading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    {t('ai.generating') || 'Generating...'}
+                  </>
+                ) : (
+                  <>
+                    <Brain className="w-4 h-4 mr-2" />
+                    {t('ai.generateInsights') || 'Generate AI Insights'}
+                  </>
+                )}
+              </Button>
+              <Button 
+                onClick={() => setIsExpanded(false)}
+                variant="outline"
+                className="border-2 border-gray-300 text-gray-700 hover:bg-gray-50"
+              >
+                {t('common.minimize') || 'Minimize'}
+              </Button>
+            </div>
+          </div>
+        )}
       </CardContent>
     </Card>
   );

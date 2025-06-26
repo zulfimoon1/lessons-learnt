@@ -33,6 +33,13 @@ const UpcomingClassesTab: React.FC<UpcomingClassesTabProps> = React.memo(({
   const { t } = useLanguage();
   const isMobile = useIsMobile();
 
+  // Filter to only show future classes
+  const now = new Date();
+  const upcomingClasses = classes.filter(classItem => {
+    const classDateTime = new Date(`${classItem.class_date}T${classItem.class_time}`);
+    return classDateTime > now;
+  });
+
   return (
     <Card role="region" aria-labelledby="upcoming-classes-title">
       <CardHeader className={cn(isMobile ? 'p-4 pb-2' : 'p-6 pb-4')}>
@@ -40,15 +47,15 @@ const UpcomingClassesTab: React.FC<UpcomingClassesTabProps> = React.memo(({
           id="upcoming-classes-title"
           className={cn(isMobile ? 'text-lg' : 'text-xl')}
         >
-          {t('class.upcomingClasses')}
+          {t('dashboard.upcomingClasses') || 'Upcoming Classes'}
         </CardTitle>
         <CardDescription className={cn(isMobile ? 'text-sm' : 'text-base')}>
-          {t('dashboard.scheduledClasses')} {studentGrade} {t('auth.school').toLowerCase()} {studentSchool}
+          {t('dashboard.scheduledClasses') || 'Your scheduled classes for'} {studentGrade} {t('dashboard.atSchool') || 'at'} {studentSchool}
         </CardDescription>
       </CardHeader>
       <CardContent className={cn(isMobile ? 'p-4 pt-0' : 'p-6 pt-0')}>
         <div className="space-y-4">
-          {classes.map((classItem) => (
+          {upcomingClasses.map((classItem) => (
             <div 
               key={classItem.id} 
               className={cn(
@@ -103,7 +110,7 @@ const UpcomingClassesTab: React.FC<UpcomingClassesTabProps> = React.memo(({
                     aria-label={`Duration ${classItem.duration_minutes} minutes`}
                   >
                     <Clock className="w-3 h-3" aria-hidden="true" />
-                    {classItem.duration_minutes} {t('class.duration')}
+                    {classItem.duration_minutes} {t('common.minutes') || 'min'}
                   </Badge>
                 </div>
               </div>
@@ -127,7 +134,7 @@ const UpcomingClassesTab: React.FC<UpcomingClassesTabProps> = React.memo(({
               </div>
             </div>
           ))}
-          {classes.length === 0 && (
+          {upcomingClasses.length === 0 && (
             <div 
               className="text-center py-8"
               role="status"
@@ -135,7 +142,7 @@ const UpcomingClassesTab: React.FC<UpcomingClassesTabProps> = React.memo(({
             >
               <BookOpen className="w-12 h-12 text-muted-foreground mx-auto mb-3" aria-hidden="true" />
               <p className="text-muted-foreground">
-                {t('dashboard.noClasses')}
+                {t('dashboard.noUpcomingClasses') || 'No upcoming classes scheduled'}
               </p>
             </div>
           )}

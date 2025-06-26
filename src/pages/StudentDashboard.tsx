@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -15,6 +16,7 @@ import WelcomeSection from "@/components/dashboard/student/WelcomeSection";
 import QuickActionsCard from "@/components/dashboard/student/QuickActionsCard";
 import WellnessTracker from "@/components/dashboard/student/WellnessTracker";
 import StudentAnalyticsDashboard from "@/components/analytics/StudentAnalyticsDashboard";
+import MentalHealthSupportTab from "@/components/dashboard/MentalHealthSupportTab";
 import { classScheduleService } from "@/services/classScheduleService";
 import AIStudentInsights from "@/components/dashboard/student/AIStudentInsights";
 
@@ -35,22 +37,29 @@ const StudentDashboard: React.FC = () => {
         setIsLoading(true);
         const response = await classScheduleService.getSchedulesBySchool(student.school);
         if (response.data) {
-          // Filter classes for student's grade
+          // Filter classes for student's grade and only show future classes
+          const now = new Date();
           const filteredClasses = response.data.filter(
-            (classItem: any) => classItem.grade === student.grade
+            (classItem: any) => {
+              if (classItem.grade !== student.grade) return false;
+              
+              // Only show classes that haven't happened yet
+              const classDateTime = new Date(`${classItem.class_date}T${classItem.class_time}`);
+              return classDateTime > now;
+            }
           );
           setUpcomingClasses(filteredClasses);
         }
       } catch (error) {
         console.error('Error fetching upcoming classes:', error);
-        toast.error('Failed to load upcoming classes');
+        toast.error(t('common.error') || 'Failed to load upcoming classes');
       } finally {
         setIsLoading(false);
       }
     };
 
     fetchUpcomingClasses();
-  }, [student]);
+  }, [student, t]);
 
   const handleLogout = async () => {
     try {
@@ -82,7 +91,7 @@ const StudentDashboard: React.FC = () => {
     {
       value: 'classes',
       icon: CalendarIcon,
-      label: t('class.upcomingClasses') || 'Classes',
+      label: t('dashboard.upcomingClasses') || 'Classes',
       component: (
         <UpcomingClassesTab
           classes={upcomingClasses}
@@ -100,37 +109,27 @@ const StudentDashboard: React.FC = () => {
     {
       value: 'summary',
       icon: FileTextIcon,
-      label: t('weekly.summary') || 'Summary',
+      label: t('dashboard.weeklySummary') || 'Summary',
       component: <WeeklySummaryTab student={student} />
     },
     {
       value: 'wellness',
       icon: HeartIcon,
-      label: t('features.mentalHealth.title') || 'Wellness',
+      label: t('dashboard.mentalHealth') || 'Mental Health',
       component: (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <WellnessTracker
-            onMoodSubmit={handleMoodSubmit}
-            recentEntries={[]} // Would be loaded from database
-          />
-          <div className="space-y-4">
-            <div className="text-center py-8">
-              <HeartIcon className="w-16 h-16 text-brand-orange mx-auto mb-4" />
-              <h3 className="text-xl font-semibold mb-2">
-                {t('features.mentalHealth.title') || 'Mental Health Support'}
-              </h3>
-              <p className="text-muted-foreground max-w-md mx-auto">
-                {t('features.mentalHealth.description') || 'Access wellness resources and mental health support when you need it.'}
-              </p>
-            </div>
-          </div>
-        </div>
+        <MentalHealthSupportTab
+          psychologists={[]}
+          studentId={student.id}
+          studentName={student.full_name}
+          studentSchool={student.school}
+          studentGrade={student.grade}
+        />
       )
     },
     {
       value: 'analytics',
       icon: BarChartIcon,
-      label: t('analytics.title') || 'Analytics',
+      label: t('dashboard.analytics') || 'Analytics',
       component: (
         <StudentAnalyticsDashboard
           studentId={student.id}
@@ -161,7 +160,7 @@ const StudentDashboard: React.FC = () => {
         {/* Quick Actions Card - New Enhancement */}
         <QuickActionsCard {...handleQuickActions} />
 
-        {/* AI Personal Insights - New */}
+        {/* AI Personal Insights - Enhanced with better visibility */}
         <AIStudentInsights
           studentId={student.id}
           school={student.school}
