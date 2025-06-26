@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { MessageCircleIcon, XIcon, ShieldCheckIcon } from "lucide-react";
+import { MessageCircleIcon, XIcon, ShieldCheckIcon, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
@@ -27,23 +27,35 @@ const LiveChatWidget = ({ studentId, studentName, school, grade, onClose }: Live
   const [isAnonymous, setIsAnonymous] = useState(true);
   const [currentSession, setCurrentSession] = useState<LiveChatSession | null>(null);
 
+  console.log('LiveChatWidget: Rendering with props:', { studentId, studentName, school, grade });
+
   const handleOpenChat = async () => {
+    console.log('LiveChatWidget: Starting chat session...');
     setIsConnecting(true);
     
     try {
-      console.log('LiveChatWidget: Starting chat session for:', { studentId, studentName, school, grade, isAnonymous });
-      
-      const { error, session } = await createChatSession(
-        isAnonymous ? null : studentId || null,
-        isAnonymous ? t('demo.mockup.anonymousStudent') : studentName,
+      const sessionData = {
+        studentId: isAnonymous ? null : studentId || null,
+        studentName: isAnonymous ? 'Anonymous Student' : studentName,
         school,
         grade,
         isAnonymous
+      };
+      
+      console.log('LiveChatWidget: Creating session with data:', sessionData);
+      
+      const { error, session } = await createChatSession(
+        sessionData.studentId,
+        sessionData.studentName,
+        sessionData.school,
+        sessionData.grade,
+        sessionData.isAnonymous
       );
 
       if (error) {
+        console.error('LiveChatWidget: Error creating session:', error);
         toast({
-          title: t('chat.connectionFailed'),
+          title: t('chat.connectionFailed') || 'Connection Failed',
           description: error,
           variant: "destructive",
         });
@@ -51,18 +63,30 @@ const LiveChatWidget = ({ studentId, studentName, school, grade, onClose }: Live
         return;
       }
 
-      setCurrentSession(session || null);
+      if (!session) {
+        console.error('LiveChatWidget: No session returned');
+        toast({
+          title: t('chat.connectionFailed') || 'Connection Failed',
+          description: 'Failed to create chat session',
+          variant: "destructive",
+        });
+        setIsConnecting(false);
+        return;
+      }
+
+      console.log('LiveChatWidget: Session created successfully:', session);
+      setCurrentSession(session);
       setIsConnecting(false);
       
       toast({
-        title: t('chat.chatStarted'),
-        description: t('chat.doctorWillJoin'),
+        title: t('chat.chatStarted') || 'Chat Started',
+        description: t('chat.doctorWillJoin') || 'A doctor will join shortly to help you.',
       });
     } catch (error) {
-      console.error('LiveChatWidget: Error starting chat:', error);
+      console.error('LiveChatWidget: Unexpected error:', error);
       toast({
-        title: t('chat.connectionFailed'),
-        description: t('chat.connectionFailed'),
+        title: t('chat.connectionFailed') || 'Connection Failed',
+        description: 'An unexpected error occurred. Please try again.',
         variant: "destructive",
       });
       setIsConnecting(false);
@@ -70,7 +94,9 @@ const LiveChatWidget = ({ studentId, studentName, school, grade, onClose }: Live
   };
 
   const handleClose = async () => {
+    console.log('LiveChatWidget: Closing chat session');
     if (currentSession) {
+      console.log('LiveChatWidget: Ending session:', currentSession.id);
       await endChatSession(currentSession.id);
     }
     
@@ -80,6 +106,7 @@ const LiveChatWidget = ({ studentId, studentName, school, grade, onClose }: Live
   };
 
   if (currentSession) {
+    console.log('LiveChatWidget: Rendering RealtimeChat with session:', currentSession.id);
     return (
       <RealtimeChat
         session={currentSession}
@@ -97,7 +124,7 @@ const LiveChatWidget = ({ studentId, studentName, school, grade, onClose }: Live
           <div className="flex items-center justify-between">
             <CardTitle className="text-lg flex items-center gap-2">
               <MessageCircleIcon className="w-5 h-5" />
-              {t('chat.startLiveChatWithDoctor')}
+              {t('chat.startLiveChatWithDoctor') || 'Start Live Chat with Doctor'}
             </CardTitle>
             <Button
               variant="ghost"
@@ -111,9 +138,9 @@ const LiveChatWidget = ({ studentId, studentName, school, grade, onClose }: Live
         </CardHeader>
         <CardContent className="p-6 space-y-4">
           <div className="text-center">
-            <h3 className="font-semibold text-lg mb-2">{t('chat.chatPreferences')}</h3>
+            <h3 className="font-semibold text-lg mb-2">{t('chat.chatPreferences') || 'Chat Preferences'}</h3>
             <p className="text-sm text-muted-foreground mb-4">
-              {t('chat.connectWithDoctor')}
+              {t('chat.connectWithDoctor') || 'Connect with a qualified medical professional'}
             </p>
           </div>
 
@@ -127,12 +154,12 @@ const LiveChatWidget = ({ studentId, studentName, school, grade, onClose }: Live
               <div className="flex-1">
                 <Label htmlFor="anonymous-mode" className="flex items-center gap-2 font-medium">
                   <ShieldCheckIcon className="w-4 h-4" />
-                  {t('chat.anonymousChat')}
+                  {t('chat.anonymousChat') || 'Anonymous Chat'}
                 </Label>
                 <p className="text-xs text-muted-foreground mt-1">
                   {isAnonymous 
-                    ? t('chat.identityProtected')
-                    : t('chat.nameVisible')
+                    ? (t('chat.identityProtected') || 'Your identity will be protected')
+                    : (t('chat.nameVisible') || 'Your name will be visible to the doctor')
                   }
                 </p>
               </div>
@@ -143,10 +170,10 @@ const LiveChatWidget = ({ studentId, studentName, school, grade, onClose }: Live
             <div className="bg-green-50 p-3 rounded-lg border border-green-200">
               <p className="text-sm text-green-800 font-medium">
                 <ShieldCheckIcon className="w-4 h-4 inline mr-1" />
-                {t('chat.privacyProtected')}
+                {t('chat.privacyProtected') || 'Privacy Protected'}
               </p>
               <p className="text-xs text-green-700">
-                {t('chat.conversationConfidential')}
+                {t('chat.conversationConfidential') || 'Your conversation will remain completely confidential'}
               </p>
             </div>
           )}
@@ -156,7 +183,17 @@ const LiveChatWidget = ({ studentId, studentName, school, grade, onClose }: Live
             disabled={isConnecting}
             className="w-full bg-purple-600 hover:bg-purple-700"
           >
-            {isConnecting ? t('chat.creatingSession') : t('chat.startChatWithDoctor')}
+            {isConnecting ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                {t('chat.creatingSession') || 'Creating Session...'}
+              </>
+            ) : (
+              <>
+                <MessageCircleIcon className="w-4 h-4 mr-2" />
+                {t('chat.startChatWithDoctor') || 'Start Chat with Doctor'}
+              </>
+            )}
           </Button>
         </CardContent>
       </Card>
@@ -165,12 +202,15 @@ const LiveChatWidget = ({ studentId, studentName, school, grade, onClose }: Live
 
   return (
     <Button
-      onClick={() => setIsOpen(true)}
+      onClick={() => {
+        console.log('LiveChatWidget: Opening chat interface');
+        setIsOpen(true);
+      }}
       disabled={isConnecting}
       className="bg-purple-600 hover:bg-purple-700 text-white"
     >
       <MessageCircleIcon className="w-4 h-4 mr-2" />
-      {t('chat.chatWithDoctor')}
+      {t('chat.chatWithDoctor') || 'Chat with Doctor'}
     </Button>
   );
 };

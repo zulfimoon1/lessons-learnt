@@ -2,10 +2,9 @@
 import React, { useEffect, useState } from "react";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { HeartHandshakeIcon, Shield, MessageCircle, Users } from "lucide-react";
+import { HeartHandshakeIcon, Shield, MessageCircle, Users, Phone, MapPin, Clock, User } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import LiveChatWidget from "@/components/LiveChatWidget";
-import PsychologistInfo from "@/components/PsychologistInfo";
 import { supabase } from "@/integrations/supabase/client";
 
 interface SchoolDoctor {
@@ -16,6 +15,7 @@ interface SchoolDoctor {
   office_location?: string;
   availability_hours?: string;
   specialization?: string;
+  role: string;
 }
 
 interface MentalHealthSupportTabProps {
@@ -37,21 +37,30 @@ const MentalHealthSupportTab: React.FC<MentalHealthSupportTabProps> = React.memo
   const [doctors, setDoctors] = useState<SchoolDoctor[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
+  console.log('MentalHealthSupportTab: Rendering with school:', studentSchool);
+
   useEffect(() => {
     const fetchDoctors = async () => {
-      if (!studentSchool) return;
+      if (!studentSchool) {
+        console.log('MentalHealthSupportTab: No school provided');
+        return;
+      }
       
       setIsLoading(true);
+      console.log('MentalHealthSupportTab: Fetching doctors for school:', studentSchool);
+      
       try {
         // Fetch verified medical professionals only
         const { data: teacherDoctors, error: teacherError } = await supabase
           .from('teachers')
-          .select('id, name, email, specialization')
+          .select('id, name, email, specialization, role')
           .eq('school', studentSchool)
           .eq('role', 'doctor');
 
         if (teacherError) {
-          console.error('Error fetching doctor teachers:', teacherError);
+          console.error('MentalHealthSupportTab: Error fetching doctor teachers:', teacherError);
+        } else {
+          console.log('MentalHealthSupportTab: Found teacher doctors:', teacherDoctors);
         }
 
         // Also get any verified psychologists from the school_psychologists table
@@ -61,7 +70,9 @@ const MentalHealthSupportTab: React.FC<MentalHealthSupportTabProps> = React.memo
           .eq('school', studentSchool);
 
         if (psychError) {
-          console.error('Error fetching school psychologists:', psychError);
+          console.error('MentalHealthSupportTab: Error fetching school psychologists:', psychError);
+        } else {
+          console.log('MentalHealthSupportTab: Found school psychologists:', schoolPsychologists);
         }
 
         // Combine both sources of verified medical professionals
@@ -70,7 +81,8 @@ const MentalHealthSupportTab: React.FC<MentalHealthSupportTabProps> = React.memo
             id: doctor.id,
             name: doctor.name,
             email: doctor.email,
-            specialization: doctor.specialization
+            specialization: doctor.specialization,
+            role: 'doctor'
           })),
           ...(schoolPsychologists || []).map(psych => ({
             id: psych.id,
@@ -78,13 +90,15 @@ const MentalHealthSupportTab: React.FC<MentalHealthSupportTabProps> = React.memo
             email: psych.email,
             phone: psych.phone,
             office_location: psych.office_location,
-            availability_hours: psych.availability_hours
+            availability_hours: psych.availability_hours,
+            role: 'psychologist'
           }))
         ];
 
+        console.log('MentalHealthSupportTab: Combined doctors:', combinedDoctors);
         setDoctors(combinedDoctors);
       } catch (error) {
-        console.error('Error fetching medical professionals:', error);
+        console.error('MentalHealthSupportTab: Error fetching medical professionals:', error);
       } finally {
         setIsLoading(false);
       }
@@ -92,6 +106,70 @@ const MentalHealthSupportTab: React.FC<MentalHealthSupportTabProps> = React.memo
 
     fetchDoctors();
   }, [studentSchool]);
+
+  const DoctorCard = ({ doctor }: { doctor: SchoolDoctor }) => (
+    <div className="border border-purple-100 rounded-lg p-4 bg-purple-50/50 mb-4">
+      <div className="flex items-start justify-between mb-3">
+        <div className="flex items-center gap-3">
+          <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
+            <User className="w-6 h-6 text-purple-600" />
+          </div>
+          <div>
+            <h4 className="font-semibold text-gray-900">{doctor.name}</h4>
+            <div className="flex gap-2 mt-1">
+              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                {doctor.role === 'doctor' ? 'School Doctor' : 'School Psychologist'}
+              </span>
+              {doctor.specialization && (
+                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                  {doctor.specialization}
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+        <div className="flex items-center gap-2 text-gray-600">
+          <MessageCircle className="w-4 h-4" />
+          <span>{doctor.email}</span>
+        </div>
+        
+        {doctor.phone && (
+          <div className="flex items-center gap-2 text-gray-600">
+            <Phone className="w-4 h-4" />
+            <span>{doctor.phone}</span>
+          </div>
+        )}
+        
+        {doctor.availability_hours && (
+          <div className="flex items-center gap-2 text-gray-600">
+            <Clock className="w-4 h-4" />
+            <span>{doctor.availability_hours}</span>
+          </div>
+        )}
+        
+        {doctor.office_location && (
+          <div className="flex items-center gap-2 text-gray-600">
+            <MapPin className="w-4 h-4" />
+            <span>{doctor.office_location}</span>
+          </div>
+        )}
+      </div>
+
+      <div className="mt-3 pt-3 border-t border-purple-200">
+        <Button 
+          size="sm" 
+          className="bg-purple-600 hover:bg-purple-700 text-white"
+          onClick={() => window.location.href = `mailto:${doctor.email}`}
+        >
+          <MessageCircle className="w-4 h-4 mr-2" />
+          Contact {doctor.role === 'doctor' ? 'Doctor' : 'Psychologist'}
+        </Button>
+      </div>
+    </div>
+  );
 
   if (isLoading) {
     return (
@@ -120,7 +198,7 @@ const MentalHealthSupportTab: React.FC<MentalHealthSupportTabProps> = React.memo
       </CardHeader>
       <CardContent className="p-6">
         <div className="space-y-6">
-          {/* Always show privacy notice */}
+          {/* Privacy notice */}
           <div className="bg-blue-50/50 p-4 rounded-lg border-l-4 border-blue-200">
             <div className="flex items-center gap-2 mb-2">
               <Shield className="w-4 h-4 text-blue-600" />
@@ -131,7 +209,7 @@ const MentalHealthSupportTab: React.FC<MentalHealthSupportTabProps> = React.memo
             </p>
           </div>
           
-          {/* Prominent Live Chat Section */}
+          {/* Live Chat Section */}
           <div className="bg-gradient-to-br from-emerald-50 to-teal-50 p-6 rounded-lg border-2 border-emerald-200">
             <div className="flex items-center gap-3 mb-4">
               <div className="w-12 h-12 bg-gradient-to-br from-emerald-400 to-teal-500 rounded-full flex items-center justify-center">
@@ -165,10 +243,16 @@ const MentalHealthSupportTab: React.FC<MentalHealthSupportTabProps> = React.memo
                 <h3 className="text-lg font-semibold text-brand-dark">
                   {t('mentalHealth.schoolProfessionals') || 'School Mental Health Professionals'}
                 </h3>
+                <span className="bg-green-100 text-green-800 text-xs font-medium px-2 py-1 rounded-full">
+                  {doctors.length} Available
+                </span>
               </div>
-              {doctors.map((doctor) => (
-                <PsychologistInfo key={doctor.id} psychologist={doctor} />
-              ))}
+              
+              <div className="grid gap-4">
+                {doctors.map((doctor) => (
+                  <DoctorCard key={doctor.id} doctor={doctor} />
+                ))}
+              </div>
             </div>
           ) : (
             <div className="text-center py-6">
@@ -176,23 +260,11 @@ const MentalHealthSupportTab: React.FC<MentalHealthSupportTabProps> = React.memo
                 <HeartHandshakeIcon className="w-8 h-8 text-brand-teal" />
               </div>
               <p className="text-brand-dark font-medium mb-2">
-                {t('mentalHealth.noProfessionalsAtSchool') || 'No dedicated mental health professionals at your school yet'}
+                {t('mentalHealth.noProfessionalsAtSchool') || 'No dedicated mental health professionals registered at your school yet'}
               </p>
               <p className="text-brand-dark/60 text-sm mb-4">
-                {t('mentalHealth.generalSupportAvailable') || 'General support is still available through live chat'}
+                {t('mentalHealth.generalSupportAvailable') || 'General support is still available through live chat above'}
               </p>
-              
-              <div className="bg-yellow-50/50 p-4 rounded-lg border-l-4 border-yellow-200">
-                <div className="flex items-center gap-2 mb-2">
-                  <MessageCircle className="w-4 h-4 text-yellow-600" />
-                  <span className="font-medium text-yellow-800">
-                    {t('mentalHealth.emergencySupport') || 'Emergency Support Available'}
-                  </span>
-                </div>
-                <p className="text-sm text-yellow-700">
-                  {t('mentalHealth.alwaysHereToHelp') || 'Our support system is always here to help you. Click the chat button above to get started.'}
-                </p>
-              </div>
             </div>
           )}
 
