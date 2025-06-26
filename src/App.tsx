@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -59,6 +60,7 @@ function App() {
                     <Route path="/weekly-summary" element={<WeeklySummary />} />
                     <Route path="/admin-dashboard" element={<AdminDashboard />} />
                     <Route path="/platform-admin" element={<PlatformAdmin />} />
+                    <Route path="/console" element={<PlatformAdminLogin />} />
                     <Route path="/platform-admin-login" element={<PlatformAdminLogin />} />
                     <Route path="/platform-admin-dashboard" element={<PlatformAdminDashboard />} />
                     <Route path="/accept-invitation" element={<AcceptInvitation />} />
