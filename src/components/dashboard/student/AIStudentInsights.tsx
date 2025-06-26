@@ -30,7 +30,7 @@ const AIStudentInsights: React.FC<AIStudentInsightsProps> = ({ studentId, school
     error
   } = useAdvancedAI(studentId);
 
-  console.log('AIStudentInsights: Current state:', { 
+  console.log('AIStudentInsights: Component render with state:', { 
     isExpanded, 
     hasProfile, 
     hasRecommendations, 
@@ -44,33 +44,29 @@ const AIStudentInsights: React.FC<AIStudentInsightsProps> = ({ studentId, school
   });
 
   const handleGenerateInsights = async () => {
-    console.log('AIStudentInsights: Starting comprehensive insight generation for student:', studentId);
+    console.log('AIStudentInsights: Starting AI insight generation process...');
     try {
       if (!hasProfile) {
         console.log('AIStudentInsights: Generating personalization profile...');
-        const profileResult = await generatePersonalizationProfile(studentId);
-        console.log('AIStudentInsights: Profile generation completed:', { success: !!profileResult, error: !profileResult });
+        await generatePersonalizationProfile(studentId);
       }
       if (!hasRecommendations) {
         console.log('AIStudentInsights: Generating content recommendations...');
-        const recsResult = await generateContentRecommendations(studentId);
-        console.log('AIStudentInsights: Recommendations generation completed:', { success: !!recsResult, error: !recsResult });
+        await generateContentRecommendations(studentId);
       }
       if (!hasInsights) {
         console.log('AIStudentInsights: Generating predictive insights...');
-        const insightsResult = await generatePredictiveInsights("month");
-        console.log('AIStudentInsights: Insights generation completed:', { success: !!insightsResult, error: !insightsResult });
+        await generatePredictiveInsights("month");
       }
-      console.log('AIStudentInsights: All AI insights generation process completed');
+      console.log('AIStudentInsights: AI generation process completed successfully');
     } catch (error) {
-      console.error('AIStudentInsights: Error during insight generation:', error);
+      console.error('AIStudentInsights: Error during AI generation:', error);
     }
   };
 
   const handleExploreInsights = () => {
-    console.log('AIStudentInsights: User clicked Explore Insights');
+    console.log('AIStudentInsights: User clicked Explore Insights, expanding view');
     setIsExpanded(true);
-    // Also generate insights if not already done
     if (!hasProfile || !hasRecommendations || !hasInsights) {
       console.log('AIStudentInsights: Auto-generating missing insights...');
       handleGenerateInsights();
@@ -80,8 +76,6 @@ const AIStudentInsights: React.FC<AIStudentInsightsProps> = ({ studentId, school
   // Helper function to safely access predictive insights data
   const getPredictiveInsightsData = () => {
     if (!predictiveInsights) return null;
-    
-    // Handle both array and object formats
     const data = Array.isArray(predictiveInsights) ? predictiveInsights[0] : predictiveInsights;
     return data;
   };
@@ -169,7 +163,7 @@ const AIStudentInsights: React.FC<AIStudentInsightsProps> = ({ studentId, school
           </div>
         ) : (
           <div className="space-y-6">
-            {/* Learning Profile - Always visible with fallback content */}
+            {/* Learning Profile */}
             <div className="bg-white border-2 border-blue-300 rounded-lg p-4 shadow-md">
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
@@ -189,7 +183,7 @@ const AIStudentInsights: React.FC<AIStudentInsightsProps> = ({ studentId, school
               </div>
             </div>
 
-            {/* Content Recommendations - Always visible with fallback content */}
+            {/* Content Recommendations */}
             <div className="bg-white border-2 border-orange-300 rounded-lg p-4 shadow-md">
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-8 h-8 bg-orange-600 rounded-full flex items-center justify-center">
@@ -204,7 +198,7 @@ const AIStudentInsights: React.FC<AIStudentInsightsProps> = ({ studentId, school
               </div>
             </div>
 
-            {/* Wellness Insights - Always visible with fallback content */}
+            {/* Wellness Insights */}
             <div className="bg-white border-2 border-purple-300 rounded-lg p-4 shadow-md">
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-8 h-8 bg-purple-600 rounded-full flex items-center justify-center">
