@@ -1,4 +1,3 @@
-
 export const ltTeacherTranslations = {
   // Teacher Dashboard
   'teacher.dashboard.title': 'Mokytojo skydelis',
@@ -11,6 +10,11 @@ export const ltTeacherTranslations = {
   'teacher.bulkUpload': 'Masinis įkėlimas',
   'teacher.articles': 'Straipsniai',
   'teacher.role': 'Mokytojas',
+  
+  // Schedule translations - FIXED
+  'schedule.mySchedules': 'Mano tvarkaraščiai',
+  'schedule.noSchedules': 'Tvarkaraščių nerasta. Sukurkite pirmą klasės tvarkaraštį, kad pradėtumėte.',
+  'schedule.createTitle': 'Sukurti naują tvarkaraštį',
   
   // Form Labels
   'teacher.classDetailsTitle': 'Klasės duomenys',

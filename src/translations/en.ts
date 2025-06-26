@@ -105,7 +105,24 @@ export const enTranslations = {
   'dashboard.sending': 'Sending...',
   'dashboard.sendMessage': 'Send Message',
 
-  // AI translations - Complete set
+  // Analytics - FIXED KEYS FROM SCREENSHOTS
+  'analytics.title': 'Analytics',
+  'analytics.description': 'Insights into your teaching performance and student engagement',
+  'analytics.totalClasses': 'Total Classes',
+  'analytics.classesCreated': 'Classes created',
+  'analytics.responseRate': 'Response Rate',
+  'analytics.averageRating': 'Avg Understanding',
+  'analytics.engagement': 'Engagement',
+  'analytics.averageInterest': 'Average interest level',
+  'analytics.performanceTrends': 'Performance Trends',
+  'analytics.subjectPerformance': 'Subject Performance',
+  'analytics.topPerformingClasses': 'Top Performing Classes',
+  'analytics.excellent': 'Excellent',
+  'analytics.needsImprovement': 'Needs Improvement',
+  'analytics.noTeacherData': 'No analytics data available yet. Create some classes and collect feedback!',
+  'analytics.noTopClasses': 'No class data available yet',
+
+  // AI translations - Complete set including FIXED KEYS
   'ai.personalInsights': 'AI Personal Insights',
   'ai.poweredByAI': 'Powered by Advanced AI',
   'ai.learningProgress': 'Learning Progress',
@@ -125,6 +142,8 @@ export const enTranslations = {
   'ai.generatingWellnessAdvice': 'Generating personalized wellness advice...',
   'ai.insights': 'AI Insights',
   'ai.insightsDescription': 'Intelligent recommendations and predictions based on your teaching data',
+  'ai.engagementPredictor': 'Student Engagement Predictor',
+  'ai.mentalHealthAnalyzer': 'Mental Health Analyzer',
 
   // Mental Health Support - Complete set
   'mentalHealth.loading': 'Loading mental health support...',
