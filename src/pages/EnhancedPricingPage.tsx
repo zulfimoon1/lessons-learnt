@@ -232,12 +232,8 @@ const EnhancedPricingPage = () => {
         {/* Order Summary */}
         <EnhancedLazyLoader minHeight={isMobile ? "400px" : "300px"}>
           <MobileOptimizedCard
-            title={
-              <div className="flex items-center gap-2">
-                <CreditCardIcon className="w-5 h-5" />
-                Order Summary
-              </div>
-            }
+            title="Order Summary"
+            icon={<CreditCardIcon className="w-5 h-5" />}
             className="mb-8"
           >
             <div className="space-y-4">
@@ -335,12 +331,8 @@ const EnhancedPricingPage = () => {
             isMobile ? 'grid grid-cols-1 gap-4' : 'grid md:grid-cols-2 gap-6'
           )}>
             <MobileOptimizedCard
-              title={
-                <div className="flex items-center gap-2">
-                  <InfoIcon className="w-5 h-5" />
-                  Free Trial
-                </div>
-              }
+              title="Free Trial"
+              icon={<InfoIcon className="w-5 h-5" />}
             >
               <p className="text-sm text-muted-foreground">
                 {trialInfo.description}. Cancel anytime during the trial period with no charges.
@@ -348,12 +340,8 @@ const EnhancedPricingPage = () => {
             </MobileOptimizedCard>
 
             <MobileOptimizedCard
-              title={
-                <div className="flex items-center gap-2">
-                  <InfoIcon className="w-5 h-5" />
-                  Summer Break Pause
-                </div>
-              }
+              title="Summer Break Pause"
+              icon={<InfoIcon className="w-5 h-5" />}
             >
               <p className="text-sm text-muted-foreground">
                 {summerPauseInfo.description} ({summerPauseInfo.availability}). 
