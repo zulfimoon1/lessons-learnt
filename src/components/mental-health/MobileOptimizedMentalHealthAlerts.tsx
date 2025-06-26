@@ -5,27 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { AlertTriangle, Eye, Calendar, User, School, Shield, ChevronDown, ChevronUp } from "lucide-react";
-
-interface MentalHealthAlert {
-  id: string;
-  student_name: string;
-  school: string;
-  grade: string;
-  alert_type: string;
-  content: string;
-  severity_level: number;
-  is_reviewed: boolean;
-  created_at: string;
-  reviewed_by?: string;
-}
-
-interface AlertStats {
-  total: number;
-  unreviewed: number;
-  critical: number;
-  bySchool: Record<string, number>;
-  criticalAlerts: MentalHealthAlert[];
-}
+import type { MentalHealthAlert, AlertStats } from "@/types/mentalHealth";
 
 interface MobileOptimizedMentalHealthAlertsProps {
   alerts: MentalHealthAlert[];

@@ -1,20 +1,12 @@
 
 import { useState, useMemo, useCallback } from 'react';
+import type { MentalHealthAlert } from '@/types/mentalHealth';
 
 interface FilterOptions {
   severity: 'all' | 'low' | 'medium' | 'high' | 'critical';
   status: 'all' | 'reviewed' | 'unreviewed';
   school: string;
   dateRange: 'all' | 'today' | 'week' | 'month';
-}
-
-interface MentalHealthAlert {
-  id: string;
-  severity_level: number;
-  is_reviewed: boolean;
-  school: string;
-  created_at: string;
-  [key: string]: any;
 }
 
 export const useMentalHealthFilters = (alerts: MentalHealthAlert[]) => {
