@@ -12,11 +12,6 @@ export const enTeacherTranslations = {
   'teacher.articles': 'Articles',
   'teacher.role': 'Teacher',
   
-  // Schedule translations - FIXED
-  'schedule.mySchedules': 'My Schedules',
-  'schedule.noSchedules': 'No schedules found. Create your first class schedule to get started.',
-  'schedule.createTitle': 'Create New Schedule',
-  
   // Form Labels
   'teacher.classDetailsTitle': 'Class Details',
   'teacher.classDetailsDescription': 'Enter the details for your class',
