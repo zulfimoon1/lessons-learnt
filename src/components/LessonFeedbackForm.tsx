@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -151,14 +150,22 @@ const LessonFeedbackForm = () => {
 
       if (error) {
         console.error('LessonFeedbackForm: Database error details:', error);
+        console.error('LessonFeedbackForm: Error code:', error.code);
+        console.error('LessonFeedbackForm: Error message:', error.message);
+        console.error('LessonFeedbackForm: Error details:', error.details);
+        console.error('LessonFeedbackForm: Error hint:', error.hint);
         
         // More specific error messages
         if (error.code === '23503') {
           throw new Error('Invalid class selection. Please refresh the page and try again.');
         } else if (error.code === '23505') {
           throw new Error('You have already submitted feedback for this class.');
+        } else if (error.code === '42501') {
+          throw new Error('Permission denied. Please check your access rights.');
+        } else if (error.message.includes('violates row-level security policy')) {
+          throw new Error('Access denied. Please check your login status and try again.');
         } else {
-          throw new Error(`Database error: ${error.message}`);
+          throw new Error(`Database error: ${error.message || 'Unknown database error'}`);
         }
       }
 
@@ -186,6 +193,9 @@ const LessonFeedbackForm = () => {
 
     } catch (error) {
       console.error('LessonFeedbackForm: Submission failed:', error);
+      console.error('LessonFeedbackForm: Error type:', typeof error);
+      console.error('LessonFeedbackForm: Error constructor:', error?.constructor?.name);
+      
       toast({
         title: "Submission Failed",
         description: error instanceof Error ? error.message : "Failed to submit feedback. Please try again.",
