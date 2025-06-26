@@ -1,105 +1,74 @@
 
-export class SecurityMonitoringService {
-  async getSecurityMetrics(): Promise<{
-    recentAttempts: number;
-    blockedIPs: string[];
-    suspiciousPatterns: string[];
-    lastScan: string;
-  }> {
+import { enhancedSecurityValidationService } from './enhancedSecurityValidationService';
+
+interface SecurityMetrics {
+  recentAttempts: number;
+  blockedIPs: string[];
+  suspiciousPatterns: string[];
+}
+
+class SecurityMonitoringService {
+  private blockedIPs = new Set<string>();
+  private suspiciousPatterns = new Set<string>();
+
+  async getSecurityMetrics(): Promise<SecurityMetrics> {
     try {
-      const securityLogs = JSON.parse(localStorage.getItem('security_logs') || '[]');
+      // Get security stats from the validation service
+      const stats = enhancedSecurityValidationService.getSecurityStats();
       
-      const recentEvents = securityLogs.filter((event: any) => 
-        new Date(event.timestamp).getTime() > Date.now() - 24 * 60 * 60 * 1000
-      );
-
-      const recentAttempts = recentEvents.filter((event: any) => 
-        event.type === 'failed_login_attempt'
-      ).length;
-
-      const blockedIPs: string[] = [];
-      const suspiciousPatterns: string[] = [];
-
       return {
-        recentAttempts,
-        blockedIPs,
-        suspiciousPatterns,
-        lastScan: new Date().toISOString()
+        recentAttempts: stats.activeRateLimits,
+        blockedIPs: Array.from(this.blockedIPs),
+        suspiciousPatterns: Array.from(this.suspiciousPatterns)
       };
     } catch (error) {
-      console.error('Error getting security metrics:', error);
+      console.error('Failed to get security metrics:', error);
       return {
         recentAttempts: 0,
         blockedIPs: [],
-        suspiciousPatterns: [],
-        lastScan: new Date().toISOString()
+        suspiciousPatterns: []
       };
     }
   }
 
-  validateSecurityHeaders(): boolean {
+  async detectAnomalousActivity(): Promise<boolean> {
     try {
-      // Basic security header validation
-      return true;
+      // Check for suspicious activity patterns
+      const isSuspicious = enhancedSecurityValidationService.detectSuspiciousActivity();
+      
+      if (isSuspicious) {
+        await enhancedSecurityValidationService.logSecurityEvent({
+          type: 'suspicious_activity',
+          details: 'Anomalous activity pattern detected',
+          severity: 'medium'
+        });
+      }
+      
+      return isSuspicious;
     } catch (error) {
-      console.error('Security header validation failed:', error);
+      console.error('Failed to detect anomalous activity:', error);
       return false;
     }
   }
 
-  detectAnomalousActivity(userId: string, activityType: string): void {
-    try {
-      const timestamp = new Date().toISOString();
-      console.log(`🔍 Monitoring activity: ${activityType} for user ${userId} at ${timestamp}`);
-    } catch (error) {
-      console.error('Anomalous activity detection failed:', error);
-    }
+  blockIP(ip: string): void {
+    this.blockedIPs.add(ip);
+    console.log(`IP ${ip} has been blocked for suspicious activity`);
   }
 
-  auditDataAccess(operation: string, tableName: string, recordCount: number): void {
-    try {
-      const auditLog = {
-        operation,
-        tableName,
-        recordCount,
-        timestamp: new Date().toISOString()
-      };
-      console.log('📊 Data access audit:', auditLog);
-    } catch (error) {
-      console.error('Data access audit failed:', error);
-    }
+  addSuspiciousPattern(pattern: string): void {
+    this.suspiciousPatterns.add(pattern);
+    console.log(`Suspicious pattern detected: ${pattern}`);
   }
 
-  getActiveAlerts(): any[] {
-    try {
-      // Return empty array for now - would be populated from actual security system
-      return [];
-    } catch (error) {
-      console.error('Failed to get active alerts:', error);
-      return [];
-    }
+  isIPBlocked(ip: string): boolean {
+    return this.blockedIPs.has(ip);
   }
 
-  async logSecurityEvent(eventType: string, details: string, severity: string = 'medium'): Promise<void> {
-    try {
-      const existingLogs = JSON.parse(localStorage.getItem('security_logs') || '[]');
-      const newEvent = {
-        type: eventType,
-        timestamp: new Date().toISOString(),
-        details,
-        severity
-      };
-      existingLogs.push(newEvent);
-      
-      if (existingLogs.length > 1000) {
-        existingLogs.splice(0, existingLogs.length - 1000);
-      }
-      
-      localStorage.setItem('security_logs', JSON.stringify(existingLogs));
-      console.log(`🔒 Security event: ${eventType} - ${severity}`);
-    } catch (error) {
-      console.error('Failed to log security event:', error);
-    }
+  clearBlocks(): void {
+    this.blockedIPs.clear();
+    this.suspiciousPatterns.clear();
+    console.log('All security blocks have been cleared');
   }
 }
 

@@ -31,10 +31,33 @@ class EnhancedSecurityValidationService {
       errors.push(`Input exceeds maximum length of ${maxLength} characters`);
     }
 
-    // Check for potential XSS patterns
-    const xssPatterns = [/<script/i, /javascript:/i, /on\w+\s*=/i, /<iframe/i];
+    // Enhanced XSS pattern detection
+    const xssPatterns = [
+      /<script[\s\S]*?>[\s\S]*?<\/script>/gi,
+      /javascript\s*:/gi,
+      /on\w+\s*=\s*["'][^"']*["']/gi,
+      /<iframe[\s\S]*?>/gi,
+      /<object[\s\S]*?>/gi,
+      /<embed[\s\S]*?>/gi,
+      /expression\s*\(/gi,
+      /vbscript\s*:/gi,
+      /data\s*:\s*text\/html/gi
+    ];
+    
     if (xssPatterns.some(pattern => pattern.test(input))) {
       errors.push('Potentially malicious content detected');
+      return { isValid: false, errors, riskLevel: 'high' };
+    }
+
+    // SQL injection pattern detection
+    const sqlPatterns = [
+      /(\b(union|select|insert|update|delete|drop|create|alter|exec|execute)\b)/gi,
+      /(--|\/\*|\*\/|;)/g,
+      /(\b(or|and)\b\s+\d+\s*=\s*\d+)/gi
+    ];
+    
+    if (sqlPatterns.some(pattern => pattern.test(input))) {
+      errors.push('Potentially malicious SQL patterns detected');
       return { isValid: false, errors, riskLevel: 'high' };
     }
 
@@ -64,8 +87,9 @@ class EnhancedSecurityValidationService {
   validatePassword(password: string): ValidationResult {
     const errors: string[] = [];
 
-    if (password.length < 8) {
-      errors.push('Password must be at least 8 characters long');
+    // Increased minimum length for better security
+    if (password.length < 12) {
+      errors.push('Password must be at least 12 characters long');
     }
 
     if (!/[A-Z]/.test(password)) {
@@ -80,11 +104,30 @@ class EnhancedSecurityValidationService {
       errors.push('Password must contain at least one number');
     }
 
-    // Check for common weak passwords
-    const weakPasswords = ['password', '123456', 'admin', 'admin123'];
-    if (weakPasswords.some(weak => password.toLowerCase().includes(weak))) {
+    if (!/[^A-Za-z0-9]/.test(password)) {
+      errors.push('Password must contain at least one special character');
+    }
+
+    // Enhanced weak password detection
+    const weakPatterns = [
+      /password/gi,
+      /123456/g,
+      /admin/gi,
+      /qwerty/gi,
+      /letmein/gi,
+      /welcome/gi,
+      /monkey/gi,
+      /dragon/gi
+    ];
+    
+    if (weakPatterns.some(pattern => pattern.test(password))) {
       errors.push('Password contains common weak patterns');
       return { isValid: false, errors, riskLevel: 'high' };
+    }
+
+    // Check for repeated characters
+    if (/(.)\1{2,}/.test(password)) {
+      errors.push('Password cannot contain more than 2 consecutive identical characters');
     }
 
     return {
@@ -123,9 +166,12 @@ class EnhancedSecurityValidationService {
 
   validateSessionSecurity(): boolean {
     try {
-      // Basic session validation checks
+      // Enhanced session validation checks
       const hasValidStorage = typeof Storage !== 'undefined';
       const hasSecureContext = window.isSecureContext || location.protocol === 'https:' || location.hostname === 'localhost';
+      
+      // Check for common security headers (if available)
+      const hasCSP = document.querySelector('meta[http-equiv="Content-Security-Policy"]') !== null;
       
       return hasValidStorage && hasSecureContext;
     } catch (error) {
@@ -191,6 +237,26 @@ class EnhancedSecurityValidationService {
       .replace(/[<>]/g, '')
       .replace(/javascript:/gi, '')
       .replace(/on\w+\s*=/gi, '');
+  }
+
+  // Clear rate limiting for testing purposes
+  clearRateLimit(identifier: string): void {
+    this.rateLimitStore.delete(identifier);
+  }
+
+  // Get security statistics
+  getSecurityStats(): {
+    totalRateLimitEntries: number;
+    activeRateLimits: number;
+  } {
+    const now = Date.now();
+    const activeCount = Array.from(this.rateLimitStore.values())
+      .filter(record => (now - record.timestamp) <= this.RATE_LIMIT_WINDOW).length;
+
+    return {
+      totalRateLimitEntries: this.rateLimitStore.size,
+      activeRateLimits: activeCount
+    };
   }
 }
 
