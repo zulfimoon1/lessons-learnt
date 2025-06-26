@@ -1,6 +1,7 @@
 
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { LogInIcon, UserIcon, SchoolIcon, GraduationCapIcon } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -80,14 +81,13 @@ const StudentLoginForm: React.FC<StudentLoginFormProps> = ({ onLogin, isLoading 
 
       <div className="space-y-2">
         <Label htmlFor="loginPassword" className="text-black font-medium">{t('auth.password')}</Label>
-        <SecurityEnhancedInput
+        <Input
           id="loginPassword"
           type="password"
           placeholder={t('auth.password')}
           value={loginData.password}
           onChange={(e) => setLoginData(prev => ({ ...prev, password: e.target.value }))}
           required
-          validateAs="password"
           maxLength={128}
         />
       </div>
