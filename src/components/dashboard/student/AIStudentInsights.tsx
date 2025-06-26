@@ -30,14 +30,18 @@ const AIStudentInsights: React.FC<AIStudentInsightsProps> = ({ studentId, school
   } = useAdvancedAI(studentId);
 
   const handleGenerateInsights = async () => {
-    if (!hasProfile) {
-      await generatePersonalizationProfile(studentId);
-    }
-    if (!hasRecommendations) {
-      await generateContentRecommendations(studentId);
-    }
-    if (!hasInsights) {
-      await generatePredictiveInsights("month" as "week" | "month" | "semester");
+    try {
+      if (!hasProfile) {
+        await generatePersonalizationProfile(studentId);
+      }
+      if (!hasRecommendations) {
+        await generateContentRecommendations(studentId);
+      }
+      if (!hasInsights) {
+        await generatePredictiveInsights("month");
+      }
+    } catch (error) {
+      console.error('Error generating insights:', error);
     }
   };
 
@@ -47,7 +51,7 @@ const AIStudentInsights: React.FC<AIStudentInsightsProps> = ({ studentId, school
     
     // Handle both array and object formats
     const data = Array.isArray(predictiveInsights) ? predictiveInsights[0] : predictiveInsights;
-    return data as any; // Type assertion to avoid TypeScript errors
+    return data;
   };
 
   return (
