@@ -9,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { AlertTriangle, Calendar, Heart, MessageSquare, User, Eye, Shield } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useMentalHealthAlerts } from "@/hooks/useMentalHealthAlerts";
+import WellnessCheckCard from "./WellnessCheckCard";
 
 interface WeeklySummary {
   id: string;
@@ -155,6 +156,11 @@ const DoctorDashboard: React.FC<DoctorDashboardProps> = ({ teacher }) => {
             </div>
           </CardContent>
         </Card>
+      </div>
+
+      {/* Wellness Check Card */}
+      <div className="mb-6">
+        <WellnessCheckCard school={teacher.school} />
       </div>
 
       {/* Main Content with Tabs */}
