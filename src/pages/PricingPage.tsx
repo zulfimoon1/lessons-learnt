@@ -112,12 +112,22 @@ const PricingPage = () => {
   };
 
   const handleSignUpEducator = () => {
-    console.log('Navigating to teacher-login from handleSignUpEducator');
+    console.log('Navigating to teacher-login from handleSignUpEducator - Admin signup');
     navigate('/teacher-login');
   };
 
   const handleStartFreeTrial = () => {
-    console.log('Navigating to teacher-login from handleStartFreeTrial');
+    console.log('Navigating to teacher-login from handleStartFreeTrial - Teacher signup');
+    navigate('/teacher-login');
+  };
+
+  const handleTransformYourSchool = () => {
+    console.log('Navigating to teacher-login from handleTransformYourSchool - Admin signup');
+    navigate('/teacher-login');
+  };
+
+  const handleStartFreeTrialNow = () => {
+    console.log('Navigating to teacher-login from handleStartFreeTrialNow - Teacher signup');
     navigate('/teacher-login');
   };
 
@@ -364,12 +374,21 @@ const PricingPage = () => {
                   <h4 className="text-xl font-semibold text-gray-900 mb-4">
                     Ready to get started?
                   </h4>
-                  <Button
-                    onClick={handleStartFreeTrial}
-                    className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white text-lg px-8 py-3"
-                  >
-                    {t('pricing.startFreeTrialNow')}
-                  </Button>
+                  <div className="flex gap-4 justify-center flex-wrap">
+                    <Button
+                      onClick={handleStartFreeTrialNow}
+                      className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white text-lg px-8 py-3"
+                    >
+                      {t('pricing.startFreeTrialNow')}
+                    </Button>
+                    <Button
+                      onClick={handleTransformYourSchool}
+                      variant="outline"
+                      className="border-2 border-green-600 text-green-600 hover:bg-green-50 text-lg px-8 py-3"
+                    >
+                      Transform Your School
+                    </Button>
+                  </div>
                   <p className="text-sm text-gray-500 mt-2">
                     No credit card required • 30-day free trial
                   </p>
