@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -6,6 +5,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import PendingTransactionsCard from "./PendingTransactionsCard";
+import NotificationBell from "./NotificationBell";
 import { 
   TrendingUpIcon,
   PauseIcon,
@@ -36,6 +37,7 @@ interface SchoolSubscriptionManagementProps {
     name: string;
     school: string;
     role: string;
+    email?: string;
   };
 }
 
@@ -149,155 +151,155 @@ const SchoolSubscriptionManagement: React.FC<SchoolSubscriptionManagementProps> 
     );
   }
 
-  if (!subscription) {
-    return (
+  return (
+    <div className="space-y-6">
+      {/* Pending Transactions Card - Show only for admins */}
+      {teacher.role === 'admin' && teacher.email && (
+        <PendingTransactionsCard 
+          adminEmail={teacher.email} 
+          schoolName={teacher.school} 
+        />
+      )}
+
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <TrendingUpIcon className="w-5 h-5" />
-            School Subscription
-          </CardTitle>
-          <CardDescription>
-            Manage your school's subscription
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="text-center py-8">
-            <p className="text-muted-foreground mb-4">No active subscription found for {teacher.school}</p>
-            <Button onClick={() => window.open('/pricing', '_blank')}>
-              View Pricing Plans
-            </Button>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <TrendingUpIcon className="w-5 h-5" />
+                School Subscription Management
+                {teacher.role === 'admin' && teacher.email && (
+                  <NotificationBell userEmail={teacher.email} />
+                )}
+              </CardTitle>
+              <CardDescription>
+                Manage subscription for {teacher.school}
+              </CardDescription>
+            </div>
+            {isRenewalWarning && (
+              <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">
+                <AlertTriangleIcon className="w-3 h-3 mr-1" />
+                Renewal Due Soon
+              </Badge>
+            )}
           </div>
+        </CardHeader>
+        
+        <CardContent>
+          {!subscription ? (
+            <div className="text-center py-8">
+              <p className="text-muted-foreground mb-4">No active subscription found for {teacher.school}</p>
+              <Button onClick={() => window.open('/pricing', '_blank')}>
+                View Pricing Plans
+              </Button>
+            </div>
+          ) : (
+            <>
+              {/* Renewal Warning */}
+              {isRenewalWarning && (
+                <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                  <h4 className="font-medium text-yellow-800 mb-2 flex items-center gap-2">
+                    <AlertTriangleIcon className="w-4 h-4" />
+                    Subscription Renewal Notice
+                  </h4>
+                  <p className="text-sm text-yellow-700">
+                    Your subscription for <strong>{subscription.plan_type}</strong> plan expires on {formatDate(subscription.current_period_end)}. 
+                    Please ensure your payment method is up to date to avoid service interruption.
+                  </p>
+                </div>
+              )}
+
+              {/* Subscription Details Table */}
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Plan</TableHead>
+                    <TableHead>Amount</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Current Period</TableHead>
+                    <TableHead>Next Renewal</TableHead>
+                    <TableHead>Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  <TableRow>
+                    <TableCell>
+                      <Badge variant="outline">
+                        {subscription.plan_type}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-1">
+                        <DollarSignIcon className="w-3 h-3" />
+                        {formatCurrency(subscription.amount, subscription.currency)}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Badge 
+                        variant={subscription.status === 'active' ? 'default' : 
+                               subscription.status === 'paused' ? 'secondary' : 'destructive'}
+                      >
+                        {subscription.status}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-1 text-sm">
+                        <CalendarIcon className="w-3 h-3" />
+                        {formatDate(subscription.current_period_start)} - {formatDate(subscription.current_period_end)}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <span className={`text-sm ${
+                        isRenewalWarning 
+                          ? 'text-yellow-600 font-medium' 
+                          : 'text-gray-600'
+                      }`}>
+                        {formatDate(subscription.current_period_end)}
+                      </span>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        {subscription.status === 'active' ? (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={handlePauseSubscription}
+                          >
+                            <PauseIcon className="w-3 h-3 mr-1" />
+                            Pause
+                          </Button>
+                        ) : subscription.status === 'paused' ? (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={handleResumeSubscription}
+                          >
+                            <PlayIcon className="w-3 h-3 mr-1" />
+                            Resume
+                          </Button>
+                        ) : null}
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                </TableBody>
+              </Table>
+              
+              {/* Holiday Pause Information */}
+              <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                <h4 className="font-medium text-blue-800 mb-2">Holiday Pause Options</h4>
+                <p className="text-sm text-blue-700 mb-3">
+                  You can pause your subscription during school holidays (summer break, winter break, etc.) 
+                  to avoid charges when the service isn't being used.
+                </p>
+                <Button variant="outline" size="sm" className="text-blue-700 border-blue-300">
+                  Schedule Holiday Pause
+                </Button>
+              </div>
+            </>
+          )}
         </CardContent>
       </Card>
-    );
-  }
-
-  return (
-    <Card>
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <div>
-            <CardTitle className="flex items-center gap-2">
-              <TrendingUpIcon className="w-5 h-5" />
-              School Subscription Management
-            </CardTitle>
-            <CardDescription>
-              Manage subscription for {teacher.school}
-            </CardDescription>
-          </div>
-          {isRenewalWarning && (
-            <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">
-              <AlertTriangleIcon className="w-3 h-3 mr-1" />
-              Renewal Due Soon
-            </Badge>
-          )}
-        </div>
-      </CardHeader>
-      
-      <CardContent>
-        {/* Renewal Warning */}
-        {isRenewalWarning && (
-          <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-            <h4 className="font-medium text-yellow-800 mb-2 flex items-center gap-2">
-              <AlertTriangleIcon className="w-4 h-4" />
-              Subscription Renewal Notice
-            </h4>
-            <p className="text-sm text-yellow-700">
-              Your subscription for <strong>{subscription.plan_type}</strong> plan expires on {formatDate(subscription.current_period_end)}. 
-              Please ensure your payment method is up to date to avoid service interruption.
-            </p>
-          </div>
-        )}
-
-        {/* Subscription Details Table */}
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Plan</TableHead>
-              <TableHead>Amount</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Current Period</TableHead>
-              <TableHead>Next Renewal</TableHead>
-              <TableHead>Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            <TableRow>
-              <TableCell>
-                <Badge variant="outline">
-                  {subscription.plan_type}
-                </Badge>
-              </TableCell>
-              <TableCell>
-                <div className="flex items-center gap-1">
-                  <DollarSignIcon className="w-3 h-3" />
-                  {formatCurrency(subscription.amount, subscription.currency)}
-                </div>
-              </TableCell>
-              <TableCell>
-                <Badge 
-                  variant={subscription.status === 'active' ? 'default' : 
-                         subscription.status === 'paused' ? 'secondary' : 'destructive'}
-                >
-                  {subscription.status}
-                </Badge>
-              </TableCell>
-              <TableCell>
-                <div className="flex items-center gap-1 text-sm">
-                  <CalendarIcon className="w-3 h-3" />
-                  {formatDate(subscription.current_period_start)} - {formatDate(subscription.current_period_end)}
-                </div>
-              </TableCell>
-              <TableCell>
-                <span className={`text-sm ${
-                  isRenewalWarning 
-                    ? 'text-yellow-600 font-medium' 
-                    : 'text-gray-600'
-                }`}>
-                  {formatDate(subscription.current_period_end)}
-                </span>
-              </TableCell>
-              <TableCell>
-                <div className="flex items-center gap-2">
-                  {subscription.status === 'active' ? (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={handlePauseSubscription}
-                    >
-                      <PauseIcon className="w-3 h-3 mr-1" />
-                      Pause
-                    </Button>
-                  ) : subscription.status === 'paused' ? (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={handleResumeSubscription}
-                    >
-                      <PlayIcon className="w-3 h-3 mr-1" />
-                      Resume
-                    </Button>
-                  ) : null}
-                </div>
-              </TableCell>
-            </TableRow>
-          </TableBody>
-        </Table>
-        
-        {/* Holiday Pause Information */}
-        <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-          <h4 className="font-medium text-blue-800 mb-2">Holiday Pause Options</h4>
-          <p className="text-sm text-blue-700 mb-3">
-            You can pause your subscription during school holidays (summer break, winter break, etc.) 
-            to avoid charges when the service isn't being used.
-          </p>
-          <Button variant="outline" size="sm" className="text-blue-700 border-blue-300">
-            Schedule Holiday Pause
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
+    </div>
   );
 };
 

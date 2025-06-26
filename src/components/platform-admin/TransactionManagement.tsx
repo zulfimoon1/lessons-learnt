@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { useToast } from "@/hooks/use-toast";
 import { usePlatformAdmin } from "@/contexts/PlatformAdminContext";
 import { securePlatformAdminService } from "@/services/securePlatformAdminService";
+import { supabase } from "@/integrations/supabase/client";
 import { 
   PlusIcon, 
   CreditCardIcon,
@@ -104,6 +105,41 @@ const TransactionManagement = () => {
     }
   };
 
+  const sendTransactionNotification = async (transactionId: string, schoolName: string) => {
+    try {
+      // Find school admin email
+      const { data: schoolAdmins, error } = await supabase
+        .from('teachers')
+        .select('email')
+        .eq('school', schoolName)
+        .eq('role', 'admin')
+        .limit(1);
+
+      if (error || !schoolAdmins || schoolAdmins.length === 0) {
+        console.log('No school admin found for notification');
+        return;
+      }
+
+      const adminEmail = schoolAdmins[0].email;
+
+      // Create in-app notification
+      await supabase
+        .from('in_app_notifications')
+        .insert({
+          recipient_email: adminEmail,
+          recipient_type: 'school_admin',
+          title: 'New Pending Transaction',
+          message: `A new transaction requires your review and approval for ${schoolName}`,
+          notification_type: 'pending_transaction',
+          related_id: transactionId
+        });
+
+      console.log('Notification sent to school admin:', adminEmail);
+    } catch (error) {
+      console.error('Error sending notification:', error);
+    }
+  };
+
   const handleCreate = async () => {
     if (!admin) {
       toast({
@@ -144,9 +180,16 @@ const TransactionManagement = () => {
       });
 
       if (result) {
+        // Send notification if status is pending
+        if (formData.status === 'pending') {
+          await sendTransactionNotification(result.id, formData.school_name.trim());
+        }
+
         toast({
           title: "Success",
-          description: "Manual transaction created successfully. School admins can view this in their subscription management section.",
+          description: formData.status === 'pending' 
+            ? "Transaction created and school admin has been notified for approval."
+            : "Manual transaction created successfully. School admins can view this in their subscription management section.",
         });
 
         resetForm();
@@ -273,7 +316,7 @@ const TransactionManagement = () => {
               <DialogHeader>
                 <DialogTitle>Add New Transaction</DialogTitle>
                 <DialogDescription>
-                  Manually add a transaction record. School admins will be able to view this transaction in their subscription management dashboard.
+                  Manually add a transaction record. If marked as "Pending", school admins will receive a notification to approve/reject it.
                 </DialogDescription>
               </DialogHeader>
               
@@ -281,11 +324,11 @@ const TransactionManagement = () => {
                 <div className="bg-blue-50 p-4 rounded-lg flex items-start gap-3">
                   <InfoIcon className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
                   <div className="text-sm text-blue-800">
-                    <p className="font-medium mb-2">How school admins receive manual transactions:</p>
+                    <p className="font-medium mb-2">Transaction Status Options:</p>
                     <ul className="list-disc list-inside space-y-1">
-                      <li>Transactions appear in their subscription management section</li>
-                      <li>They can view transaction history and details</li>
-                      <li>Email notifications can be set up separately if needed</li>
+                      <li><strong>Pending:</strong> Requires school admin approval (notification sent automatically)</li>
+                      <li><strong>Completed:</strong> Processed transaction (appears in their subscription history)</li>
+                      <li><strong>Failed:</strong> Failed or rejected transaction</li>
                     </ul>
                   </div>
                 </div>
@@ -407,8 +450,8 @@ const TransactionManagement = () => {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
+                        <SelectItem value="pending">Pending (Requires Approval)</SelectItem>
                         <SelectItem value="completed">Completed</SelectItem>
-                        <SelectItem value="pending">Pending</SelectItem>
                         <SelectItem value="failed">Failed</SelectItem>
                       </SelectContent>
                     </Select>

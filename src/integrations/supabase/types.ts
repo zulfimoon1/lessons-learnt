@@ -231,6 +231,42 @@ export type Database = {
           },
         ]
       }
+      in_app_notifications: {
+        Row: {
+          created_at: string | null
+          id: string
+          is_read: boolean | null
+          message: string
+          notification_type: string
+          recipient_email: string
+          recipient_type: string
+          related_id: string | null
+          title: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          is_read?: boolean | null
+          message: string
+          notification_type: string
+          recipient_email: string
+          recipient_type: string
+          related_id?: string | null
+          title: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          is_read?: boolean | null
+          message?: string
+          notification_type?: string
+          recipient_email?: string
+          recipient_type?: string
+          related_id?: string | null
+          title?: string
+        }
+        Relationships: []
+      }
       invitations: {
         Row: {
           accepted_at: string | null
@@ -857,6 +893,79 @@ export type Database = {
         }
         Relationships: []
       }
+      transaction_approvals: {
+        Row: {
+          action: string
+          comments: string | null
+          created_at: string | null
+          id: string
+          school_admin_email: string
+          transaction_id: string
+        }
+        Insert: {
+          action: string
+          comments?: string | null
+          created_at?: string | null
+          id?: string
+          school_admin_email: string
+          transaction_id: string
+        }
+        Update: {
+          action?: string
+          comments?: string | null
+          created_at?: string | null
+          id?: string
+          school_admin_email?: string
+          transaction_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transaction_approvals_transaction_id_fkey"
+            columns: ["transaction_id"]
+            isOneToOne: false
+            referencedRelation: "transactions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      transaction_notifications: {
+        Row: {
+          created_at: string | null
+          email_sent: boolean | null
+          id: string
+          notification_type: string
+          school_admin_email: string
+          sent_at: string | null
+          transaction_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          email_sent?: boolean | null
+          id?: string
+          notification_type: string
+          school_admin_email: string
+          sent_at?: string | null
+          transaction_id: string
+        }
+        Update: {
+          created_at?: string | null
+          email_sent?: boolean | null
+          id?: string
+          notification_type?: string
+          school_admin_email?: string
+          sent_at?: string | null
+          transaction_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transaction_notifications_transaction_id_fkey"
+            columns: ["transaction_id"]
+            isOneToOne: false
+            referencedRelation: "transactions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       transactions: {
         Row: {
           amount: number
@@ -865,6 +974,8 @@ export type Database = {
           currency: string
           description: string | null
           id: string
+          last_reminder_sent: string | null
+          notification_sent: boolean | null
           school_name: string
           status: string
           transaction_type: string
@@ -877,6 +988,8 @@ export type Database = {
           currency?: string
           description?: string | null
           id?: string
+          last_reminder_sent?: string | null
+          notification_sent?: boolean | null
           school_name: string
           status: string
           transaction_type: string
@@ -889,6 +1002,8 @@ export type Database = {
           currency?: string
           description?: string | null
           id?: string
+          last_reminder_sent?: string | null
+          notification_sent?: boolean | null
           school_name?: string
           status?: string
           transaction_type?: string
@@ -1034,6 +1149,23 @@ export type Database = {
         Args: { stat_type: string }
         Returns: {
           count: number
+        }[]
+      }
+      get_school_pending_transactions: {
+        Args: { school_admin_email_param: string }
+        Returns: {
+          amount: number
+          created_at: string
+          created_by: string | null
+          currency: string
+          description: string | null
+          id: string
+          last_reminder_sent: string | null
+          notification_sent: boolean | null
+          school_name: string
+          status: string
+          transaction_type: string
+          updated_at: string
         }[]
       }
       get_security_dashboard_data: {
@@ -1200,6 +1332,8 @@ export type Database = {
           currency: string
           description: string | null
           id: string
+          last_reminder_sent: string | null
+          notification_sent: boolean | null
           school_name: string
           status: string
           transaction_type: string
@@ -1274,6 +1408,15 @@ export type Database = {
       schedule_discount_notifications: {
         Args: Record<PropertyKey, never>
         Returns: undefined
+      }
+      school_admin_transaction_action: {
+        Args: {
+          transaction_id_param: string
+          school_admin_email_param: string
+          action_param: string
+          comments_param?: string
+        }
+        Returns: Json
       }
       set_platform_admin_context: {
         Args: { admin_email: string }
