@@ -3,16 +3,27 @@ import React from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Shield, Lock, FileText, Eye, CheckCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { useAuth } from '@/contexts/AuthContext';
 import PrivacyLinks from '@/components/privacy/PrivacyLinks';
 import SOC2ComplianceIndicator from '@/components/security/SOC2ComplianceIndicator';
 
 const ComplianceFooter: React.FC = () => {
   const { t } = useLanguage();
-  const { teacher } = useAuth();
+
+  // Safe check for auth context - only use if available
+  let teacher = null;
+  let canViewSOC2Dashboard = false;
+
+  try {
+    // Only import and use useAuth if it's available in the context
+    const { useAuth } = require('@/contexts/AuthContext');
+    const authContext = useAuth();
+    teacher = authContext?.teacher;
+  } catch (error) {
+    // AuthProvider not available, continue without auth features
+    console.log('Auth context not available in ComplianceFooter');
+  }
 
   // Safe check for platform admin - only show SOC2 dashboard link if we can safely access the context
-  let canViewSOC2Dashboard = false;
   let admin = null;
 
   try {
