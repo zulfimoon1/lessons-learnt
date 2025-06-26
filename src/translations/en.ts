@@ -514,13 +514,31 @@ export const enTranslations = {
   // Teacher role
   'teacher.role': 'Teacher',
 
-  // Analytics
+  // Analytics - Complete analytics translations
   'analytics.title': 'Analytics Dashboard',
   'analytics.overview': 'Analytics Overview',
   'analytics.engagement': 'Student Engagement',
   'analytics.performance': 'Performance Metrics',
   'analytics.trends': 'Learning Trends',
   'analytics.insights': 'Key Insights',
+  'analytics.totalClasses': 'Total Classes',
+  'analytics.classesAvailable': 'Classes Available',
+  'analytics.feedbackSubmitted': 'Feedback Submitted',
+  'analytics.averageUnderstanding': 'Average Understanding',
+  'analytics.improving': 'Improving',
+  'analytics.wellnessChecks': 'Wellness Checks',
+  'analytics.thisMonth': 'This Month',
+  'analytics.performanceTrends': 'Performance Trends',
+  'analytics.subjectPerformance': 'Subject Performance',
+
+  // Chat translations
+  'chat.error': 'Failed to send message. Please try again.',
+  'chat.waitingForDoctor': 'Waiting for doctor',
+  'chat.doctorJoinShortly': 'Doctor will join shortly',
+  'chat.anonymous': 'Anonymous',
+  'chat.liveChatWithDoctor': 'Live Chat with Doctor',
+  'chat.typeMessage': 'Type a message...',
+  'chat.send': 'Send',
 
   // Merge all sub-translations
   ...enAuthTranslations,
@@ -529,4 +547,3 @@ export const enTranslations = {
   ...enChatTranslations,
   ...enDemoTranslations,
 };
-

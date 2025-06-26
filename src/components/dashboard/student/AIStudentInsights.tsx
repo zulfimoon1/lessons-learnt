@@ -105,53 +105,53 @@ const AIStudentInsights: React.FC<AIStudentInsightsProps> = ({ studentId, school
           </div>
         ) : (
           <div className="space-y-6">
-            {/* Personalization Profile */}
-            <div className="bg-gradient-to-r from-emerald-50 to-teal-50 border-2 border-emerald-300 rounded-lg p-4 shadow-md">
+            {/* Personalization Profile - Enhanced Contrast */}
+            <div className="bg-gradient-to-r from-blue-100 to-indigo-100 border-2 border-blue-500 rounded-lg p-4 shadow-md">
               <div className="flex items-center gap-3 mb-3">
-                <div className="w-8 h-8 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-full flex items-center justify-center">
+                <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-full flex items-center justify-center">
                   <TrendingUp className="w-4 h-4 text-white" />
                 </div>
-                <h3 className="font-semibold text-emerald-800">{t('ai.learningProfile')}</h3>
-                {hasProfile && <Badge className="bg-emerald-100 text-emerald-800 border-emerald-300">{t('common.ready')}</Badge>}
+                <h3 className="font-semibold text-blue-900">{t('ai.learningProfile')}</h3>
+                {hasProfile && <Badge className="bg-blue-200 text-blue-900 border-blue-400">{t('common.ready')}</Badge>}
               </div>
               {personalizationProfile ? (
                 <div className="space-y-2">
-                  <p className="text-sm text-emerald-700">{personalizationProfile.learning_style || t('ai.analyzingLearningStyle')}</p>
-                  <p className="text-sm text-emerald-600">{personalizationProfile.strengths || t('ai.identifyingStrengths')}</p>
+                  <p className="text-sm text-blue-800">{personalizationProfile.learning_style || t('ai.analyzingLearningStyle')}</p>
+                  <p className="text-sm text-blue-700">{personalizationProfile.strengths || t('ai.identifyingStrengths')}</p>
                 </div>
               ) : (
-                <p className="text-sm text-emerald-600">{t('ai.generateProfilePrompt')}</p>
+                <p className="text-sm text-blue-700">{t('ai.generateProfilePrompt')}</p>
               )}
             </div>
 
-            {/* Content Recommendations */}
-            <div className="bg-gradient-to-r from-orange-50 to-amber-50 border-2 border-orange-300 rounded-lg p-4 shadow-md">
+            {/* Content Recommendations - Enhanced Contrast */}
+            <div className="bg-gradient-to-r from-orange-100 to-red-100 border-2 border-orange-500 rounded-lg p-4 shadow-md">
               <div className="flex items-center gap-3 mb-3">
-                <div className="w-8 h-8 bg-gradient-to-br from-orange-500 to-amber-600 rounded-full flex items-center justify-center">
+                <div className="w-8 h-8 bg-gradient-to-br from-orange-600 to-red-700 rounded-full flex items-center justify-center">
                   <BookOpen className="w-4 h-4 text-white" />
                 </div>
-                <h3 className="font-semibold text-orange-800">{t('ai.smartRecommendations')}</h3>
-                {hasRecommendations && <Badge className="bg-orange-100 text-orange-800 border-orange-300">{t('common.ready')}</Badge>}
+                <h3 className="font-semibold text-orange-900">{t('ai.smartRecommendations')}</h3>
+                {hasRecommendations && <Badge className="bg-orange-200 text-orange-900 border-orange-400">{t('common.ready')}</Badge>}
               </div>
               {contentRecommendations ? (
                 <div className="space-y-2">
                   {contentRecommendations.slice(0, 2).map((rec: any, index: number) => (
-                    <p key={index} className="text-sm text-orange-700">• {rec.title || rec}</p>
+                    <p key={index} className="text-sm text-orange-800">• {rec.title || rec}</p>
                   ))}
                 </div>
               ) : (
-                <p className="text-sm text-orange-600">{t('ai.generateRecommendationsPrompt')}</p>
+                <p className="text-sm text-orange-700">{t('ai.generateRecommendationsPrompt')}</p>
               )}
             </div>
 
-            {/* Predictive Insights */}
-            <div className="bg-gradient-to-r from-purple-50 to-pink-50 border-2 border-purple-300 rounded-lg p-4 shadow-md">
+            {/* Predictive Insights - Enhanced Contrast */}
+            <div className="bg-gradient-to-r from-purple-100 to-pink-100 border-2 border-purple-500 rounded-lg p-4 shadow-md">
               <div className="flex items-center gap-3 mb-3">
-                <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-pink-600 rounded-full flex items-center justify-center">
+                <div className="w-8 h-8 bg-gradient-to-br from-purple-600 to-pink-700 rounded-full flex items-center justify-center">
                   <Heart className="w-4 h-4 text-white" />
                 </div>
-                <h3 className="font-semibold text-purple-800">{t('ai.wellnessInsights')}</h3>
-                {hasInsights && <Badge className="bg-purple-100 text-purple-800 border-purple-300">{t('common.ready')}</Badge>}
+                <h3 className="font-semibold text-purple-900">{t('ai.wellnessInsights')}</h3>
+                {hasInsights && <Badge className="bg-purple-200 text-purple-900 border-purple-400">{t('common.ready')}</Badge>}
               </div>
               {predictiveInsights ? (
                 <div className="space-y-2">
@@ -159,13 +159,13 @@ const AIStudentInsights: React.FC<AIStudentInsightsProps> = ({ studentId, school
                     const data = getPredictiveInsightsData();
                     return (
                       <>
-                        <p className="text-sm text-purple-700">
+                        <p className="text-sm text-purple-800">
                           {data?.mental_health_score 
                             ? `Wellness Score: ${data.mental_health_score}/10`
                             : t('ai.analyzingWellness')
                           }
                         </p>
-                        <p className="text-sm text-purple-600">
+                        <p className="text-sm text-purple-700">
                           {data?.recommendations?.[0] || t('ai.generatingWellnessAdvice')}
                         </p>
                       </>
@@ -173,7 +173,7 @@ const AIStudentInsights: React.FC<AIStudentInsightsProps> = ({ studentId, school
                   })()}
                 </div>
               ) : (
-                <p className="text-sm text-purple-600">{t('ai.generateInsightsPrompt')}</p>
+                <p className="text-sm text-purple-700">{t('ai.generateInsightsPrompt')}</p>
               )}
             </div>
 

@@ -50,7 +50,10 @@ const UpcomingClassesTab: React.FC<UpcomingClassesTabProps> = React.memo(({
           {t('dashboard.upcomingClasses') || 'Upcoming Classes'}
         </CardTitle>
         <CardDescription className={cn(isMobile ? 'text-sm' : 'text-base')}>
-          {t('dashboard.scheduledClasses') || 'Your scheduled classes for'} {studentGrade} {t('dashboard.atSchool') || 'at'} {studentSchool}
+          {studentGrade && studentSchool ? 
+            `Scheduled classes for ${studentGrade} at ${studentSchool}` :
+            (t('dashboard.scheduledClasses', { grade: studentGrade || 'your grade', school: studentSchool || 'your school' }) || 'Your scheduled classes')
+          }
         </CardDescription>
       </CardHeader>
       <CardContent className={cn(isMobile ? 'p-4 pt-0' : 'p-6 pt-0')}>

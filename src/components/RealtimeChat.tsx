@@ -7,6 +7,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import ChatHeader from "./chat/ChatHeader";
 import ChatMessages from "./chat/ChatMessages";
 import ChatInput from "./chat/ChatInput";
+import { toast } from "sonner";
 
 interface RealtimeChatProps {
   session: LiveChatSession;
@@ -22,8 +23,17 @@ const RealtimeChat = ({ session, studentName, isAnonymous, onClose, isDoctorView
   const { messages, isConnected, doctorInfo, sendMessage } = useChatSession(session, isDoctorView, studentName);
 
   const handleSendMessage = async () => {
-    await sendMessage(newMessage, isAnonymous);
-    setNewMessage("");
+    if (!newMessage.trim()) return;
+    
+    try {
+      console.log('Attempting to send message:', newMessage);
+      await sendMessage(newMessage, isAnonymous);
+      setNewMessage("");
+      console.log('Message sent successfully');
+    } catch (error) {
+      console.error('Error sending message:', error);
+      toast.error(t('chat.error') || 'Failed to send message. Please try again.');
+    }
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {

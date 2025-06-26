@@ -131,11 +131,13 @@ const StudentDashboard: React.FC = () => {
       icon: BarChartIcon,
       label: t('dashboard.analytics') || 'Analytics',
       component: (
-        <StudentAnalyticsDashboard
-          studentId={student.id}
-          school={student.school}
-          grade={student.grade}
-        />
+        <div className="min-h-[400px]">
+          <StudentAnalyticsDashboard
+            studentId={student.id}
+            school={student.school}
+            grade={student.grade}
+          />
+        </div>
       )
     }
   ];
@@ -186,7 +188,7 @@ const StudentDashboard: React.FC = () => {
           </TabsList>
 
           {tabItems.map((item) => (
-            <TabsContent key={item.value} value={item.value}>
+            <TabsContent key={item.value} value={item.value} className="mt-6">
               {item.component}
             </TabsContent>
           ))}
