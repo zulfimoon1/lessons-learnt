@@ -26,37 +26,50 @@ const AIStudentInsights: React.FC<AIStudentInsightsProps> = ({ studentId, school
     isAnyLoading,
     hasProfile,
     hasRecommendations,
-    hasInsights
+    hasInsights,
+    error
   } = useAdvancedAI(studentId);
 
-  console.log('AIStudentInsights: isExpanded:', isExpanded, 'hasProfile:', hasProfile, 'hasRecommendations:', hasRecommendations, 'hasInsights:', hasInsights);
+  console.log('AIStudentInsights: State check', { 
+    isExpanded, 
+    hasProfile, 
+    hasRecommendations, 
+    hasInsights, 
+    isAnyLoading,
+    error,
+    studentId 
+  });
 
   const handleGenerateInsights = async () => {
-    console.log('AIStudentInsights: Starting insight generation');
+    console.log('AIStudentInsights: Starting comprehensive insight generation for student:', studentId);
     try {
       if (!hasProfile) {
-        console.log('AIStudentInsights: Generating personalization profile');
-        await generatePersonalizationProfile(studentId);
+        console.log('AIStudentInsights: Generating personalization profile...');
+        const profileResult = await generatePersonalizationProfile(studentId);
+        console.log('AIStudentInsights: Profile generation result:', profileResult);
       }
       if (!hasRecommendations) {
-        console.log('AIStudentInsights: Generating content recommendations');
-        await generateContentRecommendations(studentId);
+        console.log('AIStudentInsights: Generating content recommendations...');
+        const recsResult = await generateContentRecommendations(studentId);
+        console.log('AIStudentInsights: Recommendations generation result:', recsResult);
       }
       if (!hasInsights) {
-        console.log('AIStudentInsights: Generating predictive insights');
-        await generatePredictiveInsights("month");
+        console.log('AIStudentInsights: Generating predictive insights...');
+        const insightsResult = await generatePredictiveInsights("month");
+        console.log('AIStudentInsights: Insights generation result:', insightsResult);
       }
-      console.log('AIStudentInsights: All insights generated successfully');
+      console.log('AIStudentInsights: All AI insights generated successfully');
     } catch (error) {
-      console.error('AIStudentInsights: Error generating insights:', error);
+      console.error('AIStudentInsights: Error during insight generation:', error);
     }
   };
 
   const handleExploreInsights = () => {
-    console.log('AIStudentInsights: Expanding insights view');
+    console.log('AIStudentInsights: User clicked Explore Insights');
     setIsExpanded(true);
     // Also generate insights if not already done
     if (!hasProfile || !hasRecommendations || !hasInsights) {
+      console.log('AIStudentInsights: Auto-generating missing insights...');
       handleGenerateInsights();
     }
   };
@@ -106,6 +119,13 @@ const AIStudentInsights: React.FC<AIStudentInsightsProps> = ({ studentId, school
       </CardHeader>
       
       <CardContent className="p-6">
+        {error && (
+          <div className="bg-red-50 p-3 rounded-lg border border-red-200 mb-4">
+            <p className="text-sm text-red-800 font-medium">AI Service Error</p>
+            <p className="text-xs text-red-700">{error}</p>
+          </div>
+        )}
+        
         {!isExpanded ? (
           <div className="text-center space-y-4">
             <div className="flex justify-center space-x-4">

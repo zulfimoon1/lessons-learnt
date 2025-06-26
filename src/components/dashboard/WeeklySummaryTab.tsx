@@ -1,6 +1,6 @@
 
 import React from "react";
-import WeeklySummary from "@/components/WeeklySummary";
+import WeeklySummaryForm from "@/components/dashboard/student/WeeklySummaryForm";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useLanguage } from "@/contexts/LanguageContext";
 
@@ -39,8 +39,8 @@ const WeeklySummaryTab: React.FC<WeeklySummaryTabProps> = ({ student }) => {
         </CardContent>
       </Card>
       
-      {/* The actual weekly summary form */}
-      <WeeklySummary student={student} />
+      {/* The actual weekly summary form with proper styling */}
+      <WeeklySummaryForm student={student} />
     </div>
   );
 };
