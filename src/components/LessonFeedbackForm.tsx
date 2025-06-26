@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -87,13 +88,14 @@ const LessonFeedbackForm = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    console.log('LessonFeedbackForm: Form submission started');
-    console.log('Selected class:', selectedClass);
-    console.log('Audio data:', audioData);
-    console.log('Text data:', { whatWentWell, suggestions, additionalComments });
-    console.log('Student info:', student);
+    console.log('🚀 LessonFeedbackForm: Form submission started');
+    console.log('📋 Selected class:', selectedClass);
+    console.log('🎵 Audio data:', audioData);
+    console.log('📝 Text data:', { whatWentWell, suggestions, additionalComments });
+    console.log('👤 Student info:', student);
     
     if (!selectedClass) {
+      console.log('❌ No class selected');
       toast({
         title: t('feedback.selectClass'),
         description: t('feedback.selectClassDesc'),
@@ -106,9 +108,10 @@ const LessonFeedbackForm = () => {
     const hasTextInput = whatWentWell.trim() || suggestions.trim() || additionalComments.trim();
     const hasVoiceInput = audioData.audioUrl;
 
-    console.log('LessonFeedbackForm: Input validation:', { hasTextInput, hasVoiceInput });
+    console.log('✅ Input validation:', { hasTextInput, hasVoiceInput });
 
     if (!hasTextInput && !hasVoiceInput) {
+      console.log('❌ No input provided');
       toast({
         title: "Please provide feedback",
         description: "Please either write your feedback or record a voice note.",
@@ -117,25 +120,26 @@ const LessonFeedbackForm = () => {
       return;
     }
 
+    console.log('🔄 Setting submitting state to true');
     setIsSubmitting(true);
 
     try {
-      console.log('LessonFeedbackForm: Preparing feedback data...');
+      console.log('🔐 Getting authenticated user...');
       
       // Get the current user from Supabase auth
       const { data: { user }, error: authError } = await supabase.auth.getUser();
       
       if (authError) {
-        console.error('LessonFeedbackForm: Auth error:', authError);
+        console.error('❌ Auth error:', authError);
         throw new Error(`Authentication error: ${authError.message}`);
       }
       
       if (!user) {
-        console.error('LessonFeedbackForm: No authenticated user found');
+        console.error('❌ No authenticated user found');
         throw new Error('You must be logged in to submit feedback');
       }
       
-      console.log('LessonFeedbackForm: Authenticated user:', user.id);
+      console.log('✅ Authenticated user found:', user.id);
       
       // Prepare feedback data with better error handling
       const feedbackData = {
@@ -157,53 +161,66 @@ const LessonFeedbackForm = () => {
         audio_file_size: null
       };
 
-      console.log('LessonFeedbackForm: Submitting feedback with data:', feedbackData);
+      console.log('📤 Submitting feedback with data:', JSON.stringify(feedbackData, null, 2));
 
-      // First, let's test if we can access the feedback table at all
+      // Test database connectivity first
+      console.log('🔍 Testing database connectivity...');
       const { data: testQuery, error: testError } = await supabase
         .from('feedback')
         .select('id')
         .limit(1);
         
-      console.log('LessonFeedbackForm: Test query result:', { testQuery, testError });
+      console.log('🔍 Database test result:', { testQuery, testError });
       
       if (testError) {
-        console.error('LessonFeedbackForm: Cannot access feedback table:', testError);
+        console.error('❌ Cannot access feedback table:', testError);
         throw new Error(`Database access error: ${testError.message}`);
       }
 
-      // Insert feedback with better error handling
-      console.log('LessonFeedbackForm: About to insert feedback...');
+      // Insert feedback with comprehensive error handling
+      console.log('💾 About to insert feedback into database...');
+      
       const insertResult = await supabase
         .from('feedback')
         .insert(feedbackData)
         .select()
         .single();
 
-      console.log('LessonFeedbackForm: Insert result:', insertResult);
+      console.log('📊 Database insert result:', insertResult);
 
       if (insertResult.error) {
-        console.error('LessonFeedbackForm: Database error details:', insertResult.error);
-        console.error('LessonFeedbackForm: Error code:', insertResult.error.code);
-        console.error('LessonFeedbackForm: Error message:', insertResult.error.message);
-        console.error('LessonFeedbackForm: Error details:', insertResult.error.details);
-        console.error('LessonFeedbackForm: Error hint:', insertResult.error.hint);
+        console.error('❌ Database error details:', {
+          code: insertResult.error.code,
+          message: insertResult.error.message,
+          details: insertResult.error.details,
+          hint: insertResult.error.hint
+        });
         
         // More specific error messages
-        if (insertResult.error.code === '23503') {
-          throw new Error('Invalid class selection. Please refresh the page and try again.');
-        } else if (insertResult.error.code === '23505') {
-          throw new Error('You have already submitted feedback for this class.');
-        } else if (insertResult.error.code === '42501') {
-          throw new Error('Permission denied. Please check your access rights.');
-        } else if (insertResult.error.message.includes('violates row-level security policy')) {
-          throw new Error('Access denied. Please check your login status and try again.');
-        } else {
-          throw new Error(`Database error: ${insertResult.error.message || 'Unknown database error'}`);
+        let errorMessage = 'Failed to submit feedback. ';
+        
+        switch (insertResult.error.code) {
+          case '23503':
+            errorMessage += 'Invalid class selection. Please refresh the page and try again.';
+            break;
+          case '23505':
+            errorMessage += 'You have already submitted feedback for this class.';
+            break;
+          case '42501':
+            errorMessage += 'Permission denied. Please check your access rights.';
+            break;
+          default:
+            if (insertResult.error.message?.includes('violates row-level security policy')) {
+              errorMessage += 'Access denied. Please check your login status and try again.';
+            } else {
+              errorMessage += insertResult.error.message || 'Unknown database error occurred.';
+            }
         }
+        
+        throw new Error(errorMessage);
       }
 
-      console.log('LessonFeedbackForm: Submission successful:', insertResult.data);
+      console.log('✅ Submission successful! Data:', insertResult.data);
 
       toast({
         title: t('feedback.submitted'),
@@ -213,7 +230,7 @@ const LessonFeedbackForm = () => {
       });
 
       // Reset form
-      console.log('LessonFeedbackForm: Resetting form...');
+      console.log('🔄 Resetting form...');
       setSelectedClass("");
       setUnderstanding([3]);
       setInterest([3]);
@@ -226,11 +243,15 @@ const LessonFeedbackForm = () => {
       setAudioData({});
       setVoiceMode('text');
 
+      console.log('✅ Form reset complete');
+
     } catch (error) {
-      console.error('LessonFeedbackForm: Submission failed:', error);
-      console.error('LessonFeedbackForm: Error type:', typeof error);
-      console.error('LessonFeedbackForm: Error constructor:', error?.constructor?.name);
-      console.error('LessonFeedbackForm: Full error object:', JSON.stringify(error, null, 2));
+      console.error('💥 Submission failed with error:', {
+        message: error?.message,
+        stack: error?.stack,
+        type: typeof error,
+        constructor: error?.constructor?.name
+      });
       
       toast({
         title: "Submission Failed",
@@ -238,6 +259,7 @@ const LessonFeedbackForm = () => {
         variant: "destructive",
       });
     } finally {
+      console.log('🔄 Setting submitting state to false');
       setIsSubmitting(false);
     }
   };
