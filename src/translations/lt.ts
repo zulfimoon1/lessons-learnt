@@ -1,217 +1,92 @@
-export const ltTeacherTranslations = {
-  // Teacher Dashboard
-  'teacher.dashboard.title': 'Mokytojo skydelis',
-  'teacher.dashboard.description': 'Ponia Johnson prisijungia prie savo išsamaus mokytojo skydelio',
-  'teacher.dashboard.welcome': 'Mokytojo skydelis',
-  'teacher.dashboard.welcomeBack': 'Sveiki sugrįžę, ponia Johnson',
-  
-  // Navigation and tabs
-  'teacher.schedule': 'Tvarkaraštis',
-  'teacher.bulkUpload': 'Masinis įkėlimas',
-  'teacher.articles': 'Straipsniai',
-  'teacher.role': 'Mokytojas',
-  
-  // Schedule translations - FIXED
-  'schedule.mySchedules': 'Mano tvarkaraščiai',
-  'schedule.noSchedules': 'Tvarkaraščių nerasta. Sukurkite pirmą klasės tvarkaraštį, kad pradėtumėte.',
-  'schedule.createTitle': 'Sukurti naują tvarkaraštį',
-  
-  // Form Labels
-  'teacher.classDetailsTitle': 'Klasės duomenys',
-  'teacher.classDetailsDescription': 'Įveskite savo klasės duomenis',
-  'teacher.subjectLabel': 'Dalykas',
-  'teacher.selectSubject': 'Pasirinkite dalyką',
-  'teacher.lessonTopicLabel': 'Pamokos tema',
-  'teacher.lessonTopicPlaceholder': 'Įveskite pamokos temą',
-  'teacher.descriptionLabel': 'Aprašymas',
-  'teacher.descriptionPlaceholder': 'Įveskite pamokos aprašymą',
-  
-  'teacher.scheduleDetailsTitle': 'Tvarkaraščio duomenys',
-  'teacher.scheduleDetailsDescription': 'Nustatykite savo klasės datą ir laiką',
-  'teacher.dateLabel': 'Data',
-  'teacher.timeLabel': 'Laikas',
-  'teacher.durationLabel': 'Trukmė (minutės)',
-  'teacher.schoolLabel': 'Mokykla',
-  'teacher.schoolPlaceholder': 'Įveskite mokyklos pavadinimą',
-  'teacher.classGradeLabel': 'Klasė/Kursas',
-  'teacher.classGradePlaceholder': 'pvz., 5 klasė, 7 kursas',
-  
-  // Subject options
-  'teacher.mathematics': 'Matematika',
-  'teacher.science': 'Gamtos mokslai',
-  'teacher.english': 'Anglų kalba',
-  'teacher.history': 'Istorija',
-  'teacher.geography': 'Geografija',
-  'teacher.art': 'Dailė',
-  'teacher.music': 'Muzika',
-  'teacher.physicalEducation': 'Kūno kultūra',
-  'teacher.computerScience': 'Informatika',
-  'teacher.other': 'Kita',
-  
-  // Duration options
-  'teacher.30minutes': '30 minučių',
-  'teacher.45minutes': '45 minutės',
-  'teacher.60minutes': '60 minučių',
-  'teacher.90minutes': '90 minučių',
-  'teacher.120minutes': '120 minučių',
-  
-  // Recurring schedule
-  'teacher.recurringScheduleTitle': 'Pasikartojantis tvarkaraštis',
-  'teacher.recurringScheduleDescription': 'Nustatykite pasikartojančias pamokas',
-  'teacher.makeRecurring': 'Padaryti pasikartojančią pamoką',
-  'teacher.repeatPatternLabel': 'Kartojimo šablonas',
-  'teacher.numberOfClassesLabel': 'Pamokų skaičius',
-  'teacher.endDateLabel': 'Pabaigos data',
-  'teacher.weekly': 'Kas savaitę',
-  'teacher.biweekly': 'Kas dvi savaites',
-  'teacher.monthly': 'Kas mėnesį',
-  'teacher.endDateMustBeAfterStart': 'Pabaigos data turi būti po pradžios datos',
-  'teacher.previewText': 'Bus sukurtos {count} pamokos nuo {date}, kartojant {pattern}',
-  
-  // Buttons
-  'teacher.scheduleClass': 'Suplanuoti pamoką',
-  'teacher.scheduleMultipleClasses': 'Suplanuoti {count} pamokas',
-  'teacher.classScheduledSuccess': 'Pamoka sėkmingai suplanuota!',
-  'teacher.classesScheduledSuccess': '{count} pamokos sėkmingai suplanuotos!',
-  'teacher.scheduleClassFailed': 'Nepavyko suplanuoti pamokos. Bandykite dar kartą.',
-  
-  // Logout
-  'teacher.logout.success': 'Atsijungimas sėkmingas',
-  'teacher.logout.description': 'Jūs sėkmingai atsijungėte.',
-  
-  // Feedback Dashboard
-  'teacher.feedback.loading': 'Kraunami atsiliepimai...',
-  'teacher.feedback.totalFeedback': 'Iš viso atsiliepimų',
-  'teacher.feedback.avgUnderstanding': 'Vid. supratimas',
-  'teacher.feedback.avgInterest': 'Vid. susidomėjimas',
-  'teacher.feedback.avgGrowth': 'Vid. augimas',
-  'teacher.feedback.studentFeedback': 'Studentų atsiliepimai',
-  'teacher.feedback.recentFeedback': 'Paskutiniai studentų atsiliepimai apie pamokas',
-  'teacher.feedback.noFeedback': 'Kol kas negauta atsiliepimų. Studentai matys tai, kai pradės teikti atsiliepimus.',
-  'teacher.feedback.understanding': 'Supratimas',
-  'teacher.feedback.interest': 'Susidomėjimas',
-  'teacher.feedback.growth': 'Augimas',
-  'teacher.feedback.whatWentWell': 'Kas sekėsi gerai:',
-  'teacher.feedback.suggestions': 'Pasiūlymai:',
-  'teacher.feedback.additionalComments': 'Papildomi komentarai:',
-  'teacher.feedback.submitted': 'Pateikta:',
-  'teacher.feedback.failedToFetch': 'Nepavyko gauti atsiliepimų duomenų',
-  
-  // Alerts
-  'teacher.alerts.title': 'Peržiūrėti įspėjimus',
-  'teacher.alerts.description': 'Ponia Johnson tikrina psichinės sveikatos įspėjimus ir klasės veiklos perspėjimus',
-  'teacher.alerts.count': '3 įspėjimai',
-  'teacher.alerts.recent': 'Paskutiniai įspėjimai - prioritetinė peržiūra',
-  'teacher.alerts.distress': 'Studentas rodo streso požymius',
-  'teacher.alerts.anonymous': 'Klasė 10A - Anonimiškas studentas matematikos pamokoje',
-  'teacher.alerts.clickReview': 'Spustelėkite peržiūrėti ir imtis veiksmų',
-  'teacher.alerts.lowUnderstanding': 'Prastas chemijos supratimas',
-  'teacher.alerts.struggling': '15 studentų turi sunkumų su šiandienos tema',
-  'teacher.alerts.address': 'Spręsti',
-  
-  // Mental Health
-  'teacher.mentalHealth.title': 'Psichinės sveikatos palaikymo sistema',
-  'teacher.mentalHealth.description': 'Ponia Johnson peržiūri ir tvarko studentų psichinės sveikatos palaikymo užklausas',
-  'teacher.mentalHealth.center': 'Psichinės sveikatos palaikymo centras - Mokytojo sąsaja',
-  'teacher.mentalHealth.activeSessions': 'Aktyvūs palaikymo seansai',
-  'teacher.mentalHealth.anonymousStudent': 'Anonimiškas studentas - Klasė 10A',
-  'teacher.mentalHealth.activeChat': 'Aktyvus pokalbis',
-  'teacher.mentalHealth.started': 'Pradėta prieš 15 min.',
-  'teacher.mentalHealth.connected': 'Prisijungęs prie dr. Sarah Wilson - Mokyklos psichologės',
-  'teacher.mentalHealth.monitor': 'Stebėti (tik skaityti)',
-  'teacher.mentalHealth.emergency': 'Avarinė perrašymas',
-  'teacher.mentalHealth.pendingRequests': 'Laukiančios palaikymo užklausos',
-  'teacher.mentalHealth.examStress': 'Prašė konsultanto seanso dėl egzaminų streso',
-  'teacher.mentalHealth.waiting': 'Laukia 8 minutes',
-  'teacher.mentalHealth.assignCounselor': 'Priskirti konsultantą',
-  'teacher.mentalHealth.connectNow': 'Prisijungti dabar',
-  'teacher.mentalHealth.weeklyOverview': 'Savaitės psichinės sveikatos apžvalga',
-  'teacher.mentalHealth.supportSessions': 'Palaikymo seansai',
-  'teacher.mentalHealth.positiveOutcomes': 'Teigiami rezultatai',
-  'teacher.mentalHealth.supportRating': 'Palaikymo įvertinimas',
-  'teacher.mentalHealth.privacy': 'Privatumas ir konfidencialumas',
-  'teacher.mentalHealth.privacyDescription': 'Visa psichinės sveikatos komunikacija yra šifruota ir konfidenciali. Mokytojai gali stebėti tik saugumo tikslais. Individualūs pokalbių turiniai prieinami tik licencijuotiems psichinės sveikatos specialistams.',
-  'teacher.mentalHealthAlerts': 'Psichinės sveikatos įspėjimai',
-  'teacher.mentalHealthProfessional': 'Psichinės sveikatos specialistas',
-  'teacher.availability': 'Prieinamumas',
-  'teacher.available': 'Prieinamas',
-  'teacher.busy': 'Užimtas',
-  'teacher.active': 'Aktyvus',
-  'teacher.inactive': 'Neaktyvus',
-  
-  // Performance
-  'teacher.performance.title': 'Klasės veiklos analizė',
-  'teacher.performance.description': 'Ponia Johnson peržiūri šiandienos tiesioginės klasės veiklos metrikas',
-  
-  // Mood
-  'teacher.mood.title': 'Studentų nuotaikos apžvalga',
-  'teacher.mood.description': 'Ponia Johnson nagrinėja savo studentų emocinę būseną',
-  
-  // Feedback
-  'teacher.feedback.title': 'Individualūs studentų atsiliepimai',
-  'teacher.feedback.description': 'Ponia Johnson peržiūri detalius individualių studentų atsiliepimus',
-  
-  // Concerns
-  'teacher.concerns.title': 'Spręsti studentų rūpesčius',
-  'teacher.concerns.description': 'Ponia Johnson imasi veiksmų dėl studentų, kuriems reikia palaikymo',
-  
-  // Trends
-  'teacher.trends.title': 'Savaitės veiklos tendencijos',
-  'teacher.trends.description': 'Ponia Johnson analizuoja savaitės veiklos ir įsitraukimo tendencijas',
-  
-  // Improvements
-  'teacher.improvements.title': 'Planuoti pamokų patobulinimus',
-  'teacher.improvements.description': 'Ponia Johnson planuoja patobulinimus remiantis studentų atsiliepimais',
-  
-  // Simulation
-  'teacher.simulation.title': 'Mokytojo kelionės modeliavimas',
-  
-  // Statistics
-  'teacher.stats.totalStudents': 'Iš viso studentų',
-  'teacher.stats.avgUnderstanding': 'Vid. supratimas',
-  'teacher.stats.lessonRating': 'Pamokos įvertinimas',
-  'teacher.stats.needSupport': 'Reikia palaikymo',
-  
-  // Classes
-  'teacher.classes.today': 'Šiandienos pamokos',
-  'teacher.classes.mathematics': 'Matematika - Klasė 10A',
-  'teacher.classes.algebra': '9:00 val. - Algebra II',
-  'teacher.classes.students': '25 studentai',
-  'teacher.classes.live': 'Tiesioginė',
-  'teacher.classes.understanding': '89% supratimas',
-  'teacher.classes.responses': '23 atsakymai',
-  
-  // Dashboard navigation
-  'teacher.dashboard': 'Mokytojo skydelis',
-  
-  // Subscription related
-  'teacher.subscriptionDescription': 'Pasiekite visas mokytojo funkcijas su aktyviu prenumeratos planu.',
-  'teacher.doctorSubscriptionDescription': 'Pasiekite psichinės sveikatos įrankius ir studentų pagalbos funkcijas.',
-  'teacher.subscribeToContinue': 'Prenumeruoti, kad tęstumėte',
-  'teacher.subscriptionRequiredForSummaries': 'Prenumerata reikalinga peržiūrėti savaitės santraukas.',
-  'teacher.activePlan': 'Aktyvus {planType} planas - atsinaujina {date}',
-  
-  // Bulk actions
-  'teacher.bulkActions': 'Masiniai veiksmai',
-  'teacher.selected': 'pasirinkta',
-  'teacher.selectAll': 'Pasirinkti visas pamokas',
-  'teacher.duplicate': 'Dubliuoti',
-  'teacher.reschedule': 'Perkelti',
-  'teacher.delete': 'Ištrinti',
-  'teacher.confirmDelete': 'Patvirtinti ištrinimą',
-  'teacher.deleteWarning': 'Ar tikrai norite ištrinti {count} pasirinktų pamokų? Šio veiksmo negalima atšaukti.',
-  
-  // Common actions
-  'common.play': 'Paleisti',
-  'common.pause': 'Pristabdyti',
+
+import { ltAuthTranslations } from './lt/auth';
+import { ltTeacherTranslations } from './lt/teacher';
+import { ltWeeklyTranslations } from './lt/weekly';
+import { ltChatTranslations } from './lt/chat';
+import { ltDemoTranslations } from './lt/demo';
+
+export const ltTranslations = {
+  // Common translations
+  'common.loading': 'Kraunama...',
+  'common.error': 'Klaida',
+  'common.success': 'Sėkmė',
+  'common.cancel': 'Atšaukti',
+  'common.save': 'Išsaugoti',
+  'common.delete': 'Ištrinti',
+  'common.edit': 'Redaguoti',
+  'common.add': 'Pridėti',
+  'common.remove': 'Pašalinti',
+  'common.confirm': 'Patvirtinti',
+  'common.yes': 'Taip',
+  'common.no': 'Ne',
+  'common.submit': 'Pateikti',
+  'common.back': 'Atgal',
+  'common.next': 'Toliau',
+  'common.previous': 'Ankstesnis',
+  'common.close': 'Uždaryti',
+  'common.open': 'Atidaryti',
+  'common.view': 'Peržiūrėti',
+  'common.download': 'Atsisiųsti',
+  'common.upload': 'Įkelti',
+  'common.search': 'Ieškoti',
+  'common.filter': 'Filtruoti',
+  'common.sort': 'Rūšiuoti',
+  'common.refresh': 'Atnaujinti',
+  'common.clear': 'Išvalyti',
   'common.reset': 'Iš naujo',
-  
-  // Error messages
-  'teacher.missingInfo': 'Trūksta mokytojo informacijos',
-  'teacher.checkoutFailed': 'Nepavyko sukurti atsiskaitymo sesijos',
-  'teacher.passwordMismatch': 'Slaptažodžiai nesutampa',
-  'teacher.passwordsDoNotMatch': 'Slaptažodžiai nesutampa',
-  'teacher.signupFailed': 'Registracija nepavyko',
-  'teacher.accountCreated': 'Paskyra sukurta!',
-  'teacher.welcomeToApp': 'Sveiki atvykę į Lesson Lens!'
-};
+  'common.apply': 'Pritaikyti',
+  'common.update': 'Atnaujinti',
+  'common.create': 'Sukurti',
+  'common.days': 'Dienos',
+  'common.minute': 'minutė',
+  'common.minutes': 'minutės',
+  'common.ready': 'Paruošta',
+  'common.minimize': 'Sumažinti',
+
+  // Navigation
+  'nav.home': 'Pradžia',
+  'nav.dashboard': 'Skydelis',
+  'nav.profile': 'Profilis',
+  'nav.settings': 'Nustatymai',
+  'nav.help': 'Pagalba',
+  'nav.about': 'Apie',
+  'nav.contact': 'Kontaktai',
+  'navigation.studentLogin': 'Studento prisijungimas',
+  'navigation.teacherLogin': 'Mokytojo prisijungimas',
+  'navigation.signUpNow': 'Registruotis dabar',
+  'navigation.backToHome': 'Grįžti į pradžią',
+
+  // Logout
+  'logout': 'Atsijungti',
+
+  // Dashboard
+  'dashboard.title': 'Studento skydelis',
+  'dashboard.welcome': 'Sveiki atvykę',
+  'dashboard.overview': 'Apžvalga',
+  'dashboard.teacherOverview': 'Mokytojo apžvalga',
+  'dashboard.doctorOverview': 'Daktaro apžvalga',
+  'dashboard.studentOverview': 'Studento apžvalga',
+  'dashboard.studentDashboard': 'Studento skydelis',
+  'dashboard.teacherDashboard': 'Mokytojo skydelis',
+  'dashboard.feedback': 'Atsiliepimai',
+  'dashboard.feedbackDescription': 'Peržiūrėti ir tvarkyti studentų atsiliepimus apie pamokas ir klases.',
+  'dashboard.weeklySummaries': 'Savaitės santraukos',
+  'dashboard.weeklySummary': 'Savaitės santrauka',
+  'dashboard.mentalHealthSupport': 'Psichinės sveikatos palaikymas',
+  'dashboard.mentalHealth': 'Psichinė sveikata',
+  'dashboard.grade': 'Klasė',
+
+  // Auth translations
+  'auth.login': 'Prisijungti',
+  'auth.signUp': 'Registruotis',
+
+  // Analytics
+  'analytics.title': 'Analitika',
+  'analytics.description': 'Įžvalgos apie jūsų mokymo veiklą ir studentų įsitraukimą',
+
+  ...ltAuthTranslations,
+  ...ltTeacherTranslations,
+  ...ltWeeklyTranslations,
+  ...ltChatTranslations,
+  ...ltDemoTranslations,
+} as const;
