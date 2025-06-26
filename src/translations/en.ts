@@ -539,13 +539,8 @@ export const enTranslations = {
   'chat.typeMessage': 'Type a message...',
   'chat.send': 'Send',
 
-  // Features - Add missing key
-  'features.mentalHealth.title': 'Mental Health Support',
-
   // Weekly Summary - Add missing key
   'weekly.summaries': 'Weekly Summaries',
-  
-  'ai.insights': 'AI Insights',
 
   // Merge all sub-translations
   ...enAuthTranslations,
