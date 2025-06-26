@@ -1,3 +1,4 @@
+
 export interface Teacher {
   id: string;
   name: string;
@@ -14,6 +15,7 @@ export interface Student {
   full_name: string;
   school: string;
   grade: string;
+  needs_password_change?: boolean;
 }
 
 export interface LiveChatSession {

@@ -109,3 +109,12 @@ export const passwordResetService = {
     }
   }
 };
+
+// Legacy exports for backwards compatibility
+export const sendPasswordResetEmail = async (email: string) => {
+  return { error: 'Email-based password reset not supported for students. Please contact your teacher.' };
+};
+
+export const resetPassword = async (password: string) => {
+  return { error: 'Direct password reset not supported. Please use the teacher-mediated reset process.' };
+};
