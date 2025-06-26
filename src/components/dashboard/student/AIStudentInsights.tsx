@@ -121,7 +121,7 @@ const AIStudentInsights: React.FC<AIStudentInsightsProps> = ({ studentId, school
           </div>
         ) : (
           <div className="space-y-6">
-            {/* Personalization Profile */}
+            {/* Always show content even if loading */}
             <div className="bg-white border-2 border-blue-300 rounded-lg p-4 shadow-md">
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
@@ -130,17 +130,14 @@ const AIStudentInsights: React.FC<AIStudentInsightsProps> = ({ studentId, school
                 <h3 className="font-semibold text-blue-900">{t('ai.learningProfile')}</h3>
                 {hasProfile && <Badge className="bg-green-100 text-green-800 border-green-300">{t('common.ready')}</Badge>}
               </div>
-              {personalizationProfile ? (
-                <div className="space-y-2">
-                  <p className="text-sm text-gray-800">{personalizationProfile.learning_style || 'Visual learner with strong analytical skills'}</p>
-                  <p className="text-sm text-gray-700">{personalizationProfile.strengths || 'Excels in problem-solving and creative thinking'}</p>
-                </div>
-              ) : (
-                <div className="space-y-2">
-                  <p className="text-sm text-gray-800">Visual learner with strong analytical skills</p>
-                  <p className="text-sm text-gray-700">Excels in problem-solving and creative thinking</p>
-                </div>
-              )}
+              <div className="space-y-2">
+                <p className="text-sm text-gray-800">
+                  {personalizationProfile?.learning_style || 'Visual learner with strong analytical skills'}
+                </p>
+                <p className="text-sm text-gray-700">
+                  {personalizationProfile?.strengths || 'Excels in problem-solving and creative thinking'}
+                </p>
+              </div>
             </div>
 
             {/* Content Recommendations */}
@@ -152,18 +149,18 @@ const AIStudentInsights: React.FC<AIStudentInsightsProps> = ({ studentId, school
                 <h3 className="font-semibold text-orange-900">{t('ai.smartRecommendations')}</h3>
                 {hasRecommendations && <Badge className="bg-green-100 text-green-800 border-green-300">{t('common.ready')}</Badge>}
               </div>
-              {contentRecommendations && contentRecommendations.length > 0 ? (
-                <div className="space-y-2">
-                  {contentRecommendations.slice(0, 2).map((rec: any, index: number) => (
+              <div className="space-y-2">
+                {contentRecommendations && contentRecommendations.length > 0 ? (
+                  contentRecommendations.slice(0, 2).map((rec: any, index: number) => (
                     <p key={index} className="text-sm text-gray-800">• {rec.title || rec}</p>
-                  ))}
-                </div>
-              ) : (
-                <div className="space-y-2">
-                  <p className="text-sm text-gray-800">• Interactive math exercises tailored to your grade level</p>
-                  <p className="text-sm text-gray-800">• Creative writing prompts based on your interests</p>
-                </div>
-              )}
+                  ))
+                ) : (
+                  <>
+                    <p className="text-sm text-gray-800">• Interactive math exercises tailored to your grade level</p>
+                    <p className="text-sm text-gray-800">• Creative writing prompts based on your interests</p>
+                  </>
+                )}
+              </div>
             </div>
 
             {/* Predictive Insights */}
@@ -175,31 +172,24 @@ const AIStudentInsights: React.FC<AIStudentInsightsProps> = ({ studentId, school
                 <h3 className="font-semibold text-purple-900">{t('ai.wellnessInsights')}</h3>
                 {hasInsights && <Badge className="bg-green-100 text-green-800 border-green-300">{t('common.ready')}</Badge>}
               </div>
-              {predictiveInsights ? (
-                <div className="space-y-2">
-                  {(() => {
-                    const data = getPredictiveInsightsData();
-                    return (
-                      <>
-                        <p className="text-sm text-gray-800">
-                          {data?.mental_health_score 
-                            ? `Wellness Score: ${data.mental_health_score}/10`
-                            : 'Wellness Score: 8/10 - You\'re doing great!'
-                          }
-                        </p>
-                        <p className="text-sm text-gray-700">
-                          {data?.recommendations?.[0] || 'Keep up the positive engagement with your studies'}
-                        </p>
-                      </>
-                    );
-                  })()}
-                </div>
-              ) : (
-                <div className="space-y-2">
-                  <p className="text-sm text-gray-800">Wellness Score: 8/10 - You're doing great!</p>
-                  <p className="text-sm text-gray-700">Keep up the positive engagement with your studies</p>
-                </div>
-              )}
+              <div className="space-y-2">
+                {(() => {
+                  const data = getPredictiveInsightsData();
+                  return (
+                    <>
+                      <p className="text-sm text-gray-800">
+                        {data?.mental_health_score 
+                          ? `Wellness Score: ${data.mental_health_score}/10`
+                          : 'Wellness Score: 8/10 - You\'re doing great!'
+                        }
+                      </p>
+                      <p className="text-sm text-gray-700">
+                        {data?.recommendations?.[0] || 'Keep up the positive engagement with your studies'}
+                      </p>
+                    </>
+                  );
+                })()}
+              </div>
             </div>
 
             {/* Action Buttons */}
