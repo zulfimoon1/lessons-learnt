@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -120,6 +121,8 @@ const LessonFeedbackForm = () => {
     setIsSubmitting(true);
 
     try {
+      console.log('LessonFeedbackForm: Preparing feedback data...');
+      
       // Prepare feedback data with better error handling
       const feedbackData = {
         class_schedule_id: selectedClass,
@@ -145,8 +148,11 @@ const LessonFeedbackForm = () => {
       // Insert feedback with better error handling
       const { data, error } = await supabase
         .from('feedback')
-        .insert([feedbackData])
-        .select();
+        .insert(feedbackData)
+        .select()
+        .single();
+
+      console.log('LessonFeedbackForm: Supabase response:', { data, error });
 
       if (error) {
         console.error('LessonFeedbackForm: Database error details:', error);
@@ -179,6 +185,7 @@ const LessonFeedbackForm = () => {
       });
 
       // Reset form
+      console.log('LessonFeedbackForm: Resetting form...');
       setSelectedClass("");
       setUnderstanding([3]);
       setInterest([3]);
@@ -195,6 +202,7 @@ const LessonFeedbackForm = () => {
       console.error('LessonFeedbackForm: Submission failed:', error);
       console.error('LessonFeedbackForm: Error type:', typeof error);
       console.error('LessonFeedbackForm: Error constructor:', error?.constructor?.name);
+      console.error('LessonFeedbackForm: Full error object:', JSON.stringify(error, null, 2));
       
       toast({
         title: "Submission Failed",
