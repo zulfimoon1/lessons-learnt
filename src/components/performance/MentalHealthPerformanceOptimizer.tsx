@@ -124,7 +124,7 @@ const MentalHealthPerformanceOptimizer: React.FC<MentalHealthPerformanceOptimize
             <div className="text-2xl font-bold text-red-600">
               {alertSummary.criticalAlerts}
             </div>
-            <div className="text-xs text-red-800 mt-1">Critical (>7)</div>
+            <div className="text-xs text-red-800 mt-1">Critical (7+)</div>
           </div>
 
           {/* Average Severity */}
@@ -158,7 +158,7 @@ const MentalHealthPerformanceOptimizer: React.FC<MentalHealthPerformanceOptimize
         {/* Performance Badges */}
         <div className="flex flex-wrap gap-2 mt-4 justify-center">
           <Badge variant="outline" className="text-xs">
-            Response Time: <1s
+            Response Time: &lt;1s
           </Badge>
           <Badge variant="outline" className="text-xs">
             Real-time Updates: ✓

@@ -1,36 +1,41 @@
 
-import React, { Suspense } from 'react';
-import { Skeleton } from '@/components/ui/skeleton';
-import { cn } from '@/lib/utils';
+import React, { Suspense, memo } from 'react';
+import { Card, CardContent } from "@/components/ui/card";
+import { Loader2 } from "lucide-react";
 
 interface LazyLoadWrapperProps {
   children: React.ReactNode;
   fallback?: React.ReactNode;
-  className?: string;
-  height?: string;
+  minHeight?: string;
 }
 
-const LazyLoadWrapper: React.FC<LazyLoadWrapperProps> = ({
-  children,
-  fallback,
-  className,
-  height = 'h-48'
-}) => {
-  const defaultFallback = (
-    <div className={cn('space-y-3', className)}>
-      <Skeleton className={cn('w-full', height)} />
-      <div className="space-y-2">
-        <Skeleton className="h-4 w-3/4" />
-        <Skeleton className="h-4 w-1/2" />
+const DefaultFallback: React.FC<{ minHeight?: string }> = ({ minHeight = "200px" }) => (
+  <Card className="w-full" style={{ minHeight }}>
+    <CardContent className="flex items-center justify-center h-full p-8">
+      <div className="flex flex-col items-center space-y-3">
+        <Loader2 className="w-6 h-6 animate-spin text-blue-600" />
+        <p className="text-sm text-gray-600">Loading mental health data...</p>
       </div>
-    </div>
-  );
+    </CardContent>
+  </Card>
+);
+
+const LazyLoadWrapper: React.FC<LazyLoadWrapperProps> = memo(({ 
+  children, 
+  fallback,
+  minHeight = "200px" 
+}) => {
+  const LoadingFallback = fallback || <DefaultFallback minHeight={minHeight} />;
 
   return (
-    <Suspense fallback={fallback || defaultFallback}>
-      {children}
+    <Suspense fallback={LoadingFallback}>
+      <div className="w-full">
+        {children}
+      </div>
     </Suspense>
   );
-};
+});
+
+LazyLoadWrapper.displayName = 'LazyLoadWrapper';
 
 export default LazyLoadWrapper;
