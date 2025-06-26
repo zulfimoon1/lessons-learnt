@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CalendarIcon, MessageSquareIcon, FileTextIcon, BarChartIcon, BrainIcon, BookOpenIcon } from "lucide-react";
@@ -13,11 +14,13 @@ import WeeklySummariesTab from "@/components/dashboard/teacher/WeeklySummariesTa
 import ArticlesTab from "@/components/dashboard/teacher/ArticlesTab";
 import AnalyticsTab from "@/components/dashboard/teacher/AnalyticsTab";
 import AIInsightsTab from "@/components/dashboard/teacher/AIInsightsTab";
+import DoctorDashboard from "@/components/dashboard/doctor/DoctorDashboard";
+import DoctorChatDashboard from "@/components/DoctorChatDashboard";
 
 const TeacherDashboard: React.FC = () => {
   const { teacher, logout } = useAuth();
   const { t } = useLanguage();
-  const [activeTab, setActiveTab] = useState('schedule');
+  const [activeTab, setActiveTab] = useState('feedback');
   const isMobile = useIsMobile();
 
   const handleLogout = async () => {
@@ -38,55 +41,89 @@ const TeacherDashboard: React.FC = () => {
     return <Navigate to="/admin-dashboard" replace />;
   }
 
-  const tabItems = [
-    {
-      value: 'schedule',
-      icon: CalendarIcon,
-      label: t('teacher.schedule') || 'Schedule',
-      component: <ScheduleTab teacher={teacher} />,
-      color: 'text-brand-teal'
-    },
-    {
-      value: 'feedback',
-      icon: MessageSquareIcon,
-      label: t('dashboard.feedback') || 'Feedback',
-      component: <FeedbackDashboard teacher={teacher} />,
-      color: 'text-brand-orange'
-    },
-    {
-      value: 'summaries',
-      icon: FileTextIcon,
-      label: t('weekly.summaries') || 'Summaries',
-      component: <WeeklySummariesTab teacher={teacher} />,
-      color: 'text-brand-teal'
-    },
-    {
-      value: 'notes',
-      icon: BookOpenIcon,
-      label: t('teacher.notes') || 'Teachers Notes',
-      component: <ArticlesTab teacher={teacher} />,
-      color: 'text-brand-orange'
-    },
-    {
-      value: 'analytics',
-      icon: BarChartIcon,
-      label: t('analytics.title') || 'Analytics',
-      component: <AnalyticsTab teacher={teacher} />,
-      color: 'text-brand-teal'
-    },
-    {
-      value: 'ai-insights',
-      icon: BrainIcon,
-      label: t('ai.insights') || 'AI Insights',
-      component: <AIInsightsTab teacher={teacher} />,
-      color: 'text-brand-orange'
+  // Check if user is a doctor
+  const isDoctor = teacher.role === 'doctor';
+
+  // Define tab items based on role
+  const getTabItems = () => {
+    const baseItems = [
+      {
+        value: 'feedback',
+        icon: MessageSquareIcon,
+        label: t('dashboard.feedback') || 'Feedback',
+        component: <FeedbackDashboard teacher={teacher} />,
+        color: 'text-brand-orange'
+      },
+      {
+        value: 'summaries',
+        icon: FileTextIcon,
+        label: t('weekly.summaries') || 'Summaries',
+        component: <WeeklySummariesTab teacher={teacher} />,
+        color: 'text-brand-teal'
+      },
+      {
+        value: 'analytics',
+        icon: BarChartIcon,
+        label: t('analytics.title') || 'Analytics',
+        component: <AnalyticsTab teacher={teacher} />,
+        color: 'text-brand-teal'
+      },
+      {
+        value: 'ai-insights',
+        icon: BrainIcon,
+        label: t('ai.insights') || 'AI Insights',
+        component: <AIInsightsTab teacher={teacher} />,
+        color: 'text-brand-orange'
+      }
+    ];
+
+    if (isDoctor) {
+      // For doctors, add doctor-specific tabs and remove schedule/notes
+      return [
+        ...baseItems,
+        {
+          value: 'doctor-dashboard',
+          icon: MessageSquareIcon,
+          label: 'Medical Dashboard',
+          component: <DoctorDashboard teacher={teacher} />,
+          color: 'text-brand-teal'
+        },
+        {
+          value: 'doctor-chat',
+          icon: MessageSquareIcon,
+          label: 'Live Chat',
+          component: <DoctorChatDashboard doctorId={teacher.id} doctorName={teacher.name} school={teacher.school} />,
+          color: 'text-brand-orange'
+        }
+      ];
+    } else {
+      // For regular teachers, include schedule and notes
+      return [
+        {
+          value: 'schedule',
+          icon: CalendarIcon,
+          label: t('teacher.schedule') || 'Schedule',
+          component: <ScheduleTab teacher={teacher} />,
+          color: 'text-brand-teal'
+        },
+        ...baseItems,
+        {
+          value: 'notes',
+          icon: BookOpenIcon,
+          label: t('teacher.notes') || 'Teachers Notes',
+          component: <ArticlesTab teacher={teacher} />,
+          color: 'text-brand-orange'
+        }
+      ];
     }
-  ];
+  };
+
+  const tabItems = getTabItems();
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-brand-teal/5 via-white to-brand-orange/5">
       <DashboardHeader
-        title={t('teacher.dashboard.title') || 'Teacher Dashboard'}
+        title={isDoctor ? 'Doctor Dashboard' : (t('teacher.dashboard.title') || 'Teacher Dashboard')}
         userName={teacher.name}
         onLogout={handleLogout}
       />
@@ -105,11 +142,11 @@ const TeacherDashboard: React.FC = () => {
                   {teacher.school}
                 </p>
                 <p className="text-lg text-white/80 mb-4">
-                  {t('teacher.role') || 'Teacher'}
+                  {isDoctor ? 'School Doctor' : (t('teacher.role') || 'Teacher')}
                 </p>
                 <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm text-white px-4 py-2 rounded-full text-sm font-medium">
                   <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
-                  {t('common.ready') || 'Ready to teach'}
+                  {isDoctor ? 'Ready to support student health' : (t('common.ready') || 'Ready to teach')}
                 </div>
               </div>
             </div>
