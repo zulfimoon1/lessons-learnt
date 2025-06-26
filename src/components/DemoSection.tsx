@@ -1,3 +1,4 @@
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -109,7 +110,8 @@ const DemoSection = () => {
                 <div>
                   <h3 className="text-2xl font-bold text-white mb-2 drop-shadow-lg">✨ Bonus Points</h3>
                   <p className="text-lg text-white/95 font-medium drop-shadow-md">
-                    Pause subscriptions during holidays? That's next-level budget optimization. Pay only when you're actually educating minds
+                    Pause subscriptions during holidays?<br />
+                    Pay only when you're actually educating minds
                   </p>
                 </div>
               </div>
