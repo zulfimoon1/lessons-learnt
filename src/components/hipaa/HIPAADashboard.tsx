@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -14,6 +13,8 @@ import HIPAAPatientRights from './HIPAAPatientRights';
 import HIPAATrainingTracking from './HIPAATrainingTracking';
 import HIPAAPHIProtectionPanel from './HIPAAPHIProtectionPanel';
 import HIPAAMinimumNecessaryControl from './HIPAAMinimumNecessaryControl';
+import HIPAAWorkforceSecurityManagement from './HIPAAWorkforceSecurityManagement';
+import HIPAAIncidentResponsePanel from './HIPAAIncidentResponsePanel';
 
 interface HIPAAMetrics {
   phiAccessEvents24h: number;
@@ -137,6 +138,8 @@ const HIPAADashboard: React.FC = () => {
         <TabsList>
           <TabsTrigger value="phi-protection">PHI Protection</TabsTrigger>
           <TabsTrigger value="minimum-necessary">Access Control</TabsTrigger>
+          <TabsTrigger value="workforce-security">Workforce Security</TabsTrigger>
+          <TabsTrigger value="incident-response">Incident Response</TabsTrigger>
           <TabsTrigger value="risk-assessment">Risk Assessment</TabsTrigger>
           <TabsTrigger value="baa-management">BAA Management</TabsTrigger>
           <TabsTrigger value="breach-notification">Breach Notification</TabsTrigger>
@@ -150,6 +153,14 @@ const HIPAADashboard: React.FC = () => {
 
         <TabsContent value="minimum-necessary" className="space-y-4">
           <HIPAAMinimumNecessaryControl />
+        </TabsContent>
+
+        <TabsContent value="workforce-security" className="space-y-4">
+          <HIPAAWorkforceSecurityManagement />
+        </TabsContent>
+
+        <TabsContent value="incident-response" className="space-y-4">
+          <HIPAAIncidentResponsePanel />
         </TabsContent>
 
         <TabsContent value="risk-assessment" className="space-y-4">
