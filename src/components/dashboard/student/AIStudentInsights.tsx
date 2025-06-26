@@ -37,13 +37,14 @@ const AIStudentInsights: React.FC<AIStudentInsightsProps> = ({ studentId, school
       await generateContentRecommendations(studentId);
     }
     if (!hasInsights) {
-      await generatePredictiveInsights(studentId);
+      // Fix: Pass a valid period type instead of studentId
+      await generatePredictiveInsights("month" as "week" | "month" | "semester");
     }
   };
 
   return (
-    <Card className="bg-gradient-to-br from-blue-50 to-purple-50 border-2 border-blue-200/50 shadow-lg">
-      <CardHeader className="bg-gradient-to-r from-brand-teal to-purple-600 text-white rounded-t-lg">
+    <Card className="bg-gradient-to-br from-emerald-50 to-blue-50 border-2 border-emerald-300/60 shadow-xl">
+      <CardHeader className="bg-gradient-to-r from-emerald-500 to-blue-600 text-white rounded-t-lg">
         <CardTitle className="flex items-center gap-3">
           <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
             <Brain className="w-5 h-5" />
@@ -84,7 +85,7 @@ const AIStudentInsights: React.FC<AIStudentInsightsProps> = ({ studentId, school
             
             <Button 
               onClick={() => setIsExpanded(true)}
-              className="bg-gradient-to-r from-brand-teal to-purple-600 hover:from-brand-teal/90 hover:to-purple-600/90 text-white px-6 py-2 rounded-full transform transition-all hover:scale-105"
+              className="bg-gradient-to-r from-emerald-500 to-blue-600 hover:from-emerald-600 hover:to-blue-700 text-white px-8 py-3 rounded-full transform transition-all hover:scale-105 shadow-lg"
             >
               <Sparkles className="w-4 h-4 mr-2" />
               {t('ai.exploreInsights') || 'Explore Your Insights'}
@@ -93,9 +94,9 @@ const AIStudentInsights: React.FC<AIStudentInsightsProps> = ({ studentId, school
         ) : (
           <div className="space-y-6">
             {/* Personalization Profile */}
-            <div className="bg-gradient-to-r from-emerald-50 to-teal-50 border-2 border-emerald-200 rounded-lg p-4">
+            <div className="bg-gradient-to-r from-emerald-50 to-teal-50 border-2 border-emerald-300 rounded-lg p-4 shadow-md">
               <div className="flex items-center gap-3 mb-3">
-                <div className="w-8 h-8 bg-gradient-to-br from-emerald-400 to-teal-600 rounded-full flex items-center justify-center">
+                <div className="w-8 h-8 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-full flex items-center justify-center">
                   <TrendingUp className="w-4 h-4 text-white" />
                 </div>
                 <h3 className="font-semibold text-emerald-800">{t('ai.learningProfile') || 'Learning Profile'}</h3>
@@ -112,9 +113,9 @@ const AIStudentInsights: React.FC<AIStudentInsightsProps> = ({ studentId, school
             </div>
 
             {/* Content Recommendations */}
-            <div className="bg-gradient-to-r from-orange-50 to-red-50 border-2 border-orange-200 rounded-lg p-4">
+            <div className="bg-gradient-to-r from-orange-50 to-amber-50 border-2 border-orange-300 rounded-lg p-4 shadow-md">
               <div className="flex items-center gap-3 mb-3">
-                <div className="w-8 h-8 bg-gradient-to-br from-orange-400 to-red-500 rounded-full flex items-center justify-center">
+                <div className="w-8 h-8 bg-gradient-to-br from-orange-500 to-amber-600 rounded-full flex items-center justify-center">
                   <BookOpen className="w-4 h-4 text-white" />
                 </div>
                 <h3 className="font-semibold text-orange-800">{t('ai.smartRecommendations') || 'Smart Recommendations'}</h3>
@@ -132,9 +133,9 @@ const AIStudentInsights: React.FC<AIStudentInsightsProps> = ({ studentId, school
             </div>
 
             {/* Predictive Insights */}
-            <div className="bg-gradient-to-r from-purple-50 to-pink-50 border-2 border-purple-200 rounded-lg p-4">
+            <div className="bg-gradient-to-r from-purple-50 to-pink-50 border-2 border-purple-300 rounded-lg p-4 shadow-md">
               <div className="flex items-center gap-3 mb-3">
-                <div className="w-8 h-8 bg-gradient-to-br from-purple-400 to-pink-500 rounded-full flex items-center justify-center">
+                <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-pink-600 rounded-full flex items-center justify-center">
                   <Heart className="w-4 h-4 text-white" />
                 </div>
                 <h3 className="font-semibold text-purple-800">{t('ai.wellnessInsights') || 'Wellness & Growth Insights'}</h3>
@@ -142,8 +143,23 @@ const AIStudentInsights: React.FC<AIStudentInsightsProps> = ({ studentId, school
               </div>
               {predictiveInsights ? (
                 <div className="space-y-2">
-                  <p className="text-sm text-purple-700">{predictiveInsights.mental_health_score ? `Wellness Score: ${predictiveInsights.mental_health_score}/10` : t('ai.analyzingWellness') || 'Analyzing your wellness patterns...'}</p>
-                  <p className="text-sm text-purple-600">{predictiveInsights.recommendations?.[0] || t('ai.generatingWellnessAdvice') || 'Generating personalized wellness advice...'}</p>
+                  {/* Fix: Handle predictiveInsights as either array or object */}
+                  <p className="text-sm text-purple-700">
+                    {Array.isArray(predictiveInsights) 
+                      ? (predictiveInsights[0]?.mental_health_score 
+                          ? `Wellness Score: ${predictiveInsights[0].mental_health_score}/10`
+                          : t('ai.analyzingWellness') || 'Analyzing your wellness patterns...')
+                      : (predictiveInsights.mental_health_score 
+                          ? `Wellness Score: ${predictiveInsights.mental_health_score}/10`
+                          : t('ai.analyzingWellness') || 'Analyzing your wellness patterns...')
+                    }
+                  </p>
+                  <p className="text-sm text-purple-600">
+                    {Array.isArray(predictiveInsights) 
+                      ? (predictiveInsights[0]?.recommendations?.[0] || t('ai.generatingWellnessAdvice') || 'Generating personalized wellness advice...')
+                      : (predictiveInsights.recommendations?.[0] || t('ai.generatingWellnessAdvice') || 'Generating personalized wellness advice...')
+                    }
+                  </p>
                 </div>
               ) : (
                 <p className="text-sm text-purple-600">{t('ai.generateInsightsPrompt') || 'Discover insights about your learning journey'}</p>
@@ -155,7 +171,7 @@ const AIStudentInsights: React.FC<AIStudentInsightsProps> = ({ studentId, school
               <Button 
                 onClick={handleGenerateInsights}
                 disabled={isAnyLoading}
-                className="flex-1 bg-gradient-to-r from-brand-teal to-purple-600 text-white hover:from-brand-teal/90 hover:to-purple-600/90"
+                className="flex-1 bg-gradient-to-r from-emerald-500 to-blue-600 text-white hover:from-emerald-600 hover:to-blue-700 shadow-lg"
               >
                 {isAnyLoading ? (
                   <>
@@ -172,7 +188,7 @@ const AIStudentInsights: React.FC<AIStudentInsightsProps> = ({ studentId, school
               <Button 
                 onClick={() => setIsExpanded(false)}
                 variant="outline"
-                className="border-2 border-gray-300 text-gray-700 hover:bg-gray-50"
+                className="border-2 border-gray-300 text-gray-700 hover:bg-gray-50 shadow-md"
               >
                 {t('common.minimize') || 'Minimize'}
               </Button>
