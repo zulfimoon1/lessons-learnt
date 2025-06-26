@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Plus, UserCheck, UserX, MoreVertical, Pause, Trash2, Users, Calendar } from "lucide-react";
+import { Plus, UserCheck, UserX, MoreVertical, Pause, Trash2, Users, Calendar, CreditCard } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -25,6 +25,9 @@ interface Teacher {
   is_available?: boolean;
   pause_start_date?: string;
   pause_end_date?: string;
+  stripe_subscription_id?: string;
+  stripe_customer_id?: string;
+  subscription_status?: string;
 }
 
 interface TeacherManagementProps {
@@ -44,6 +47,7 @@ const TeacherManagement: React.FC<TeacherManagementProps> = ({ school }) => {
   const [pauseEndDate, setPauseEndDate] = useState<Date>();
   const [bulkPauseStartDate, setBulkPauseStartDate] = useState<Date>();
   const [bulkPauseEndDate, setBulkPauseEndDate] = useState<Date>();
+  const [isProcessingStripe, setIsProcessingStripe] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -64,7 +68,7 @@ const TeacherManagement: React.FC<TeacherManagementProps> = ({ school }) => {
         .from('teachers')
         .select('*')
         .eq('school', school)
-        .neq('role', 'admin'); // Don't show admins in this list
+        .neq('role', 'admin');
 
       if (error) throw error;
       setTeachers(data || []);
@@ -84,8 +88,7 @@ const TeacherManagement: React.FC<TeacherManagementProps> = ({ school }) => {
     e.preventDefault();
     
     try {
-      // Generate a simple password hash (in production, use proper bcrypt)
-      const passwordHash = btoa(formData.password); // Simple base64 encoding for demo
+      const passwordHash = btoa(formData.password);
 
       const { data, error } = await supabase
         .from('teachers')
@@ -120,35 +123,61 @@ const TeacherManagement: React.FC<TeacherManagementProps> = ({ school }) => {
     }
   };
 
-  const toggleAvailability = async (teacherId: string, currentStatus: boolean) => {
-    if (!currentStatus) {
-      // If activating, just set available and clear pause dates
-      try {
-        const { error } = await supabase
-          .from('teachers')
-          .update({ 
-            is_available: true,
-            pause_start_date: null,
-            pause_end_date: null
-          })
-          .eq('id', teacherId);
+  const manageTeacherSubscription = async (teacherId: string, action: 'pause' | 'resume', startDate?: Date, endDate?: Date) => {
+    setIsProcessingStripe(true);
+    try {
+      const { data: currentUser } = await supabase.auth.getUser();
+      if (!currentUser.user) throw new Error("Authentication required");
 
-        if (error) throw error;
+      const { data: adminData } = await supabase
+        .from('teachers')
+        .select('email')
+        .eq('id', currentUser.user.id)
+        .single();
 
+      if (!adminData) throw new Error("Admin verification failed");
+
+      const requestBody = {
+        action,
+        teacherId,
+        pauseStartDate: startDate?.toISOString(),
+        pauseEndDate: endDate?.toISOString(),
+        adminEmail: adminData.email
+      };
+
+      const { data, error } = await supabase.functions.invoke('manage-teacher-subscription', {
+        body: requestBody
+      });
+
+      if (error) throw error;
+
+      if (data.success) {
         toast({
           title: "Success",
-          description: "Staff member activated successfully",
+          description: data.message + (action === 'pause' && data.billingPaused ? " (Billing paused)" : 
+                                     action === 'resume' && data.billingResumed ? " (Billing resumed)" : ""),
         });
-
+        
         fetchTeachers();
-      } catch (error) {
-        console.error('Error updating availability:', error);
-        toast({
-          title: "Error",
-          description: "Failed to update availability",
-          variant: "destructive",
-        });
+      } else {
+        throw new Error(data.error || 'Unknown error occurred');
       }
+    } catch (error) {
+      console.error('Error managing teacher subscription:', error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to manage subscription",
+        variant: "destructive",
+      });
+    } finally {
+      setIsProcessingStripe(false);
+    }
+  };
+
+  const toggleAvailability = async (teacherId: string, currentStatus: boolean) => {
+    if (!currentStatus) {
+      // If activating, resume subscription
+      await manageTeacherSubscription(teacherId, 'resume');
     } else {
       // If pausing, show date selection dialog
       setSelectedTeacherId(teacherId);
@@ -168,36 +197,59 @@ const TeacherManagement: React.FC<TeacherManagementProps> = ({ school }) => {
       return;
     }
 
-    try {
-      const { error } = await supabase
-        .from('teachers')
-        .update({ 
-          is_available: false,
-          pause_start_date: pauseStartDate.toISOString(),
-          pause_end_date: pauseEndDate?.toISOString() || null
-        })
-        .eq('id', selectedTeacherId);
+    await manageTeacherSubscription(selectedTeacherId, 'pause', pauseStartDate, pauseEndDate);
+    
+    setShowIndividualPauseDialog(false);
+    setSelectedTeacherId(null);
+    setPauseStartDate(undefined);
+    setPauseEndDate(undefined);
+  };
 
-      if (error) throw error;
+  const handleBulkAction = async () => {
+    if (selectedTeachers.length === 0) {
+      toast({
+        title: "Error",
+        description: "Please select at least one staff member",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (bulkAction === 'pause') {
+      if (!bulkPauseStartDate) {
+        toast({
+          title: "Error",
+          description: "Please select start date for pause period",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Process each teacher individually for proper Stripe handling
+      for (const teacherId of selectedTeachers) {
+        await manageTeacherSubscription(teacherId, 'pause', bulkPauseStartDate, bulkPauseEndDate);
+      }
 
       toast({
         title: "Success",
-        description: "Staff member paused successfully",
+        description: `${selectedTeachers.length} staff member(s) paused successfully`,
       });
+    } else {
+      // Activate (resume) selected teachers
+      for (const teacherId of selectedTeachers) {
+        await manageTeacherSubscription(teacherId, 'resume');
+      }
 
-      setShowIndividualPauseDialog(false);
-      setSelectedTeacherId(null);
-      setPauseStartDate(undefined);
-      setPauseEndDate(undefined);
-      fetchTeachers();
-    } catch (error) {
-      console.error('Error pausing teacher:', error);
       toast({
-        title: "Error",
-        description: "Failed to pause staff member",
-        variant: "destructive",
+        title: "Success",
+        description: `${selectedTeachers.length} staff member(s) activated successfully`,
       });
     }
+
+    setSelectedTeachers([]);
+    setShowBulkDialog(false);
+    setBulkPauseStartDate(undefined);
+    setBulkPauseEndDate(undefined);
   };
 
   const removeTeacher = async (teacherId: string, teacherName: string) => {
@@ -226,89 +278,6 @@ const TeacherManagement: React.FC<TeacherManagementProps> = ({ school }) => {
         description: "Failed to remove teacher",
         variant: "destructive",
       });
-    }
-  };
-
-  const handleBulkAction = async () => {
-    if (selectedTeachers.length === 0) {
-      toast({
-        title: "Error",
-        description: "Please select at least one staff member",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (bulkAction === 'pause') {
-      if (!bulkPauseStartDate) {
-        toast({
-          title: "Error",
-          description: "Please select start date for pause period",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      try {
-        const { error } = await supabase
-          .from('teachers')
-          .update({ 
-            is_available: false,
-            pause_start_date: bulkPauseStartDate.toISOString(),
-            pause_end_date: bulkPauseEndDate?.toISOString() || null
-          })
-          .in('id', selectedTeachers);
-
-        if (error) throw error;
-
-        toast({
-          title: "Success",
-          description: `${selectedTeachers.length} staff member(s) paused successfully`,
-        });
-
-        setSelectedTeachers([]);
-        setShowBulkDialog(false);
-        setBulkPauseStartDate(undefined);
-        setBulkPauseEndDate(undefined);
-        fetchTeachers();
-      } catch (error) {
-        console.error('Error performing bulk pause:', error);
-        toast({
-          title: "Error",
-          description: "Failed to perform bulk pause",
-          variant: "destructive",
-        });
-      }
-    } else {
-      // Activate (remove pause dates)
-      try {
-        const { error } = await supabase
-          .from('teachers')
-          .update({ 
-            is_available: true,
-            pause_start_date: null,
-            pause_end_date: null
-          })
-          .in('id', selectedTeachers);
-
-        if (error) throw error;
-
-        toast({
-          title: "Success",
-          description: `${selectedTeachers.length} staff member(s) activated successfully`,
-        });
-
-        setSelectedTeachers([]);
-        setShowBulkDialog(false);
-        fetchTeachers();
-      } catch (error) {
-        console.error('Error performing bulk activation:', error);
-        toast({
-          title: "Error",
-          description: "Failed to perform bulk activation",
-          variant: "destructive",
-        });
-      }
     }
   };
 
@@ -350,6 +319,7 @@ const TeacherManagement: React.FC<TeacherManagementProps> = ({ school }) => {
                   <DialogTitle>Bulk Staff Management</DialogTitle>
                   <DialogDescription>
                     Select an action to apply to {selectedTeachers.length} selected staff member(s).
+                    {bulkAction === 'pause' && " (This will also pause Stripe billing where applicable)"}
                   </DialogDescription>
                 </DialogHeader>
                 <div className="space-y-4">
@@ -429,8 +399,8 @@ const TeacherManagement: React.FC<TeacherManagementProps> = ({ school }) => {
                   <Button variant="outline" onClick={() => setShowBulkDialog(false)}>
                     Cancel
                   </Button>
-                  <Button onClick={handleBulkAction}>
-                    Apply to {selectedTeachers.length} Staff Member(s)
+                  <Button onClick={handleBulkAction} disabled={isProcessingStripe}>
+                    {isProcessingStripe ? 'Processing...' : `Apply to ${selectedTeachers.length} Staff Member(s)`}
                   </Button>
                 </DialogFooter>
               </DialogContent>
@@ -448,7 +418,7 @@ const TeacherManagement: React.FC<TeacherManagementProps> = ({ school }) => {
               <DialogHeader>
                 <DialogTitle>Pause Staff Member</DialogTitle>
                 <DialogDescription>
-                  Set the pause period for this staff member.
+                  Set the pause period for this staff member. This will also pause Stripe billing if applicable.
                 </DialogDescription>
               </DialogHeader>
               <div className="space-y-4">
@@ -511,8 +481,8 @@ const TeacherManagement: React.FC<TeacherManagementProps> = ({ school }) => {
                 <Button variant="outline" onClick={() => setShowIndividualPauseDialog(false)}>
                   Cancel
                 </Button>
-                <Button onClick={handleIndividualPause}>
-                  Pause Staff Member
+                <Button onClick={handleIndividualPause} disabled={isProcessingStripe}>
+                  {isProcessingStripe ? 'Processing...' : 'Pause Staff Member'}
                 </Button>
               </DialogFooter>
             </DialogContent>
@@ -642,6 +612,12 @@ const TeacherManagement: React.FC<TeacherManagementProps> = ({ school }) => {
                           }`}>
                             {teacher.is_available ? 'Active' : 'Paused'}
                           </span>
+                          {teacher.stripe_subscription_id && (
+                            <span className="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded flex items-center gap-1">
+                              <CreditCard className="w-3 h-3" />
+                              {teacher.subscription_status || 'Billing Active'}
+                            </span>
+                          )}
                           {!teacher.is_available && teacher.pause_start_date && (
                             <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded">
                               {format(new Date(teacher.pause_start_date), "MMM d")}
@@ -654,13 +630,14 @@ const TeacherManagement: React.FC<TeacherManagementProps> = ({ school }) => {
                     <div className="flex items-center gap-2">
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <Button variant="outline" size="sm">
+                          <Button variant="outline" size="sm" disabled={isProcessingStripe}>
                             <MoreVertical className="w-4 h-4" />
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                           <DropdownMenuItem
                             onClick={() => toggleAvailability(teacher.id, teacher.is_available || false)}
+                            disabled={isProcessingStripe}
                           >
                             {teacher.is_available ? (
                               <>
@@ -677,6 +654,7 @@ const TeacherManagement: React.FC<TeacherManagementProps> = ({ school }) => {
                           <DropdownMenuItem
                             onClick={() => removeTeacher(teacher.id, teacher.name)}
                             className="text-red-600"
+                            disabled={isProcessingStripe}
                           >
                             <Trash2 className="w-4 h-4 mr-2" />
                             Remove from School
