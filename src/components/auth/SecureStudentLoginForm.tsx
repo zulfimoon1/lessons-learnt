@@ -1,119 +1,134 @@
 
-import React, { useState } from "react";
+import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { LogInIcon, UserIcon, SchoolIcon, GraduationCapIcon } from "lucide-react";
-import { useLanguage } from "@/contexts/LanguageContext";
-import SecurityEnhancedInput from "@/components/security/SecurityEnhancedInput";
-import SecureFormWrapper from "@/components/security/SecureFormWrapper";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { LogInIcon, AlertCircle } from "lucide-react";
 
 interface SecureStudentLoginFormProps {
   onLogin: (fullName: string, school: string, grade: string, password: string) => Promise<void>;
   isLoading: boolean;
 }
 
-const SecureStudentLoginForm: React.FC<SecureStudentLoginFormProps> = ({ onLogin, isLoading }) => {
-  const { t, language } = useLanguage();
-  const [loginData, setLoginData] = useState({
-    fullName: "",
-    school: "",
-    grade: "",
-    password: ""
-  });
+const grades = [
+  'Kindergarten', 'Grade 1', 'Grade 2', 'Grade 3', 'Grade 4', 'Grade 5',
+  'Grade 6', 'Grade 7', 'Grade 8', 'Grade 9', 'Grade 10', 'Grade 11', 'Grade 12'
+];
 
-  const handleSecureSubmit = async (formData: FormData, csrfToken: string) => {
-    const fullName = formData.get('fullName') as string;
-    const school = formData.get('school') as string;
-    const grade = formData.get('grade') as string;
-    const password = formData.get('password') as string;
-    
+const SecureStudentLoginForm: React.FC<SecureStudentLoginFormProps> = ({ onLogin, isLoading }) => {
+  const [fullName, setFullName] = useState('');
+  const [school, setSchool] = useState('');
+  const [grade, setGrade] = useState('');
+  const [password, setPassword] = useState('');
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     await onLogin(fullName, school, grade, password);
   };
 
+  const getGradeLevel = (grade: string): number => {
+    const gradeNumber = grade.toLowerCase().replace(/[^0-9]/g, '');
+    if (grade.toLowerCase().includes('kindergarten')) return 0;
+    return parseInt(gradeNumber) || 6;
+  };
+
+  const getPasswordGuidance = (grade: string) => {
+    const gradeLevel = getGradeLevel(grade);
+    if (gradeLevel <= 3) {
+      return "Enter the password your teacher gave you. It might be something like 'cat12' or 'temp45'.";
+    } else if (gradeLevel <= 6) {
+      return "Enter your password. If you forgot it, ask your teacher to help reset it.";
+    } else {
+      return "Enter your password. Contact your teacher if you need a password reset.";
+    }
+  };
+
   return (
-    <SecureFormWrapper onSubmit={handleSecureSubmit} className="space-y-4">
-      <div className="space-y-2">
-        <Label htmlFor="fullName" className="flex items-center gap-2 text-brand-dark font-medium">
-          <UserIcon className="w-4 h-4 text-brand-teal" />
-          {t('auth.fullName')}
-        </Label>
-        <SecurityEnhancedInput
-          name="fullName"
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div>
+        <Label htmlFor="fullName">Full Name</Label>
+        <Input
+          id="fullName"
           type="text"
-          placeholder={language === 'lt' ? 'Vardas Pavardė' : 'John Smith'}
-          value={loginData.fullName}
-          onChange={(e) => setLoginData(prev => ({ ...prev, fullName: e.target.value }))}
+          value={fullName}
+          onChange={(e) => setFullName(e.target.value)}
+          placeholder="Enter your full name"
           required
-          validateAs="name"
-          maxLength={100}
-          className="bg-white border-gray-300 focus:border-brand-teal focus:ring-brand-teal text-brand-dark placeholder:text-gray-500"
+          disabled={isLoading}
         />
       </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="school" className="flex items-center gap-2 text-brand-dark font-medium">
-          <SchoolIcon className="w-4 h-4 text-brand-teal" />
-          {t('auth.school')}
-        </Label>
-        <SecurityEnhancedInput
-          name="school"
+      <div>
+        <Label htmlFor="school">School</Label>
+        <Input
+          id="school"
           type="text"
-          placeholder={language === 'lt' ? 'Vilniaus licėjus' : 'Central High School'}
-          value={loginData.school}
-          onChange={(e) => setLoginData(prev => ({ ...prev, school: e.target.value }))}
+          value={school}
+          onChange={(e) => setSchool(e.target.value)}
+          placeholder="Enter your school name"
           required
-          validateAs="school"
-          maxLength={200}
-          className="bg-white border-gray-300 focus:border-brand-teal focus:ring-brand-teal text-brand-dark placeholder:text-gray-500"
+          disabled={isLoading}
         />
       </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="grade" className="flex items-center gap-2 text-brand-dark font-medium">
-          <GraduationCapIcon className="w-4 h-4 text-brand-teal" />
-          {t('auth.gradeClass')}
-        </Label>
-        <SecurityEnhancedInput
-          name="grade"
-          type="text"
-          placeholder={language === 'lt' ? '10A, 9 klasė' : 'Grade 5, 10A'}
-          value={loginData.grade}
-          onChange={(e) => setLoginData(prev => ({ ...prev, grade: e.target.value }))}
-          required
-          validateAs="grade"
-          maxLength={50}
-          className="bg-white border-gray-300 focus:border-brand-teal focus:ring-brand-teal text-brand-dark placeholder:text-gray-500"
-        />
+      <div>
+        <Label htmlFor="grade">Grade</Label>
+        <Select value={grade} onValueChange={setGrade} disabled={isLoading}>
+          <SelectTrigger>
+            <SelectValue placeholder="Select your grade" />
+          </SelectTrigger>
+          <SelectContent>
+            {grades.map((gradeOption) => (
+              <SelectItem key={gradeOption} value={gradeOption}>
+                {gradeOption}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="password" className="text-brand-dark font-medium">{t('auth.password')}</Label>
-        <SecurityEnhancedInput
-          name="password"
+      <div>
+        <Label htmlFor="password">Password</Label>
+        <Input
+          id="password"
           type="password"
-          placeholder={language === 'lt' ? 'Įveskite slaptažodį' : 'Enter your password'}
-          value={loginData.password}
-          onChange={(e) => setLoginData(prev => ({ ...prev, password: e.target.value }))}
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          placeholder="Enter your password"
           required
-          validateAs="password"
-          maxLength={128}
-          className="bg-white border-gray-300 focus:border-brand-teal focus:ring-brand-teal text-brand-dark placeholder:text-gray-500"
+          disabled={isLoading}
         />
+        
+        {grade && (
+          <Alert className="mt-2 bg-blue-50 border-blue-200">
+            <AlertCircle className="w-4 h-4 text-blue-600" />
+            <AlertDescription className="text-blue-800 text-sm">
+              {getPasswordGuidance(grade)}
+            </AlertDescription>
+          </Alert>
+        )}
       </div>
 
-      <Button 
-        type="submit" 
-        className="w-full bg-brand-teal hover:bg-brand-dark text-white font-medium py-3"
+      <Button
+        type="submit"
+        className="w-full bg-brand-teal hover:bg-brand-teal/90"
         disabled={isLoading}
       >
-        {isLoading ? t('auth.loggingIn') : (
+        {isLoading ? (
+          <>
+            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+            Signing In...
+          </>
+        ) : (
           <>
             <LogInIcon className="w-4 h-4 mr-2" />
-            {t('auth.login')}
+            Sign In
           </>
         )}
       </Button>
-    </SecureFormWrapper>
+    </form>
   );
 };
 

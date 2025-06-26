@@ -1,124 +1,124 @@
 
-import React, { useState } from "react";
+import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { UserIcon, School, GraduationCap } from "lucide-react";
-import { useLanguage } from "@/contexts/LanguageContext";
-import SecurityEnhancedInput from "@/components/security/SecurityEnhancedInput";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { UserPlusIcon } from "lucide-react";
+import AgeAppropriatePasswordInput from './AgeAppropriatePasswordInput';
 
 interface StudentSignupFormProps {
   onSignup: (fullName: string, school: string, grade: string, password: string, confirmPassword: string) => Promise<void>;
   isLoading: boolean;
 }
 
+const grades = [
+  'Kindergarten', 'Grade 1', 'Grade 2', 'Grade 3', 'Grade 4', 'Grade 5',
+  'Grade 6', 'Grade 7', 'Grade 8', 'Grade 9', 'Grade 10', 'Grade 11', 'Grade 12'
+];
+
 const StudentSignupForm: React.FC<StudentSignupFormProps> = ({ onSignup, isLoading }) => {
-  const { t } = useLanguage();
-  const [signupData, setSignupData] = useState({
-    fullName: "",
-    school: "",
-    grade: "",
-    password: "",
-    confirmPassword: ""
-  });
+  const [fullName, setFullName] = useState('');
+  const [school, setSchool] = useState('');
+  const [grade, setGrade] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await onSignup(
-      signupData.fullName,
-      signupData.school,
-      signupData.grade,
-      signupData.password,
-      signupData.confirmPassword
-    );
+    await onSignup(fullName, school, grade, password, confirmPassword);
+  };
+
+  const getGradeLevel = (grade: string): number => {
+    const gradeNumber = grade.toLowerCase().replace(/[^0-9]/g, '');
+    if (grade.toLowerCase().includes('kindergarten')) return 0;
+    return parseInt(gradeNumber) || 6;
   };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="space-y-2">
-        <Label htmlFor="signupFullName" className="flex items-center gap-2 text-black font-medium">
-          <UserIcon className="w-4 h-4 text-brand-teal" />
-          {t('auth.fullName')}
-        </Label>
-        <SecurityEnhancedInput
-          id="signupFullName"
+      <div>
+        <Label htmlFor="fullName">Full Name</Label>
+        <Input
+          id="fullName"
           type="text"
-          placeholder={t('student.fullNameSignupPlaceholder') || "Enter your full name"}
-          value={signupData.fullName}
-          onChange={(e) => setSignupData(prev => ({ ...prev, fullName: e.target.value }))}
+          value={fullName}
+          onChange={(e) => setFullName(e.target.value)}
+          placeholder="Enter your full name"
           required
-          validateAs="name"
-          maxLength={100}
+          disabled={isLoading}
         />
       </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="signupSchool" className="flex items-center gap-2 text-black font-medium">
-          <School className="w-4 h-4 text-brand-teal" />
-          {t('auth.school')}
-        </Label>
-        <SecurityEnhancedInput
-          id="signupSchool"
+      <div>
+        <Label htmlFor="school">School</Label>
+        <Input
+          id="school"
           type="text"
-          placeholder={t('student.schoolPlaceholder') || "Enter your school name"}
-          value={signupData.school}
-          onChange={(e) => setSignupData(prev => ({ ...prev, school: e.target.value }))}
+          value={school}
+          onChange={(e) => setSchool(e.target.value)}
+          placeholder="Enter your school name"
           required
-          validateAs="school"
-          maxLength={200}
+          disabled={isLoading}
         />
       </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="signupGrade" className="flex items-center gap-2 text-black font-medium">
-          <GraduationCap className="w-4 h-4 text-brand-teal" />
-          {t('student.classGrade') || "Class/Grade"}
-        </Label>
-        <SecurityEnhancedInput
-          id="signupGrade"
-          type="text"
-          placeholder={t('student.gradePlaceholder') || "e.g., Grade 5, Year 7"}
-          value={signupData.grade}
-          onChange={(e) => setSignupData(prev => ({ ...prev, grade: e.target.value }))}
-          required
-          validateAs="grade"
-          maxLength={50}
-        />
+      <div>
+        <Label htmlFor="grade">Grade</Label>
+        <Select value={grade} onValueChange={setGrade} disabled={isLoading}>
+          <SelectTrigger>
+            <SelectValue placeholder="Select your grade" />
+          </SelectTrigger>
+          <SelectContent>
+            {grades.map((gradeOption) => (
+              <SelectItem key={gradeOption} value={gradeOption}>
+                {gradeOption}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="signupPassword" className="text-black font-medium">{t('auth.password')}</Label>
-        <SecurityEnhancedInput
-          id="signupPassword"
-          type="password"
-          placeholder={t('student.createPassword') || "Create a password"}
-          value={signupData.password}
-          onChange={(e) => setSignupData(prev => ({ ...prev, password: e.target.value }))}
-          required
-          validateAs="password"
-          maxLength={128}
+      {grade && (
+        <AgeAppropriatePasswordInput
+          password={password}
+          onPasswordChange={setPassword}
+          gradeLevel={getGradeLevel(grade)}
+          studentName={fullName}
+          showStrengthMeter={true}
+          disabled={isLoading}
         />
-      </div>
+      )}
 
-      <div className="space-y-2">
-        <Label htmlFor="confirmPassword" className="text-black font-medium">{t('auth.confirmPassword')}</Label>
-        <SecurityEnhancedInput
+      <div>
+        <Label htmlFor="confirmPassword">Confirm Password</Label>
+        <Input
           id="confirmPassword"
           type="password"
-          placeholder={t('student.confirmPasswordPlaceholder') || "Confirm your password"}
-          value={signupData.confirmPassword}
-          onChange={(e) => setSignupData(prev => ({ ...prev, confirmPassword: e.target.value }))}
+          value={confirmPassword}
+          onChange={(e) => setConfirmPassword(e.target.value)}
+          placeholder="Enter your password again"
           required
-          validateAs="password"
-          maxLength={128}
+          disabled={isLoading}
         />
       </div>
 
-      <Button 
-        type="submit" 
-        className="w-full bg-brand-gradient hover:opacity-90 text-white"
+      <Button
+        type="submit"
+        className="w-full bg-brand-teal hover:bg-brand-teal/90"
         disabled={isLoading}
       >
-        {isLoading ? t('auth.creatingAccount') : t('auth.createAccount')}
+        {isLoading ? (
+          <>
+            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+            Creating Account...
+          </>
+        ) : (
+          <>
+            <UserPlusIcon className="w-4 h-4 mr-2" />
+            Create Account
+          </>
+        )}
       </Button>
     </form>
   );

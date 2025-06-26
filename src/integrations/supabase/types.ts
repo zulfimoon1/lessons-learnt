@@ -625,33 +625,89 @@ export type Database = {
         }
         Relationships: []
       }
+      student_login_activity: {
+        Row: {
+          created_at: string | null
+          grade: string | null
+          id: string
+          ip_address: unknown | null
+          login_timestamp: string | null
+          school: string
+          student_id: string | null
+          success: boolean | null
+          user_agent: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          grade?: string | null
+          id?: string
+          ip_address?: unknown | null
+          login_timestamp?: string | null
+          school: string
+          student_id?: string | null
+          success?: boolean | null
+          user_agent?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          grade?: string | null
+          id?: string
+          ip_address?: unknown | null
+          login_timestamp?: string | null
+          school?: string
+          student_id?: string | null
+          success?: boolean | null
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_login_activity_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       students: {
         Row: {
           created_at: string
           full_name: string
           grade: string
+          grade_level: number | null
           id: string
+          last_password_change: string | null
           needs_password_change: boolean | null
           password_hash: string
+          password_strength_score: number | null
           school: string
+          session_timeout_minutes: number | null
         }
         Insert: {
           created_at?: string
           full_name: string
           grade: string
+          grade_level?: number | null
           id?: string
+          last_password_change?: string | null
           needs_password_change?: boolean | null
           password_hash: string
+          password_strength_score?: number | null
           school: string
+          session_timeout_minutes?: number | null
         }
         Update: {
           created_at?: string
           full_name?: string
           grade?: string
+          grade_level?: number | null
           id?: string
+          last_password_change?: string | null
           needs_password_change?: boolean | null
           password_hash?: string
+          password_strength_score?: number | null
           school?: string
+          session_timeout_minutes?: number | null
         }
         Relationships: []
       }
@@ -1505,6 +1561,15 @@ export type Database = {
           student_id: string
         }[]
       }
+      teacher_reset_student_password_enhanced: {
+        Args: {
+          student_name_param: string
+          student_school_param: string
+          student_grade_param: string
+          teacher_id_param: string
+        }
+        Returns: Json
+      }
       validate_admin_operation: {
         Args: { operation_name: string }
         Returns: boolean
@@ -1512,6 +1577,10 @@ export type Database = {
       validate_mental_health_access: {
         Args: Record<PropertyKey, never>
         Returns: boolean
+      }
+      validate_student_password: {
+        Args: { password_text: string; student_grade_level?: number }
+        Returns: Json
       }
     }
     Enums: {
