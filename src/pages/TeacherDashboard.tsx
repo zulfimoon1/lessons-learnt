@@ -109,18 +109,6 @@ const TeacherDashboard: React.FC = () => {
                   {t('common.ready') || 'Ready to teach'}
                 </div>
               </div>
-              
-              {/* Quick Stats - Matching Student Dashboard Style */}
-              <div className="grid grid-cols-2 lg:grid-cols-2 gap-4 w-full lg:w-auto">
-                <div className="bg-white/20 backdrop-blur-sm rounded-2xl p-4 text-center border border-white/30">
-                  <div className="text-2xl lg:text-3xl font-bold text-white">8</div>
-                  <div className="text-sm text-white/80">{t('teacher.classes.today') || 'Today\'s Classes'}</div>
-                </div>
-                <div className="bg-white/20 backdrop-blur-sm rounded-2xl p-4 text-center border border-white/30">
-                  <div className="text-2xl lg:text-3xl font-bold text-white">124</div>
-                  <div className="text-sm text-white/80">{t('teacher.stats.totalStudents') || 'Total Students'}</div>
-                </div>
-              </div>
             </div>
           </div>
         </div>
