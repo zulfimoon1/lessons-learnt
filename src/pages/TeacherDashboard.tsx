@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { CalendarIcon, MessageSquareIcon, FileTextIcon, BookOpenIcon, UsersIcon, BarChartIcon, BrainIcon } from "lucide-react";
+import { CalendarIcon, MessageSquareIcon, FileTextIcon, UsersIcon, BarChartIcon, BrainIcon } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Navigate } from "react-router-dom";
@@ -11,7 +11,6 @@ import DashboardHeader from "@/components/dashboard/DashboardHeader";
 import ScheduleTab from "@/components/dashboard/teacher/ScheduleTab";
 import FeedbackDashboard from "@/components/dashboard/teacher/FeedbackDashboard";
 import WeeklySummariesTab from "@/components/dashboard/teacher/WeeklySummariesTab";
-import BulkUploadTab from "@/components/dashboard/teacher/BulkUploadTab";
 import MentalHealthTab from "@/components/dashboard/teacher/MentalHealthTab";
 import ArticlesTab from "@/components/dashboard/teacher/ArticlesTab";
 import AnalyticsTab from "@/components/dashboard/teacher/AnalyticsTab";
@@ -54,12 +53,6 @@ const TeacherDashboard: React.FC = () => {
       icon: FileTextIcon,
       label: t('weekly.summaries') || 'Summaries',
       component: <WeeklySummariesTab teacher={teacher} />
-    },
-    {
-      value: 'bulk',
-      icon: BookOpenIcon,
-      label: t('teacher.bulkUpload') || 'Bulk Upload',
-      component: <BulkUploadTab teacher={teacher} />
     },
     {
       value: 'mental-health',
@@ -135,7 +128,7 @@ const TeacherDashboard: React.FC = () => {
         {/* Navigation Tabs - Matching Student Dashboard */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <div className="bg-white/80 backdrop-blur-sm rounded-2xl border border-gray-200/50 shadow-lg overflow-hidden">
-            <TabsList className={`grid w-full bg-transparent border-b border-gray-200/50 ${isMobile ? 'grid-cols-2 gap-0 h-auto p-0' : 'grid-cols-8 h-14'}`}>
+            <TabsList className={`grid w-full bg-transparent border-b border-gray-200/50 ${isMobile ? 'grid-cols-2 gap-0 h-auto p-0' : 'grid-cols-7 h-14'}`}>
               {tabItems.map((item) => {
                 const Icon = item.icon;
                 return (
