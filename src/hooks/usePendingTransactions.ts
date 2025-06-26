@@ -5,6 +5,17 @@ import type { Database } from '@/integrations/supabase/types';
 
 type Transaction = Database['public']['Tables']['transactions']['Row'];
 
+interface TransactionActionResult {
+  success: boolean;
+  action: string;
+  new_status: string;
+  transaction_id: string;
+  requires_payment?: boolean;
+  payment_initiated?: boolean;
+  checkout_url?: string;
+  payment_intent_id?: string;
+}
+
 export const usePendingTransactions = () => {
   const [pendingTransactions, setPendingTransactions] = useState<Transaction[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -47,8 +58,11 @@ export const usePendingTransactions = () => {
       
       console.log('Transaction action completed:', data);
 
+      // Parse the JSON response
+      const actionResult = data as TransactionActionResult;
+
       // If transaction was approved, trigger automatic payment processing
-      if (action === 'approved' && data?.requires_payment) {
+      if (action === 'approved' && actionResult?.requires_payment) {
         console.log('Triggering automatic payment processing...');
         
         try {
@@ -75,12 +89,17 @@ export const usePendingTransactions = () => {
           }
 
           // Show success message with payment info
-          return {
-            ...data,
+          const result: TransactionActionResult = {
+            ...actionResult,
             payment_initiated: true,
             checkout_url: paymentData?.checkout_url,
             payment_intent_id: paymentData?.payment_intent_id
           };
+
+          // Refresh pending transactions after action
+          await fetchPendingTransactions(adminEmail);
+          
+          return result;
 
         } catch (paymentError) {
           console.error('Failed to initiate payment processing:', paymentError);
@@ -93,7 +112,7 @@ export const usePendingTransactions = () => {
       // Refresh pending transactions after action
       await fetchPendingTransactions(adminEmail);
       
-      return data;
+      return actionResult;
     } catch (error) {
       console.error('Error handling transaction action:', error);
       throw error;
