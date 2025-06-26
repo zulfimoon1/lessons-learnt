@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -23,17 +23,25 @@ const DoctorChatDashboard = ({ doctorId, doctorName, school }: DoctorChatDashboa
   const [activeSessions, setActiveSessions] = useState<LiveChatSession[]>([]);
   const [currentChatSession, setCurrentChatSession] = useState<LiveChatSession | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const channelRef = useRef<any>(null);
 
   useEffect(() => {
     loadSessions();
     setupRealtimeSubscription();
+    
+    return () => {
+      if (channelRef.current) {
+        console.log('DoctorChatDashboard: Cleaning up subscription');
+        supabase.removeChannel(channelRef.current);
+        channelRef.current = null;
+      }
+    };
   }, [school, doctorId]);
 
   const loadSessions = async () => {
     try {
       console.log('Loading chat sessions for doctor:', { doctorId, school });
       
-      // Load waiting sessions
       const { data: waiting, error: waitingError } = await supabase
         .from('live_chat_sessions')
         .select('*')
@@ -43,7 +51,6 @@ const DoctorChatDashboard = ({ doctorId, doctorName, school }: DoctorChatDashboa
 
       if (waitingError) throw waitingError;
 
-      // Load active sessions for this doctor
       const { data: active, error: activeError } = await supabase
         .from('live_chat_sessions')
         .select('*')
@@ -55,7 +62,6 @@ const DoctorChatDashboard = ({ doctorId, doctorName, school }: DoctorChatDashboa
 
       console.log('Loaded sessions:', { waiting, active });
       
-      // Transform data to ensure proper typing
       const typedWaiting: LiveChatSession[] = (waiting || []).map(session => ({
         ...session,
         status: session.status as 'waiting' | 'active' | 'ended'
@@ -83,8 +89,17 @@ const DoctorChatDashboard = ({ doctorId, doctorName, school }: DoctorChatDashboa
   const setupRealtimeSubscription = () => {
     console.log('Setting up real-time subscription for doctor chat dashboard');
     
+    // Clean up existing subscription
+    if (channelRef.current) {
+      supabase.removeChannel(channelRef.current);
+      channelRef.current = null;
+    }
+    
+    // Create unique channel name
+    const channelName = `doctor_chat_${doctorId}_${Date.now()}`;
+    
     const channel = supabase
-      .channel(`doctor_chat_${doctorId}`)
+      .channel(channelName)
       .on(
         'postgres_changes',
         {
@@ -102,9 +117,7 @@ const DoctorChatDashboard = ({ doctorId, doctorName, school }: DoctorChatDashboa
         console.log('Doctor chat subscription status:', status);
       });
 
-    return () => {
-      supabase.removeChannel(channel);
-    };
+    channelRef.current = channel;
   };
 
   const handleJoinSession = async (session: LiveChatSession) => {
@@ -159,7 +172,10 @@ const DoctorChatDashboard = ({ doctorId, doctorName, school }: DoctorChatDashboa
     return (
       <Card>
         <CardContent className="p-6">
-          <div className="text-center">Loading chat sessions...</div>
+          <div className="flex items-center justify-center py-8">
+            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-brand-teal"></div>
+            <span className="ml-3 text-brand-dark">Loading chat sessions...</span>
+          </div>
         </CardContent>
       </Card>
     );
@@ -171,8 +187,11 @@ const DoctorChatDashboard = ({ doctorId, doctorName, school }: DoctorChatDashboa
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <MessageCircleIcon className="w-5 h-5" />
-            Doctor Chat Dashboard
+            Live Chat Dashboard - Medical Support
           </CardTitle>
+          <p className="text-sm text-gray-600">
+            Manage student chat sessions and provide medical guidance
+          </p>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -180,17 +199,18 @@ const DoctorChatDashboard = ({ doctorId, doctorName, school }: DoctorChatDashboa
             <div>
               <h3 className="font-semibold mb-4 flex items-center gap-2">
                 <ClockIcon className="w-4 h-4" />
-                Waiting for Doctor ({waitingSessions.length})
+                Students Waiting ({waitingSessions.length})
               </h3>
               <ScrollArea className="h-96">
                 <div className="space-y-3">
                   {waitingSessions.length === 0 ? (
                     <div className="text-center text-gray-500 py-8">
-                      No students waiting for chat
+                      <MessageCircleIcon className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+                      <p className="text-sm">No students waiting for medical support</p>
                     </div>
                   ) : (
                     waitingSessions.map((session) => (
-                      <Card key={session.id} className="border-orange-200">
+                      <Card key={session.id} className="border-orange-200 bg-orange-50/30">
                         <CardContent className="p-4">
                           <div className="flex items-center justify-between mb-2">
                             <div className="flex items-center gap-2">
@@ -210,8 +230,10 @@ const DoctorChatDashboard = ({ doctorId, doctorName, school }: DoctorChatDashboa
                           <Button
                             onClick={() => handleJoinSession(session)}
                             className="w-full bg-green-600 hover:bg-green-700"
+                            size="sm"
                           >
-                            Join Chat
+                            <StethoscopeIcon className="w-4 h-4 mr-2" />
+                            Provide Support
                           </Button>
                         </CardContent>
                       </Card>
@@ -225,17 +247,18 @@ const DoctorChatDashboard = ({ doctorId, doctorName, school }: DoctorChatDashboa
             <div>
               <h3 className="font-semibold mb-4 flex items-center gap-2">
                 <StethoscopeIcon className="w-4 h-4" />
-                Your Active Chats ({activeSessions.length})
+                Your Active Sessions ({activeSessions.length})
               </h3>
               <ScrollArea className="h-96">
                 <div className="space-y-3">
                   {activeSessions.length === 0 ? (
                     <div className="text-center text-gray-500 py-8">
-                      No active chat sessions
+                      <StethoscopeIcon className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+                      <p className="text-sm">No active medical support sessions</p>
                     </div>
                   ) : (
                     activeSessions.map((session) => (
-                      <Card key={session.id} className="border-green-200">
+                      <Card key={session.id} className="border-green-200 bg-green-50/30">
                         <CardContent className="p-4">
                           <div className="flex items-center justify-between mb-2">
                             <div className="flex items-center gap-2">
@@ -255,8 +278,9 @@ const DoctorChatDashboard = ({ doctorId, doctorName, school }: DoctorChatDashboa
                           <Button
                             onClick={() => setCurrentChatSession(session)}
                             className="w-full bg-blue-600 hover:bg-blue-700"
+                            size="sm"
                           >
-                            Continue Chat
+                            Continue Session
                           </Button>
                         </CardContent>
                       </Card>

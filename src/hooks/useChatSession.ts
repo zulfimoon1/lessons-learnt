@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { LiveChatSession } from "@/types/auth";
@@ -18,13 +18,21 @@ export const useChatSession = (session: LiveChatSession, isDoctorView: boolean, 
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isConnected, setIsConnected] = useState(false);
   const [doctorInfo, setDoctorInfo] = useState<any>(null);
+  const channelRef = useRef<any>(null);
 
   useEffect(() => {
     console.log('useChatSession: Setting up chat for session:', session.id);
     loadMessages();
     
-    // Set up real-time subscription and store the cleanup function
-    const cleanup = setupRealtimeSubscription();
+    // Clean up any existing subscription first
+    if (channelRef.current) {
+      console.log('useChatSession: Cleaning up existing channel');
+      supabase.removeChannel(channelRef.current);
+      channelRef.current = null;
+    }
+    
+    // Set up new subscription
+    setupRealtimeSubscription();
     
     if (session.status === 'active' && session.doctor_id) {
       setIsConnected(true);
@@ -37,8 +45,14 @@ export const useChatSession = (session: LiveChatSession, isDoctorView: boolean, 
       notifyStudentDoctorJoined();
     }
 
-    // Return the cleanup function
-    return cleanup;
+    // Cleanup function
+    return () => {
+      if (channelRef.current) {
+        console.log('useChatSession: Cleaning up chat subscription on unmount');
+        supabase.removeChannel(channelRef.current);
+        channelRef.current = null;
+      }
+    };
   }, [session.id]);
 
   const loadMessages = async () => {
@@ -53,7 +67,6 @@ export const useChatSession = (session: LiveChatSession, isDoctorView: boolean, 
       if (error) throw error;
       console.log('useChatSession: Loaded messages:', data);
       
-      // Transform data to ensure proper typing
       const typedMessages: ChatMessage[] = (data || []).map(msg => ({
         ...msg,
         sender_type: msg.sender_type as 'student' | 'doctor'
@@ -67,8 +80,12 @@ export const useChatSession = (session: LiveChatSession, isDoctorView: boolean, 
 
   const setupRealtimeSubscription = () => {
     console.log('useChatSession: Setting up real-time subscription');
+    
+    // Create a unique channel name to avoid conflicts
+    const channelName = `chat_${session.id}_${Date.now()}`;
+    
     const channel = supabase
-      .channel(`chat_${session.id}`)
+      .channel(channelName)
       .on(
         'postgres_changes',
         {
@@ -108,11 +125,7 @@ export const useChatSession = (session: LiveChatSession, isDoctorView: boolean, 
         console.log('useChatSession: Subscription status:', status);
       });
 
-    // Return cleanup function that removes the channel
-    return () => {
-      console.log('useChatSession: Cleaning up chat subscription');
-      supabase.removeChannel(channel);
-    };
+    channelRef.current = channel;
   };
 
   const loadDoctorInfo = async (doctorId: string) => {
