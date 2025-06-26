@@ -137,7 +137,7 @@ const DemoSection = () => {
 
         <div className={cn(
           'items-center',
-          isMobile ? 'grid grid-cols-1 gap-8' : 'grid grid-cols-1 lg:grid-cols-2 gap-12 items-center'
+          isMobile ? 'grid grid-cols-1 gap-8' : 'grid grid-cols-1 lg:grid-cols-1 gap-12 items-center'
         )}>
           <div className="space-y-8">
             <div className="flex items-start gap-4">
@@ -188,49 +188,6 @@ const DemoSection = () => {
               </div>
             </div>
           </div>
-
-          {/* Hide this card on mobile as requested */}
-          {!isMobile && (
-            <div className="bg-brand-gradient-soft rounded-2xl p-8">
-              <Card className="bg-white/90 backdrop-blur-sm border-brand-teal/20">
-                <CardHeader>
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="w-10 h-10 bg-brand-teal rounded-full flex items-center justify-center">
-                      <HeartIcon className="w-5 h-5 text-white" />
-                    </div>
-                    <div>
-                      <CardTitle className="text-lg text-brand-dark">{t('demo.demoFeatures')}</CardTitle>
-                      <CardDescription className="text-gray-600">{t('demo.tryBeforeCommit')}</CardDescription>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="flex items-center gap-3">
-                    <ShieldCheckIcon className="w-5 h-5 text-brand-teal" />
-                    <span className="text-brand-dark">Full platform access</span>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <ShieldCheckIcon className="w-5 h-5 text-brand-teal" />
-                    <span className="text-brand-dark">Real workflow testing</span>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <ShieldCheckIcon className="w-5 h-5 text-brand-teal" />
-                    <span className="text-brand-dark">Live data examples</span>
-                  </div>
-                  
-                  <div className="pt-4">
-                    <Button 
-                      className="w-full bg-brand-orange hover:bg-brand-orange/90 text-white"
-                      onClick={handleTryDemo}
-                    >
-                      <ExternalLink className="w-4 h-4 mr-2" />
-                      Try Live Demo
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          )}
         </div>
       </div>
     </section>
