@@ -123,6 +123,7 @@ export const enTranslations = {
   'ai.analyzingWellness': 'Analyzing your wellness patterns...',
   'ai.generatingWellnessAdvice': 'Generating personalized wellness advice...',
   'ai.insights': 'AI Insights',
+  'ai.engagementPredictor': 'Engagement Predictor',
 
   // Mental Health Support - Complete set
   'mentalHealth.loading': 'Loading mental health support...',

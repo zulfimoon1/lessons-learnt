@@ -3,8 +3,7 @@ import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import AIRecommendationsCard from '@/components/ai/AIRecommendationsCard';
 import StudentEngagementPredictor from '@/components/ai/StudentEngagementPredictor';
-import MentalHealthAIAnalyzer from '@/components/ai/MentalHealthAIAnalyzer';
-import { Brain, Sparkles, Target, Heart } from 'lucide-react';
+import { Brain, Sparkles, Target } from 'lucide-react';
 
 interface AIInsightsTabProps {
   teacher: {
@@ -71,24 +70,6 @@ const AIInsightsTab: React.FC<AIInsightsTabProps> = ({ teacher }) => {
           </CardContent>
         </Card>
       </div>
-
-      {/* Mental Health AI Analyzer - Full Width */}
-      <Card className="group hover:shadow-xl transition-all duration-300 border-0 shadow-lg bg-gradient-to-br from-purple-500/5 to-pink-500/10 hover:from-purple-500/10 hover:to-pink-500/20">
-        <CardHeader className="pb-4">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-purple-500/10 flex items-center justify-center group-hover:bg-purple-500/20 transition-colors">
-              <Heart className="w-4 h-4 text-purple-500" />
-            </div>
-            <div>
-              <CardTitle className="text-lg text-gray-900">Mental Health AI Analysis</CardTitle>
-              <CardDescription className="text-sm">AI-powered wellbeing insights for your students</CardDescription>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <MentalHealthAIAnalyzer school={teacher.school} />
-        </CardContent>
-      </Card>
     </div>
   );
 };

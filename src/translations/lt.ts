@@ -411,6 +411,9 @@ export const ltTranslations = {
   'analytics.topPerformingClasses': 'Geriausiai veikiančios pamokos',
   'analytics.noTopClasses': 'Pamokų duomenų dar nėra',
   
+  'ai.insights': 'AI įžvalgos',
+  'ai.engagementPredictor': 'Įsitraukimo prognozuotojas',
+  
   ...ltAuthTranslations,
   ...ltTeacherTranslations,
   ...ltWeeklyTranslations,
