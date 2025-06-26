@@ -50,12 +50,12 @@ class SecurePlatformAdminService {
     }
   }
 
-  // Enhanced platform admin context setting with multiple attempts and better error handling
+  // Enhanced platform admin context setting with better error handling and multiple context variables
   private async setPlatformAdminContext(adminEmail: string): Promise<void> {
     try {
-      console.log('🔧 Setting platform admin context for:', adminEmail);
+      console.log('🔧 Setting comprehensive platform admin context for:', adminEmail);
       
-      // Use the dedicated function
+      // Set multiple context variables for maximum compatibility
       const { error: contextError } = await supabase.rpc('set_platform_admin_context', {
         admin_email: adminEmail
       });
@@ -64,13 +64,13 @@ class SecurePlatformAdminService {
         console.error('Context setting error:', contextError);
         throw new Error(`Failed to set admin context: ${contextError.message}`);
       } else {
-        console.log('✅ Platform admin context set successfully via RPC');
+        console.log('✅ Platform admin context set successfully with all required flags');
       }
 
       // Log the context setting with valid event type
       centralizedValidationService.logSecurityEvent({
         type: 'suspicious_activity',
-        details: `Platform admin context configured for ${adminEmail}`,
+        details: `Platform admin context configured for ${adminEmail} with comprehensive flags`,
         severity: 'low'
       });
 
@@ -155,9 +155,10 @@ class SecurePlatformAdminService {
 
   async getTransactions(adminEmail: string) {
     try {
+      console.log('🔍 Setting admin context before fetching transactions');
       await this.setPlatformAdminContext(adminEmail);
       
-      console.log('🔍 Attempting to fetch transactions with admin context');
+      console.log('📊 Attempting to fetch transactions with enhanced admin context');
       
       const { data, error } = await supabase
         .from('transactions')
@@ -165,11 +166,11 @@ class SecurePlatformAdminService {
         .order('created_at', { ascending: false });
 
       if (error) {
-        console.error('❌ Transaction fetch error:', error);
+        console.error('❌ Transaction fetch error with enhanced context:', error);
         throw new Error(`Failed to fetch transactions: ${error.message}`);
       }
       
-      console.log('✅ Transactions fetched successfully:', data?.length || 0);
+      console.log('✅ Transactions fetched successfully with enhanced admin context:', data?.length || 0);
       return data || [];
     } catch (error) {
       console.error('Error getting transactions:', error);
@@ -207,10 +208,10 @@ class SecurePlatformAdminService {
   }
 
   async createTransaction(adminEmail: string, transactionData: TransactionData) {
-    console.log('🔧 Creating transaction via secure RPC function');
+    console.log('🔧 Creating transaction via enhanced secure RPC function');
     
     try {
-      console.log('💳 Creating transaction via RPC:', transactionData.school_name);
+      console.log('💳 Creating transaction with comprehensive admin context:', transactionData.school_name);
       
       // Validate input data
       const amount = parseFloat(transactionData.amount);
@@ -218,7 +219,7 @@ class SecurePlatformAdminService {
         throw new Error('Invalid amount provided');
       }
 
-      // Use the platform_admin_create_transaction RPC function
+      // Use the platform_admin_create_transaction RPC function with enhanced context
       const { data, error } = await supabase.rpc('platform_admin_create_transaction', {
         admin_email_param: adminEmail,
         school_name_param: transactionData.school_name,
@@ -230,14 +231,14 @@ class SecurePlatformAdminService {
       });
 
       if (error) {
-        console.error('❌ RPC transaction creation failed:', error);
+        console.error('❌ Enhanced RPC transaction creation failed:', error);
         throw new Error(`Transaction creation failed: ${error.message}`);
       }
       
-      console.log('✅ Transaction created successfully via RPC:', data?.id);
+      console.log('✅ Transaction created successfully via enhanced RPC:', data?.id);
       return data;
     } catch (error) {
-      console.error('Error creating transaction:', error);
+      console.error('Error creating transaction with enhanced context:', error);
       centralizedValidationService.logSecurityEvent({
         type: 'form_validation_failed',
         details: `Failed to create transaction: ${error instanceof Error ? error.message : 'Unknown error'}`,

@@ -2,8 +2,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { usePlatformAdmin } from '@/contexts/PlatformAdminContext';
-import { securityService } from '@/services/securityService';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Shield, AlertTriangle } from "lucide-react";
 
@@ -28,7 +26,22 @@ const SecurityGuard: React.FC<SecurityGuardProps> = ({
   const navigate = useNavigate();
   const location = useLocation();
   const { teacher, student, isLoading: authLoading } = useAuth();
-  const { admin, isLoading: adminLoading, isAuthenticated: adminAuthenticated } = usePlatformAdmin();
+
+  // Safe platform admin context access
+  let admin = null;
+  let adminAuthenticated = false;
+  let adminLoading = false;
+
+  try {
+    const { usePlatformAdmin } = require('@/contexts/PlatformAdminContext');
+    const platformAdminContext = usePlatformAdmin();
+    admin = platformAdminContext?.admin;
+    adminAuthenticated = platformAdminContext?.isAuthenticated || false;
+    adminLoading = platformAdminContext?.isLoading || false;
+  } catch (error) {
+    console.log('Platform admin context not available in SecurityGuard');
+    // Continue with teacher/student auth only
+  }
 
   useEffect(() => {
     console.log('SecurityGuard: Auth state check', { 

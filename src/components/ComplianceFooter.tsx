@@ -4,17 +4,27 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { Shield, Lock, FileText, Eye, CheckCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { usePlatformAdmin } from '@/contexts/PlatformAdminContext';
 import PrivacyLinks from '@/components/privacy/PrivacyLinks';
 import SOC2ComplianceIndicator from '@/components/security/SOC2ComplianceIndicator';
 
 const ComplianceFooter: React.FC = () => {
   const { t } = useLanguage();
   const { teacher } = useAuth();
-  const { admin } = usePlatformAdmin();
 
-  // Only show SOC 2 dashboard link to platform admins or teachers with admin role
-  const canViewSOC2Dashboard = admin || (teacher && teacher.role === 'admin');
+  // Safe check for platform admin - only show SOC2 dashboard link if we can safely access the context
+  let canViewSOC2Dashboard = false;
+  let admin = null;
+
+  try {
+    // Dynamically import the platform admin context only if it's available
+    const { usePlatformAdmin } = require('@/contexts/PlatformAdminContext');
+    admin = usePlatformAdmin()?.admin;
+    canViewSOC2Dashboard = admin || (teacher && teacher.role === 'admin');
+  } catch (error) {
+    // If PlatformAdminProvider is not available, fall back to teacher-only check
+    console.log('Platform admin context not available, using fallback');
+    canViewSOC2Dashboard = teacher && teacher.role === 'admin';
+  }
 
   return (
     <footer className="bg-slate-50 border-t mt-16">
