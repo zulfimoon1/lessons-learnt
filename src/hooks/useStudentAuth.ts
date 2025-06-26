@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Student } from '@/types/auth';
 import { secureStudentLogin, secureStudentSignup } from '@/services/secureStudentAuthService';
@@ -9,14 +8,24 @@ export const useStudentAuth = () => {
   const login = async (fullName: string, school: string, grade: string, password: string) => {
     try {
       console.log('useStudentAuth: Starting student login process for:', { fullName, school, grade });
+      console.log('useStudentAuth: Exact values being sent:', {
+        fullName: `"${fullName}"`,
+        school: `"${school}"`, 
+        grade: `"${grade}"`,
+        passwordLength: password.length
+      });
       
       // Basic input validation
       if (!fullName?.trim() || !school?.trim() || !grade?.trim() || !password?.trim()) {
         return { error: 'All fields are required' };
       }
 
-      // Use the secure student login service
-      const result = await secureStudentLogin(fullName.trim(), school.trim(), grade.trim(), password);
+      // Clean the grade field - remove "Grade " prefix if present
+      const cleanGrade = grade.replace(/^Grade\s+/i, '').trim();
+      console.log('useStudentAuth: Cleaned grade from', grade, 'to', cleanGrade);
+
+      // Use the secure student login service with cleaned grade
+      const result = await secureStudentLogin(fullName.trim(), school.trim(), cleanGrade, password);
       
       if (result.student) {
         const studentData: Student = {

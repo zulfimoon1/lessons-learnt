@@ -1,4 +1,3 @@
-
 import { enhancedSecurityValidationService } from './enhancedSecurityValidationService';
 import bcrypt from 'bcryptjs';
 import { supabase } from '@/integrations/supabase/client';
@@ -10,6 +9,8 @@ interface StudentAuthResult {
 
 export const secureStudentLogin = async (fullName: string, school: string, grade: string, password: string): Promise<StudentAuthResult> => {
   try {
+    console.log('secureStudentLogin: Attempting login with:', { fullName, school, grade });
+
     // Rate limiting check
     const rateLimitKey = `student_secure_login_${fullName}_${school}`;
     if (!enhancedSecurityValidationService.checkRateLimit(rateLimitKey, 5, 15 * 60 * 1000)) {
@@ -24,7 +25,26 @@ export const secureStudentLogin = async (fullName: string, school: string, grade
       throw new Error('Invalid input provided');
     }
 
+    // Debug: Check what students exist in database
+    console.log('secureStudentLogin: Querying database for students...');
+    const { data: allStudents, error: queryError } = await supabase
+      .from('students')
+      .select('id, full_name, school, grade')
+      .limit(10);
+    
+    if (queryError) {
+      console.error('secureStudentLogin: Error querying students:', queryError);
+    } else {
+      console.log('secureStudentLogin: Found students in database:', allStudents);
+    }
+
     // Find student in database
+    console.log('secureStudentLogin: Looking for exact match:', {
+      full_name: fullName.trim(),
+      school: school.trim(),
+      grade: grade.trim()
+    });
+
     const { data: student, error } = await supabase
       .from('students')
       .select('*')
@@ -33,7 +53,10 @@ export const secureStudentLogin = async (fullName: string, school: string, grade
       .eq('grade', grade.trim())
       .single();
 
+    console.log('secureStudentLogin: Database query result:', { student, error });
+
     if (error || !student) {
+      console.log('secureStudentLogin: No student found or error:', error);
       await enhancedSecurityValidationService.logSecurityEvent({
         type: 'suspicious_activity',
         details: `Failed student login attempt for: ${fullName} at ${school}`,
@@ -42,8 +65,17 @@ export const secureStudentLogin = async (fullName: string, school: string, grade
       throw new Error('Invalid credentials');
     }
 
+    console.log('secureStudentLogin: Found student:', {
+      id: student.id,
+      full_name: student.full_name,
+      school: student.school,
+      grade: student.grade
+    });
+
     // Verify password using bcrypt
+    console.log('secureStudentLogin: Verifying password...');
     const isPasswordValid = await bcrypt.compare(password, student.password_hash);
+    console.log('secureStudentLogin: Password valid:', isPasswordValid);
     
     if (!isPasswordValid) {
       await enhancedSecurityValidationService.logSecurityEvent({
@@ -61,6 +93,7 @@ export const secureStudentLogin = async (fullName: string, school: string, grade
       severity: 'low'
     });
 
+    console.log('secureStudentLogin: Login successful');
     return { student };
 
   } catch (error) {
