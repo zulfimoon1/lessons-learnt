@@ -1,6 +1,5 @@
 
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { User } from '@supabase/supabase-js';
 import { Teacher, Student } from '@/types/auth';
@@ -32,8 +31,6 @@ interface AuthProviderInnerProps {
 const AuthProviderInner: React.FC<AuthProviderInnerProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  const navigate = useNavigate();
-  const location = useLocation();
   
   // Use the existing auth hooks for backward compatibility
   const teacherAuth = useTeacherAuth();
@@ -77,7 +74,6 @@ const AuthProviderInner: React.FC<AuthProviderInnerProps> = ({ children }) => {
       await supabase.auth.signOut();
       teacherAuth.logout();
       studentAuth.logout();
-      navigate('/');
     } catch (error) {
       console.error('Error signing out:', error);
     }
