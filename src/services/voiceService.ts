@@ -46,7 +46,7 @@ class VoiceService {
   /**
    * Convert audio blob to a supported format and upload
    */
-  async processAndUploadAudio(audioBlob: Blob, prefix: string = 'recording'): Promise<VoiceUploadResult> {
+  async processAndUploadAudio(audioBlob: Blob, prefix: string = 'recording', enableTranscription: boolean = false): Promise<VoiceUploadResult> {
     console.log('VoiceService: Processing audio blob, size:', audioBlob.size);
     
     // Generate unique filename
@@ -55,21 +55,26 @@ class VoiceService {
     const fileName = `${prefix}_${timestamp}_${randomId}.webm`;
 
     try {
-      // Upload to storage
+      // Upload to storage first (fast)
       const audioUrl = await this.uploadAudio(audioBlob, fileName);
       
       // Calculate duration (approximate)
       const duration = await this.calculateAudioDuration(audioBlob);
       
-      // Transcribe audio
+      // Only transcribe if explicitly requested
       let transcription: string | undefined;
-      try {
-        const transcriptionResult = await this.transcribeAudio(audioBlob);
-        if (transcriptionResult.success) {
-          transcription = transcriptionResult.transcription;
+      if (enableTranscription) {
+        try {
+          console.log('VoiceService: Starting transcription...');
+          const transcriptionResult = await this.transcribeAudio(audioBlob);
+          if (transcriptionResult.success) {
+            transcription = transcriptionResult.transcription;
+          }
+        } catch (transcribeError) {
+          console.warn('VoiceService: Transcription failed, continuing without it:', transcribeError);
         }
-      } catch (transcribeError) {
-        console.warn('VoiceService: Transcription failed, continuing without it:', transcribeError);
+      } else {
+        console.log('VoiceService: Skipping transcription for faster processing');
       }
 
       return {
@@ -107,7 +112,7 @@ class VoiceService {
   }
 
   /**
-   * Transcribe audio using Supabase Edge Function
+   * Transcribe audio using Supabase Edge Function (optional, for when specifically needed)
    */
   async transcribeAudio(audioBlob: Blob): Promise<TranscriptionResult> {
     console.log('VoiceService: Starting transcription...');

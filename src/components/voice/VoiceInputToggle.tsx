@@ -42,16 +42,14 @@ export const VoiceInputToggle: React.FC<VoiceInputToggleProps> = ({
         return;
       }
 
-      // Upload and process audio
-      const result = await voiceService.processAndUploadAudio(audioBlob, 'feedback');
+      // Upload audio quickly without transcription for now
+      const result = await voiceService.processAndUploadAudio(audioBlob, 'feedback', false);
       
       console.log('VoiceInputToggle: Voice processing completed:', result);
       
       toast({
         title: "Voice recording saved",
-        description: result.transcription 
-          ? "Your voice note has been recorded and transcribed."
-          : "Your voice note has been recorded. Transcription is processing.",
+        description: "Your voice note has been recorded successfully.",
       });
 
       onVoiceComplete(result.audioUrl, result.transcription, result.duration);
@@ -117,10 +115,10 @@ export const VoiceInputToggle: React.FC<VoiceInputToggleProps> = ({
 
       {/* Processing Indicator */}
       {isProcessing && (
-        <div className="text-center py-4">
+        <div className="text-center py-2">
           <div className="inline-flex items-center gap-2 text-sm text-purple-600">
             <div className="w-4 h-4 border-2 border-purple-600 border-t-transparent rounded-full animate-spin" />
-            Processing your voice note...
+            Saving your voice note...
           </div>
         </div>
       )}
