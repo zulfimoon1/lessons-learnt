@@ -33,6 +33,22 @@ interface ClassPerformance {
   total_responses: number;
 }
 
+interface RawFeedbackData {
+  understanding: number;
+  interest: number;
+  educational_growth: number;
+  class_schedules: {
+    teacher_id: string;
+    lesson_topic: string;
+    class_date: string;
+    subject: string;
+    school: string;
+    teachers: {
+      name: string;
+    };
+  };
+}
+
 interface HierarchicalFeedbackAnalyticsProps {
   school: string;
 }
@@ -84,8 +100,30 @@ const HierarchicalFeedbackAnalytics: React.FC<HierarchicalFeedbackAnalyticsProps
     }
   };
 
-  const processHierarchicalData = (rawData: any[]): TeacherPerformance[] => {
-    const teacherMap = new Map<string, any>();
+  const processHierarchicalData = (rawData: RawFeedbackData[]): TeacherPerformance[] => {
+    const teacherMap = new Map<string, {
+      teacher_id: string;
+      teacher_name: string;
+      subjects: Map<string, {
+        subject: string;
+        classes: Map<string, {
+          class_date: string;
+          lesson_topic: string;
+          total_understanding: number;
+          total_interest: number;
+          total_growth: number;
+          total_responses: number;
+        }>;
+        total_understanding: number;
+        total_interest: number;
+        total_growth: number;
+        total_responses: number;
+      }>;
+      total_understanding: number;
+      total_interest: number;
+      total_growth: number;
+      total_responses: number;
+    }>();
 
     rawData.forEach(item => {
       const teacherId = item.class_schedules.teacher_id;
@@ -105,7 +143,7 @@ const HierarchicalFeedbackAnalytics: React.FC<HierarchicalFeedbackAnalyticsProps
         });
       }
 
-      const teacher = teacherMap.get(teacherId);
+      const teacher = teacherMap.get(teacherId)!;
       
       if (!teacher.subjects.has(subject)) {
         teacher.subjects.set(subject, {
@@ -118,7 +156,7 @@ const HierarchicalFeedbackAnalytics: React.FC<HierarchicalFeedbackAnalyticsProps
         });
       }
 
-      const subjectData = teacher.subjects.get(subject);
+      const subjectData = teacher.subjects.get(subject)!;
       
       if (!subjectData.classes.has(classKey)) {
         subjectData.classes.set(classKey, {
@@ -131,7 +169,7 @@ const HierarchicalFeedbackAnalytics: React.FC<HierarchicalFeedbackAnalyticsProps
         });
       }
 
-      const classData = subjectData.classes.get(classKey);
+      const classData = subjectData.classes.get(classKey)!;
       
       // Update class metrics
       classData.total_understanding += item.understanding;
