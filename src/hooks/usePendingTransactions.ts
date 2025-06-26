@@ -58,8 +58,8 @@ export const usePendingTransactions = () => {
       
       console.log('Transaction action completed:', data);
 
-      // Parse the JSON response
-      const actionResult = data as TransactionActionResult;
+      // Parse the JSON response with proper type checking
+      const actionResult = data as unknown as TransactionActionResult;
 
       // If transaction was approved, trigger automatic payment processing
       if (action === 'approved' && actionResult?.requires_payment) {
