@@ -85,15 +85,15 @@ const AIStudentInsights: React.FC<AIStudentInsightsProps> = ({ studentId, school
     if (!contentRecommendations || contentRecommendations.length === 0) {
       return (
         <>
-          <p className="text-sm text-gray-800 font-medium">• Interactive practice exercises tailored to your current level</p>
-          <p className="text-sm text-gray-800 font-medium">• Creative projects that align with your learning style and interests</p>
+          <p className="text-sm text-gray-800 font-medium">• Cool activities that match how you like to learn</p>
+          <p className="text-sm text-gray-800 font-medium">• Fun projects you might really enjoy</p>
         </>
       );
     }
 
     return contentRecommendations.slice(0, 2).map((rec: any, index: number) => (
       <p key={index} className="text-sm text-gray-800 font-medium">
-        • {typeof rec === 'string' ? rec : (rec.title || rec.topic || 'Personalized recommendation')}
+        • {typeof rec === 'string' ? rec : (rec.title || rec.topic || 'Something cool just for you!')}
       </p>
     ));
   };
@@ -106,9 +106,9 @@ const AIStudentInsights: React.FC<AIStudentInsightsProps> = ({ studentId, school
             <Brain className="w-5 h-5" />
           </div>
           <div>
-            <span className="text-lg font-bold">{t('ai.personalInsights') || 'AI Personal Insights'}</span>
+            <span className="text-lg font-bold">My Learning Helper</span>
             <div className="text-sm opacity-90">
-              {t('ai.poweredByAI') || 'Powered by Advanced AI'}
+              Cool insights about how you learn!
             </div>
           </div>
           <Sparkles className="w-5 h-5 ml-auto text-yellow-300" />
@@ -118,14 +118,14 @@ const AIStudentInsights: React.FC<AIStudentInsightsProps> = ({ studentId, school
       <CardContent className="p-6">
         {error && (
           <div className="bg-red-50 p-3 rounded-lg border border-red-200 mb-4">
-            <p className="text-sm text-red-800 font-medium">AI Service Error</p>
+            <p className="text-sm text-red-800 font-medium">Learning Helper isn't working right now</p>
             <p className="text-xs text-red-700">{error}</p>
             <Button 
               onClick={handleGenerateInsights}
               size="sm"
               className="mt-2 bg-red-600 hover:bg-red-700 text-white"
             >
-              Retry Generation
+              Try Again
             </Button>
           </div>
         )}
@@ -137,19 +137,19 @@ const AIStudentInsights: React.FC<AIStudentInsightsProps> = ({ studentId, school
                 <div className="w-12 h-12 bg-gradient-to-br from-emerald-400 to-teal-600 rounded-full flex items-center justify-center mx-auto mb-2">
                   <TrendingUp className="w-6 h-6 text-white" />
                 </div>
-                <div className="text-sm font-medium text-emerald-700">{t('ai.learningProgress') || 'Learning Progress'}</div>
+                <div className="text-sm font-medium text-emerald-700">How I'm Getting Better</div>
               </div>
               <div className="text-center">
                 <div className="w-12 h-12 bg-gradient-to-br from-orange-400 to-red-500 rounded-full flex items-center justify-center mx-auto mb-2">
                   <BookOpen className="w-6 h-6 text-white" />
                 </div>
-                <div className="text-sm font-medium text-orange-700">{t('ai.recommendations') || 'Smart Recommendations'}</div>
+                <div className="text-sm font-medium text-orange-700">Fun Things To Try</div>
               </div>
               <div className="text-center">
                 <div className="w-12 h-12 bg-gradient-to-br from-purple-400 to-pink-500 rounded-full flex items-center justify-center mx-auto mb-2">
                   <Heart className="w-6 h-6 text-white" />
                 </div>
-                <div className="text-sm font-medium text-purple-700">{t('ai.wellnessInsights') || 'Wellness Insights'}</div>
+                <div className="text-sm font-medium text-purple-700">How I'm Feeling</div>
               </div>
             </div>
             
@@ -158,7 +158,7 @@ const AIStudentInsights: React.FC<AIStudentInsightsProps> = ({ studentId, school
               className="bg-gradient-to-r from-emerald-500 to-blue-600 hover:from-emerald-600 hover:to-blue-700 text-white px-8 py-3 rounded-full transform transition-all hover:scale-105 shadow-lg"
             >
               <Sparkles className="w-4 h-4 mr-2" />
-              {t('ai.exploreInsights') || 'Explore AI Insights'}
+              See What's Cool About How I Learn!
             </Button>
           </div>
         ) : (
@@ -169,16 +169,16 @@ const AIStudentInsights: React.FC<AIStudentInsightsProps> = ({ studentId, school
                 <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
                   <TrendingUp className="w-4 h-4 text-white" />
                 </div>
-                <h3 className="font-semibold text-blue-900">{t('ai.learningProfile') || 'Learning Profile'}</h3>
-                {hasProfile && <Badge className="bg-green-100 text-green-800 border-green-300">{t('common.ready') || 'Ready'}</Badge>}
-                {isAnyLoading && <Badge className="bg-yellow-100 text-yellow-800 border-yellow-300">Generating...</Badge>}
+                <h3 className="font-semibold text-blue-900">How I Learn Best</h3>
+                {hasProfile && <Badge className="bg-green-100 text-green-800 border-green-300">Ready!</Badge>}
+                {isAnyLoading && <Badge className="bg-yellow-100 text-yellow-800 border-yellow-300">Finding out...</Badge>}
               </div>
               <div className="space-y-2">
                 <p className="text-sm text-gray-800 font-medium">
-                  {personalizationProfile?.learning_style || 'Visual learner with strong analytical skills and creative problem-solving abilities'}
+                  {personalizationProfile?.learning_style || 'You learn really well when you can see things and work with others!'}
                 </p>
                 <p className="text-sm text-gray-700">
-                  {personalizationProfile?.strengths || 'Shows excellent progress in collaborative learning environments and demonstrates strong attention to detail'}
+                  {personalizationProfile?.strengths || 'You\'re great at paying attention to details and solving problems in creative ways'}
                 </p>
               </div>
             </div>
@@ -189,9 +189,9 @@ const AIStudentInsights: React.FC<AIStudentInsightsProps> = ({ studentId, school
                 <div className="w-8 h-8 bg-orange-600 rounded-full flex items-center justify-center">
                   <BookOpen className="w-4 h-4 text-white" />
                 </div>
-                <h3 className="font-semibold text-orange-900">{t('ai.smartRecommendations') || 'Smart Recommendations'}</h3>
-                {hasRecommendations && <Badge className="bg-green-100 text-green-800 border-green-300">{t('common.ready') || 'Ready'}</Badge>}
-                {isAnyLoading && <Badge className="bg-yellow-100 text-yellow-800 border-yellow-300">Generating...</Badge>}
+                <h3 className="font-semibold text-orange-900">Fun Things To Try</h3>
+                {hasRecommendations && <Badge className="bg-green-100 text-green-800 border-green-300">Ready!</Badge>}
+                {isAnyLoading && <Badge className="bg-yellow-100 text-yellow-800 border-yellow-300">Finding ideas...</Badge>}
               </div>
               <div className="space-y-2">
                 {renderContentRecommendations()}
@@ -204,9 +204,9 @@ const AIStudentInsights: React.FC<AIStudentInsightsProps> = ({ studentId, school
                 <div className="w-8 h-8 bg-purple-600 rounded-full flex items-center justify-center">
                   <Heart className="w-4 h-4 text-white" />
                 </div>
-                <h3 className="font-semibold text-purple-900">{t('ai.wellnessInsights') || 'Wellness Insights'}</h3>
-                {hasInsights && <Badge className="bg-green-100 text-green-800 border-green-300">{t('common.ready') || 'Ready'}</Badge>}
-                {isAnyLoading && <Badge className="bg-yellow-100 text-yellow-800 border-yellow-300">Generating...</Badge>}
+                <h3 className="font-semibold text-purple-900">How I'm Feeling Lately</h3>
+                {hasInsights && <Badge className="bg-green-100 text-green-800 border-green-300">Ready!</Badge>}
+                {isAnyLoading && <Badge className="bg-yellow-100 text-yellow-800 border-yellow-300">Checking in...</Badge>}
               </div>
               <div className="space-y-2">
                 {(() => {
@@ -215,12 +215,12 @@ const AIStudentInsights: React.FC<AIStudentInsightsProps> = ({ studentId, school
                     <>
                       <p className="text-sm text-gray-800 font-medium">
                         {data?.mental_health_score 
-                          ? `Overall Wellness Score: ${data.mental_health_score}/10 - Excellent progress!`
-                          : 'Overall Wellness Score: 8.5/10 - You\'re maintaining excellent emotional balance!'
+                          ? `How You're Doing: ${data.mental_health_score}/10 - You're doing awesome!`
+                          : 'How You\'re Doing: 8.5/10 - You\'re keeping a great balance!'
                         }
                       </p>
                       <p className="text-sm text-gray-700">
-                        {data?.recommendations?.[0] || 'Continue your positive engagement patterns and maintain healthy study-life balance'}
+                        {data?.recommendations?.[0] || 'Keep up your positive attitude and remember to take breaks when you need them'}
                       </p>
                     </>
                   );
@@ -238,12 +238,12 @@ const AIStudentInsights: React.FC<AIStudentInsightsProps> = ({ studentId, school
                 {isAnyLoading ? (
                   <>
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    {t('ai.generating') || 'Generating...'}
+                    Finding new insights...
                   </>
                 ) : (
                   <>
                     <Brain className="w-4 h-4 mr-2" />
-                    {t('ai.generateInsights') || 'Generate New Insights'}
+                    Get New Insights
                   </>
                 )}
               </Button>
@@ -252,7 +252,7 @@ const AIStudentInsights: React.FC<AIStudentInsightsProps> = ({ studentId, school
                 variant="outline"
                 className="border-2 border-gray-300 text-gray-700 hover:bg-gray-50 shadow-md"
               >
-                {t('common.minimize') || 'Minimize'}
+                Make Smaller
               </Button>
             </div>
           </div>

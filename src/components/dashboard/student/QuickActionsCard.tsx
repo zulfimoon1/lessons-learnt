@@ -26,31 +26,31 @@ const QuickActionsCard: React.FC<QuickActionsCardProps> = ({
   const actions = [
     {
       icon: Calendar,
-      label: t('dashboard.viewClasses') || 'View Classes',
+      label: 'Check My Classes',
       onClick: onViewClasses,
       color: 'text-brand-teal',
-      description: 'View your upcoming classes and schedule'
+      description: 'See what classes I have coming up'
     },
     {
       icon: MessageSquare,
-      label: t('dashboard.submitFeedback') || 'Submit Feedback',
+      label: 'Share How Class Went',
       onClick: onSubmitFeedback,
       color: 'text-brand-orange',
-      description: 'Share feedback about your classes'
+      description: 'Tell us about your classes'
     },
     {
       icon: FileText,
-      label: t('dashboard.weeklySummary') || 'Weekly Summary',
+      label: 'Check In About My Week',
       onClick: onWeeklySummary,
       color: 'text-brand-teal',
-      description: 'Review your weekly learning summary'
+      description: 'See how this week is going'
     },
     {
       icon: Heart,
-      label: t('dashboard.wellnessCheck') || 'Wellness Check',
+      label: 'How Am I Feeling?',
       onClick: onWellnessCheck,
       color: 'text-brand-orange',
-      description: 'Check in on your mental wellbeing'
+      description: 'Talk about how I\'m doing'
     }
   ];
 
@@ -65,7 +65,7 @@ const QuickActionsCard: React.FC<QuickActionsCardProps> = ({
           id="quick-actions-title"
           className={cn(isMobile ? 'text-lg' : 'text-xl')}
         >
-          {t('dashboard.quickActions') || 'Quick Actions'}
+          Quick Actions
         </CardTitle>
       </CardHeader>
       <CardContent className={cn(isMobile ? 'p-4 pt-0' : 'p-6 pt-0')}>

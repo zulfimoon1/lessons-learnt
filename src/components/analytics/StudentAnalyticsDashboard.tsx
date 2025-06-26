@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
@@ -151,7 +150,7 @@ const StudentAnalyticsDashboard: React.FC<StudentAnalyticsProps> = ({
       <Card>
         <CardContent className="p-6 text-center">
           <p className="text-muted-foreground">
-            {t('analytics.noData') || 'No analytics data available yet. Complete some classes to see your progress!'}
+            No progress data yet! Complete some classes and share your thoughts to see how you're doing!
           </p>
         </CardContent>
       </Card>
@@ -169,14 +168,14 @@ const StudentAnalyticsDashboard: React.FC<StudentAnalyticsProps> = ({
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              {t('analytics.totalClasses') || 'Total Classes'}
+              My Classes
             </CardTitle>
             <Calendar className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{analytics.totalClasses}</div>
             <p className="text-xs text-muted-foreground">
-              {t('analytics.classesAvailable') || 'Classes available'}
+              Classes I can take
             </p>
           </CardContent>
         </Card>
@@ -184,7 +183,7 @@ const StudentAnalyticsDashboard: React.FC<StudentAnalyticsProps> = ({
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              {t('analytics.feedbackSubmitted') || 'Feedback Submitted'}
+              Classes I've Shared About
             </CardTitle>
             <BookOpen className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
@@ -192,7 +191,7 @@ const StudentAnalyticsDashboard: React.FC<StudentAnalyticsProps> = ({
             <div className="text-2xl font-bold">{analytics.feedbackSubmitted}</div>
             <Progress value={progressPercentage} className="mt-2" />
             <p className="text-xs text-muted-foreground mt-1">
-              {Math.round(progressPercentage)}% completion rate
+              {Math.round(progressPercentage)}% of classes shared about
             </p>
           </CardContent>
         </Card>
@@ -200,17 +199,14 @@ const StudentAnalyticsDashboard: React.FC<StudentAnalyticsProps> = ({
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              {t('analytics.averageUnderstanding') || 'Avg Understanding'}
+              How Well I Get Things
             </CardTitle>
             <Target className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{analytics.averageRatings.understanding}/5</div>
             <Badge variant={analytics.averageRatings.understanding >= 4 ? "default" : "secondary"}>
-              {analytics.averageRatings.understanding >= 4 ? 
-                (t('analytics.excellent') || 'Excellent') : 
-                (t('analytics.improving') || 'Improving')
-              }
+              {analytics.averageRatings.understanding >= 4 ? 'Awesome!' : 'Getting Better!'}
             </Badge>
           </CardContent>
         </Card>
@@ -218,14 +214,14 @@ const StudentAnalyticsDashboard: React.FC<StudentAnalyticsProps> = ({
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              {t('analytics.wellnessChecks') || 'Wellness Checks'}
+              Wellness Check-Ins
             </CardTitle>
             <Heart className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{analytics.wellnessEntries}</div>
             <p className="text-xs text-muted-foreground">
-              {t('analytics.thisMonth') || 'This month'}
+              This month
             </p>
           </CardContent>
         </Card>
@@ -236,7 +232,7 @@ const StudentAnalyticsDashboard: React.FC<StudentAnalyticsProps> = ({
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <TrendingUp className="w-5 h-5" />
-            {t('analytics.performanceTrends') || 'Performance Trends'}
+            How I'm Getting Better
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -264,27 +260,27 @@ const StudentAnalyticsDashboard: React.FC<StudentAnalyticsProps> = ({
       <Card>
         <CardHeader>
           <CardTitle>
-            {t('analytics.subjectPerformance') || 'Subject Performance'}
+            How I'm Doing in Each Subject
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <span className="text-sm">Overall Understanding</span>
+              <span className="text-sm">How Well I Understand</span>
               <div className="flex items-center gap-2">
                 <Progress value={(analytics.averageRatings.understanding / 5) * 100} className="w-20" />
                 <span className="text-sm font-medium">{analytics.averageRatings.understanding}/5</span>
               </div>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-sm">Interest Level</span>
+              <span className="text-sm">How Interesting It Is</span>
               <div className="flex items-center gap-2">
                 <Progress value={(analytics.averageRatings.interest / 5) * 100} className="w-20" />
                 <span className="text-sm font-medium">{analytics.averageRatings.interest}/5</span>
               </div>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-sm">Educational Growth</span>
+              <span className="text-sm">How Much I'm Learning</span>
               <div className="flex items-center gap-2">
                 <Progress value={(analytics.averageRatings.growth / 5) * 100} className="w-20" />
                 <span className="text-sm font-medium">{analytics.averageRatings.growth}/5</span>
