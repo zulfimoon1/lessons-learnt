@@ -55,7 +55,7 @@ const OptimizedMentalHealthAlerts = () => {
           alertCounts={alertCounts}
         />
 
-        {/* Main Alerts Component with filtered data */}
+        {/* Main Alerts Component */}
         <div className="min-h-[400px]">
           <MentalHealthAlerts />
         </div>
