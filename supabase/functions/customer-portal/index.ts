@@ -25,29 +25,21 @@ serve(async (req) => {
       { auth: { persistSession: false } }
     );
 
-    // Get authenticated user
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader) {
-      console.error("No authorization header provided");
-      throw new Error("No authorization header");
-    }
-
-    const token = authHeader.replace("Bearer ", "");
-    console.log("Attempting to authenticate user with token");
+    // Get the request body to extract teacher info
+    const { email, school } = await req.json();
     
-    const { data: userData, error: userError } = await supabaseAdmin.auth.getUser(token);
-    if (userError || !userData.user) {
-      console.error("User authentication failed:", userError);
-      throw new Error("User not authenticated");
+    if (!email) {
+      console.error("No email provided in request body");
+      throw new Error("Email is required");
     }
 
-    console.log("User authenticated:", userData.user.email);
+    console.log("Creating customer portal for teacher:", email, "School:", school);
 
-    // Get teacher info from teachers table
+    // Verify teacher exists in our database
     const { data: teacherData, error: teacherError } = await supabaseAdmin
       .from('teachers')
       .select('email, school')
-      .eq('email', userData.user.email)
+      .eq('email', email)
       .single();
 
     if (teacherError || !teacherData) {
@@ -55,16 +47,16 @@ serve(async (req) => {
       throw new Error("Teacher not found");
     }
 
-    console.log("Teacher found:", teacherData.email, "School:", teacherData.school);
+    console.log("Teacher verified:", teacherData.email, "School:", teacherData.school);
 
     // Find Stripe customer by email
     const customers = await stripe.customers.list({
-      email: userData.user.email,
+      email: email,
       limit: 1
     });
 
     if (customers.data.length === 0) {
-      console.error("No Stripe customer found for email:", userData.user.email);
+      console.error("No Stripe customer found for email:", email);
       throw new Error("No Stripe customer found");
     }
 

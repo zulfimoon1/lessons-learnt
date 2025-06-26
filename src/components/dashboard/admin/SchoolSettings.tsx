@@ -53,23 +53,6 @@ const SchoolSettings: React.FC<SchoolSettingsProps> = ({ teacher }) => {
     setIsLoading(true);
     try {
       console.log('Attempting to access customer portal for:', teacher.email);
-      
-      // First, refresh the session to ensure we have a valid token
-      const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
-      
-      if (refreshError) {
-        console.error('Session refresh failed:', refreshError);
-        throw new Error("Session expired. Please log out and log back in.");
-      }
-
-      const session = refreshData.session;
-      
-      if (!session || !session.access_token) {
-        console.error('No valid session after refresh');
-        throw new Error("No valid session found. Please log out and log back in.");
-      }
-
-      console.log('Session refreshed successfully, calling customer portal function');
 
       const { data, error } = await supabase.functions.invoke('customer-portal', {
         body: { 
@@ -77,7 +60,6 @@ const SchoolSettings: React.FC<SchoolSettingsProps> = ({ teacher }) => {
           email: teacher.email 
         },
         headers: {
-          Authorization: `Bearer ${session.access_token}`,
           'Content-Type': 'application/json'
         }
       });
