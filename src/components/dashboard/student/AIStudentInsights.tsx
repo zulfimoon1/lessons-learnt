@@ -37,9 +37,17 @@ const AIStudentInsights: React.FC<AIStudentInsightsProps> = ({ studentId, school
       await generateContentRecommendations(studentId);
     }
     if (!hasInsights) {
-      // Fix: Pass a valid period type instead of studentId
       await generatePredictiveInsights("month" as "week" | "month" | "semester");
     }
+  };
+
+  // Helper function to safely access predictive insights data
+  const getPredictiveInsightsData = () => {
+    if (!predictiveInsights) return null;
+    
+    // Handle both array and object formats
+    const data = Array.isArray(predictiveInsights) ? predictiveInsights[0] : predictiveInsights;
+    return data as any; // Type assertion to avoid TypeScript errors
   };
 
   return (
@@ -143,23 +151,22 @@ const AIStudentInsights: React.FC<AIStudentInsightsProps> = ({ studentId, school
               </div>
               {predictiveInsights ? (
                 <div className="space-y-2">
-                  {/* Fix: Handle predictiveInsights as either array or object */}
-                  <p className="text-sm text-purple-700">
-                    {Array.isArray(predictiveInsights) 
-                      ? (predictiveInsights[0]?.mental_health_score 
-                          ? `Wellness Score: ${predictiveInsights[0].mental_health_score}/10`
-                          : t('ai.analyzingWellness') || 'Analyzing your wellness patterns...')
-                      : (predictiveInsights.mental_health_score 
-                          ? `Wellness Score: ${predictiveInsights.mental_health_score}/10`
-                          : t('ai.analyzingWellness') || 'Analyzing your wellness patterns...')
-                    }
-                  </p>
-                  <p className="text-sm text-purple-600">
-                    {Array.isArray(predictiveInsights) 
-                      ? (predictiveInsights[0]?.recommendations?.[0] || t('ai.generatingWellnessAdvice') || 'Generating personalized wellness advice...')
-                      : (predictiveInsights.recommendations?.[0] || t('ai.generatingWellnessAdvice') || 'Generating personalized wellness advice...')
-                    }
-                  </p>
+                  {(() => {
+                    const data = getPredictiveInsightsData();
+                    return (
+                      <>
+                        <p className="text-sm text-purple-700">
+                          {data?.mental_health_score 
+                            ? `Wellness Score: ${data.mental_health_score}/10`
+                            : t('ai.analyzingWellness') || 'Analyzing your wellness patterns...'
+                          }
+                        </p>
+                        <p className="text-sm text-purple-600">
+                          {data?.recommendations?.[0] || t('ai.generatingWellnessAdvice') || 'Generating personalized wellness advice...'}
+                        </p>
+                      </>
+                    );
+                  })()}
                 </div>
               ) : (
                 <p className="text-sm text-purple-600">{t('ai.generateInsightsPrompt') || 'Discover insights about your learning journey'}</p>
