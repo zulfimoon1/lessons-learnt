@@ -33,13 +33,18 @@ const ArticlesTab: React.FC<ArticlesTabProps> = ({
 
   const loadStats = async () => {
     try {
+      console.log('Loading stats for teacher:', teacher.id, 'school:', teacher.school);
+      
       // Get total students in the school
       const { data: studentsData, error: studentsError } = await supabase
         .from('students')
         .select('id')
         .eq('school', teacher.school);
 
-      if (studentsError) throw studentsError;
+      if (studentsError) {
+        console.error('Error loading students:', studentsError);
+        throw studentsError;
+      }
 
       // Get total classes for this teacher
       const { data: classesData, error: classesError } = await supabase
@@ -47,7 +52,13 @@ const ArticlesTab: React.FC<ArticlesTabProps> = ({
         .select('id')
         .eq('teacher_id', teacher.id);
 
-      if (classesError) throw classesError;
+      if (classesError) {
+        console.error('Error loading classes:', classesError);
+        throw classesError;
+      }
+
+      console.log('Students data:', studentsData?.length || 0);
+      console.log('Classes data:', classesData?.length || 0);
 
       setStats({
         totalStudents: studentsData?.length || 0,
