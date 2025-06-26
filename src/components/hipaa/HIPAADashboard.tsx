@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -17,6 +18,7 @@ import HIPAAWorkforceSecurityManagement from './HIPAAWorkforceSecurityManagement
 import HIPAAIncidentResponsePanel from './HIPAAIncidentResponsePanel';
 import HIPAATechnicalSafeguards from './HIPAATechnicalSafeguards';
 import HIPAAPhysicalSafeguards from './HIPAAPhysicalSafeguards';
+import HIPAAComplianceTestPanel from './HIPAAComplianceTestPanel';
 
 interface HIPAAMetrics {
   phiAccessEvents24h: number;
@@ -149,6 +151,7 @@ const HIPAADashboard: React.FC = () => {
           <TabsTrigger value="breach-notification">Breach Notification</TabsTrigger>
           <TabsTrigger value="patient-rights">Patient Rights</TabsTrigger>
           <TabsTrigger value="training">Training & Workforce</TabsTrigger>
+          <TabsTrigger value="compliance-testing">Compliance Testing</TabsTrigger>
         </TabsList>
 
         <TabsContent value="phi-protection" className="space-y-4">
@@ -193,6 +196,10 @@ const HIPAADashboard: React.FC = () => {
 
         <TabsContent value="training" className="space-y-4">
           <HIPAATrainingTracking />
+        </TabsContent>
+
+        <TabsContent value="compliance-testing" className="space-y-4">
+          <HIPAAComplianceTestPanel />
         </TabsContent>
       </Tabs>
     </div>

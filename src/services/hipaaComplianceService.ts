@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 
 interface PHIAccessEvent {
@@ -39,6 +40,8 @@ interface BreachIncident {
 }
 
 class HIPAAComplianceService {
+  private testingMode = false;
+
   async logPHIAccess(event: PHIAccessEvent): Promise<void> {
     try {
       console.log('HIPAA PHI Access Event:', event);
@@ -118,6 +121,63 @@ class HIPAAComplianceService {
         patientRequestsPending: 0
       };
     }
+  }
+
+  // Testing and validation methods
+  async runComplianceTest(): Promise<{ passed: boolean; results: any[] }> {
+    console.log('Running HIPAA Compliance Test Suite...');
+    
+    const results = [];
+    let allPassed = true;
+
+    // Test PHI Access Logging
+    try {
+      await this.logPHIAccess({
+        event_type: 'phi_access',
+        resource_accessed: 'test_patient_record',
+        action_performed: 'compliance_test',
+        result: 'success',
+        timestamp: new Date().toISOString(),
+        severity: 'low',
+        minimum_necessary: true,
+        purpose_of_use: 'operations'
+      });
+      results.push({ test: 'PHI Access Logging', status: 'PASSED' });
+    } catch (error) {
+      results.push({ test: 'PHI Access Logging', status: 'FAILED', error });
+      allPassed = false;
+    }
+
+    // Test Metrics Calculation
+    try {
+      const metrics = await this.getHIPAAMetrics();
+      if (metrics.complianceScore >= 0 && metrics.complianceScore <= 100) {
+        results.push({ test: 'Metrics Calculation', status: 'PASSED' });
+      } else {
+        results.push({ test: 'Metrics Calculation', status: 'FAILED', error: 'Invalid compliance score' });
+        allPassed = false;
+      }
+    } catch (error) {
+      results.push({ test: 'Metrics Calculation', status: 'FAILED', error });
+      allPassed = false;
+    }
+
+    // Test PHI Classification
+    try {
+      const testData = { mental_health: 'anxiety assessment', patient_id: '12345' };
+      const isPHI = this.classifyPHI(testData);
+      if (isPHI) {
+        results.push({ test: 'PHI Classification', status: 'PASSED' });
+      } else {
+        results.push({ test: 'PHI Classification', status: 'FAILED', error: 'Failed to identify PHI' });
+        allPassed = false;
+      }
+    } catch (error) {
+      results.push({ test: 'PHI Classification', status: 'FAILED', error });
+      allPassed = false;
+    }
+
+    return { passed: allPassed, results };
   }
 
   classifyPHI(data: any): boolean {
@@ -236,6 +296,16 @@ class HIPAAComplianceService {
   clearHIPAAData(): void {
     localStorage.removeItem('hipaa_phi_events');
     localStorage.removeItem('hipaa_breach_incidents');
+  }
+
+  enableTestingMode(): void {
+    this.testingMode = true;
+    console.log('HIPAA Testing Mode Enabled');
+  }
+
+  disableTestingMode(): void {
+    this.testingMode = false;
+    console.log('HIPAA Testing Mode Disabled');
   }
 }
 
