@@ -3,7 +3,8 @@ import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import ClassScheduleForm from '@/components/ClassScheduleForm';
 import BulkScheduleUpload from '@/components/BulkScheduleUpload';
-import { Calendar, Clock } from 'lucide-react';
+import ClassScheduleCalendar from './ClassScheduleCalendar';
+import { Calendar, Clock, Eye } from 'lucide-react';
 
 interface ScheduleTabProps {
   teacher: {
@@ -18,6 +19,7 @@ const ScheduleTab: React.FC<ScheduleTabProps> = ({ teacher }) => {
   const handleUploadComplete = () => {
     console.log('Schedule upload completed');
     // Refresh schedules or show success message
+    window.location.reload(); // Simple refresh for now
   };
 
   return (
@@ -31,13 +33,31 @@ const ScheduleTab: React.FC<ScheduleTabProps> = ({ teacher }) => {
           <div>
             <h2 className="text-2xl font-bold text-gray-900">Class Schedule</h2>
             <p className="text-gray-600">
-              Create and manage your class schedules efficiently
+              Create, manage, and view your class schedules
             </p>
           </div>
         </div>
       </div>
 
-      {/* Schedule Cards Grid */}
+      {/* Calendar View Section */}
+      <Card className="border-0 shadow-lg bg-gradient-to-br from-blue-50/50 to-indigo-50/50">
+        <CardHeader className="pb-4">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center">
+              <Eye className="w-4 h-4 text-blue-600" />
+            </div>
+            <div>
+              <CardTitle className="text-lg text-gray-900">Schedule Overview</CardTitle>
+              <CardDescription className="text-sm">View and manage your scheduled classes</CardDescription>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <ClassScheduleCalendar teacher={teacher} />
+        </CardContent>
+      </Card>
+
+      {/* Create & Upload Section */}
       <div className="grid gap-6 md:grid-cols-1 lg:grid-cols-2">
         {/* Create Schedule */}
         <Card className="group hover:shadow-xl transition-all duration-300 border-0 shadow-lg bg-gradient-to-br from-brand-teal/5 to-brand-teal/10 hover:from-brand-teal/10 hover:to-brand-teal/20">
