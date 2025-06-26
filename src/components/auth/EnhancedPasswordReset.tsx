@@ -63,8 +63,9 @@ const EnhancedPasswordReset: React.FC<EnhancedPasswordResetProps> = ({ teacher }
         return;
       }
 
-      if (data && typeof data === 'object') {
-        const result = data as ResetResult;
+      if (data) {
+        // Cast through unknown first to satisfy TypeScript
+        const result = data as unknown as ResetResult;
         setResetResult(result);
         
         if (result.success) {

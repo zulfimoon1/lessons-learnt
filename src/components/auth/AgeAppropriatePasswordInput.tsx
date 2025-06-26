@@ -58,9 +58,9 @@ const AgeAppropriatePasswordInput: React.FC<AgeAppropriatePasswordInputProps> = 
 
       if (error) throw error;
       
-      // Type assertion for the JSON response
-      if (data && typeof data === 'object') {
-        setValidation(data as PasswordValidation);
+      // Type assertion for the JSON response - cast through unknown first
+      if (data) {
+        setValidation(data as unknown as PasswordValidation);
       }
     } catch (error) {
       console.error('Password validation error:', error);
