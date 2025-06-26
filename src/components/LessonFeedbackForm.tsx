@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -13,6 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { classScheduleService } from "@/services/classScheduleService";
+import { secureSessionService } from "@/services/secureSessionService";
 import { BookOpenIcon, StarIcon, LightbulbIcon, MessageCircleIcon, EyeOffIcon, AlertCircleIcon } from "lucide-react";
 import VoiceInputToggle from '@/components/voice/VoiceInputToggle';
 import AudioPlayer from '@/components/voice/AudioPlayer';
