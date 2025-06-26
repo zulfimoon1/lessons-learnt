@@ -59,8 +59,8 @@ function App() {
                     <Route path="/class-feedback/:teacherId/:classId" element={<ClassFeedback />} />
                     <Route path="/weekly-summary" element={<WeeklySummary />} />
                     <Route path="/admin-dashboard" element={<AdminDashboard />} />
-                    <Route path="/platform-admin" element={<PlatformAdmin />} />
                     <Route path="/console" element={<PlatformAdminLogin />} />
+                    <Route path="/platform-admin" element={<PlatformAdminDashboard />} />
                     <Route path="/platform-admin-login" element={<PlatformAdminLogin />} />
                     <Route path="/platform-admin-dashboard" element={<PlatformAdminDashboard />} />
                     <Route path="/accept-invitation" element={<AcceptInvitation />} />
