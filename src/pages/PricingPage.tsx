@@ -116,6 +116,11 @@ const PricingPage = () => {
     navigate('/teacher-login');
   };
 
+  const handleStartFreeTrial = () => {
+    // Direct users to teacher login to start their free trial
+    navigate('/teacher-login');
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
       <header className="bg-white/80 backdrop-blur-sm border-b border-blue-100 p-4">
@@ -352,6 +357,22 @@ const PricingPage = () => {
                   <div className="text-sm text-gray-500">
                     Perfect for 50+ teachers or district-wide implementation
                   </div>
+                </div>
+                
+                {/* Bottom CTA Section */}
+                <div className="mt-8 pt-8 border-t border-purple-200">
+                  <h4 className="text-xl font-semibold text-gray-900 mb-4">
+                    Ready to get started?
+                  </h4>
+                  <Button
+                    onClick={handleStartFreeTrial}
+                    className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white text-lg px-8 py-3"
+                  >
+                    {t('pricing.startFreeTrialNow')}
+                  </Button>
+                  <p className="text-sm text-gray-500 mt-2">
+                    No credit card required • 30-day free trial
+                  </p>
                 </div>
               </div>
             </CardContent>
