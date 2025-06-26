@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -116,8 +117,8 @@ const WeeklySummaryForm: React.FC<WeeklySummaryFormProps> = ({ student, onSubmit
 
     if (!hasEmotionalInput && !hasAcademicInput) {
       toast({
-        title: t('weeklySummary.fillAtLeastOne'),
-        description: "Please share either emotional or academic concerns through text or voice note.",
+        title: "Looks like you haven't shared anything yet!",
+        description: "Tell us about your feelings or school stuff - we want to help you!",
         variant: "destructive",
       });
       return;
@@ -157,8 +158,8 @@ const WeeklySummaryForm: React.FC<WeeklySummaryFormProps> = ({ student, onSubmit
       if (error) {
         if (error.code === '23505') {
           toast({
-            title: "Already submitted",
-            description: "You have already submitted a weekly summary for this week.",
+            title: "You already told us about this week!",
+            description: "Thanks for sharing - we got your thoughts already this week.",
             variant: "destructive",
           });
           setHasSubmitted(true);
@@ -169,10 +170,10 @@ const WeeklySummaryForm: React.FC<WeeklySummaryFormProps> = ({ student, onSubmit
         const hasVoiceNotes = emotionalAudioData.audioUrl || academicAudioData.audioUrl;
         
         toast({
-          title: t('weeklySummary.submitted'),
+          title: "Thanks for sharing with us!",
           description: hasVoiceNotes ? 
-            "Your weekly summary and voice notes have been submitted successfully!" :
-            t('weeklySummary.submittedDescription'),
+            "We got your message and voice notes - thanks for telling us how you're doing!" :
+            "We got your message - thanks for telling us how you're doing!",
         });
 
         // Reset form
@@ -191,8 +192,8 @@ const WeeklySummaryForm: React.FC<WeeklySummaryFormProps> = ({ student, onSubmit
     } catch (error) {
       console.error('Error submitting weekly summary:', error);
       toast({
-        title: t('common.error'),
-        description: t('feedback.submitError'),
+        title: "Oops! Something went wrong",
+        description: "We couldn't save your message right now. Want to try again?",
         variant: "destructive",
       });
     } finally {
@@ -220,18 +221,18 @@ const WeeklySummaryForm: React.FC<WeeklySummaryFormProps> = ({ student, onSubmit
             <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
               <CheckCircle className="w-5 h-5" />
             </div>
-            Weekly Summary Submitted
+            You Already Shared This Week!
           </CardTitle>
         </CardHeader>
         <CardContent className="p-6">
           <div className="text-center">
             <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
             <h3 className="text-lg font-semibold text-brand-dark mb-2">
-              Thank you for your submission!
+              Thanks for telling us how you're doing!
             </h3>
             <p className="text-brand-dark/70">
-              You have already submitted your weekly summary for this week. 
-              Your feedback has been recorded and will be reviewed by the appropriate staff.
+              You already shared your thoughts with us this week. 
+              We've got your message and the right people will take a look to help you out.
             </p>
           </div>
         </CardContent>
@@ -246,22 +247,32 @@ const WeeklySummaryForm: React.FC<WeeklySummaryFormProps> = ({ student, onSubmit
           <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
             <Calendar className="w-5 h-5" />
           </div>
-          {t('weeklySummary.title')}
+          Tell Us About Your Week!
         </CardTitle>
       </CardHeader>
       <CardContent className="p-6">
         <div className="text-center mb-6">
-          <p className="text-brand-dark/80 mb-2">
-            {t('weeklySummary.description')}
+          <p className="text-brand-dark/80 mb-4 text-lg font-medium">
+            Share your thoughts about this week to help us give you better support.
           </p>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-brand-dark/60">
-            <div className="flex items-center gap-2 justify-center">
-              <Heart className="w-4 h-4 text-pink-500" />
-              <span>{t('weeklySummary.emotionalRoute')}</span>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+            <div className="bg-orange-100 p-3 rounded-lg border border-orange-200">
+              <div className="flex items-center gap-2 mb-1">
+                <Heart className="w-4 h-4 text-orange-600" />
+                <span className="font-semibold text-gray-800">How You're Feeling → School Doctor</span>
+              </div>
+              <p className="text-xs text-gray-700">
+                Tell us about your emotions, friendships, stress, or anything that's on your mind
+              </p>
             </div>
-            <div className="flex items-center gap-2 justify-center">
-              <BookOpen className="w-4 h-4 text-blue-500" />
-              <span>{t('weeklySummary.academicRoute')}</span>
+            <div className="bg-teal-100 p-3 rounded-lg border border-teal-200">
+              <div className="flex items-center gap-2 mb-1">
+                <BookOpen className="w-4 h-4 text-teal-600" />
+                <span className="font-semibold text-gray-800">School Stuff → Teachers</span>
+              </div>
+              <p className="text-xs text-gray-700">
+                Share about your classes, homework, tests, or anything school-related
+              </p>
             </div>
           </div>
         </div>
@@ -269,12 +280,14 @@ const WeeklySummaryForm: React.FC<WeeklySummaryFormProps> = ({ student, onSubmit
         <form onSubmit={handleSubmit} className="space-y-8">
           {/* Emotional Concerns Section */}
           <div className="space-y-4">
-            <Label htmlFor="emotional_concerns" className="flex items-center gap-2 text-base font-medium text-brand-dark">
-              <Heart className="w-4 h-4 text-pink-500" />
-              {t('weeklySummary.emotionalLabel')}
-            </Label>
+            <div className="flex items-center gap-2">
+              <Heart className="w-5 h-5 text-pink-500" />
+              <Label htmlFor="emotional_concerns" className="text-base font-medium text-brand-dark">
+                How are you feeling emotionally this week?
+              </Label>
+            </div>
             <p className="text-sm text-brand-dark/60 mb-2">
-              {t('weeklySummary.emotionalDescription')}
+              This will be looked at by the school doctor to help you with your feelings and mental health.
             </p>
 
             <VoiceInputToggle
@@ -289,7 +302,7 @@ const WeeklySummaryForm: React.FC<WeeklySummaryFormProps> = ({ student, onSubmit
                 audioUrl={emotionalAudioData.audioUrl}
                 transcription={emotionalAudioData.transcription}
                 duration={emotionalAudioData.duration}
-                title="Emotional concerns voice note"
+                title="My feelings voice message"
                 showTranscription={true}
                 className="mb-4"
               />
@@ -300,7 +313,7 @@ const WeeklySummaryForm: React.FC<WeeklySummaryFormProps> = ({ student, onSubmit
                 id="emotional_concerns"
                 value={formData.emotional_concerns}
                 onChange={(e) => setFormData(prev => ({ ...prev, emotional_concerns: e.target.value }))}
-                placeholder={t('weeklySummary.emotionalPlaceholder')}
+                placeholder="Share any feelings, worries, or thoughts you've had this week..."
                 rows={4}
                 className="resize-none border-brand-teal/20 focus:border-brand-teal"
               />
@@ -309,12 +322,14 @@ const WeeklySummaryForm: React.FC<WeeklySummaryFormProps> = ({ student, onSubmit
 
           {/* Academic Concerns Section */}
           <div className="space-y-4">
-            <Label htmlFor="academic_concerns" className="flex items-center gap-2 text-base font-medium text-brand-dark">
-              <BookOpen className="w-4 h-4 text-blue-500" />
-              {t('weeklySummary.academicLabel')}
-            </Label>
+            <div className="flex items-center gap-2">
+              <BookOpen className="w-5 h-5 text-blue-500" />
+              <Label htmlFor="academic_concerns" className="text-base font-medium text-brand-dark">
+                Any school challenges or difficulties?
+              </Label>
+            </div>
             <p className="text-sm text-brand-dark/60 mb-2">
-              {t('weeklySummary.academicDescription')}
+              This will be looked at by your teachers to help you with school work and learning.
             </p>
 
             <VoiceInputToggle
@@ -329,7 +344,7 @@ const WeeklySummaryForm: React.FC<WeeklySummaryFormProps> = ({ student, onSubmit
                 audioUrl={academicAudioData.audioUrl}
                 transcription={academicAudioData.transcription}
                 duration={academicAudioData.duration}
-                title="Academic concerns voice note"
+                title="My school concerns voice message"
                 showTranscription={true}
                 className="mb-4"
               />
@@ -340,7 +355,7 @@ const WeeklySummaryForm: React.FC<WeeklySummaryFormProps> = ({ student, onSubmit
                 id="academic_concerns"
                 value={formData.academic_concerns}
                 onChange={(e) => setFormData(prev => ({ ...prev, academic_concerns: e.target.value }))}
-                placeholder={t('weeklySummary.academicPlaceholder')}
+                placeholder="Share any school challenges, trouble with subjects, or study concerns..."
                 rows={4}
                 className="resize-none border-brand-teal/20 focus:border-brand-teal"
               />
@@ -356,7 +371,7 @@ const WeeklySummaryForm: React.FC<WeeklySummaryFormProps> = ({ student, onSubmit
             />
             <Label htmlFor="anonymous" className="flex items-center gap-2 text-sm text-brand-dark">
               <EyeOff className="w-4 h-4 text-brand-dark/60" />
-              {t('weeklySummary.submitAnonymously')}
+              Keep my name private (they won't know it's from me)
             </Label>
           </div>
 
@@ -367,7 +382,7 @@ const WeeklySummaryForm: React.FC<WeeklySummaryFormProps> = ({ student, onSubmit
               disabled={isSubmitting}
               className="bg-gradient-to-r from-brand-teal to-brand-orange hover:from-brand-teal/90 hover:to-brand-orange/90 text-white px-8 py-3 shadow-lg hover:shadow-xl transition-all duration-200"
             >
-              {isSubmitting ? t('weeklySummary.submitting') : t('weeklySummary.submitButton')}
+              {isSubmitting ? 'Sending Your Message...' : 'Send My Thoughts!'}
             </Button>
           </div>
         </form>
