@@ -94,8 +94,10 @@ class EnhancedSecurityValidationService {
     };
   }
 
-  checkRateLimit(identifier: string): boolean {
+  checkRateLimit(identifier: string, maxAttempts?: number, windowMs?: number): boolean {
     const now = Date.now();
+    const attempts = maxAttempts || this.MAX_ATTEMPTS;
+    const window = windowMs || this.RATE_LIMIT_WINDOW;
     const record = this.rateLimitStore.get(identifier);
 
     if (!record) {
@@ -104,13 +106,13 @@ class EnhancedSecurityValidationService {
     }
 
     // Reset if window has passed
-    if (now - record.timestamp > this.RATE_LIMIT_WINDOW) {
+    if (now - record.timestamp > window) {
       this.rateLimitStore.set(identifier, { count: 1, timestamp: now });
       return true;
     }
 
     // Check if limit exceeded
-    if (record.count >= this.MAX_ATTEMPTS) {
+    if (record.count >= attempts) {
       return false;
     }
 
@@ -126,6 +128,23 @@ class EnhancedSecurityValidationService {
       const hasSecureContext = window.isSecureContext || location.protocol === 'https:' || location.hostname === 'localhost';
       
       return hasValidStorage && hasSecureContext;
+    } catch (error) {
+      return false;
+    }
+  }
+
+  detectSuspiciousActivity(): boolean {
+    try {
+      // Check for rapid successive requests
+      const now = Date.now();
+      const lastActivity = parseInt(sessionStorage.getItem('last_activity') || '0');
+      
+      if (lastActivity && (now - lastActivity) < 100) {
+        return true; // Suspicious rapid activity
+      }
+      
+      sessionStorage.setItem('last_activity', now.toString());
+      return false;
     } catch (error) {
       return false;
     }

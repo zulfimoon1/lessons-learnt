@@ -46,7 +46,7 @@ export const useSecurityMonitoring = () => {
 
         // Log monitoring start
         await enhancedSecurityValidationService.logSecurityEvent({
-          type: 'session_restored',
+          type: 'session_error',
           userId: teacher?.id || student?.id,
           details: 'Security monitoring initialized',
           severity: 'low'

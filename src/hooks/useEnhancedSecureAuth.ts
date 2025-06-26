@@ -95,7 +95,7 @@ export const useEnhancedSecureAuth = () => {
 
           // Log successful enhanced authentication
           await enhancedSecurityValidationService.logSecurityEvent({
-            type: 'session_restored',
+            type: 'session_error',
             userId: currentUser.id,
             details: `Enhanced secure authentication successful, security score: ${securityScore}`,
             severity: 'low'

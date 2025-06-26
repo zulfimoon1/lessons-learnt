@@ -44,7 +44,7 @@ class SecureDataAccessService {
   ): Promise<void> {
     try {
       await enhancedSecurityValidationService.logSecurityEvent({
-        type: 'session_restored',
+        type: 'session_error',
         userId: context.userId,
         details: `Data access: ${operation} on ${resource}`,
         severity: 'low'
