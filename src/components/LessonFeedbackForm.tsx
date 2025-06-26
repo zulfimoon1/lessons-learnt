@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -88,6 +87,11 @@ const LessonFeedbackForm = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    console.log('LessonFeedbackForm: Form submission started');
+    console.log('Selected class:', selectedClass);
+    console.log('Audio data:', audioData);
+    console.log('Text data:', { whatWentWell, suggestions, additionalComments });
+    
     if (!selectedClass) {
       toast({
         title: t('feedback.selectClass'),
@@ -100,6 +104,8 @@ const LessonFeedbackForm = () => {
     // Check if we have either text input or voice note
     const hasTextInput = whatWentWell.trim() || suggestions.trim() || additionalComments.trim();
     const hasVoiceInput = audioData.audioUrl;
+
+    console.log('LessonFeedbackForm: Input validation:', { hasTextInput, hasVoiceInput });
 
     if (!hasTextInput && !hasVoiceInput) {
       toast({
@@ -132,13 +138,18 @@ const LessonFeedbackForm = () => {
         audio_file_size: null // We could add this to the voice service
       };
 
-      console.log('LessonFeedbackForm: Submitting feedback with voice data:', feedbackData);
+      console.log('LessonFeedbackForm: Submitting feedback with data:', feedbackData);
 
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('feedback')
         .insert(feedbackData);
 
-      if (error) throw error;
+      if (error) {
+        console.error('LessonFeedbackForm: Submission error:', error);
+        throw error;
+      }
+
+      console.log('LessonFeedbackForm: Submission successful:', data);
 
       toast({
         title: t('feedback.submitted'),
