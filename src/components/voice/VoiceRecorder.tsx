@@ -2,7 +2,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { MicIcon, StopIcon, PlayIcon, PauseIcon, TrashIcon, UploadIcon } from 'lucide-react';
+import { MicIcon, Square, PlayIcon, PauseIcon, TrashIcon, UploadIcon } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 
@@ -266,7 +266,7 @@ export const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
                   variant="destructive"
                   size="sm"
                 >
-                  <StopIcon className="w-4 h-4" />
+                  <Square className="w-4 h-4" />
                 </Button>
               </>
             )}
