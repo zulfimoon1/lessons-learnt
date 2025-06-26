@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -55,26 +54,37 @@ const SchoolSettings: React.FC<SchoolSettingsProps> = ({ teacher }) => {
     try {
       console.log('Attempting to access customer portal for:', teacher.email);
       
-      // Get the current session
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      // First, refresh the session to ensure we have a valid token
+      const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
       
-      if (sessionError || !session) {
-        console.error('No valid session found:', sessionError);
-        throw new Error("Please log in again to manage your subscription");
+      if (refreshError) {
+        console.error('Session refresh failed:', refreshError);
+        throw new Error("Session expired. Please log out and log back in.");
       }
 
-      console.log('Session found, calling customer portal function');
+      const session = refreshData.session;
+      
+      if (!session || !session.access_token) {
+        console.error('No valid session after refresh');
+        throw new Error("No valid session found. Please log out and log back in.");
+      }
+
+      console.log('Session refreshed successfully, calling customer portal function');
 
       const { data, error } = await supabase.functions.invoke('customer-portal', {
-        body: { school: teacher.school },
+        body: { 
+          school: teacher.school,
+          email: teacher.email 
+        },
         headers: {
           Authorization: `Bearer ${session.access_token}`,
+          'Content-Type': 'application/json'
         }
       });
 
       if (error) {
         console.error('Function invocation error:', error);
-        throw error;
+        throw new Error(error.message || "Failed to access subscription management");
       }
 
       if (data?.url) {
