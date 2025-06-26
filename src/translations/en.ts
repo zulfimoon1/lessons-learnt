@@ -1,3 +1,4 @@
+
 import { enAuthTranslations } from './en/auth';
 import { enTeacherTranslations } from './en/teacher';
 import { enWeeklyTranslations } from './en/weekly';
@@ -81,13 +82,14 @@ export const enTranslations = {
   'dashboard.noClasses': 'No upcoming classes found',
   'dashboard.noUpcomingClasses': 'No upcoming classes scheduled',
   'dashboard.schoolAdmin': 'School Admin Dashboard',
-  'dashboard.analytics': 'School Analytics',
+  'dashboard.analytics': 'Analytics',
   'dashboard.adminPanel': 'Admin Panel',
   'dashboard.accessAnalytics': 'Access detailed school analytics in the',
   'dashboard.subscription': 'Subscription',
   'dashboard.atSchool': 'at',
+  'dashboard.confidentialSupport': 'Confidential support available 24/7 for',
 
-  // AI translations
+  // AI translations - Complete set
   'ai.personalInsights': 'AI Personal Insights',
   'ai.poweredByAI': 'Powered by Advanced AI',
   'ai.learningProgress': 'Learning Progress',
@@ -106,7 +108,7 @@ export const enTranslations = {
   'ai.analyzingWellness': 'Analyzing your wellness patterns...',
   'ai.generatingWellnessAdvice': 'Generating personalized wellness advice...',
 
-  // Mental Health Support
+  // Mental Health Support - Complete set
   'mentalHealth.loading': 'Loading mental health support...',
   'mentalHealth.confidentialSupport': 'Confidential Support',
   'mentalHealth.privacyNotice': 'All conversations with mental health professionals are strictly confidential and secure.',
@@ -155,7 +157,7 @@ export const enTranslations = {
   'schedule.mySchedules': 'My Class Schedules',
   'schedule.noSchedules': 'No class schedules created yet. Create your first schedule above.',
 
-  // Feedback
+  // Feedback - Complete set
   'feedback.title': 'Lesson Feedback',
   'feedback.description': 'Share your thoughts about today\'s lesson to help improve the learning experience.',
   'feedback.classFeedbackTitle': 'Class Feedback',
@@ -208,7 +210,7 @@ export const enTranslations = {
   'feedback.suggestionsLabel': 'Suggestions:',
   'feedback.additionalCommentsLabel': 'Additional Comments:',
 
-  // Weekly Summary
+  // Weekly Summary - Complete set
   'weeklySummary.title': 'Weekly Summary',
   'weeklySummary.description': 'Share your thoughts about this week to help us provide better support.',
   'weeklySummary.emotionalRoute': 'Emotional concerns → School Doctor',
@@ -266,7 +268,7 @@ export const enTranslations = {
   'articles.mentalHealth': 'Mental Health Articles',
   'articles.subscriptionRequired': 'A subscription is required for this feature.',
 
-  // Pricing - Adding comprehensive pricing translations
+  // Pricing - Complete pricing translations
   'pricing.processing': 'Processing...',
   'pricing.title': 'Pricing',
   'pricing.choosePlan': 'Choose Your Plan',
@@ -348,7 +350,7 @@ export const enTranslations = {
   'pricing.privacyCompliant': 'Privacy compliant',
   'pricing.maximumImpact': 'Maximum impact',
 
-  // Student
+  // Student - Complete set
   'student.failedToLoadClasses': 'Failed to load classes',
   'student.accessMentalHealthResources': 'Access mental health resources at {school}',
   'student.defaultName': 'Student',
@@ -358,6 +360,7 @@ export const enTranslations = {
   'student.classGrade': 'Class/Grade',
   'student.school': 'School',
 
+  // Welcome section
   'welcome.title': 'Lessons Learnt',
   'welcome.heroTitle1': 'Collaborative Classrooms',
   'welcome.heroTitle2': 'Unstoppable Minds',
@@ -365,6 +368,7 @@ export const enTranslations = {
   'welcome.freeForStudents': 'Always free for students!',
   'tagline.studentLead': 'Where every student voice shapes the future of learning',
 
+  // Features
   'features.studentFeedback.title': 'Student Feedback Collection',
   'features.studentFeedback.description': 'Collect direct feedback on lessons and experiences',
   'features.teacherInsights.title': 'Teacher Analytics Dashboard',
@@ -372,6 +376,7 @@ export const enTranslations = {
   'features.mentalHealth.title': 'Mental Health Support',
   'features.mentalHealth.description': 'Anonymous chat with school psychologists',
 
+  // Platform
   'platform.whySchools': 'Why Schools Choose Lessons Learnt',
   'platform.whySchoolsSubtitle': 'Comprehensive educational technology that puts student wellbeing first',
   'platform.studentInsights': 'Real-time Student Insights',
@@ -387,7 +392,7 @@ export const enTranslations = {
   'platform.readyToTransform': 'Ready to Transform Your School?',
   'platform.readyToTransformDesc': 'Join thousands of educators already using our platform',
 
-  // Updated compliance section - changed "Certified" to "Compliant" and "Aligned" to "Compliant"
+  // Compliance
   'compliance.gdpr.title': 'GDPR Compliant',
   'compliance.gdpr.description': 'Full compliance with European data protection regulations',
   'compliance.soc2.title': 'SOC 2 Compliant',
@@ -400,7 +405,7 @@ export const enTranslations = {
   'compliance.dataRetention': 'Data Retention',
   'compliance.rightToDelete': 'Right to Delete',
 
-  // Demo section - only keys used on homepage
+  // Demo section
   'demo.featureDemo': 'Feature Demo',
   'demo.title': 'Demo',
   'demo.subtitle': 'Try our platform features',
@@ -423,7 +428,7 @@ export const enTranslations = {
   'demo.sampleDataIncluded': 'Sample data included',
   'demo.enterDemo': 'Enter Demo',
 
-  // GDPR & Privacy - New translations added
+  // Privacy
   'privacy.title': 'Privacy Policy',
   'privacy.cookieConsent': 'Cookie Consent',
   'privacy.essential': 'Essential Cookies',
@@ -457,6 +462,10 @@ export const enTranslations = {
   'privacy.consentWithdrawn': 'Consent Withdrawn',
   'privacy.consentGiven': 'Consent Given',
   'privacy.lastUpdated': 'Last Updated',
+
+  // Auth translations
+  'auth.logoutSuccess': 'Logged out successfully',
+  'auth.logoutError': 'Logout failed',
 
   // Merge all sub-translations
   ...enAuthTranslations,
