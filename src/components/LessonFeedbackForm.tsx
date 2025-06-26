@@ -123,10 +123,25 @@ const LessonFeedbackForm = () => {
     try {
       console.log('LessonFeedbackForm: Preparing feedback data...');
       
+      // Get the current user from Supabase auth
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
+      
+      if (authError) {
+        console.error('LessonFeedbackForm: Auth error:', authError);
+        throw new Error(`Authentication error: ${authError.message}`);
+      }
+      
+      if (!user) {
+        console.error('LessonFeedbackForm: No authenticated user found');
+        throw new Error('You must be logged in to submit feedback');
+      }
+      
+      console.log('LessonFeedbackForm: Authenticated user:', user.id);
+      
       // Prepare feedback data with better error handling
       const feedbackData = {
         class_schedule_id: selectedClass,
-        student_id: isAnonymous ? null : student?.id || null,
+        student_id: isAnonymous ? null : (student?.id || user.id),
         student_name: isAnonymous ? t('feedback.anonymous') : (student?.full_name || 'Unknown Student'),
         understanding: understanding[0] || 3,
         interest: interest[0] || 3,
@@ -144,6 +159,19 @@ const LessonFeedbackForm = () => {
       };
 
       console.log('LessonFeedbackForm: Submitting feedback with data:', feedbackData);
+
+      // First, let's test if we can access the feedback table at all
+      const { data: testQuery, error: testError } = await supabase
+        .from('feedback')
+        .select('id')
+        .limit(1);
+        
+      console.log('LessonFeedbackForm: Test query result:', { testQuery, testError });
+      
+      if (testError) {
+        console.error('LessonFeedbackForm: Cannot access feedback table:', testError);
+        throw new Error(`Database access error: ${testError.message}`);
+      }
 
       // Insert feedback with better error handling
       const { data, error } = await supabase
