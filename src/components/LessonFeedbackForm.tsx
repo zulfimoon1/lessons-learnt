@@ -13,7 +13,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { classScheduleService } from "@/services/classScheduleService";
 import { secureSessionService } from "@/services/secureSessionService";
-import { BookOpenIcon, StarIcon, LightbulbIcon, MessageCircleIcon, EyeOffIcon, AlertCircleIcon } from "lucide-react";
+import { BookOpenIcon, StarIcon, LightbulbIcon, MessageCircleIcon, EyeOffIcon, AlertCircleIcon, CheckCircle } from "lucide-react";
 import VoiceInputToggle from '@/components/voice/VoiceInputToggle';
 import AudioPlayer from '@/components/voice/AudioPlayer';
 import EmotionalStateSelector from '@/components/EmotionalStateSelector';
@@ -343,12 +343,30 @@ const LessonFeedbackForm = () => {
 
       console.log('✅ Submission successful! Data:', insertResult.data);
 
+      // Show success message with enhanced visibility
       toast({
-        title: t('feedback.submitted'),
+        title: "🎉 Feedback Submitted Successfully!",
         description: hasVoiceInput ? 
-          "Your feedback and voice note have been submitted successfully!" :
-          t('feedback.submittedDesc'),
+          "Thank you! Your feedback and voice note have been saved. Your teacher will review it soon." :
+          "Thank you! Your feedback has been saved. Your teacher will review it soon.",
+        variant: "default",
+        className: "bg-green-50 border-green-200 text-green-800"
       });
+
+      // Show a temporary success indicator
+      const successIndicator = document.createElement('div');
+      successIndicator.className = 'fixed top-4 right-4 z-50 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg flex items-center gap-2';
+      successIndicator.innerHTML = `
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+        </svg>
+        <span>Feedback submitted successfully!</span>
+      `;
+      document.body.appendChild(successIndicator);
+      
+      setTimeout(() => {
+        document.body.removeChild(successIndicator);
+      }, 5000);
 
       // Reset form
       console.log('🔄 Resetting form...');
@@ -611,13 +629,23 @@ const LessonFeedbackForm = () => {
                 </Label>
               </div>
 
-              {/* Submit Button */}
+              {/* Submit Button with enhanced feedback */}
               <Button 
                 type="submit" 
                 disabled={isSubmitting}
-                className="w-full bg-gradient-to-r from-brand-teal to-brand-orange hover:from-brand-teal/90 hover:to-brand-orange/90"
+                className="w-full bg-gradient-to-r from-brand-teal to-brand-orange hover:from-brand-teal/90 hover:to-brand-orange/90 text-white font-semibold py-3 text-lg shadow-lg hover:shadow-xl transition-all duration-200"
               >
-                {isSubmitting ? t('feedback.submitting') : t('feedback.submit')}
+                {isSubmitting ? (
+                  <div className="flex items-center gap-2">
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    Submitting your feedback...
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <CheckCircle className="w-5 h-5" />
+                    Submit Feedback
+                  </div>
+                )}
               </Button>
             </>
           )}
