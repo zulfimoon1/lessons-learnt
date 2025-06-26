@@ -46,7 +46,7 @@ const Demo = () => {
   };
 
   const handleStartFreeTrial = () => {
-    navigate('/teacher-login');
+    navigate('/teacher-login?tab=signup');
   };
 
   const handleTeacherDemo = () => {
@@ -231,6 +231,16 @@ const Demo = () => {
                 <p className="text-xl font-bold mt-3 opacity-95 drop-shadow-md text-center">
                   Sign up and test all features
                 </p>
+                
+                {/* Updated Call to Action Button */}
+                <div className="mt-6 text-center">
+                  <Button 
+                    onClick={handleStartFreeTrial}
+                    className="bg-brand-orange hover:bg-brand-orange/90 text-white px-8 py-3 text-lg font-semibold shadow-lg hover:shadow-xl transition-all transform hover:scale-105"
+                  >
+                    Sign Up to Test All Features
+                  </Button>
+                </div>
               </div>
             </div>
 
