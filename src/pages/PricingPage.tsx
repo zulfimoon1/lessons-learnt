@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -113,11 +112,12 @@ const PricingPage = () => {
   };
 
   const handleSignUpEducator = () => {
+    console.log('Navigating to teacher-login from handleSignUpEducator');
     navigate('/teacher-login');
   };
 
   const handleStartFreeTrial = () => {
-    // Direct users to teacher login to start their free trial
+    console.log('Navigating to teacher-login from handleStartFreeTrial');
     navigate('/teacher-login');
   };
 
