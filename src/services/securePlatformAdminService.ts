@@ -67,9 +67,9 @@ class SecurePlatformAdminService {
         console.log('✅ Platform admin context set successfully via RPC');
       }
 
-      // Log the context setting
+      // Log the context setting with valid event type
       centralizedValidationService.logSecurityEvent({
-        type: 'admin_context_set',
+        type: 'suspicious_activity',
         details: `Platform admin context configured for ${adminEmail}`,
         severity: 'low'
       });
@@ -77,7 +77,7 @@ class SecurePlatformAdminService {
     } catch (error) {
       console.error('Error setting platform admin context:', error);
       centralizedValidationService.logSecurityEvent({
-        type: 'admin_context_error',
+        type: 'unauthorized_access',
         details: `Failed to set admin context: ${error instanceof Error ? error.message : 'Unknown error'}`,
         severity: 'high'
       });
@@ -239,7 +239,7 @@ class SecurePlatformAdminService {
     } catch (error) {
       console.error('Error creating transaction:', error);
       centralizedValidationService.logSecurityEvent({
-        type: 'transaction_creation_error',
+        type: 'form_validation_failed',
         details: `Failed to create transaction: ${error instanceof Error ? error.message : 'Unknown error'}`,
         severity: 'medium'
       });
