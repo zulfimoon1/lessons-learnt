@@ -63,15 +63,16 @@ const EnhancedPasswordReset: React.FC<EnhancedPasswordResetProps> = ({ teacher }
         return;
       }
 
-      if (data) {
-        setResetResult(data);
+      if (data && typeof data === 'object') {
+        const result = data as ResetResult;
+        setResetResult(result);
         
-        if (data.success) {
+        if (result.success) {
           // Add to recent resets
-          setRecentResets(prev => [data, ...prev.slice(0, 4)]);
+          setRecentResets(prev => [result, ...prev.slice(0, 4)]);
           toast.success('Password reset successfully! Share the temporary password with the student.');
         } else {
-          toast.error(data.message);
+          toast.error(result.message);
         }
       }
     } catch (err) {

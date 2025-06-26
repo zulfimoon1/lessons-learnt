@@ -20,13 +20,13 @@ interface StudentLoginActivityProps {
 
 interface LoginActivity {
   id: string;
-  student_id: string;
-  login_timestamp: string;
-  ip_address?: string;
-  user_agent?: string;
-  success: boolean;
+  student_id: string | null;
+  login_timestamp: string | null;
+  ip_address?: string | null;
+  user_agent?: string | null;
+  success: boolean | null;
   school: string;
-  grade?: string;
+  grade?: string | null;
   student_name?: string;
 }
 
@@ -74,9 +74,16 @@ const StudentLoginActivity: React.FC<StudentLoginActivityProps> = ({ teacher }) 
 
       if (loginError) throw loginError;
 
-      // Transform the data to include student names
-      const activitiesWithNames = loginData?.map(activity => ({
-        ...activity,
+      // Transform the data to include student names with proper typing
+      const activitiesWithNames: LoginActivity[] = loginData?.map(activity => ({
+        id: activity.id,
+        student_id: activity.student_id,
+        login_timestamp: activity.login_timestamp,
+        ip_address: typeof activity.ip_address === 'string' ? activity.ip_address : null,
+        user_agent: activity.user_agent,
+        success: activity.success,
+        school: activity.school,
+        grade: activity.grade,
         student_name: activity.students?.full_name || 'Unknown Student'
       })) || [];
 
@@ -88,7 +95,7 @@ const StudentLoginActivity: React.FC<StudentLoginActivityProps> = ({ teacher }) 
     }
   };
 
-  const getActivityIcon = (success: boolean) => {
+  const getActivityIcon = (success: boolean | null) => {
     return success ? (
       <Shield className="w-4 h-4 text-green-500" />
     ) : (
@@ -96,7 +103,9 @@ const StudentLoginActivity: React.FC<StudentLoginActivityProps> = ({ teacher }) 
     );
   };
 
-  const getTimeAgo = (timestamp: string) => {
+  const getTimeAgo = (timestamp: string | null) => {
+    if (!timestamp) return 'Unknown';
+    
     const date = new Date(timestamp);
     const now = new Date();
     const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60));
@@ -180,7 +189,12 @@ const StudentLoginActivity: React.FC<StudentLoginActivityProps> = ({ teacher }) 
                         </Badge>
                         <span>•</span>
                         <Calendar className="w-3 h-3" />
-                        <span>{format(new Date(activity.login_timestamp), 'MMM d, h:mm a')}</span>
+                        <span>
+                          {activity.login_timestamp 
+                            ? format(new Date(activity.login_timestamp), 'MMM d, h:mm a')
+                            : 'Unknown time'
+                          }
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -217,7 +231,7 @@ const StudentLoginActivity: React.FC<StudentLoginActivityProps> = ({ teacher }) 
             </div>
             <div className="text-center">
               <p className="text-2xl font-bold text-gray-700">
-                {new Set(activities.map(a => a.student_id)).size}
+                {new Set(activities.map(a => a.student_id).filter(Boolean)).size}
               </p>
               <p className="text-sm text-gray-600">Active Students</p>
             </div>

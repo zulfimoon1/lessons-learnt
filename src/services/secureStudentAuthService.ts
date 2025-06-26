@@ -18,7 +18,7 @@ interface AuthResult {
   needsPasswordChange?: boolean;
 }
 
-// Enhanced secure student login with Supabase session creation
+// Enhanced secure student login with login activity tracking
 export const secureStudentLogin = async (
   fullName: string, 
   school: string, 
@@ -43,6 +43,21 @@ export const secureStudentLogin = async (
       grade_param: grade.trim(),
       password_param: password
     });
+
+    // Track login attempt
+    const loginSuccess = !authError && authResult && authResult.length > 0 && authResult[0].password_valid;
+    
+    try {
+      await supabase.from('student_login_activity').insert({
+        student_id: loginSuccess ? authResult[0].student_id : null,
+        school: schoolValidation.sanitized,
+        grade: grade.trim(),
+        success: loginSuccess,
+        user_agent: navigator.userAgent
+      });
+    } catch (trackingError) {
+      console.warn('Failed to track login activity:', trackingError);
+    }
 
     if (authError) {
       console.error('❌ SecureStudentAuth: Database authentication error:', authError);
@@ -118,6 +133,18 @@ export const secureStudentLogin = async (
 
   } catch (error) {
     console.error('💥 SecureStudentAuth: Login failed:', error);
+    
+    // Track failed login attempt
+    try {
+      await supabase.from('student_login_activity').insert({
+        school: school,
+        grade: grade,
+        success: false,
+        user_agent: navigator.userAgent
+      });
+    } catch (trackingError) {
+      console.warn('Failed to track failed login:', trackingError);
+    }
     
     securityService.logSecurityEvent({
       type: 'login_failed',
