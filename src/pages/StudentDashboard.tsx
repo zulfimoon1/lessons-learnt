@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -17,6 +16,8 @@ import QuickActionsCard from "@/components/dashboard/student/QuickActionsCard";
 import WellnessTracker from "@/components/dashboard/student/WellnessTracker";
 import StudentAnalyticsDashboard from "@/components/analytics/StudentAnalyticsDashboard";
 import MentalHealthSupportTab from "@/components/dashboard/MentalHealthSupportTab";
+import MobileTabs from "@/components/dashboard/student/MobileTabs";
+import WelcomeTour from "@/components/onboarding/WelcomeTour";
 import { classScheduleService } from "@/services/classScheduleService";
 import AIStudentInsights from "@/components/dashboard/student/AIStudentInsights";
 
@@ -28,8 +29,17 @@ const StudentDashboard: React.FC = () => {
   const [upcomingClasses, setUpcomingClasses] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('classes');
+  const [showWelcomeTour, setShowWelcomeTour] = useState(false);
 
   console.log('StudentDashboard: Rendering with student:', student?.full_name);
+
+  useEffect(() => {
+    // Check if user has seen the welcome tour
+    const hasSeenTour = localStorage.getItem(`welcomeTour_student_${student?.id}`);
+    if (!hasSeenTour && student) {
+      setShowWelcomeTour(true);
+    }
+  }, [student]);
 
   useEffect(() => {
     const fetchUpcomingClasses = async () => {
@@ -65,6 +75,13 @@ const StudentDashboard: React.FC = () => {
     fetchUpcomingClasses();
   }, [student, t]);
 
+  const handleWelcomeTourComplete = () => {
+    setShowWelcomeTour(false);
+    if (student) {
+      localStorage.setItem(`welcomeTour_student_${student.id}`, 'completed');
+    }
+  };
+
   const handleLogout = async () => {
     try {
       logout();
@@ -93,18 +110,10 @@ const StudentDashboard: React.FC = () => {
     }
   };
 
-  const handleMoodSubmit = (entry: any) => {
-    console.log('StudentDashboard: Mood entry submitted:', entry);
-    toast.success(t('wellness.submitted') || 'Wellness check submitted successfully');
-    // Here you would typically save to database
-  };
-
   if (!student) {
     console.log('StudentDashboard: No student found, redirecting to login');
     return <Navigate to="/student-login" replace />;
   }
-
-  console.log('StudentDashboard: Rendering dashboard for student:', student.full_name);
 
   const tabItems = [
     {
@@ -170,7 +179,6 @@ const StudentDashboard: React.FC = () => {
       />
 
       <main className="max-w-7xl mx-auto p-3 md:p-6 space-y-4 md:space-y-6">
-        {/* Welcome Section - Preserved */}
         <WelcomeSection
           studentName={student.full_name}
           school={student.school}
@@ -178,41 +186,58 @@ const StudentDashboard: React.FC = () => {
           upcomingClassesCount={upcomingClasses.length}
         />
 
-        {/* Quick Actions Card - New Enhancement */}
         <QuickActionsCard {...handleQuickActions} />
 
-        {/* AI Personal Insights - Enhanced with better visibility */}
         <AIStudentInsights
           studentId={student.id}
           school={student.school}
           grade={student.grade}
         />
 
-        {/* Enhanced Tabs with Analytics and AI */}
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 md:space-y-6">
-          <TabsList className={`grid w-full ${isMobile ? 'grid-cols-3 gap-1 h-auto p-1' : 'grid-cols-5'}`}>
-            {tabItems.map((item) => {
-              const Icon = item.icon;
-              return (
-                <TabsTrigger 
-                  key={item.value}
-                  value={item.value} 
-                  className={`flex items-center gap-1 md:gap-2 ${isMobile ? 'flex-col py-2 px-1 text-xs' : 'flex-row'}`}
-                >
-                  <Icon className="w-4 h-4" />
-                  <span className={isMobile ? 'text-[10px] leading-tight text-center' : ''}>{item.label}</span>
-                </TabsTrigger>
-              );
-            })}
-          </TabsList>
+        {/* Mobile vs Desktop Tabs */}
+        {isMobile ? (
+          <div className="space-y-4">
+            <MobileTabs
+              activeTab={activeTab}
+              onTabChange={setActiveTab}
+              t={t}
+            />
+            <div className="mt-6">
+              {tabItems.find(item => item.value === activeTab)?.component}
+            </div>
+          </div>
+        ) : (
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 md:space-y-6">
+            <TabsList className="grid w-full grid-cols-5">
+              {tabItems.map((item) => {
+                const Icon = item.icon;
+                return (
+                  <TabsTrigger 
+                    key={item.value}
+                    value={item.value} 
+                    className="flex items-center gap-2"
+                  >
+                    <Icon className="w-4 h-4" />
+                    <span>{item.label}</span>
+                  </TabsTrigger>
+                );
+              })}
+            </TabsList>
 
-          {tabItems.map((item) => (
-            <TabsContent key={item.value} value={item.value} className="mt-6">
-              {item.component}
-            </TabsContent>
-          ))}
-        </Tabs>
+            {tabItems.map((item) => (
+              <TabsContent key={item.value} value={item.value} className="mt-6">
+                {item.component}
+              </TabsContent>
+            ))}
+          </Tabs>
+        )}
       </main>
+
+      <WelcomeTour
+        userType="student"
+        isVisible={showWelcomeTour}
+        onComplete={handleWelcomeTourComplete}
+      />
     </div>
   );
 };
