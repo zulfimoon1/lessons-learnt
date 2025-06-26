@@ -36,6 +36,7 @@ import SOC2TestPage from "./pages/SOC2TestPage";
 import HIPAACompliancePage from "./pages/HIPAACompliancePage";
 import NotFound from "./pages/NotFound";
 import "./App.css";
+import TranslationValidationDashboard from "./components/translation/TranslationValidationDashboard";
 
 const queryClient = new QueryClient();
 
@@ -76,6 +77,7 @@ function App() {
                     <Route path="/soc2-compliance" element={<SOC2CompliancePage />} />
                     <Route path="/soc2-test" element={<SOC2TestPage />} />
                     <Route path="/hipaa-compliance" element={<HIPAACompliancePage />} />
+                    <Route path="/translation-validation" element={<TranslationValidationDashboard />} />
                     <Route path="*" element={<NotFound />} />
                   </Routes>
                 </PlatformAdminProvider>
