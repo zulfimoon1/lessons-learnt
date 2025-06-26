@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { GraduationCapIcon, UsersIcon, BookOpenIcon, HeartIcon, BarChart3Icon, ShieldCheckIcon, PlayCircleIcon, Shield } from "lucide-react";
@@ -6,136 +7,107 @@ import LanguageSwitcher from "@/components/LanguageSwitcher";
 import DemoSection from "@/components/DemoSection";
 import ComplianceFooter from "@/components/ComplianceFooter";
 import CookieConsent from "@/components/CookieConsent";
+import MobileOptimizedLayout from "@/components/mobile/MobileOptimizedLayout";
+import MobileOptimizedHeader from "@/components/mobile/MobileOptimizedHeader";
+import MobileOptimizedHero from "@/components/mobile/MobileOptimizedHero";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { cn } from "@/lib/utils";
 
 const Index = () => {
   const { t, isLoading } = useLanguage();
+  const isMobile = useIsMobile();
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <GraduationCapIcon className="w-12 h-12 text-brand-teal mx-auto mb-4" />
-          <p className="text-muted-foreground">{t('common.loading')}</p>
+      <MobileOptimizedLayout>
+        <div className="min-h-screen bg-background flex items-center justify-center">
+          <div className="text-center">
+            <GraduationCapIcon className="w-12 h-12 text-brand-teal mx-auto mb-4" />
+            <p className="text-muted-foreground">{t('common.loading')}</p>
+          </div>
         </div>
-      </div>
+      </MobileOptimizedLayout>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <MobileOptimizedLayout>
       <CookieConsent />
       
-      {/* Header */}
-      <header className="bg-white/80 backdrop-blur-sm border-b border-border shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex justify-between items-center">
-            <div className="flex items-center gap-2">
-              <GraduationCapIcon className="w-8 h-8 text-brand-teal" />
-              <h1 className="text-2xl font-bold text-brand-dark">{t('welcome.title')}</h1>
-            </div>
-            <div className="flex items-center gap-4">
-              <Link to="/pricing-showcase">
-                <Button variant="outline" size="sm" className="bg-brand-orange/10 border-brand-orange hover:bg-brand-orange/20 text-brand-orange hover:text-brand-orange">
-                  {t('pricing.title')}
-                </Button>
-              </Link>
-              <Link to="/demo">
-                <Button variant="outline" size="sm" className="flex items-center gap-2 border-brand-teal text-brand-teal hover:bg-brand-teal hover:text-white">
-                  <PlayCircleIcon className="w-4 h-4" />
-                  {t('demo.title')}
-                </Button>
-              </Link>
-              <LanguageSwitcher />
-            </div>
-          </div>
-        </div>
-      </header>
+      {/* Mobile-Optimized Header */}
+      <MobileOptimizedHeader />
 
-      {/* Hero Section with Enhanced Gradient */}
-      <section className="relative bg-hero-gradient py-20 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-brand-dark/80 via-brand-teal/60 to-brand-orange/40"></div>
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <div className="max-w-3xl mx-auto">
-            <h2 className="text-5xl font-bold text-white mb-2">
-              {t('welcome.heroTitle1')}
-            </h2>
-            <h2 className="text-5xl font-bold text-white mb-6">
-              {t('welcome.heroTitle2')}
-            </h2>
-            <p className="text-xl text-white/90 mb-12">
-              {t('welcome.subtitle')}
-            </p>
-            
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-md mx-auto">
-              <Link to="/student-login">
-                <Button 
-                  size="lg" 
-                  className="w-full min-h-16 py-3 px-4 text-base flex items-center justify-center bg-brand-teal hover:bg-brand-dark text-white"
-                >
-                  <UsersIcon className="w-5 h-5 mr-2 flex-shrink-0" />
-                  <span className="text-center leading-tight whitespace-normal">{t('navigation.studentLogin')}</span>
-                </Button>
-              </Link>
-              
-              <Link to="/teacher-login">
-                <Button 
-                  size="lg" 
-                  variant="outline" 
-                  className="w-full border-2 border-white text-white hover:bg-white hover:text-brand-dark min-h-16 py-3 px-4 text-base flex items-center justify-center"
-                >
-                  <BookOpenIcon className="w-5 h-5 mr-2 flex-shrink-0" />
-                  <span className="text-center leading-tight whitespace-normal">{t('navigation.teacherLogin')}</span>
-                </Button>
-              </Link>
-            </div>
-            
-            <div className="max-w-2xl mx-auto mt-6">
-              <p className="text-5xl font-bold text-brand-orange mt-2">
-                {t('welcome.freeForStudents')}
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
+      {/* Mobile-Optimized Hero Section */}
+      <MobileOptimizedHero />
 
       {/* Demo Section */}
       <DemoSection />
 
       {/* Features Section */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+      <section className={cn(
+        'max-w-7xl mx-auto',
+        isMobile ? 'px-4 py-8' : 'px-4 sm:px-6 lg:px-8 py-12'
+      )}>
+        <div className={cn(
+          'grid gap-6',
+          isMobile ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-3 gap-8'
+        )}>
           <Card className="bg-white/90 backdrop-blur-sm border-brand-teal/20 hover:shadow-lg transition-shadow">
-            <CardHeader>
+            <CardHeader className={isMobile ? 'p-4' : undefined}>
               <div className="w-12 h-12 bg-brand-teal/20 rounded-lg flex items-center justify-center mb-4">
                 <UsersIcon className="w-6 h-6 text-brand-teal" />
               </div>
-              <CardTitle className="text-xl text-brand-dark">{t('features.studentFeedback.title')}</CardTitle>
-              <CardDescription className="text-gray-600">
+              <CardTitle className={cn(
+                'text-brand-dark',
+                isMobile ? 'text-lg' : 'text-xl'
+              )}>
+                {t('features.studentFeedback.title')}
+              </CardTitle>
+              <CardDescription className={cn(
+                'text-gray-600',
+                isMobile ? 'text-sm' : undefined
+              )}>
                 {t('features.studentFeedback.description')}
               </CardDescription>
             </CardHeader>
           </Card>
 
           <Card className="bg-white/90 backdrop-blur-sm border-brand-teal/20 hover:shadow-lg transition-shadow">
-            <CardHeader>
+            <CardHeader className={isMobile ? 'p-4' : undefined}>
               <div className="w-12 h-12 bg-brand-teal/20 rounded-lg flex items-center justify-center mb-4">
                 <BookOpenIcon className="w-6 h-6 text-brand-teal" />
               </div>
-              <CardTitle className="text-xl text-brand-dark">{t('features.teacherInsights.title')}</CardTitle>
-              <CardDescription className="text-gray-600">
+              <CardTitle className={cn(
+                'text-brand-dark',
+                isMobile ? 'text-lg' : 'text-xl'
+              )}>
+                {t('features.teacherInsights.title')}
+              </CardTitle>
+              <CardDescription className={cn(
+                'text-gray-600',
+                isMobile ? 'text-sm' : undefined
+              )}>
                 {t('features.teacherInsights.description')}
               </CardDescription>
             </CardHeader>
           </Card>
 
           <Card className="bg-white/90 backdrop-blur-sm border-brand-teal/20 hover:shadow-lg transition-shadow">
-            <CardHeader>
+            <CardHeader className={isMobile ? 'p-4' : undefined}>
               <div className="w-12 h-12 bg-brand-orange/20 rounded-lg flex items-center justify-center mb-4">
                 <HeartIcon className="w-6 h-6 text-brand-orange" />
               </div>
-              <CardTitle className="text-xl text-brand-dark">{t('features.mentalHealth.title')}</CardTitle>
-              <CardDescription className="text-gray-600">
+              <CardTitle className={cn(
+                'text-brand-dark',
+                isMobile ? 'text-lg' : 'text-xl'
+              )}>
+                {t('features.mentalHealth.title')}
+              </CardTitle>
+              <CardDescription className={cn(
+                'text-gray-600',
+                isMobile ? 'text-sm' : undefined
+              )}>
                 {t('features.mentalHealth.description')}
               </CardDescription>
             </CardHeader>
@@ -144,57 +116,118 @@ const Index = () => {
       </section>
 
       {/* Platform Overview Section */}
-      <section className="bg-brand-gradient-soft py-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-brand-dark mb-6">
+      <section className="bg-brand-gradient-soft py-12 md:py-20">
+        <div className={cn(
+          'max-w-7xl mx-auto',
+          isMobile ? 'px-4' : 'px-4 sm:px-6 lg:px-8'
+        )}>
+          <div className={cn(
+            'text-center',
+            isMobile ? 'mb-8' : 'mb-16'
+          )}>
+            <h2 className={cn(
+              'font-bold text-brand-dark mb-4',
+              isMobile ? 'text-2xl mb-3' : 'text-4xl mb-6'
+            )}>
               {t('platform.whySchools')}
             </h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+            <p className={cn(
+              'text-gray-600 max-w-3xl mx-auto',
+              isMobile ? 'text-lg' : 'text-xl'
+            )}>
               {t('platform.whySchoolsSubtitle')}
             </p>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center mb-16">
+          <div className={cn(
+            'items-center mb-12',
+            isMobile ? 'space-y-8' : 'grid grid-cols-1 lg:grid-cols-2 gap-12 mb-16'
+          )}>
             <div>
-              <h3 className="text-3xl font-bold text-brand-dark mb-6">
+              <h3 className={cn(
+                'font-bold text-brand-dark mb-4',
+                isMobile ? 'text-2xl' : 'text-3xl mb-6'
+              )}>
                 {t('platform.studentInsights')}
               </h3>
-              <div className="space-y-6">
+              <div className={cn(
+                'space-y-4',
+                isMobile ? 'space-y-4' : 'space-y-6'
+              )}>
                 <div className="flex items-start gap-4">
-                  <BarChart3Icon className="w-6 h-6 text-brand-teal mt-1" />
+                  <BarChart3Icon className="w-6 h-6 text-brand-teal mt-1 flex-shrink-0" />
                   <div>
-                    <h4 className="font-semibold text-lg mb-2 text-brand-dark">{t('platform.realTimeAnalytics')}</h4>
-                    <p className="text-gray-600">
+                    <h4 className={cn(
+                      'font-semibold mb-2 text-brand-dark',
+                      isMobile ? 'text-base' : 'text-lg'
+                    )}>
+                      {t('platform.realTimeAnalytics')}
+                    </h4>
+                    <p className={cn(
+                      'text-gray-600',
+                      isMobile ? 'text-sm' : undefined
+                    )}>
                       {t('platform.realTimeAnalyticsDesc')}
                     </p>
                   </div>
                 </div>
                 <div className="flex items-start gap-4">
-                  <HeartIcon className="w-6 h-6 text-brand-orange mt-1" />
+                  <HeartIcon className="w-6 h-6 text-brand-orange mt-1 flex-shrink-0" />
                   <div>
-                    <h4 className="font-semibold text-lg mb-2 text-brand-dark">{t('platform.mentalHealthMonitoring')}</h4>
-                    <p className="text-gray-600">
+                    <h4 className={cn(
+                      'font-semibold mb-2 text-brand-dark',
+                      isMobile ? 'text-base' : 'text-lg'
+                    )}>
+                      {t('platform.mentalHealthMonitoring')}
+                    </h4>
+                    <p className={cn(
+                      'text-gray-600',
+                      isMobile ? 'text-sm' : undefined
+                    )}>
                       {t('platform.mentalHealthMonitoringDesc')}
                     </p>
                   </div>
                 </div>
                 <div className="flex items-start gap-4">
-                  <ShieldCheckIcon className="w-6 h-6 text-brand-teal mt-1" />
+                  <ShieldCheckIcon className="w-6 h-6 text-brand-teal mt-1 flex-shrink-0" />
                   <div>
-                    <h4 className="font-semibold text-lg mb-2 text-brand-dark">{t('platform.privacySecurity')}</h4>
-                    <p className="text-gray-600">
+                    <h4 className={cn(
+                      'font-semibold mb-2 text-brand-dark',
+                      isMobile ? 'text-base' : 'text-lg'
+                    )}>
+                      {t('platform.privacySecurity')}
+                    </h4>
+                    <p className={cn(
+                      'text-gray-600',
+                      isMobile ? 'text-sm' : undefined
+                    )}>
                       {t('platform.privacySecurityDesc')}
                     </p>
                   </div>
                 </div>
               </div>
             </div>
-            <div className="bg-brand-gradient p-8 rounded-2xl text-white">
+            <div className={cn(
+              'bg-brand-gradient rounded-2xl text-white',
+              isMobile ? 'p-6' : 'p-8'
+            )}>
               <div className="text-center">
-                <div className="text-6xl font-bold mb-4">{t('platform.improvementPercent')}</div>
-                <p className="text-xl font-semibold mb-2">{t('platform.improvementTitle')}</p>
-                <p className="text-white/90">
+                <div className={cn(
+                  'font-bold mb-4',
+                  isMobile ? 'text-4xl' : 'text-6xl'
+                )}>
+                  {t('platform.improvementPercent')}
+                </div>
+                <p className={cn(
+                  'font-semibold mb-2',
+                  isMobile ? 'text-lg' : 'text-xl'
+                )}>
+                  {t('platform.improvementTitle')}
+                </p>
+                <p className={cn(
+                  'text-white/90',
+                  isMobile ? 'text-sm' : undefined
+                )}>
                   {t('platform.improvementDesc')}
                 </p>
               </div>
@@ -202,14 +235,26 @@ const Index = () => {
           </div>
 
           <div className="text-center">
-            <h3 className="text-2xl font-bold text-brand-dark mb-4">
+            <h3 className={cn(
+              'font-bold text-brand-dark mb-4',
+              isMobile ? 'text-xl' : 'text-2xl'
+            )}>
               {t('platform.readyToTransform')}
             </h3>
-            <p className="text-lg text-gray-600 mb-8">
+            <p className={cn(
+              'text-gray-600 mb-6',
+              isMobile ? 'text-base mb-6' : 'text-lg mb-8'
+            )}>
               {t('platform.readyToTransformDesc')}
             </p>
             <Link to="/teacher-login?tab=signup">
-              <Button size="lg" className="text-xl px-12 py-4 bg-brand-orange hover:bg-brand-orange/90 text-white transform scale-125">
+              <Button 
+                size="lg" 
+                className={cn(
+                  'bg-brand-orange hover:bg-brand-orange/90 text-white touch-manipulation',
+                  isMobile ? 'text-lg px-8 py-4' : 'text-xl px-12 py-4 transform scale-125'
+                )}
+              >
                 {t('navigation.signUpNow')}
               </Button>
             </Link>
@@ -219,7 +264,7 @@ const Index = () => {
 
       {/* Compliance Footer */}
       <ComplianceFooter />
-    </div>
+    </MobileOptimizedLayout>
   );
 };
 
