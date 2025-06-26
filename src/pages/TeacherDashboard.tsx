@@ -120,13 +120,13 @@ const TeacherDashboard: React.FC = () => {
           </div>
         </div>
 
-        {/* Navigation Tabs - Styled like Student Quick Actions */}
+        {/* Navigation Tabs - Proper Radix UI Structure with Student Styling */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <div className="bg-white/90 backdrop-blur-sm rounded-2xl border border-gray-200/50 shadow-lg p-6">
             <h2 className="text-xl font-semibold text-gray-900 mb-4">
               {t('dashboard.quickActions') || 'Quick Actions'}
             </h2>
-            <div className={`grid gap-3 ${isMobile ? 'grid-cols-1 sm:grid-cols-2' : 'grid-cols-2 lg:grid-cols-4'}`}>
+            <TabsList className="bg-transparent p-0 h-auto gap-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
               {tabItems.map((item) => {
                 const Icon = item.icon;
                 return (
@@ -136,28 +136,23 @@ const TeacherDashboard: React.FC = () => {
                     className={`
                       h-auto p-4 flex items-center gap-3 hover:bg-gray-50 border border-gray-200 justify-start
                       data-[state=active]:bg-brand-teal data-[state=active]:text-white data-[state=active]:border-brand-teal
-                      transition-all duration-300 rounded-lg
+                      transition-all duration-300 rounded-lg bg-white
                       ${isMobile ? 'flex-col text-center min-h-[80px]' : 'flex-row'}
                     `}
-                    asChild
                   >
-                    <button
-                      aria-label={`${item.label} tab`}
-                    >
-                      <Icon 
-                        className={`w-5 h-5 ${activeTab === item.value ? 'text-white' : item.color}`}
-                        aria-hidden="true"
-                      />
-                      <div className={isMobile ? 'text-center' : 'text-left'}>
-                        <span className="text-sm font-medium block">
-                          {item.label}
-                        </span>
-                      </div>
-                    </button>
+                    <Icon 
+                      className={`w-5 h-5 ${activeTab === item.value ? 'text-white' : item.color}`}
+                      aria-hidden="true"
+                    />
+                    <div className={isMobile ? 'text-center' : 'text-left'}>
+                      <span className="text-sm font-medium block">
+                        {item.label}
+                      </span>
+                    </div>
                   </TabsTrigger>
                 );
               })}
-            </div>
+            </TabsList>
           </div>
 
           {/* Tab Content */}
