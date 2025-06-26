@@ -1,30 +1,13 @@
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { AlertTriangle, Eye, Calendar, User, School, Shield } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
-import { useMentalHealthAlerts } from "@/hooks/useMentalHealthAlerts";
-
-interface MentalHealthAlert {
-  id: string;
-  student_name: string;
-  school: string;
-  grade: string;
-  alert_type: string;
-  content: string;
-  severity_level: number;
-  is_reviewed: boolean;
-  created_at: string;
-  reviewed_by?: string;
-  reviewed_at?: string;
-}
+import { useOptimizedMentalHealthAlerts } from "@/hooks/useOptimizedMentalHealthAlerts";
 
 const MentalHealthAlerts = () => {
-  const { alerts, isLoading, isAuthorized, markAsReviewed } = useMentalHealthAlerts();
-  const { toast } = useToast();
+  const { alerts, isLoading, isAuthorized, markAsReviewed } = useOptimizedMentalHealthAlerts();
 
   if (!isAuthorized) {
     return (

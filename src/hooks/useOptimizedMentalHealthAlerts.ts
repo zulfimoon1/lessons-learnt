@@ -1,215 +1,185 @@
 
-import { useState, useEffect, useMemo } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
-import { useLanguage } from "@/contexts/LanguageContext";
-import { usePlatformAdmin } from "@/contexts/PlatformAdminContext";
+import { useState, useEffect, useCallback, useMemo } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
+import { toast } from 'sonner';
 
-export interface MentalHealthAlert {
+interface MentalHealthAlert {
   id: string;
   student_name: string;
   school: string;
   grade: string;
   alert_type: string;
   content: string;
-  source_table: string;
   severity_level: number;
   is_reviewed: boolean;
+  created_at: string;
   reviewed_by?: string;
   reviewed_at?: string;
-  created_at: string;
+}
+
+interface AlertStats {
+  total: number;
+  unreviewed: number;
+  critical: number;
+  bySchool: Record<string, number>;
+  criticalAlerts: MentalHealthAlert[];
 }
 
 export const useOptimizedMentalHealthAlerts = () => {
   const [alerts, setAlerts] = useState<MentalHealthAlert[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [isAuthorized, setIsAuthorized] = useState(false);
-  const [lastFetch, setLastFetch] = useState<number>(0);
-  const { toast } = useToast();
-  const { t } = useLanguage();
-  const { admin } = usePlatformAdmin();
+  const [lastFetchTime, setLastFetchTime] = useState<number>(0);
+  const { teacher } = useAuth();
 
-  // Memoized computed values for better performance
-  const alertStats = useMemo(() => {
-    const unreviewed = alerts.filter(alert => !alert.is_reviewed);
-    const critical = alerts.filter(alert => alert.severity_level >= 5);
-    const bySchool = alerts.reduce((acc, alert) => {
-      acc[alert.school] = (acc[alert.school] || 0) + 1;
-      return acc;
-    }, {} as Record<string, number>);
+  // Check if user is authorized to view mental health data
+  const isAuthorized = useMemo(() => {
+    return teacher && (teacher.role === 'doctor' || teacher.role === 'admin');
+  }, [teacher]);
 
-    return {
+  // Generate alert statistics
+  const alertStats = useMemo((): AlertStats => {
+    const stats = {
       total: alerts.length,
-      unreviewed: unreviewed.length,
-      critical: critical.length,
-      bySchool,
-      unreviewedAlerts: unreviewed,
-      criticalAlerts: critical
+      unreviewed: alerts.filter(alert => !alert.is_reviewed).length,
+      critical: alerts.filter(alert => alert.severity_level > 7).length,
+      bySchool: {} as Record<string, number>,
+      criticalAlerts: alerts.filter(alert => alert.severity_level > 7)
     };
+
+    alerts.forEach(alert => {
+      stats.bySchool[alert.school] = (stats.bySchool[alert.school] || 0) + 1;
+    });
+
+    return stats;
   }, [alerts]);
 
-  // Optimized authorization check with caching
-  const checkAuthorization = useMemo(() => async () => {
-    try {
-      if (!admin?.email) {
-        console.log('No admin context available for mental health access');
-        setIsAuthorized(false);
-        return false;
-      }
-
-      // Cache authorization for 5 minutes to reduce API calls
-      const cacheKey = `mental_health_auth_${admin.email}`;
-      const cached = sessionStorage.getItem(cacheKey);
-      if (cached) {
-        const { authorized, timestamp } = JSON.parse(cached);
-        if (Date.now() - timestamp < 300000) { // 5 minutes
-          setIsAuthorized(authorized);
-          return authorized;
-        }
-      }
-
-      const { data, error } = await supabase.functions.invoke('platform-admin', {
-        body: {
-          operation: 'verifyMedicalAccess',
-          adminEmail: admin.email
-        }
-      });
-
-      const authorized = !error && data?.success;
-      
-      // Cache the result
-      sessionStorage.setItem(cacheKey, JSON.stringify({
-        authorized,
-        timestamp: Date.now()
-      }));
-
-      setIsAuthorized(authorized);
-      return authorized;
-    } catch (error) {
-      console.error('Authorization check failed:', error);
-      setIsAuthorized(false);
-      return false;
+  const fetchAlerts = useCallback(async (force = false) => {
+    if (!isAuthorized) {
+      console.log('useOptimizedMentalHealthAlerts: User not authorized for mental health data');
+      setIsLoading(false);
+      return;
     }
-  }, [admin?.email]);
 
-  // Optimized fetch with intelligent caching
-  const fetchAlerts = async (forceRefresh = false) => {
+    // Implement caching - only fetch if more than 30 seconds have passed
     const now = Date.now();
-    
-    // Avoid too frequent fetches (minimum 30 seconds between calls)
-    if (!forceRefresh && now - lastFetch < 30000) {
+    if (!force && (now - lastFetchTime) < 30000) {
+      console.log('useOptimizedMentalHealthAlerts: Using cached data');
       return;
     }
 
     try {
+      console.log('useOptimizedMentalHealthAlerts: Fetching mental health alerts');
       setIsLoading(true);
-      
-      const authorized = await checkAuthorization();
-      if (!authorized) {
-        console.log('User not authorized for mental health data access');
-        setAlerts([]);
-        return;
-      }
 
-      console.log('🧠 Fetching mental health alerts via secure edge function...');
-      const { data, error } = await supabase.functions.invoke('platform-admin', {
-        body: {
-          operation: 'getMentalHealthAlerts',
-          adminEmail: admin.email,
-          includeStats: true // Request additional metadata
-        }
-      });
+      // Fetch alerts with optimized query
+      const { data, error } = await supabase
+        .from('mental_health_alerts')
+        .select('*')
+        .eq('school', teacher.school)
+        .order('created_at', { ascending: false })
+        .order('severity_level', { ascending: false });
 
       if (error) {
-        console.error('Error fetching mental health alerts:', error);
-        setAlerts([]);
-        return;
+        console.error('useOptimizedMentalHealthAlerts: Error fetching alerts:', error);
+        throw error;
       }
-      
-      if (data?.success) {
-        console.log('✅ Mental health alerts fetched securely:', data.data?.length || 0);
-        setAlerts(data.data || []);
-        setLastFetch(now);
-      } else {
-        console.warn('Mental health alerts request unsuccessful:', data?.error);
-        setAlerts([]);
-      }
+
+      console.log('useOptimizedMentalHealthAlerts: Fetched alerts:', data?.length || 0);
+      setAlerts(data || []);
+      setLastFetchTime(now);
     } catch (error) {
-      console.error('Error in fetchAlerts:', error);
-      setAlerts([]);
+      console.error('useOptimizedMentalHealthAlerts: Error:', error);
+      toast.error('Failed to load mental health alerts');
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [isAuthorized, teacher, lastFetchTime]);
 
-  // Optimized mark as reviewed with optimistic updates
-  const markAsReviewed = async (alertId: string) => {
-    if (!isAuthorized) {
-      toast({
-        title: t('common.error'),
-        description: "Unauthorized access to mental health data",
-        variant: "destructive",
-      });
+  const markAsReviewed = useCallback(async (alertId: string) => {
+    if (!isAuthorized || !teacher) {
+      console.error('useOptimizedMentalHealthAlerts: Not authorized to mark as reviewed');
       return;
     }
 
-    // Optimistic update
-    setAlerts(prev => prev.map(alert => 
-      alert.id === alertId 
-        ? { ...alert, is_reviewed: true, reviewed_by: admin.email, reviewed_at: new Date().toISOString() }
-        : alert
-    ));
-
     try {
-      console.log('✅ Marking alert as reviewed via secure edge function...');
-      const { data, error } = await supabase.functions.invoke('platform-admin', {
-        body: {
-          operation: 'markAlertAsReviewed',
-          adminEmail: admin.email,
-          alertId: alertId
-        }
-      });
+      console.log('useOptimizedMentalHealthAlerts: Marking alert as reviewed:', alertId);
 
-      if (error) throw error;
+      const { error } = await supabase
+        .from('mental_health_alerts')
+        .update({
+          is_reviewed: true,
+          reviewed_by: teacher.email,
+          reviewed_at: new Date().toISOString()
+        })
+        .eq('id', alertId);
 
-      if (data?.success) {
-        toast({
-          title: t('common.success'),
-          description: "The alert has been securely marked as reviewed",
-        });
-      } else {
-        throw new Error(data?.error || 'Failed to mark alert as reviewed');
+      if (error) {
+        console.error('useOptimizedMentalHealthAlerts: Error marking as reviewed:', error);
+        throw error;
       }
+
+      // Optimistically update local state
+      setAlerts(prevAlerts => 
+        prevAlerts.map(alert => 
+          alert.id === alertId 
+            ? { 
+                ...alert, 
+                is_reviewed: true, 
+                reviewed_by: teacher.email,
+                reviewed_at: new Date().toISOString()
+              }
+            : alert
+        )
+      );
+
+      toast.success('Alert marked as reviewed');
     } catch (error) {
-      console.error('Error marking alert as reviewed:', error);
-      // Revert optimistic update
-      setAlerts(prev => prev.map(alert => 
-        alert.id === alertId 
-          ? { ...alert, is_reviewed: false, reviewed_by: undefined, reviewed_at: undefined }
-          : alert
-      ));
-      toast({
-        title: t('common.error'),
-        description: "Failed to mark alert as reviewed",
-        variant: "destructive",
-      });
+      console.error('useOptimizedMentalHealthAlerts: Error marking as reviewed:', error);
+      toast.error('Failed to mark alert as reviewed');
     }
-  };
+  }, [isAuthorized, teacher]);
 
-  // Auto-refresh every 5 minutes when authorized
+  const refreshAlerts = useCallback(() => {
+    console.log('useOptimizedMentalHealthAlerts: Force refreshing alerts');
+    fetchAlerts(true);
+  }, [fetchAlerts]);
+
+  // Initial load
   useEffect(() => {
-    if (!admin?.email) return;
+    if (isAuthorized) {
+      fetchAlerts();
+    }
+  }, [isAuthorized, fetchAlerts]);
 
-    fetchAlerts();
+  // Set up real-time subscription for new alerts
+  useEffect(() => {
+    if (!isAuthorized || !teacher) return;
+
+    console.log('useOptimizedMentalHealthAlerts: Setting up real-time subscription');
     
-    const interval = setInterval(() => {
-      if (isAuthorized) {
-        fetchAlerts();
-      }
-    }, 300000); // 5 minutes
+    const channel = supabase
+      .channel(`mental_health_alerts_${teacher.school}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'mental_health_alerts',
+          filter: `school=eq.${teacher.school}`
+        },
+        (payload) => {
+          console.log('useOptimizedMentalHealthAlerts: Real-time update:', payload);
+          refreshAlerts();
+        }
+      )
+      .subscribe();
 
-    return () => clearInterval(interval);
-  }, [admin?.email, isAuthorized]);
+    return () => {
+      console.log('useOptimizedMentalHealthAlerts: Cleaning up subscription');
+      supabase.removeChannel(channel);
+    };
+  }, [isAuthorized, teacher, refreshAlerts]);
 
   return {
     alerts,
@@ -217,7 +187,7 @@ export const useOptimizedMentalHealthAlerts = () => {
     isAuthorized,
     alertStats,
     markAsReviewed,
-    fetchAlerts: (forceRefresh?: boolean) => fetchAlerts(forceRefresh),
-    refreshAlerts: () => fetchAlerts(true)
+    refreshAlerts,
+    fetchAlerts
   };
 };

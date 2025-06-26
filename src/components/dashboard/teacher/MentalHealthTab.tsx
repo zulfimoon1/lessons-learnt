@@ -3,8 +3,9 @@ import React from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import MentalHealthArticles from "@/components/MentalHealthArticles";
+import OptimizedMentalHealthAlerts from "@/components/OptimizedMentalHealthAlerts";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { Heart, Shield, Users } from 'lucide-react';
+import { Heart, Shield, Users, AlertTriangle } from 'lucide-react';
 
 interface MentalHealthTabProps {
   teacher: any;
@@ -37,6 +38,24 @@ const MentalHealthTab: React.FC<MentalHealthTabProps> = ({
           </div>
         </div>
       </div>
+
+      {/* Optimized Mental Health Alerts Dashboard */}
+      <Card className="group hover:shadow-xl transition-all duration-300 border-0 shadow-lg bg-gradient-to-br from-red-500/5 to-orange-500/10 hover:from-red-500/10 hover:to-orange-500/20">
+        <CardHeader className="pb-4">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-red-500/10 flex items-center justify-center group-hover:bg-red-500/20 transition-colors">
+              <AlertTriangle className="w-4 h-4 text-red-500" />
+            </div>
+            <div>
+              <CardTitle className="text-lg text-gray-900">Mental Health Alerts</CardTitle>
+              <CardDescription className="text-sm">Monitor and respond to student mental health concerns</CardDescription>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <OptimizedMentalHealthAlerts />
+        </CardContent>
+      </Card>
 
       {!subscription && onCreateCheckout ? (
         <Card className="group hover:shadow-xl transition-all duration-300 border-0 shadow-lg bg-gradient-to-br from-purple-500/5 to-pink-500/10 hover:from-purple-500/10 hover:to-pink-500/20">
