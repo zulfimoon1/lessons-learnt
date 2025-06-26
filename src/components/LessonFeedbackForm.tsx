@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -91,6 +92,7 @@ const LessonFeedbackForm = () => {
     console.log('Selected class:', selectedClass);
     console.log('Audio data:', audioData);
     console.log('Text data:', { whatWentWell, suggestions, additionalComments });
+    console.log('Student info:', student);
     
     if (!selectedClass) {
       toast({
@@ -119,14 +121,15 @@ const LessonFeedbackForm = () => {
     setIsSubmitting(true);
 
     try {
+      // Prepare feedback data with better error handling
       const feedbackData = {
         class_schedule_id: selectedClass,
-        student_id: isAnonymous ? null : student?.id,
-        student_name: isAnonymous ? t('feedback.anonymous') : student?.full_name,
-        understanding: understanding[0],
-        interest: interest[0],
-        educational_growth: educationalGrowth[0],
-        emotional_state: emotionalState,
+        student_id: isAnonymous ? null : student?.id || null,
+        student_name: isAnonymous ? t('feedback.anonymous') : (student?.full_name || 'Unknown Student'),
+        understanding: understanding[0] || 3,
+        interest: interest[0] || 3,
+        educational_growth: educationalGrowth[0] || 3,
+        emotional_state: emotionalState || null,
         what_went_well: whatWentWell.trim() || null,
         suggestions: suggestions.trim() || null,
         additional_comments: additionalComments.trim() || null,
@@ -135,18 +138,28 @@ const LessonFeedbackForm = () => {
         audio_url: audioData.audioUrl || null,
         transcription: audioData.transcription || null,
         audio_duration: audioData.duration || null,
-        audio_file_size: null // We could add this to the voice service
+        audio_file_size: null
       };
 
       console.log('LessonFeedbackForm: Submitting feedback with data:', feedbackData);
 
+      // Insert feedback with better error handling
       const { data, error } = await supabase
         .from('feedback')
-        .insert(feedbackData);
+        .insert([feedbackData])
+        .select();
 
       if (error) {
-        console.error('LessonFeedbackForm: Submission error:', error);
-        throw error;
+        console.error('LessonFeedbackForm: Database error details:', error);
+        
+        // More specific error messages
+        if (error.code === '23503') {
+          throw new Error('Invalid class selection. Please refresh the page and try again.');
+        } else if (error.code === '23505') {
+          throw new Error('You have already submitted feedback for this class.');
+        } else {
+          throw new Error(`Database error: ${error.message}`);
+        }
       }
 
       console.log('LessonFeedbackForm: Submission successful:', data);
@@ -172,10 +185,10 @@ const LessonFeedbackForm = () => {
       setVoiceMode('text');
 
     } catch (error) {
-      console.error('Error submitting feedback:', error);
+      console.error('LessonFeedbackForm: Submission failed:', error);
       toast({
-        title: t('common.error'),
-        description: t('feedback.submitError'),
+        title: "Submission Failed",
+        description: error instanceof Error ? error.message : "Failed to submit feedback. Please try again.",
         variant: "destructive",
       });
     } finally {
