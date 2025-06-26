@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { secureAdminAuthService } from './secureAdminAuthService';
 import { centralizedValidationService } from './centralizedValidationService';
@@ -44,27 +43,9 @@ class SecurePlatformAdminService {
         console.log('✅ Platform admin context set successfully via RPC');
       }
 
-      // Additional direct context setting for redundancy
-      try {
-        // Set context variables directly if possible
-        await supabase.rpc('set_config', {
-          setting_name: 'app.admin_context_set',
-          setting_value: 'true'
-        });
-        
-        await supabase.rpc('set_config', {
-          setting_name: 'app.current_user_email', 
-          setting_value: adminEmail
-        });
-
-        console.log('✅ Additional context variables set successfully');
-      } catch (directError) {
-        console.log('Direct context setting failed (this is normal):', directError);
-      }
-
       // Log the context setting
       centralizedValidationService.logSecurityEvent({
-        type: 'admin_context_configured',
+        type: 'suspicious_activity',
         details: `Platform admin context configured for ${adminEmail}`,
         severity: 'low'
       });
