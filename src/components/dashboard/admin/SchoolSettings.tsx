@@ -27,11 +27,9 @@ const SchoolSettings: React.FC<SchoolSettingsProps> = ({ teacher }) => {
     address: ''
   });
   const [isLoading, setIsLoading] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     loadSubscriptionInfo();
-    loadSchoolInfo();
   }, [teacher]);
 
   const loadSubscriptionInfo = async () => {
@@ -39,7 +37,7 @@ const SchoolSettings: React.FC<SchoolSettingsProps> = ({ teacher }) => {
       const { data, error } = await supabase
         .from('subscriptions')
         .select('*')
-        .eq('school', teacher.school)
+        .eq('school_name', teacher.school)
         .single();
 
       if (error && error.code !== 'PGRST116') {
@@ -49,64 +47,6 @@ const SchoolSettings: React.FC<SchoolSettingsProps> = ({ teacher }) => {
       }
     } catch (error) {
       console.error('Error loading subscription info:', error);
-    }
-  };
-
-  const loadSchoolInfo = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('school_profiles')
-        .select('*')
-        .eq('school_name', teacher.school)
-        .single();
-
-      if (error && error.code !== 'PGRST116') {
-        console.error('Error loading school info:', error);
-      } else if (data) {
-        setSchoolInfo(prev => ({
-          ...prev,
-          description: data.description || '',
-          contact_email: data.contact_email || teacher.email,
-          phone: data.phone || '',
-          address: data.address || ''
-        }));
-      }
-    } catch (error) {
-      console.error('Error loading school info:', error);
-    }
-  };
-
-  const handleSaveSchoolInfo = async () => {
-    setIsSaving(true);
-    try {
-      const { error } = await supabase
-        .from('school_profiles')
-        .upsert({
-          school_name: teacher.school,
-          description: schoolInfo.description,
-          contact_email: schoolInfo.contact_email,
-          phone: schoolInfo.phone,
-          address: schoolInfo.address,
-          updated_at: new Date().toISOString()
-        }, {
-          onConflict: 'school_name'
-        });
-
-      if (error) throw error;
-
-      toast({
-        title: "Settings Saved",
-        description: "School settings have been updated successfully.",
-      });
-    } catch (error) {
-      console.error('Error saving school info:', error);
-      toast({
-        title: "Error",
-        description: "Failed to save school settings. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsSaving(false);
     }
   };
 
@@ -176,7 +116,7 @@ const SchoolSettings: React.FC<SchoolSettingsProps> = ({ teacher }) => {
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-gray-600">Plan:</span>
-                  <span className="text-sm font-medium">{subscriptionInfo.price_id || 'Standard'}</span>
+                  <span className="text-sm font-medium">{subscriptionInfo.plan_type || 'Standard'}</span>
                 </div>
                 {subscriptionInfo.current_period_end && (
                   <div className="flex items-center justify-between">
@@ -209,7 +149,7 @@ const SchoolSettings: React.FC<SchoolSettingsProps> = ({ teacher }) => {
               </div>
               <div>
                 <CardTitle className="text-lg text-gray-900">School Information</CardTitle>
-                <CardDescription className="text-sm">Update your school details</CardDescription>
+                <CardDescription className="text-sm">View your school details</CardDescription>
               </div>
             </div>
           </CardHeader>
@@ -224,51 +164,18 @@ const SchoolSettings: React.FC<SchoolSettingsProps> = ({ teacher }) => {
               />
             </div>
             <div>
-              <Label htmlFor="description">Description</Label>
-              <Textarea
-                id="description"
-                value={schoolInfo.description}
-                onChange={(e) => setSchoolInfo(prev => ({ ...prev, description: e.target.value }))}
-                placeholder="Brief description of your school..."
-                rows={3}
-              />
-            </div>
-            <div>
-              <Label htmlFor="contact-email">Contact Email</Label>
+              <Label htmlFor="contact-email">Admin Email</Label>
               <Input
                 id="contact-email"
                 type="email"
                 value={schoolInfo.contact_email}
-                onChange={(e) => setSchoolInfo(prev => ({ ...prev, contact_email: e.target.value }))}
-                placeholder="contact@school.edu"
+                disabled
+                className="bg-gray-50"
               />
             </div>
-            <div>
-              <Label htmlFor="phone">Phone Number</Label>
-              <Input
-                id="phone"
-                value={schoolInfo.phone}
-                onChange={(e) => setSchoolInfo(prev => ({ ...prev, phone: e.target.value }))}
-                placeholder="+1 (555) 123-4567"
-              />
+            <div className="text-sm text-gray-500">
+              Contact support to update school information
             </div>
-            <div>
-              <Label htmlFor="address">Address</Label>
-              <Textarea
-                id="address"
-                value={schoolInfo.address}
-                onChange={(e) => setSchoolInfo(prev => ({ ...prev, address: e.target.value }))}
-                placeholder="School address..."
-                rows={2}
-              />
-            </div>
-            <Button 
-              onClick={handleSaveSchoolInfo}
-              disabled={isSaving}
-              className="w-full bg-brand-teal hover:bg-brand-teal/90"
-            >
-              {isSaving ? 'Saving...' : 'Save Settings'}
-            </Button>
           </CardContent>
         </Card>
       </div>
