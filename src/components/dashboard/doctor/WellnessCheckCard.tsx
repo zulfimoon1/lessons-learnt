@@ -34,81 +34,57 @@ const WellnessCheckCard: React.FC<WellnessCheckCardProps> = ({ school }) => {
       setIsLoading(true);
       console.log('WellnessCheckCard: Fetching wellness entries for school:', school);
       
-      // Try to fetch from actual wellness table first, fallback to mock data
-      const { data: realData, error } = await supabase
-        .from('student_wellness')
-        .select('*')
-        .eq('school', school)
-        .order('created_at', { ascending: false })
-        .limit(10);
+      // Since we don't have a student_wellness table, we'll use mock data for demonstration
+      // In a real implementation, this would be replaced with actual database queries
+      const mockData: WellnessEntry[] = [
+        {
+          id: '1',
+          student_name: 'Emma Johnson',
+          school: school,
+          grade: '9th',
+          mood: 'good',
+          notes: 'Feeling much better after talking to my counselor about stress management techniques',
+          submitted_at: new Date().toISOString()
+        },
+        {
+          id: '2',
+          student_name: 'Michael Chen',
+          school: school,
+          grade: '10th',
+          mood: 'okay',
+          notes: 'A bit worried about upcoming exams but trying to stay positive',
+          submitted_at: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString()
+        },
+        {
+          id: '3',
+          student_name: 'Sarah Wilson',
+          school: school,
+          grade: '11th',
+          mood: 'poor',
+          notes: 'Having trouble sleeping and feeling anxious about college applications',
+          submitted_at: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString()
+        },
+        {
+          id: '4',
+          student_name: 'Anonymous Student',
+          school: school,
+          grade: '8th',
+          mood: 'terrible',
+          notes: 'Really struggling with bullying issues and feeling isolated',
+          submitted_at: new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString()
+        },
+        {
+          id: '5',
+          student_name: 'Alex Rodriguez',
+          school: school,
+          grade: '12th',
+          mood: 'great',
+          notes: 'Feeling confident and excited about graduation!',
+          submitted_at: new Date(Date.now() - 8 * 60 * 60 * 1000).toISOString()
+        }
+      ];
       
-      if (error) {
-        console.log('WellnessCheckCard: Wellness table not found, using mock data');
-      }
-      
-      if (realData && realData.length > 0) {
-        const typedData: WellnessEntry[] = realData.map(entry => ({
-          id: entry.id,
-          student_name: entry.student_name,
-          school: entry.school,
-          grade: entry.grade,
-          mood: entry.mood as 'great' | 'good' | 'okay' | 'poor' | 'terrible',
-          notes: entry.notes,
-          submitted_at: entry.created_at
-        }));
-        setWellnessEntries(typedData);
-      } else {
-        // Use enhanced mock data for demonstration
-        const mockData: WellnessEntry[] = [
-          {
-            id: '1',
-            student_name: 'Emma Johnson',
-            school: school,
-            grade: '9th',
-            mood: 'good',
-            notes: 'Feeling much better after talking to my counselor about stress management techniques',
-            submitted_at: new Date().toISOString()
-          },
-          {
-            id: '2',
-            student_name: 'Michael Chen',
-            school: school,
-            grade: '10th',
-            mood: 'okay',
-            notes: 'A bit worried about upcoming exams but trying to stay positive',
-            submitted_at: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString()
-          },
-          {
-            id: '3',
-            student_name: 'Sarah Wilson',
-            school: school,
-            grade: '11th',
-            mood: 'poor',
-            notes: 'Having trouble sleeping and feeling anxious about college applications',
-            submitted_at: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString()
-          },
-          {
-            id: '4',
-            student_name: 'Anonymous Student',
-            school: school,
-            grade: '8th',
-            mood: 'terrible',
-            notes: 'Really struggling with bullying issues and feeling isolated',
-            submitted_at: new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString()
-          },
-          {
-            id: '5',
-            student_name: 'Alex Rodriguez',
-            school: school,
-            grade: '12th',
-            mood: 'great',
-            notes: 'Feeling confident and excited about graduation!',
-            submitted_at: new Date(Date.now() - 8 * 60 * 60 * 1000).toISOString()
-          }
-        ];
-        
-        setWellnessEntries(mockData);
-      }
+      setWellnessEntries(mockData);
     } catch (error) {
       console.error('WellnessCheckCard: Error fetching wellness entries:', error);
       setWellnessEntries([]);
