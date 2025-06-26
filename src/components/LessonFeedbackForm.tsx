@@ -12,13 +12,15 @@ import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { classScheduleService } from "@/services/classScheduleService";
-import { BookOpenIcon, StarIcon, LightbulbIcon, MessageCircleIcon, EyeOffIcon } from "lucide-react";
+import { BookOpenIcon, StarIcon, LightbulbIcon, MessageCircleIcon, EyeOffIcon, AlertCircleIcon } from "lucide-react";
 import VoiceInputToggle from '@/components/voice/VoiceInputToggle';
 import AudioPlayer from '@/components/voice/AudioPlayer';
 import EmotionalStateSelector from '@/components/EmotionalStateSelector';
 
 const LessonFeedbackForm = () => {
   const [classes, setClasses] = useState([]);
+  const [allClassesCount, setAllClassesCount] = useState(0);
+  const [feedbackSubmittedCount, setFeedbackSubmittedCount] = useState(0);
   const [selectedClass, setSelectedClass] = useState("");
   const [understanding, setUnderstanding] = useState([3]);
   const [interest, setInterest] = useState([3]);
@@ -30,6 +32,7 @@ const LessonFeedbackForm = () => {
   const [isAnonymous, setIsAnonymous] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [debugInfo, setDebugInfo] = useState("");
 
   // Voice note states
   const [voiceMode, setVoiceMode] = useState<'text' | 'voice'>('text');
@@ -45,22 +48,96 @@ const LessonFeedbackForm = () => {
 
   useEffect(() => {
     const loadClasses = async () => {
-      if (!student) return;
+      if (!student) {
+        setDebugInfo("No student information found");
+        return;
+      }
       
       try {
         setIsLoading(true);
+        console.log('🔍 Loading classes for student:', { 
+          school: student.school, 
+          grade: student.grade,
+          studentId: student.id 
+        });
+        
         const response = await classScheduleService.getSchedulesBySchool(student.school);
+        console.log('📋 Raw class schedules response:', response);
+        
         if (response.data) {
           const today = new Date();
+          
+          // Expand time window to 30 days instead of 7
           const relevantClasses = response.data.filter((classItem: any) => {
             const classDate = new Date(classItem.class_date);
             const daysDiff = Math.abs(today.getTime() - classDate.getTime()) / (1000 * 3600 * 24);
-            return daysDiff <= 7 && classItem.grade === student.grade;
+            const isRelevantGrade = classItem.grade === student.grade;
+            
+            console.log('🎯 Class filter check:', {
+              classDate: classItem.class_date,
+              classGrade: classItem.grade,
+              studentGrade: student.grade,
+              daysDiff,
+              isRelevantGrade,
+              withinTimeWindow: daysDiff <= 30
+            });
+            
+            return daysDiff <= 30 && isRelevantGrade;
           });
-          setClasses(relevantClasses);
+          
+          setAllClassesCount(relevantClasses.length);
+          console.log('📊 Relevant classes found:', relevantClasses.length);
+
+          // Get existing feedback for this student
+          const { data: feedbackData, error: feedbackError } = await supabase
+            .from('feedback')
+            .select('class_schedule_id')
+            .eq('student_id', student.id);
+
+          if (feedbackError) {
+            console.error('❌ Error fetching feedback:', feedbackError);
+          } else {
+            console.log('✅ Existing feedback:', feedbackData);
+          }
+
+          const feedbackClassIds = new Set(feedbackData?.map(f => f.class_schedule_id) || []);
+          setFeedbackSubmittedCount(feedbackClassIds.size);
+
+          // Filter out classes that already have feedback
+          const classesNeedingFeedback = relevantClasses.filter(classItem => {
+            const needsFeedback = !feedbackClassIds.has(classItem.id);
+            console.log('🔄 Feedback check for class:', {
+              classId: classItem.id,
+              subject: classItem.subject,
+              date: classItem.class_date,
+              hasFeedback: feedbackClassIds.has(classItem.id),
+              needsFeedback
+            });
+            return needsFeedback;
+          });
+
+          setClasses(classesNeedingFeedback);
+          
+          const debugMessage = `
+            Student: ${student.school} - Grade ${student.grade}
+            Total classes in last 30 days: ${relevantClasses.length}
+            Classes with feedback: ${feedbackClassIds.size}
+            Classes needing feedback: ${classesNeedingFeedback.length}
+          `;
+          setDebugInfo(debugMessage);
+          
+          console.log('📝 Final classes needing feedback:', classesNeedingFeedback);
+        } else {
+          setDebugInfo("No class schedule data returned from server");
         }
       } catch (error) {
-        console.error('Error loading classes:', error);
+        console.error('💥 Error loading classes:', error);
+        setDebugInfo(`Error loading classes: ${error.message}`);
+        toast({
+          title: t('common.error'),
+          description: t('student.failedToLoadClasses'),
+          variant: "destructive",
+        });
       } finally {
         setIsLoading(false);
       }
@@ -269,6 +346,7 @@ const LessonFeedbackForm = () => {
         <CardContent className="p-6">
           <div className="flex items-center justify-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-teal"></div>
+            <span className="ml-3">Loading your classes...</span>
           </div>
         </CardContent>
       </Card>
@@ -288,168 +366,207 @@ const LessonFeedbackForm = () => {
       </CardHeader>
       
       <CardContent className="p-6">
+        {/* Debug Information */}
+        {debugInfo && (
+          <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+            <div className="flex items-center gap-2 mb-2">
+              <AlertCircleIcon className="w-4 h-4 text-blue-600" />
+              <span className="text-sm font-medium text-blue-800">Class Loading Information:</span>
+            </div>
+            <div className="text-xs text-blue-700 whitespace-pre-line">{debugInfo}</div>
+          </div>
+        )}
+
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Class Selection */}
           <div className="space-y-2">
-            <Label className="text-base font-semibold">{t('feedback.selectClass')}</Label>
-            <RadioGroup value={selectedClass} onValueChange={setSelectedClass}>
-              {classes.map((classItem: any) => (
-                <div key={classItem.id} className="flex items-center space-x-2 p-3 border rounded-lg hover:bg-gray-50">
-                  <RadioGroupItem value={classItem.id} id={classItem.id} />
-                  <label htmlFor={classItem.id} className="flex-1 cursor-pointer">
-                    <div className="font-medium">{classItem.subject} - {classItem.lesson_topic}</div>
-                    <div className="text-sm text-gray-600">
-                      {new Date(classItem.class_date).toLocaleDateString()} at {classItem.class_time}
-                    </div>
-                  </label>
-                </div>
-              ))}
-            </RadioGroup>
-          </div>
-
-          {/* Rating Sliders */}
-          <div className="grid gap-6">
-            <div className="space-y-3">
-              <Label className="flex items-center gap-2 text-base font-semibold">
-                <BookOpenIcon className="w-5 h-5 text-blue-500" />
-                {t('feedback.understanding')}: {understanding[0]}/5
-              </Label>
-              <Slider
-                value={understanding}
-                onValueChange={setUnderstanding}
-                max={5}
-                min={1}
-                step={1}
-                className="w-full"
-              />
-            </div>
-
-            <div className="space-y-3">
-              <Label className="flex items-center gap-2 text-base font-semibold">
-                <StarIcon className="w-5 h-5 text-yellow-500" />
-                {t('feedback.interest')}: {interest[0]}/5
-              </Label>
-              <Slider
-                value={interest}
-                onValueChange={setInterest}
-                max={5}
-                min={1}
-                step={1}
-                className="w-full"
-              />
-            </div>
-
-            <div className="space-y-3">
-              <Label className="flex items-center gap-2 text-base font-semibold">
-                <LightbulbIcon className="w-5 h-5 text-green-500" />
-                {t('feedback.growth')}: {educationalGrowth[0]}/5
-              </Label>
-              <Slider
-                value={educationalGrowth}
-                onValueChange={setEducationalGrowth}
-                max={5}
-                min={1}
-                step={1}
-                className="w-full"
-              />
-            </div>
-          </div>
-
-          {/* Emotional State - Using the proper EmotionalStateSelector component */}
-          <div className="space-y-3">
-            <Label className="text-base font-semibold">{t('feedback.emotionalState')}</Label>
-            <EmotionalStateSelector
-              selectedState={emotionalState}
-              onStateChange={setEmotionalState}
-            />
-          </div>
-
-          {/* Voice Input Toggle */}
-          <div className="border-t pt-6">
-            <Label className="text-base font-semibold mb-4 block">
-              Choose how to share your detailed feedback:
+            <Label className="text-base font-semibold">
+              {t('feedback.selectClass')} 
+              {classes.length === 0 && allClassesCount > 0 && (
+                <span className="text-sm text-green-600 ml-2">
+                  (All {allClassesCount} recent classes have feedback ✓)
+                </span>
+              )}
             </Label>
             
-            <VoiceInputToggle
-              onVoiceComplete={handleVoiceComplete}
-              onTextMode={handleTextMode}
-              disabled={isSubmitting}
-              className="mb-4"
-            />
+            {classes.length === 0 ? (
+              <div className="p-4 border-2 border-dashed border-gray-300 rounded-lg text-center">
+                <div className="text-gray-600 mb-2">
+                  {allClassesCount === 0 
+                    ? "No classes found for your grade in the last 30 days" 
+                    : `Great job! You've provided feedback for all ${allClassesCount} recent classes.`
+                  }
+                </div>
+                <div className="text-sm text-gray-500">
+                  {allClassesCount === 0 && "Classes for your grade and school will appear here once they're scheduled."}
+                  {feedbackSubmittedCount > 0 && `You've submitted ${feedbackSubmittedCount} feedback responses.`}
+                </div>
+              </div>
+            ) : (
+              <RadioGroup value={selectedClass} onValueChange={setSelectedClass}>
+                {classes.map((classItem: any) => (
+                  <div key={classItem.id} className="flex items-center space-x-2 p-3 border rounded-lg hover:bg-gray-50">
+                    <RadioGroupItem value={classItem.id} id={classItem.id} />
+                    <label htmlFor={classItem.id} className="flex-1 cursor-pointer">
+                      <div className="font-medium">{classItem.subject} - {classItem.lesson_topic}</div>
+                      <div className="text-sm text-gray-600">
+                        {new Date(classItem.class_date).toLocaleDateString()} at {classItem.class_time}
+                      </div>
+                    </label>
+                  </div>
+                ))}
+              </RadioGroup>
+            )}
+          </div>
 
-            {/* Show audio player if voice note exists */}
-            {audioData.audioUrl && (
-              <div className="mb-4">
-                <AudioPlayer
-                  audioUrl={audioData.audioUrl}
-                  transcription={audioData.transcription}
-                  duration={audioData.duration}
-                  title="Your feedback voice note"
-                  showTranscription={true}
+          {/* Only show the rest of the form if there are classes to provide feedback for */}
+          {classes.length > 0 && (
+            <>
+              {/* Rating Sliders */}
+              <div className="grid gap-6">
+                <div className="space-y-3">
+                  <Label className="flex items-center gap-2 text-base font-semibold">
+                    <BookOpenIcon className="w-5 h-5 text-blue-500" />
+                    {t('feedback.understanding')}: {understanding[0]}/5
+                  </Label>
+                  <Slider
+                    value={understanding}
+                    onValueChange={setUnderstanding}
+                    max={5}
+                    min={1}
+                    step={1}
+                    className="w-full"
+                  />
+                </div>
+
+                <div className="space-y-3">
+                  <Label className="flex items-center gap-2 text-base font-semibold">
+                    <StarIcon className="w-5 h-5 text-yellow-500" />
+                    {t('feedback.interest')}: {interest[0]}/5
+                  </Label>
+                  <Slider
+                    value={interest}
+                    onValueChange={setInterest}
+                    max={5}
+                    min={1}
+                    step={1}
+                    className="w-full"
+                  />
+                </div>
+
+                <div className="space-y-3">
+                  <Label className="flex items-center gap-2 text-base font-semibold">
+                    <LightbulbIcon className="w-5 h-5 text-green-500" />
+                    {t('feedback.growth')}: {educationalGrowth[0]}/5
+                  </Label>
+                  <Slider
+                    value={educationalGrowth}
+                    onValueChange={setEducationalGrowth}
+                    max={5}
+                    min={1}
+                    step={1}
+                    className="w-full"
+                  />
+                </div>
+              </div>
+
+              {/* Emotional State - Using the proper EmotionalStateSelector component */}
+              <div className="space-y-3">
+                <Label className="text-base font-semibold">{t('feedback.emotionalState')}</Label>
+                <EmotionalStateSelector
+                  selectedState={emotionalState}
+                  onStateChange={setEmotionalState}
                 />
               </div>
-            )}
 
-            {/* Text input fields - only show if not in voice mode or if we have voice but want to add text */}
-            {(!audioData.audioUrl || voiceMode === 'text') && (
-              <div className="space-y-4">
-                <div>
-                  <Label htmlFor="whatWentWell">{t('feedback.whatWentWell')}</Label>
-                  <Textarea
-                    id="whatWentWell"
-                    placeholder={t('feedback.whatWentWellPlaceholder')}
-                    value={whatWentWell}
-                    onChange={(e) => setWhatWentWell(e.target.value)}
-                    className="min-h-[100px]"
-                  />
-                </div>
+              {/* Voice Input Toggle */}
+              <div className="border-t pt-6">
+                <Label className="text-base font-semibold mb-4 block">
+                  Choose how to share your detailed feedback:
+                </Label>
+                
+                <VoiceInputToggle
+                  onVoiceComplete={handleVoiceComplete}
+                  onTextMode={handleTextMode}
+                  disabled={isSubmitting}
+                  className="mb-4"
+                />
 
-                <div>
-                  <Label htmlFor="suggestions">{t('feedback.suggestions')}</Label>
-                  <Textarea
-                    id="suggestions"
-                    placeholder={t('feedback.suggestionsPlaceholder')}
-                    value={suggestions}
-                    onChange={(e) => setSuggestions(e.target.value)}
-                    className="min-h-[100px]"
-                  />
-                </div>
+                {/* Show audio player if voice note exists */}
+                {audioData.audioUrl && (
+                  <div className="mb-4">
+                    <AudioPlayer
+                      audioUrl={audioData.audioUrl}
+                      transcription={audioData.transcription}
+                      duration={audioData.duration}
+                      title="Your feedback voice note"
+                      showTranscription={true}
+                    />
+                  </div>
+                )}
 
-                <div>
-                  <Label htmlFor="additionalComments">{t('feedback.additionalComments')}</Label>
-                  <Textarea
-                    id="additionalComments"
-                    placeholder={t('feedback.additionalCommentsPlaceholder')}
-                    value={additionalComments}
-                    onChange={(e) => setAdditionalComments(e.target.value)}
-                    className="min-h-[100px]"
-                  />
-                </div>
+                {/* Text input fields - only show if not in voice mode or if we have voice but want to add text */}
+                {(!audioData.audioUrl || voiceMode === 'text') && (
+                  <div className="space-y-4">
+                    <div>
+                      <Label htmlFor="whatWentWell">{t('feedback.whatWentWell')}</Label>
+                      <Textarea
+                        id="whatWentWell"
+                        placeholder={t('feedback.whatWentWellPlaceholder')}
+                        value={whatWentWell}
+                        onChange={(e) => setWhatWentWell(e.target.value)}
+                        className="min-h-[100px]"
+                      />
+                    </div>
+
+                    <div>
+                      <Label htmlFor="suggestions">{t('feedback.suggestions')}</Label>
+                      <Textarea
+                        id="suggestions"
+                        placeholder={t('feedback.suggestionsPlaceholder')}
+                        value={suggestions}
+                        onChange={(e) => setSuggestions(e.target.value)}
+                        className="min-h-[100px]"
+                      />
+                    </div>
+
+                    <div>
+                      <Label htmlFor="additionalComments">{t('feedback.additionalComments')}</Label>
+                      <Textarea
+                        id="additionalComments"
+                        placeholder={t('feedback.additionalCommentsPlaceholder')}
+                        value={additionalComments}
+                        onChange={(e) => setAdditionalComments(e.target.value)}
+                        className="min-h-[100px]"
+                      />
+                    </div>
+                  </div>
+                )}
               </div>
-            )}
-          </div>
 
-          {/* Anonymous Option */}
-          <div className="flex items-center space-x-2 p-4 bg-gray-50 rounded-lg">
-            <Checkbox
-              id="anonymous"
-              checked={isAnonymous}
-              onCheckedChange={(checked) => setIsAnonymous(checked as boolean)}
-            />
-            <Label htmlFor="anonymous" className="flex items-center gap-2">
-              <EyeOffIcon className="w-4 h-4" />
-              {t('feedback.submitAnonymously')}
-            </Label>
-          </div>
+              {/* Anonymous Option */}
+              <div className="flex items-center space-x-2 p-4 bg-gray-50 rounded-lg">
+                <Checkbox
+                  id="anonymous"
+                  checked={isAnonymous}
+                  onCheckedChange={(checked) => setIsAnonymous(checked as boolean)}
+                />
+                <Label htmlFor="anonymous" className="flex items-center gap-2">
+                  <EyeOffIcon className="w-4 h-4" />
+                  {t('feedback.submitAnonymously')}
+                </Label>
+              </div>
 
-          {/* Submit Button */}
-          <Button 
-            type="submit" 
-            disabled={isSubmitting}
-            className="w-full bg-gradient-to-r from-brand-teal to-brand-orange hover:from-brand-teal/90 hover:to-brand-orange/90"
-          >
-            {isSubmitting ? t('feedback.submitting') : t('feedback.submit')}
-          </Button>
+              {/* Submit Button */}
+              <Button 
+                type="submit" 
+                disabled={isSubmitting}
+                className="w-full bg-gradient-to-r from-brand-teal to-brand-orange hover:from-brand-teal/90 hover:to-brand-orange/90"
+              >
+                {isSubmitting ? t('feedback.submitting') : t('feedback.submit')}
+              </Button>
+            </>
+          )}
         </form>
       </CardContent>
     </Card>
