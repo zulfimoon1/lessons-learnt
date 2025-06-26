@@ -33,6 +33,9 @@ export const usePendingTransactions = () => {
     comments?: string
   ) => {
     try {
+      console.log('Processing transaction action:', { transactionId, action, adminEmail });
+
+      // First, perform the transaction action
       const { data, error } = await supabase.rpc('school_admin_transaction_action', {
         transaction_id_param: transactionId,
         school_admin_email_param: adminEmail,
@@ -41,6 +44,51 @@ export const usePendingTransactions = () => {
       });
 
       if (error) throw error;
+      
+      console.log('Transaction action completed:', data);
+
+      // If transaction was approved, trigger automatic payment processing
+      if (action === 'approved' && data?.requires_payment) {
+        console.log('Triggering automatic payment processing...');
+        
+        try {
+          const { data: paymentData, error: paymentError } = await supabase.functions.invoke(
+            'process-transaction-payment',
+            {
+              body: {
+                transaction_id: transactionId,
+                school_admin_email: adminEmail
+              }
+            }
+          );
+
+          if (paymentError) {
+            console.error('Payment processing error:', paymentError);
+            throw new Error(`Payment processing failed: ${paymentError.message}`);
+          }
+
+          console.log('Payment processing initiated:', paymentData);
+
+          // If we have a checkout URL, open it in a new tab
+          if (paymentData?.checkout_url) {
+            window.open(paymentData.checkout_url, '_blank');
+          }
+
+          // Show success message with payment info
+          return {
+            ...data,
+            payment_initiated: true,
+            checkout_url: paymentData?.checkout_url,
+            payment_intent_id: paymentData?.payment_intent_id
+          };
+
+        } catch (paymentError) {
+          console.error('Failed to initiate payment processing:', paymentError);
+          // Still refresh transactions even if payment processing fails
+          await fetchPendingTransactions(adminEmail);
+          throw new Error(`Transaction approved but payment processing failed: ${paymentError}`);
+        }
+      }
       
       // Refresh pending transactions after action
       await fetchPendingTransactions(adminEmail);

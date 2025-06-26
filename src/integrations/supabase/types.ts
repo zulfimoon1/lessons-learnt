@@ -976,8 +976,12 @@ export type Database = {
           id: string
           last_reminder_sent: string | null
           notification_sent: boolean | null
+          payment_processed_at: string | null
+          payment_status: string | null
           school_name: string
           status: string
+          stripe_payment_intent_id: string | null
+          stripe_session_id: string | null
           transaction_type: string
           updated_at: string
         }
@@ -990,8 +994,12 @@ export type Database = {
           id?: string
           last_reminder_sent?: string | null
           notification_sent?: boolean | null
+          payment_processed_at?: string | null
+          payment_status?: string | null
           school_name: string
           status: string
+          stripe_payment_intent_id?: string | null
+          stripe_session_id?: string | null
           transaction_type: string
           updated_at?: string
         }
@@ -1004,8 +1012,12 @@ export type Database = {
           id?: string
           last_reminder_sent?: string | null
           notification_sent?: boolean | null
+          payment_processed_at?: string | null
+          payment_status?: string | null
           school_name?: string
           status?: string
+          stripe_payment_intent_id?: string | null
+          stripe_session_id?: string | null
           transaction_type?: string
           updated_at?: string
         }
@@ -1162,8 +1174,12 @@ export type Database = {
           id: string
           last_reminder_sent: string | null
           notification_sent: boolean | null
+          payment_processed_at: string | null
+          payment_status: string | null
           school_name: string
           status: string
+          stripe_payment_intent_id: string | null
+          stripe_session_id: string | null
           transaction_type: string
           updated_at: string
         }[]
@@ -1334,8 +1350,12 @@ export type Database = {
           id: string
           last_reminder_sent: string | null
           notification_sent: boolean | null
+          payment_processed_at: string | null
+          payment_status: string | null
           school_name: string
           status: string
+          stripe_payment_intent_id: string | null
+          stripe_session_id: string | null
           transaction_type: string
           updated_at: string
         }

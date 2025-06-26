@@ -16,7 +16,9 @@ import {
   MessageSquareIcon,
   DollarSignIcon,
   CalendarIcon,
-  AlertTriangleIcon
+  AlertTriangleIcon,
+  CreditCardIcon,
+  ExternalLinkIcon
 } from 'lucide-react';
 
 interface PendingTransactionsCardProps {
@@ -50,20 +52,28 @@ const PendingTransactionsCard: React.FC<PendingTransactionsCardProps> = ({
     
     setIsProcessing(true);
     try {
-      await handleTransactionAction(selectedTransaction, adminEmail, actionType, comments);
+      const result = await handleTransactionAction(selectedTransaction, adminEmail, actionType, comments);
       
-      toast({
-        title: "Success",
-        description: `Transaction ${actionType} successfully.`,
-      });
+      if (actionType === 'approved' && result?.payment_initiated) {
+        toast({
+          title: "Payment Processing Started",
+          description: "Transaction approved and payment processing has been initiated. A new tab will open for payment completion.",
+        });
+      } else {
+        toast({
+          title: "Success",
+          description: `Transaction ${actionType} successfully.`,
+        });
+      }
       
       setSelectedTransaction(null);
       setActionType(null);
       setComments('');
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : `Failed to ${actionType} transaction`;
       toast({
         title: "Error",
-        description: `Failed to ${actionType} transaction.`,
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
@@ -80,6 +90,34 @@ const PendingTransactionsCard: React.FC<PendingTransactionsCardProps> = ({
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString();
+  };
+
+  const getPaymentStatusBadge = (transaction: any) => {
+    const paymentStatus = transaction.payment_status;
+    
+    if (!paymentStatus || paymentStatus === 'pending') {
+      return <Badge variant="outline">Pending Approval</Badge>;
+    }
+    
+    switch (paymentStatus) {
+      case 'processing':
+        return <Badge variant="secondary" className="bg-blue-50 text-blue-700">Processing</Badge>;
+      case 'requires_payment':
+        return (
+          <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">
+            <CreditCardIcon className="w-3 h-3 mr-1" />
+            Payment Required
+          </Badge>
+        );
+      case 'paid':
+        return <Badge variant="default" className="bg-green-50 text-green-700">Paid</Badge>;
+      case 'failed':
+        return <Badge variant="destructive">Payment Failed</Badge>;
+      case 'cancelled':
+        return <Badge variant="secondary">Cancelled</Badge>;
+      default:
+        return <Badge variant="outline">{paymentStatus}</Badge>;
+    }
   };
 
   if (isLoading) {
@@ -106,7 +144,7 @@ const PendingTransactionsCard: React.FC<PendingTransactionsCardProps> = ({
             )}
           </CardTitle>
           <CardDescription>
-            Review and approve/reject pending transactions for {schoolName}
+            Review and approve/reject pending transactions for {schoolName}. Approved transactions will automatically initiate Stripe payment processing.
           </CardDescription>
         </CardHeader>
         
@@ -123,7 +161,7 @@ const PendingTransactionsCard: React.FC<PendingTransactionsCardProps> = ({
                 <Alert key={transaction.id} className="border-yellow-200 bg-yellow-50">
                   <AlertTriangleIcon className="h-4 w-4 text-yellow-600" />
                   <AlertDescription>
-                    <div className="flex flex-col gap-2">
+                    <div className="flex flex-col gap-3">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
                           <DollarSignIcon className="w-4 h-4" />
@@ -131,6 +169,7 @@ const PendingTransactionsCard: React.FC<PendingTransactionsCardProps> = ({
                             {formatCurrency(transaction.amount, transaction.currency)}
                           </span>
                           <Badge variant="outline">{transaction.transaction_type}</Badge>
+                          {getPaymentStatusBadge(transaction)}
                         </div>
                         <div className="flex items-center gap-1 text-sm text-muted-foreground">
                           <CalendarIcon className="w-3 h-3" />
@@ -141,25 +180,41 @@ const PendingTransactionsCard: React.FC<PendingTransactionsCardProps> = ({
                       {transaction.description && (
                         <p className="text-sm text-gray-600">{transaction.description}</p>
                       )}
+
+                      {/* Show payment status info for approved transactions */}
+                      {transaction.status === 'approved' && transaction.payment_status === 'requires_payment' && (
+                        <div className="p-3 bg-blue-50 border border-blue-200 rounded-md">
+                          <div className="flex items-center gap-2 mb-2">
+                            <CreditCardIcon className="w-4 h-4 text-blue-600" />
+                            <span className="text-sm font-medium text-blue-800">Payment Processing Required</span>
+                          </div>
+                          <p className="text-xs text-blue-700">
+                            This transaction has been approved and requires payment completion via Stripe.
+                          </p>
+                        </div>
+                      )}
                       
-                      <div className="flex items-center gap-2 mt-3">
-                        <Button
-                          onClick={() => handleActionClick(transaction.id, 'approved')}
-                          size="sm"
-                          className="bg-green-600 hover:bg-green-700"
-                        >
-                          <CheckCircleIcon className="w-4 h-4 mr-1" />
-                          Approve
-                        </Button>
-                        <Button
-                          onClick={() => handleActionClick(transaction.id, 'rejected')}
-                          size="sm"
-                          variant="destructive"
-                        >
-                          <XCircleIcon className="w-4 h-4 mr-1" />
-                          Reject
-                        </Button>
-                      </div>
+                      {/* Only show action buttons for truly pending transactions */}
+                      {transaction.status === 'pending' && (
+                        <div className="flex items-center gap-2 mt-3">
+                          <Button
+                            onClick={() => handleActionClick(transaction.id, 'approved')}
+                            size="sm"
+                            className="bg-green-600 hover:bg-green-700"
+                          >
+                            <CheckCircleIcon className="w-4 h-4 mr-1" />
+                            Approve & Process Payment
+                          </Button>
+                          <Button
+                            onClick={() => handleActionClick(transaction.id, 'rejected')}
+                            size="sm"
+                            variant="destructive"
+                          >
+                            <XCircleIcon className="w-4 h-4 mr-1" />
+                            Reject
+                          </Button>
+                        </div>
+                      )}
                     </div>
                   </AlertDescription>
                 </Alert>
@@ -174,14 +229,29 @@ const PendingTransactionsCard: React.FC<PendingTransactionsCardProps> = ({
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
-              {actionType === 'approved' ? 'Approve Transaction' : 'Reject Transaction'}
+              {actionType === 'approved' ? 'Approve Transaction & Process Payment' : 'Reject Transaction'}
             </DialogTitle>
             <DialogDescription>
-              Are you sure you want to {actionType} this transaction? This action cannot be undone.
+              {actionType === 'approved' 
+                ? 'Are you sure you want to approve this transaction? This will automatically initiate Stripe payment processing and open a payment window.' 
+                : 'Are you sure you want to reject this transaction? This action cannot be undone.'
+              }
             </DialogDescription>
           </DialogHeader>
           
           <div className="space-y-4">
+            {actionType === 'approved' && (
+              <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                <div className="flex items-center gap-2 mb-2">
+                  <CreditCardIcon className="w-4 h-4 text-blue-600" />
+                  <span className="text-sm font-medium text-blue-800">Automatic Payment Processing</span>
+                </div>
+                <p className="text-xs text-blue-700">
+                  Once approved, a Stripe checkout session will be created and opened in a new tab for payment completion.
+                </p>
+              </div>
+            )}
+            
             <div>
               <Label htmlFor="comments">Comments (Optional)</Label>
               <Textarea
@@ -204,7 +274,8 @@ const PendingTransactionsCard: React.FC<PendingTransactionsCardProps> = ({
               className={actionType === 'approved' ? 'bg-green-600 hover:bg-green-700' : ''}
               variant={actionType === 'rejected' ? 'destructive' : 'default'}
             >
-              {isProcessing ? 'Processing...' : `${actionType === 'approved' ? 'Approve' : 'Reject'} Transaction`}
+              {isProcessing ? 'Processing...' : 
+               actionType === 'approved' ? 'Approve & Process Payment' : 'Reject Transaction'}
             </Button>
           </DialogFooter>
         </DialogContent>
