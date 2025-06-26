@@ -54,13 +54,22 @@ const SchoolSettings: React.FC<SchoolSettingsProps> = ({ teacher }) => {
     try {
       console.log('Attempting to access customer portal for:', teacher.email);
 
+      // Create a session token for additional security
+      const sessionToken = btoa(JSON.stringify({
+        teacherId: teacher.id,
+        email: teacher.email,
+        timestamp: Date.now()
+      }));
+
       const { data, error } = await supabase.functions.invoke('customer-portal', {
         body: { 
           school: teacher.school,
-          email: teacher.email 
+          email: teacher.email,
+          teacherId: teacher.id
         },
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'x-teacher-session': sessionToken
         }
       });
 
