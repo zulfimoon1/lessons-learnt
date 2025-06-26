@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -13,8 +12,12 @@ import {
   TrendingUp,
   BookOpen,
   Heart,
-  Star
+  Star,
+  MicIcon,
+  VolumeIcon,
+  PlayIcon
 } from "lucide-react";
+import VoiceDemoCard from './voice/VoiceDemoCard';
 
 interface TeacherSimulationProps {
   isPlaying: boolean;
@@ -29,6 +32,11 @@ const TeacherSimulation: React.FC<TeacherSimulationProps> = ({ isPlaying }) => {
       title: "Teacher Dashboard",
       description: "Teacher views their dashboard with class schedule and student feedback overview",
       component: "dashboard"
+    },
+    {
+      title: "Voice Feedback Management",
+      description: "Teacher discovers new tools for managing student voice messages",
+      component: "voice"
     },
     {
       title: "Live Feedback",
@@ -56,7 +64,7 @@ const TeacherSimulation: React.FC<TeacherSimulationProps> = ({ isPlaying }) => {
         setProgress((next / (steps.length - 1)) * 100);
         return next;
       });
-    }, 3000);
+    }, 3500);
 
     return () => clearInterval(interval);
   }, [isPlaying, steps.length]);
@@ -158,6 +166,115 @@ const TeacherSimulation: React.FC<TeacherSimulationProps> = ({ isPlaying }) => {
                 <p className="text-sm text-gray-600">Room 201 • 11:00 - 11:50 AM</p>
               </div>
               <Badge variant="outline">Upcoming</Badge>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+
+  const renderVoiceManagement = () => (
+    <div className="space-y-6">
+      <Card className="bg-gradient-to-r from-orange-100 to-yellow-100 border-orange-200 shadow-lg">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-orange-800">
+            <VolumeIcon className="w-6 h-6" />
+            📢 Voice Feedback Management Tools
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="bg-white/80 backdrop-blur-sm rounded-lg p-4">
+            <h3 className="font-semibold text-orange-900 mb-2">Voice Messages Give You:</h3>
+            <ul className="space-y-2 text-sm text-orange-800">
+              <li className="flex items-center gap-2">
+                <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
+                Hear the emotion and tone in student voices
+              </li>
+              <li className="flex items-center gap-2">
+                <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
+                Automatic transcription for easy reading and search
+              </li>
+              <li className="flex items-center gap-2">
+                <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
+                Better understanding of student struggles and excitement
+              </li>
+              <li className="flex items-center gap-2">
+                <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
+                Quick playback at 1.5x speed to save time
+              </li>
+            </ul>
+          </div>
+
+          <div className="space-y-4">
+            <div className="bg-white rounded-lg p-4 border border-orange-200">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center">
+                    <MicIcon className="w-4 h-4 text-orange-600" />
+                  </div>
+                  <div>
+                    <p className="font-medium text-gray-900">Emma S. - Math Feedback</p>
+                    <p className="text-sm text-gray-600">2 minutes ago</p>
+                  </div>
+                </div>
+                <Badge className="bg-orange-100 text-orange-800">Voice + Text</Badge>
+              </div>
+              
+              <div className="bg-gray-50 rounded-lg p-3 mb-3">
+                <div className="flex items-center gap-2 mb-2">
+                  <PlayIcon className="w-4 h-4 text-orange-600" />
+                  <div className="flex-1 bg-orange-200 rounded-full h-2">
+                    <div className="bg-orange-500 h-2 rounded-full w-1/3"></div>
+                  </div>
+                  <span className="text-xs text-gray-600">0:12 / 0:35</span>
+                </div>
+                <p className="text-sm text-gray-700 italic">
+                  "I was really confused about quadratic functions at first, but when you used the basketball example, it totally clicked! The way you showed how the ball's path is a parabola made it so much clearer."
+                </p>
+              </div>
+
+              <div className="flex gap-2">
+                <Button size="sm" variant="outline">
+                  <VolumeIcon className="w-3 h-3 mr-1" />
+                  Play
+                </Button>
+                <Button size="sm" variant="outline">
+                  Reply
+                </Button>
+                <Button size="sm" variant="outline">
+                  Save Note
+                </Button>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-lg p-4 border border-red-200">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center">
+                    <MicIcon className="w-4 h-4 text-red-600" />
+                  </div>
+                  <div>
+                    <p className="font-medium text-gray-900">Anonymous Student</p>
+                    <p className="text-sm text-gray-600">15 minutes ago</p>
+                  </div>
+                </div>
+                <Badge className="bg-red-100 text-red-800">Needs Attention</Badge>
+              </div>
+              
+              <div className="bg-gray-50 rounded-lg p-3 mb-3">
+                <p className="text-sm text-gray-700 italic">
+                  Voice message detected emotional distress: "I'm feeling really overwhelmed with all the homework lately and I'm worried I'm falling behind in math..."
+                </p>
+              </div>
+
+              <div className="flex gap-2">
+                <Button size="sm" className="bg-red-600 hover:bg-red-700 text-white">
+                  Priority Follow-up
+                </Button>
+                <Button size="sm" variant="outline">
+                  Contact Counselor
+                </Button>
+              </div>
             </div>
           </div>
         </CardContent>
@@ -357,6 +474,7 @@ const TeacherSimulation: React.FC<TeacherSimulationProps> = ({ isPlaying }) => {
   const getCurrentComponent = () => {
     switch (steps[currentStep].component) {
       case "dashboard": return renderDashboard();
+      case "voice": return renderVoiceManagement();
       case "feedback": return renderFeedback();
       case "analytics": return renderAnalytics();
       case "wellness": return renderWellness();

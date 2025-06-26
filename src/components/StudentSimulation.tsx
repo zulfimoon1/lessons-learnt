@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -12,8 +11,11 @@ import {
   StarIcon,
   ClockIcon,
   TrendingUpIcon,
-  UserIcon
+  UserIcon,
+  MicIcon,
+  VolumeIcon
 } from "lucide-react";
+import VoiceDemoCard from './voice/VoiceDemoCard';
 
 interface StudentSimulationProps {
   isPlaying: boolean;
@@ -28,6 +30,11 @@ const StudentSimulation: React.FC<StudentSimulationProps> = ({ isPlaying }) => {
       title: "Welcome Dashboard",
       description: "Student views their personalized dashboard with upcoming classes and wellness check",
       component: "dashboard"
+    },
+    {
+      title: "Voice Feedback Demo",
+      description: "Student discovers the new voice recording feature for easier feedback",
+      component: "voice"
     },
     {
       title: "Lesson Feedback",
@@ -55,7 +62,7 @@ const StudentSimulation: React.FC<StudentSimulationProps> = ({ isPlaying }) => {
         setProgress((next / (steps.length - 1)) * 100);
         return next;
       });
-    }, 3000);
+    }, 3500);
 
     return () => clearInterval(interval);
   }, [isPlaying, steps.length]);
@@ -111,6 +118,58 @@ const StudentSimulation: React.FC<StudentSimulationProps> = ({ isPlaying }) => {
     </div>
   );
 
+  const renderVoiceDemo = () => (
+    <div className="space-y-6">
+      <Card className="bg-gradient-to-r from-purple-100 to-blue-100 border-purple-200 shadow-lg">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-purple-800">
+            <MicIcon className="w-6 h-6" />
+            🎉 New Feature: Voice Recording!
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="bg-white/80 backdrop-blur-sm rounded-lg p-4">
+            <h3 className="font-semibold text-purple-900 mb-2">Why Voice Recording is Amazing:</h3>
+            <ul className="space-y-2 text-sm text-purple-800">
+              <li className="flex items-center gap-2">
+                <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
+                Express emotions and tone that text can't capture
+              </li>
+              <li className="flex items-center gap-2">
+                <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
+                Faster than typing - just speak your thoughts
+              </li>
+              <li className="flex items-center gap-2">
+                <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
+                Perfect for students with dyslexia or writing challenges
+              </li>
+              <li className="flex items-center gap-2">
+                <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
+                Your voice is automatically transcribed for teachers
+              </li>
+            </ul>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <VoiceDemoCard
+              title="Express Feelings"
+              description="Record how you really feel about lessons"
+              mockTranscription="I was feeling a bit confused during the algebra section, but when you explained it with the pizza example, everything clicked! Can we do more real-world examples like that?"
+              variant="student"
+            />
+            
+            <VoiceDemoCard
+              title="Quick Feedback"
+              description="Share thoughts instantly after class"
+              mockTranscription="Today's chemistry lab was awesome! I loved the volcano experiment. It made me understand chemical reactions so much better than just reading about them."
+              variant="student"
+            />
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+
   const renderFeedback = () => (
     <div className="space-y-6">
       <Card className="bg-white/90 backdrop-blur-sm border-gray-200/50 shadow-lg">
@@ -141,10 +200,26 @@ const StudentSimulation: React.FC<StudentSimulationProps> = ({ isPlaying }) => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-2">Additional Comments</label>
-            <div className="bg-gray-50 p-3 rounded-lg border">
-              <p className="text-sm text-gray-700 italic">
-                "The quadratic equations were challenging but I feel like I'm getting better with practice..."
+            <label className="block text-sm font-medium mb-2">Share your thoughts (Text or Voice)</label>
+            <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
+              <div className="flex items-center gap-2 mb-3">
+                <MicIcon className="w-4 h-4 text-purple-600" />
+                <span className="text-sm font-medium text-purple-800">Voice message recorded</span>
+                <Badge className="bg-purple-100 text-purple-700">NEW!</Badge>
+              </div>
+              <div className="flex items-center gap-3 bg-white rounded-lg p-3">
+                <VolumeIcon className="w-4 h-4 text-purple-600" />
+                <div className="flex-1">
+                  <div className="flex gap-1 mb-1">
+                    {[...Array(8)].map((_, i) => (
+                      <div key={i} className={`w-1 rounded-full bg-purple-400 ${i < 5 ? 'h-4' : 'h-2'}`}></div>
+                    ))}
+                  </div>
+                  <p className="text-xs text-gray-600">0:12 / 0:45</p>
+                </div>
+              </div>
+              <p className="text-sm text-gray-700 italic mt-2">
+                "The quadratic equations were challenging but I feel like I'm getting better with practice. I love how you use real examples!"
               </p>
             </div>
           </div>
@@ -247,6 +322,7 @@ const StudentSimulation: React.FC<StudentSimulationProps> = ({ isPlaying }) => {
   const getCurrentComponent = () => {
     switch (steps[currentStep].component) {
       case "dashboard": return renderDashboard();
+      case "voice": return renderVoiceDemo();
       case "feedback": return renderFeedback();
       case "wellness": return renderWellness();
       case "summary": return renderSummary();

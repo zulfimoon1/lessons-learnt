@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -14,7 +13,8 @@ import {
   Settings,
   Calendar,
   MessageSquare,
-  Gift
+  Gift,
+  MicIcon
 } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useNavigate } from "react-router-dom";
@@ -22,6 +22,7 @@ import StudentSimulation from "@/components/StudentSimulation";
 import TeacherSimulation from "@/components/TeacherSimulation";
 import AdminSimulation from "@/components/AdminSimulation";
 import DoctorSimulation from "@/components/DoctorSimulation";
+import VoiceFeatureShowcase from "@/components/voice/VoiceFeatureShowcase";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import ComplianceFooter from "@/components/ComplianceFooter";
 import MobileOptimizedLayout from "@/components/mobile/MobileOptimizedLayout";
@@ -258,8 +259,38 @@ const Demo = () => {
             <EnhancedLazyLoader minHeight={isMobile ? "600px" : "400px"}>
               <div className={cn(
                 'gap-8 mb-16',
-                isMobile ? 'grid grid-cols-1 gap-6' : 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8'
+                isMobile ? 'grid grid-cols-1 gap-6' : 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8'
               )}>
+                {/* Voice Features - NEW! */}
+                <MobileOptimizedCard
+                  title="🎤 Voice Features"
+                  className="cursor-pointer hover:shadow-lg transition-all duration-300 border-2 hover:border-purple-500 relative"
+                  icon={<MicIcon className="h-6 w-6 text-purple-600" />}
+                  actions={
+                    <Badge className="bg-gradient-to-r from-purple-600 to-pink-600 text-white animate-pulse">
+                      NEW!
+                    </Badge>
+                  }
+                >
+                  <CardDescription className="mb-4">
+                    Experience revolutionary voice-powered education
+                  </CardDescription>
+                  <div className="space-y-2 text-sm text-gray-600 mb-4">
+                    <p>• Student voice feedback and recording</p>
+                    <p>• Teacher voice message management</p>
+                    <p>• AI-powered emotional analysis</p>
+                    <p>• Voice accessibility features</p>
+                  </div>
+                  <MobileOptimizedButton 
+                    onClick={() => handleDemoSelect('voice')}
+                    className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white"
+                    fullWidth={true}
+                  >
+                    <MicIcon className="w-4 h-4 mr-2" />
+                    Try Voice Revolution
+                  </MobileOptimizedButton>
+                </MobileOptimizedCard>
+
                 {/* Student Experience */}
                 <MobileOptimizedCard
                   title={t('demo.simulation.student.title') || 'Student Experience'}
@@ -387,7 +418,14 @@ const Demo = () => {
               <EnhancedLazyLoader minHeight="300px">
                 <div className="mt-16 bg-white/90 backdrop-blur-sm rounded-2xl p-8 shadow-lg border border-gray-200/50">
                   <h3 className="text-2xl font-bold text-center mb-8">Modern Design Meets Powerful Functionality</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+                  <div className="grid grid-cols-1 md:grid-cols-5 gap-8">
+                    <div className="text-center">
+                      <div className="w-16 h-16 bg-purple-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                        <MicIcon className="h-8 w-8 text-purple-600" />
+                      </div>
+                      <h4 className="text-lg font-semibold mb-2">Voice-First Platform</h4>
+                      <p className="text-gray-600">Revolutionary voice recording and analysis technology</p>
+                    </div>
                     <div className="text-center">
                       <div className="w-16 h-16 bg-brand-teal/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
                         <GraduationCap className="h-8 w-8 text-brand-teal" />
@@ -466,6 +504,7 @@ const Demo = () => {
                     'font-bold',
                     isMobile ? 'text-lg' : 'text-2xl'
                   )}>
+                    {activeDemo === 'voice' && '🎤 Voice Features Demo'}
                     {activeDemo === 'student' && (t('demo.simulation.student.title') || 'Student Experience')}
                     {activeDemo === 'teacher' && (t('demo.simulation.teacher.title') || 'Teacher Experience')}
                     {activeDemo === 'admin' && 'School Administrator Experience'}
@@ -501,6 +540,9 @@ const Demo = () => {
               <div className={cn(isMobile ? '' : 'lg:col-span-8')}>
                 <MobileOptimizedCard className="h-full shadow-lg">
                   <EnhancedLazyLoader>
+                    {activeDemo === 'voice' && (
+                      <VoiceFeatureShowcase />
+                    )}
                     {activeDemo === 'student' && (
                       <StudentSimulation isPlaying={isPlaying} />
                     )}
@@ -524,6 +566,23 @@ const Demo = () => {
                     title="Demo Information"
                     className="h-full shadow-lg"
                   >
+                    {activeDemo === 'voice' && (
+                      <div className="space-y-4">
+                        <p className="text-sm text-gray-600">
+                          Experience the revolutionary voice-powered features that transform educational feedback.
+                        </p>
+                        <div className="space-y-2">
+                          <h4 className="font-semibold">Key Voice Features:</h4>
+                          <ul className="text-sm text-gray-600 space-y-1">
+                            <li>• Student voice recording and feedback</li>
+                            <li>• Teacher voice message management tools</li>
+                            <li>• AI-powered emotional tone analysis</li>
+                            <li>• Automatic voice transcription</li>
+                            <li>• Voice accessibility for all students</li>
+                          </ul>
+                        </div>
+                      </div>
+                    )}
                     {activeDemo === 'student' && (
                       <div className="space-y-4">
                         <p className="text-sm text-gray-600">
