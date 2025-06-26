@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -221,27 +222,27 @@ const LessonFeedbackForm = () => {
     setIsSubmitting(true);
 
     try {
-      console.log('🔐 Getting authenticated user...');
+      console.log('🔐 Checking authentication session...');
       
-      // Get the current user from Supabase auth
-      const { data: { user }, error: authError } = await supabase.auth.getUser();
+      // Get the current session with better error handling
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
       
-      if (authError) {
-        console.error('❌ Auth error:', authError);
-        throw new Error(`Authentication error: ${authError.message}`);
+      if (sessionError) {
+        console.error('❌ Session error:', sessionError);
+        throw new Error(`Session error: ${sessionError.message}`);
       }
       
-      if (!user) {
-        console.error('❌ No authenticated user found');
-        throw new Error('You must be logged in to submit feedback');
+      if (!session) {
+        console.error('❌ No active session found');
+        throw new Error('No active session. Please log in again.');
       }
       
-      console.log('✅ Authenticated user found:', user.id);
+      console.log('✅ Session validated:', session.user.id);
       
-      // Prepare feedback data with better error handling
+      // Prepare feedback data with enhanced error handling
       const feedbackData = {
         class_schedule_id: selectedClass,
-        student_id: isAnonymous ? null : (student?.id || user.id),
+        student_id: isAnonymous ? null : (student?.id || session.user.id),
         student_name: isAnonymous ? t('feedback.anonymous') : (student?.full_name || 'Unknown Student'),
         understanding: understanding[0] || 3,
         interest: interest[0] || 3,
@@ -350,9 +351,16 @@ const LessonFeedbackForm = () => {
         constructor: error?.constructor?.name
       });
       
+      // Check if it's an auth-related error and provide helpful guidance
+      let errorMessage = error instanceof Error ? error.message : "Failed to submit feedback. Please try again.";
+      
+      if (errorMessage.includes('session') || errorMessage.includes('auth')) {
+        errorMessage += " Try refreshing the page and logging in again.";
+      }
+      
       toast({
         title: "Submission Failed",
-        description: error instanceof Error ? error.message : "Failed to submit feedback. Please try again.",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
