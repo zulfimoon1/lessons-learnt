@@ -71,7 +71,7 @@ const EnhancedClassCard: React.FC<EnhancedClassCardProps> = ({
             )}
           </div>
           <Badge variant={isUpcoming() ? "default" : "secondary"}>
-            {isUpcoming() ? t('class.upcoming') || 'Upcoming' : t('class.past') || 'Past'}
+            {isUpcoming() ? 'Coming Up!' : 'Already Had This Class'}
           </Badge>
         </div>
 
@@ -94,7 +94,7 @@ const EnhancedClassCard: React.FC<EnhancedClassCardProps> = ({
             disabled={isUpcoming()}
           >
             <MessageSquare className="w-4 h-4" />
-            {t('class.provideFeedback') || 'Provide Feedback'}
+            {isUpcoming() ? 'Wait Until After Class' : 'Tell Us How It Went!'}
           </Button>
         </div>
       </CardContent>

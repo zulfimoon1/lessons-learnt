@@ -1,160 +1,110 @@
 
 import React from "react";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { CalendarIcon, ClockIcon, BookOpenIcon } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { useIsMobile } from "@/hooks/use-mobile";
-import { cn } from "@/lib/utils";
-import { Clock, BookOpen, Calendar } from "lucide-react";
+import EnhancedClassCard from "@/components/dashboard/student/EnhancedClassCard";
 
 interface ClassSchedule {
   id: string;
-  subject: string;
-  grade: string;
   lesson_topic: string;
+  subject: string;
   class_date: string;
   class_time: string;
   duration_minutes: number;
-  teacher_id: string;
-  school: string;
+  description?: string;
 }
 
 interface UpcomingClassesTabProps {
   classes: ClassSchedule[];
-  studentGrade?: string;
-  studentSchool?: string;
+  studentGrade: string;
+  studentSchool: string;
 }
 
-const UpcomingClassesTab: React.FC<UpcomingClassesTabProps> = React.memo(({ 
-  classes, 
-  studentGrade, 
-  studentSchool 
+const UpcomingClassesTab: React.FC<UpcomingClassesTabProps> = ({
+  classes,
+  studentGrade,
+  studentSchool
 }) => {
   const { t } = useLanguage();
-  const isMobile = useIsMobile();
 
-  // Filter to only show future classes
-  const now = new Date();
-  const upcomingClasses = classes.filter(classItem => {
-    const classDateTime = new Date(`${classItem.class_date}T${classItem.class_time}`);
-    return classDateTime > now;
-  });
+  const handleProvideFeedback = (scheduleId: string) => {
+    // This would typically navigate to a feedback form
+    console.log('Tell us about class:', scheduleId);
+  };
+
+  if (classes.length === 0) {
+    return (
+      <Card className="bg-blue-50 border-blue-200">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-blue-800">
+            <CalendarIcon className="w-5 h-5" />
+            My Upcoming Classes
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-center py-8">
+            <BookOpenIcon className="w-12 h-12 text-blue-400 mx-auto mb-4" />
+            <h3 className="text-lg font-semibold text-blue-800 mb-2">
+              No classes coming up right now!
+            </h3>
+            <p className="text-blue-600">
+              Don't worry - new classes will show up here when they're scheduled. 
+              Check back later or ask your teacher when the next class will be!
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
-    <Card role="region" aria-labelledby="upcoming-classes-title">
-      <CardHeader className={cn(isMobile ? 'p-4 pb-2' : 'p-6 pb-4')}>
-        <CardTitle 
-          id="upcoming-classes-title"
-          className={cn(isMobile ? 'text-lg' : 'text-xl')}
-        >
-          {t('dashboard.upcomingClasses') || 'Upcoming Classes'}
-        </CardTitle>
-        <CardDescription className={cn(isMobile ? 'text-sm' : 'text-base')}>
-          {studentGrade && studentSchool ? 
-            `Scheduled classes for ${studentGrade} at ${studentSchool}` :
-            (t('dashboard.scheduledClasses', { grade: studentGrade || 'your grade', school: studentSchool || 'your school' }) || 'Your scheduled classes')
-          }
-        </CardDescription>
-      </CardHeader>
-      <CardContent className={cn(isMobile ? 'p-4 pt-0' : 'p-6 pt-0')}>
-        <div className="space-y-4">
-          {upcomingClasses.map((classItem) => (
-            <div 
-              key={classItem.id} 
-              className={cn(
-                'p-4 border rounded-lg transition-colors hover:bg-gray-50',
-                isMobile ? 'space-y-3' : 'flex items-center justify-between'
-              )}
-              role="article"
-              aria-labelledby={`class-${classItem.id}-title`}
-            >
-              <div className={cn(isMobile ? 'space-y-2' : 'flex-1')}>
-                <div className="flex items-start gap-2">
-                  <BookOpen 
-                    className="w-4 h-4 text-brand-teal mt-0.5 flex-shrink-0" 
-                    aria-hidden="true"
-                  />
-                  <div className="min-w-0 flex-1">
-                    <h3 
-                      id={`class-${classItem.id}-title`}
-                      className={cn(
-                        'font-medium text-foreground',
-                        isMobile ? 'text-sm' : 'text-base'
-                      )}
-                    >
-                      {classItem.subject}
-                    </h3>
-                    <p className={cn(
-                      'text-muted-foreground mt-1',
-                      isMobile ? 'text-xs' : 'text-sm'
-                    )}>
-                      {classItem.lesson_topic}
-                    </p>
-                  </div>
-                </div>
-                
-                <div className={cn(
-                  'flex gap-2',
-                  isMobile ? 'flex-wrap' : 'mt-2'
-                )}>
-                  <Badge 
-                    variant="outline" 
-                    className={cn(isMobile ? 'text-xs' : 'text-sm')}
-                    aria-label={`Grade ${classItem.grade}`}
-                  >
-                    {classItem.grade}
-                  </Badge>
-                  <Badge 
-                    variant="outline" 
-                    className={cn(
-                      'flex items-center gap-1',
-                      isMobile ? 'text-xs' : 'text-sm'
-                    )}
-                    aria-label={`Duration ${classItem.duration_minutes} minutes`}
-                  >
-                    <Clock className="w-3 h-3" aria-hidden="true" />
-                    {classItem.duration_minutes} {t('common.minutes') || 'min'}
-                  </Badge>
-                </div>
-              </div>
-              
-              <div className={cn(
-                'flex items-center gap-2',
-                isMobile ? 'justify-between border-t pt-2 mt-2' : 'text-right ml-4'
-              )}>
-                <div className="flex items-center gap-1 text-muted-foreground">
-                  <Calendar className="w-4 h-4" aria-hidden="true" />
-                  <span className={cn(isMobile ? 'text-xs' : 'text-sm')}>
-                    {new Date(classItem.class_date).toLocaleDateString()}
-                  </span>
-                </div>
-                <div className={cn(
-                  'font-medium',
-                  isMobile ? 'text-sm' : 'text-base'
-                )}>
-                  {classItem.class_time}
-                </div>
+    <div className="space-y-6">
+      <Card className="bg-gradient-to-r from-brand-teal/10 to-brand-orange/10 border-brand-teal/20">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <CalendarIcon className="w-5 h-5 text-brand-teal" />
+            My Upcoming Classes
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-2 md:grid-cols-3">
+            <div className="flex items-center gap-2">
+              <CalendarIcon className="w-4 h-4 text-brand-teal" />
+              <div>
+                <p className="text-sm text-muted-foreground">My School</p>
+                <p className="font-medium">{studentSchool}</p>
               </div>
             </div>
-          ))}
-          {upcomingClasses.length === 0 && (
-            <div 
-              className="text-center py-8"
-              role="status"
-              aria-live="polite"
-            >
-              <BookOpen className="w-12 h-12 text-muted-foreground mx-auto mb-3" aria-hidden="true" />
-              <p className="text-muted-foreground">
-                {t('dashboard.noUpcomingClasses') || 'No upcoming classes scheduled'}
-              </p>
+            <div className="flex items-center gap-2">
+              <BookOpenIcon className="w-4 h-4 text-brand-orange" />
+              <div>
+                <p className="text-sm text-muted-foreground">My Grade</p>
+                <p className="font-medium">{studentGrade}</p>
+              </div>
             </div>
-          )}
-        </div>
-      </CardContent>
-    </Card>
-  );
-});
+            <div className="flex items-center gap-2">
+              <ClockIcon className="w-4 h-4 text-brand-teal" />
+              <div>
+                <p className="text-sm text-muted-foreground">Classes Coming Up</p>
+                <p className="font-medium">{classes.length}</p>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
-UpcomingClassesTab.displayName = "UpcomingClassesTab";
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        {classes.map((classItem) => (
+          <EnhancedClassCard
+            key={classItem.id}
+            classItem={classItem}
+            onProvideFeedback={handleProvideFeedback}
+          />
+        ))}
+      </div>
+    </div>
+  );
+};
 
 export default UpcomingClassesTab;

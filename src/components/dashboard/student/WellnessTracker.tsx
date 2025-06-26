@@ -27,11 +27,11 @@ const WellnessTracker: React.FC<WellnessTrackerProps> = ({
   const { t } = useLanguage();
 
   const moods = [
-    { value: 'great', icon: Smile, label: t('wellness.great') || 'Great', color: 'text-green-500' },
-    { value: 'good', icon: Smile, label: t('wellness.good') || 'Good', color: 'text-blue-500' },
-    { value: 'okay', icon: Meh, label: t('wellness.okay') || 'Okay', color: 'text-yellow-500' },
-    { value: 'poor', icon: Frown, label: t('wellness.poor') || 'Poor', color: 'text-orange-500' },
-    { value: 'terrible', icon: AlertTriangle, label: t('wellness.terrible') || 'Terrible', color: 'text-red-500' }
+    { value: 'great', icon: Smile, label: 'Awesome!', color: 'text-green-500' },
+    { value: 'good', icon: Smile, label: 'Pretty Good', color: 'text-blue-500' },
+    { value: 'okay', icon: Meh, label: 'Okay', color: 'text-yellow-500' },
+    { value: 'poor', icon: Frown, label: 'Not Great', color: 'text-orange-500' },
+    { value: 'terrible', icon: AlertTriangle, label: 'Really Bad', color: 'text-red-500' }
   ] as const;
 
   const handleSubmit = () => {
@@ -63,14 +63,14 @@ const WellnessTracker: React.FC<WellnessTrackerProps> = ({
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Heart className="w-5 h-5 text-brand-orange" />
-          {t('wellness.tracker') || 'Wellness Tracker'}
+          How Are You Feeling Today?
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
         {/* Mood Selection */}
         <div>
           <h4 className="text-sm font-medium mb-3">
-            {t('wellness.howAreYou') || 'How are you feeling today?'}
+            Pick the one that feels right:
           </h4>
           <div className="grid grid-cols-5 gap-2">
             {moods.map((mood) => {
@@ -97,12 +97,12 @@ const WellnessTracker: React.FC<WellnessTrackerProps> = ({
         {selectedMood && (
           <div>
             <h4 className="text-sm font-medium mb-2">
-              {t('wellness.notes') || 'Any additional thoughts? (Optional)'}
+              Want to tell us more? (You don't have to!)
             </h4>
             <Textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              placeholder={t('wellness.notesPlaceholder') || 'Share what\'s on your mind...'}
+              placeholder="What's going on? How are things at school or home? Anything you want to share..."
               className="resize-none"
               rows={3}
             />
@@ -113,16 +113,16 @@ const WellnessTracker: React.FC<WellnessTrackerProps> = ({
         <Button
           onClick={handleSubmit}
           disabled={!selectedMood}
-          className="w-full"
+          className="w-full bg-brand-teal hover:bg-brand-teal/90"
         >
-          {t('wellness.submit') || 'Submit Wellness Check'}
+          Share How I'm Feeling
         </Button>
 
         {/* Recent Entries */}
         {recentEntries.length > 0 && (
           <div>
             <h4 className="text-sm font-medium mb-3">
-              {t('wellness.recent') || 'Recent Entries'}
+              How You've Been Feeling Lately:
             </h4>
             <div className="space-y-2 max-h-32 overflow-y-auto">
               {recentEntries.slice(0, 5).map((entry, index) => {

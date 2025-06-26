@@ -15,27 +15,27 @@ const MobileTabs: React.FC<MobileTabsProps> = ({ activeTab, onTabChange, t }) =>
     {
       value: 'classes',
       icon: CalendarIcon,
-      label: t('dashboard.upcomingClasses') || 'Classes'
+      label: 'My Classes'
     },
     {
       value: 'feedback',
       icon: MessageSquareIcon,
-      label: t('dashboard.feedback') || 'Feedback'
+      label: 'Share Thoughts'
     },
     {
       value: 'summary',
       icon: FileTextIcon,
-      label: t('dashboard.weeklySummary') || 'Summary'
+      label: 'My Week'
     },
     {
       value: 'wellness',
       icon: HeartIcon,
-      label: t('dashboard.mentalHealth') || 'Mental Health'
+      label: 'How I Feel'
     },
     {
       value: 'analytics',
       icon: BarChartIcon,
-      label: t('dashboard.analytics') || 'Analytics'
+      label: 'My Progress'
     }
   ];
 
