@@ -32,7 +32,7 @@ class SecurePlatformAdminService {
     try {
       console.log('🔧 Setting platform admin context for:', adminEmail);
       
-      // First approach: Use the dedicated function
+      // Use the dedicated function
       const { error: contextError } = await supabase.rpc('set_platform_admin_context', {
         admin_email: adminEmail
       });
@@ -192,7 +192,7 @@ class SecurePlatformAdminService {
   }) {
     console.log('🔧 Creating transaction with enhanced context setting');
     
-    // Set context with multiple approaches for maximum reliability
+    // Set context for maximum reliability
     await this.setPlatformAdminContext(adminEmail);
     
     // Wait a moment for context to be fully applied
@@ -201,7 +201,7 @@ class SecurePlatformAdminService {
     try {
       console.log('💳 Inserting transaction:', transactionData.school_name);
       
-      // Try direct insert first
+      // Direct insert with enhanced admin context
       const { data, error } = await supabase
         .from('transactions')
         .insert({
@@ -216,28 +216,8 @@ class SecurePlatformAdminService {
         .single();
 
       if (error) {
-        console.error('❌ Direct transaction creation failed:', error);
-        
-        // If direct insert fails, try using an RPC function approach
-        console.log('🔄 Attempting RPC-based transaction creation...');
-        
-        const { data: rpcData, error: rpcError } = await supabase.rpc('platform_admin_create_transaction', {
-          admin_email_param: adminEmail,
-          school_name_param: transactionData.school_name,
-          amount_param: Math.round(parseFloat(transactionData.amount) * 100),
-          currency_param: transactionData.currency,
-          transaction_type_param: transactionData.transaction_type,
-          status_param: transactionData.status,
-          description_param: transactionData.description
-        });
-
-        if (rpcError) {
-          console.error('❌ RPC transaction creation also failed:', rpcError);
-          throw rpcError;
-        }
-        
-        console.log('✅ Transaction created via RPC successfully:', rpcData);
-        return rpcData;
+        console.error('❌ Transaction creation failed:', error);
+        throw error;
       }
       
       console.log('✅ Transaction created successfully:', data.id);
