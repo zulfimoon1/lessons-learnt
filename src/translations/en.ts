@@ -360,12 +360,24 @@ export const enTranslations = {
   'student.classGrade': 'Class/Grade',
   'student.school': 'School',
 
-  // Welcome section
+  // Welcome section - NEW ADDITIONS for WelcomeSection component
   'welcome.title': 'Lessons Learnt',
   'welcome.heroTitle1': 'Collaborative Classrooms',
   'welcome.heroTitle2': 'Unstoppable Minds',
   'welcome.subtitle': 'Students rate lessons, access counselors instantly—the only platform giving teachers game-changing insights while ensuring no student struggles alone!',
   'welcome.freeForStudents': 'Always free for students!',
+  'welcome.studentsWelcome': 'Welcome to Your Learning Journey',
+  'welcome.studentsSubtitle': 'Track your progress, share feedback, and access support whenever you need it.',
+  'welcome.quickActions': 'Quick Actions',
+  'welcome.viewUpcomingClasses': 'View Upcoming Classes',
+  'welcome.submitFeedback': 'Submit Lesson Feedback',
+  'welcome.weeklySummary': 'Weekly Summary',
+  'welcome.accessSupport': 'Access Mental Health Support',
+  'welcome.classesThisWeek': 'classes this week',
+  'welcome.learningProgress': 'Your Learning Progress',
+  'welcome.engagementLevel': 'Engagement Level',
+  'welcome.wellnessScore': 'Wellness Score',
+  'welcome.feedbackSubmitted': 'Feedback Submitted',
   'tagline.studentLead': 'Where every student voice shapes the future of learning',
 
   // Features
