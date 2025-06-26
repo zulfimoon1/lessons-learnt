@@ -3,6 +3,7 @@ import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import TeacherAnalyticsDashboard from '@/components/analytics/TeacherAnalyticsDashboard';
 import { BarChart3 } from 'lucide-react';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface AnalyticsTabProps {
   teacher: {
@@ -14,6 +15,8 @@ interface AnalyticsTabProps {
 }
 
 const AnalyticsTab: React.FC<AnalyticsTabProps> = ({ teacher }) => {
+  const { t } = useLanguage();
+
   return (
     <div className="space-y-6">
       {/* Header Section - Matching Student Dashboard Style */}
@@ -23,9 +26,9 @@ const AnalyticsTab: React.FC<AnalyticsTabProps> = ({ teacher }) => {
             <BarChart3 className="w-5 h-5 text-white" />
           </div>
           <div>
-            <h2 className="text-2xl font-bold text-gray-900">Analytics Dashboard</h2>
+            <h2 className="text-2xl font-bold text-gray-900">{t('analytics.title')}</h2>
             <p className="text-gray-600">
-              Insights into your teaching performance and student engagement
+              {t('analytics.overview')}
             </p>
           </div>
         </div>
