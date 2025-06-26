@@ -7,10 +7,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Plus, UserCheck, UserX, MoreVertical, Pause, Trash2, Users } from "lucide-react";
+import { Plus, UserCheck, UserX, MoreVertical, Pause, Trash2, Users, Calendar } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar as CalendarComponent } from "@/components/ui/calendar";
+import { cn } from "@/lib/utils";
+import { format } from "date-fns";
 
 interface Teacher {
   id: string;
@@ -19,6 +23,8 @@ interface Teacher {
   role: string;
   specialization?: string;
   is_available?: boolean;
+  pause_start_date?: string;
+  pause_end_date?: string;
 }
 
 interface TeacherManagementProps {
@@ -32,6 +38,12 @@ const TeacherManagement: React.FC<TeacherManagementProps> = ({ school }) => {
   const [selectedTeachers, setSelectedTeachers] = useState<string[]>([]);
   const [showBulkDialog, setShowBulkDialog] = useState(false);
   const [bulkAction, setBulkAction] = useState<'pause' | 'activate'>('pause');
+  const [showIndividualPauseDialog, setShowIndividualPauseDialog] = useState(false);
+  const [selectedTeacherId, setSelectedTeacherId] = useState<string | null>(null);
+  const [pauseStartDate, setPauseStartDate] = useState<Date>();
+  const [pauseEndDate, setPauseEndDate] = useState<Date>();
+  const [bulkPauseStartDate, setBulkPauseStartDate] = useState<Date>();
+  const [bulkPauseEndDate, setBulkPauseEndDate] = useState<Date>();
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -109,25 +121,80 @@ const TeacherManagement: React.FC<TeacherManagementProps> = ({ school }) => {
   };
 
   const toggleAvailability = async (teacherId: string, currentStatus: boolean) => {
+    if (!currentStatus) {
+      // If activating, just set available and clear pause dates
+      try {
+        const { error } = await supabase
+          .from('teachers')
+          .update({ 
+            is_available: true,
+            pause_start_date: null,
+            pause_end_date: null
+          })
+          .eq('id', teacherId);
+
+        if (error) throw error;
+
+        toast({
+          title: "Success",
+          description: "Staff member activated successfully",
+        });
+
+        fetchTeachers();
+      } catch (error) {
+        console.error('Error updating availability:', error);
+        toast({
+          title: "Error",
+          description: "Failed to update availability",
+          variant: "destructive",
+        });
+      }
+    } else {
+      // If pausing, show date selection dialog
+      setSelectedTeacherId(teacherId);
+      setPauseStartDate(new Date());
+      setPauseEndDate(undefined);
+      setShowIndividualPauseDialog(true);
+    }
+  };
+
+  const handleIndividualPause = async () => {
+    if (!selectedTeacherId || !pauseStartDate) {
+      toast({
+        title: "Error",
+        description: "Please select start date",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       const { error } = await supabase
         .from('teachers')
-        .update({ is_available: !currentStatus })
-        .eq('id', teacherId);
+        .update({ 
+          is_available: false,
+          pause_start_date: pauseStartDate.toISOString(),
+          pause_end_date: pauseEndDate?.toISOString() || null
+        })
+        .eq('id', selectedTeacherId);
 
       if (error) throw error;
 
       toast({
         title: "Success",
-        description: `Staff member ${currentStatus ? 'paused' : 'activated'} successfully`,
+        description: "Staff member paused successfully",
       });
 
+      setShowIndividualPauseDialog(false);
+      setSelectedTeacherId(null);
+      setPauseStartDate(undefined);
+      setPauseEndDate(undefined);
       fetchTeachers();
     } catch (error) {
-      console.error('Error updating availability:', error);
+      console.error('Error pausing teacher:', error);
       toast({
         title: "Error",
-        description: "Failed to update availability",
+        description: "Failed to pause staff member",
         variant: "destructive",
       });
     }
@@ -172,29 +239,76 @@ const TeacherManagement: React.FC<TeacherManagementProps> = ({ school }) => {
       return;
     }
 
-    try {
-      const { error } = await supabase
-        .from('teachers')
-        .update({ is_available: bulkAction === 'activate' })
-        .in('id', selectedTeachers);
+    if (bulkAction === 'pause') {
+      if (!bulkPauseStartDate) {
+        toast({
+          title: "Error",
+          description: "Please select start date for pause period",
+          variant: "destructive",
+        });
+        return;
+      }
 
-      if (error) throw error;
+      try {
+        const { error } = await supabase
+          .from('teachers')
+          .update({ 
+            is_available: false,
+            pause_start_date: bulkPauseStartDate.toISOString(),
+            pause_end_date: bulkPauseEndDate?.toISOString() || null
+          })
+          .in('id', selectedTeachers);
 
-      toast({
-        title: "Success",
-        description: `${selectedTeachers.length} staff member(s) ${bulkAction === 'activate' ? 'activated' : 'paused'} successfully`,
-      });
+        if (error) throw error;
 
-      setSelectedTeachers([]);
-      setShowBulkDialog(false);
-      fetchTeachers();
-    } catch (error) {
-      console.error('Error performing bulk action:', error);
-      toast({
-        title: "Error",
-        description: "Failed to perform bulk action",
-        variant: "destructive",
-      });
+        toast({
+          title: "Success",
+          description: `${selectedTeachers.length} staff member(s) paused successfully`,
+        });
+
+        setSelectedTeachers([]);
+        setShowBulkDialog(false);
+        setBulkPauseStartDate(undefined);
+        setBulkPauseEndDate(undefined);
+        fetchTeachers();
+      } catch (error) {
+        console.error('Error performing bulk pause:', error);
+        toast({
+          title: "Error",
+          description: "Failed to perform bulk pause",
+          variant: "destructive",
+        });
+      }
+    } else {
+      // Activate (remove pause dates)
+      try {
+        const { error } = await supabase
+          .from('teachers')
+          .update({ 
+            is_available: true,
+            pause_start_date: null,
+            pause_end_date: null
+          })
+          .in('id', selectedTeachers);
+
+        if (error) throw error;
+
+        toast({
+          title: "Success",
+          description: `${selectedTeachers.length} staff member(s) activated successfully`,
+        });
+
+        setSelectedTeachers([]);
+        setShowBulkDialog(false);
+        fetchTeachers();
+      } catch (error) {
+        console.error('Error performing bulk activation:', error);
+        toast({
+          title: "Error",
+          description: "Failed to perform bulk activation",
+          variant: "destructive",
+        });
+      }
     }
   };
 
@@ -231,12 +345,11 @@ const TeacherManagement: React.FC<TeacherManagementProps> = ({ school }) => {
                   Bulk Actions ({selectedTeachers.length})
                 </Button>
               </DialogTrigger>
-              <DialogContent>
+              <DialogContent className="max-w-md">
                 <DialogHeader>
                   <DialogTitle>Bulk Staff Management</DialogTitle>
                   <DialogDescription>
                     Select an action to apply to {selectedTeachers.length} selected staff member(s).
-                    This is useful for school holidays or temporary suspensions.
                   </DialogDescription>
                 </DialogHeader>
                 <div className="space-y-4">
@@ -252,6 +365,65 @@ const TeacherManagement: React.FC<TeacherManagementProps> = ({ school }) => {
                       </SelectContent>
                     </Select>
                   </div>
+
+                  {bulkAction === 'pause' && (
+                    <>
+                      <div>
+                        <Label>Pause Start Date *</Label>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <Button
+                              variant="outline"
+                              className={cn(
+                                "w-full justify-start text-left font-normal",
+                                !bulkPauseStartDate && "text-muted-foreground"
+                              )}
+                            >
+                              <Calendar className="mr-2 h-4 w-4" />
+                              {bulkPauseStartDate ? format(bulkPauseStartDate, "PPP") : "Select start date"}
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0" align="start">
+                            <CalendarComponent
+                              mode="single"
+                              selected={bulkPauseStartDate}
+                              onSelect={setBulkPauseStartDate}
+                              initialFocus
+                              className="pointer-events-auto"
+                            />
+                          </PopoverContent>
+                        </Popover>
+                      </div>
+
+                      <div>
+                        <Label>Pause End Date (Optional)</Label>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <Button
+                              variant="outline"
+                              className={cn(
+                                "w-full justify-start text-left font-normal",
+                                !bulkPauseEndDate && "text-muted-foreground"
+                              )}
+                            >
+                              <Calendar className="mr-2 h-4 w-4" />
+                              {bulkPauseEndDate ? format(bulkPauseEndDate, "PPP") : "Select end date (optional)"}
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0" align="start">
+                            <CalendarComponent
+                              mode="single"
+                              selected={bulkPauseEndDate}
+                              onSelect={setBulkPauseEndDate}
+                              disabled={(date) => bulkPauseStartDate ? date < bulkPauseStartDate : false}
+                              initialFocus
+                              className="pointer-events-auto"
+                            />
+                          </PopoverContent>
+                        </Popover>
+                      </div>
+                    </>
+                  )}
                 </div>
                 <DialogFooter>
                   <Button variant="outline" onClick={() => setShowBulkDialog(false)}>
@@ -270,6 +442,82 @@ const TeacherManagement: React.FC<TeacherManagementProps> = ({ school }) => {
           </div>
         </CardHeader>
         <CardContent>
+          {/* Individual Pause Dialog */}
+          <Dialog open={showIndividualPauseDialog} onOpenChange={setShowIndividualPauseDialog}>
+            <DialogContent className="max-w-md">
+              <DialogHeader>
+                <DialogTitle>Pause Staff Member</DialogTitle>
+                <DialogDescription>
+                  Set the pause period for this staff member.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div>
+                  <Label>Pause Start Date *</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          "w-full justify-start text-left font-normal",
+                          !pauseStartDate && "text-muted-foreground"
+                        )}
+                      >
+                        <Calendar className="mr-2 h-4 w-4" />
+                        {pauseStartDate ? format(pauseStartDate, "PPP") : "Select start date"}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <CalendarComponent
+                        mode="single"
+                        selected={pauseStartDate}
+                        onSelect={setPauseStartDate}
+                        initialFocus
+                        className="pointer-events-auto"
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+
+                <div>
+                  <Label>Pause End Date (Optional)</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          "w-full justify-start text-left font-normal",
+                          !pauseEndDate && "text-muted-foreground"
+                        )}
+                      >
+                        <Calendar className="mr-2 h-4 w-4" />
+                        {pauseEndDate ? format(pauseEndDate, "PPP") : "Select end date (optional)"}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <CalendarComponent
+                        mode="single"
+                        selected={pauseEndDate}
+                        onSelect={setPauseEndDate}
+                        disabled={(date) => pauseStartDate ? date < pauseStartDate : false}
+                        initialFocus
+                        className="pointer-events-auto"
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setShowIndividualPauseDialog(false)}>
+                  Cancel
+                </Button>
+                <Button onClick={handleIndividualPause}>
+                  Pause Staff Member
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+
           {showAddForm && (
             <form onSubmit={handleAddTeacher} className="space-y-4 mb-6 p-4 border rounded-lg">
               <div className="grid grid-cols-2 gap-4">
@@ -350,7 +598,13 @@ const TeacherManagement: React.FC<TeacherManagementProps> = ({ school }) => {
                 <div className="flex items-center gap-2 pb-2 border-b">
                   <Checkbox
                     checked={selectedTeachers.length === teachers.length}
-                    onCheckedChange={selectAllTeachers}
+                    onCheckedChange={() => {
+                      if (selectedTeachers.length === teachers.length) {
+                        setSelectedTeachers([]);
+                      } else {
+                        setSelectedTeachers(teachers.map(t => t.id));
+                      }
+                    }}
                   />
                   <span className="text-sm text-muted-foreground">
                     {selectedTeachers.length === teachers.length ? 'Deselect All' : 'Select All'}
@@ -361,7 +615,13 @@ const TeacherManagement: React.FC<TeacherManagementProps> = ({ school }) => {
                     <div className="flex items-center gap-3">
                       <Checkbox
                         checked={selectedTeachers.includes(teacher.id)}
-                        onCheckedChange={() => toggleSelectTeacher(teacher.id)}
+                        onCheckedChange={() => {
+                          setSelectedTeachers(prev => 
+                            prev.includes(teacher.id) 
+                              ? prev.filter(id => id !== teacher.id)
+                              : [...prev, teacher.id]
+                          );
+                        }}
                       />
                       <div>
                         <h4 className="font-medium">{teacher.name}</h4>
@@ -382,6 +642,12 @@ const TeacherManagement: React.FC<TeacherManagementProps> = ({ school }) => {
                           }`}>
                             {teacher.is_available ? 'Active' : 'Paused'}
                           </span>
+                          {!teacher.is_available && teacher.pause_start_date && (
+                            <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded">
+                              {format(new Date(teacher.pause_start_date), "MMM d")}
+                              {teacher.pause_end_date && ` - ${format(new Date(teacher.pause_end_date), "MMM d")}`}
+                            </span>
+                          )}
                         </div>
                       </div>
                     </div>
