@@ -1,9 +1,9 @@
+
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Settings, CreditCard, School, Users, Calendar, CheckCircle } from 'lucide-react';
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -52,44 +52,60 @@ const SchoolSettings: React.FC<SchoolSettingsProps> = ({ teacher }) => {
   const handleManageSubscription = async () => {
     setIsLoading(true);
     try {
-      console.log('Attempting to access customer portal for:', teacher.email);
+      console.log('Attempting to access customer portal for teacher:', teacher);
 
-      // Create a session token for additional security
-      const sessionToken = btoa(JSON.stringify({
-        teacherId: teacher.id,
+      // Validate required teacher data
+      if (!teacher.id || !teacher.email || !teacher.school) {
+        throw new Error("Missing teacher information. Please log in again.");
+      }
+
+      if (teacher.role !== 'admin') {
+        throw new Error("Only administrators can manage subscriptions.");
+      }
+
+      // Prepare request data
+      const requestData = {
         email: teacher.email,
-        timestamp: Date.now()
-      }));
+        school: teacher.school,
+        teacherId: teacher.id
+      };
+
+      console.log('Sending request to customer portal with data:', requestData);
 
       const { data, error } = await supabase.functions.invoke('customer-portal', {
-        body: { 
-          school: teacher.school,
-          email: teacher.email,
-          teacherId: teacher.id
-        },
+        body: requestData,
         headers: {
-          'Content-Type': 'application/json',
-          'x-teacher-session': sessionToken
+          'Content-Type': 'application/json'
         }
       });
+
+      console.log('Customer portal response:', { data, error });
 
       if (error) {
         console.error('Function invocation error:', error);
         throw new Error(error.message || "Failed to access subscription management");
       }
 
-      if (data?.url) {
-        console.log('Redirecting to customer portal:', data.url);
-        window.open(data.url, '_blank');
-      } else {
-        console.error('No URL returned from customer portal');
+      if (!data || !data.url) {
+        console.error('No URL returned from customer portal:', data);
         throw new Error("Failed to get subscription management URL");
       }
+
+      console.log('Opening customer portal:', data.url);
+      
+      // Open in new tab for better user experience
+      window.open(data.url, '_blank');
+      
+      toast({
+        title: "Success",
+        description: "Opening subscription management portal...",
+      });
+      
     } catch (error) {
       console.error('Error accessing customer portal:', error);
       toast({
         title: "Error",
-        description: error.message || "Failed to access subscription management. Please try again.",
+        description: error.message || "Failed to access subscription management. Please try again or contact support.",
         variant: "destructive",
       });
     } finally {
@@ -153,13 +169,20 @@ const SchoolSettings: React.FC<SchoolSettingsProps> = ({ teacher }) => {
             ) : (
               <p className="text-sm text-gray-500">No active subscription found</p>
             )}
-            <Button 
-              onClick={handleManageSubscription}
-              disabled={isLoading}
-              className="w-full bg-brand-orange hover:bg-brand-orange/90"
-            >
-              {isLoading ? 'Loading...' : 'Manage Subscription'}
-            </Button>
+            
+            {teacher.role === 'admin' ? (
+              <Button 
+                onClick={handleManageSubscription}
+                disabled={isLoading}
+                className="w-full bg-brand-orange hover:bg-brand-orange/90"
+              >
+                {isLoading ? 'Loading...' : 'Manage Subscription'}
+              </Button>
+            ) : (
+              <div className="text-sm text-gray-500 text-center p-3 bg-gray-50 rounded-lg">
+                Only administrators can manage subscriptions
+              </div>
+            )}
           </CardContent>
         </Card>
 

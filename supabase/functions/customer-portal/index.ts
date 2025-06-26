@@ -14,6 +14,8 @@ serve(async (req) => {
   }
 
   try {
+    console.log("Customer portal function started");
+
     const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
       apiVersion: "2023-10-16",
     });
@@ -25,18 +27,30 @@ serve(async (req) => {
       { auth: { persistSession: false } }
     );
 
-    // Get the request body and validate required fields
-    const { email, school, teacherId } = await req.json();
+    // Parse request body with error handling
+    let requestBody;
+    try {
+      const bodyText = await req.text();
+      console.log("Raw request body:", bodyText);
+      
+      if (!bodyText.trim()) {
+        throw new Error("Empty request body");
+      }
+      
+      requestBody = JSON.parse(bodyText);
+    } catch (parseError) {
+      console.error("JSON parsing error:", parseError);
+      throw new Error("Invalid JSON in request body");
+    }
+
+    const { email, school, teacherId } = requestBody;
     
     if (!email || !school || !teacherId) {
-      console.error("Missing required fields in request body");
+      console.error("Missing required fields:", { email: !!email, school: !!school, teacherId: !!teacherId });
       throw new Error("Email, school, and teacher ID are required");
     }
 
-    // Get the teacher session token from headers for additional verification
-    const teacherSessionHeader = req.headers.get("x-teacher-session");
-    
-    console.log("Creating customer portal for teacher:", email, "School:", school);
+    console.log("Processing customer portal request for:", email, "School:", school, "Teacher ID:", teacherId);
 
     // Verify teacher exists and matches the provided details
     const { data: teacherData, error: teacherError } = await supabaseAdmin
@@ -72,7 +86,7 @@ serve(async (req) => {
 
     // Additional check: ensure teacher has admin role for subscription management
     if (teacherData.role !== 'admin') {
-      console.error("Teacher does not have admin role:", teacherData.email);
+      console.error("Teacher does not have admin role:", teacherData.email, "Role:", teacherData.role);
       
       // Log unauthorized access attempt
       await supabaseAdmin
@@ -93,7 +107,7 @@ serve(async (req) => {
       throw new Error("Insufficient permissions. Admin role required.");
     }
 
-    console.log("Teacher verified with admin role:", teacherData.email, "School:", teacherData.school);
+    console.log("Teacher verified successfully:", teacherData.email, "School:", teacherData.school);
 
     // Find Stripe customer by email
     const customers = await stripe.customers.list({
@@ -103,7 +117,7 @@ serve(async (req) => {
 
     if (customers.data.length === 0) {
       console.error("No Stripe customer found for email:", email);
-      throw new Error("No Stripe customer found");
+      throw new Error("No Stripe customer found. Please contact support.");
     }
 
     const customerId = customers.data[0].id;
@@ -125,13 +139,18 @@ serve(async (req) => {
         }
       });
 
-    // Create customer portal session
+    // Create customer portal session with proper return URL
+    const origin = req.headers.get("origin") || "https://lessonslearnt.eu";
+    const returnUrl = `${origin}/admin-dashboard?tab=settings`;
+    
+    console.log("Creating portal session with return URL:", returnUrl);
+
     const session = await stripe.billingPortal.sessions.create({
       customer: customerId,
-      return_url: `${req.headers.get("origin")}/admin-dashboard?tab=settings`,
+      return_url: returnUrl,
     });
 
-    console.log("Customer portal session created:", session.id);
+    console.log("Customer portal session created successfully:", session.id);
 
     return new Response(JSON.stringify({ url: session.url }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -139,7 +158,14 @@ serve(async (req) => {
     });
   } catch (error) {
     console.error("Customer portal error:", error);
-    return new Response(JSON.stringify({ error: error.message }), {
+    
+    // Return a proper error response
+    const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
+    
+    return new Response(JSON.stringify({ 
+      error: errorMessage,
+      details: "Please check the server logs for more information"
+    }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 500,
     });
