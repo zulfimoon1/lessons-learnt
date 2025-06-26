@@ -191,28 +191,37 @@ class SecurePlatformAdminService {
     status: string;
     description: string;
   }) {
-    console.log('🔧 Creating transaction with RPC function approach');
+    console.log('🔧 Creating transaction with enhanced context setting');
+    
+    // Set context for maximum reliability
+    await this.setPlatformAdminContext(adminEmail);
+    
+    // Wait a moment for context to be fully applied
+    await new Promise(resolve => setTimeout(resolve, 200));
     
     try {
-      console.log('💳 Creating transaction via RPC:', transactionData.school_name);
+      console.log('💳 Inserting transaction:', transactionData.school_name);
       
-      // Use the platform_admin_create_transaction RPC function directly
-      const { data, error } = await supabase.rpc('platform_admin_create_transaction', {
-        admin_email_param: adminEmail,
-        school_name_param: transactionData.school_name,
-        amount_param: Math.round(parseFloat(transactionData.amount) * 100),
-        currency_param: transactionData.currency,
-        transaction_type_param: transactionData.transaction_type,
-        status_param: transactionData.status,
-        description_param: transactionData.description
-      });
+      // Direct insert with enhanced admin context
+      const { data, error } = await supabase
+        .from('transactions')
+        .insert({
+          school_name: transactionData.school_name,
+          amount: Math.round(parseFloat(transactionData.amount) * 100),
+          currency: transactionData.currency,
+          transaction_type: transactionData.transaction_type,
+          status: transactionData.status,
+          description: transactionData.description
+        })
+        .select()
+        .single();
 
       if (error) {
-        console.error('❌ RPC transaction creation failed:', error);
+        console.error('❌ Transaction creation failed:', error);
         throw error;
       }
       
-      console.log('✅ Transaction created successfully via RPC:', data.id);
+      console.log('✅ Transaction created successfully:', data.id);
       return data;
     } catch (error) {
       console.error('Error creating transaction:', error);
