@@ -35,7 +35,7 @@ export const VoiceInputToggle: React.FC<VoiceInputToggleProps> = ({
       const validation = voiceService.validateAudioBlob(audioBlob);
       if (!validation.valid) {
         toast({
-          title: "Invalid recording",
+          title: "Oops! Something went wrong with your recording",
           description: validation.error,
           variant: "destructive"
         });
@@ -50,8 +50,8 @@ export const VoiceInputToggle: React.FC<VoiceInputToggleProps> = ({
       console.log('VoiceInputToggle: Voice processing completed:', result);
       
       toast({
-        title: "Voice recording saved",
-        description: "Your voice note has been recorded successfully.",
+        title: "Got it! Your voice message is saved",
+        description: "We've recorded what you said successfully.",
       });
 
       onVoiceComplete(result.audioUrl, result.transcription, result.duration);
@@ -60,17 +60,17 @@ export const VoiceInputToggle: React.FC<VoiceInputToggleProps> = ({
     } catch (error) {
       console.error('VoiceInputToggle: Error processing voice:', error);
       
-      let errorMessage = "Failed to process your voice recording. Please try again.";
+      let errorMessage = "Something went wrong with your recording. Want to try again?";
       if (error instanceof Error) {
         if (error.message.includes('storage')) {
-          errorMessage = "Storage error. Please try again in a moment.";
+          errorMessage = "Having trouble saving your recording. Let's try again in a moment.";
         } else if (error.message.includes('network') || error.message.includes('fetch')) {
-          errorMessage = "Network error. Please check your connection and try again.";
+          errorMessage = "Check your internet connection and try recording again.";
         }
       }
       
       toast({
-        title: "Recording failed",
+        title: "Recording didn't work",
         description: errorMessage,
         variant: "destructive"
       });
@@ -99,7 +99,7 @@ export const VoiceInputToggle: React.FC<VoiceInputToggleProps> = ({
             disabled={disabled || isProcessing}
           >
             <KeyboardIcon className="w-4 h-4 mr-2" />
-            Type Response
+            Type My Answer
           </Button>
         )}
         
@@ -111,7 +111,7 @@ export const VoiceInputToggle: React.FC<VoiceInputToggleProps> = ({
           className="bg-purple-600 hover:bg-purple-700 text-white"
         >
           <MicIcon className="w-4 h-4 mr-2" />
-          Voice Note
+          Record My Voice
         </Button>
       </div>
 
@@ -130,7 +130,7 @@ export const VoiceInputToggle: React.FC<VoiceInputToggleProps> = ({
         <div className="text-center py-2">
           <div className="inline-flex items-center gap-2 text-sm text-purple-600">
             <div className="w-4 h-4 border-2 border-purple-600 border-t-transparent rounded-full animate-spin" />
-            Saving your voice note...
+            Saving what you said...
           </div>
         </div>
       )}
