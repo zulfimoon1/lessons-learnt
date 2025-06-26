@@ -30,14 +30,17 @@ const AIStudentInsights: React.FC<AIStudentInsightsProps> = ({ studentId, school
     error
   } = useAdvancedAI(studentId);
 
-  console.log('AIStudentInsights: State check', { 
+  console.log('AIStudentInsights: Current state:', { 
     isExpanded, 
     hasProfile, 
     hasRecommendations, 
     hasInsights, 
     isAnyLoading,
     error,
-    studentId 
+    studentId,
+    personalizationProfile: !!personalizationProfile,
+    contentRecommendations: !!contentRecommendations,
+    predictiveInsights: !!predictiveInsights
   });
 
   const handleGenerateInsights = async () => {
@@ -46,19 +49,19 @@ const AIStudentInsights: React.FC<AIStudentInsightsProps> = ({ studentId, school
       if (!hasProfile) {
         console.log('AIStudentInsights: Generating personalization profile...');
         const profileResult = await generatePersonalizationProfile(studentId);
-        console.log('AIStudentInsights: Profile generation result:', profileResult);
+        console.log('AIStudentInsights: Profile generation completed:', { success: !!profileResult, error: !profileResult });
       }
       if (!hasRecommendations) {
         console.log('AIStudentInsights: Generating content recommendations...');
         const recsResult = await generateContentRecommendations(studentId);
-        console.log('AIStudentInsights: Recommendations generation result:', recsResult);
+        console.log('AIStudentInsights: Recommendations generation completed:', { success: !!recsResult, error: !recsResult });
       }
       if (!hasInsights) {
         console.log('AIStudentInsights: Generating predictive insights...');
         const insightsResult = await generatePredictiveInsights("month");
-        console.log('AIStudentInsights: Insights generation result:', insightsResult);
+        console.log('AIStudentInsights: Insights generation completed:', { success: !!insightsResult, error: !insightsResult });
       }
-      console.log('AIStudentInsights: All AI insights generated successfully');
+      console.log('AIStudentInsights: All AI insights generation process completed');
     } catch (error) {
       console.error('AIStudentInsights: Error during insight generation:', error);
     }
@@ -123,6 +126,13 @@ const AIStudentInsights: React.FC<AIStudentInsightsProps> = ({ studentId, school
           <div className="bg-red-50 p-3 rounded-lg border border-red-200 mb-4">
             <p className="text-sm text-red-800 font-medium">AI Service Error</p>
             <p className="text-xs text-red-700">{error}</p>
+            <Button 
+              onClick={handleGenerateInsights}
+              size="sm"
+              className="mt-2 bg-red-600 hover:bg-red-700 text-white"
+            >
+              Retry Generation
+            </Button>
           </div>
         )}
         
@@ -167,6 +177,7 @@ const AIStudentInsights: React.FC<AIStudentInsightsProps> = ({ studentId, school
                 </div>
                 <h3 className="font-semibold text-blue-900">{t('ai.learningProfile') || 'Learning Profile'}</h3>
                 {hasProfile && <Badge className="bg-green-100 text-green-800 border-green-300">{t('common.ready') || 'Ready'}</Badge>}
+                {isAnyLoading && <Badge className="bg-yellow-100 text-yellow-800 border-yellow-300">Generating...</Badge>}
               </div>
               <div className="space-y-2">
                 <p className="text-sm text-gray-800 font-medium">
@@ -186,6 +197,7 @@ const AIStudentInsights: React.FC<AIStudentInsightsProps> = ({ studentId, school
                 </div>
                 <h3 className="font-semibold text-orange-900">{t('ai.smartRecommendations') || 'Smart Recommendations'}</h3>
                 {hasRecommendations && <Badge className="bg-green-100 text-green-800 border-green-300">{t('common.ready') || 'Ready'}</Badge>}
+                {isAnyLoading && <Badge className="bg-yellow-100 text-yellow-800 border-yellow-300">Generating...</Badge>}
               </div>
               <div className="space-y-2">
                 {renderContentRecommendations()}
@@ -200,6 +212,7 @@ const AIStudentInsights: React.FC<AIStudentInsightsProps> = ({ studentId, school
                 </div>
                 <h3 className="font-semibold text-purple-900">{t('ai.wellnessInsights') || 'Wellness Insights'}</h3>
                 {hasInsights && <Badge className="bg-green-100 text-green-800 border-green-300">{t('common.ready') || 'Ready'}</Badge>}
+                {isAnyLoading && <Badge className="bg-yellow-100 text-yellow-800 border-yellow-300">Generating...</Badge>}
               </div>
               <div className="space-y-2">
                 {(() => {

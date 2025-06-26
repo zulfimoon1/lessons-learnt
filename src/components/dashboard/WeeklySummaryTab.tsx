@@ -24,16 +24,16 @@ const WeeklySummaryTab: React.FC<WeeklySummaryTabProps> = ({ student }) => {
             <div className="bg-orange-100 p-3 rounded-lg border border-orange-200">
               <div className="flex items-center gap-2 mb-1">
                 <div className="w-3 h-3 bg-orange-500 rounded-full"></div>
-                <span className="font-semibold text-orange-800">{t('weeklySummary.emotionalRoute')}</span>
+                <span className="font-semibold text-orange-900">{t('weeklySummary.emotionalRoute')}</span>
               </div>
-              <p className="text-gray-900 text-xs font-semibold">{t('weeklySummary.emotionalDescription')}</p>
+              <p className="text-gray-800 text-xs font-medium">{t('weeklySummary.emotionalDescription')}</p>
             </div>
             <div className="bg-green-100 p-3 rounded-lg border border-green-200">
               <div className="flex items-center gap-2 mb-1">
                 <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                <span className="font-semibold text-green-800">{t('weeklySummary.academicRoute')}</span>
+                <span className="font-semibold text-green-900">{t('weeklySummary.academicRoute')}</span>
               </div>
-              <p className="text-gray-900 text-xs font-semibold">{t('weeklySummary.academicDescription')}</p>
+              <p className="text-gray-800 text-xs font-medium">{t('weeklySummary.academicDescription')}</p>
             </div>
           </div>
         </CardContent>
