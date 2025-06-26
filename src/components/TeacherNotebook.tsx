@@ -57,15 +57,16 @@ const TeacherNotebook = ({ teacher }: TeacherNotebookProps) => {
 
   const loadNotes = async () => {
     try {
+      // Use dynamic query since TypeScript doesn't recognize the new table yet
       const { data, error } = await supabase
-        .from('teacher_notes')
+        .from('teacher_notes' as any)
         .select('*')
         .eq('school', teacher.school)
         .eq('created_by', teacher.id)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setNotes(data || []);
+      setNotes(data as Note[] || []);
     } catch (error) {
       console.error('Error loading notes:', error);
       toast({
@@ -92,12 +93,12 @@ const TeacherNotebook = ({ teacher }: TeacherNotebookProps) => {
 
     try {
       let fileUrl = '';
-      let fileName = '';
+      let uploadedFileName = '';
 
       if (selectedFile) {
         const fileExt = selectedFile.name.split('.').pop();
-        const fileName = `${Date.now()}.${fileExt}`;
-        const filePath = `teacher-notes/${teacher.id}/${fileName}`;
+        const uniqueFileName = `${Date.now()}.${fileExt}`;
+        const filePath = `teacher-notes/${teacher.id}/${uniqueFileName}`;
 
         const { error: uploadError } = await supabase.storage
           .from('teacher-files')
@@ -110,7 +111,7 @@ const TeacherNotebook = ({ teacher }: TeacherNotebookProps) => {
           .getPublicUrl(filePath);
 
         fileUrl = urlData.publicUrl;
-        fileName = selectedFile.name;
+        uploadedFileName = selectedFile.name;
       }
 
       const noteData = {
@@ -118,12 +119,12 @@ const TeacherNotebook = ({ teacher }: TeacherNotebookProps) => {
         school: teacher.school,
         created_by: teacher.id,
         file_url: fileUrl,
-        file_name: fileName
+        file_name: uploadedFileName
       };
 
       if (editingNote) {
         const { error } = await supabase
-          .from('teacher_notes')
+          .from('teacher_notes' as any)
           .update({
             ...noteData,
             updated_at: new Date().toISOString()
@@ -138,7 +139,7 @@ const TeacherNotebook = ({ teacher }: TeacherNotebookProps) => {
         });
       } else {
         const { error } = await supabase
-          .from('teacher_notes')
+          .from('teacher_notes' as any)
           .insert(noteData);
 
         if (error) throw error;
@@ -180,7 +181,7 @@ const TeacherNotebook = ({ teacher }: TeacherNotebookProps) => {
 
     try {
       const { error } = await supabase
-        .from('teacher_notes')
+        .from('teacher_notes' as any)
         .delete()
         .eq('id', id);
 

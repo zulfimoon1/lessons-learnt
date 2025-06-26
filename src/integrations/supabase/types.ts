@@ -674,6 +674,48 @@ export type Database = {
         }
         Relationships: []
       }
+      teacher_notes: {
+        Row: {
+          category: string
+          content: string | null
+          created_at: string
+          created_by: string
+          file_name: string | null
+          file_url: string | null
+          id: string
+          school: string
+          tags: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          category: string
+          content?: string | null
+          created_at?: string
+          created_by: string
+          file_name?: string | null
+          file_url?: string | null
+          id?: string
+          school: string
+          tags?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          content?: string | null
+          created_at?: string
+          created_by?: string
+          file_name?: string | null
+          file_url?: string | null
+          id?: string
+          school?: string
+          tags?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       teacher_profiles: {
         Row: {
           created_at: string | null
