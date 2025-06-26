@@ -19,21 +19,21 @@ const WeeklySummaryTab: React.FC<WeeklySummaryTabProps> = ({ student }) => {
           <CardTitle className="text-blue-800 text-lg">{t('weeklySummary.title')}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
-          <p className="text-blue-700 text-sm">{t('weeklySummary.description')}</p>
+          <p className="text-black text-sm font-medium">{t('weeklySummary.description')}</p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
             <div className="bg-orange-100 p-3 rounded-lg border border-orange-200">
               <div className="flex items-center gap-2 mb-1">
                 <div className="w-3 h-3 bg-orange-500 rounded-full"></div>
                 <span className="font-medium text-orange-800">{t('weeklySummary.emotionalRoute')}</span>
               </div>
-              <p className="text-black text-xs">{t('weeklySummary.emotionalDescription')}</p>
+              <p className="text-black text-xs font-medium">{t('weeklySummary.emotionalDescription')}</p>
             </div>
             <div className="bg-green-100 p-3 rounded-lg border border-green-200">
               <div className="flex items-center gap-2 mb-1">
                 <div className="w-3 h-3 bg-green-500 rounded-full"></div>
                 <span className="font-medium text-green-800">{t('weeklySummary.academicRoute')}</span>
               </div>
-              <p className="text-black text-xs">{t('weeklySummary.academicDescription')}</p>
+              <p className="text-black text-xs font-medium">{t('weeklySummary.academicDescription')}</p>
             </div>
           </div>
         </CardContent>

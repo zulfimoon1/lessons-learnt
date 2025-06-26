@@ -121,64 +121,59 @@ const AIStudentInsights: React.FC<AIStudentInsightsProps> = ({ studentId, school
           </div>
         ) : (
           <div className="space-y-6">
-            {/* Debug info */}
-            <div className="text-xs text-gray-500 mb-4">
-              Debug: Profile: {hasProfile ? 'Yes' : 'No'}, Recommendations: {hasRecommendations ? 'Yes' : 'No'}, Insights: {hasInsights ? 'Yes' : 'No'}
-            </div>
-
-            {/* Personalization Profile - Enhanced Contrast */}
-            <div className="bg-gradient-to-r from-blue-100 to-indigo-100 border-2 border-blue-500 rounded-lg p-4 shadow-md">
+            {/* Personalization Profile */}
+            <div className="bg-white border-2 border-blue-300 rounded-lg p-4 shadow-md">
               <div className="flex items-center gap-3 mb-3">
-                <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-full flex items-center justify-center">
+                <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
                   <TrendingUp className="w-4 h-4 text-white" />
                 </div>
                 <h3 className="font-semibold text-blue-900">{t('ai.learningProfile')}</h3>
-                {hasProfile && <Badge className="bg-blue-200 text-blue-900 border-blue-400">{t('common.ready')}</Badge>}
+                {hasProfile && <Badge className="bg-green-100 text-green-800 border-green-300">{t('common.ready')}</Badge>}
               </div>
               {personalizationProfile ? (
                 <div className="space-y-2">
-                  <p className="text-sm text-blue-800">{personalizationProfile.learning_style || 'Visual learner with strong analytical skills'}</p>
-                  <p className="text-sm text-blue-700">{personalizationProfile.strengths || 'Excels in problem-solving and creative thinking'}</p>
+                  <p className="text-sm text-gray-800">{personalizationProfile.learning_style || 'Visual learner with strong analytical skills'}</p>
+                  <p className="text-sm text-gray-700">{personalizationProfile.strengths || 'Excels in problem-solving and creative thinking'}</p>
                 </div>
               ) : (
                 <div className="space-y-2">
-                  <p className="text-sm text-blue-800">Visual learner with strong analytical skills</p>
-                  <p className="text-sm text-blue-700">Excels in problem-solving and creative thinking</p>
+                  <p className="text-sm text-gray-800">Visual learner with strong analytical skills</p>
+                  <p className="text-sm text-gray-700">Excels in problem-solving and creative thinking</p>
                 </div>
               )}
             </div>
 
-            {/* Content Recommendations - Enhanced Contrast */}
-            <div className="bg-gradient-to-r from-orange-100 to-red-100 border-2 border-orange-500 rounded-lg p-4 shadow-md">
+            {/* Content Recommendations */}
+            <div className="bg-white border-2 border-orange-300 rounded-lg p-4 shadow-md">
               <div className="flex items-center gap-3 mb-3">
-                <div className="w-8 h-8 bg-gradient-to-br from-orange-600 to-red-700 rounded-full flex items-center justify-center">
+                <div className="w-8 h-8 bg-orange-600 rounded-full flex items-center justify-center">
                   <BookOpen className="w-4 h-4 text-white" />
                 </div>
                 <h3 className="font-semibold text-orange-900">{t('ai.smartRecommendations')}</h3>
-                {hasRecommendations && <Badge className="bg-orange-200 text-orange-900 border-orange-400">{t('common.ready')}</Badge>}
+                {hasRecommendations && <Badge className="bg-green-100 text-green-800 border-green-300">{t('common.ready')}</Badge>}
               </div>
               {contentRecommendations && contentRecommendations.length > 0 ? (
                 <div className="space-y-2">
                   {contentRecommendations.slice(0, 2).map((rec: any, index: number) => (
-                    <p key={index} className="text-sm text-orange-800">• {rec.title || rec}</p>
+                    <p key={index} className="text-sm text-gray-800">• {rec.title || rec}</p>
                   ))}
                 </div>
               ) : (
                 <div className="space-y-2">
-                  <p className="text-sm text-orange-800">• Interactive math exercises tailored to your grade level</p>
-                  <p className="text-sm text-orange-800">• Creative writing prompts based on your interests</p>
+                  <p className="text-sm text-gray-800">• Interactive math exercises tailored to your grade level</p>
+                  <p className="text-sm text-gray-800">• Creative writing prompts based on your interests</p>
                 </div>
               )}
             </div>
 
-            {/* Predictive Insights - Enhanced Contrast */}
-            <div className="bg-gradient-to-r from-purple-100 to-pink-100 border-2 border-purple-500 rounded-lg p-4 shadow-md">
+            {/* Predictive Insights */}
+            <div className="bg-white border-2 border-purple-300 rounded-lg p-4 shadow-md">
               <div className="flex items-center gap-3 mb-3">
-                <div className="w-8 h-8 bg-gradient-to-br from-purple-600 to-pink-700 rounded-full flex items-center justify-center">
+                <div className="w-8 h-8 bg-purple-600 rounded-full flex items-center justify-center">
                   <Heart className="w-4 h-4 text-white" />
                 </div>
                 <h3 className="font-semibold text-purple-900">{t('ai.wellnessInsights')}</h3>
-                {hasInsights && <Badge className="bg-purple-200 text-purple-900 border-purple-400">{t('common.ready')}</Badge>}
+                {hasInsights && <Badge className="bg-green-100 text-green-800 border-green-300">{t('common.ready')}</Badge>}
               </div>
               {predictiveInsights ? (
                 <div className="space-y-2">
@@ -186,13 +181,13 @@ const AIStudentInsights: React.FC<AIStudentInsightsProps> = ({ studentId, school
                     const data = getPredictiveInsightsData();
                     return (
                       <>
-                        <p className="text-sm text-purple-800">
+                        <p className="text-sm text-gray-800">
                           {data?.mental_health_score 
                             ? `Wellness Score: ${data.mental_health_score}/10`
                             : 'Wellness Score: 8/10 - You\'re doing great!'
                           }
                         </p>
-                        <p className="text-sm text-purple-700">
+                        <p className="text-sm text-gray-700">
                           {data?.recommendations?.[0] || 'Keep up the positive engagement with your studies'}
                         </p>
                       </>
@@ -201,8 +196,8 @@ const AIStudentInsights: React.FC<AIStudentInsightsProps> = ({ studentId, school
                 </div>
               ) : (
                 <div className="space-y-2">
-                  <p className="text-sm text-purple-800">Wellness Score: 8/10 - You're doing great!</p>
-                  <p className="text-sm text-purple-700">Keep up the positive engagement with your studies</p>
+                  <p className="text-sm text-gray-800">Wellness Score: 8/10 - You're doing great!</p>
+                  <p className="text-sm text-gray-700">Keep up the positive engagement with your studies</p>
                 </div>
               )}
             </div>

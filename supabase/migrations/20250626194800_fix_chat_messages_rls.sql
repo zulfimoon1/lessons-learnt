@@ -3,6 +3,10 @@
 -- First drop any existing restrictive policies
 DROP POLICY IF EXISTS "Users can only see their own messages" ON public.chat_messages;
 DROP POLICY IF EXISTS "Users can insert their own messages" ON public.chat_messages;
+DROP POLICY IF EXISTS "Allow authenticated users to view chat messages" ON public.chat_messages;
+DROP POLICY IF EXISTS "Allow authenticated users to insert chat messages" ON public.chat_messages;
+DROP POLICY IF EXISTS "Allow anonymous chat message viewing" ON public.chat_messages;
+DROP POLICY IF EXISTS "Allow anonymous chat message insertion" ON public.chat_messages;
 
 -- Create permissive policies for chat functionality
 CREATE POLICY "Allow authenticated users to view chat messages"
