@@ -522,6 +522,7 @@ export const enTranslations = {
   'analytics.insights': 'Key Insights',
   'analytics.totalClasses': 'Total Classes',
   'analytics.classesAvailable': 'Classes Available',
+  'analytics.classesCreated': 'Classes Created',
   'analytics.feedbackSubmitted': 'Feedback Submitted',
   'analytics.averageUnderstanding': 'Average Understanding',
   'analytics.improving': 'Improving',
@@ -539,6 +540,12 @@ export const enTranslations = {
   'analytics.feedbackAnalysis': 'Feedback Analysis',
   'analytics.learningOutcomes': 'Learning Outcomes',
   'analytics.studentSatisfaction': 'Student Satisfaction',
+  'analytics.noTeacherData': 'No analytics data available yet. Create some classes and collect feedback!',
+  'analytics.excellent': 'Excellent',
+  'analytics.needsImprovement': 'Needs Improvement',
+  'analytics.averageInterest': 'Average interest level',
+  'analytics.topPerformingClasses': 'Top Performing Classes',
+  'analytics.noTopClasses': 'No class data available yet',
 
   // Chat translations
   'chat.error': 'Failed to send message. Please try again.',
