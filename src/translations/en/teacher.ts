@@ -173,6 +173,7 @@ export const enTeacherTranslations = {
   
   // Dashboard navigation
   'teacher.dashboard': 'Teacher Dashboard',
+  'teacher.schedule': 'Schedule',
   
   // Subscription related
   'teacher.subscriptionDescription': 'Access all teacher features with an active subscription.',

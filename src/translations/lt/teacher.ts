@@ -173,6 +173,7 @@ export const ltTeacherTranslations = {
   
   // Dashboard navigation
   'teacher.dashboard': 'Mokytojo skydelis',
+  'teacher.schedule': 'Tvarkaraštis',
   
   // Subscription related
   'teacher.subscriptionDescription': 'Pasiekite visas mokytojo funkcijas su aktyviu prenumeratos planu.',

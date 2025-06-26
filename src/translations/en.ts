@@ -1,5 +1,3 @@
-
-
 import { enAuthTranslations } from './en/auth';
 import { enTeacherTranslations } from './en/teacher';
 import { enWeeklyTranslations } from './en/weekly';
@@ -124,6 +122,7 @@ export const enTranslations = {
   'ai.identifyingStrengths': 'Identifying your strengths...',
   'ai.analyzingWellness': 'Analyzing your wellness patterns...',
   'ai.generatingWellnessAdvice': 'Generating personalized wellness advice...',
+  'ai.insights': 'AI Insights',
 
   // Mental Health Support - Complete set
   'mentalHealth.loading': 'Loading mental health support...',
@@ -539,6 +538,14 @@ export const enTranslations = {
   'chat.liveChatWithDoctor': 'Live Chat with Doctor',
   'chat.typeMessage': 'Type a message...',
   'chat.send': 'Send',
+
+  // Features - Add missing key
+  'features.mentalHealth.title': 'Mental Health Support',
+
+  // Weekly Summary - Add missing key
+  'weekly.summaries': 'Weekly Summaries',
+  
+  'ai.insights': 'AI Insights',
 
   // Merge all sub-translations
   ...enAuthTranslations,
