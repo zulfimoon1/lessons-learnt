@@ -5,10 +5,14 @@ import { Badge } from "@/components/ui/badge";
 import { BookOpenIcon, UserIcon, BarChart3Icon, HeartIcon, PlayIcon, ShieldCheckIcon, Users, Calendar, MessageSquare, Heart, Gift, ExternalLink } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useNavigate } from "react-router-dom";
+import { useDeviceType } from "@/hooks/use-device";
+import { cn } from "@/lib/utils";
 
 const DemoSection = () => {
   const { t } = useLanguage();
   const navigate = useNavigate();
+  const deviceType = useDeviceType();
+  const isMobile = deviceType === 'mobile';
 
   const handleRegisterNow = () => {
     navigate('/teacher-login?tab=signup');
@@ -129,7 +133,10 @@ const DemoSection = () => {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+        <div className={cn(
+          'items-center',
+          isMobile ? 'grid grid-cols-1 gap-8' : 'grid grid-cols-1 lg:grid-cols-2 gap-12 items-center'
+        )}>
           <div className="space-y-8">
             <div className="flex items-start gap-4">
               <div className="w-12 h-12 bg-brand-teal/20 rounded-lg flex items-center justify-center flex-shrink-0">
@@ -180,45 +187,48 @@ const DemoSection = () => {
             </div>
           </div>
 
-          <div className="bg-brand-gradient-soft rounded-2xl p-8">
-            <Card className="bg-white/90 backdrop-blur-sm border-brand-teal/20">
-              <CardHeader>
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-10 h-10 bg-brand-teal rounded-full flex items-center justify-center">
-                    <HeartIcon className="w-5 h-5 text-white" />
+          {/* Hide this card on mobile as requested */}
+          {!isMobile && (
+            <div className="bg-brand-gradient-soft rounded-2xl p-8">
+              <Card className="bg-white/90 backdrop-blur-sm border-brand-teal/20">
+                <CardHeader>
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-10 h-10 bg-brand-teal rounded-full flex items-center justify-center">
+                      <HeartIcon className="w-5 h-5 text-white" />
+                    </div>
+                    <div>
+                      <CardTitle className="text-lg text-brand-dark">{t('demo.demoFeatures')}</CardTitle>
+                      <CardDescription className="text-gray-600">{t('demo.tryBeforeCommit')}</CardDescription>
+                    </div>
                   </div>
-                  <div>
-                    <CardTitle className="text-lg text-brand-dark">{t('demo.demoFeatures')}</CardTitle>
-                    <CardDescription className="text-gray-600">{t('demo.tryBeforeCommit')}</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="flex items-center gap-3">
+                    <ShieldCheckIcon className="w-5 h-5 text-brand-teal" />
+                    <span className="text-brand-dark">{t('demo.noRegistrationRequired')}</span>
                   </div>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center gap-3">
-                  <ShieldCheckIcon className="w-5 h-5 text-brand-teal" />
-                  <span className="text-brand-dark">{t('demo.noRegistrationRequired')}</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <ShieldCheckIcon className="w-5 h-5 text-brand-teal" />
-                  <span className="text-brand-dark">{t('demo.fullFeatureAccess')}</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <ShieldCheckIcon className="w-5 h-5 text-brand-teal" />
-                  <span className="text-brand-dark">{t('demo.sampleDataIncluded')}</span>
-                </div>
-                
-                <div className="pt-4">
-                  <Button 
-                    className="w-full bg-brand-orange hover:bg-brand-orange/90 text-white"
-                    onClick={() => window.open('/demo', '_blank')}
-                  >
-                    <PlayIcon className="w-4 h-4 mr-2" />
-                    {t('demo.enterDemo')}
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+                  <div className="flex items-center gap-3">
+                    <ShieldCheckIcon className="w-5 h-5 text-brand-teal" />
+                    <span className="text-brand-dark">{t('demo.fullFeatureAccess')}</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <ShieldCheckIcon className="w-5 h-5 text-brand-teal" />
+                    <span className="text-brand-dark">{t('demo.sampleDataIncluded')}</span>
+                  </div>
+                  
+                  <div className="pt-4">
+                    <Button 
+                      className="w-full bg-brand-orange hover:bg-brand-orange/90 text-white"
+                      onClick={() => window.open('/demo', '_blank')}
+                    >
+                      <PlayIcon className="w-4 h-4 mr-2" />
+                      {t('demo.enterDemo')}
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          )}
         </div>
       </div>
     </section>
