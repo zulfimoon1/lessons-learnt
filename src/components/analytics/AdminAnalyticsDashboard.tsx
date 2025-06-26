@@ -7,6 +7,9 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { School, Users, BookOpen, TrendingUp, AlertTriangle, Heart } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { supabase } from '@/integrations/supabase/client';
+import { useDeviceType } from '@/hooks/use-device';
+import { cn } from '@/lib/utils';
+import EnhancedLazyLoader from '@/components/performance/EnhancedLazyLoader';
 
 interface AdminAnalyticsProps {
   school: string;
@@ -47,6 +50,9 @@ const AdminAnalyticsDashboard: React.FC<AdminAnalyticsProps> = ({ school }) => {
   const [analytics, setAnalytics] = useState<AdminAnalyticsData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedTimeframe, setSelectedTimeframe] = useState('month');
+  const deviceType = useDeviceType();
+  const isMobile = deviceType === 'mobile';
+  const isTablet = deviceType === 'tablet';
 
   useEffect(() => {
     const fetchAdminAnalytics = async () => {
@@ -192,11 +198,17 @@ const AdminAnalyticsDashboard: React.FC<AdminAnalyticsProps> = ({ school }) => {
 
   if (isLoading) {
     return (
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+      <div className={cn(
+        'grid gap-6',
+        isMobile ? 'grid-cols-1' : isTablet ? 'grid-cols-2' : 'md:grid-cols-2 lg:grid-cols-3'
+      )}>
         {[...Array(6)].map((_, i) => (
           <Card key={i} className="animate-pulse">
-            <CardContent className="p-6">
-              <div className="h-16 bg-gray-200 rounded"></div>
+            <CardContent className={cn(
+              'flex items-center justify-center h-full',
+              isMobile ? 'p-4' : 'p-6'
+            )}>
+              <div className="h-16 bg-gray-200 rounded w-full"></div>
             </CardContent>
           </Card>
         ))}
@@ -207,7 +219,10 @@ const AdminAnalyticsDashboard: React.FC<AdminAnalyticsProps> = ({ school }) => {
   if (!analytics) {
     return (
       <Card>
-        <CardContent className="p-6 text-center">
+        <CardContent className={cn(
+          'text-center',
+          isMobile ? 'p-4' : 'p-6'
+        )}>
           <p className="text-muted-foreground">
             {t('analytics.noAdminData') || 'No analytics data available for this school yet.'}
           </p>
@@ -221,12 +236,21 @@ const AdminAnalyticsDashboard: React.FC<AdminAnalyticsProps> = ({ school }) => {
   return (
     <div className="space-y-6">
       {/* Header with timeframe selector */}
-      <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold">
+      <div className={cn(
+        'flex justify-between items-center',
+        isMobile && 'flex-col gap-4'
+      )}>
+        <h2 className={cn(
+          'font-bold',
+          isMobile ? 'text-xl' : 'text-2xl'
+        )}>
           {t('analytics.schoolAnalytics') || 'School Analytics Dashboard'}
         </h2>
         <Select value={selectedTimeframe} onValueChange={setSelectedTimeframe}>
-          <SelectTrigger className="w-32">
+          <SelectTrigger className={cn(
+            'w-32',
+            isMobile && 'w-full'
+          )}>
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -238,154 +262,183 @@ const AdminAnalyticsDashboard: React.FC<AdminAnalyticsProps> = ({ school }) => {
       </div>
 
       {/* Overview Cards */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              {t('analytics.totalStudents') || 'Total Students'}
-            </CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{analytics.totalStudents}</div>
-          </CardContent>
-        </Card>
+      <EnhancedLazyLoader minHeight={isMobile ? "300px" : "120px"}>
+        <div className={cn(
+          'grid gap-4',
+          isMobile ? 'grid-cols-1' : isTablet ? 'grid-cols-2 lg:grid-cols-3' : 'md:grid-cols-2 lg:grid-cols-5'
+        )}>
+          <Card>
+            <CardHeader className={cn(
+              'flex flex-row items-center justify-between space-y-0',
+              isMobile ? 'pb-1' : 'pb-2'
+            )}>
+              <CardTitle className={cn(
+                'font-medium',
+                isMobile ? 'text-sm' : 'text-base'
+              )}>
+                {t('analytics.totalStudents') || 'Total Students'}
+              </CardTitle>
+              <Users className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className={cn(
+                'font-bold',
+                isMobile ? 'text-xl' : 'text-2xl'
+              )}>{analytics.totalStudents}</div>
+            </CardContent>
+          </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              {t('analytics.totalTeachers') || 'Total Teachers'}
-            </CardTitle>
-            <School className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{analytics.totalTeachers}</div>
-          </CardContent>
-        </Card>
+          <Card>
+            <CardHeader className={cn(
+              'flex flex-row items-center justify-between space-y-0',
+              isMobile ? 'pb-1' : 'pb-2'
+            )}>
+              <CardTitle className={cn(
+                'font-medium',
+                isMobile ? 'text-sm' : 'text-base'
+              )}>
+                {t('analytics.totalTeachers') || 'Total Teachers'}
+              </CardTitle>
+              <School className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className={cn(
+                'font-bold',
+                isMobile ? 'text-xl' : 'text-2xl'
+              )}>{analytics.totalTeachers}</div>
+            </CardContent>
+          </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              {t('analytics.totalClasses') || 'Total Classes'}
-            </CardTitle>
-            <BookOpen className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{analytics.totalClasses}</div>
-          </CardContent>
-        </Card>
+          <Card>
+            <CardHeader className={cn(
+              'flex flex-row items-center justify-between space-y-0',
+              isMobile ? 'pb-1' : 'pb-2'
+            )}>
+              <CardTitle className={cn(
+                'font-medium',
+                isMobile ? 'text-sm' : 'text-base'
+              )}>
+                {t('analytics.totalClasses') || 'Total Classes'}
+              </CardTitle>
+              <BookOpen className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className={cn(
+                'font-bold',
+                isMobile ? 'text-xl' : 'text-2xl'
+              )}>{analytics.totalClasses}</div>
+            </CardContent>
+          </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              {t('analytics.responseRate') || 'Response Rate'}
-            </CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{analytics.responseRate}%</div>
-          </CardContent>
-        </Card>
+          <Card>
+            <CardHeader className={cn(
+              'flex flex-row items-center justify-between space-y-0',
+              isMobile ? 'pb-1' : 'pb-2'
+            )}>
+              <CardTitle className={cn(
+                'font-medium',
+                isMobile ? 'text-sm' : 'text-base'
+              )}>
+                {t('analytics.responseRate') || 'Response Rate'}
+              </CardTitle>
+              <TrendingUp className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className={cn(
+                'font-bold',
+                isMobile ? 'text-xl' : 'text-2xl'
+              )}>{analytics.responseRate}%</div>
+            </CardContent>
+          </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              {t('analytics.mentalHealthAlerts') || 'Mental Health Alerts'}
-            </CardTitle>
-            <AlertTriangle className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{analytics.mentalHealthAlerts}</div>
-            {analytics.mentalHealthAlerts > 0 && (
-              <Badge variant="destructive" className="mt-1">
-                {t('analytics.needsAttention') || 'Needs Attention'}
-              </Badge>
-            )}
-          </CardContent>
-        </Card>
-      </div>
+          <Card>
+            <CardHeader className={cn(
+              'flex flex-row items-center justify-between space-y-0',
+              isMobile ? 'pb-1' : 'pb-2'
+            )}>
+              <CardTitle className={cn(
+                'font-medium',
+                isMobile ? 'text-sm' : 'text-base'
+              )}>
+                {t('analytics.mentalHealthAlerts') || 'Mental Health Alerts'}
+              </CardTitle>
+              <AlertTriangle className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className={cn(
+                'font-bold',
+                isMobile ? 'text-xl' : 'text-2xl'
+              )}>{analytics.mentalHealthAlerts}</div>
+              {analytics.mentalHealthAlerts > 0 && (
+                <Badge variant="destructive" className="mt-1">
+                  {t('analytics.needsAttention') || 'Needs Attention'}
+                </Badge>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      </EnhancedLazyLoader>
 
       {/* Charts Section */}
-      <div className="grid gap-6 md:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle>
-              {t('analytics.gradeDistribution') || 'Grade Distribution'}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={analytics.gradeDistribution}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="grade" />
-                <YAxis />
-                <Tooltip />
-                <Bar dataKey="studentCount" fill="#8884d8" name="Students" />
-              </BarChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
+      <div className={cn(
+        'grid gap-6',
+        isMobile ? 'grid-cols-1' : 'md:grid-cols-2'
+      )}>
+        <EnhancedLazyLoader minHeight={isMobile ? "250px" : "300px"}>
+          <Card>
+            <CardHeader>
+              <CardTitle className={isMobile ? 'text-base' : 'text-lg'}>
+                {t('analytics.gradeDistribution') || 'Grade Distribution'}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={isMobile ? 200 : 300}>
+                <BarChart data={analytics.gradeDistribution}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis 
+                    dataKey="grade" 
+                    fontSize={isMobile ? 10 : 12}
+                  />
+                  <YAxis fontSize={isMobile ? 10 : 12} />
+                  <Tooltip />
+                  <Bar dataKey="studentCount" fill="#8884d8" name="Students" />
+                </BarChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+        </EnhancedLazyLoader>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>
-              {t('analytics.subjectPerformance') || 'Subject Performance'}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <PieChart>
-                <Pie
-                  data={analytics.subjectPerformance}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={false}
-                  label={({ subject, avgRating }) => `${subject}: ${avgRating.toFixed(1)}`}
-                  outerRadius={80}
-                  fill="#8884d8"
-                  dataKey="avgRating"
-                >
-                  {analytics.subjectPerformance.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip />
-              </PieChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
+        <EnhancedLazyLoader minHeight={isMobile ? "250px" : "300px"}>
+          <Card>
+            <CardHeader>
+              <CardTitle className={isMobile ? 'text-base' : 'text-lg'}>
+                {t('analytics.subjectPerformance') || 'Subject Performance'}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={isMobile ? 200 : 300}>
+                <PieChart>
+                  <Pie
+                    data={analytics.subjectPerformance}
+                    cx="50%"
+                    cy="50%"
+                    labelLine={false}
+                    label={isMobile ? false : ({ subject, avgRating }) => `${subject}: ${avgRating.toFixed(1)}`}
+                    outerRadius={isMobile ? 60 : 80}
+                    fill="#8884d8"
+                    dataKey="avgRating"
+                  >
+                    {analytics.subjectPerformance.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                </PieChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+        </EnhancedLazyLoader>
       </div>
-
-      {/* Teacher Performance Table */}
-      <Card>
-        <CardHeader>
-          <CardTitle>
-            {t('analytics.teacherPerformance') || 'Teacher Performance'}
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-3">
-            {analytics.teacherPerformance.map((teacher, index) => (
-              <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
-                <div>
-                  <p className="font-medium">{teacher.teacherName}</p>
-                  <p className="text-sm text-muted-foreground">
-                    {teacher.totalClasses} classes • {Math.round(teacher.responseRate)}% response rate
-                  </p>
-                </div>
-                <Badge variant={teacher.avgRating >= 4 ? "default" : "secondary"}>
-                  {Math.round(teacher.avgRating * 10) / 10}/5
-                </Badge>
-              </div>
-            ))}
-            {analytics.teacherPerformance.length === 0 && (
-              <p className="text-sm text-muted-foreground text-center py-4">
-                {t('analytics.noTeacherData') || 'No teacher performance data available yet'}
-              </p>
-            )}
-          </div>
-        </CardContent>
-      </Card>
     </div>
   );
 };

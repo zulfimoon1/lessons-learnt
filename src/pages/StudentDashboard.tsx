@@ -6,7 +6,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Navigate, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { useIsMobile } from "@/hooks/use-mobile";
+import { useDeviceType } from "@/hooks/use-device";
 import DashboardHeader from "@/components/dashboard/DashboardHeader";
 import UpcomingClassesTab from "@/components/dashboard/UpcomingClassesTab";
 import FeedbackTab from "@/components/dashboard/FeedbackTab";
@@ -20,12 +20,18 @@ import MobileTabs from "@/components/dashboard/student/MobileTabs";
 import WelcomeTour from "@/components/onboarding/WelcomeTour";
 import { classScheduleService } from "@/services/classScheduleService";
 import AIStudentInsights from "@/components/dashboard/student/AIStudentInsights";
+import MobileOptimizedLayout from "@/components/mobile/MobileOptimizedLayout";
+import EnhancedLazyLoader from "@/components/performance/EnhancedLazyLoader";
+import { cn } from '@/lib/utils';
 
 const StudentDashboard: React.FC = () => {
   const { student, logout } = useAuth();
   const { t } = useLanguage();
   const navigate = useNavigate();
-  const isMobile = useIsMobile();
+  const deviceType = useDeviceType();
+  const isMobile = deviceType === 'mobile';
+  const isTablet = deviceType === 'tablet';
+  
   const [upcomingClasses, setUpcomingClasses] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('classes');
@@ -171,28 +177,37 @@ const StudentDashboard: React.FC = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-background">
+    <MobileOptimizedLayout className="bg-background">
       <DashboardHeader
         title={t('dashboard.studentDashboard') || 'Student Dashboard'}
         userName={student.full_name}
         onLogout={handleLogout}
       />
 
-      <main className="max-w-7xl mx-auto p-3 md:p-6 space-y-4 md:space-y-6">
-        <WelcomeSection
-          studentName={student.full_name}
-          school={student.school}
-          grade={student.grade}
-          upcomingClassesCount={upcomingClasses.length}
-        />
+      <main className={cn(
+        'max-w-7xl mx-auto space-y-4',
+        isMobile ? 'p-3' : isTablet ? 'p-4' : 'p-6'
+      )}>
+        <EnhancedLazyLoader minHeight={isMobile ? "150px" : "200px"}>
+          <WelcomeSection
+            studentName={student.full_name}
+            school={student.school}
+            grade={student.grade}
+            upcomingClassesCount={upcomingClasses.length}
+          />
+        </EnhancedLazyLoader>
 
-        <QuickActionsCard {...handleQuickActions} />
+        <EnhancedLazyLoader minHeight={isMobile ? "120px" : "150px"}>
+          <QuickActionsCard {...handleQuickActions} />
+        </EnhancedLazyLoader>
 
-        <AIStudentInsights
-          studentId={student.id}
-          school={student.school}
-          grade={student.grade}
-        />
+        <EnhancedLazyLoader minHeight={isMobile ? "200px" : "250px"}>
+          <AIStudentInsights
+            studentId={student.id}
+            school={student.school}
+            grade={student.grade}
+          />
+        </EnhancedLazyLoader>
 
         {/* Mobile vs Desktop Tabs */}
         {isMobile ? (
@@ -202,23 +217,39 @@ const StudentDashboard: React.FC = () => {
               onTabChange={setActiveTab}
               t={t}
             />
-            <div className="mt-6">
-              {tabItems.find(item => item.value === activeTab)?.component}
-            </div>
+            <EnhancedLazyLoader minHeight="300px">
+              <div className="mt-6">
+                {tabItems.find(item => item.value === activeTab)?.component}
+              </div>
+            </EnhancedLazyLoader>
           </div>
         ) : (
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 md:space-y-6">
-            <TabsList className="grid w-full grid-cols-5">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className={cn(
+            'space-y-4',
+            isTablet ? 'space-y-4' : 'space-y-6'
+          )}>
+            <TabsList className={cn(
+              'grid w-full',
+              isMobile ? 'grid-cols-2' : isTablet ? 'grid-cols-3' : 'grid-cols-5'
+            )}>
               {tabItems.map((item) => {
                 const Icon = item.icon;
                 return (
                   <TabsTrigger 
                     key={item.value}
                     value={item.value} 
-                    className="flex items-center gap-2"
+                    className={cn(
+                      'flex items-center gap-2',
+                      isTablet && 'text-sm'
+                    )}
                   >
-                    <Icon className="w-4 h-4" />
-                    <span>{item.label}</span>
+                    <Icon className={cn(
+                      'w-4 h-4',
+                      isTablet && 'w-3 h-3'
+                    )} />
+                    <span className={isTablet ? 'hidden sm:inline' : undefined}>
+                      {item.label}
+                    </span>
                   </TabsTrigger>
                 );
               })}
@@ -226,7 +257,9 @@ const StudentDashboard: React.FC = () => {
 
             {tabItems.map((item) => (
               <TabsContent key={item.value} value={item.value} className="mt-6">
-                {item.component}
+                <EnhancedLazyLoader minHeight={isMobile ? "300px" : "400px"}>
+                  {item.component}
+                </EnhancedLazyLoader>
               </TabsContent>
             ))}
           </Tabs>
@@ -238,7 +271,7 @@ const StudentDashboard: React.FC = () => {
         isVisible={showWelcomeTour}
         onComplete={handleWelcomeTourComplete}
       />
-    </div>
+    </MobileOptimizedLayout>
   );
 };
 

@@ -19,6 +19,9 @@ import HIPAAIncidentResponsePanel from './HIPAAIncidentResponsePanel';
 import HIPAATechnicalSafeguards from './HIPAATechnicalSafeguards';
 import HIPAAPhysicalSafeguards from './HIPAAPhysicalSafeguards';
 import HIPAAComplianceTestPanel from './HIPAAComplianceTestPanel';
+import { useDeviceType } from '@/hooks/use-device';
+import { cn } from '@/lib/utils';
+import EnhancedLazyLoader from '@/components/performance/EnhancedLazyLoader';
 
 interface HIPAAMetrics {
   phiAccessEvents24h: number;
@@ -33,6 +36,9 @@ interface HIPAAMetrics {
 const HIPAADashboard: React.FC = () => {
   const [metrics, setMetrics] = useState<HIPAAMetrics | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const deviceType = useDeviceType();
+  const isMobile = deviceType === 'mobile';
+  const isTablet = deviceType === 'tablet';
 
   useEffect(() => {
     loadHIPAAData();
@@ -96,26 +102,47 @@ const HIPAADashboard: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6 p-6">
+    <div className={cn(
+      'space-y-6',
+      isMobile ? 'p-4' : isTablet ? 'p-5' : 'p-6'
+    )}>
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className={cn(
+        'flex justify-between',
+        isMobile ? 'flex-col gap-4' : 'flex-row items-center'
+      )}>
         <div>
-          <h1 className="text-3xl font-bold flex items-center gap-2">
-            <Shield className="w-8 h-8 text-green-600" />
+          <h1 className={cn(
+            'font-bold flex items-center gap-2',
+            isMobile ? 'text-2xl' : 'text-3xl'
+          )}>
+            <Shield className={cn(
+              'text-green-600',
+              isMobile ? 'w-6 h-6' : 'w-8 h-8'
+            )} />
             HIPAA Compliance Dashboard
           </h1>
-          <p className="text-muted-foreground mt-2">
+          <p className={cn(
+            'text-muted-foreground mt-2',
+            isMobile ? 'text-sm' : 'text-base'
+          )}>
             Protected Health Information (PHI) monitoring and compliance management
           </p>
         </div>
-        <Button onClick={runComplianceAudit} variant="outline">
+        <Button 
+          onClick={runComplianceAudit} 
+          variant="outline"
+          className={isMobile ? 'w-full' : undefined}
+        >
           <FileCheck className="w-4 h-4 mr-2" />
           Run Compliance Audit
         </Button>
       </div>
 
       {/* Overview Cards */}
-      <HIPAAOverviewCards metrics={metrics} />
+      <EnhancedLazyLoader minHeight={isMobile ? "120px" : "150px"}>
+        <HIPAAOverviewCards metrics={metrics} />
+      </EnhancedLazyLoader>
 
       {/* Critical Alerts */}
       {metrics?.breachIncidents && metrics.breachIncidents > 0 && (
@@ -139,68 +166,112 @@ const HIPAADashboard: React.FC = () => {
 
       {/* Detailed Tabs */}
       <Tabs defaultValue="phi-protection" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="phi-protection">PHI Protection</TabsTrigger>
-          <TabsTrigger value="minimum-necessary">Access Control</TabsTrigger>
-          <TabsTrigger value="workforce-security">Workforce Security</TabsTrigger>
-          <TabsTrigger value="incident-response">Incident Response</TabsTrigger>
-          <TabsTrigger value="technical-safeguards">Technical Safeguards</TabsTrigger>
-          <TabsTrigger value="physical-safeguards">Physical Safeguards</TabsTrigger>
-          <TabsTrigger value="risk-assessment">Risk Assessment</TabsTrigger>
-          <TabsTrigger value="baa-management">BAA Management</TabsTrigger>
-          <TabsTrigger value="breach-notification">Breach Notification</TabsTrigger>
-          <TabsTrigger value="patient-rights">Patient Rights</TabsTrigger>
-          <TabsTrigger value="training">Training & Workforce</TabsTrigger>
-          <TabsTrigger value="compliance-testing">Compliance Testing</TabsTrigger>
+        <TabsList className={cn(
+          isMobile ? 'grid grid-cols-2 gap-1 h-auto' : 
+          isTablet ? 'grid grid-cols-3 gap-1' : 
+          'flex flex-wrap'
+        )}>
+          <TabsTrigger value="phi-protection" className={isMobile ? 'text-xs p-2' : undefined}>
+            {isMobile ? 'PHI' : 'PHI Protection'}
+          </TabsTrigger>
+          <TabsTrigger value="minimum-necessary" className={isMobile ? 'text-xs p-2' : undefined}>
+            {isMobile ? 'Access' : 'Access Control'}
+          </TabsTrigger>
+          <TabsTrigger value="workforce-security" className={isMobile ? 'text-xs p-2' : undefined}>
+            {isMobile ? 'Security' : 'Workforce Security'}
+          </TabsTrigger>
+          <TabsTrigger value="incident-response" className={isMobile ? 'text-xs p-2' : undefined}>
+            {isMobile ? 'Incidents' : 'Incident Response'}
+          </TabsTrigger>
+          {!isMobile && (
+            <>
+              <TabsTrigger value="technical-safeguards">Technical Safeguards</TabsTrigger>
+              <TabsTrigger value="physical-safeguards">Physical Safeguards</TabsTrigger>
+              <TabsTrigger value="risk-assessment">Risk Assessment</TabsTrigger>
+              <TabsTrigger value="baa-management">BAA Management</TabsTrigger>
+              <TabsTrigger value="breach-notification">Breach Notification</TabsTrigger>
+              <TabsTrigger value="patient-rights">Patient Rights</TabsTrigger>
+              <TabsTrigger value="training">Training & Workforce</TabsTrigger>
+              <TabsTrigger value="compliance-testing">Compliance Testing</TabsTrigger>
+            </>
+          )}
         </TabsList>
 
         <TabsContent value="phi-protection" className="space-y-4">
-          <HIPAAPHIProtectionPanel />
+          <EnhancedLazyLoader minHeight={isMobile ? "200px" : "300px"}>
+            <HIPAAPHIProtectionPanel />
+          </EnhancedLazyLoader>
         </TabsContent>
 
         <TabsContent value="minimum-necessary" className="space-y-4">
-          <HIPAAMinimumNecessaryControl />
+          <EnhancedLazyLoader minHeight={isMobile ? "200px" : "300px"}>
+            <HIPAAMinimumNecessaryControl />
+          </EnhancedLazyLoader>
         </TabsContent>
 
         <TabsContent value="workforce-security" className="space-y-4">
-          <HIPAAWorkforceSecurityManagement />
+          <EnhancedLazyLoader minHeight={isMobile ? "200px" : "300px"}>
+            <HIPAAWorkforceSecurityManagement />
+          </EnhancedLazyLoader>
         </TabsContent>
 
         <TabsContent value="incident-response" className="space-y-4">
-          <HIPAAIncidentResponsePanel />
+          <EnhancedLazyLoader minHeight={isMobile ? "200px" : "300px"}>
+            <HIPAAIncidentResponsePanel />
+          </EnhancedLazyLoader>
         </TabsContent>
 
-        <TabsContent value="technical-safeguards" className="space-y-4">
-          <HIPAATechnicalSafeguards />
-        </TabsContent>
+        {!isMobile && (
+          <>
+            <TabsContent value="technical-safeguards" className="space-y-4">
+              <EnhancedLazyLoader minHeight="300px">
+                <HIPAATechnicalSafeguards />
+              </EnhancedLazyLoader>
+            </TabsContent>
 
-        <TabsContent value="physical-safeguards" className="space-y-4">
-          <HIPAAPhysicalSafeguards />
-        </TabsContent>
+            <TabsContent value="physical-safeguards" className="space-y-4">
+              <EnhancedLazyLoader minHeight="300px">
+                <HIPAAPhysicalSafeguards />
+              </EnhancedLazyLoader>
+            </TabsContent>
 
-        <TabsContent value="risk-assessment" className="space-y-4">
-          <HIPAARiskAssessment />
-        </TabsContent>
+            <TabsContent value="risk-assessment" className="space-y-4">
+              <EnhancedLazyLoader minHeight="300px">
+                <HIPAARiskAssessment />
+              </EnhancedLazyLoader>
+            </TabsContent>
 
-        <TabsContent value="baa-management" className="space-y-4">
-          <HIPAABAAManagement />
-        </TabsContent>
+            <TabsContent value="baa-management" className="space-y-4">
+              <EnhancedLazyLoader minHeight="300px">
+                <HIPAABAAManagement />
+              </EnhancedLazyLoader>
+            </TabsContent>
 
-        <TabsContent value="breach-notification" className="space-y-4">
-          <HIPAABreachNotification />
-        </TabsContent>
+            <TabsContent value="breach-notification" className="space-y-4">
+              <EnhancedLazyLoader minHeight="300px">
+                <HIPAABreachNotification />
+              </EnhancedLazyLoader>
+            </TabsContent>
 
-        <TabsContent value="patient-rights" className="space-y-4">
-          <HIPAAPatientRights />
-        </TabsContent>
+            <TabsContent value="patient-rights" className="space-y-4">
+              <EnhancedLazyLoader minHeight="300px">
+                <HIPAAPatientRights />
+              </EnhancedLazyLoader>
+            </TabsContent>
 
-        <TabsContent value="training" className="space-y-4">
-          <HIPAATrainingTracking />
-        </TabsContent>
+            <TabsContent value="training" className="space-y-4">
+              <EnhancedLazyLoader minHeight="300px">
+                <HIPAATrainingTracking />
+              </EnhancedLazyLoader>
+            </TabsContent>
 
-        <TabsContent value="compliance-testing" className="space-y-4">
-          <HIPAAComplianceTestPanel />
-        </TabsContent>
+            <TabsContent value="compliance-testing" className="space-y-4">
+              <EnhancedLazyLoader minHeight="300px">
+                <HIPAAComplianceTestPanel />
+              </EnhancedLazyLoader>
+            </TabsContent>
+          </>
+        )}
       </Tabs>
     </div>
   );
