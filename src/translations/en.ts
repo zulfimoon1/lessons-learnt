@@ -529,6 +529,16 @@ export const enTranslations = {
   'analytics.thisMonth': 'This Month',
   'analytics.performanceTrends': 'Performance Trends',
   'analytics.subjectPerformance': 'Subject Performance',
+  'analytics.responseRate': 'Response Rate',
+  'analytics.averageRating': 'Average Rating',
+  'analytics.totalResponses': 'Total Responses',
+  'analytics.engagementTrend': 'Engagement Trend',
+  'analytics.weeklyProgress': 'Weekly Progress',
+  'analytics.studentParticipation': 'Student Participation',
+  'analytics.classPerformance': 'Class Performance',
+  'analytics.feedbackAnalysis': 'Feedback Analysis',
+  'analytics.learningOutcomes': 'Learning Outcomes',
+  'analytics.studentSatisfaction': 'Student Satisfaction',
 
   // Chat translations
   'chat.error': 'Failed to send message. Please try again.',

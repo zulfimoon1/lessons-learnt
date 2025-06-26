@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { CalendarIcon, MessageSquareIcon, FileTextIcon, UsersIcon, BarChartIcon, BrainIcon } from "lucide-react";
+import { CalendarIcon, MessageSquareIcon, FileTextIcon, BarChartIcon, BrainIcon } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Navigate } from "react-router-dom";
@@ -11,7 +11,6 @@ import DashboardHeader from "@/components/dashboard/DashboardHeader";
 import ScheduleTab from "@/components/dashboard/teacher/ScheduleTab";
 import FeedbackDashboard from "@/components/dashboard/teacher/FeedbackDashboard";
 import WeeklySummariesTab from "@/components/dashboard/teacher/WeeklySummariesTab";
-import MentalHealthTab from "@/components/dashboard/teacher/MentalHealthTab";
 import ArticlesTab from "@/components/dashboard/teacher/ArticlesTab";
 import AnalyticsTab from "@/components/dashboard/teacher/AnalyticsTab";
 import AIInsightsTab from "@/components/dashboard/teacher/AIInsightsTab";
@@ -58,39 +57,32 @@ const TeacherDashboard: React.FC = () => {
       color: 'text-brand-teal'
     },
     {
-      value: 'mental-health',
-      icon: UsersIcon,
-      label: t('features.mentalHealth.title') || 'Mental Health',
-      component: <MentalHealthTab teacher={teacher} />,
-      color: 'text-brand-orange'
-    },
-    {
       value: 'articles',
       icon: FileTextIcon,
       label: t('teacher.articles') || 'Articles',
       component: <ArticlesTab teacher={teacher} />,
-      color: 'text-brand-teal'
+      color: 'text-brand-orange'
     },
     {
       value: 'analytics',
       icon: BarChartIcon,
       label: t('analytics.title') || 'Analytics',
       component: <AnalyticsTab teacher={teacher} />,
-      color: 'text-brand-orange'
+      color: 'text-brand-teal'
     },
     {
       value: 'ai-insights',
       icon: BrainIcon,
       label: t('ai.insights') || 'AI Insights',
       component: <AIInsightsTab teacher={teacher} />,
-      color: 'text-brand-teal'
+      color: 'text-brand-orange'
     }
   ];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-brand-teal/5 via-white to-brand-orange/5">
       <DashboardHeader
-        title={t('dashboard.teacherDashboard') || 'Teacher Dashboard'}
+        title={t('teacher.dashboard.title') || 'Teacher Dashboard'}
         userName={teacher.name}
         onLogout={handleLogout}
       />
@@ -126,7 +118,7 @@ const TeacherDashboard: React.FC = () => {
             <h2 className="text-xl font-semibold text-gray-900 mb-4">
               {t('dashboard.quickActions') || 'Quick Actions'}
             </h2>
-            <TabsList className="bg-transparent p-0 h-auto gap-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+            <TabsList className="bg-transparent p-0 h-auto gap-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
               {tabItems.map((item) => {
                 const Icon = item.icon;
                 return (
