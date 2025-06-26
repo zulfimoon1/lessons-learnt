@@ -1,4 +1,5 @@
 
+
 import { enAuthTranslations } from './en/auth';
 import { enTeacherTranslations } from './en/teacher';
 import { enWeeklyTranslations } from './en/weekly';
@@ -59,7 +60,7 @@ export const enTranslations = {
   // Logout (direct key for simple access)
   'logout': 'Logout',
 
-  // Dashboard
+  // Dashboard - Enhanced with missing keys
   'dashboard.title': 'Student Dashboard',
   'dashboard.welcome': 'Welcome',
   'dashboard.overview': 'Overview',
@@ -88,6 +89,22 @@ export const enTranslations = {
   'dashboard.subscription': 'Subscription',
   'dashboard.atSchool': 'at',
   'dashboard.confidentialSupport': 'Confidential support available 24/7 for',
+  'dashboard.quickActions': 'Quick Actions',
+  'dashboard.viewClasses': 'View Classes',
+  'dashboard.submitFeedback': 'Submit Feedback',
+  'dashboard.wellnessCheck': 'Wellness Check',
+  'dashboard.studentWelcomeMessage': 'Ready to share your feedback and help improve your learning experience!',
+  'dashboard.messageSent': 'Message sent successfully',
+  'dashboard.contactForSupport': 'Contact for Support',
+  'dashboard.contactPsychologist': 'Contact School Psychologist',
+  'dashboard.confidentialMessage': 'Send a confidential message to your school\'s mental health support team.',
+  'dashboard.selectPsychologist': 'Select Psychologist',
+  'dashboard.yourMessage': 'Your Message',
+  'dashboard.messagePlaceholder': 'Share what\'s on your mind. Your message will be handled confidentially...',
+  'dashboard.sendAnonymously': 'Send anonymously',
+  'dashboard.privacyNote': 'Your privacy is protected. Messages are handled confidentially by qualified mental health professionals.',
+  'dashboard.sending': 'Sending...',
+  'dashboard.sendMessage': 'Send Message',
 
   // AI translations - Complete set
   'ai.personalInsights': 'AI Personal Insights',
@@ -125,8 +142,19 @@ export const enTranslations = {
   'mentalHealth.crisisHotline': 'Crisis Text Line: Text HOME to 741741',
   'mentalHealth.schoolCounselor': 'Your school counselor or trusted adult',
 
-  // Wellness
+  // Wellness - Complete set
   'wellness.submitted': 'Wellness check submitted successfully',
+  'wellness.tracker': 'Wellness Tracker',
+  'wellness.howAreYou': 'How are you feeling today?',
+  'wellness.notes': 'Any additional thoughts? (Optional)',
+  'wellness.notesPlaceholder': 'Share what\'s on your mind...',
+  'wellness.submit': 'Submit Wellness Check',
+  'wellness.recent': 'Recent Entries',
+  'wellness.great': 'Great',
+  'wellness.good': 'Good',
+  'wellness.okay': 'Okay',
+  'wellness.poor': 'Poor',
+  'wellness.terrible': 'Terrible',
 
   // Teacher Dashboard
   'teacher.dashboard.title': 'Teacher Dashboard',
@@ -237,6 +265,7 @@ export const enTranslations = {
   'admin.loading': 'Loading...',
   'admin.error.title': 'Error',
   'admin.error.description': 'Failed to load data',
+  'admin.role': 'Administrator',
 
   // Class
   'class.schedule': 'Schedule',
@@ -359,6 +388,7 @@ export const enTranslations = {
   'student.gradePlaceholder': '10A, Grade 9',
   'student.classGrade': 'Class/Grade',
   'student.school': 'School',
+  'student.yourName': 'Your Name',
 
   // Welcome section - NEW ADDITIONS for WelcomeSection component
   'welcome.title': 'Lessons Learnt',
@@ -478,6 +508,19 @@ export const enTranslations = {
   // Auth translations
   'auth.logoutSuccess': 'Logged out successfully',
   'auth.logoutError': 'Logout failed',
+  'auth.school': 'School',
+  'auth.grade': 'Grade',
+
+  // Teacher role
+  'teacher.role': 'Teacher',
+
+  // Analytics
+  'analytics.title': 'Analytics Dashboard',
+  'analytics.overview': 'Analytics Overview',
+  'analytics.engagement': 'Student Engagement',
+  'analytics.performance': 'Performance Metrics',
+  'analytics.trends': 'Learning Trends',
+  'analytics.insights': 'Key Insights',
 
   // Merge all sub-translations
   ...enAuthTranslations,
@@ -486,3 +529,4 @@ export const enTranslations = {
   ...enChatTranslations,
   ...enDemoTranslations,
 };
+
