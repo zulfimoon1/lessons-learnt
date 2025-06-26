@@ -26,14 +26,14 @@ const WeeklySummaryTab: React.FC<WeeklySummaryTabProps> = ({ student }) => {
                 <div className="w-3 h-3 bg-orange-500 rounded-full"></div>
                 <span className="font-medium text-orange-800">{t('weeklySummary.emotionalRoute')}</span>
               </div>
-              <p className="text-orange-700 text-xs">{t('weeklySummary.emotionalDescription')}</p>
+              <p className="text-black text-xs">{t('weeklySummary.emotionalDescription')}</p>
             </div>
             <div className="bg-green-100 p-3 rounded-lg border border-green-200">
               <div className="flex items-center gap-2 mb-1">
                 <div className="w-3 h-3 bg-green-500 rounded-full"></div>
                 <span className="font-medium text-green-800">{t('weeklySummary.academicRoute')}</span>
               </div>
-              <p className="text-green-700 text-xs">{t('weeklySummary.academicDescription')}</p>
+              <p className="text-black text-xs">{t('weeklySummary.academicDescription')}</p>
             </div>
           </div>
         </CardContent>
