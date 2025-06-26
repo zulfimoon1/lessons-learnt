@@ -88,65 +88,77 @@ const TeacherDashboard: React.FC = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-brand-gradient-soft">
+    <div className="min-h-screen bg-gradient-to-br from-brand-teal/5 via-white to-brand-orange/5">
       <DashboardHeader
         title={t('dashboard.teacherDashboard') || 'Teacher Dashboard'}
         userName={teacher.name}
         onLogout={handleLogout}
       />
 
-      <main className="max-w-7xl mx-auto p-3 md:p-6">
-        {/* Welcome Section with Student Dashboard Aesthetic */}
-        <div className="bg-card/80 backdrop-blur-sm rounded-2xl p-4 md:p-8 mb-6 md:mb-8 border border-border/50 shadow-lg">
-          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-            <div className="flex-1">
-              <h1 className="text-2xl md:text-4xl font-bold text-brand-dark mb-2 md:mb-3">
-                {t('admin.welcome') || 'Welcome'}, {teacher.name}!
-              </h1>
-              <p className="text-sm md:text-lg text-brand-dark/70 mb-4">
-                {teacher.school} • {teacher.role === 'admin' ? t('admin.role') || 'School Administrator' : t('teacher.role') || 'Teacher'}
-              </p>
-              <div className="inline-flex items-center gap-2 bg-brand-teal/10 text-brand-teal px-3 py-1 rounded-full text-sm font-medium">
-                <div className="w-2 h-2 bg-brand-teal rounded-full animate-pulse"></div>
-                {t('common.ready') || 'Ready'}
+      <main className="container mx-auto px-4 py-6 max-w-7xl">
+        {/* Hero Welcome Section - Matching Student Dashboard */}
+        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-brand-teal to-brand-orange p-8 mb-8 text-white shadow-2xl">
+          <div className="absolute inset-0 bg-black/10"></div>
+          <div className="relative z-10">
+            <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
+              <div className="flex-1">
+                <h1 className="text-3xl lg:text-5xl font-bold mb-3">
+                  {t('admin.welcome') || 'Welcome'}, {teacher.name}!
+                </h1>
+                <p className="text-xl lg:text-2xl text-white/90 mb-2">
+                  {teacher.school}
+                </p>
+                <p className="text-lg text-white/80 mb-4">
+                  {teacher.role === 'admin' ? t('admin.role') || 'School Administrator' : t('teacher.role') || 'Teacher'}
+                </p>
+                <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm text-white px-4 py-2 rounded-full text-sm font-medium">
+                  <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+                  {t('common.ready') || 'Ready to teach'}
+                </div>
               </div>
-            </div>
-            
-            {/* Quick Stats Cards */}
-            <div className="grid grid-cols-2 gap-3 w-full md:w-auto">
-              <div className="bg-white/60 backdrop-blur-sm rounded-lg p-3 text-center border border-brand-teal/20">
-                <div className="text-lg md:text-2xl font-bold text-brand-dark">8</div>
-                <div className="text-xs text-brand-dark/60">{t('teacher.classes.today') || 'Today\'s Classes'}</div>
-              </div>
-              <div className="bg-white/60 backdrop-blur-sm rounded-lg p-3 text-center border border-brand-orange/20">
-                <div className="text-lg md:text-2xl font-bold text-brand-dark">24</div>
-                <div className="text-xs text-brand-dark/60">{t('teacher.stats.totalStudents') || 'Total Students'}</div>
+              
+              {/* Quick Stats - Matching Student Dashboard Style */}
+              <div className="grid grid-cols-2 lg:grid-cols-2 gap-4 w-full lg:w-auto">
+                <div className="bg-white/20 backdrop-blur-sm rounded-2xl p-4 text-center border border-white/30">
+                  <div className="text-2xl lg:text-3xl font-bold text-white">8</div>
+                  <div className="text-sm text-white/80">{t('teacher.classes.today') || 'Today\'s Classes'}</div>
+                </div>
+                <div className="bg-white/20 backdrop-blur-sm rounded-2xl p-4 text-center border border-white/30">
+                  <div className="text-2xl lg:text-3xl font-bold text-white">124</div>
+                  <div className="text-sm text-white/80">{t('teacher.stats.totalStudents') || 'Total Students'}</div>
+                </div>
               </div>
             </div>
           </div>
         </div>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 md:space-y-6">
-          <TabsList className={`grid w-full bg-white/60 backdrop-blur-sm border border-border/50 shadow-sm ${isMobile ? 'grid-cols-2 gap-1 h-auto p-1' : 'grid-cols-8'}`}>
-            {tabItems.map((item) => {
-              const Icon = item.icon;
-              return (
-                <TabsTrigger 
-                  key={item.value}
-                  value={item.value} 
-                  className={`flex items-center gap-1 md:gap-2 data-[state=active]:bg-brand-teal data-[state=active]:text-white transition-all duration-200 ${isMobile ? 'flex-col py-2 px-1 text-xs' : 'flex-row'}`}
-                >
-                  <Icon className={`${isMobile ? 'w-4 h-4' : 'w-4 h-4'}`} />
-                  <span className={isMobile ? 'text-[10px] leading-tight' : ''}>{item.label}</span>
-                </TabsTrigger>
-              );
-            })}
-          </TabsList>
+        {/* Navigation Tabs - Matching Student Dashboard */}
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+          <div className="bg-white/80 backdrop-blur-sm rounded-2xl border border-gray-200/50 shadow-lg overflow-hidden">
+            <TabsList className={`grid w-full bg-transparent border-b border-gray-200/50 ${isMobile ? 'grid-cols-2 gap-0 h-auto p-0' : 'grid-cols-8 h-14'}`}>
+              {tabItems.map((item) => {
+                const Icon = item.icon;
+                return (
+                  <TabsTrigger 
+                    key={item.value}
+                    value={item.value} 
+                    className={`flex items-center gap-2 data-[state=active]:bg-brand-teal data-[state=active]:text-white data-[state=active]:shadow-lg transition-all duration-300 hover:bg-gray-50 ${isMobile ? 'flex-col py-3 px-2 text-xs border-b border-gray-200/50' : 'flex-row h-full rounded-none'}`}
+                  >
+                    <Icon className={`${isMobile ? 'w-5 h-5' : 'w-4 h-4'}`} />
+                    <span className={isMobile ? 'text-[11px] leading-tight' : 'text-sm font-medium'}>{item.label}</span>
+                  </TabsTrigger>
+                );
+              })}
+            </TabsList>
+          </div>
 
+          {/* Tab Content - Matching Student Dashboard Cards */}
           {tabItems.map((item) => (
-            <TabsContent key={item.value} value={item.value} className="bg-card/80 backdrop-blur-sm rounded-2xl border border-border/50 shadow-lg">
-              <div className="p-4 md:p-6">
-                {item.component}
+            <TabsContent key={item.value} value={item.value} className="space-y-6">
+              <div className="bg-white/80 backdrop-blur-sm rounded-2xl border border-gray-200/50 shadow-lg">
+                <div className="p-6">
+                  {item.component}
+                </div>
               </div>
             </TabsContent>
           ))}
