@@ -407,6 +407,57 @@ export type Database = {
         }
         Relationships: []
       }
+      password_reset_tokens: {
+        Row: {
+          created_at: string
+          expires_at: string
+          id: string
+          is_used: boolean
+          student_id: string
+          teacher_id: string
+          temporary_password: string
+          token: string
+          used_at: string | null
+        }
+        Insert: {
+          created_at?: string
+          expires_at?: string
+          id?: string
+          is_used?: boolean
+          student_id: string
+          teacher_id: string
+          temporary_password: string
+          token?: string
+          used_at?: string | null
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string
+          id?: string
+          is_used?: boolean
+          student_id?: string
+          teacher_id?: string
+          temporary_password?: string
+          token?: string
+          used_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "password_reset_tokens_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "password_reset_tokens_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: false
+            referencedRelation: "teachers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       payment_notifications: {
         Row: {
           admin_email: string
@@ -520,6 +571,7 @@ export type Database = {
           full_name: string
           grade: string
           id: string
+          needs_password_change: boolean | null
           password_hash: string
           school: string
         }
@@ -528,6 +580,7 @@ export type Database = {
           full_name: string
           grade: string
           id?: string
+          needs_password_change?: boolean | null
           password_hash: string
           school: string
         }
@@ -536,6 +589,7 @@ export type Database = {
           full_name?: string
           grade?: string
           id?: string
+          needs_password_change?: boolean | null
           password_hash?: string
           school?: string
         }
@@ -965,6 +1019,10 @@ export type Database = {
           recommendations: string[]
         }[]
       }
+      generate_temporary_password: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
       get_current_user_info: {
         Args: Record<PropertyKey, never>
         Returns: {
@@ -1197,6 +1255,27 @@ export type Database = {
       set_platform_admin_context: {
         Args: { admin_email: string }
         Returns: undefined
+      }
+      student_change_password_after_reset: {
+        Args: { student_id_param: string; new_password: string }
+        Returns: {
+          success: boolean
+          message: string
+        }[]
+      }
+      teacher_reset_student_password: {
+        Args: {
+          student_name_param: string
+          student_school_param: string
+          student_grade_param: string
+          teacher_id_param: string
+        }
+        Returns: {
+          success: boolean
+          temporary_password: string
+          message: string
+          student_id: string
+        }[]
       }
       validate_admin_operation: {
         Args: { operation_name: string }

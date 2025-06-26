@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { CalendarIcon, MessageSquareIcon, FileTextIcon, BarChartIcon, BrainIcon, BookOpenIcon } from "lucide-react";
+import { CalendarIcon, MessageSquareIcon, FileTextIcon, BarChartIcon, BrainIcon, BookOpenIcon, KeyIcon } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Navigate } from "react-router-dom";
@@ -14,6 +14,7 @@ import WeeklySummariesTab from "@/components/dashboard/teacher/WeeklySummariesTa
 import ArticlesTab from "@/components/dashboard/teacher/ArticlesTab";
 import AnalyticsTab from "@/components/dashboard/teacher/AnalyticsTab";
 import AIInsightsTab from "@/components/dashboard/teacher/AIInsightsTab";
+import StudentPasswordReset from "@/components/dashboard/teacher/StudentPasswordReset";
 import DoctorDashboard from "@/components/dashboard/doctor/DoctorDashboard";
 import DoctorChatDashboard from "@/components/DoctorChatDashboard";
 
@@ -97,7 +98,7 @@ const TeacherDashboard: React.FC = () => {
         }
       ];
     } else {
-      // For regular teachers, include schedule and notes
+      // For regular teachers, include schedule, notes, and password reset
       return [
         {
           value: 'schedule',
@@ -107,6 +108,13 @@ const TeacherDashboard: React.FC = () => {
           color: 'text-brand-teal'
         },
         ...baseItems,
+        {
+          value: 'password-reset',
+          icon: KeyIcon,
+          label: 'Password Reset',
+          component: <StudentPasswordReset teacher={teacher} />,
+          color: 'text-brand-orange'
+        },
         {
           value: 'notes',
           icon: BookOpenIcon,

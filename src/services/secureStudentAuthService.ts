@@ -56,7 +56,8 @@ export const secureStudentLogin = async (fullName: string, school: string, grade
           id: demoId,
           full_name: fullName,
           school: school,
-          grade: grade
+          grade: grade,
+          needs_password_change: false
         }
       };
     }
@@ -111,7 +112,12 @@ export const secureStudentLogin = async (fullName: string, school: string, grade
     }
 
     console.log('✅ Student authentication successful');
-    return { student };
+    return { 
+      student: {
+        ...student,
+        needs_password_change: student.needs_password_change || false
+      }
+    };
 
   } catch (error) {
     console.error('Student login error:', error);
@@ -135,7 +141,8 @@ export const secureStudentSignup = async (fullName: string, school: string, grad
           id: demoId,
           full_name: fullName,
           school: school,
-          grade: grade
+          grade: grade,
+          needs_password_change: false
         }
       };
     }
@@ -168,7 +175,8 @@ export const secureStudentSignup = async (fullName: string, school: string, grad
         full_name: fullName.trim(),
         school: school.trim(),
         grade: grade.trim(),
-        password_hash: hashedPassword
+        password_hash: hashedPassword,
+        needs_password_change: false
       })
       .select()
       .single();

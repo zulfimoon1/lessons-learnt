@@ -11,6 +11,7 @@ import AuthHeader from "@/components/auth/AuthHeader";
 import SecureStudentLoginForm from "@/components/auth/SecureStudentLoginForm";
 import StudentSignupForm from "@/components/auth/StudentSignupForm";
 import SessionSecurityMonitor from "@/components/security/SessionSecurityMonitor";
+import ForcePasswordChange from "@/components/auth/ForcePasswordChange";
 
 const SecureStudentLogin = () => {
   const { t } = useLanguage();
@@ -18,13 +19,17 @@ const SecureStudentLogin = () => {
   const { toast } = useToast();
   const { student, isLoading: authLoading, studentLogin, setStudent } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
+  const [forcePasswordChange, setForcePasswordChange] = useState<{
+    studentId: string;
+    studentName: string;
+  } | null>(null);
 
   useEffect(() => {
-    if (student && !authLoading) {
+    if (student && !authLoading && !forcePasswordChange) {
       console.log('Student already logged in, redirecting to dashboard');
       navigate("/student-dashboard", { replace: true });
     }
-  }, [student, authLoading, navigate]);
+  }, [student, authLoading, navigate, forcePasswordChange]);
 
   if (authLoading) {
     return (
@@ -34,6 +39,24 @@ const SecureStudentLogin = () => {
           <p className="mt-2 text-brand-dark">{t('common.loading')}</p>
         </div>
       </div>
+    );
+  }
+
+  // Show force password change screen if needed
+  if (forcePasswordChange) {
+    return (
+      <ForcePasswordChange
+        studentId={forcePasswordChange.studentId}
+        studentName={forcePasswordChange.studentName}
+        onPasswordChanged={() => {
+          setForcePasswordChange(null);
+          toast({
+            title: "Password changed successfully!",
+            description: "You can now access your dashboard.",
+          });
+          navigate("/student-dashboard", { replace: true });
+        }}
+      />
     );
   }
 
@@ -61,7 +84,18 @@ const SecureStudentLogin = () => {
           variant: "destructive",
         });
       } else if ('student' in result && result.student) {
-        console.log('SecureStudentLogin: Login successful, navigating to dashboard');
+        console.log('SecureStudentLogin: Login successful');
+        
+        // Check if student needs to change password
+        if (result.student.needs_password_change) {
+          console.log('Student needs to change password');
+          setForcePasswordChange({
+            studentId: result.student.id,
+            studentName: result.student.full_name
+          });
+          return;
+        }
+
         toast({
           title: "Welcome back!",
           description: "Login successful",
@@ -149,6 +183,9 @@ const SecureStudentLogin = () => {
             <CardTitle className="text-2xl text-brand-dark">{t('login.student.title') || 'Student Login'}</CardTitle>
             <CardDescription className="text-gray-600">
               {t('login.student.subtitle') || 'Sign in to access your student dashboard'}
+            </CardDescription>
+            <CardDescription className="text-sm text-brand-orange mt-2">
+              Forgot your password? Ask your teacher to reset it for you.
             </CardDescription>
           </CardHeader>
           <CardContent>

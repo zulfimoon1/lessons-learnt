@@ -1,72 +1,111 @@
 
 import { supabase } from '@/integrations/supabase/client';
 
-export const sendPasswordResetEmail = async (email: string) => {
-  try {
-    console.log('sendPasswordResetEmail: Sending reset email to:', email);
-    
-    // Validate email format
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email.trim())) {
-      return { error: 'Please enter a valid email address.' };
+export interface PasswordResetResult {
+  success: boolean;
+  temporary_password?: string;
+  message: string;
+  student_id?: string;
+}
+
+export interface PasswordChangeResult {
+  success: boolean;
+  message: string;
+}
+
+export const passwordResetService = {
+  /**
+   * Teacher resets a student's password
+   */
+  async resetStudentPassword(
+    studentName: string,
+    studentSchool: string,
+    studentGrade: string,
+    teacherId: string
+  ): Promise<PasswordResetResult> {
+    try {
+      const { data, error } = await supabase.rpc('teacher_reset_student_password', {
+        student_name_param: studentName.trim(),
+        student_school_param: studentSchool,
+        student_grade_param: studentGrade.trim(),
+        teacher_id_param: teacherId
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      if (data && data.length > 0) {
+        return data[0] as PasswordResetResult;
+      }
+
+      return {
+        success: false,
+        message: 'No response received from server'
+      };
+    } catch (error) {
+      console.error('Password reset service error:', error);
+      return {
+        success: false,
+        message: error instanceof Error ? error.message : 'An unexpected error occurred'
+      };
     }
+  },
 
-    // Check if teacher exists with this email
-    const { data: teachers, error: searchError } = await supabase
-      .from('teachers')
-      .select('id, email')
-      .eq('email', email.trim().toLowerCase());
+  /**
+   * Student changes password after reset
+   */
+  async changePasswordAfterReset(
+    studentId: string,
+    newPassword: string
+  ): Promise<PasswordChangeResult> {
+    try {
+      const { data, error } = await supabase.rpc('student_change_password_after_reset', {
+        student_id_param: studentId,
+        new_password: newPassword
+      });
 
-    if (searchError) {
-      console.log('sendPasswordResetEmail: Database error during search');
-      return { error: 'Database error. Please try again.' };
+      if (error) {
+        throw error;
+      }
+
+      if (data && data.length > 0) {
+        return data[0] as PasswordChangeResult;
+      }
+
+      return {
+        success: false,
+        message: 'No response received from server'
+      };
+    } catch (error) {
+      console.error('Password change service error:', error);
+      return {
+        success: false,
+        message: error instanceof Error ? error.message : 'An unexpected error occurred'
+      };
     }
+  },
 
-    if (!teachers || teachers.length === 0) {
-      // Don't reveal if email exists or not for security
-      return { success: true };
+  /**
+   * Check if student needs to change password
+   */
+  async checkPasswordChangeRequired(studentId: string): Promise<boolean> {
+    try {
+      const { data, error } = await supabase
+        .from('students')
+        .select('needs_password_change')
+        .eq('id', studentId)
+        .single();
+
+      if (error) {
+        console.error('Error checking password change requirement:', error);
+        return false;
+      }
+
+      return data?.needs_password_change || false;
+    } catch (error) {
+      console.error('Service error checking password change requirement:', error);
+      return false;
     }
-
-    // Send password reset email using Supabase Auth
-    const { error } = await supabase.auth.resetPasswordForEmail(email.trim().toLowerCase(), {
-      redirectTo: `${window.location.origin}/reset-password`
-    });
-
-    if (error) {
-      console.log('sendPasswordResetEmail: Error sending reset email');
-      return { error: 'Failed to send reset email. Please try again.' };
-    }
-
-    console.log('sendPasswordResetEmail: Reset email sent successfully');
-    return { success: true };
-  } catch (error) {
-    console.log('sendPasswordResetEmail: Unexpected error occurred');
-    return { error: 'An unexpected error occurred. Please try again.' };
-  }
-};
-
-export const resetPassword = async (newPassword: string) => {
-  try {
-    console.log('resetPassword: Updating password');
-    
-    // Password strength validation
-    if (newPassword.length < 8) {
-      return { error: 'Password must be at least 8 characters long.' };
-    }
-
-    const { error } = await supabase.auth.updateUser({
-      password: newPassword
-    });
-
-    if (error) {
-      console.log('resetPassword: Error updating password');
-      return { error: 'Failed to update password. Please try again.' };
-    }
-
-    console.log('resetPassword: Password updated successfully');
-    return { success: true };
-  } catch (error) {
-    console.log('resetPassword: Unexpected error occurred');
-    return { error: 'An unexpected error occurred. Please try again.' };
   }
 };
