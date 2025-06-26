@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -72,31 +71,37 @@ const SchoolSettings: React.FC<SchoolSettingsProps> = ({ teacher }) => {
 
       console.log('Sending request to customer portal with data:', requestData);
 
-      // Use proper supabase function invocation with explicit headers
-      const { data, error } = await supabase.functions.invoke('customer-portal', {
-        body: JSON.stringify(requestData),
+      // Make the function call with proper headers and body
+      const response = await fetch(`https://bjpgloftnlnzndgliqty.supabase.co/functions/v1/customer-portal`, {
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        }
+          'Accept': 'application/json',
+          'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
+          'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJqcGdsb2Z0bmxuem5kZ2xpcXR5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDkxMTg2OTgsImV4cCI6MjA2NDY5NDY5OH0.F2s-5sMai4AMIDiFqzdVr5s8XzR6ZTD3OUekOFvXbZg'
+        },
+        body: JSON.stringify(requestData)
       });
 
-      console.log('Customer portal response:', { data, error });
+      console.log('Response status:', response.status);
+      console.log('Response headers:', Object.fromEntries(response.headers.entries()));
 
-      if (error) {
-        console.error('Function invocation error:', error);
-        throw new Error(error.message || "Failed to access subscription management");
+      const responseData = await response.json();
+      console.log('Customer portal response:', responseData);
+
+      if (!response.ok) {
+        throw new Error(responseData.error || `HTTP ${response.status}: ${response.statusText}`);
       }
 
-      if (!data || !data.url) {
-        console.error('No URL returned from customer portal:', data);
+      if (!responseData || !responseData.url) {
+        console.error('No URL returned from customer portal:', responseData);
         throw new Error("Failed to get subscription management URL");
       }
 
-      console.log('Opening customer portal:', data.url);
+      console.log('Opening customer portal:', responseData.url);
       
       // Open in new tab for better user experience
-      window.open(data.url, '_blank');
+      window.open(responseData.url, '_blank');
       
       toast({
         title: "Success",
