@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
@@ -26,6 +27,13 @@ interface AnalyticsData {
     interest: number;
   }[];
   wellnessEntries: number;
+  subjectPerformance: {
+    subject: string;
+    understanding: number;
+    interest: number;
+    growth: number;
+    feedbackCount: number;
+  }[];
 }
 
 const StudentAnalyticsDashboard: React.FC<StudentAnalyticsProps> = ({
@@ -42,12 +50,18 @@ const StudentAnalyticsDashboard: React.FC<StudentAnalyticsProps> = ({
       try {
         setIsLoading(true);
         
-        // Fetch student's feedback data
+        // Fetch student's feedback data with class schedule information
         const { data: feedbackData } = await supabase
           .from('feedback')
           .select(`
             *,
-            class_schedules(*)
+            class_schedules(
+              subject,
+              lesson_topic,
+              school,
+              grade,
+              class_date
+            )
           `)
           .eq('student_id', studentId);
 
@@ -75,6 +89,35 @@ const StudentAnalyticsDashboard: React.FC<StudentAnalyticsProps> = ({
             avgRatings.interest /= feedbackCount;
             avgRatings.growth /= feedbackCount;
           }
+
+          // Calculate subject-specific performance
+          const subjectMap = new Map();
+          feedbackData.forEach(feedback => {
+            const subject = feedback.class_schedules?.subject || 'Unknown Subject';
+            if (!subjectMap.has(subject)) {
+              subjectMap.set(subject, {
+                subject,
+                understanding: 0,
+                interest: 0,
+                growth: 0,
+                feedbackCount: 0
+              });
+            }
+            
+            const subjectData = subjectMap.get(subject);
+            subjectData.understanding += feedback.understanding || 0;
+            subjectData.interest += feedback.interest || 0;
+            subjectData.growth += feedback.educational_growth || 0;
+            subjectData.feedbackCount += 1;
+          });
+
+          // Calculate averages for each subject
+          const subjectPerformance = Array.from(subjectMap.values()).map(subject => ({
+            ...subject,
+            understanding: Math.round((subject.understanding / subject.feedbackCount) * 10) / 10,
+            interest: Math.round((subject.interest / subject.feedbackCount) * 10) / 10,
+            growth: Math.round((subject.growth / subject.feedbackCount) * 10) / 10
+          }));
 
           // Calculate weekly trends (last 4 weeks)
           const fourWeeksAgo = new Date();
@@ -118,7 +161,8 @@ const StudentAnalyticsDashboard: React.FC<StudentAnalyticsProps> = ({
               growth: Math.round(avgRatings.growth * 10) / 10
             },
             recentTrends: weeklyTrends,
-            wellnessEntries: 0 // Would be implemented when wellness data is stored
+            wellnessEntries: 0, // Would be implemented when wellness data is stored
+            subjectPerformance
           });
         }
       } catch (error) {
@@ -264,29 +308,50 @@ const StudentAnalyticsDashboard: React.FC<StudentAnalyticsProps> = ({
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <span className="text-sm">How Well I Understand</span>
-              <div className="flex items-center gap-2">
-                <Progress value={(analytics.averageRatings.understanding / 5) * 100} className="w-20" />
-                <span className="text-sm font-medium">{analytics.averageRatings.understanding}/5</span>
-              </div>
+          {analytics.subjectPerformance.length === 0 ? (
+            <p className="text-muted-foreground text-center py-4">
+              No subject data yet. Share feedback about your classes to see how you're doing in each subject!
+            </p>
+          ) : (
+            <div className="space-y-4">
+              {analytics.subjectPerformance.map((subject, index) => (
+                <div key={index} className="space-y-3 p-4 border rounded-lg">
+                  <div className="flex items-center justify-between">
+                    <h4 className="font-semibold text-lg">{subject.subject}</h4>
+                    <Badge variant="outline">
+                      {subject.feedbackCount} feedback{subject.feedbackCount !== 1 ? 's' : ''}
+                    </Badge>
+                  </div>
+                  
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm">How Well I Understand</span>
+                      <div className="flex items-center gap-2">
+                        <Progress value={(subject.understanding / 5) * 100} className="w-20" />
+                        <span className="text-sm font-medium">{subject.understanding}/5</span>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm">How Interesting It Is</span>
+                      <div className="flex items-center gap-2">
+                        <Progress value={(subject.interest / 5) * 100} className="w-20" />
+                        <span className="text-sm font-medium">{subject.interest}/5</span>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm">How Much I'm Learning</span>
+                      <div className="flex items-center gap-2">
+                        <Progress value={(subject.growth / 5) * 100} className="w-20" />
+                        <span className="text-sm font-medium">{subject.growth}/5</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
-            <div className="flex items-center justify-between">
-              <span className="text-sm">How Interesting It Is</span>
-              <div className="flex items-center gap-2">
-                <Progress value={(analytics.averageRatings.interest / 5) * 100} className="w-20" />
-                <span className="text-sm font-medium">{analytics.averageRatings.interest}/5</span>
-              </div>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-sm">How Much I'm Learning</span>
-              <div className="flex items-center gap-2">
-                <Progress value={(analytics.averageRatings.growth / 5) * 100} className="w-20" />
-                <span className="text-sm font-medium">{analytics.averageRatings.growth}/5</span>
-              </div>
-            </div>
-          </div>
+          )}
         </CardContent>
       </Card>
     </div>
