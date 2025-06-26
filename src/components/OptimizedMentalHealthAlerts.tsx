@@ -11,7 +11,7 @@ import MentalHealthAlerts from "@/components/MentalHealthAlerts";
 
 const OptimizedMentalHealthAlerts = () => {
   const isMobile = useIsMobile();
-  const { alerts, isLoading, isAuthorized, refreshAlerts } = useOptimizedMentalHealthAlerts();
+  const { alerts, isLoading, isAuthorized, refreshAlerts, markAsReviewed, alertStats } = useOptimizedMentalHealthAlerts();
   const [lastUpdated, setLastUpdated] = useState(new Date());
   
   const {
@@ -31,7 +31,13 @@ const OptimizedMentalHealthAlerts = () => {
   if (isMobile) {
     return (
       <LazyLoadWrapper>
-        <MobileOptimizedMentalHealthAlerts />
+        <MobileOptimizedMentalHealthAlerts 
+          alerts={filteredAlerts}
+          isLoading={isLoading}
+          isAuthorized={isAuthorized}
+          markAsReviewed={markAsReviewed}
+          alertStats={alertStats}
+        />
       </LazyLoadWrapper>
     );
   }
@@ -42,7 +48,7 @@ const OptimizedMentalHealthAlerts = () => {
       <div className="space-y-4">
         {/* Performance Summary */}
         <MentalHealthPerformanceOptimizer
-          alerts={alerts}
+          alerts={filteredAlerts}
           onRefresh={handleRefresh}
           lastUpdated={lastUpdated}
         />
@@ -57,7 +63,12 @@ const OptimizedMentalHealthAlerts = () => {
 
         {/* Main Alerts Component */}
         <div className="min-h-[400px]">
-          <MentalHealthAlerts />
+          <MentalHealthAlerts 
+            alerts={filteredAlerts}
+            isLoading={isLoading}
+            isAuthorized={isAuthorized}
+            markAsReviewed={markAsReviewed}
+          />
         </div>
       </div>
     </LazyLoadWrapper>

@@ -2,6 +2,7 @@
 import React, { Suspense, memo } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Loader2 } from "lucide-react";
+import MentalHealthErrorBoundary from "./MentalHealthErrorBoundary";
 
 interface LazyLoadWrapperProps {
   children: React.ReactNode;
@@ -28,11 +29,13 @@ const LazyLoadWrapper: React.FC<LazyLoadWrapperProps> = memo(({
   const LoadingFallback = fallback || <DefaultFallback minHeight={minHeight} />;
 
   return (
-    <Suspense fallback={LoadingFallback}>
-      <div className="w-full">
-        {children}
-      </div>
-    </Suspense>
+    <MentalHealthErrorBoundary>
+      <Suspense fallback={LoadingFallback}>
+        <div className="w-full">
+          {children}
+        </div>
+      </Suspense>
+    </MentalHealthErrorBoundary>
   );
 });
 

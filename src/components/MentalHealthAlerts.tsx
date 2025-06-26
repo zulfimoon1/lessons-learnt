@@ -5,11 +5,33 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { AlertTriangle, Eye, Calendar, User, School, Shield } from "lucide-react";
-import { useOptimizedMentalHealthAlerts } from "@/hooks/useOptimizedMentalHealthAlerts";
 
-const MentalHealthAlerts: React.FC = memo(() => {
-  const { alerts, isLoading, isAuthorized, markAsReviewed } = useOptimizedMentalHealthAlerts();
+interface MentalHealthAlert {
+  id: string;
+  student_name: string;
+  school: string;
+  grade: string;
+  alert_type: string;
+  content: string;
+  severity_level: number;
+  is_reviewed: boolean;
+  created_at: string;
+  reviewed_by?: string;
+}
 
+interface MentalHealthAlertsProps {
+  alerts: MentalHealthAlert[];
+  isLoading: boolean;
+  isAuthorized: boolean;
+  markAsReviewed: (alertId: string) => void;
+}
+
+const MentalHealthAlerts: React.FC<MentalHealthAlertsProps> = memo(({ 
+  alerts, 
+  isLoading, 
+  isAuthorized, 
+  markAsReviewed 
+}) => {
   if (!isAuthorized) {
     return (
       <Card>

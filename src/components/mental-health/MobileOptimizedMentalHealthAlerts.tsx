@@ -1,30 +1,48 @@
 
-import React, { useMemo } from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { AlertTriangle, Eye, Calendar, User, School, Shield, ChevronDown, ChevronUp } from "lucide-react";
-import { useOptimizedMentalHealthAlerts } from "@/hooks/useOptimizedMentalHealthAlerts";
-import { useState } from 'react';
-import { cn } from "@/lib/utils";
 
-const MobileOptimizedMentalHealthAlerts = () => {
-  const { alerts, isLoading, isAuthorized, markAsReviewed, alertStats } = useOptimizedMentalHealthAlerts();
+interface MentalHealthAlert {
+  id: string;
+  student_name: string;
+  school: string;
+  grade: string;
+  alert_type: string;
+  content: string;
+  severity_level: number;
+  is_reviewed: boolean;
+  created_at: string;
+  reviewed_by?: string;
+}
+
+interface AlertStats {
+  total: number;
+  unreviewed: number;
+  critical: number;
+  bySchool: Record<string, number>;
+  criticalAlerts: MentalHealthAlert[];
+}
+
+interface MobileOptimizedMentalHealthAlertsProps {
+  alerts: MentalHealthAlert[];
+  isLoading: boolean;
+  isAuthorized: boolean;
+  markAsReviewed: (alertId: string) => void;
+  alertStats: AlertStats;
+}
+
+const MobileOptimizedMentalHealthAlerts: React.FC<MobileOptimizedMentalHealthAlertsProps> = ({
+  alerts,
+  isLoading,
+  isAuthorized,
+  markAsReviewed,
+  alertStats
+}) => {
   const [expandedAlert, setExpandedAlert] = useState<string | null>(null);
-
-  // Memoize filtered alerts for performance
-  const { criticalAlerts, reviewedAlerts, unreviewedAlerts } = useMemo(() => {
-    const critical = alerts.filter(alert => alert.severity_level > 7);
-    const reviewed = alerts.filter(alert => alert.is_reviewed);
-    const unreviewed = alerts.filter(alert => !alert.is_reviewed);
-    
-    return {
-      criticalAlerts: critical,
-      reviewedAlerts: reviewed,
-      unreviewedAlerts: unreviewed
-    };
-  }, [alerts]);
 
   if (!isAuthorized) {
     return (
