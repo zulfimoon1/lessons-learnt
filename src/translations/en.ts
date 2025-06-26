@@ -39,6 +39,8 @@ export const enTranslations = {
   'common.days': 'Days',
   'common.minute': 'minute',
   'common.minutes': 'minutes',
+  'common.ready': 'Ready',
+  'common.minimize': 'Minimize',
 
   // Navigation
   'nav.home': 'Home',
@@ -63,11 +65,13 @@ export const enTranslations = {
   'dashboard.teacherOverview': 'Teacher Overview',
   'dashboard.doctorOverview': 'Doctor Overview',
   'dashboard.studentOverview': 'Student Overview',
+  'dashboard.studentDashboard': 'Student Dashboard',
   'dashboard.feedback': 'Feedback',
   'dashboard.feedbackDescription': 'View and manage student feedback about lessons and classes.',
   'dashboard.weeklySummaries': 'Weekly Summaries',
   'dashboard.weeklySummary': 'Weekly Summary',
   'dashboard.mentalHealthSupport': 'Mental Health Support',
+  'dashboard.mentalHealth': 'Mental Health',
   'dashboard.grade': 'Grade',
   'dashboard.upcomingClasses': 'Upcoming Classes',
   'dashboard.subscribeNow': 'Subscribe Now',
@@ -75,11 +79,52 @@ export const enTranslations = {
   'dashboard.contactAdmin': 'Contact your school administrator for mental health support',
   'dashboard.scheduledClasses': 'Scheduled classes for grade {grade} at {school}',
   'dashboard.noClasses': 'No upcoming classes found',
+  'dashboard.noUpcomingClasses': 'No upcoming classes scheduled',
   'dashboard.schoolAdmin': 'School Admin Dashboard',
   'dashboard.analytics': 'School Analytics',
   'dashboard.adminPanel': 'Admin Panel',
   'dashboard.accessAnalytics': 'Access detailed school analytics in the',
   'dashboard.subscription': 'Subscription',
+  'dashboard.atSchool': 'at',
+
+  // AI translations
+  'ai.personalInsights': 'AI Personal Insights',
+  'ai.poweredByAI': 'Powered by Advanced AI',
+  'ai.learningProgress': 'Learning Progress',
+  'ai.recommendations': 'Recommendations',
+  'ai.wellnessInsights': 'Wellness Insights',
+  'ai.exploreInsights': 'Explore Your Insights',
+  'ai.learningProfile': 'Learning Profile',
+  'ai.smartRecommendations': 'Smart Recommendations',
+  'ai.generateProfilePrompt': 'Generate your personalized learning profile',
+  'ai.generateRecommendationsPrompt': 'Get personalized study recommendations',
+  'ai.generateInsightsPrompt': 'Discover insights about your learning journey',
+  'ai.generating': 'Generating...',
+  'ai.generateInsights': 'Generate AI Insights',
+  'ai.analyzingLearningStyle': 'Analyzing your learning style...',
+  'ai.identifyingStrengths': 'Identifying your strengths...',
+  'ai.analyzingWellness': 'Analyzing your wellness patterns...',
+  'ai.generatingWellnessAdvice': 'Generating personalized wellness advice...',
+
+  // Mental Health Support
+  'mentalHealth.loading': 'Loading mental health support...',
+  'mentalHealth.confidentialSupport': 'Confidential Support',
+  'mentalHealth.privacyNotice': 'All conversations with mental health professionals are strictly confidential and secure.',
+  'mentalHealth.instantSupport': 'Instant Support Available',
+  'mentalHealth.startConversation': 'Start a confidential conversation right now',
+  'mentalHealth.schoolProfessionals': 'School Mental Health Professionals',
+  'mentalHealth.noProfessionalsAtSchool': 'No dedicated mental health professionals at your school yet',
+  'mentalHealth.generalSupportAvailable': 'General support is still available through live chat',
+  'mentalHealth.emergencySupport': 'Emergency Support Available',
+  'mentalHealth.alwaysHereToHelp': 'Our support system is always here to help you. Click the chat button above to get started.',
+  'mentalHealth.emergencyResources': 'Emergency Resources',
+  'mentalHealth.immediateHelp': 'If you need immediate help, please contact:',
+  'mentalHealth.emergencyNumber': 'Emergency: 112 (EU) / 911 (US)',
+  'mentalHealth.crisisHotline': 'Crisis Text Line: Text HOME to 741741',
+  'mentalHealth.schoolCounselor': 'Your school counselor or trusted adult',
+
+  // Wellness
+  'wellness.submitted': 'Wellness check submitted successfully',
 
   // Teacher Dashboard
   'teacher.dashboard.title': 'Teacher Dashboard',
@@ -181,9 +226,6 @@ export const enTranslations = {
   'weeklySummary.submittedDescription': 'Your weekly summary has been submitted successfully. The relevant staff will review it.',
   'weeklySummary.fillAtLeastOne': 'Please fill in at least one section',
   'weeklySummary.fillAtLeastOneDescription': 'Add either emotional or academic concerns to submit your weekly summary',
-
-  // Mental Health Support
-  'mentalHealth.loading': 'Loading mental health support...',
 
   // Admin
   'admin.title': 'Admin Dashboard',
