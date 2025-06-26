@@ -21,17 +21,10 @@ export const useChatSession = (session: LiveChatSession, isDoctorView: boolean, 
   const channelRef = useRef<any>(null);
 
   useEffect(() => {
-    console.log('useChatSession: Setting up chat for session:', session.id);
+    console.log('useChatSession: Initializing for session:', session.id);
+    
+    // Initialize chat
     loadMessages();
-    
-    // Clean up any existing subscription first
-    if (channelRef.current) {
-      console.log('useChatSession: Cleaning up existing channel');
-      supabase.removeChannel(channelRef.current);
-      channelRef.current = null;
-    }
-    
-    // Set up new subscription
     setupRealtimeSubscription();
     
     if (session.status === 'active' && session.doctor_id) {
@@ -48,7 +41,7 @@ export const useChatSession = (session: LiveChatSession, isDoctorView: boolean, 
     // Cleanup function
     return () => {
       if (channelRef.current) {
-        console.log('useChatSession: Cleaning up chat subscription on unmount');
+        console.log('useChatSession: Cleaning up subscription');
         supabase.removeChannel(channelRef.current);
         channelRef.current = null;
       }
@@ -64,24 +57,31 @@ export const useChatSession = (session: LiveChatSession, isDoctorView: boolean, 
         .eq('session_id', session.id)
         .order('sent_at', { ascending: true });
 
-      if (error) throw error;
-      console.log('useChatSession: Loaded messages:', data);
+      if (error) {
+        console.error('useChatSession: Error loading messages:', error);
+        throw error;
+      }
       
       const typedMessages: ChatMessage[] = (data || []).map(msg => ({
         ...msg,
         sender_type: msg.sender_type as 'student' | 'doctor'
       }));
       
+      console.log('useChatSession: Loaded messages:', typedMessages.length);
       setMessages(typedMessages);
     } catch (error) {
-      console.error('useChatSession: Error loading messages:', error);
+      console.error('useChatSession: Failed to load messages:', error);
     }
   };
 
   const setupRealtimeSubscription = () => {
-    console.log('useChatSession: Setting up real-time subscription');
+    console.log('useChatSession: Setting up realtime subscription');
     
-    // Create a unique channel name to avoid conflicts
+    // Clean up existing subscription
+    if (channelRef.current) {
+      supabase.removeChannel(channelRef.current);
+    }
+    
     const channelName = `chat_${session.id}_${Date.now()}`;
     
     const channel = supabase
@@ -178,6 +178,7 @@ export const useChatSession = (session: LiveChatSession, isDoctorView: boolean, 
         });
 
       if (error) throw error;
+      console.log('useChatSession: Message sent successfully');
     } catch (error) {
       console.error('useChatSession: Error sending message:', error);
       toast({
