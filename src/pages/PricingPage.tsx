@@ -112,23 +112,39 @@ const PricingPage = () => {
   };
 
   const handleSignUpEducator = () => {
-    console.log('Navigating to teacher-login from handleSignUpEducator - Admin signup');
-    navigate('/teacher-login');
+    console.log('Admin signup button clicked - navigating to teacher-login');
+    try {
+      navigate('/teacher-login');
+    } catch (error) {
+      console.error('Navigation error:', error);
+    }
   };
 
   const handleStartFreeTrial = () => {
-    console.log('Navigating to teacher-login from handleStartFreeTrial - Teacher signup');
-    navigate('/teacher-login');
+    console.log('Teacher signup button clicked - navigating to teacher-login');
+    try {
+      navigate('/teacher-login');
+    } catch (error) {
+      console.error('Navigation error:', error);
+    }
   };
 
   const handleTransformYourSchool = () => {
-    console.log('Navigating to teacher-login from handleTransformYourSchool - Admin signup');
-    navigate('/teacher-login');
+    console.log('Transform Your School button clicked - navigating to teacher-login');
+    try {
+      navigate('/teacher-login');
+    } catch (error) {
+      console.error('Navigation error:', error);
+    }
   };
 
   const handleStartFreeTrialNow = () => {
-    console.log('Navigating to teacher-login from handleStartFreeTrialNow - Teacher signup');
-    navigate('/teacher-login');
+    console.log('Start Free Trial Now button clicked - navigating to teacher-login');
+    try {
+      navigate('/teacher-login');
+    } catch (error) {
+      console.error('Navigation error:', error);
+    }
   };
 
   return (
@@ -379,7 +395,7 @@ const PricingPage = () => {
                       onClick={handleStartFreeTrialNow}
                       className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white text-lg px-8 py-3"
                     >
-                      {t('pricing.startFreeTrialNow')}
+                      Start Free Trial Now
                     </Button>
                     <Button
                       onClick={handleTransformYourSchool}
