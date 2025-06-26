@@ -36,6 +36,7 @@ const MentalHealthSupportTab: React.FC<MentalHealthSupportTabProps> = React.memo
   const { t } = useLanguage();
   const [doctors, setDoctors] = useState<SchoolDoctor[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   console.log('MentalHealthSupportTab: Rendering with school:', studentSchool);
 
@@ -47,6 +48,7 @@ const MentalHealthSupportTab: React.FC<MentalHealthSupportTabProps> = React.memo
       }
       
       setIsLoading(true);
+      setError(null);
       console.log('MentalHealthSupportTab: Fetching doctors for school:', studentSchool);
       
       try {
@@ -71,6 +73,7 @@ const MentalHealthSupportTab: React.FC<MentalHealthSupportTabProps> = React.memo
 
         if (psychError) {
           console.error('MentalHealthSupportTab: Error fetching school psychologists:', psychError);
+          // Don't treat this as a fatal error, just log it
         } else {
           console.log('MentalHealthSupportTab: Found school psychologists:', schoolPsychologists);
         }
@@ -99,6 +102,7 @@ const MentalHealthSupportTab: React.FC<MentalHealthSupportTabProps> = React.memo
         setDoctors(combinedDoctors);
       } catch (error) {
         console.error('MentalHealthSupportTab: Error fetching medical professionals:', error);
+        setError('Failed to load mental health professionals');
       } finally {
         setIsLoading(false);
       }
@@ -234,6 +238,13 @@ const MentalHealthSupportTab: React.FC<MentalHealthSupportTabProps> = React.memo
               />
             </div>
           </div>
+
+          {/* Error display */}
+          {error && (
+            <div className="bg-red-50/50 p-4 rounded-lg border-l-4 border-red-200">
+              <p className="text-sm text-red-700">{error}</p>
+            </div>
+          )}
 
           {/* School Mental Health Professionals */}
           {doctors.length > 0 ? (

@@ -26,12 +26,14 @@ const LiveChatWidget = ({ studentId, studentName, school, grade, onClose }: Live
   const [isConnecting, setIsConnecting] = useState(false);
   const [isAnonymous, setIsAnonymous] = useState(true);
   const [currentSession, setCurrentSession] = useState<LiveChatSession | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   console.log('LiveChatWidget: Rendering with props:', { studentId, studentName, school, grade });
 
   const handleOpenChat = async () => {
     console.log('LiveChatWidget: Starting chat session...');
     setIsConnecting(true);
+    setError(null);
     
     try {
       const sessionData = {
@@ -54,29 +56,29 @@ const LiveChatWidget = ({ studentId, studentName, school, grade, onClose }: Live
 
       if (error) {
         console.error('LiveChatWidget: Error creating session:', error);
+        setError(error);
         toast({
           title: t('chat.connectionFailed') || 'Connection Failed',
           description: error,
           variant: "destructive",
         });
-        setIsConnecting(false);
         return;
       }
 
       if (!session) {
         console.error('LiveChatWidget: No session returned');
+        const errorMsg = 'Failed to create chat session';
+        setError(errorMsg);
         toast({
           title: t('chat.connectionFailed') || 'Connection Failed',
-          description: 'Failed to create chat session',
+          description: errorMsg,
           variant: "destructive",
         });
-        setIsConnecting(false);
         return;
       }
 
       console.log('LiveChatWidget: Session created successfully:', session);
       setCurrentSession(session);
-      setIsConnecting(false);
       
       toast({
         title: t('chat.chatStarted') || 'Chat Started',
@@ -84,11 +86,14 @@ const LiveChatWidget = ({ studentId, studentName, school, grade, onClose }: Live
       });
     } catch (error) {
       console.error('LiveChatWidget: Unexpected error:', error);
+      const errorMsg = 'An unexpected error occurred. Please try again.';
+      setError(errorMsg);
       toast({
         title: t('chat.connectionFailed') || 'Connection Failed',
-        description: 'An unexpected error occurred. Please try again.',
+        description: errorMsg,
         variant: "destructive",
       });
+    } finally {
       setIsConnecting(false);
     }
   };
@@ -97,11 +102,16 @@ const LiveChatWidget = ({ studentId, studentName, school, grade, onClose }: Live
     console.log('LiveChatWidget: Closing chat session');
     if (currentSession) {
       console.log('LiveChatWidget: Ending session:', currentSession.id);
-      await endChatSession(currentSession.id);
+      try {
+        await endChatSession(currentSession.id);
+      } catch (error) {
+        console.error('LiveChatWidget: Error ending session:', error);
+      }
     }
     
     setIsOpen(false);
     setCurrentSession(null);
+    setError(null);
     if (onClose) onClose();
   };
 
@@ -129,7 +139,10 @@ const LiveChatWidget = ({ studentId, studentName, school, grade, onClose }: Live
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => setIsOpen(false)}
+              onClick={() => {
+                setIsOpen(false);
+                setError(null);
+              }}
               className="text-white hover:bg-purple-700"
             >
               <XIcon className="w-4 h-4" />
@@ -143,6 +156,13 @@ const LiveChatWidget = ({ studentId, studentName, school, grade, onClose }: Live
               {t('chat.connectWithDoctor') || 'Connect with a qualified medical professional'}
             </p>
           </div>
+
+          {error && (
+            <div className="bg-red-50 p-3 rounded-lg border border-red-200 mb-4">
+              <p className="text-sm text-red-800 font-medium">Error</p>
+              <p className="text-xs text-red-700">{error}</p>
+            </div>
+          )}
 
           <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
             <div className="flex items-center space-x-3">
@@ -205,6 +225,7 @@ const LiveChatWidget = ({ studentId, studentName, school, grade, onClose }: Live
       onClick={() => {
         console.log('LiveChatWidget: Opening chat interface');
         setIsOpen(true);
+        setError(null);
       }}
       disabled={isConnecting}
       className="bg-purple-600 hover:bg-purple-700 text-white"

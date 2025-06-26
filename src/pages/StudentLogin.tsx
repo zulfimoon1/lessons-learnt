@@ -21,7 +21,19 @@ const StudentLogin = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [showTester, setShowTester] = useState(false);
 
-  // Redirect if already logged in
+  // Always call useEffect hooks in the same order
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.ctrlKey && e.shiftKey && e.key === 'T') {
+        setShowTester(!showTester);
+      }
+    };
+    
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [showTester]);
+
+  // Redirect if already logged in - moved after all hook calls
   useEffect(() => {
     console.log('StudentLogin: Checking auth state', { student, authLoading });
     if (student && !authLoading) {
@@ -140,18 +152,6 @@ const StudentLogin = () => {
       setIsLoading(false);
     }
   };
-
-  // Show verification tester if Ctrl+Shift+T is pressed
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.ctrlKey && e.shiftKey && e.key === 'T') {
-        setShowTester(!showTester);
-      }
-    };
-    
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [showTester]);
 
   return (
     <div className="min-h-screen bg-brand-gradient-soft">
