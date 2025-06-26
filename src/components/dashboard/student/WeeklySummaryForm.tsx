@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -9,6 +8,8 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Calendar, Heart, BookOpen, EyeOff, CheckCircle } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
+import VoiceInputToggle from '@/components/voice/VoiceInputToggle';
+import AudioPlayer from '@/components/voice/AudioPlayer';
 
 interface WeeklySummaryFormProps {
   student: {
@@ -29,6 +30,21 @@ const WeeklySummaryForm: React.FC<WeeklySummaryFormProps> = ({ student, onSubmit
     emotional_concerns: '',
     academic_concerns: ''
   });
+
+  // Voice note states
+  const [emotionalVoiceMode, setEmotionalVoiceMode] = useState<'text' | 'voice'>('text');
+  const [academicVoiceMode, setAcademicVoiceMode] = useState<'text' | 'voice'>('text');
+  const [emotionalAudioData, setEmotionalAudioData] = useState<{
+    audioUrl?: string;
+    transcription?: string;
+    duration?: number;
+  }>({});
+  const [academicAudioData, setAcademicAudioData] = useState<{
+    audioUrl?: string;
+    transcription?: string;
+    duration?: number;
+  }>({});
+
   const { toast } = useToast();
   const { t } = useLanguage();
 
@@ -65,13 +81,43 @@ const WeeklySummaryForm: React.FC<WeeklySummaryFormProps> = ({ student, onSubmit
     checkExistingSubmission();
   }, [student.id]);
 
+  const handleEmotionalVoiceComplete = (audioUrl: string, transcription?: string, duration?: number) => {
+    console.log('WeeklySummaryForm: Emotional voice recording completed:', { audioUrl, transcription, duration });
+    setEmotionalAudioData({ audioUrl, transcription, duration });
+    
+    if (transcription) {
+      setFormData(prev => ({ ...prev, emotional_concerns: transcription }));
+    }
+  };
+
+  const handleAcademicVoiceComplete = (audioUrl: string, transcription?: string, duration?: number) => {
+    console.log('WeeklySummaryForm: Academic voice recording completed:', { audioUrl, transcription, duration });
+    setAcademicAudioData({ audioUrl, transcription, duration });
+    
+    if (transcription) {
+      setFormData(prev => ({ ...prev, academic_concerns: transcription }));
+    }
+  };
+
+  const handleEmotionalTextMode = () => {
+    setEmotionalVoiceMode('text');
+  };
+
+  const handleAcademicTextMode = () => {
+    setAcademicVoiceMode('text');
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.emotional_concerns.trim() && !formData.academic_concerns.trim()) {
+    // Check if we have either text input or voice notes
+    const hasEmotionalInput = formData.emotional_concerns.trim() || emotionalAudioData.audioUrl;
+    const hasAcademicInput = formData.academic_concerns.trim() || academicAudioData.audioUrl;
+
+    if (!hasEmotionalInput && !hasAcademicInput) {
       toast({
         title: t('weeklySummary.fillAtLeastOne'),
-        description: t('weeklySummary.fillAtLeastOneDescription'),
+        description: "Please share either emotional or academic concerns through text or voice note.",
         variant: "destructive",
       });
       return;
@@ -82,19 +128,31 @@ const WeeklySummaryForm: React.FC<WeeklySummaryFormProps> = ({ student, onSubmit
     try {
       const weekStartDate = getWeekStartDate();
       
-      // Create a single submission with both concerns
+      const summaryData = {
+        student_id: isAnonymous ? null : student.id,
+        student_name: isAnonymous ? 'Anonymous Student' : student.full_name,
+        school: student.school,
+        grade: student.grade,
+        week_start_date: weekStartDate,
+        emotional_concerns: formData.emotional_concerns.trim() || null,
+        academic_concerns: formData.academic_concerns.trim() || null,
+        is_anonymous: isAnonymous,
+        // Emotional voice fields
+        emotional_audio_url: emotionalAudioData.audioUrl || null,
+        emotional_transcription: emotionalAudioData.transcription || null,
+        // Academic voice fields
+        academic_audio_url: academicAudioData.audioUrl || null,
+        academic_transcription: academicAudioData.transcription || null,
+        // Combined audio metadata
+        audio_duration: Math.max(emotionalAudioData.duration || 0, academicAudioData.duration || 0) || null,
+        audio_file_size: null // Could be added to voice service
+      };
+
+      console.log('WeeklySummaryForm: Submitting with voice data:', summaryData);
+
       const { error } = await supabase
         .from('weekly_summaries')
-        .insert({
-          student_id: isAnonymous ? null : student.id,
-          student_name: isAnonymous ? 'Anonymous Student' : student.full_name,
-          school: student.school,
-          grade: student.grade,
-          week_start_date: weekStartDate,
-          emotional_concerns: formData.emotional_concerns.trim() || null,
-          academic_concerns: formData.academic_concerns.trim() || null,
-          is_anonymous: isAnonymous
-        });
+        .insert(summaryData);
 
       if (error) {
         if (error.code === '23505') {
@@ -108,9 +166,13 @@ const WeeklySummaryForm: React.FC<WeeklySummaryFormProps> = ({ student, onSubmit
           throw error;
         }
       } else {
+        const hasVoiceNotes = emotionalAudioData.audioUrl || academicAudioData.audioUrl;
+        
         toast({
           title: t('weeklySummary.submitted'),
-          description: t('weeklySummary.submittedDescription'),
+          description: hasVoiceNotes ? 
+            "Your weekly summary and voice notes have been submitted successfully!" :
+            t('weeklySummary.submittedDescription'),
         });
 
         // Reset form
@@ -119,6 +181,10 @@ const WeeklySummaryForm: React.FC<WeeklySummaryFormProps> = ({ student, onSubmit
           academic_concerns: ''
         });
         setIsAnonymous(false);
+        setEmotionalAudioData({});
+        setAcademicAudioData({});
+        setEmotionalVoiceMode('text');
+        setAcademicVoiceMode('text');
         setHasSubmitted(true);
         onSubmitted?.();
       }
@@ -200,8 +266,9 @@ const WeeklySummaryForm: React.FC<WeeklySummaryFormProps> = ({ student, onSubmit
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="space-y-2">
+        <form onSubmit={handleSubmit} className="space-y-8">
+          {/* Emotional Concerns Section */}
+          <div className="space-y-4">
             <Label htmlFor="emotional_concerns" className="flex items-center gap-2 text-base font-medium text-brand-dark">
               <Heart className="w-4 h-4 text-pink-500" />
               {t('weeklySummary.emotionalLabel')}
@@ -209,17 +276,39 @@ const WeeklySummaryForm: React.FC<WeeklySummaryFormProps> = ({ student, onSubmit
             <p className="text-sm text-brand-dark/60 mb-2">
               {t('weeklySummary.emotionalDescription')}
             </p>
-            <Textarea
-              id="emotional_concerns"
-              value={formData.emotional_concerns}
-              onChange={(e) => setFormData(prev => ({ ...prev, emotional_concerns: e.target.value }))}
-              placeholder={t('weeklySummary.emotionalPlaceholder')}
-              rows={4}
-              className="resize-none border-brand-teal/20 focus:border-brand-teal"
+
+            <VoiceInputToggle
+              onVoiceComplete={handleEmotionalVoiceComplete}
+              onTextMode={handleEmotionalTextMode}
+              disabled={isSubmitting}
+              className="mb-4"
             />
+
+            {emotionalAudioData.audioUrl && (
+              <AudioPlayer
+                audioUrl={emotionalAudioData.audioUrl}
+                transcription={emotionalAudioData.transcription}
+                duration={emotionalAudioData.duration}
+                title="Emotional concerns voice note"
+                showTranscription={true}
+                className="mb-4"
+              />
+            )}
+
+            {(!emotionalAudioData.audioUrl || emotionalVoiceMode === 'text') && (
+              <Textarea
+                id="emotional_concerns"
+                value={formData.emotional_concerns}
+                onChange={(e) => setFormData(prev => ({ ...prev, emotional_concerns: e.target.value }))}
+                placeholder={t('weeklySummary.emotionalPlaceholder')}
+                rows={4}
+                className="resize-none border-brand-teal/20 focus:border-brand-teal"
+              />
+            )}
           </div>
 
-          <div className="space-y-2">
+          {/* Academic Concerns Section */}
+          <div className="space-y-4">
             <Label htmlFor="academic_concerns" className="flex items-center gap-2 text-base font-medium text-brand-dark">
               <BookOpen className="w-4 h-4 text-blue-500" />
               {t('weeklySummary.academicLabel')}
@@ -227,16 +316,38 @@ const WeeklySummaryForm: React.FC<WeeklySummaryFormProps> = ({ student, onSubmit
             <p className="text-sm text-brand-dark/60 mb-2">
               {t('weeklySummary.academicDescription')}
             </p>
-            <Textarea
-              id="academic_concerns"
-              value={formData.academic_concerns}
-              onChange={(e) => setFormData(prev => ({ ...prev, academic_concerns: e.target.value }))}
-              placeholder={t('weeklySummary.academicPlaceholder')}
-              rows={4}
-              className="resize-none border-brand-teal/20 focus:border-brand-teal"
+
+            <VoiceInputToggle
+              onVoiceComplete={handleAcademicVoiceComplete}
+              onTextMode={handleAcademicTextMode}
+              disabled={isSubmitting}
+              className="mb-4"
             />
+
+            {academicAudioData.audioUrl && (
+              <AudioPlayer
+                audioUrl={academicAudioData.audioUrl}
+                transcription={academicAudioData.transcription}
+                duration={academicAudioData.duration}
+                title="Academic concerns voice note"
+                showTranscription={true}
+                className="mb-4"
+              />
+            )}
+
+            {(!academicAudioData.audioUrl || academicVoiceMode === 'text') && (
+              <Textarea
+                id="academic_concerns"
+                value={formData.academic_concerns}
+                onChange={(e) => setFormData(prev => ({ ...prev, academic_concerns: e.target.value }))}
+                placeholder={t('weeklySummary.academicPlaceholder')}
+                rows={4}
+                className="resize-none border-brand-teal/20 focus:border-brand-teal"
+              />
+            )}
           </div>
 
+          {/* Anonymous Option */}
           <div className="flex items-center space-x-2 p-4 bg-brand-teal/5 rounded-lg border border-brand-teal/20">
             <Checkbox
               id="anonymous"
@@ -249,6 +360,7 @@ const WeeklySummaryForm: React.FC<WeeklySummaryFormProps> = ({ student, onSubmit
             </Label>
           </div>
 
+          {/* Submit Button */}
           <div className="flex justify-center pt-4">
             <Button 
               type="submit" 

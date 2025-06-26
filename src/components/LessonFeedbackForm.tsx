@@ -1,250 +1,165 @@
-
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Slider } from "@/components/ui/slider";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { MessageSquareIcon, BookOpenIcon, EyeOffIcon, CheckCircle, AlertCircle } from "lucide-react";
-import StarRating from "./StarRating";
-import EmotionalStateSelector from "./EmotionalStateSelector";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuthStorage } from "@/hooks/useAuthStorage";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { useSearchParams } from "react-router-dom";
-
-interface ClassWithFeedback {
-  id: string;
-  subject: string;
-  lesson_topic: string;
-  class_date: string;
-  class_time: string;
-  teacher_name?: string;
-  has_feedback: boolean;
-}
+import { useAuth } from "@/contexts/AuthContext";
+import { classScheduleService } from "@/services/classScheduleService";
+import { BookOpenIcon, StarIcon, LightbulbIcon, MessageCircleIcon, EyeOffIcon } from "lucide-react";
+import VoiceInputToggle from '@/components/voice/VoiceInputToggle';
+import AudioPlayer from '@/components/voice/AudioPlayer';
 
 const LessonFeedbackForm = () => {
-  const [selectedSubject, setSelectedSubject] = useState("");
-  const [lessonTopic, setLessonTopic] = useState("");
-  const [understanding, setUnderstanding] = useState(0);
-  const [interest, setInterest] = useState(0);
-  const [growth, setGrowth] = useState(0);
+  const [classes, setClasses] = useState([]);
+  const [selectedClass, setSelectedClass] = useState("");
+  const [understanding, setUnderstanding] = useState([3]);
+  const [interest, setInterest] = useState([3]);
+  const [educationalGrowth, setEducationalGrowth] = useState([3]);
   const [emotionalState, setEmotionalState] = useState("");
   const [whatWentWell, setWhatWentWell] = useState("");
   const [suggestions, setSuggestions] = useState("");
   const [additionalComments, setAdditionalComments] = useState("");
   const [isAnonymous, setIsAnonymous] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [availableClasses, setAvailableClasses] = useState<ClassWithFeedback[]>([]);
-  const [selectedClassId, setSelectedClassId] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Voice note states
+  const [voiceMode, setVoiceMode] = useState<'text' | 'voice'>('text');
+  const [audioData, setAudioData] = useState<{
+    audioUrl?: string;
+    transcription?: string;
+    duration?: number;
+  }>({});
+
   const { toast } = useToast();
-  const { student } = useAuthStorage();
   const { t } = useLanguage();
-  const [searchParams] = useSearchParams();
-
-  // Common subjects for dropdown
-  const subjects = [
-    "Mathematics",
-    "English", 
-    "Science",
-    "History",
-    "Geography",
-    "Physics",
-    "Chemistry",
-    "Biology",
-    "Literature",
-    "Art",
-    "Music",
-    "Physical Education",
-    "Computer Science",
-    "Foreign Languages"
-  ];
-
-  const isDemoStudent = student?.id?.includes('-') && student?.full_name?.toLowerCase().includes('demo');
+  const { student } = useAuth();
 
   useEffect(() => {
-    if (student) {
-      fetchAvailableClasses();
-    }
+    const loadClasses = async () => {
+      if (!student) return;
+      
+      try {
+        setIsLoading(true);
+        const response = await classScheduleService.getSchedulesBySchool(student.school);
+        if (response.data) {
+          const today = new Date();
+          const relevantClasses = response.data.filter((classItem: any) => {
+            const classDate = new Date(classItem.class_date);
+            const daysDiff = Math.abs(today.getTime() - classDate.getTime()) / (1000 * 3600 * 24);
+            return daysDiff <= 7 && classItem.grade === student.grade;
+          });
+          setClasses(relevantClasses);
+        }
+      } catch (error) {
+        console.error('Error loading classes:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadClasses();
   }, [student]);
 
-  useEffect(() => {
-    const classId = searchParams.get('classId');
-    if (classId && availableClasses.length > 0) {
-      const targetClass = availableClasses.find(c => c.id === classId);
-      if (targetClass && !targetClass.has_feedback) {
-        setSelectedClassId(classId);
-        setSelectedSubject(targetClass.subject);
-        setLessonTopic(targetClass.lesson_topic);
-      }
+  const handleVoiceComplete = (audioUrl: string, transcription?: string, duration?: number) => {
+    console.log('LessonFeedbackForm: Voice recording completed:', { audioUrl, transcription, duration });
+    setAudioData({ audioUrl, transcription, duration });
+    
+    // If we have transcription, populate the text fields
+    if (transcription) {
+      setAdditionalComments(transcription);
     }
-  }, [searchParams, availableClasses]);
+  };
 
-  const fetchAvailableClasses = async () => {
-    if (!student) return;
-
-    try {
-      // Fetch classes for the last 30 days and upcoming classes
-      const thirtyDaysAgo = new Date();
-      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-      const thirtyDaysAgoStr = thirtyDaysAgo.toISOString().split('T')[0];
-      
-      const { data: classData, error } = await supabase
-        .from('class_schedules')
-        .select('*')
-        .eq('school', student.school)
-        .eq('grade', student.grade)
-        .gte('class_date', thirtyDaysAgoStr)
-        .order('class_date', { ascending: false });
-
-      if (error) throw error;
-
-      // Get existing feedback for this student
-      const { data: feedbackData } = await supabase
-        .from('feedback')
-        .select('class_schedule_id')
-        .eq('student_id', student.id);
-
-      const feedbackClassIds = new Set(feedbackData?.map(f => f.class_schedule_id) || []);
-
-      // Fetch teacher names and mark classes with existing feedback
-      const classesWithDetails = await Promise.all(
-        (classData || []).map(async (classItem) => {
-          const { data: teacherData } = await supabase
-            .from('teachers')
-            .select('name')
-            .eq('id', classItem.teacher_id)
-            .single();
-
-          return {
-            id: classItem.id,
-            subject: classItem.subject,
-            lesson_topic: classItem.lesson_topic,
-            class_date: classItem.class_date,
-            class_time: classItem.class_time,
-            teacher_name: teacherData?.name || t('student.defaultName'),
-            has_feedback: feedbackClassIds.has(classItem.id)
-          };
-        })
-      );
-
-      setAvailableClasses(classesWithDetails);
-    } catch (error) {
-      console.error('Error fetching classes:', error);
-    }
+  const handleTextMode = () => {
+    console.log('LessonFeedbackForm: Switched to text mode');
+    setVoiceMode('text');
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!selectedSubject || !lessonTopic.trim()) {
+    if (!selectedClass) {
       toast({
-        title: t('common.error'),
-        description: "Please fill in all required fields",
+        title: t('feedback.selectClass'),
+        description: t('feedback.selectClassDesc'),
         variant: "destructive",
       });
       return;
     }
 
-    if (understanding === 0 || interest === 0 || growth === 0) {
+    // Check if we have either text input or voice note
+    const hasTextInput = whatWentWell.trim() || suggestions.trim() || additionalComments.trim();
+    const hasVoiceInput = audioData.audioUrl;
+
+    if (!hasTextInput && !hasVoiceInput) {
       toast({
-        title: t('common.error'),
-        description: "Please provide ratings for all assessment questions",
+        title: "Please provide feedback",
+        description: "Please either write your feedback or record a voice note.",
         variant: "destructive",
       });
       return;
-    }
-
-    // Check if feedback already exists for the selected class
-    if (selectedClassId) {
-      const selectedClass = availableClasses.find(c => c.id === selectedClassId);
-      if (selectedClass?.has_feedback) {
-        toast({
-          title: t('common.error'),
-          description: "Feedback has already been submitted for this class",
-          variant: "destructive",
-        });
-        return;
-      }
     }
 
     setIsSubmitting(true);
 
     try {
-      console.log('Feedback submission for:', { 
-        isDemoStudent, 
-        studentId: student?.id, 
-        studentName: student?.full_name 
-      });
+      const feedbackData = {
+        class_schedule_id: selectedClass,
+        student_id: isAnonymous ? null : student?.id,
+        student_name: isAnonymous ? t('feedback.anonymous') : student?.full_name,
+        understanding: understanding[0],
+        interest: interest[0],
+        educational_growth: educationalGrowth[0],
+        emotional_state: emotionalState,
+        what_went_well: whatWentWell.trim() || null,
+        suggestions: suggestions.trim() || null,
+        additional_comments: additionalComments.trim() || null,
+        is_anonymous: isAnonymous,
+        // Voice note fields
+        audio_url: audioData.audioUrl || null,
+        transcription: audioData.transcription || null,
+        audio_duration: audioData.duration || null,
+        audio_file_size: null // We could add this to the voice service
+      };
 
-      let classScheduleId = selectedClassId;
+      console.log('LessonFeedbackForm: Submitting feedback with voice data:', feedbackData);
 
-      // If no specific class selected, create a generic class entry
-      if (!classScheduleId) {
-        const { data: scheduleData, error: scheduleError } = await supabase
-          .from('class_schedules')
-          .insert({
-            teacher_id: '00000000-0000-0000-0000-000000000000',
-            subject: selectedSubject,
-            lesson_topic: lessonTopic.trim(),
-            description: additionalComments.trim() || null,
-            grade: student?.grade || 'Unknown',
-            school: student?.school || 'Unknown',
-            class_date: new Date().toISOString().split('T')[0],
-            class_time: '00:00:00'
-          })
-          .select()
-          .single();
-
-        if (scheduleError) throw scheduleError;
-        classScheduleId = scheduleData.id;
-      }
-
-      // Submit the feedback
       const { error } = await supabase
         .from('feedback')
-        .insert({
-          student_id: isAnonymous ? null : student?.id,
-          student_name: isAnonymous ? t('demo.mockup.anonymousStudent') : student?.full_name || '',
-          class_schedule_id: classScheduleId,
-          understanding: understanding,
-          interest: interest,
-          educational_growth: growth,
-          emotional_state: emotionalState || 'neutral',
-          what_went_well: whatWentWell.trim() || null,
-          suggestions: suggestions.trim() || null,
-          additional_comments: additionalComments.trim() || null,
-          is_anonymous: isAnonymous
-        });
+        .insert(feedbackData);
 
       if (error) throw error;
 
       toast({
         title: t('feedback.submitted'),
-        description: t('feedback.submittedDescription'),
+        description: hasVoiceInput ? 
+          "Your feedback and voice note have been submitted successfully!" :
+          t('feedback.submittedDesc'),
       });
 
       // Reset form
-      setSelectedSubject("");
-      setLessonTopic("");
-      setUnderstanding(0);
-      setInterest(0);
-      setGrowth(0);
+      setSelectedClass("");
+      setUnderstanding([3]);
+      setInterest([3]);
+      setEducationalGrowth([3]);
       setEmotionalState("");
       setWhatWentWell("");
       setSuggestions("");
       setAdditionalComments("");
       setIsAnonymous(false);
-      setSelectedClassId("");
-      
-      // Refresh available classes
-      fetchAvailableClasses();
+      setAudioData({});
+      setVoiceMode('text');
+
     } catch (error) {
-      console.error('Feedback submission error:', error);
+      console.error('Error submitting feedback:', error);
       toast({
         title: t('common.error'),
         description: t('feedback.submitError'),
@@ -255,240 +170,202 @@ const LessonFeedbackForm = () => {
     }
   };
 
-  return (
-    <div className="space-y-6">
-      {/* Header Section */}
-      <div className="bg-white/80 backdrop-blur-sm rounded-lg p-6 border border-brand-teal/20 text-center">
-        <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full mx-auto flex items-center justify-center mb-4">
-          <MessageSquareIcon className="w-8 h-8 text-white" />
-        </div>
-        <h1 className="text-2xl font-bold text-gray-900 mb-2">Share Your Learning Experience</h1>
-        <p className="text-lg text-gray-600 mb-4">Help your teacher understand how to make lessons even better</p>
-        {isDemoStudent && (
-          <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
-            👤 test student
-          </Badge>
-        )}
-      </div>
-
-      {/* Available Classes Section */}
-      {availableClasses.length > 0 && (
-        <Card className="bg-white/80 backdrop-blur-sm border-blue-100">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <BookOpenIcon className="w-5 h-5" />
-              Select a Class (Optional)
-            </CardTitle>
-            <CardDescription>
-              Choose a specific class to provide feedback for, or leave unselected for general feedback
-            </CardDescription>
-          </CardHeader>
-          
-          <CardContent>
-            <div className="grid gap-3 max-h-60 overflow-y-auto">
-              {availableClasses.map((classItem) => (
-                <div
-                  key={classItem.id}
-                  className={`border rounded-lg p-3 cursor-pointer transition-colors ${
-                    selectedClassId === classItem.id ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:bg-gray-50'
-                  } ${classItem.has_feedback ? 'opacity-50 cursor-not-allowed' : ''}`}
-                  onClick={() => {
-                    if (!classItem.has_feedback) {
-                      setSelectedClassId(selectedClassId === classItem.id ? "" : classItem.id);
-                      if (selectedClassId !== classItem.id) {
-                        setSelectedSubject(classItem.subject);
-                        setLessonTopic(classItem.lesson_topic);
-                      } else {
-                        setSelectedSubject("");
-                        setLessonTopic("");
-                      }
-                    }
-                  }}
-                >
-                  <div className="flex justify-between items-start">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <h4 className="font-medium">{classItem.subject}</h4>
-                        {classItem.has_feedback && (
-                          <Badge variant="secondary" className="bg-green-100 text-green-800 border-green-200">
-                            <CheckCircle className="w-3 h-3 mr-1" />
-                            Completed
-                          </Badge>
-                        )}
-                      </div>
-                      <p className="text-sm text-gray-600 mb-1">{classItem.lesson_topic}</p>
-                      <p className="text-xs text-gray-500">
-                        {new Date(classItem.class_date).toLocaleDateString()} at {classItem.class_time} - {classItem.teacher_name}
-                      </p>
-                      {classItem.has_feedback && (
-                        <p className="text-xs text-green-600 mt-1 flex items-center gap-1">
-                          <AlertCircle className="w-3 h-3" />
-                          Feedback already submitted for this class
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      <Card className="bg-white/80 backdrop-blur-sm border-blue-100">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <BookOpenIcon className="w-5 h-5" />
-            Lesson Details
-          </CardTitle>
-          <CardDescription>
-            Tell us about today's lesson
-          </CardDescription>
-        </CardHeader>
-        
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Lesson Details Section */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-2">
-                <Label htmlFor="subject" className="text-base font-medium">
-                  Subject
-                </Label>
-                <Select value={selectedSubject} onValueChange={setSelectedSubject}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select subject" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {subjects.map((subject) => (
-                      <SelectItem key={subject} value={subject}>
-                        {subject}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="lessonTopic" className="text-base font-medium">
-                  Lesson Topic
-                </Label>
-                <Input
-                  id="lessonTopic"
-                  value={lessonTopic}
-                  onChange={(e) => setLessonTopic(e.target.value)}
-                  placeholder="e.g., Fractions, Photosynthesis, Shakespeare"
-                  required
-                />
-              </div>
-            </div>
-
-            {/* Learning Assessment Section */}
-            <div>
-              <h3 className="text-lg font-semibold mb-4">Learning Assessment</h3>
-              <p className="text-sm text-gray-600 mb-6">Rate your learning experience</p>
-              
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="space-y-3">
-                  <Label className="text-base font-medium">How well did you understand the lesson content?</Label>
-                  <StarRating rating={understanding} onRatingChange={setUnderstanding} />
-                </div>
-
-                <div className="space-y-3">
-                  <Label className="text-base font-medium">How interesting was the lesson?</Label>
-                  <StarRating rating={interest} onRatingChange={setInterest} />
-                </div>
-
-                <div className="space-y-3">
-                  <Label className="text-base font-medium">How much do you feel you learned or grew from this lesson?</Label>
-                  <StarRating rating={growth} onRatingChange={setGrowth} />
-                </div>
-              </div>
-            </div>
-
-            {/* Emotional State Section */}
-            <div>
-              <Label className="text-base font-medium">Emotional State</Label>
-              <p className="text-sm text-gray-600 mb-4">
-                How did you feel emotionally during the lesson?
-              </p>
-              <p className="text-sm text-gray-500 mb-3">
-                Select how you felt emotionally during the lesson. This helps your teacher understand the classroom environment.
-              </p>
-              <EmotionalStateSelector 
-                selectedState={emotionalState} 
-                onStateChange={setEmotionalState} 
-              />
-            </div>
-
-            {/* Detailed Feedback Section */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-2">
-                <Label htmlFor="whatWentWell" className="text-base font-medium">
-                  What went well in this lesson?
-                </Label>
-                <Textarea
-                  id="whatWentWell"
-                  value={whatWentWell}
-                  onChange={(e) => setWhatWentWell(e.target.value)}
-                  placeholder="Share what you liked or found helpful in the lesson"
-                  rows={4}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="suggestions" className="text-base font-medium">
-                  Suggestions for improvement
-                </Label>
-                <Textarea
-                  id="suggestions"
-                  value={suggestions}
-                  onChange={(e) => setSuggestions(e.target.value)}
-                  placeholder="What could be improved in future lessons?"
-                  rows={4}
-                />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="additionalComments" className="text-base font-medium">
-                Additional comments
-              </Label>
-              <Textarea
-                id="additionalComments"
-                value={additionalComments}
-                onChange={(e) => setAdditionalComments(e.target.value)}
-                placeholder="Do you have any other thoughts or feedback you'd like to share?"
-                rows={3}
-              />
-            </div>
-
-            {/* Anonymous Option */}
-            <div className="flex items-center space-x-2 p-4 bg-gray-50 rounded-lg">
-              <Checkbox
-                id="anonymous"
-                checked={isAnonymous}
-                onCheckedChange={(checked) => setIsAnonymous(checked as boolean)}
-              />
-              <Label htmlFor="anonymous" className="flex items-center gap-2 text-sm">
-                <EyeOffIcon className="w-4 h-4 text-gray-500" />
-                {t('feedback.submitAnonymously')}
-              </Label>
-            </div>
-
-            {/* Submit Button */}
-            <div className="flex justify-center pt-4">
-              <Button
-                type="submit"
-                disabled={isSubmitting}
-                className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 px-8 py-3"
-              >
-                {isSubmitting ? t('feedback.submitting') : t('feedback.submitFeedback')}
-              </Button>
-            </div>
-          </form>
+  if (isLoading) {
+    return (
+      <Card className="w-full max-w-2xl mx-auto">
+        <CardContent className="p-6">
+          <div className="flex items-center justify-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-teal"></div>
+          </div>
         </CardContent>
       </Card>
-    </div>
+    );
+  }
+
+  return (
+    <Card className="w-full max-w-2xl mx-auto">
+      <CardHeader className="bg-gradient-to-r from-brand-teal to-brand-orange text-white rounded-t-lg">
+        <CardTitle className="flex items-center gap-3">
+          <MessageCircleIcon className="w-6 h-6" />
+          {t('feedback.title')}
+        </CardTitle>
+        <CardDescription className="text-white/90">
+          {t('feedback.description')}
+        </CardDescription>
+      </CardHeader>
+      
+      <CardContent className="p-6">
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Class Selection */}
+          <div className="space-y-2">
+            <Label className="text-base font-semibold">{t('feedback.selectClass')}</Label>
+            <RadioGroup value={selectedClass} onValueChange={setSelectedClass}>
+              {classes.map((classItem: any) => (
+                <div key={classItem.id} className="flex items-center space-x-2 p-3 border rounded-lg hover:bg-gray-50">
+                  <RadioGroupItem value={classItem.id} id={classItem.id} />
+                  <label htmlFor={classItem.id} className="flex-1 cursor-pointer">
+                    <div className="font-medium">{classItem.subject} - {classItem.lesson_topic}</div>
+                    <div className="text-sm text-gray-600">
+                      {new Date(classItem.class_date).toLocaleDateString()} at {classItem.class_time}
+                    </div>
+                  </label>
+                </div>
+              ))}
+            </RadioGroup>
+          </div>
+
+          {/* Rating Sliders */}
+          <div className="grid gap-6">
+            <div className="space-y-3">
+              <Label className="flex items-center gap-2 text-base font-semibold">
+                <BookOpenIcon className="w-5 h-5 text-blue-500" />
+                {t('feedback.understanding')}: {understanding[0]}/5
+              </Label>
+              <Slider
+                value={understanding}
+                onValueChange={setUnderstanding}
+                max={5}
+                min={1}
+                step={1}
+                className="w-full"
+              />
+            </div>
+
+            <div className="space-y-3">
+              <Label className="flex items-center gap-2 text-base font-semibold">
+                <StarIcon className="w-5 h-5 text-yellow-500" />
+                {t('feedback.interest')}: {interest[0]}/5
+              </Label>
+              <Slider
+                value={interest}
+                onValueChange={setInterest}
+                max={5}
+                min={1}
+                step={1}
+                className="w-full"
+              />
+            </div>
+
+            <div className="space-y-3">
+              <Label className="flex items-center gap-2 text-base font-semibold">
+                <LightbulbIcon className="w-5 h-5 text-green-500" />
+                {t('feedback.growth')}: {educationalGrowth[0]}/5
+              </Label>
+              <Slider
+                value={educationalGrowth}
+                onValueChange={setEducationalGrowth}
+                max={5}
+                min={1}
+                step={1}
+                className="w-full"
+              />
+            </div>
+          </div>
+
+          {/* Emotional State */}
+          <div className="space-y-2">
+            <Label className="text-base font-semibold">{t('feedback.emotionalState')}</Label>
+            <RadioGroup value={emotionalState} onValueChange={setEmotionalState}>
+              <div className="grid grid-cols-2 gap-2">
+                {['happy', 'excited', 'content', 'curious', 'confused', 'frustrated', 'bored', 'anxious'].map((emotion) => (
+                  <div key={emotion} className="flex items-center space-x-2">
+                    <RadioGroupItem value={emotion} id={emotion} />
+                    <Label htmlFor={emotion} className="capitalize cursor-pointer">{t(`feedback.emotions.${emotion}`)}</Label>
+                  </div>
+                ))}
+              </div>
+            </RadioGroup>
+          </div>
+
+          {/* Voice Input Toggle */}
+          <div className="border-t pt-6">
+            <Label className="text-base font-semibold mb-4 block">
+              Choose how to share your detailed feedback:
+            </Label>
+            
+            <VoiceInputToggle
+              onVoiceComplete={handleVoiceComplete}
+              onTextMode={handleTextMode}
+              disabled={isSubmitting}
+              className="mb-4"
+            />
+
+            {/* Show audio player if voice note exists */}
+            {audioData.audioUrl && (
+              <div className="mb-4">
+                <AudioPlayer
+                  audioUrl={audioData.audioUrl}
+                  transcription={audioData.transcription}
+                  duration={audioData.duration}
+                  title="Your feedback voice note"
+                  showTranscription={true}
+                />
+              </div>
+            )}
+
+            {/* Text input fields - only show if not in voice mode or if we have voice but want to add text */}
+            {(!audioData.audioUrl || voiceMode === 'text') && (
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="whatWentWell">{t('feedback.whatWentWell')}</Label>
+                  <Textarea
+                    id="whatWentWell"
+                    placeholder={t('feedback.whatWentWellPlaceholder')}
+                    value={whatWentWell}
+                    onChange={(e) => setWhatWentWell(e.target.value)}
+                    className="min-h-[100px]"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="suggestions">{t('feedback.suggestions')}</Label>
+                  <Textarea
+                    id="suggestions"
+                    placeholder={t('feedback.suggestionsPlaceholder')}
+                    value={suggestions}
+                    onChange={(e) => setSuggestions(e.target.value)}
+                    className="min-h-[100px]"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="additionalComments">{t('feedback.additionalComments')}</Label>
+                  <Textarea
+                    id="additionalComments"
+                    placeholder={t('feedback.additionalCommentsPlaceholder')}
+                    value={additionalComments}
+                    onChange={(e) => setAdditionalComments(e.target.value)}
+                    className="min-h-[100px]"
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Anonymous Option */}
+          <div className="flex items-center space-x-2 p-4 bg-gray-50 rounded-lg">
+            <Checkbox
+              id="anonymous"
+              checked={isAnonymous}
+              onCheckedChange={(checked) => setIsAnonymous(checked as boolean)}
+            />
+            <Label htmlFor="anonymous" className="flex items-center gap-2">
+              <EyeOffIcon className="w-4 h-4" />
+              {t('feedback.submitAnonymously')}
+            </Label>
+          </div>
+
+          {/* Submit Button */}
+          <Button 
+            type="submit" 
+            disabled={isSubmitting}
+            className="w-full bg-gradient-to-r from-brand-teal to-brand-orange hover:from-brand-teal/90 hover:to-brand-orange/90"
+          >
+            {isSubmitting ? t('feedback.submitting') : t('feedback.submit')}
+          </Button>
+        </form>
+      </CardContent>
+    </Card>
   );
 };
 

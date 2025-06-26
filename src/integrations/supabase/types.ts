@@ -41,6 +41,9 @@ export type Database = {
       }
       chat_messages: {
         Row: {
+          audio_duration: number | null
+          audio_file_size: number | null
+          audio_url: string | null
           created_at: string
           id: string
           message: string
@@ -48,8 +51,12 @@ export type Database = {
           sender_type: string
           sent_at: string
           session_id: string
+          transcription: string | null
         }
         Insert: {
+          audio_duration?: number | null
+          audio_file_size?: number | null
+          audio_url?: string | null
           created_at?: string
           id?: string
           message: string
@@ -57,8 +64,12 @@ export type Database = {
           sender_type: string
           sent_at?: string
           session_id: string
+          transcription?: string | null
         }
         Update: {
+          audio_duration?: number | null
+          audio_file_size?: number | null
+          audio_url?: string | null
           created_at?: string
           id?: string
           message?: string
@@ -66,6 +77,7 @@ export type Database = {
           sender_type?: string
           sent_at?: string
           session_id?: string
+          transcription?: string | null
         }
         Relationships: [
           {
@@ -178,6 +190,9 @@ export type Database = {
       feedback: {
         Row: {
           additional_comments: string | null
+          audio_duration: number | null
+          audio_file_size: number | null
+          audio_url: string | null
           class_schedule_id: string
           educational_growth: number
           emotional_state: string
@@ -188,11 +203,15 @@ export type Database = {
           student_name: string | null
           submitted_at: string
           suggestions: string | null
+          transcription: string | null
           understanding: number
           what_went_well: string | null
         }
         Insert: {
           additional_comments?: string | null
+          audio_duration?: number | null
+          audio_file_size?: number | null
+          audio_url?: string | null
           class_schedule_id: string
           educational_growth: number
           emotional_state: string
@@ -203,11 +222,15 @@ export type Database = {
           student_name?: string | null
           submitted_at?: string
           suggestions?: string | null
+          transcription?: string | null
           understanding: number
           what_went_well?: string | null
         }
         Update: {
           additional_comments?: string | null
+          audio_duration?: number | null
+          audio_file_size?: number | null
+          audio_url?: string | null
           class_schedule_id?: string
           educational_growth?: number
           emotional_state?: string
@@ -218,6 +241,7 @@ export type Database = {
           student_name?: string | null
           submitted_at?: string
           suggestions?: string | null
+          transcription?: string | null
           understanding?: number
           what_went_well?: string | null
         }
@@ -1025,8 +1049,14 @@ export type Database = {
       }
       weekly_summaries: {
         Row: {
+          academic_audio_url: string | null
           academic_concerns: string | null
+          academic_transcription: string | null
+          audio_duration: number | null
+          audio_file_size: number | null
+          emotional_audio_url: string | null
           emotional_concerns: string | null
+          emotional_transcription: string | null
           grade: string
           id: string
           is_anonymous: boolean
@@ -1037,8 +1067,14 @@ export type Database = {
           week_start_date: string
         }
         Insert: {
+          academic_audio_url?: string | null
           academic_concerns?: string | null
+          academic_transcription?: string | null
+          audio_duration?: number | null
+          audio_file_size?: number | null
+          emotional_audio_url?: string | null
           emotional_concerns?: string | null
+          emotional_transcription?: string | null
           grade: string
           id?: string
           is_anonymous?: boolean
@@ -1049,8 +1085,14 @@ export type Database = {
           week_start_date: string
         }
         Update: {
+          academic_audio_url?: string | null
           academic_concerns?: string | null
+          academic_transcription?: string | null
+          audio_duration?: number | null
+          audio_file_size?: number | null
+          emotional_audio_url?: string | null
           emotional_concerns?: string | null
+          emotional_transcription?: string | null
           grade?: string
           id?: string
           is_anonymous?: boolean
