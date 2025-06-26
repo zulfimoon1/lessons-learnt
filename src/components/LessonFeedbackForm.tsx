@@ -222,28 +222,51 @@ const LessonFeedbackForm = () => {
     setIsSubmitting(true);
 
     try {
-      console.log('🔐 Checking authentication session...');
+      console.log('🔐 Enhanced authentication check...');
       
-      // Get the current session with better error handling
+      // Multiple authentication validation approaches
+      let authenticatedUserId = null;
+      let authMethod = '';
+      
+      // First try: Get Supabase session
       const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-      
-      if (sessionError) {
-        console.error('❌ Session error:', sessionError);
-        throw new Error(`Session error: ${sessionError.message}`);
+      if (session?.user) {
+        authenticatedUserId = session.user.id;
+        authMethod = 'supabase_session';
+        console.log('✅ Found Supabase session:', session.user.id);
+      } else {
+        console.log('⚠️ No Supabase session found');
       }
       
-      if (!session) {
-        console.error('❌ No active session found');
-        throw new Error('No active session. Please log in again.');
+      // Second try: Use student context
+      if (!authenticatedUserId && student?.id) {
+        authenticatedUserId = student.id;
+        authMethod = 'student_context';
+        console.log('✅ Using student context:', student.id);
       }
       
-      console.log('✅ Session validated:', session.user.id);
+      // Third try: Check secure session storage
+      if (!authenticatedUserId) {
+        const storedStudent = secureSessionService.securelyRetrieveUserData('student');
+        if (storedStudent?.id) {
+          authenticatedUserId = storedStudent.id;
+          authMethod = 'secure_storage';
+          console.log('✅ Found student in secure storage:', storedStudent.id);
+        }
+      }
+      
+      if (!authenticatedUserId) {
+        console.error('❌ No valid authentication found');
+        throw new Error('Please log in to submit feedback. Try refreshing the page and logging in again.');
+      }
+      
+      console.log(`✅ Authentication validated via ${authMethod}:`, authenticatedUserId);
       
       // Prepare feedback data with enhanced error handling
       const feedbackData = {
         class_schedule_id: selectedClass,
-        student_id: isAnonymous ? null : (student?.id || session.user.id),
-        student_name: isAnonymous ? t('feedback.anonymous') : (student?.full_name || 'Unknown Student'),
+        student_id: isAnonymous ? null : authenticatedUserId,
+        student_name: isAnonymous ? t('feedback.anonymous') : (student?.full_name || 'Student'),
         understanding: understanding[0] || 3,
         interest: interest[0] || 3,
         educational_growth: educationalGrowth[0] || 3,
@@ -270,7 +293,7 @@ const LessonFeedbackForm = () => {
         
       console.log('🔍 Database test result:', { testQuery, testError });
       
-      if (testError) {
+      if (testError && testError.code !== 'PGRST116') { // PGRST116 is "no rows returned" which is fine
         console.error('❌ Cannot access feedback table:', testError);
         throw new Error(`Database access error: ${testError.message}`);
       }
@@ -354,8 +377,10 @@ const LessonFeedbackForm = () => {
       // Check if it's an auth-related error and provide helpful guidance
       let errorMessage = error instanceof Error ? error.message : "Failed to submit feedback. Please try again.";
       
-      if (errorMessage.includes('session') || errorMessage.includes('auth')) {
-        errorMessage += " Try refreshing the page and logging in again.";
+      if (errorMessage.includes('session') || errorMessage.includes('auth') || errorMessage.includes('log in')) {
+        // Already includes guidance in the error message
+      } else {
+        errorMessage += " If this persists, try refreshing the page and logging in again.";
       }
       
       toast({

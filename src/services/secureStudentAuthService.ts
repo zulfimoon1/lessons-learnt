@@ -1,246 +1,219 @@
 
-import { enhancedSecurityValidationService } from './enhancedSecurityValidationService';
-import bcrypt from 'bcryptjs';
 import { supabase } from '@/integrations/supabase/client';
+import { secureSessionService } from './secureSessionService';
+import { securityService } from './securityService';
+import bcrypt from 'bcryptjs';
 
-interface StudentAuthResult {
-  student?: any;
-  error?: string;
+interface Student {
+  id: string;
+  full_name: string;
+  school: string;
+  grade: string;
+  needs_password_change?: boolean;
 }
 
-export const secureStudentLogin = async (fullName: string, school: string, grade: string, password: string): Promise<StudentAuthResult> => {
-  try {
-    console.log('secureStudentLogin: Attempting login with:', { fullName, school, grade });
+interface AuthResult {
+  student?: Student;
+  error?: string;
+  needsPasswordChange?: boolean;
+}
 
-    // Rate limiting check
-    const rateLimitKey = `student_secure_login_${fullName}_${school}`;
-    if (!enhancedSecurityValidationService.checkRateLimit(rateLimitKey, 5, 15 * 60 * 1000)) {
-      throw new Error('Too many login attempts. Please try again in 15 minutes.');
-    }
+// Enhanced secure student login with Supabase session creation
+export const secureStudentLogin = async (
+  fullName: string, 
+  school: string, 
+  grade: string, 
+  password: string
+): Promise<AuthResult> => {
+  try {
+    console.log('🔐 SecureStudentAuth: Starting secure login process for:', { fullName, school, grade });
 
     // Input validation
-    const nameValidation = enhancedSecurityValidationService.validateInput(fullName, 'name');
-    const schoolValidation = enhancedSecurityValidationService.validateInput(school, 'school');
+    const nameValidation = securityService.validateAndSanitizeInput(fullName, 'name');
+    const schoolValidation = securityService.validateAndSanitizeInput(school, 'school');
     
     if (!nameValidation.isValid || !schoolValidation.isValid) {
-      throw new Error('Invalid input provided');
+      return { error: 'Invalid input provided' };
     }
 
-    // Debug: Check what students exist in database
-    console.log('secureStudentLogin: Querying database for students...');
-    const { data: allStudents, error: queryError } = await supabase
-      .from('students')
-      .select('id, full_name, school, grade')
-      .limit(10);
+    // Call the secure authentication function
+    const { data: authResult, error: authError } = await supabase.rpc('authenticate_student_working', {
+      name_param: nameValidation.sanitized,
+      school_param: schoolValidation.sanitized,
+      grade_param: grade.trim(),
+      password_param: password
+    });
+
+    if (authError) {
+      console.error('❌ SecureStudentAuth: Database authentication error:', authError);
+      return { error: 'Authentication failed' };
+    }
+
+    if (!authResult || authResult.length === 0) {
+      console.log('❌ SecureStudentAuth: No matching student found');
+      return { error: 'Invalid credentials' };
+    }
+
+    const studentData = authResult[0];
     
-    if (queryError) {
-      console.error('secureStudentLogin: Error querying students:', queryError);
-    } else {
-      console.log('secureStudentLogin: Found students in database:', allStudents);
+    if (!studentData.student_id || !studentData.password_valid) {
+      console.log('❌ SecureStudentAuth: Invalid credentials');
+      return { error: 'Invalid credentials' };
     }
 
-    // Clean the grade input - try multiple variations
-    const cleanGrade = grade.replace(/^Grade\s+/i, '').trim();
-    console.log('secureStudentLogin: Original grade:', grade, 'Cleaned grade:', cleanGrade);
+    console.log('✅ SecureStudentAuth: Student authenticated successfully');
 
-    // Try to find student with multiple grade variations
-    console.log('secureStudentLogin: Looking for exact match with cleaned grade:', {
-      full_name: fullName.trim(),
-      school: school.trim(),
-      grade: cleanGrade
-    });
+    const student: Student = {
+      id: studentData.student_id,
+      full_name: studentData.student_name,
+      school: studentData.student_school,
+      grade: studentData.student_grade
+    };
 
-    let student = null;
-    let error = null;
-
-    // First try with cleaned grade (e.g., "5")
-    const result1 = await supabase
-      .from('students')
-      .select('*')
-      .eq('full_name', fullName.trim())
-      .eq('school', school.trim())
-      .eq('grade', cleanGrade)
-      .maybeSingle();
-
-    console.log('secureStudentLogin: First attempt result (cleaned grade):', result1);
-
-    if (result1.data) {
-      student = result1.data;
-    } else {
-      // Try with original grade format (e.g., "Grade 5")
-      const result2 = await supabase
-        .from('students')
-        .select('*')
-        .eq('full_name', fullName.trim())
-        .eq('school', school.trim())
-        .eq('grade', grade.trim())
-        .maybeSingle();
-
-      console.log('secureStudentLogin: Second attempt result (original grade):', result2);
-
-      if (result2.data) {
-        student = result2.data;
-      } else {
-        // Try case-insensitive search for full name and school
-        const result3 = await supabase
-          .from('students')
-          .select('*')
-          .ilike('full_name', fullName.trim())
-          .ilike('school', school.trim())
-          .in('grade', [cleanGrade, grade.trim(), `Grade ${cleanGrade}`])
-          .maybeSingle();
-
-        console.log('secureStudentLogin: Third attempt result (case-insensitive):', result3);
-        
-        if (result3.data) {
-          student = result3.data;
-        } else {
-          error = result3.error;
-        }
-      }
-    }
-
-    if (!student) {
-      console.log('secureStudentLogin: No student found after all attempts. Error:', error);
-      await enhancedSecurityValidationService.logSecurityEvent({
-        type: 'suspicious_activity',
-        details: `Failed student login attempt for: ${fullName} at ${school} grade ${grade}`,
-        severity: 'medium'
-      });
-      throw new Error('Invalid credentials');
-    }
-
-    console.log('secureStudentLogin: Found student:', {
-      id: student.id,
-      full_name: student.full_name,
-      school: student.school,
-      grade: student.grade
-    });
-
-    // Enhanced password verification - try multiple methods
-    console.log('secureStudentLogin: Verifying password...');
-    let isPasswordValid = false;
-
-    // First try bcrypt (for properly hashed passwords)
+    // Create a Supabase auth session for the student
     try {
-      isPasswordValid = await bcrypt.compare(password, student.password_hash);
-      console.log('secureStudentLogin: Bcrypt password check:', isPasswordValid);
-    } catch (bcryptError) {
-      console.log('secureStudentLogin: Bcrypt failed, trying simple hash...');
-    }
-
-    // If bcrypt fails, try simple SHA256 hash (for test accounts)
-    if (!isPasswordValid) {
-      try {
-        const crypto = require('crypto');
-        const simpleHash = crypto.createHash('sha256').update(password + 'simple_salt_2024').digest('hex');
-        isPasswordValid = simpleHash === student.password_hash;
-        console.log('secureStudentLogin: Simple hash password check:', isPasswordValid);
-      } catch (hashError) {
-        console.log('secureStudentLogin: Simple hash failed');
-      }
-    }
-
-    // If both fail, try direct comparison for development/testing
-    if (!isPasswordValid) {
-      // Check if it's a test password that might be stored in plain text or encoded
-      const testPasswords = ['demostudent', 'demostudent123', 'password123', 'teststudent'];
-      isPasswordValid = testPasswords.includes(password) || password === student.password_hash;
-      console.log('secureStudentLogin: Test password check:', isPasswordValid);
-    }
-
-    console.log('secureStudentLogin: Final password validation result:', isPasswordValid);
-    
-    if (!isPasswordValid) {
-      await enhancedSecurityValidationService.logSecurityEvent({
-        type: 'suspicious_activity',
-        details: `Invalid password for student: ${fullName}`,
-        severity: 'medium'
+      // Sign in the student using Supabase auth with a temporary email
+      const studentEmail = `${student.id}@student.local`;
+      
+      // First, try to sign in
+      const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+        email: studentEmail,
+        password: 'student-temp-password'
       });
-      throw new Error('Invalid credentials');
+
+      // If sign in fails, create the user first
+      if (signInError) {
+        console.log('🔄 Creating Supabase user for student...');
+        const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+          email: studentEmail,
+          password: 'student-temp-password',
+          options: {
+            data: {
+              user_type: 'student',
+              full_name: student.full_name,
+              school: student.school,
+              grade: student.grade,
+              student_id: student.id
+            }
+          }
+        });
+
+        if (signUpError) {
+          console.warn('⚠️ Could not create Supabase session, but student auth succeeded');
+        } else {
+          console.log('✅ Created Supabase user for student');
+        }
+      } else {
+        console.log('✅ Student signed into Supabase successfully');
+      }
+    } catch (sessionError) {
+      console.warn('⚠️ Supabase session creation failed, but student authentication succeeded:', sessionError);
     }
 
-    await enhancedSecurityValidationService.logSecurityEvent({
-      type: 'session_error', // Using valid type
-      userId: student.id,
-      details: 'Successful secure student authentication',
-      severity: 'low'
-    });
+    // Store in secure session service
+    secureSessionService.securelyStoreUserData('student', student);
 
-    console.log('secureStudentLogin: Login successful');
+    console.log('✅ SecureStudentAuth: Login completed successfully');
     return { student };
 
   } catch (error) {
-    console.error('Secure student login error:', error);
-    throw error;
+    console.error('💥 SecureStudentAuth: Login failed:', error);
+    
+    securityService.logSecurityEvent({
+      type: 'login_failed',
+      timestamp: new Date().toISOString(),
+      details: `Student login failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      userAgent: navigator.userAgent
+    });
+    
+    return { error: 'Authentication failed' };
   }
 };
 
-export const secureStudentSignup = async (fullName: string, school: string, grade: string, password: string): Promise<StudentAuthResult> => {
+// Enhanced secure student signup
+export const secureStudentSignup = async (
+  fullName: string,
+  school: string, 
+  grade: string,
+  password: string
+): Promise<AuthResult> => {
   try {
-    // Enhanced input validation
-    const nameValidation = enhancedSecurityValidationService.validateInput(fullName, 'name', { maxLength: 100 });
-    const schoolValidation = enhancedSecurityValidationService.validateInput(school, 'school', { maxLength: 100 });
-    const gradeValidation = enhancedSecurityValidationService.validateInput(grade, 'grade', { maxLength: 10 });
-    const passwordValidation = enhancedSecurityValidationService.validatePassword(password);
+    console.log('📝 SecureStudentAuth: Starting secure signup process for:', { fullName, school, grade });
 
-    if (!nameValidation.isValid) {
-      throw new Error(nameValidation.errors.join(', '));
-    }
-    if (!schoolValidation.isValid) {
-      throw new Error(schoolValidation.errors.join(', '));
-    }
-    if (!gradeValidation.isValid) {
-      throw new Error(gradeValidation.errors.join(', '));
-    }
-    if (!passwordValidation.isValid) {
-      throw new Error(passwordValidation.errors.join(', '));
-    }
-
-    // Check if student already exists
-    const { data: existingStudent } = await supabase
-      .from('students')
-      .select('id')
-      .eq('full_name', fullName.trim())
-      .eq('school', school.trim())
-      .eq('grade', grade.trim())
-      .single();
-
-    if (existingStudent) {
-      throw new Error('A student with this name already exists in this school and grade');
+    // Input validation
+    const nameValidation = securityService.validateAndSanitizeInput(fullName, 'name');
+    const schoolValidation = securityService.validateAndSanitizeInput(school, 'school');
+    const passwordValidation = securityService.validatePassword(password);
+    
+    if (!nameValidation.isValid || !schoolValidation.isValid || !passwordValidation.isValid) {
+      return { error: passwordValidation.message || 'Invalid input provided' };
     }
 
     // Hash password securely
-    const passwordHash = await bcrypt.hash(password, 12);
+    const saltRounds = 12;
+    const hashedPassword = await bcrypt.hash(password, saltRounds);
 
-    // Insert new student
-    const { data: newStudent, error } = await supabase
+    // Insert student record
+    const { data: studentData, error: insertError } = await supabase
       .from('students')
       .insert({
-        full_name: fullName.trim(),
-        school: school.trim(),
+        full_name: nameValidation.sanitized,
+        school: schoolValidation.sanitized,
         grade: grade.trim(),
-        password_hash: passwordHash
+        password_hash: hashedPassword
       })
       .select()
       .single();
 
-    if (error) {
-      console.error('Student registration error:', error);
-      throw new Error('Registration failed');
+    if (insertError) {
+      console.error('❌ SecureStudentAuth: Signup failed:', insertError);
+      
+      if (insertError.code === '23505') {
+        return { error: 'A student with this name already exists in this school and grade' };
+      }
+      
+      return { error: 'Registration failed' };
     }
 
-    await enhancedSecurityValidationService.logSecurityEvent({
-      type: 'session_error', // Using valid type
-      userId: newStudent.id,
-      details: 'New secure student account created',
-      severity: 'low'
-    });
+    const student: Student = {
+      id: studentData.id,
+      full_name: studentData.full_name,
+      school: studentData.school,
+      grade: studentData.grade
+    };
 
-    return { student: newStudent };
+    // Create Supabase auth session
+    try {
+      const studentEmail = `${student.id}@student.local`;
+      const { error: signUpError } = await supabase.auth.signUp({
+        email: studentEmail,
+        password: 'student-temp-password',
+        options: {
+          data: {
+            user_type: 'student',
+            full_name: student.full_name,
+            school: student.school,
+            grade: student.grade,
+            student_id: student.id
+          }
+        }
+      });
+
+      if (signUpError) {
+        console.warn('⚠️ Could not create Supabase session during signup');
+      }
+    } catch (sessionError) {
+      console.warn('⚠️ Supabase session creation failed during signup:', sessionError);
+    }
+
+    // Store in secure session service
+    secureSessionService.securelyStoreUserData('student', student);
+
+    console.log('✅ SecureStudentAuth: Signup completed successfully');
+    return { student };
 
   } catch (error) {
-    console.error('Secure student signup error:', error);
-    throw error;
+    console.error('💥 SecureStudentAuth: Signup failed:', error);
+    return { error: 'Registration failed' };
   }
 };
