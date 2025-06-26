@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Calendar, Clock, BookOpen, User, MessageSquare, GraduationCap, CheckCircle } from "lucide-react";
+import { Calendar, Clock, BookOpen, User, MessageSquare, GraduationCap, CheckCircle, AlertCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
 
@@ -35,48 +35,77 @@ interface StudentUpcomingClassesProps {
 }
 
 const StudentUpcomingClasses: React.FC<StudentUpcomingClassesProps> = ({ student, onClassCountChange }) => {
-  const [upcomingClasses, setUpcomingClasses] = useState<ClassSchedule[]>([]);
+  const [classes, setClasses] = useState<ClassSchedule[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [debugInfo, setDebugInfo] = useState("");
   const { toast } = useToast();
   const navigate = useNavigate();
   const { t } = useLanguage();
 
   useEffect(() => {
-    fetchUpcomingClasses();
+    fetchClasses();
   }, [student.school, student.grade]);
 
   useEffect(() => {
     // Notify parent component of class count change
-    onClassCountChange?.(upcomingClasses.length);
-  }, [upcomingClasses.length, onClassCountChange]);
+    onClassCountChange?.(classes.length);
+  }, [classes.length, onClassCountChange]);
 
-  const fetchUpcomingClasses = async () => {
+  const fetchClasses = async () => {
     try {
       setIsLoading(true);
       
-      const today = new Date();
+      console.log('🔍 StudentUpcomingClasses: Loading classes for student:', { 
+        name: student.full_name,
+        school: student.school, 
+        grade: student.grade,
+        studentId: student.id 
+      });
       
-      // Fetch classes for the student's school and grade
+      // Fetch ALL classes for the student's school and grade in the last 30 days
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+      
       const { data: classData, error } = await supabase
         .from('class_schedules')
         .select('*')
         .eq('school', student.school)
         .eq('grade', student.grade)
-        .order('class_date', { ascending: true })
-        .order('class_time', { ascending: true });
+        .gte('class_date', thirtyDaysAgo.toISOString().split('T')[0])
+        .order('class_date', { ascending: false })
+        .order('class_time', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ Error fetching classes:', error);
+        throw error;
+      }
+
+      console.log('📋 Raw class schedules found:', classData?.length || 0);
+      console.log('📋 Class data:', classData);
+
+      if (!classData || classData.length === 0) {
+        setDebugInfo(`No classes found for school "${student.school}" and grade "${student.grade}" in the last 30 days.`);
+        setClasses([]);
+        return;
+      }
 
       // Get existing feedback for this student
-      const { data: feedbackData } = await supabase
+      const { data: feedbackData, error: feedbackError } = await supabase
         .from('feedback')
         .select('class_schedule_id')
         .eq('student_id', student.id);
 
+      if (feedbackError) {
+        console.error('❌ Error fetching feedback:', feedbackError);
+      }
+
+      console.log('✅ Existing feedback for student:', feedbackData?.length || 0);
+
       const feedbackClassIds = new Set(feedbackData?.map(f => f.class_schedule_id) || []);
 
-      const classesWithTeachers = await Promise.all(
-        (classData || []).map(async (classItem) => {
+      // Get teacher names and process classes
+      const classesWithDetails = await Promise.all(
+        classData.map(async (classItem) => {
           const { data: teacherData } = await supabase
             .from('teachers')
             .select('name')
@@ -84,32 +113,61 @@ const StudentUpcomingClasses: React.FC<StudentUpcomingClassesProps> = ({ student
             .single();
 
           const classDateTime = new Date(`${classItem.class_date}T${classItem.class_time}`);
-          const isPast = classDateTime < today;
+          const now = new Date();
+          const isPast = classDateTime < now;
           const hasFeedback = feedbackClassIds.has(classItem.id);
+
+          console.log('🎯 Processing class:', {
+            id: classItem.id,
+            subject: classItem.subject,
+            lesson_topic: classItem.lesson_topic,
+            date: classItem.class_date,
+            time: classItem.class_time,
+            isPast,
+            hasFeedback,
+            shouldShow: !isPast || !hasFeedback // Show if upcoming OR past without feedback
+          });
 
           return {
             ...classItem,
-            teacher_name: teacherData?.name || t('student.defaultName'),
+            teacher_name: teacherData?.name || 'Unknown Teacher',
             has_feedback: hasFeedback,
             is_past: isPast
           };
         })
       );
 
-      // Updated filtering logic: Show upcoming classes OR past classes WITHOUT feedback
-      // Exclude past classes that already have feedback
-      const filteredClasses = classesWithTeachers.filter(classItem => {
-        // Always show upcoming classes (not past)
-        if (!classItem.is_past) {
-          return true;
-        }
-        // For past classes, only show if NO feedback has been submitted
-        return !classItem.has_feedback;
+      // Show both upcoming classes AND past classes that don't have feedback
+      const relevantClasses = classesWithDetails.filter(classItem => {
+        // Show upcoming classes OR past classes without feedback
+        const shouldShow = !classItem.is_past || !classItem.has_feedback;
+        return shouldShow;
       });
 
-      setUpcomingClasses(filteredClasses);
+      console.log('📊 Final classes to show:', relevantClasses.length);
+      console.log('📊 Classes details:', relevantClasses.map(c => ({
+        subject: c.subject,
+        topic: c.lesson_topic,
+        date: c.class_date,
+        isPast: c.is_past,
+        hasFeedback: c.has_feedback
+      })));
+
+      setClasses(relevantClasses);
+      
+      const debugMessage = `
+        Student: ${student.full_name}
+        School: ${student.school}
+        Grade: ${student.grade}
+        Total classes found: ${classData.length}
+        Classes with feedback: ${feedbackClassIds.size}
+        Classes needing attention: ${relevantClasses.length}
+      `;
+      setDebugInfo(debugMessage);
+      
     } catch (error) {
-      console.error('Error fetching upcoming classes:', error);
+      console.error('💥 Error loading classes:', error);
+      setDebugInfo(`Error loading classes: ${error.message}`);
       toast({
         title: t('common.error'),
         description: t('student.failedToLoadClasses'),
@@ -142,26 +200,34 @@ const StudentUpcomingClasses: React.FC<StudentUpcomingClassesProps> = ({ student
           <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
             <Calendar className="w-5 h-5" />
           </div>
-          {t('dashboard.upcomingClasses')}
+          Classes & Feedback
         </CardTitle>
       </CardHeader>
       <CardContent className="p-6">
-        {upcomingClasses.length === 0 ? (
+        {/* Debug Information */}
+        {debugInfo && (
+          <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+            <div className="flex items-center gap-2 mb-2">
+              <AlertCircle className="w-4 h-4 text-blue-600" />
+              <span className="text-sm font-medium text-blue-800">Debug Information:</span>
+            </div>
+            <div className="text-xs text-blue-700 whitespace-pre-line">{debugInfo}</div>
+          </div>
+        )}
+
+        {classes.length === 0 ? (
           <div className="text-center py-12">
             <div className="w-20 h-20 bg-brand-teal/10 rounded-full mx-auto mb-4 flex items-center justify-center">
               <BookOpen className="w-10 h-10 text-brand-teal" />
             </div>
-            <p className="text-brand-dark font-medium mb-2">{t('dashboard.noClasses')}</p>
+            <p className="text-brand-dark font-medium mb-2">No classes found</p>
             <p className="text-brand-dark/60 text-sm">
-              {t('dashboard.scheduledClasses', { 
-                grade: student.grade, 
-                school: student.school 
-              })}
+              Classes for {student.grade} at {student.school} will appear here
             </p>
           </div>
         ) : (
           <div className="space-y-4">
-            {upcomingClasses.map((classItem, index) => (
+            {classes.map((classItem, index) => (
               <div 
                 key={classItem.id} 
                 className="group border border-brand-teal/20 rounded-lg p-5 hover:bg-brand-teal/5 hover:border-brand-teal/40 transition-all duration-200 hover:shadow-md"
@@ -178,7 +244,18 @@ const StudentUpcomingClasses: React.FC<StudentUpcomingClassesProps> = ({ student
                       </Badge>
                       {classItem.is_past && !classItem.has_feedback && (
                         <Badge variant="secondary" className="bg-orange-100 text-orange-800 border-orange-200">
-                          {t('feedback.pending')}
+                          Feedback Needed
+                        </Badge>
+                      )}
+                      {classItem.has_feedback && (
+                        <Badge variant="secondary" className="bg-green-100 text-green-800 border-green-200">
+                          <CheckCircle className="w-3 h-3 mr-1" />
+                          Feedback Submitted
+                        </Badge>
+                      )}
+                      {!classItem.is_past && (
+                        <Badge variant="default" className="bg-blue-100 text-blue-800 border-blue-200">
+                          Upcoming
                         </Badge>
                       )}
                     </div>
@@ -208,14 +285,16 @@ const StudentUpcomingClasses: React.FC<StudentUpcomingClassesProps> = ({ student
                   </div>
                   
                   <div className="ml-6">
-                    <Button
-                      size="sm"
-                      onClick={() => handleLeaveFeedback(classItem.id)}
-                      className="bg-gradient-to-r from-brand-orange to-brand-orange/80 hover:from-brand-orange/90 hover:to-brand-orange/70 text-white shadow-lg hover:shadow-xl transition-all duration-200 group-hover:scale-105"
-                    >
-                      <MessageSquare className="w-4 h-4 mr-2" />
-                      {t('feedback.submitFeedback')}
-                    </Button>
+                    {!classItem.has_feedback && (
+                      <Button
+                        size="sm"
+                        onClick={() => handleLeaveFeedback(classItem.id)}
+                        className="bg-gradient-to-r from-brand-orange to-brand-orange/80 hover:from-brand-orange/90 hover:to-brand-orange/70 text-white shadow-lg hover:shadow-xl transition-all duration-200 group-hover:scale-105"
+                      >
+                        <MessageSquare className="w-4 h-4 mr-2" />
+                        {classItem.is_past ? 'Leave Feedback' : 'Submit Feedback'}
+                      </Button>
+                    )}
                   </div>
                 </div>
               </div>
