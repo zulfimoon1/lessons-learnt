@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -57,16 +56,19 @@ const TeacherNotebook = ({ teacher }: TeacherNotebookProps) => {
 
   const loadNotes = async () => {
     try {
-      // Use dynamic query since TypeScript doesn't recognize the new table yet
       const { data, error } = await supabase
-        .from('teacher_notes' as any)
+        .from('teacher_notes')
         .select('*')
         .eq('school', teacher.school)
         .eq('created_by', teacher.id)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
-      setNotes(data as Note[] || []);
+      if (error) {
+        console.error('Error loading notes:', error);
+        throw error;
+      }
+
+      setNotes(data || []);
     } catch (error) {
       console.error('Error loading notes:', error);
       toast({
@@ -124,7 +126,7 @@ const TeacherNotebook = ({ teacher }: TeacherNotebookProps) => {
 
       if (editingNote) {
         const { error } = await supabase
-          .from('teacher_notes' as any)
+          .from('teacher_notes')
           .update({
             ...noteData,
             updated_at: new Date().toISOString()
@@ -139,7 +141,7 @@ const TeacherNotebook = ({ teacher }: TeacherNotebookProps) => {
         });
       } else {
         const { error } = await supabase
-          .from('teacher_notes' as any)
+          .from('teacher_notes')
           .insert(noteData);
 
         if (error) throw error;
@@ -181,7 +183,7 @@ const TeacherNotebook = ({ teacher }: TeacherNotebookProps) => {
 
     try {
       const { error } = await supabase
-        .from('teacher_notes' as any)
+        .from('teacher_notes')
         .delete()
         .eq('id', id);
 
@@ -353,9 +355,9 @@ const TeacherNotebook = ({ teacher }: TeacherNotebookProps) => {
       )}
 
       {/* Notes List */}
-      {filteredNotes.length > 0 && (
+      {notes.length > 0 && (
         <div className="grid gap-4">
-          {filteredNotes.map((note) => (
+          {notes.map((note) => (
             <Card key={note.id}>
               <CardHeader>
                 <div className="flex justify-between items-start">
@@ -418,7 +420,7 @@ const TeacherNotebook = ({ teacher }: TeacherNotebookProps) => {
         </div>
       )}
 
-      {filteredNotes.length === 0 && !showForm && (
+      {notes.length === 0 && !showForm && (
         <Card>
           <CardContent className="text-center py-8">
             <NotebookPenIcon className="w-12 h-12 text-gray-400 mx-auto mb-4" />
@@ -429,6 +431,50 @@ const TeacherNotebook = ({ teacher }: TeacherNotebookProps) => {
       )}
     </div>
   );
+
+  function handleEdit(note: Note) {
+    setFormData({
+      title: note.title,
+      content: note.content,
+      category: note.category,
+      tags: note.tags,
+    });
+    setEditingNote(note);
+    setShowForm(true);
+  }
+
+  function handleDelete(id: string) {
+    if (!confirm(t('notes.confirmDelete'))) return;
+
+    supabase
+      .from('teacher_notes')
+      .delete()
+      .eq('id', id)
+      .then(({ error }) => {
+        if (error) {
+          console.error('Error deleting note:', error);
+          toast({
+            title: t('common.error'),
+            description: 'Failed to delete note',
+            variant: "destructive",
+          });
+        } else {
+          toast({
+            title: t('notes.noteDeleted'),
+            description: 'Note deleted successfully',
+          });
+          loadNotes();
+        }
+      });
+  }
+
+  const filteredNotes = notes.filter(note => {
+    const matchesSearch = note.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         note.content.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         note.tags.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesCategory = filterCategory === 'all' || note.category === filterCategory;
+    return matchesSearch && matchesCategory;
+  });
 };
 
 export default TeacherNotebook;
