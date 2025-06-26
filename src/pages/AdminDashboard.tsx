@@ -7,6 +7,7 @@ import { BarChart3, Users, MessageSquare, Settings, School } from "lucide-react"
 import FeedbackAnalytics from "@/components/dashboard/admin/FeedbackAnalytics";
 import TeacherManagement from "@/components/dashboard/admin/TeacherManagement";
 import SchoolAdminDashboard from "@/components/dashboard/admin/SchoolAdminDashboard";
+import SchoolSettings from "@/components/dashboard/admin/SchoolSettings";
 import { useLanguage } from "@/contexts/LanguageContext";
 import DashboardHeader from "@/components/dashboard/DashboardHeader";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -55,15 +56,7 @@ const AdminDashboard = () => {
       value: 'settings',
       icon: Settings,
       label: 'Settings',
-      component: (
-        <div className="text-center py-8">
-          <Settings className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">School Settings</h3>
-          <p className="text-gray-600">
-            School configuration and administrative settings will be available here.
-          </p>
-        </div>
-      ),
+      component: <SchoolSettings teacher={teacher} />,
       color: 'text-brand-orange'
     }
   ];
