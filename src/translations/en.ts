@@ -345,11 +345,12 @@ export const enTranslations = {
   'platform.readyToTransform': 'Ready to Transform Your School?',
   'platform.readyToTransformDesc': 'Join thousands of educators already using our platform',
 
+  // Updated compliance section - changed "Certified" to "Compliant" and "Aligned" to "Compliant"
   'compliance.gdpr.title': 'GDPR Compliant',
   'compliance.gdpr.description': 'Full compliance with European data protection regulations',
-  'compliance.soc2.title': 'SOC 2 Certified',
+  'compliance.soc2.title': 'SOC 2 Compliant',
   'compliance.soc2.description': 'Industry-standard security and availability controls',
-  'compliance.hipaa.title': 'HIPAA Aligned',
+  'compliance.hipaa.title': 'HIPAA Compliant',
   'compliance.hipaa.description': 'Healthcare-grade privacy protection for sensitive data',
   'compliance.privacyPolicy': 'Privacy Policy',
   'compliance.cookiePolicy': 'Cookie Policy',
