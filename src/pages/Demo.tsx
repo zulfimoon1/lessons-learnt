@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -330,34 +329,6 @@ const Demo = () => {
                   </Button>
                 </CardContent>
               </Card>
-            </div>
-
-            {/* Platform Features Section */}
-            <div className="mt-16 bg-white/90 backdrop-blur-sm rounded-2xl p-8 shadow-lg border border-gray-200/50">
-              <h3 className="text-3xl font-bold text-center mb-4 text-brand-dark">
-                Experience the Complete Platform
-              </h3>
-              <p className="text-lg text-center text-gray-600 mb-8 max-w-4xl mx-auto">
-                Our interactive demos showcase the modern, intuitive design that makes complex educational workflows simple and efficient
-              </p>
-              
-              <div className="bg-gradient-to-r from-brand-teal to-brand-orange text-white rounded-2xl p-8 max-w-2xl mx-auto mb-12 shadow-xl">
-                <div className="text-center">
-                  <p className="text-4xl font-black tracking-wide drop-shadow-lg mb-2">
-                    Real User Experience
-                  </p>
-                  <p className="text-xl font-bold opacity-95 drop-shadow-md mb-6">
-                    Sign up and test all features with authentic workflows
-                  </p>
-                  
-                  <Button 
-                    onClick={handleStartFreeTrial}
-                    className="bg-brand-orange hover:bg-brand-orange/90 text-white px-8 py-3 text-lg font-semibold shadow-lg hover:shadow-xl transition-all transform hover:scale-105"
-                  >
-                    Start Your Free Trial
-                  </Button>
-                </div>
-              </div>
             </div>
 
             {/* Key Features */}
