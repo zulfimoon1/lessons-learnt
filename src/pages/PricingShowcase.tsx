@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -15,27 +14,27 @@ const PricingShowcase = () => {
   const [isAnnual, setIsAnnual] = useState(false);
 
   const handleStartFreeTrial = () => {
-    console.log('Start Free Trial button clicked - navigating to teacher-login');
+    console.log('Start Free Trial button clicked - navigating to teacher-login signup tab');
     try {
-      navigate('/teacher-login');
+      navigate('/teacher-login?tab=signup');
     } catch (error) {
       console.error('Navigation error:', error);
     }
   };
 
   const handleTransformYourSchool = () => {
-    console.log('Transform Your School button clicked - navigating to teacher-login');
+    console.log('Transform Your School button clicked - navigating to teacher-login signup tab');
     try {
-      navigate('/teacher-login');
+      navigate('/teacher-login?tab=signup');
     } catch (error) {
       console.error('Navigation error:', error);
     }
   };
 
   const handleStartFreeTrialNow = () => {
-    console.log('Start Free Trial Now button clicked - navigating to teacher-login');
+    console.log('Start Free Trial Now button clicked - navigating to teacher-login signup tab');
     try {
-      navigate('/teacher-login');
+      navigate('/teacher-login?tab=signup');
     } catch (error) {
       console.error('Navigation error:', error);
     }

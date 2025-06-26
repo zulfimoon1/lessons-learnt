@@ -1,10 +1,9 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { GraduationCapIcon } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
 import AuthHeader from "@/components/auth/AuthHeader";
@@ -19,6 +18,10 @@ const SecureTeacherLogin = () => {
   const { toast } = useToast();
   const { teacher, isLoading: authLoading, setTeacher } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
+  const [searchParams] = useSearchParams();
+  
+  // Get the tab from URL params, default to 'signup' if tab=signup is in URL, otherwise 'login'
+  const defaultTab = searchParams.get('tab') === 'signup' ? 'signup' : 'login';
 
   useEffect(() => {
     if (teacher && !authLoading) {
@@ -145,7 +148,7 @@ const SecureTeacherLogin = () => {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Tabs defaultValue="login" className="space-y-4">
+            <Tabs defaultValue={defaultTab} className="space-y-4">
               <TabsList className="grid w-full grid-cols-2 bg-gray-100">
                 <TabsTrigger value="login" className="data-[state=active]:bg-brand-teal data-[state=active]:text-white text-brand-dark">{t('auth.login')}</TabsTrigger>
                 <TabsTrigger value="signup" className="data-[state=active]:bg-brand-teal data-[state=active]:text-white text-brand-dark">{t('auth.signUp')}</TabsTrigger>
