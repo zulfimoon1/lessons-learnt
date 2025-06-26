@@ -1,4 +1,3 @@
-
 import { enhancedSecurityValidationService } from './enhancedSecurityValidationService';
 
 interface SecurityMetrics {
@@ -7,9 +6,18 @@ interface SecurityMetrics {
   suspiciousPatterns: string[];
 }
 
+interface SecurityAlert {
+  id: string;
+  type: string;
+  severity: 'low' | 'medium' | 'high' | 'critical';
+  message: string;
+  timestamp: Date;
+}
+
 class SecurityMonitoringService {
   private blockedIPs = new Set<string>();
   private suspiciousPatterns = new Set<string>();
+  private activeAlerts: SecurityAlert[] = [];
 
   async getSecurityMetrics(): Promise<SecurityMetrics> {
     try {
@@ -69,6 +77,43 @@ class SecurityMonitoringService {
     this.blockedIPs.clear();
     this.suspiciousPatterns.clear();
     console.log('All security blocks have been cleared');
+  }
+
+  getActiveAlerts(): SecurityAlert[] {
+    return this.activeAlerts;
+  }
+
+  async auditDataAccess(operation: string, resource: string, recordCount: number = 1): Promise<void> {
+    try {
+      await enhancedSecurityValidationService.logSecurityEvent({
+        type: 'suspicious_activity',
+        details: `Data access audit: ${operation} on ${resource} (${recordCount} records)`,
+        severity: 'low'
+      });
+    } catch (error) {
+      console.error('Failed to audit data access:', error);
+    }
+  }
+
+  addAlert(type: string, message: string, severity: 'low' | 'medium' | 'high' | 'critical' = 'medium'): void {
+    const alert: SecurityAlert = {
+      id: crypto.randomUUID(),
+      type,
+      severity,
+      message,
+      timestamp: new Date()
+    };
+    
+    this.activeAlerts.push(alert);
+    
+    // Keep only the last 100 alerts to prevent memory issues
+    if (this.activeAlerts.length > 100) {
+      this.activeAlerts = this.activeAlerts.slice(-100);
+    }
+  }
+
+  acknowledgeAlert(alertId: string): void {
+    this.activeAlerts = this.activeAlerts.filter(alert => alert.id !== alertId);
   }
 }
 
