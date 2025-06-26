@@ -53,20 +53,42 @@ const SchoolSettings: React.FC<SchoolSettingsProps> = ({ teacher }) => {
   const handleManageSubscription = async () => {
     setIsLoading(true);
     try {
+      console.log('Attempting to access customer portal for:', teacher.email);
+      
+      // Get the current session
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError || !session) {
+        console.error('No valid session found:', sessionError);
+        throw new Error("Please log in again to manage your subscription");
+      }
+
+      console.log('Session found, calling customer portal function');
+
       const { data, error } = await supabase.functions.invoke('customer-portal', {
-        body: { school: teacher.school }
+        body: { school: teacher.school },
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        }
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Function invocation error:', error);
+        throw error;
+      }
 
       if (data?.url) {
+        console.log('Redirecting to customer portal:', data.url);
         window.open(data.url, '_blank');
+      } else {
+        console.error('No URL returned from customer portal');
+        throw new Error("Failed to get subscription management URL");
       }
     } catch (error) {
       console.error('Error accessing customer portal:', error);
       toast({
         title: "Error",
-        description: "Failed to access subscription management. Please try again.",
+        description: error.message || "Failed to access subscription management. Please try again.",
         variant: "destructive",
       });
     } finally {
