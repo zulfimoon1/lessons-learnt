@@ -72,10 +72,12 @@ const SchoolSettings: React.FC<SchoolSettingsProps> = ({ teacher }) => {
 
       console.log('Sending request to customer portal with data:', requestData);
 
+      // Use proper supabase function invocation with explicit headers
       const { data, error } = await supabase.functions.invoke('customer-portal', {
-        body: requestData,
+        body: JSON.stringify(requestData),
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
         }
       });
 

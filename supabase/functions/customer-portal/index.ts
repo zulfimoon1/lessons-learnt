@@ -15,6 +15,8 @@ serve(async (req) => {
 
   try {
     console.log("Customer portal function started");
+    console.log("Request method:", req.method);
+    console.log("Request headers:", Object.fromEntries(req.headers.entries()));
 
     const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
       apiVersion: "2023-10-16",
@@ -27,26 +29,35 @@ serve(async (req) => {
       { auth: { persistSession: false } }
     );
 
-    // Parse request body with error handling
+    // Parse request body with better error handling
     let requestBody;
     try {
       const bodyText = await req.text();
-      console.log("Raw request body:", bodyText);
+      console.log("Raw request body length:", bodyText?.length || 0);
+      console.log("Raw request body content:", bodyText || "(empty)");
       
-      if (!bodyText.trim()) {
-        throw new Error("Empty request body");
+      if (!bodyText || bodyText.trim() === "") {
+        console.log("Request body is empty, checking if this is a GET request or malformed POST");
+        throw new Error("Request body is required. Please ensure you're sending a POST request with JSON data.");
       }
       
       requestBody = JSON.parse(bodyText);
+      console.log("Parsed request body:", JSON.stringify(requestBody, null, 2));
     } catch (parseError) {
-      console.error("JSON parsing error:", parseError);
-      throw new Error("Invalid JSON in request body");
+      console.error("JSON parsing error details:", parseError);
+      console.error("Failed to parse body as JSON");
+      throw new Error(`Invalid JSON in request body: ${parseError.message}`);
     }
 
     const { email, school, teacherId } = requestBody;
     
     if (!email || !school || !teacherId) {
-      console.error("Missing required fields:", { email: !!email, school: !!school, teacherId: !!teacherId });
+      console.error("Missing required fields:", { 
+        email: !!email, 
+        school: !!school, 
+        teacherId: !!teacherId,
+        receivedFields: Object.keys(requestBody)
+      });
       throw new Error("Email, school, and teacher ID are required");
     }
 
@@ -158,6 +169,7 @@ serve(async (req) => {
     });
   } catch (error) {
     console.error("Customer portal error:", error);
+    console.error("Error stack:", error.stack);
     
     // Return a proper error response
     const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
