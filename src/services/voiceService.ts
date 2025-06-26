@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 
 export interface VoiceUploadResult {
@@ -17,30 +16,71 @@ export interface TranscriptionResult {
 class VoiceService {
   
   /**
+   * Initialize storage bucket if it doesn't exist
+   */
+  private async ensureBucketExists(): Promise<void> {
+    try {
+      const { data: buckets, error } = await supabase.storage.listBuckets();
+      
+      if (error) {
+        console.error('VoiceService: Error checking buckets:', error);
+        return;
+      }
+
+      const bucketExists = buckets?.some(bucket => bucket.id === 'voice-recordings');
+      
+      if (!bucketExists) {
+        console.log('VoiceService: Creating voice-recordings bucket...');
+        const { error: createError } = await supabase.storage.createBucket('voice-recordings', {
+          public: true,
+          allowedMimeTypes: ['audio/webm', 'audio/wav', 'audio/mp3'],
+          fileSizeLimit: 10485760 // 10MB
+        });
+        
+        if (createError) {
+          console.error('VoiceService: Error creating bucket:', createError);
+        } else {
+          console.log('VoiceService: Bucket created successfully');
+        }
+      }
+    } catch (error) {
+      console.error('VoiceService: Error ensuring bucket exists:', error);
+    }
+  }
+
+  /**
    * Upload audio file to Supabase storage
    */
   async uploadAudio(audioBlob: Blob, fileName: string): Promise<string> {
     console.log('VoiceService: Uploading audio file:', fileName);
     
-    const { data, error } = await supabase.storage
-      .from('voice-recordings')
-      .upload(fileName, audioBlob, {
-        cacheControl: '3600',
-        upsert: false
-      });
+    try {
+      // Ensure bucket exists
+      await this.ensureBucketExists();
+      
+      const { data, error } = await supabase.storage
+        .from('voice-recordings')
+        .upload(fileName, audioBlob, {
+          cacheControl: '3600',
+          upsert: false
+        });
 
-    if (error) {
-      console.error('VoiceService: Upload error:', error);
-      throw new Error(`Failed to upload audio: ${error.message}`);
+      if (error) {
+        console.error('VoiceService: Upload error:', error);
+        throw new Error(`Failed to upload audio: ${error.message}`);
+      }
+
+      // Get public URL
+      const { data: urlData } = supabase.storage
+        .from('voice-recordings')
+        .getPublicUrl(data.path);
+
+      console.log('VoiceService: Audio uploaded successfully:', urlData.publicUrl);
+      return urlData.publicUrl;
+    } catch (error) {
+      console.error('VoiceService: Upload failed:', error);
+      throw error;
     }
-
-    // Get public URL
-    const { data: urlData } = supabase.storage
-      .from('voice-recordings')
-      .getPublicUrl(data.path);
-
-    console.log('VoiceService: Audio uploaded successfully:', urlData.publicUrl);
-    return urlData.publicUrl;
   }
 
   /**

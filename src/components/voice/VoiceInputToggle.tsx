@@ -42,6 +42,8 @@ export const VoiceInputToggle: React.FC<VoiceInputToggleProps> = ({
         return;
       }
 
+      console.log('VoiceInputToggle: Audio validation passed, uploading...');
+      
       // Upload audio quickly without transcription for now
       const result = await voiceService.processAndUploadAudio(audioBlob, 'feedback', false);
       
@@ -57,9 +59,19 @@ export const VoiceInputToggle: React.FC<VoiceInputToggleProps> = ({
       
     } catch (error) {
       console.error('VoiceInputToggle: Error processing voice:', error);
+      
+      let errorMessage = "Failed to process your voice recording. Please try again.";
+      if (error instanceof Error) {
+        if (error.message.includes('storage')) {
+          errorMessage = "Storage error. Please try again in a moment.";
+        } else if (error.message.includes('network') || error.message.includes('fetch')) {
+          errorMessage = "Network error. Please check your connection and try again.";
+        }
+      }
+      
       toast({
         title: "Recording failed",
-        description: "Failed to process your voice recording. Please try again.",
+        description: errorMessage,
         variant: "destructive"
       });
     } finally {
