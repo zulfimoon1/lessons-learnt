@@ -9,10 +9,13 @@ import TeacherManagement from "@/components/dashboard/admin/TeacherManagement";
 import SchoolAdminDashboard from "@/components/dashboard/admin/SchoolAdminDashboard";
 import { useLanguage } from "@/contexts/LanguageContext";
 import DashboardHeader from "@/components/dashboard/DashboardHeader";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const AdminDashboard = () => {
   const { teacher, logout, isLoading } = useAuth();
   const { t } = useLanguage();
+  const [activeTab, setActiveTab] = useState('overview');
+  const isMobile = useIsMobile();
 
   if (isLoading) {
     return (
@@ -25,6 +28,45 @@ const AdminDashboard = () => {
   if (!teacher || teacher.role !== 'admin') {
     return <Navigate to="/teacher-login" replace />;
   }
+
+  const tabItems = [
+    {
+      value: 'overview',
+      icon: School,
+      label: 'School Overview',
+      component: <SchoolAdminDashboard teacher={teacher} />,
+      color: 'text-brand-teal'
+    },
+    {
+      value: 'feedback',
+      icon: MessageSquare,
+      label: 'Feedback Analytics',
+      component: <FeedbackAnalytics school={teacher.school} />,
+      color: 'text-brand-orange'
+    },
+    {
+      value: 'staff',
+      icon: Users,
+      label: 'Staff Management',
+      component: <TeacherManagement school={teacher.school} />,
+      color: 'text-brand-teal'
+    },
+    {
+      value: 'settings',
+      icon: Settings,
+      label: 'Settings',
+      component: (
+        <div className="text-center py-8">
+          <Settings className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">School Settings</h3>
+          <p className="text-gray-600">
+            School configuration and administrative settings will be available here.
+          </p>
+        </div>
+      ),
+      color: 'text-brand-orange'
+    }
+  ];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-brand-teal/5 via-white to-brand-orange/5">
@@ -59,80 +101,51 @@ const AdminDashboard = () => {
           </div>
         </div>
 
-        <Tabs defaultValue="overview" className="space-y-6">
+        {/* Navigation Tabs */}
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <div className="bg-white/90 backdrop-blur-sm rounded-2xl border border-gray-200/50 shadow-lg p-6">
             <h2 className="text-xl font-semibold text-gray-900 mb-4">
               {t('dashboard.quickActions') || 'Admin Tools'}
             </h2>
             <TabsList className="bg-transparent p-0 h-auto gap-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
-              <TabsTrigger 
-                value="overview" 
-                className="h-auto p-4 flex items-center gap-3 hover:bg-gray-50 border border-gray-200 justify-start data-[state=active]:bg-brand-teal data-[state=active]:text-white data-[state=active]:border-brand-teal transition-all duration-300 rounded-lg bg-white"
-              >
-                <School className="w-5 h-5" />
-                <span className="text-sm font-medium">School Overview</span>
-              </TabsTrigger>
-              <TabsTrigger 
-                value="feedback" 
-                className="h-auto p-4 flex items-center gap-3 hover:bg-gray-50 border border-gray-200 justify-start data-[state=active]:bg-brand-teal data-[state=active]:text-white data-[state=active]:border-brand-teal transition-all duration-300 rounded-lg bg-white"
-              >
-                <MessageSquare className="w-5 h-5" />
-                <span className="text-sm font-medium">Feedback Analytics</span>
-              </TabsTrigger>
-              <TabsTrigger 
-                value="staff" 
-                className="h-auto p-4 flex items-center gap-3 hover:bg-gray-50 border border-gray-200 justify-start data-[state=active]:bg-brand-teal data-[state=active]:text-white data-[state=active]:border-brand-teal transition-all duration-300 rounded-lg bg-white"
-              >
-                <Users className="w-5 h-5" />
-                <span className="text-sm font-medium">Staff Management</span>
-              </TabsTrigger>
-              <TabsTrigger 
-                value="settings" 
-                className="h-auto p-4 flex items-center gap-3 hover:bg-gray-50 border border-gray-200 justify-start data-[state=active]:bg-brand-teal data-[state=active]:text-white data-[state=active]:border-brand-teal transition-all duration-300 rounded-lg bg-white"
-              >
-                <Settings className="w-5 h-5" />
-                <span className="text-sm font-medium">Settings</span>
-              </TabsTrigger>
+              {tabItems.map((item) => {
+                const Icon = item.icon;
+                return (
+                  <TabsTrigger 
+                    key={item.value}
+                    value={item.value} 
+                    className={`
+                      h-auto p-4 flex items-center gap-3 hover:bg-gray-50 border border-gray-200 justify-start
+                      data-[state=active]:bg-brand-teal data-[state=active]:text-white data-[state=active]:border-brand-teal
+                      transition-all duration-300 rounded-lg bg-white
+                      ${isMobile ? 'flex-col text-center min-h-[80px]' : 'flex-row'}
+                    `}
+                  >
+                    <Icon 
+                      className={`w-5 h-5 ${activeTab === item.value ? 'text-white' : item.color}`}
+                      aria-hidden="true"
+                    />
+                    <div className={isMobile ? 'text-center' : 'text-left'}>
+                      <span className="text-sm font-medium block">
+                        {item.label}
+                      </span>
+                    </div>
+                  </TabsTrigger>
+                );
+              })}
             </TabsList>
           </div>
 
-          <TabsContent value="overview" className="space-y-6">
-            <div className="bg-white/80 backdrop-blur-sm rounded-2xl border border-gray-200/50 shadow-lg">
-              <div className="p-6">
-                <SchoolAdminDashboard teacher={teacher} />
-              </div>
-            </div>
-          </TabsContent>
-
-          <TabsContent value="feedback" className="space-y-6">
-            <div className="bg-white/80 backdrop-blur-sm rounded-2xl border border-gray-200/50 shadow-lg">
-              <div className="p-6">
-                <FeedbackAnalytics school={teacher.school} />
-              </div>
-            </div>
-          </TabsContent>
-
-          <TabsContent value="staff" className="space-y-6">
-            <div className="bg-white/80 backdrop-blur-sm rounded-2xl border border-gray-200/50 shadow-lg">
-              <div className="p-6">
-                <TeacherManagement school={teacher.school} />
-              </div>
-            </div>
-          </TabsContent>
-
-          <TabsContent value="settings" className="space-y-6">
-            <div className="bg-white/80 backdrop-blur-sm rounded-2xl border border-gray-200/50 shadow-lg">
-              <div className="p-6">
-                <div className="text-center py-8">
-                  <Settings className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">School Settings</h3>
-                  <p className="text-gray-600">
-                    School configuration and administrative settings will be available here.
-                  </p>
+          {/* Tab Content */}
+          {tabItems.map((item) => (
+            <TabsContent key={item.value} value={item.value} className="space-y-6">
+              <div className="bg-white/80 backdrop-blur-sm rounded-2xl border border-gray-200/50 shadow-lg">
+                <div className="p-6">
+                  {item.component}
                 </div>
               </div>
-            </div>
-          </TabsContent>
+            </TabsContent>
+          ))}
         </Tabs>
       </main>
     </div>
