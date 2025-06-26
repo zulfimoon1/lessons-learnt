@@ -1,7 +1,6 @@
-
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { CalendarIcon, MessageSquareIcon, FileTextIcon, BarChartIcon, BrainIcon } from "lucide-react";
+import { CalendarIcon, MessageSquareIcon, FileTextIcon, BarChartIcon, BrainIcon, BookOpenIcon } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Navigate } from "react-router-dom";
@@ -57,9 +56,9 @@ const TeacherDashboard: React.FC = () => {
       color: 'text-brand-teal'
     },
     {
-      value: 'articles',
-      icon: FileTextIcon,
-      label: t('teacher.articles') || 'Articles',
+      value: 'notes',
+      icon: BookOpenIcon,
+      label: t('teacher.notes') || 'Teachers Notes',
       component: <ArticlesTab teacher={teacher} />,
       color: 'text-brand-orange'
     },
