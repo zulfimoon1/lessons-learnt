@@ -15,6 +15,11 @@ interface ScheduleTabProps {
 }
 
 const ScheduleTab: React.FC<ScheduleTabProps> = ({ teacher }) => {
+  const handleUploadComplete = () => {
+    console.log('Schedule upload completed');
+    // Refresh schedules or show success message
+  };
+
   return (
     <div className="space-y-6">
       {/* Header Section - Matching AI Insights Style */}
@@ -66,7 +71,7 @@ const ScheduleTab: React.FC<ScheduleTabProps> = ({ teacher }) => {
             </div>
           </CardHeader>
           <CardContent>
-            <BulkScheduleUpload teacher={teacher} />
+            <BulkScheduleUpload teacher={teacher} onUploadComplete={handleUploadComplete} />
           </CardContent>
         </Card>
       </div>

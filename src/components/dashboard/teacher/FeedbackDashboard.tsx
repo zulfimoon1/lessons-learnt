@@ -34,10 +34,17 @@ const FeedbackDashboard: React.FC<FeedbackDashboardProps> = ({ teacher }) => {
     try {
       setLoading(true);
       const { data, error } = await supabase
-        .from('lesson_feedback')
-        .select('*')
-        .eq('school', teacher.school)
-        .order('created_at', { ascending: false });
+        .from('feedback')
+        .select(`
+          *,
+          class_schedules!inner(
+            school,
+            subject,
+            lesson_topic
+          )
+        `)
+        .eq('class_schedules.school', teacher.school)
+        .order('submitted_at', { ascending: false });
 
       if (error) throw error;
 
@@ -45,9 +52,9 @@ const FeedbackDashboard: React.FC<FeedbackDashboardProps> = ({ teacher }) => {
       
       if (data && data.length > 0) {
         const totalFeedback = data.length;
-        const avgUnderstanding = data.reduce((sum, item) => sum + (item.understanding_rating || 0), 0) / totalFeedback;
-        const avgInterest = data.reduce((sum, item) => sum + (item.interest_rating || 0), 0) / totalFeedback;
-        const avgGrowth = data.reduce((sum, item) => sum + (item.educational_growth_rating || 0), 0) / totalFeedback;
+        const avgUnderstanding = data.reduce((sum, item) => sum + (item.understanding || 0), 0) / totalFeedback;
+        const avgInterest = data.reduce((sum, item) => sum + (item.interest || 0), 0) / totalFeedback;
+        const avgGrowth = data.reduce((sum, item) => sum + (item.educational_growth || 0), 0) / totalFeedback;
         
         setStats({
           totalFeedback,
@@ -166,11 +173,11 @@ const FeedbackDashboard: React.FC<FeedbackDashboardProps> = ({ teacher }) => {
               {feedbackData.slice(0, 5).map((feedback) => (
                 <div key={feedback.id} className="border-l-4 border-brand-teal pl-4 py-2">
                   <div className="flex justify-between items-start mb-2">
-                    <h4 className="font-medium">{feedback.lesson_title || 'Lesson Feedback'}</h4>
+                    <h4 className="font-medium">{feedback.class_schedules?.lesson_topic || 'Lesson Feedback'}</h4>
                     <div className="flex gap-2">
-                      <Badge variant="outline">U: {feedback.understanding_rating}/5</Badge>
-                      <Badge variant="outline">I: {feedback.interest_rating}/5</Badge>
-                      <Badge variant="outline">G: {feedback.educational_growth_rating}/5</Badge>
+                      <Badge variant="outline">U: {feedback.understanding}/5</Badge>
+                      <Badge variant="outline">I: {feedback.interest}/5</Badge>
+                      <Badge variant="outline">G: {feedback.educational_growth}/5</Badge>
                     </div>
                   </div>
                   {feedback.what_went_well && (
