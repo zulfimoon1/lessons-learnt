@@ -1,172 +1,75 @@
 
-import React, { useState, useEffect } from "react";
-import ClassScheduleForm from "@/components/ClassScheduleForm";
-import BulkScheduleUpload from "@/components/BulkScheduleUpload";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { classScheduleService } from "@/services/classScheduleService";
-import { Calendar, Clock, BookOpen, Plus, ChevronDown } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
-import { useLanguage } from "@/contexts/LanguageContext";
+import React from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import ClassScheduleForm from '@/components/ClassScheduleForm';
+import BulkScheduleUpload from '@/components/BulkScheduleUpload';
+import { Calendar, Clock } from 'lucide-react';
 
 interface ScheduleTabProps {
   teacher: {
     id: string;
-    name: string;
     school: string;
+    name: string;
     role: string;
   };
 }
 
 const ScheduleTab: React.FC<ScheduleTabProps> = ({ teacher }) => {
-  const [schedules, setSchedules] = useState<any[]>([]);
-  const [upcomingSchedules, setUpcomingSchedules] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [fetchError, setFetchError] = useState<string>("");
-  const [isCreateOpen, setIsCreateOpen] = useState(false);
-  const { toast } = useToast();
-  const { t } = useLanguage();
-
-  useEffect(() => {
-    fetchSchedules();
-  }, [teacher.id]);
-
-  const fetchSchedules = async () => {
-    try {
-      console.log('ScheduleTab: Attempting to fetch schedules for teacher:', teacher.id);
-      setFetchError("");
-      
-      const result = await classScheduleService.getSchedulesByTeacher(teacher.id);
-      if (result.data) {
-        console.log('ScheduleTab: Successfully fetched schedules:', result.data.length);
-        
-        // Filter upcoming schedules (future dates only)
-        const now = new Date();
-        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-        
-        const upcoming = result.data.filter(schedule => {
-          const scheduleDate = new Date(schedule.class_date);
-          return scheduleDate >= today;
-        });
-        
-        console.log('ScheduleTab: Upcoming schedules filtered:', upcoming.length);
-        setSchedules(result.data);
-        setUpcomingSchedules(upcoming);
-      } else if (result.error) {
-        console.error('ScheduleTab: Error from service:', result.error);
-        setFetchError('Unable to load existing schedules. You can still create new ones.');
-        setSchedules([]);
-        setUpcomingSchedules([]);
-      }
-    } catch (error) {
-      console.error('ScheduleTab: Error fetching schedules:', error);
-      setFetchError('Unable to load existing schedules. You can still create new ones.');
-      setSchedules([]);
-      setUpcomingSchedules([]);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleScheduleCreated = () => {
-    console.log('ScheduleTab: Schedule created, refreshing list...');
-    fetchSchedules(); // Refresh the schedule list
-  };
-
-  if (isLoading) {
-    return <div>{t('common.loading')}</div>;
-  }
-
   return (
     <div className="space-y-6">
-      {/* My Classes Section - First at the top */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Calendar className="w-5 h-5" />
-            {t('schedule.mySchedules')} ({upcomingSchedules.length})
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {fetchError && (
-            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-4">
-              <p className="text-yellow-800 text-sm">{fetchError}</p>
-            </div>
-          )}
-          
-          {upcomingSchedules.length === 0 ? (
-            <p className="text-muted-foreground text-center py-4">
-              {fetchError ? 'Create your first schedule below.' : t('schedule.noSchedules')}
+      {/* Header Section - Matching AI Insights Style */}
+      <div className="space-y-2">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-r from-brand-teal to-brand-orange flex items-center justify-center">
+            <Calendar className="w-5 h-5 text-white" />
+          </div>
+          <div>
+            <h2 className="text-2xl font-bold text-gray-900">Class Schedule</h2>
+            <p className="text-gray-600">
+              Create and manage your class schedules efficiently
             </p>
-          ) : (
-            <div className="grid gap-4">
-              {upcomingSchedules.map((schedule) => (
-                <Card key={schedule.id} className="border border-gray-200">
-                  <CardContent className="p-4">
-                    <div className="flex justify-between items-start">
-                      <div className="space-y-2">
-                        <h4 className="font-semibold flex items-center gap-2">
-                          <BookOpen className="w-4 h-4" />
-                          {schedule.subject} - {schedule.lesson_topic}
-                        </h4>
-                        <p className="text-sm text-muted-foreground">
-                          {t('dashboard.grade')} {schedule.grade} | {schedule.school}
-                        </p>
-                        <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                          <span className="flex items-center gap-1">
-                            <Calendar className="w-3 h-3" />
-                            {new Date(schedule.class_date).toLocaleDateString()}
-                          </span>
-                          <span className="flex items-center gap-1">
-                            <Clock className="w-3 h-3" />
-                            {schedule.class_time} ({schedule.duration_minutes} min)
-                          </span>
-                        </div>
-                        {schedule.description && (
-                          <p className="text-sm text-gray-600 mt-2">
-                            {schedule.description}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Schedule Cards Grid */}
+      <div className="grid gap-6 md:grid-cols-1 lg:grid-cols-2">
+        {/* Create Schedule */}
+        <Card className="group hover:shadow-xl transition-all duration-300 border-0 shadow-lg bg-gradient-to-br from-brand-teal/5 to-brand-teal/10 hover:from-brand-teal/10 hover:to-brand-teal/20">
+          <CardHeader className="pb-4">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-lg bg-brand-teal/10 flex items-center justify-center group-hover:bg-brand-teal/20 transition-colors">
+                <Calendar className="w-4 h-4 text-brand-teal" />
+              </div>
+              <div>
+                <CardTitle className="text-lg text-gray-900">Create Schedule</CardTitle>
+                <CardDescription className="text-sm">Schedule individual classes</CardDescription>
+              </div>
             </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Create Class Section - Second, below My Classes - Now Collapsible */}
-      <Collapsible open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-        <Card>
-          <CollapsibleTrigger asChild>
-            <CardHeader className="cursor-pointer hover:bg-gray-50 transition-colors">
-              <CardTitle className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Plus className="w-5 h-5" />
-                  {t('schedule.createTitle')}
-                </div>
-                <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${isCreateOpen ? 'rotate-180' : ''}`} />
-              </CardTitle>
-            </CardHeader>
-          </CollapsibleTrigger>
-          <CollapsibleContent>
-            <CardContent>
-              <ClassScheduleForm 
-                teacher={teacher} 
-                onScheduleCreated={handleScheduleCreated}
-              />
-            </CardContent>
-          </CollapsibleContent>
+          </CardHeader>
+          <CardContent>
+            <ClassScheduleForm teacher={teacher} />
+          </CardContent>
         </Card>
-      </Collapsible>
 
-      {/* Bulk Upload Section - Third, at the bottom */}
-      <BulkScheduleUpload 
-        teacher={teacher} 
-        onUploadComplete={handleScheduleCreated} 
-      />
+        {/* Bulk Upload */}
+        <Card className="group hover:shadow-xl transition-all duration-300 border-0 shadow-lg bg-gradient-to-br from-brand-orange/5 to-brand-orange/10 hover:from-brand-orange/10 hover:to-brand-orange/20">
+          <CardHeader className="pb-4">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-lg bg-brand-orange/10 flex items-center justify-center group-hover:bg-brand-orange/20 transition-colors">
+                <Clock className="w-4 h-4 text-brand-orange" />
+              </div>
+              <div>
+                <CardTitle className="text-lg text-gray-900">Bulk Upload</CardTitle>
+                <CardDescription className="text-sm">Upload multiple schedules at once</CardDescription>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <BulkScheduleUpload teacher={teacher} />
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 };

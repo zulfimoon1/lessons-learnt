@@ -1,254 +1,189 @@
 
-import React, { useState, useEffect } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
-import { Star, MessageSquare, TrendingUp, Users } from "lucide-react";
-import { useLanguage } from "@/contexts/LanguageContext";
-
-interface FeedbackData {
-  id: string;
-  student_name: string;
-  understanding: number;
-  interest: number;
-  educational_growth: number;
-  emotional_state: string;
-  what_went_well: string;
-  suggestions: string;
-  additional_comments: string;
-  submitted_at: string;
-  class_schedule: {
-    subject: string;
-    lesson_topic: string;
-    class_date: string;
-    grade: string;
-  };
-}
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { supabase } from '@/integrations/supabase/client';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { MessageSquare, TrendingUp, Users, Star } from 'lucide-react';
 
 interface FeedbackDashboardProps {
   teacher: {
     id: string;
-    name: string;
     school: string;
+    name: string;
     role: string;
   };
 }
 
 const FeedbackDashboard: React.FC<FeedbackDashboardProps> = ({ teacher }) => {
-  const [feedback, setFeedback] = useState<FeedbackData[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const { t } = useLanguage();
+  const [feedbackData, setFeedbackData] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
     totalFeedback: 0,
     avgUnderstanding: 0,
     avgInterest: 0,
-    avgGrowth: 0,
+    avgGrowth: 0
   });
-  const { toast } = useToast();
-  const { t } = useLanguage();
 
   useEffect(() => {
-    fetchFeedback();
-  }, [teacher.id]);
+    fetchFeedbackData();
+  }, [teacher.school]);
 
-  const fetchFeedback = async () => {
+  const fetchFeedbackData = async () => {
     try {
+      setLoading(true);
       const { data, error } = await supabase
-        .from('feedback')
-        .select(`
-          *,
-          class_schedule:class_schedules(
-            subject,
-            lesson_topic,
-            class_date,
-            grade
-          )
-        `)
-        .eq('class_schedules.teacher_id', teacher.id)
-        .order('submitted_at', { ascending: false });
+        .from('lesson_feedback')
+        .select('*')
+        .eq('school', teacher.school)
+        .order('created_at', { ascending: false });
 
       if (error) throw error;
 
-      setFeedback(data || []);
+      setFeedbackData(data || []);
       
-      // Calculate stats
       if (data && data.length > 0) {
-        const total = data.length;
-        const avgUnderstanding = data.reduce((sum, f) => sum + f.understanding, 0) / total;
-        const avgInterest = data.reduce((sum, f) => sum + f.interest, 0) / total;
-        const avgGrowth = data.reduce((sum, f) => sum + f.educational_growth, 0) / total;
+        const totalFeedback = data.length;
+        const avgUnderstanding = data.reduce((sum, item) => sum + (item.understanding_rating || 0), 0) / totalFeedback;
+        const avgInterest = data.reduce((sum, item) => sum + (item.interest_rating || 0), 0) / totalFeedback;
+        const avgGrowth = data.reduce((sum, item) => sum + (item.educational_growth_rating || 0), 0) / totalFeedback;
         
         setStats({
-          totalFeedback: total,
+          totalFeedback,
           avgUnderstanding: Math.round(avgUnderstanding * 10) / 10,
           avgInterest: Math.round(avgInterest * 10) / 10,
-          avgGrowth: Math.round(avgGrowth * 10) / 10,
+          avgGrowth: Math.round(avgGrowth * 10) / 10
         });
       }
     } catch (error) {
       console.error('Error fetching feedback:', error);
-      toast({
-        title: t('common.error'),
-        description: t('teacher.feedback.failedToFetch'),
-        variant: "destructive",
-      });
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
-  const renderStars = (rating: number) => {
-    return Array.from({ length: 5 }, (_, i) => (
-      <Star
-        key={i}
-        className={`w-4 h-4 ${
-          i < rating ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300'
-        }`}
-      />
-    ));
-  };
-
-  if (isLoading) {
+  if (loading) {
     return <div className="text-center py-8">{t('teacher.feedback.loading')}</div>;
   }
 
   return (
     <div className="space-y-6">
-      {/* Stats Overview */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card>
-          <CardContent className="p-4">
+      {/* Header Section - Matching AI Insights Style */}
+      <div className="space-y-2">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-r from-brand-teal to-brand-orange flex items-center justify-center">
+            <MessageSquare className="w-5 h-5 text-white" />
+          </div>
+          <div>
+            <h2 className="text-2xl font-bold text-gray-900">Student Feedback Dashboard</h2>
+            <p className="text-gray-600">
+              Monitor student feedback and engagement insights
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Stats Cards Grid */}
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+        <Card className="group hover:shadow-xl transition-all duration-300 border-0 shadow-lg bg-gradient-to-br from-brand-teal/5 to-brand-teal/10 hover:from-brand-teal/10 hover:to-brand-teal/20">
+          <CardHeader className="pb-4">
             <div className="flex items-center gap-3">
-              <MessageSquare className="w-8 h-8 text-blue-500" />
+              <div className="w-8 h-8 rounded-lg bg-brand-teal/10 flex items-center justify-center group-hover:bg-brand-teal/20 transition-colors">
+                <Users className="w-4 h-4 text-brand-teal" />
+              </div>
               <div>
-                <p className="text-2xl font-bold">{stats.totalFeedback}</p>
-                <p className="text-sm text-muted-foreground">{t('teacher.feedback.totalFeedback')}</p>
+                <CardTitle className="text-lg text-gray-900">Total Feedback</CardTitle>
+                <CardDescription className="text-2xl font-bold text-brand-teal">{stats.totalFeedback}</CardDescription>
               </div>
             </div>
-          </CardContent>
+          </CardHeader>
         </Card>
 
-        <Card>
-          <CardContent className="p-4">
+        <Card className="group hover:shadow-xl transition-all duration-300 border-0 shadow-lg bg-gradient-to-br from-brand-orange/5 to-brand-orange/10 hover:from-brand-orange/10 hover:to-brand-orange/20">
+          <CardHeader className="pb-4">
             <div className="flex items-center gap-3">
-              <TrendingUp className="w-8 h-8 text-green-500" />
+              <div className="w-8 h-8 rounded-lg bg-brand-orange/10 flex items-center justify-center group-hover:bg-brand-orange/20 transition-colors">
+                <TrendingUp className="w-4 h-4 text-brand-orange" />
+              </div>
               <div>
-                <div className="flex items-center gap-1">
-                  {renderStars(Math.round(stats.avgUnderstanding))}
-                </div>
-                <p className="text-sm text-muted-foreground">{t('teacher.feedback.avgUnderstanding')}</p>
+                <CardTitle className="text-lg text-gray-900">Understanding</CardTitle>
+                <CardDescription className="text-2xl font-bold text-brand-orange">{stats.avgUnderstanding}/5</CardDescription>
               </div>
             </div>
-          </CardContent>
+          </CardHeader>
         </Card>
 
-        <Card>
-          <CardContent className="p-4">
+        <Card className="group hover:shadow-xl transition-all duration-300 border-0 shadow-lg bg-gradient-to-br from-purple-500/5 to-purple-500/10 hover:from-purple-500/10 hover:to-purple-500/20">
+          <CardHeader className="pb-4">
             <div className="flex items-center gap-3">
-              <Star className="w-8 h-8 text-purple-500" />
+              <div className="w-8 h-8 rounded-lg bg-purple-500/10 flex items-center justify-center group-hover:bg-purple-500/20 transition-colors">
+                <Star className="w-4 h-4 text-purple-500" />
+              </div>
               <div>
-                <div className="flex items-center gap-1">
-                  {renderStars(Math.round(stats.avgInterest))}
-                </div>
-                <p className="text-sm text-muted-foreground">{t('teacher.feedback.avgInterest')}</p>
+                <CardTitle className="text-lg text-gray-900">Interest</CardTitle>
+                <CardDescription className="text-2xl font-bold text-purple-500">{stats.avgInterest}/5</CardDescription>
               </div>
             </div>
-          </CardContent>
+          </CardHeader>
         </Card>
 
-        <Card>
-          <CardContent className="p-4">
+        <Card className="group hover:shadow-xl transition-all duration-300 border-0 shadow-lg bg-gradient-to-br from-green-500/5 to-green-500/10 hover:from-green-500/10 hover:to-green-500/20">
+          <CardHeader className="pb-4">
             <div className="flex items-center gap-3">
-              <Users className="w-8 h-8 text-orange-500" />
+              <div className="w-8 h-8 rounded-lg bg-green-500/10 flex items-center justify-center group-hover:bg-green-500/20 transition-colors">
+                <TrendingUp className="w-4 h-4 text-green-500" />
+              </div>
               <div>
-                <div className="flex items-center gap-1">
-                  {renderStars(Math.round(stats.avgGrowth))}
-                </div>
-                <p className="text-sm text-muted-foreground">{t('teacher.feedback.avgGrowth')}</p>
+                <CardTitle className="text-lg text-gray-900">Growth</CardTitle>
+                <CardDescription className="text-2xl font-bold text-green-500">{stats.avgGrowth}/5</CardDescription>
               </div>
             </div>
-          </CardContent>
+          </CardHeader>
         </Card>
       </div>
 
-      {/* Feedback List */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <MessageSquare className="w-5 h-5" />
-            {t('teacher.feedback.studentFeedback')}
-          </CardTitle>
-          <CardDescription>
-            {t('teacher.feedback.recentFeedback')}
-          </CardDescription>
+      {/* Recent Feedback */}
+      <Card className="group hover:shadow-xl transition-all duration-300 border-0 shadow-lg bg-gradient-to-br from-gray-50/50 to-white hover:from-gray-50 hover:to-gray-50/50">
+        <CardHeader className="pb-4">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center group-hover:bg-gray-200 transition-colors">
+              <MessageSquare className="w-4 h-4 text-gray-600" />
+            </div>
+            <div>
+              <CardTitle className="text-lg text-gray-900">Recent Feedback</CardTitle>
+              <CardDescription className="text-sm">Latest student responses and comments</CardDescription>
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
-          {feedback.length === 0 ? (
-            <p className="text-center text-muted-foreground py-8">
+          {feedbackData.length === 0 ? (
+            <p className="text-gray-500 text-center py-4">
               {t('teacher.feedback.noFeedback')}
             </p>
           ) : (
             <div className="space-y-4">
-              {feedback.map((item) => (
-                <Card key={item.id} className="border border-gray-200">
-                  <CardContent className="p-4">
-                    <div className="flex justify-between items-start mb-3">
-                      <div>
-                        <h4 className="font-semibold">
-                          {item.class_schedule?.subject} - {item.class_schedule?.lesson_topic}
-                        </h4>
-                        <p className="text-sm text-muted-foreground">
-                          {item.student_name} • Grade {item.class_schedule?.grade} • {new Date(item.class_schedule?.class_date).toLocaleDateString()}
-                        </p>
-                      </div>
-                      <Badge variant="outline" className="capitalize">
-                        {item.emotional_state}
-                      </Badge>
+              {feedbackData.slice(0, 5).map((feedback) => (
+                <div key={feedback.id} className="border-l-4 border-brand-teal pl-4 py-2">
+                  <div className="flex justify-between items-start mb-2">
+                    <h4 className="font-medium">{feedback.lesson_title || 'Lesson Feedback'}</h4>
+                    <div className="flex gap-2">
+                      <Badge variant="outline">U: {feedback.understanding_rating}/5</Badge>
+                      <Badge variant="outline">I: {feedback.interest_rating}/5</Badge>
+                      <Badge variant="outline">G: {feedback.educational_growth_rating}/5</Badge>
                     </div>
-
-                    <div className="grid grid-cols-3 gap-4 mb-4">
-                      <div>
-                        <p className="text-xs text-muted-foreground mb-1">{t('teacher.feedback.understanding')}</p>
-                        <div className="flex gap-1">{renderStars(item.understanding)}</div>
-                      </div>
-                      <div>
-                        <p className="text-xs text-muted-foreground mb-1">{t('teacher.feedback.interest')}</p>
-                        <div className="flex gap-1">{renderStars(item.interest)}</div>
-                      </div>
-                      <div>
-                        <p className="text-xs text-muted-foreground mb-1">{t('teacher.feedback.growth')}</p>
-                        <div className="flex gap-1">{renderStars(item.educational_growth)}</div>
-                      </div>
-                    </div>
-
-                    {(item.what_went_well || item.suggestions || item.additional_comments) && (
-                      <div className="space-y-2 text-sm">
-                        {item.what_went_well && (
-                          <div>
-                            <p className="font-medium text-green-700">{t('teacher.feedback.whatWentWell')}</p>
-                            <p className="text-gray-600">{item.what_went_well}</p>
-                          </div>
-                        )}
-                        {item.suggestions && (
-                          <div>
-                            <p className="font-medium text-blue-700">{t('teacher.feedback.suggestions')}</p>
-                            <p className="text-gray-600">{item.suggestions}</p>
-                          </div>
-                        )}
-                        {item.additional_comments && (
-                          <div>
-                            <p className="font-medium text-purple-700">{t('teacher.feedback.additionalComments')}</p>
-                            <p className="text-gray-600">{item.additional_comments}</p>
-                          </div>
-                        )}
-                      </div>
-                    )}
-
-                    <p className="text-xs text-muted-foreground mt-3">
-                      {t('teacher.feedback.submitted')} {new Date(item.submitted_at).toLocaleString()}
+                  </div>
+                  {feedback.what_went_well && (
+                    <p className="text-sm text-gray-600 mb-2">
+                      <span className="font-medium">What went well:</span> {feedback.what_went_well}
                     </p>
-                  </CardContent>
-                </Card>
+                  )}
+                  {feedback.suggestions && (
+                    <p className="text-sm text-gray-600">
+                      <span className="font-medium">Suggestions:</span> {feedback.suggestions}
+                    </p>
+                  )}
+                </div>
               ))}
             </div>
           )}
