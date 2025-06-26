@@ -1,1 +1,55 @@
+
+# The name of your Supabase project
 project_id = "bjpgloftnlnzndgliqty"
+
+[api]
+enabled = true
+port = 54321
+schemas = ["public", "graphql_public"]
+extra_search_path = ["public", "extensions"]
+max_rows = 1000
+
+[auth]
+enabled = true
+port = 54324
+site_url = "http://localhost:3000"
+additional_redirect_urls = ["https://1027d4f9-f3af-4df5-ab92-85afbac975f1.lovableproject.com"]
+jwt_expiry = 3600
+refresh_token_rotation_enabled = true
+security_update_password_require_reauthentication = true
+
+[db]
+port = 54322
+
+[functions.customer-portal]
+verify_jwt = false
+
+[functions.create-checkout]
+verify_jwt = false
+
+[functions.stripe-webhook]
+verify_jwt = false
+
+[functions.platform-admin]
+verify_jwt = false
+
+[functions.create-teacher-account]
+verify_jwt = false
+
+[functions.create-student-account]
+verify_jwt = false
+
+[functions.send-teacher-invitation]
+verify_jwt = false
+
+[functions.reset-admin-password]
+verify_jwt = false
+
+[functions.send-privacy-email]
+verify_jwt = false
+
+[functions.process-discount-expirations]
+verify_jwt = false
+
+[functions.validate-input]
+verify_jwt = false
