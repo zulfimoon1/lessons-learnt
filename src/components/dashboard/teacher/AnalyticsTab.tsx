@@ -1,6 +1,7 @@
 
 import React from 'react';
 import TeacherAnalyticsDashboard from '@/components/analytics/TeacherAnalyticsDashboard';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface AnalyticsTabProps {
   teacher: {
@@ -12,13 +13,15 @@ interface AnalyticsTabProps {
 }
 
 const AnalyticsTab: React.FC<AnalyticsTabProps> = ({ teacher }) => {
+  const { t } = useLanguage();
+  
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-brand-dark">Analytics Dashboard</h2>
+          <h2 className="text-2xl font-bold text-brand-dark">{t('analytics.title')}</h2>
           <p className="text-brand-dark/70">
-            Insights into your teaching performance and student engagement
+            {t('analytics.description') || 'Insights into your teaching performance and student engagement'}
           </p>
         </div>
       </div>

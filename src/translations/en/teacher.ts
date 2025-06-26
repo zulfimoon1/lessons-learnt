@@ -6,6 +6,12 @@ export const enTeacherTranslations = {
   'teacher.dashboard.welcome': 'Teacher Dashboard',
   'teacher.dashboard.welcomeBack': 'Welcome back, Mrs. Johnson',
   
+  // Navigation and tabs
+  'teacher.schedule': 'Schedule',
+  'teacher.bulkUpload': 'Bulk Upload',
+  'teacher.articles': 'Articles',
+  'teacher.role': 'Teacher',
+  
   // Form Labels
   'teacher.classDetailsTitle': 'Class Details',
   'teacher.classDetailsDescription': 'Enter the details for your class',
@@ -181,6 +187,16 @@ export const enTeacherTranslations = {
   'teacher.subscriptionRequiredForSummaries': 'Subscription required to view weekly summaries.',
   'teacher.activePlan': 'Active {planType} plan - renews {date}',
   
+  // Bulk actions
+  'teacher.bulkActions': 'Bulk Actions',
+  'teacher.selected': 'selected',
+  'teacher.selectAll': 'Select All Classes',
+  'teacher.duplicate': 'Duplicate',
+  'teacher.reschedule': 'Reschedule',
+  'teacher.delete': 'Delete',
+  'teacher.confirmDelete': 'Confirm Deletion',
+  'teacher.deleteWarning': 'Are you sure you want to delete {count} selected classes? This action cannot be undone.',
+  
   // Common actions
   'common.play': 'Play',
   'common.pause': 'Pause',
@@ -188,5 +204,10 @@ export const enTeacherTranslations = {
   
   // Error messages
   'teacher.missingInfo': 'Missing teacher information',
-  'teacher.checkoutFailed': 'Failed to create checkout session'
+  'teacher.checkoutFailed': 'Failed to create checkout session',
+  'teacher.passwordMismatch': 'Password mismatch',
+  'teacher.passwordsDoNotMatch': 'Passwords do not match',
+  'teacher.signupFailed': 'Signup failed',
+  'teacher.accountCreated': 'Account created!',
+  'teacher.welcomeToApp': 'Welcome to Lesson Lens!'
 };

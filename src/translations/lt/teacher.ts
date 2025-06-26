@@ -6,6 +6,12 @@ export const ltTeacherTranslations = {
   'teacher.dashboard.welcome': 'Mokytojo skydelis',
   'teacher.dashboard.welcomeBack': 'Sveiki sugrįžę, ponia Johnson',
   
+  // Navigation and tabs
+  'teacher.schedule': 'Tvarkaraštis',
+  'teacher.bulkUpload': 'Masinis įkėlimas',
+  'teacher.articles': 'Straipsniai',
+  'teacher.role': 'Mokytojas',
+  
   // Form Labels
   'teacher.classDetailsTitle': 'Klasės duomenys',
   'teacher.classDetailsDescription': 'Įveskite savo klasės duomenis',
@@ -181,6 +187,16 @@ export const ltTeacherTranslations = {
   'teacher.subscriptionRequiredForSummaries': 'Prenumerata reikalinga peržiūrėti savaitės santraukas.',
   'teacher.activePlan': 'Aktyvus {planType} planas - atsinaujina {date}',
   
+  // Bulk actions
+  'teacher.bulkActions': 'Masiniai veiksmai',
+  'teacher.selected': 'pasirinkta',
+  'teacher.selectAll': 'Pasirinkti visas pamokas',
+  'teacher.duplicate': 'Dubliuoti',
+  'teacher.reschedule': 'Perkelti',
+  'teacher.delete': 'Ištrinti',
+  'teacher.confirmDelete': 'Patvirtinti ištrinimą',
+  'teacher.deleteWarning': 'Ar tikrai norite ištrinti {count} pasirinktų pamokų? Šio veiksmo negalima atšaukti.',
+  
   // Common actions
   'common.play': 'Paleisti',
   'common.pause': 'Pristabdyti',
@@ -188,5 +204,10 @@ export const ltTeacherTranslations = {
   
   // Error messages
   'teacher.missingInfo': 'Trūksta mokytojo informacijos',
-  'teacher.checkoutFailed': 'Nepavyko sukurti atsiskaitymo sesijos'
+  'teacher.checkoutFailed': 'Nepavyko sukurti atsiskaitymo sesijos',
+  'teacher.passwordMismatch': 'Slaptažodžiai nesutampa',
+  'teacher.passwordsDoNotMatch': 'Slaptažodžiai nesutampa',
+  'teacher.signupFailed': 'Registracija nepavyko',
+  'teacher.accountCreated': 'Paskyra sukurta!',
+  'teacher.welcomeToApp': 'Sveiki atvykę į Lesson Lens!'
 };
