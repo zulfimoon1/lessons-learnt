@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -54,64 +53,62 @@ const DemoSection = () => {
               Sign up and test all features with authentic workflows
             </p>
             
-            {/* Step Overview */}
+            {/* Step Overview - Alternating Layout */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8 text-left">
-              {/* Left Column */}
-              <div className="space-y-4">
-                <div className="flex items-start gap-3 bg-white/10 backdrop-blur-sm rounded-lg p-4">
-                  <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center flex-shrink-0">
-                    <Users className="w-4 h-4 text-white" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-white mb-1">Step 1</h3>
-                    <p className="text-sm text-white/90">School administrator logins and invites teachers and school psychologist</p>
-                  </div>
+              {/* Step 1 - Left */}
+              <div className="flex items-start gap-3 bg-white/10 backdrop-blur-sm rounded-lg p-4">
+                <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center flex-shrink-0">
+                  <Users className="w-4 h-4 text-white" />
                 </div>
-                
-                <div className="flex items-start gap-3 bg-white/10 backdrop-blur-sm rounded-lg p-4">
-                  <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center flex-shrink-0">
-                    <Calendar className="w-4 h-4 text-white" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-white mb-1">Step 2</h3>
-                    <p className="text-sm text-white/90">Teachers can bulk upload class schedules along with any day trips</p>
-                  </div>
+                <div>
+                  <h3 className="font-semibold text-white mb-1">Step 1</h3>
+                  <p className="text-sm text-white/90">School administrator logins and invites teachers and school psychologist</p>
                 </div>
               </div>
               
-              {/* Right Column */}
-              <div className="space-y-4">
-                <div className="flex items-start gap-3 bg-white/10 backdrop-blur-sm rounded-lg p-4">
-                  <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center flex-shrink-0">
-                    <MessageSquare className="w-4 h-4 text-white" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-white mb-1">Step 3</h3>
-                    <p className="text-sm text-white/90">Student leave feedback</p>
-                  </div>
+              {/* Step 2 - Right */}
+              <div className="flex items-start gap-3 bg-white/10 backdrop-blur-sm rounded-lg p-4">
+                <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center flex-shrink-0">
+                  <Calendar className="w-4 h-4 text-white" />
                 </div>
-                
-                <div className="flex items-start gap-3 bg-white/10 backdrop-blur-sm rounded-lg p-4">
-                  <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center flex-shrink-0">
-                    <Heart className="w-4 h-4 text-white" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-white mb-1">Step 4</h3>
-                    <p className="text-sm text-white/90">School psychologist has access to live chat and emotional wellbeing</p>
-                  </div>
+                <div>
+                  <h3 className="font-semibold text-white mb-1">Step 2</h3>
+                  <p className="text-sm text-white/90">Teachers can bulk upload class schedules along with any day trips</p>
+                </div>
+              </div>
+              
+              {/* Step 3 - Left */}
+              <div className="flex items-start gap-3 bg-white/10 backdrop-blur-sm rounded-lg p-4">
+                <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center flex-shrink-0">
+                  <MessageSquare className="w-4 h-4 text-white" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-white mb-1">Step 3</h3>
+                  <p className="text-sm text-white/90">Student leave feedback</p>
+                </div>
+              </div>
+              
+              {/* Step 4 - Right */}
+              <div className="flex items-start gap-3 bg-white/10 backdrop-blur-sm rounded-lg p-4">
+                <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center flex-shrink-0">
+                  <Heart className="w-4 h-4 text-white" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-white mb-1">Step 4</h3>
+                  <p className="text-sm text-white/90">School psychologist has access to live chat and emotional wellbeing</p>
                 </div>
               </div>
             </div>
             
-            {/* Bonus Points */}
-            <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 mb-6">
-              <div className="flex items-start gap-3">
-                <div className="w-8 h-8 bg-brand-orange rounded-full flex items-center justify-center flex-shrink-0">
-                  <Gift className="w-4 h-4 text-white" />
+            {/* Enhanced Bonus Points */}
+            <div className="bg-gradient-to-r from-brand-orange to-yellow-500 rounded-xl p-6 mb-6 shadow-2xl border-2 border-yellow-400/30">
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center flex-shrink-0 shadow-lg">
+                  <Gift className="w-6 h-6 text-brand-orange" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-white mb-1">Bonus Points</h3>
-                  <p className="text-sm text-white/90">
+                  <h3 className="text-2xl font-bold text-white mb-2 drop-shadow-lg">✨ Bonus Points</h3>
+                  <p className="text-lg text-white/95 font-medium drop-shadow-md">
                     Pause subscriptions during holidays? That's next-level budget optimization. Pay only when you're actually educating minds
                   </p>
                 </div>
