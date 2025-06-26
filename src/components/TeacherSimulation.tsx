@@ -1,522 +1,405 @@
-import { useState, useEffect } from "react";
+
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { 
-  PlayIcon,
-  PauseIcon,
-  RotateCcwIcon,
-  BarChart3Icon,
-  TrendingUpIcon,
-  AlertTriangleIcon,
-  CheckCircleIcon,
-  UsersIcon,
-  HeartIcon,
-  UserIcon,
-  ClockIcon,
-  BookOpenIcon,
-  MessageSquareIcon,
-  CalendarIcon,
-  FileTextIcon
+  Users,
+  BarChart3,
+  MessageSquare,
+  Calendar,
+  AlertTriangle,
+  TrendingUp,
+  BookOpen,
+  Heart,
+  Star
 } from "lucide-react";
-import { useLanguage } from "@/contexts/LanguageContext";
 
 interface TeacherSimulationProps {
   isPlaying: boolean;
 }
 
-const TeacherSimulation = ({ isPlaying }: TeacherSimulationProps) => {
-  const { t } = useLanguage();
-  const [currentStep, setCurrentStep] = useState(1);
-  const [internalIsPlaying, setInternalIsPlaying] = useState(false);
-  const totalSteps = 8;
+const TeacherSimulation: React.FC<TeacherSimulationProps> = ({ isPlaying }) => {
+  const [currentStep, setCurrentStep] = useState(0);
+  const [progress, setProgress] = useState(0);
 
-  // Update internal playing state when prop changes
-  useEffect(() => {
-    setInternalIsPlaying(isPlaying);
-  }, [isPlaying]);
-
-  const simulationSteps = [
-    { id: 1, name: t('demo.teacher.steps.1'), shortName: t('demo.teacher.steps.1').split(' ')[0] },
-    { id: 2, name: t('demo.teacher.steps.2'), shortName: t('demo.teacher.steps.2').split(' ')[0] },
-    { id: 3, name: t('demo.teacher.steps.3'), shortName: t('demo.teacher.steps.3').split(' ')[0] },
-    { id: 4, name: t('demo.teacher.steps.4'), shortName: t('demo.teacher.steps.4').split(' ')[0] },
-    { id: 5, name: t('demo.teacher.steps.5'), shortName: t('demo.teacher.steps.5').split(' ')[0] },
-    { id: 6, name: t('demo.teacher.steps.6'), shortName: t('demo.teacher.steps.6').split(' ')[0] },
-    { id: 7, name: t('demo.teacher.steps.7'), shortName: t('demo.teacher.steps.7').split(' ')[0] },
-    { id: 8, name: t('demo.teacher.steps.8'), shortName: t('demo.teacher.steps.8').split(' ')[0] }
+  const steps = [
+    {
+      title: "Teacher Dashboard",
+      description: "Teacher views their dashboard with class schedule and student feedback overview",
+      component: "dashboard"
+    },
+    {
+      title: "Live Feedback",
+      description: "Teacher monitors real-time student feedback during and after lessons",
+      component: "feedback"
+    },
+    {
+      title: "Student Analytics",
+      description: "Teacher analyzes student performance and engagement trends",
+      component: "analytics"
+    },
+    {
+      title: "Wellness Monitoring",
+      description: "Teacher reviews student wellness alerts and mental health insights",
+      component: "wellness"
+    }
   ];
 
   useEffect(() => {
-    let interval: NodeJS.Timeout;
-    if (internalIsPlaying) {
-      interval = setInterval(() => {
-        setCurrentStep(prev => prev < totalSteps ? prev + 1 : 1);
-      }, 3500);
-    }
+    if (!isPlaying) return;
+
+    const interval = setInterval(() => {
+      setCurrentStep((prev) => {
+        const next = (prev + 1) % steps.length;
+        setProgress((next / (steps.length - 1)) * 100);
+        return next;
+      });
+    }, 3000);
+
     return () => clearInterval(interval);
-  }, [internalIsPlaying, totalSteps]);
+  }, [isPlaying, steps.length]);
 
-  const handleStepClick = (stepId: number) => {
-    setCurrentStep(stepId);
-  };
+  const renderDashboard = () => (
+    <div className="space-y-6">
+      {/* Welcome Section */}
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-brand-teal to-brand-orange p-8 text-white shadow-2xl">
+        <div className="absolute inset-0 bg-black/10"></div>
+        <div className="relative z-10">
+          <h1 className="text-3xl font-bold mb-2">Welcome back, Ms. Johnson!</h1>
+          <p className="text-xl text-white/90 mb-2">Lincoln High School - Mathematics Teacher</p>
+          <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm text-white px-4 py-2 rounded-full text-sm font-medium">
+            <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+            Ready to teach
+          </div>
+        </div>
+      </div>
 
-  const getCurrentStepContent = () => {
-    switch (currentStep) {
-      case 1:
-        return (
-          <div className="bg-white p-6 rounded-lg shadow-lg border">
-            <h3 className="text-lg font-semibold mb-4">{t('demo.teacher.dashboardOverview')}</h3>
-            
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-              <div className="bg-blue-50 p-4 rounded-lg">
-                <div className="flex items-center gap-3">
-                  <UsersIcon className="w-8 h-8 text-blue-600" />
-                  <div>
-                    <div className="text-2xl font-bold text-blue-600">142</div>
-                    <div className="text-sm text-blue-800">{t('demo.teacher.totalStudents')}</div>
-                  </div>
-                </div>
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <Card className="bg-white/90 backdrop-blur-sm border-gray-200/50 shadow-lg">
+          <CardContent className="p-6">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 bg-brand-teal/10 rounded-lg flex items-center justify-center">
+                <Users className="w-6 h-6 text-brand-teal" />
               </div>
-              
-              <div className="bg-green-50 p-4 rounded-lg">
-                <div className="flex items-center gap-3">
-                  <TrendingUpIcon className="w-8 h-8 text-green-600" />
-                  <div>
-                    <div className="text-2xl font-bold text-green-600">87%</div>
-                    <div className="text-sm text-green-800">{t('demo.teacher.avgUnderstanding')}</div>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="bg-red-50 p-4 rounded-lg">
-                <div className="flex items-center gap-3">
-                  <AlertTriangleIcon className="w-8 h-8 text-red-600" />
-                  <div>
-                    <div className="text-2xl font-bold text-red-600">3</div>
-                    <div className="text-sm text-red-800">{t('demo.teacher.studentsNeedSupport')}</div>
-                  </div>
-                </div>
+              <div>
+                <p className="text-sm text-gray-600">Total Students</p>
+                <p className="text-2xl font-bold text-brand-dark">127</p>
               </div>
             </div>
+          </CardContent>
+        </Card>
 
-            <div className="space-y-3">
-              <h4 className="font-semibold">{t('demo.teacher.recentClassPerformance')}</h4>
+        <Card className="bg-white/90 backdrop-blur-sm border-gray-200/50 shadow-lg">
+          <CardContent className="p-6">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 bg-brand-orange/10 rounded-lg flex items-center justify-center">
+                <MessageSquare className="w-6 h-6 text-brand-orange" />
+              </div>
+              <div>
+                <p className="text-sm text-gray-600">Feedback Received</p>
+                <p className="text-2xl font-bold text-brand-dark">89</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-white/90 backdrop-blur-sm border-gray-200/50 shadow-lg">
+          <CardContent className="p-6">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                <TrendingUp className="w-6 h-6 text-green-600" />
+              </div>
+              <div>
+                <p className="text-sm text-gray-600">Avg Engagement</p>
+                <p className="text-2xl font-bold text-brand-dark">4.3/5</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-white/90 backdrop-blur-sm border-gray-200/50 shadow-lg">
+          <CardContent className="p-6">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center">
+                <AlertTriangle className="w-6 h-6 text-red-600" />
+              </div>
+              <div>
+                <p className="text-sm text-gray-600">Wellness Alerts</p>
+                <p className="text-2xl font-bold text-red-600">3</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Today's Schedule */}
+      <Card className="bg-white/90 backdrop-blur-sm border-gray-200/50 shadow-lg">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Calendar className="w-5 h-5 text-brand-teal" />
+            Today's Schedule
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-3">
+            <div className="flex items-center justify-between p-3 bg-brand-teal/5 rounded-lg border border-brand-teal/20">
+              <div>
+                <h3 className="font-semibold text-brand-dark">Algebra II - Period 1</h3>
+                <p className="text-sm text-gray-600">Room 201 • 9:00 - 9:50 AM</p>
+              </div>
+              <Badge className="bg-brand-teal text-white">In Progress</Badge>
+            </div>
+            <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+              <div>
+                <h3 className="font-semibold text-brand-dark">Geometry - Period 3</h3>
+                <p className="text-sm text-gray-600">Room 201 • 11:00 - 11:50 AM</p>
+              </div>
+              <Badge variant="outline">Upcoming</Badge>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+
+  const renderFeedback = () => (
+    <div className="space-y-6">
+      <Card className="bg-white/90 backdrop-blur-sm border-gray-200/50 shadow-lg">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <MessageSquare className="w-5 h-5 text-brand-orange" />
+            Live Student Feedback
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-3 gap-4">
+            <div className="bg-green-50 p-4 rounded-lg border border-green-200">
+              <h3 className="font-semibold text-green-800">Understanding</h3>
+              <p className="text-2xl font-bold text-green-600">4.2/5</p>
+              <div className="flex mt-2">
+                {[1, 2, 3, 4].map((star) => (
+                  <Star key={star} className="w-4 h-4 text-yellow-400 fill-current" />
+                ))}
+                <Star className="w-4 h-4 text-gray-300" />
+              </div>
+            </div>
+            <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+              <h3 className="font-semibold text-blue-800">Interest</h3>
+              <p className="text-2xl font-bold text-blue-600">3.8/5</p>
+              <div className="flex mt-2">
+                {[1, 2, 3].map((star) => (
+                  <Star key={star} className="w-4 h-4 text-yellow-400 fill-current" />
+                ))}
+                {[4, 5].map((star) => (
+                  <Star key={star} className="w-4 h-4 text-gray-300" />
+                ))}
+              </div>
+            </div>
+            <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
+              <h3 className="font-semibold text-purple-800">Growth</h3>
+              <p className="text-2xl font-bold text-purple-600">4.5/5</p>
+              <div className="flex mt-2">
+                {[1, 2, 3, 4].map((star) => (
+                  <Star key={star} className="w-4 h-4 text-yellow-400 fill-current" />
+                ))}
+                <Star className="w-4 h-4 text-yellow-400 fill-current" />
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-3">
+            <h4 className="font-semibold">Recent Comments:</h4>
+            <div className="space-y-2">
+              <div className="bg-gray-50 p-3 rounded-lg">
+                <p className="text-sm text-gray-700">"The examples really helped me understand quadratic functions better!" - Emma S.</p>
+              </div>
+              <div className="bg-gray-50 p-3 rounded-lg">
+                <p className="text-sm text-gray-700">"Could you go slower through the factoring steps?" - Anonymous</p>
+              </div>
+              <div className="bg-gray-50 p-3 rounded-lg">
+                <p className="text-sm text-gray-700">"I love how you connect math to real-world problems!" - Mike R.</p>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+
+  const renderAnalytics = () => (
+    <div className="space-y-6">
+      <Card className="bg-white/90 backdrop-blur-sm border-gray-200/50 shadow-lg">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <BarChart3 className="w-5 h-5 text-brand-teal" />
+            Student Performance Analytics
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-2 gap-6">
+            <div>
+              <h4 className="font-semibold mb-3">Class Performance Trends</h4>
               <div className="space-y-2">
-                <div className="flex justify-between items-center p-3 bg-green-50 rounded-lg">
-                  <span className="font-medium">{t('demo.teacher.mathematicsAlgebra')}</span>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm">Understanding</span>
                   <div className="flex items-center gap-2">
-                    <Badge className="bg-green-100 text-green-700">4.2★</Badge>
-                    <CheckCircleIcon className="w-4 h-4 text-green-600" />
+                    <Progress value={84} className="w-20" />
+                    <span className="text-sm font-medium">84%</span>
                   </div>
                 </div>
-                <div className="flex justify-between items-center p-3 bg-yellow-50 rounded-lg">
-                  <span className="font-medium">{t('demo.teacher.chemistryLabWork')}</span>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm">Interest</span>
                   <div className="flex items-center gap-2">
-                    <Badge className="bg-yellow-100 text-yellow-700">3.8★</Badge>
-                    <AlertTriangleIcon className="w-4 h-4 text-yellow-600" />
+                    <Progress value={76} className="w-20" />
+                    <span className="text-sm font-medium">76%</span>
+                  </div>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm">Growth</span>
+                  <div className="flex items-center gap-2">
+                    <Progress value={90} className="w-20" />
+                    <span className="text-sm font-medium">90%</span>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
-        );
-
-      case 2:
-        return (
-          <div className="bg-white p-6 rounded-lg shadow-lg border">
-            <h3 className="text-lg font-semibold mb-4">{t('demo.teacher.steps.2')}</h3>
-            <div className="space-y-4">
-              <div className="bg-blue-50 p-4 rounded-lg">
-                <h4 className="font-medium text-blue-800 mb-2">{t('demo.teacher.mathematicsAlgebra')}</h4>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <div className="text-sm text-blue-600">{t('demo.teacher.avgUnderstanding')}</div>
-                    <div className="text-2xl font-bold text-blue-800">8.2/10</div>
-                  </div>
-                  <div>
-                    <div className="text-sm text-blue-600">{t('demo.teacher.activeStudents')}</div>
-                    <div className="text-2xl font-bold text-blue-800">28/30</div>
-                  </div>
+            
+            <div>
+              <h4 className="font-semibold mb-3">Top Performing Topics</h4>
+              <div className="space-y-2">
+                <div className="flex justify-between items-center p-2 bg-green-50 rounded">
+                  <span className="text-sm">Linear Equations</span>
+                  <Badge className="bg-green-100 text-green-800">4.6/5</Badge>
                 </div>
-                <div className="mt-3">
-                  <div className="w-full bg-blue-200 rounded-full h-2">
-                    <div className="bg-blue-600 h-2 rounded-full" style={{ width: '82%' }}></div>
-                  </div>
+                <div className="flex justify-between items-center p-2 bg-blue-50 rounded">
+                  <span className="text-sm">Graphing</span>
+                  <Badge className="bg-blue-100 text-blue-800">4.3/5</Badge>
                 </div>
-              </div>
-
-              <div className="bg-yellow-50 p-4 rounded-lg">
-                <h4 className="font-medium text-yellow-800 mb-2">{t('demo.teacher.chemistryLabWork')}</h4>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <div className="text-sm text-yellow-600">{t('demo.teacher.avgUnderstanding')}</div>
-                    <div className="text-2xl font-bold text-yellow-800">6.8/10</div>
-                  </div>
-                  <div>
-                    <div className="text-sm text-yellow-600">{t('demo.teacher.activeStudents')}</div>
-                    <div className="text-2xl font-bold text-yellow-800">25/30</div>
-                  </div>
-                </div>
-                <div className="mt-3">
-                  <div className="w-full bg-yellow-200 rounded-full h-2">
-                    <div className="bg-yellow-600 h-2 rounded-full" style={{ width: '68%' }}></div>
-                  </div>
+                <div className="flex justify-between items-center p-2 bg-yellow-50 rounded">
+                  <span className="text-sm">Factoring</span>
+                  <Badge className="bg-yellow-100 text-yellow-800">3.8/5</Badge>
                 </div>
               </div>
             </div>
           </div>
-        );
 
-      case 3:
-        return (
-          <div className="bg-white p-6 rounded-lg shadow-lg border">
-            <h3 className="text-lg font-semibold mb-4">{t('demo.teacher.steps.3')}</h3>
-            <div className="space-y-3">
-              <div className="bg-red-50 p-4 rounded-lg border border-red-200">
-                <div className="flex items-center gap-3">
-                  <AlertTriangleIcon className="w-6 h-6 text-red-600" />
-                  <div className="flex-1">
-                    <div className="font-medium text-red-800">Emma Johnson</div>
-                    <div className="text-sm text-red-600">{t('demo.teacher.lowEngagement')}</div>
-                    <div className="text-xs text-red-500">{t('demo.teacher.lastWeek')}</div>
-                  </div>
-                  <Button size="sm" variant="outline" className="text-red-600 border-red-200">
-                    {t('demo.teacher.contactStudent')}
-                  </Button>
+          <div className="bg-brand-teal/5 p-4 rounded-lg border border-brand-teal/20">
+            <h4 className="font-semibold text-brand-dark mb-2">AI Insights</h4>
+            <p className="text-sm text-gray-700">
+              "Students are showing strong improvement in problem-solving skills. Consider introducing more challenging word problems to maintain engagement."
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+
+  const renderWellness = () => (
+    <div className="space-y-6">
+      <Card className="bg-white/90 backdrop-blur-sm border-gray-200/50 shadow-lg">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Heart className="w-5 h-5 text-brand-orange" />
+            Student Wellness Monitor
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-3 gap-4">
+            <div className="bg-green-50 p-4 rounded-lg border border-green-200 text-center">
+              <h3 className="font-semibold text-green-800">Positive</h3>
+              <p className="text-2xl font-bold text-green-600">78%</p>
+              <p className="text-xs text-green-600">Students feeling good</p>
+            </div>
+            <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-200 text-center">
+              <h3 className="font-semibold text-yellow-800">Neutral</h3>
+              <p className="text-2xl font-bold text-yellow-600">18%</p>
+              <p className="text-xs text-yellow-600">Average mood</p>
+            </div>
+            <div className="bg-red-50 p-4 rounded-lg border border-red-200 text-center">
+              <h3 className="font-semibold text-red-800">Needs Support</h3>
+              <p className="text-2xl font-bold text-red-600">4%</p>
+              <p className="text-xs text-red-600">Require attention</p>
+            </div>
+          </div>
+
+          <div className="space-y-3">
+            <h4 className="font-semibold">Recent Wellness Alerts:</h4>
+            <div className="space-y-2">
+              <div className="border border-orange-200 rounded-lg p-3 bg-orange-50/30">
+                <div className="flex justify-between items-start mb-2">
+                  <span className="font-medium text-brand-dark">Student - Sarah M.</span>
+                  <Badge variant="secondary">Medium Priority</Badge>
                 </div>
+                <p className="text-sm text-gray-700">"Feeling overwhelmed with upcoming exams and having trouble sleeping."</p>
               </div>
-
-              <div className="bg-orange-50 p-4 rounded-lg border border-orange-200">
-                <div className="flex items-center gap-3">
-                  <UserIcon className="w-6 h-6 text-orange-600" />
-                  <div className="flex-1">
-                    <div className="font-medium text-orange-800">Alex Smith</div>
-                    <div className="text-sm text-orange-600">{t('demo.teacher.strugglingMath')}</div>
-                    <div className="text-xs text-orange-500">{t('demo.teacher.needsSupport')}</div>
-                  </div>
-                  <Button size="sm" variant="outline" className="text-orange-600 border-orange-200">
-                    {t('demo.teacher.scheduleHelp')}
-                  </Button>
+              
+              <div className="border border-red-200 rounded-lg p-3 bg-red-50/30">
+                <div className="flex justify-between items-start mb-2">
+                  <span className="font-medium text-brand-dark">Anonymous Student</span>
+                  <Badge variant="destructive">High Priority</Badge>
                 </div>
-              </div>
-
-              <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
-                <div className="flex items-center gap-3">
-                  <HeartIcon className="w-6 h-6 text-yellow-600" />
-                  <div className="flex-1">
-                    <div className="font-medium text-yellow-800">Maria Garcia</div>
-                    <div className="text-sm text-yellow-600">{t('demo.teacher.moodChange')}</div>
-                    <div className="text-xs text-yellow-500">{t('demo.teacher.monitorClosely')}</div>
-                  </div>
-                  <Button size="sm" variant="outline" className="text-yellow-600 border-yellow-200">
-                    {t('demo.teacher.checkIn')}
-                  </Button>
-                </div>
+                <p className="text-sm text-gray-700">"Struggling with social anxiety and finding it hard to participate in class."</p>
               </div>
             </div>
           </div>
-        );
 
-      case 4:
-        return (
-          <div className="bg-white p-6 rounded-lg shadow-lg border">
-            <h3 className="text-lg font-semibold mb-4">{t('demo.teacher.steps.4')}</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="bg-green-50 p-4 rounded-lg">
-                <h4 className="font-medium text-green-800 mb-3">{t('demo.teacher.positiveWeek')}</h4>
-                <div className="space-y-2">
-                  <div className="flex justify-between">
-                    <span className="text-sm">{t('demo.teacher.happyStudents')}</span>
-                    <span className="font-medium text-green-600">78%</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-sm">{t('demo.teacher.engagedLearners')}</span>
-                    <span className="font-medium text-green-600">85%</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-sm">{t('demo.teacher.completedTasks')}</span>
-                    <span className="font-medium text-green-600">92%</span>
-                  </div>
-                </div>
-              </div>
+          <Button className="w-full bg-brand-orange hover:bg-brand-orange/90 text-white">
+            Contact School Counselor
+          </Button>
+        </CardContent>
+      </Card>
+    </div>
+  );
 
-              <div className="bg-red-50 p-4 rounded-lg">
-                <h4 className="font-medium text-red-800 mb-3">{t('demo.teacher.needsAttention')}</h4>
-                <div className="space-y-2">
-                  <div className="flex justify-between">
-                    <span className="text-sm">{t('demo.teacher.stressedStudents')}</span>
-                    <span className="font-medium text-red-600">12%</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-sm">{t('demo.teacher.lowMood')}</span>
-                    <span className="font-medium text-red-600">8%</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-sm">{t('demo.teacher.missingTasks')}</span>
-                    <span className="font-medium text-red-600">15%</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        );
-
-      case 5:
-        return (
-          <div className="bg-white p-6 rounded-lg shadow-lg border">
-            <h3 className="text-lg font-semibold mb-4">{t('demo.teacher.steps.5')}</h3>
-            <div className="space-y-4">
-              <div className="bg-blue-50 p-4 rounded-lg">
-                <div className="flex items-center gap-3 mb-3">
-                  <UserIcon className="w-6 h-6 text-blue-600" />
-                  <div>
-                    <div className="font-medium">Emma Johnson</div>
-                    <div className="text-sm text-gray-600">{t('demo.teacher.weeklyReport')}</div>
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-4 text-sm">
-                  <div>
-                    <div className="text-gray-600">{t('demo.teacher.avgUnderstanding')}</div>
-                    <div className="font-medium">7.2/10</div>
-                  </div>
-                  <div>
-                    <div className="text-gray-600">{t('demo.teacher.participation')}</div>
-                    <div className="font-medium">65%</div>
-                  </div>
-                  <div>
-                    <div className="text-gray-600">{t('demo.teacher.moodRating')}</div>
-                    <div className="font-medium">6.8/10</div>
-                  </div>
-                  <div>
-                    <div className="text-gray-600">{t('demo.teacher.tasksCompleted')}</div>
-                    <div className="font-medium">8/10</div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-yellow-50 p-4 rounded-lg">
-                <h4 className="font-medium text-yellow-800 mb-2">{t('demo.teacher.recommendations')}</h4>
-                <ul className="text-sm space-y-1 text-yellow-700">
-                  <li>• {t('demo.teacher.encourageParticipation')}</li>
-                  <li>• {t('demo.teacher.provideFeedback')}</li>
-                  <li>• {t('demo.teacher.checkWellbeing')}</li>
-                </ul>
-              </div>
-            </div>
-          </div>
-        );
-
-      case 6:
-        return (
-          <div className="bg-white p-6 rounded-lg shadow-lg border">
-            <h3 className="text-lg font-semibold mb-4">{t('demo.teacher.steps.6')}</h3>
-            <div className="space-y-4">
-              <div className="bg-purple-50 p-4 rounded-lg">
-                <h4 className="font-medium text-purple-800 mb-3">{t('demo.teacher.actionPlan')}</h4>
-                <div className="space-y-3">
-                  <div className="flex items-start gap-3">
-                    <CheckCircleIcon className="w-5 h-5 text-green-600 mt-0.5" />
-                    <div>
-                      <div className="font-medium">{t('demo.teacher.scheduleOneOnOne')}</div>
-                      <div className="text-sm text-gray-600">{t('demo.teacher.withEmmaJohnson')}</div>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-start gap-3">
-                    <ClockIcon className="w-5 h-5 text-blue-600 mt-0.5" />
-                    <div>
-                      <div className="font-medium">{t('demo.teacher.createStudyGroup')}</div>
-                      <div className="text-sm text-gray-600">{t('demo.teacher.forMathStruggling')}</div>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-start gap-3">
-                    <MessageSquareIcon className="w-5 h-5 text-orange-600 mt-0.5" />
-                    <div>
-                      <div className="font-medium">{t('demo.teacher.contactParents')}</div>
-                      <div className="text-sm text-gray-600">{t('demo.teacher.discussProgress')}</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        );
-
-      case 7:
-        return (
-          <div className="bg-white p-6 rounded-lg shadow-lg border">
-            <h3 className="text-lg font-semibold mb-4">{t('demo.teacher.steps.7')}</h3>
-            <div className="space-y-4">
-              <div className="bg-gradient-to-r from-blue-50 to-green-50 p-4 rounded-lg">
-                <h4 className="font-medium mb-3">{t('demo.teacher.weeklyTrends')}</h4>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <TrendingUpIcon className="w-4 h-4 text-green-600" />
-                      <span className="text-sm font-medium">{t('demo.teacher.improving')}</span>
-                    </div>
-                    <div className="text-xs text-gray-600 mt-1">
-                      {t('demo.teacher.understanding')} +12%
-                    </div>
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <TrendingUpIcon className="w-4 h-4 text-green-600" />
-                      <span className="text-sm font-medium">{t('demo.teacher.engagement')}</span>
-                    </div>
-                    <div className="text-xs text-gray-600 mt-1">
-                      +8% {t('demo.teacher.thisWeek')}
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-orange-50 p-4 rounded-lg">
-                <h4 className="font-medium text-orange-800 mb-2">{t('demo.teacher.areasForImprovement')}</h4>
-                <ul className="text-sm space-y-1 text-orange-700">
-                  <li>• {t('demo.teacher.chemistryLabNeedsFocus')}</li>
-                  <li>• {t('demo.teacher.increaseInteractivity')}</li>
-                  <li>• {t('demo.teacher.moreFrequentCheckins')}</li>
-                </ul>
-              </div>
-            </div>
-          </div>
-        );
-
-      case 8:
-        return (
-          <div className="bg-white p-6 rounded-lg shadow-lg border">
-            <h3 className="text-lg font-semibold mb-4">{t('demo.teacher.steps.8')}</h3>
-            <div className="space-y-4">
-              <div className="bg-indigo-50 p-4 rounded-lg">
-                <h4 className="font-medium text-indigo-800 mb-3">{t('demo.teacher.nextWeekPlanning')}</h4>
-                <div className="space-y-3">
-                  <div className="flex items-center gap-3 p-2 bg-white rounded border">
-                    <BookOpenIcon className="w-5 h-5 text-indigo-600" />
-                    <div className="flex-1">
-                      <div className="font-medium">{t('demo.teacher.revisitAlgebra')}</div>
-                      <div className="text-sm text-gray-600">{t('demo.teacher.focusOnStrugglingStudents')}</div>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-center gap-3 p-2 bg-white rounded border">
-                    <UserIcon className="w-5 h-5 text-indigo-600" />
-                    <div className="flex-1">
-                      <div className="font-medium">{t('demo.teacher.interactiveLab')}</div>
-                      <div className="text-sm text-gray-600">{t('demo.teacher.improveChemistryEngagement')}</div>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-center gap-3 p-2 bg-white rounded border">
-                    <CalendarIcon className="w-5 h-5 text-indigo-600" />
-                    <div className="flex-1">
-                      <div className="font-medium">{t('demo.teacher.wellbeingCheckins')}</div>
-                      <div className="text-sm text-gray-600">{t('demo.teacher.scheduledTuesdayThursday')}</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-green-50 p-4 rounded-lg">
-                <div className="flex items-center gap-2 text-green-800">
-                  <CheckCircleIcon className="w-5 h-5" />
-                  <span className="font-medium">{t('demo.teacher.planningComplete')}</span>
-                </div>
-                <div className="text-sm text-green-600 mt-1">
-                  {t('demo.teacher.readyForNextWeek')}
-                </div>
-              </div>
-            </div>
-          </div>
-        );
-      
-      default:
-        return (
-          <div className="bg-white p-6 rounded-lg shadow-lg border">
-            <div className="text-center">
-              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <BarChart3Icon className="w-8 h-8 text-green-600" />
-              </div>
-              <h3 className="text-lg font-semibold mb-2">
-                {simulationSteps[currentStep - 1]?.name}
-              </h3>
-              <p className="text-gray-600 text-sm">
-                {t('demo.teacher.analyzeDescription')}
-              </p>
-            </div>
-          </div>
-        );
+  const getCurrentComponent = () => {
+    switch (steps[currentStep].component) {
+      case "dashboard": return renderDashboard();
+      case "feedback": return renderFeedback();
+      case "analytics": return renderAnalytics();
+      case "wellness": return renderWellness();
+      default: return renderDashboard();
     }
   };
 
   return (
     <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle className="flex items-center gap-2">
-              {t('demo.simulation.teacher.title')}
-            </CardTitle>
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setInternalIsPlaying(!internalIsPlaying)}
-                className="flex items-center gap-2"
-              >
-                {internalIsPlaying ? (
-                  <>
-                    <PauseIcon className="w-4 h-4" />
-                    {t('demo.simulation.pause')}
-                  </>
-                ) : (
-                  <>
-                    <PlayIcon className="w-4 h-4" />
-                    {t('demo.simulation.play')}
-                  </>
-                )}
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setCurrentStep(1)}
-                className="flex items-center gap-2"
-              >
-                <RotateCcwIcon className="w-4 h-4" />
-                {t('demo.simulation.reset')}
-              </Button>
-            </div>
+      {/* Progress Header */}
+      <Card className="bg-white/90 backdrop-blur-sm border-gray-200/50 shadow-lg">
+        <CardContent className="p-4">
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="font-semibold text-brand-dark">Teacher Experience Demo</h3>
+            <Badge variant="outline" className="border-brand-teal text-brand-teal">
+              Step {currentStep + 1} of {steps.length}
+            </Badge>
           </div>
-          <div className="flex items-center justify-between text-sm text-gray-600">
-            <span>{t('demo.simulation.step')} {currentStep} {t('demo.simulation.of')} {totalSteps}</span>
-            <span>{simulationSteps[currentStep - 1]?.name}</span>
-          </div>
-          <Progress value={(currentStep / totalSteps) * 100} className="mt-2" />
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-6">
-            {simulationSteps.map((step) => (
-              <Button
-                key={step.id}
-                variant={currentStep === step.id ? "default" : "outline"}
-                size="sm"
-                onClick={() => handleStepClick(step.id)}
-                className="text-xs p-2 h-auto min-h-[60px] flex flex-col items-center justify-center"
-              >
-                <div className="text-center">
-                  <div className="font-medium">{step.id}.</div>
-                  <div className="break-words">{step.shortName}</div>
-                </div>
-              </Button>
-            ))}
-          </div>
-          
-          {getCurrentStepContent()}
+          <Progress value={progress} className="mb-2" />
+          <p className="text-sm text-gray-600">{steps[currentStep].description}</p>
         </CardContent>
       </Card>
+
+      {/* Current Step Content */}
+      {getCurrentComponent()}
+
+      {/* Navigation */}
+      <div className="flex justify-between">
+        <Button
+          variant="outline"
+          onClick={() => setCurrentStep(Math.max(0, currentStep - 1))}
+          disabled={currentStep === 0}
+        >
+          Previous
+        </Button>
+        <Button
+          onClick={() => setCurrentStep(Math.min(steps.length - 1, currentStep + 1))}
+          disabled={currentStep === steps.length - 1}
+          className="bg-brand-teal hover:bg-brand-dark text-white"
+        >
+          Next
+        </Button>
+      </div>
     </div>
   );
 };
