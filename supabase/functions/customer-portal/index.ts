@@ -22,7 +22,7 @@ serve(async (req) => {
       apiVersion: "2023-10-16",
     });
 
-    // Create Supabase client with service role key
+    // Create Supabase client with service role key for database operations
     const supabaseAdmin = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
@@ -37,7 +37,7 @@ serve(async (req) => {
       console.log("Raw request body content:", bodyText || "(empty)");
       
       if (!bodyText || bodyText.trim() === "") {
-        console.log("Request body is empty, checking if this is a GET request or malformed POST");
+        console.log("Request body is empty");
         throw new Error("Request body is required. Please ensure you're sending a POST request with JSON data.");
       }
       
@@ -45,7 +45,6 @@ serve(async (req) => {
       console.log("Parsed request body:", JSON.stringify(requestBody, null, 2));
     } catch (parseError) {
       console.error("JSON parsing error details:", parseError);
-      console.error("Failed to parse body as JSON");
       throw new Error(`Invalid JSON in request body: ${parseError.message}`);
     }
 
@@ -63,7 +62,7 @@ serve(async (req) => {
 
     console.log("Processing customer portal request for:", email, "School:", school, "Teacher ID:", teacherId);
 
-    // Verify teacher exists and matches the provided details
+    // Verify teacher exists and matches the provided details (using service role key)
     const { data: teacherData, error: teacherError } = await supabaseAdmin
       .from('teachers')
       .select('id, email, school, role')
@@ -92,7 +91,7 @@ serve(async (req) => {
           }
         });
       
-      throw new Error("Teacher verification failed");
+      throw new Error("Teacher verification failed. Invalid credentials provided.");
     }
 
     // Additional check: ensure teacher has admin role for subscription management

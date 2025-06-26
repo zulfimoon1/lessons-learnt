@@ -71,13 +71,12 @@ const SchoolSettings: React.FC<SchoolSettingsProps> = ({ teacher }) => {
 
       console.log('Sending request to customer portal with data:', requestData);
 
-      // Make the function call with proper headers and body
+      // Make the function call with proper headers and body (no auth token needed)
       const response = await fetch(`https://bjpgloftnlnzndgliqty.supabase.co/functions/v1/customer-portal`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
-          'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
           'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJqcGdsb2Z0bmxuem5kZ2xpcXR5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDkxMTg2OTgsImV4cCI6MjA2NDY5NDY5OH0.F2s-5sMai4AMIDiFqzdVr5s8XzR6ZTD3OUekOFvXbZg'
         },
         body: JSON.stringify(requestData)
