@@ -42,6 +42,20 @@ const StudentUpcomingClasses: React.FC<StudentUpcomingClassesProps> = ({ student
   const navigate = useNavigate();
   const { t } = useLanguage();
 
+  // Helper function to normalize grades for comparison
+  const normalizeGrade = (grade: string): string => {
+    if (!grade) return '';
+    // Remove common prefixes and convert to lowercase for comparison
+    return grade.toLowerCase().replace(/^(grade\s*|class\s*)/i, '').trim();
+  };
+
+  // Helper function to check if grades match
+  const gradesMatch = (grade1: string, grade2: string): boolean => {
+    const normalized1 = normalizeGrade(grade1);
+    const normalized2 = normalizeGrade(grade2);
+    return normalized1 === normalized2;
+  };
+
   useEffect(() => {
     fetchClasses();
   }, [student.school, student.grade]);
@@ -70,7 +84,6 @@ const StudentUpcomingClasses: React.FC<StudentUpcomingClassesProps> = ({ student
         .from('class_schedules')
         .select('*')
         .eq('school', student.school)
-        .eq('grade', student.grade)
         .gte('class_date', thirtyDaysAgo.toISOString().split('T')[0])
         .order('class_date', { ascending: false })
         .order('class_time', { ascending: false });
@@ -84,7 +97,28 @@ const StudentUpcomingClasses: React.FC<StudentUpcomingClassesProps> = ({ student
       console.log('📋 Class data:', classData);
 
       if (!classData || classData.length === 0) {
-        setDebugInfo(`No classes found for school "${student.school}" and grade "${student.grade}" in the last 30 days.`);
+        setDebugInfo(`No classes found for school "${student.school}" in the last 30 days.`);
+        setClasses([]);
+        return;
+      }
+
+      // Filter classes by grade with flexible matching
+      const gradeMatchedClasses = classData.filter(classItem => {
+        const isMatch = gradesMatch(classItem.grade, student.grade);
+        console.log('🎯 Grade matching:', {
+          classGrade: classItem.grade,
+          studentGrade: student.grade,
+          normalizedClassGrade: normalizeGrade(classItem.grade),
+          normalizedStudentGrade: normalizeGrade(student.grade),
+          match: isMatch
+        });
+        return isMatch;
+      });
+
+      console.log('📊 Grade-matched classes:', gradeMatchedClasses.length);
+
+      if (gradeMatchedClasses.length === 0) {
+        setDebugInfo(`No classes found for grade "${student.grade}" at "${student.school}" in the last 30 days. Available grades: ${[...new Set(classData.map(c => c.grade))].join(', ')}`);
         setClasses([]);
         return;
       }
@@ -105,7 +139,7 @@ const StudentUpcomingClasses: React.FC<StudentUpcomingClassesProps> = ({ student
 
       // Get teacher names and process classes
       const classesWithDetails = await Promise.all(
-        classData.map(async (classItem) => {
+        gradeMatchedClasses.map(async (classItem) => {
           const { data: teacherData } = await supabase
             .from('teachers')
             .select('name')
@@ -158,10 +192,13 @@ const StudentUpcomingClasses: React.FC<StudentUpcomingClassesProps> = ({ student
       const debugMessage = `
         Student: ${student.full_name}
         School: ${student.school}
-        Grade: ${student.grade}
+        Grade: ${student.grade} (normalized: ${normalizeGrade(student.grade)})
         Total classes found: ${classData.length}
+        Grade-matched classes: ${gradeMatchedClasses.length}
         Classes with feedback: ${feedbackClassIds.size}
         Classes needing attention: ${relevantClasses.length}
+        
+        Available grades in database: ${[...new Set(classData.map(c => c.grade))].join(', ')}
       `;
       setDebugInfo(debugMessage);
       

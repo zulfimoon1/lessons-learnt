@@ -46,6 +46,20 @@ const LessonFeedbackForm = () => {
   const { t } = useLanguage();
   const { student } = useAuth();
 
+  // Helper function to normalize grades for comparison
+  const normalizeGrade = (grade: string): string => {
+    if (!grade) return '';
+    // Remove common prefixes and convert to lowercase for comparison
+    return grade.toLowerCase().replace(/^(grade\s*|class\s*)/i, '').trim();
+  };
+
+  // Helper function to check if grades match
+  const gradesMatch = (grade1: string, grade2: string): boolean => {
+    const normalized1 = normalizeGrade(grade1);
+    const normalized2 = normalizeGrade(grade2);
+    return normalized1 === normalized2;
+  };
+
   useEffect(() => {
     const loadClasses = async () => {
       if (!student) {
@@ -71,14 +85,16 @@ const LessonFeedbackForm = () => {
           const relevantClasses = response.data.filter((classItem: any) => {
             const classDate = new Date(classItem.class_date);
             const daysDiff = Math.abs(today.getTime() - classDate.getTime()) / (1000 * 3600 * 24);
-            const isRelevantGrade = classItem.grade === student.grade;
+            const isRelevantGrade = gradesMatch(classItem.grade, student.grade);
             
             console.log('🎯 Class filter check:', {
               classDate: classItem.class_date,
               classGrade: classItem.grade,
               studentGrade: student.grade,
+              normalizedClassGrade: normalizeGrade(classItem.grade),
+              normalizedStudentGrade: normalizeGrade(student.grade),
+              gradesMatch: isRelevantGrade,
               daysDiff,
-              isRelevantGrade,
               withinTimeWindow: daysDiff <= 30
             });
             
@@ -119,10 +135,15 @@ const LessonFeedbackForm = () => {
           setClasses(classesNeedingFeedback);
           
           const debugMessage = `
-            Student: ${student.school} - Grade ${student.grade}
+            Student: ${student.school} - Grade ${student.grade} (normalized: ${normalizeGrade(student.grade)})
             Total classes in last 30 days: ${relevantClasses.length}
             Classes with feedback: ${feedbackClassIds.size}
             Classes needing feedback: ${classesNeedingFeedback.length}
+            
+            Grade matching examples:
+            ${response.data.slice(0, 3).map(c => 
+              `- Class grade: "${c.grade}" (normalized: "${normalizeGrade(c.grade)}") → Match: ${gradesMatch(c.grade, student.grade)}`
+            ).join('\n            ')}
           `;
           setDebugInfo(debugMessage);
           
