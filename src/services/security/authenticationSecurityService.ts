@@ -71,6 +71,44 @@ class AuthenticationSecurityService {
     this.rateLimits.delete(identifier);
   }
 
+  // New method to support the enhanced security service interface
+  async authenticateUser(
+    userType: 'student' | 'teacher' | 'admin',
+    credentials: any,
+    requestContext: {
+      userAgent: string;
+      ipAddress?: string;
+    }
+  ): Promise<{ success: boolean; user?: any; error?: string }> {
+    try {
+      if (userType === 'teacher') {
+        const result = await this.authenticateTeacher(credentials.email, credentials.password);
+        return {
+          success: !result.error,
+          user: result.teacher,
+          error: result.error
+        };
+      } else if (userType === 'student') {
+        const result = await this.authenticateStudent(
+          credentials.fullName,
+          credentials.school,
+          credentials.grade,
+          credentials.password
+        );
+        return {
+          success: !result.error,
+          user: result.student,
+          error: result.error
+        };
+      }
+      
+      return { success: false, error: 'Unsupported user type' };
+    } catch (error) {
+      console.error('Authentication error:', error);
+      return { success: false, error: 'Authentication failed' };
+    }
+  }
+
   async authenticateTeacher(email: string, password: string): Promise<AuthResult> {
     try {
       const identifier = `teacher_${email}`;
@@ -180,6 +218,12 @@ class AuthenticationSecurityService {
       console.error('Student authentication error:', error);
       return { error: 'Authentication service unavailable' };
     }
+  }
+
+  // Cleanup method required by other services
+  cleanup(): void {
+    this.cleanupRateLimits();
+    console.log('Authentication security service cleaned up');
   }
 }
 
