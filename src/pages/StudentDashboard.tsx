@@ -29,11 +29,14 @@ const StudentDashboard: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('classes');
 
+  console.log('StudentDashboard: Rendering with student:', student?.full_name);
+
   useEffect(() => {
     const fetchUpcomingClasses = async () => {
       if (!student) return;
       
       try {
+        console.log('StudentDashboard: Fetching classes for student:', student.full_name);
         setIsLoading(true);
         const response = await classScheduleService.getSchedulesBySchool(student.school);
         if (response.data) {
@@ -48,10 +51,11 @@ const StudentDashboard: React.FC = () => {
               return classDateTime > now;
             }
           );
+          console.log('StudentDashboard: Filtered classes:', filteredClasses.length);
           setUpcomingClasses(filteredClasses);
         }
       } catch (error) {
-        console.error('Error fetching upcoming classes:', error);
+        console.error('StudentDashboard: Error fetching upcoming classes:', error);
         toast.error(t('common.error') || 'Failed to load upcoming classes');
       } finally {
         setIsLoading(false);
@@ -71,21 +75,36 @@ const StudentDashboard: React.FC = () => {
   };
 
   const handleQuickActions = {
-    onViewClasses: () => setActiveTab('classes'),
-    onSubmitFeedback: () => setActiveTab('feedback'),
-    onWeeklySummary: () => setActiveTab('summary'),
-    onWellnessCheck: () => setActiveTab('wellness')
+    onViewClasses: () => {
+      console.log('StudentDashboard: Quick action - View Classes');
+      setActiveTab('classes');
+    },
+    onSubmitFeedback: () => {
+      console.log('StudentDashboard: Quick action - Submit Feedback');
+      setActiveTab('feedback');
+    },
+    onWeeklySummary: () => {
+      console.log('StudentDashboard: Quick action - Weekly Summary');
+      setActiveTab('summary');
+    },
+    onWellnessCheck: () => {
+      console.log('StudentDashboard: Quick action - Wellness Check');
+      setActiveTab('wellness');
+    }
   };
 
   const handleMoodSubmit = (entry: any) => {
-    console.log('Mood entry submitted:', entry);
+    console.log('StudentDashboard: Mood entry submitted:', entry);
     toast.success(t('wellness.submitted') || 'Wellness check submitted successfully');
     // Here you would typically save to database
   };
 
   if (!student) {
+    console.log('StudentDashboard: No student found, redirecting to login');
     return <Navigate to="/student-login" replace />;
   }
+
+  console.log('StudentDashboard: Rendering dashboard for student:', student.full_name);
 
   const tabItems = [
     {
