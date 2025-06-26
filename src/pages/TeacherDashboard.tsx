@@ -40,43 +40,50 @@ const TeacherDashboard: React.FC = () => {
       value: 'schedule',
       icon: CalendarIcon,
       label: t('teacher.schedule') || 'Schedule',
-      component: <ScheduleTab teacher={teacher} />
+      component: <ScheduleTab teacher={teacher} />,
+      color: 'text-brand-teal'
     },
     {
       value: 'feedback',
       icon: MessageSquareIcon,
       label: t('dashboard.feedback') || 'Feedback',
-      component: <FeedbackDashboard teacher={teacher} />
+      component: <FeedbackDashboard teacher={teacher} />,
+      color: 'text-brand-orange'
     },
     {
       value: 'summaries',
       icon: FileTextIcon,
       label: t('weekly.summaries') || 'Summaries',
-      component: <WeeklySummariesTab teacher={teacher} />
+      component: <WeeklySummariesTab teacher={teacher} />,
+      color: 'text-brand-teal'
     },
     {
       value: 'mental-health',
       icon: UsersIcon,
       label: t('features.mentalHealth.title') || 'Mental Health',
-      component: <MentalHealthTab teacher={teacher} />
+      component: <MentalHealthTab teacher={teacher} />,
+      color: 'text-brand-orange'
     },
     {
       value: 'articles',
       icon: FileTextIcon,
       label: t('teacher.articles') || 'Articles',
-      component: <ArticlesTab teacher={teacher} />
+      component: <ArticlesTab teacher={teacher} />,
+      color: 'text-brand-teal'
     },
     {
       value: 'analytics',
       icon: BarChartIcon,
       label: t('analytics.title') || 'Analytics',
-      component: <AnalyticsTab teacher={teacher} />
+      component: <AnalyticsTab teacher={teacher} />,
+      color: 'text-brand-orange'
     },
     {
       value: 'ai-insights',
       icon: BrainIcon,
       label: t('ai.insights') || 'AI Insights',
-      component: <AIInsightsTab teacher={teacher} />
+      component: <AIInsightsTab teacher={teacher} />,
+      color: 'text-brand-teal'
     }
   ];
 
@@ -113,27 +120,47 @@ const TeacherDashboard: React.FC = () => {
           </div>
         </div>
 
-        {/* Navigation Tabs - Matching Student Dashboard */}
+        {/* Navigation Tabs - Styled like Student Quick Actions */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <div className="bg-white/80 backdrop-blur-sm rounded-2xl border border-gray-200/50 shadow-lg overflow-hidden">
-            <TabsList className={`grid w-full bg-transparent border-b border-gray-200/50 ${isMobile ? 'grid-cols-2 gap-0 h-auto p-0' : 'grid-cols-7 h-14'}`}>
+          <div className="bg-white/90 backdrop-blur-sm rounded-2xl border border-gray-200/50 shadow-lg p-6">
+            <h2 className="text-xl font-semibold text-gray-900 mb-4">
+              {t('dashboard.quickActions') || 'Quick Actions'}
+            </h2>
+            <div className={`grid gap-3 ${isMobile ? 'grid-cols-1 sm:grid-cols-2' : 'grid-cols-2 lg:grid-cols-4'}`}>
               {tabItems.map((item) => {
                 const Icon = item.icon;
                 return (
                   <TabsTrigger 
                     key={item.value}
                     value={item.value} 
-                    className={`flex items-center gap-2 data-[state=active]:bg-brand-teal data-[state=active]:text-white data-[state=active]:shadow-lg transition-all duration-300 hover:bg-gray-50 ${isMobile ? 'flex-col py-3 px-2 text-xs border-b border-gray-200/50' : 'flex-row h-full rounded-none'}`}
+                    className={`
+                      h-auto p-4 flex items-center gap-3 hover:bg-gray-50 border border-gray-200 justify-start
+                      data-[state=active]:bg-brand-teal data-[state=active]:text-white data-[state=active]:border-brand-teal
+                      transition-all duration-300 rounded-lg
+                      ${isMobile ? 'flex-col text-center min-h-[80px]' : 'flex-row'}
+                    `}
+                    asChild
                   >
-                    <Icon className={`${isMobile ? 'w-5 h-5' : 'w-4 h-4'}`} />
-                    <span className={isMobile ? 'text-[11px] leading-tight' : 'text-sm font-medium'}>{item.label}</span>
+                    <button
+                      aria-label={`${item.label} tab`}
+                    >
+                      <Icon 
+                        className={`w-5 h-5 ${activeTab === item.value ? 'text-white' : item.color}`}
+                        aria-hidden="true"
+                      />
+                      <div className={isMobile ? 'text-center' : 'text-left'}>
+                        <span className="text-sm font-medium block">
+                          {item.label}
+                        </span>
+                      </div>
+                    </button>
                   </TabsTrigger>
                 );
               })}
-            </TabsList>
+            </div>
           </div>
 
-          {/* Tab Content - Matching Student Dashboard Cards */}
+          {/* Tab Content */}
           {tabItems.map((item) => (
             <TabsContent key={item.value} value={item.value} className="space-y-6">
               <div className="bg-white/80 backdrop-blur-sm rounded-2xl border border-gray-200/50 shadow-lg">
