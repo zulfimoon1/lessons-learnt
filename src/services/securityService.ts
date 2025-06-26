@@ -1,8 +1,13 @@
 
 import { supabase } from '@/integrations/supabase/client';
+import { authenticationSecurityService } from './security/authenticationSecurityService';
+import { secureSessionManager } from './security/secureSessionManager';
+import { enhancedInputValidator } from './security/enhancedInputValidator';
+import { securityMonitor } from './security/securityMonitor';
+import { csrfProtection } from './security/csrfProtection';
 
 interface SecurityEvent {
-  type: 'login_success' | 'login_failed' | 'logout' | 'unauthorized_access' | 'suspicious_activity' | 'rate_limit_exceeded' | 'session_restored' | 'session_error' | 'csrf_violation' | 'test_admin_created' | 'forced_password_reset';
+  type: 'login_success' | 'login_failed' | 'logout' | 'unauthorized_access' | 'suspicious_activity' | 'rate_limit_exceeded' | 'session_restored' | 'session_error' | 'csrf_violation' | 'test_admin_created' | 'forced_password_reset' | 'security_alert';
   userId?: string;
   timestamp: string;
   details: string;
@@ -23,92 +28,222 @@ class SecurityService {
     windowMinutes: 15
   };
 
-  // Always return true to avoid blocking authentication
+  // Enhanced session validation
   async validateSession(): Promise<boolean> {
+    const session = secureSessionManager.getCurrentSession();
+    if (!session) {
+      return false;
+    }
+
+    // Additional security checks could be added here
     return true;
   }
 
-  // Basic CSRF token management - but don't enforce strictly
+  // Secure CSRF token management
   generateCSRFToken(): string {
-    const array = new Uint8Array(32);
-    crypto.getRandomValues(array);
-    const token = Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
     try {
-      sessionStorage.setItem('csrf_token', token);
-      sessionStorage.setItem('csrf_token_timestamp', Date.now().toString());
+      return csrfProtection.getToken();
     } catch (error) {
-      console.warn('Failed to store CSRF token:', error);
+      console.error('Failed to generate CSRF token:', error);
+      // Fallback token generation
+      const array = new Uint8Array(32);
+      crypto.getRandomValues(array);
+      return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
     }
-    return token;
   }
 
   validateCSRFToken(token: string): boolean {
-    // Always return true to avoid blocking authentication
-    return true;
+    return csrfProtection.validateToken(token);
   }
 
-  // Always allow to avoid blocking authentication
+  // Enhanced rate limiting with persistent tracking
   async checkRateLimit(identifier: string, action: string, config?: RateLimitConfig): Promise<{ allowed: boolean; message?: string }> {
-    return { allowed: true };
+    const rateConfig = config || this.defaultRateLimit;
+    
+    try {
+      // Check local rate limits first (immediate response)
+      const allowed = enhancedInputValidator.checkValidationRateLimit(identifier);
+      
+      if (!allowed) {
+        await this.logSecurityEvent({
+          type: 'rate_limit_exceeded',
+          timestamp: new Date().toISOString(),
+          details: `Rate limit exceeded for ${action} by ${identifier}`,
+          userAgent: navigator.userAgent
+        });
+        
+        return { 
+          allowed: false, 
+          message: `Too many ${action} attempts. Please wait before trying again.` 
+        };
+      }
+      
+      return { allowed: true };
+    } catch (error) {
+      console.error('Rate limit check failed:', error);
+      // Default to allowing to avoid blocking legitimate users
+      return { allowed: true };
+    }
   }
 
   async recordAttempt(identifier: string, action: string, success: boolean): Promise<void> {
-    // Silent operation
+    try {
+      const eventType = success ? 'login_success' : 'login_failed';
+      await this.logSecurityEvent({
+        type: eventType,
+        timestamp: new Date().toISOString(),
+        details: `${action} attempt by ${identifier}: ${success ? 'success' : 'failed'}`,
+        userAgent: navigator.userAgent
+      });
+    } catch (error) {
+      console.error('Failed to record attempt:', error);
+    }
   }
 
-  // Basic input validation - but be lenient
+  // Enhanced input validation
   validateAndSanitizeInput(input: string, type: 'name' | 'email' | 'school' | 'grade'): { isValid: boolean; sanitized: string; message?: string } {
-    if (!input || input.trim().length === 0) {
-      return { isValid: false, sanitized: '', message: 'Input cannot be empty' };
-    }
-
-    const sanitized = input.trim().replace(/[<>]/g, '');
+    const result = enhancedInputValidator.validateInput(input, type);
     
-    switch (type) {
-      case 'email':
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        const isValid = emailRegex.test(sanitized);
-        return {
-          isValid: isValid,
-          sanitized,
-          message: isValid ? undefined : 'Invalid email format'
-        };
-      default:
-        return { isValid: true, sanitized };
-    }
+    return {
+      isValid: result.isValid,
+      sanitized: result.sanitized,
+      message: result.errors.length > 0 ? result.errors[0] : undefined
+    };
   }
 
-  // Lenient password validation
-  validatePassword(password: string): { isValid: boolean; message?: string; score?: number } {
-    if (password.length < 4) {
-      return { isValid: false, message: 'Password must be at least 4 characters long', score: 0 };
+  // Enhanced password validation
+  validatePassword(password: string, gradeLevel?: number): { isValid: boolean; message?: string; score?: number } {
+    const result = enhancedInputValidator.validatePassword(password, gradeLevel);
+    
+    let score = 1;
+    if (result.isValid) {
+      score = password.length >= 8 ? 4 : password.length >= 6 ? 3 : 2;
     }
-    return { isValid: true, score: 3 };
+    
+    return {
+      isValid: result.isValid,
+      message: result.errors.length > 0 ? result.errors[0] : undefined,
+      score
+    };
   }
 
-  // Session management
+  // Enhanced session management
   async clearSession(): Promise<void> {
     try {
+      secureSessionManager.clearSession();
       localStorage.removeItem('platformAdmin');
-      sessionStorage.clear();
+      
+      await this.logSecurityEvent({
+        type: 'logout',
+        timestamp: new Date().toISOString(),
+        details: 'User session cleared',
+        userAgent: navigator.userAgent
+      });
     } catch (error) {
-      // Silent fail
+      console.error('Failed to clear session:', error);
     }
   }
 
-  // Disabled monitoring
+  // Enhanced security monitoring
   monitorSecurityViolations(): void {
-    // No monitoring
+    // Security monitoring is now handled by securityMonitor service
+    securityMonitor.logSecurityEvent({
+      type: 'security_monitoring_started',
+      severity: 'low',
+      details: 'Security monitoring activated',
+      userAgent: navigator.userAgent
+    });
   }
 
   detectConcurrentSessions(): boolean {
+    const session = secureSessionManager.getCurrentSession();
+    if (!session) return false;
+    
+    // Enhanced concurrent session detection could be implemented here
+    // For now, we rely on the session manager's built-in limits
     return false;
   }
 
-  // Silent logging
-  logSecurityEvent(event: SecurityEvent): void {
-    // Silent operation - just log to console for debugging
-    console.log('Security event:', event.type, event.details);
+  // Enhanced security logging
+  async logSecurityEvent(event: SecurityEvent): Promise<void> {
+    try {
+      // Log to security monitor
+      securityMonitor.logSecurityEvent({
+        type: event.type,
+        severity: this.getSeverityLevel(event.type),
+        details: event.details,
+        userId: event.userId,
+        sessionId: event.sessionId,
+        userAgent: event.userAgent,
+        timestamp: new Date(event.timestamp).getTime()
+      });
+
+      // Also log to Supabase for persistence
+      await supabase.from('audit_log').insert({
+        table_name: 'security_events',
+        operation: event.type,
+        user_id: event.userId || null,
+        new_data: {
+          details: event.details,
+          timestamp: event.timestamp,
+          user_agent: event.userAgent,
+          ip_address: event.ipAddress,
+          session_id: event.sessionId,
+          error_stack: event.errorStack
+        }
+      });
+    } catch (error) {
+      // Fallback to console logging if all else fails
+      console.warn('Failed to log security event:', event, error);
+    }
+  }
+
+  private getSeverityLevel(eventType: string): 'low' | 'medium' | 'high' | 'critical' {
+    switch (eventType) {
+      case 'login_failed':
+      case 'unauthorized_access':
+      case 'suspicious_activity':
+        return 'medium';
+      case 'rate_limit_exceeded':
+      case 'csrf_violation':
+        return 'high';
+      case 'security_alert':
+        return 'critical';
+      default:
+        return 'low';
+    }
+  }
+
+  // Get comprehensive security status
+  async getSecurityStatus(): Promise<{
+    sessionValid: boolean;
+    rateLimitStatus: string;
+    securityScore: number;
+    recommendations: string[];
+    recentEvents: number;
+  }> {
+    try {
+      const sessionValid = await this.validateSession();
+      const securitySummary = securityMonitor.getSecuritySummary();
+      const scanResults = await securityMonitor.runSecurityScan();
+      
+      return {
+        sessionValid,
+        rateLimitStatus: 'Normal',
+        securityScore: Math.max(0, 100 - scanResults.riskScore),
+        recommendations: scanResults.recommendations,
+        recentEvents: securitySummary.totalEvents
+      };
+    } catch (error) {
+      console.error('Failed to get security status:', error);
+      return {
+        sessionValid: false,
+        rateLimitStatus: 'Unknown',
+        securityScore: 50,
+        recommendations: ['Security status check failed - manual review recommended'],
+        recentEvents: 0
+      };
+    }
   }
 }
 
