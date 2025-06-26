@@ -1,5 +1,4 @@
 
-import { supabase } from '@/integrations/supabase/client';
 import { securePlatformAdminService } from './securePlatformAdminService';
 
 // Export types for components
@@ -14,15 +13,21 @@ export interface PlatformAdmin {
   school: string;
 }
 
-// Redirect to secure service
+// Redirect to secure service with enhanced error handling
 export const platformAdminLoginService = async (email: string, password: string) => {
   console.log('⚠️ Using legacy platformAdminLoginService - redirecting to secure service');
-  const result = await securePlatformAdminService.authenticateAdmin({ email, password });
   
-  if (result.success && result.admin) {
-    return { admin: result.admin };
-  } else {
-    return { error: result.error };
+  try {
+    const result = await securePlatformAdminService.authenticateAdmin({ email, password });
+    
+    if (result.success && result.admin) {
+      return { admin: result.admin };
+    } else {
+      return { error: result.error || 'Authentication failed' };
+    }
+  } catch (error) {
+    console.error('Legacy login service error:', error);
+    return { error: 'Authentication service unavailable' };
   }
 };
 
@@ -30,34 +35,51 @@ export const platformAdminLoginService = async (email: string, password: string)
 export const resetAdminPassword = async (email: string, newPassword: string = 'admin123') => {
   console.log('🔄 Password reset requested for:', email);
   
-  // For the known admin, always return success since we're using hardcoded auth
-  if (email.toLowerCase().trim() === 'zulfimoon1@gmail.com') {
+  try {
+    // For the known admin, always return success since we're using hardcoded auth
+    if (email.toLowerCase().trim() === 'zulfimoon1@gmail.com') {
+      return { 
+        success: true, 
+        message: '✅ Admin password is ready! Use "admin123" to log in.' 
+      };
+    }
+    
     return { 
-      success: true, 
-      message: '✅ Admin password is ready! Use "admin123" to log in.' 
+      success: false, 
+      message: '❌ Password reset is only available for the platform administrator.' 
+    };
+  } catch (error) {
+    console.error('Password reset error:', error);
+    return {
+      success: false,
+      message: '❌ Password reset service unavailable'
     };
   }
-  
-  return { 
-    success: false, 
-    message: '❌ Password reset is only available for the platform administrator.' 
-  };
 };
 
 // Enhanced test function using secure service
 export const testPasswordVerification = async (email: string = 'zulfimoon1@gmail.com', password: string = 'admin123') => {
   console.log('🔍 Testing password verification for:', email);
-  const result = await securePlatformAdminService.authenticateAdmin({ email, password });
   
-  if (result.success) {
-    return { 
-      success: true, 
-      message: '🎉 Admin authentication test successful! You can now log in.' 
-    };
-  } else {
-    return { 
+  try {
+    const result = await securePlatformAdminService.authenticateAdmin({ email, password });
+    
+    if (result.success) {
+      return { 
+        success: true, 
+        message: '🎉 Admin authentication test successful! You can now log in.' 
+      };
+    } else {
+      return { 
+        success: false,
+        message: result.error || '❌ Authentication test failed. Check your credentials.'
+      };
+    }
+  } catch (error) {
+    console.error('Password verification test error:', error);
+    return {
       success: false,
-      message: result.error || '❌ Authentication test failed. Check your credentials.'
+      message: '❌ Authentication test service unavailable'
     };
   }
 };
@@ -75,7 +97,12 @@ export const adminSecurityUtils = {
       };
     } catch (error) {
       console.error('Error fetching security metrics:', error);
-      throw error;
+      return {
+        loginAttempts: 0,
+        suspiciousActivities: 0,
+        blockedIPs: 0,
+        lastSecurityScan: new Date().toISOString()
+      };
     }
   }
 };

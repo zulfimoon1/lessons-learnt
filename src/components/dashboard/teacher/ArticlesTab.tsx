@@ -28,10 +28,17 @@ const ArticlesTab: React.FC<ArticlesTabProps> = ({
   const [isLoadingStats, setIsLoadingStats] = useState(true);
 
   useEffect(() => {
-    loadStats();
+    if (teacher?.id && teacher?.school) {
+      loadStats();
+    }
   }, [teacher]);
 
   const loadStats = async () => {
+    if (!teacher?.id || !teacher?.school) {
+      setIsLoadingStats(false);
+      return;
+    }
+
     try {
       console.log('Loading stats for teacher:', teacher.id, 'school:', teacher.school);
       
@@ -66,6 +73,11 @@ const ArticlesTab: React.FC<ArticlesTabProps> = ({
       });
     } catch (error) {
       console.error('Error loading stats:', error);
+      // Set default values on error
+      setStats({
+        totalStudents: 0,
+        totalClasses: 0
+      });
     } finally {
       setIsLoadingStats(false);
     }
@@ -92,12 +104,12 @@ const ArticlesTab: React.FC<ArticlesTabProps> = ({
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
         <StatsCard
           title="Total Students"
-          value={isLoadingStats ? "..." : stats.totalStudents}
+          value={isLoadingStats ? "..." : stats.totalStudents.toString()}
           icon={Users}
         />
         <StatsCard
           title="Total Classes"
-          value={isLoadingStats ? "..." : stats.totalClasses}
+          value={isLoadingStats ? "..." : stats.totalClasses.toString()}
           icon={Calendar}
         />
       </div>
