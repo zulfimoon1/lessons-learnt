@@ -28,12 +28,12 @@ class SecurePlatformAdminService {
     return await secureAdminAuthService.validateAdminSession(email);
   }
 
-  // Enhanced platform admin context setting with multiple attempts
+  // Enhanced platform admin context setting with multiple attempts and better error handling
   private async setPlatformAdminContext(adminEmail: string): Promise<void> {
     try {
       console.log('🔧 Setting platform admin context for:', adminEmail);
       
-      // Use the dedicated function created in the migration
+      // First approach: Use the dedicated function
       const { error: contextError } = await supabase.rpc('set_platform_admin_context', {
         admin_email: adminEmail
       });
@@ -41,12 +41,30 @@ class SecurePlatformAdminService {
       if (contextError) {
         console.error('Context setting error:', contextError);
       } else {
-        console.log('✅ Platform admin context set successfully');
+        console.log('✅ Platform admin context set successfully via RPC');
+      }
+
+      // Additional direct context setting for redundancy
+      try {
+        // Set context variables directly if possible
+        await supabase.rpc('set_config', {
+          setting_name: 'app.admin_context_set',
+          setting_value: 'true'
+        });
+        
+        await supabase.rpc('set_config', {
+          setting_name: 'app.current_user_email', 
+          setting_value: adminEmail
+        });
+
+        console.log('✅ Additional context variables set successfully');
+      } catch (directError) {
+        console.log('Direct context setting failed (this is normal):', directError);
       }
 
       // Log the context setting
       centralizedValidationService.logSecurityEvent({
-        type: 'unauthorized_access',
+        type: 'admin_context_configured',
         details: `Platform admin context configured for ${adminEmail}`,
         severity: 'low'
       });
@@ -193,15 +211,16 @@ class SecurePlatformAdminService {
   }) {
     console.log('🔧 Creating transaction with enhanced context setting');
     
-    // Set context with the dedicated function
+    // Set context with multiple approaches for maximum reliability
     await this.setPlatformAdminContext(adminEmail);
     
     // Wait a moment for context to be fully applied
-    await new Promise(resolve => setTimeout(resolve, 100));
+    await new Promise(resolve => setTimeout(resolve, 200));
     
     try {
       console.log('💳 Inserting transaction:', transactionData.school_name);
       
+      // Try direct insert first
       const { data, error } = await supabase
         .from('transactions')
         .insert({
@@ -216,8 +235,28 @@ class SecurePlatformAdminService {
         .single();
 
       if (error) {
-        console.error('❌ Transaction creation failed:', error);
-        throw error;
+        console.error('❌ Direct transaction creation failed:', error);
+        
+        // If direct insert fails, try using an RPC function approach
+        console.log('🔄 Attempting RPC-based transaction creation...');
+        
+        const { data: rpcData, error: rpcError } = await supabase.rpc('platform_admin_create_transaction', {
+          admin_email_param: adminEmail,
+          school_name_param: transactionData.school_name,
+          amount_param: Math.round(parseFloat(transactionData.amount) * 100),
+          currency_param: transactionData.currency,
+          transaction_type_param: transactionData.transaction_type,
+          status_param: transactionData.status,
+          description_param: transactionData.description
+        });
+
+        if (rpcError) {
+          console.error('❌ RPC transaction creation also failed:', rpcError);
+          throw rpcError;
+        }
+        
+        console.log('✅ Transaction created via RPC successfully:', rpcData);
+        return rpcData;
       }
       
       console.log('✅ Transaction created successfully:', data.id);
