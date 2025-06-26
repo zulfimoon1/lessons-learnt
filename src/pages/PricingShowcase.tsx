@@ -5,13 +5,41 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { CheckIcon, StarIcon, UsersIcon, BookOpenIcon, BarChart3Icon, ShieldIcon, GlobeIcon, HeartIcon, ArrowLeft } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 
 const PricingShowcase = () => {
   const { t } = useLanguage();
+  const navigate = useNavigate();
   const [isAnnual, setIsAnnual] = useState(false);
+
+  const handleStartFreeTrial = () => {
+    console.log('Start Free Trial button clicked - navigating to teacher-login');
+    try {
+      navigate('/teacher-login');
+    } catch (error) {
+      console.error('Navigation error:', error);
+    }
+  };
+
+  const handleTransformYourSchool = () => {
+    console.log('Transform Your School button clicked - navigating to teacher-login');
+    try {
+      navigate('/teacher-login');
+    } catch (error) {
+      console.error('Navigation error:', error);
+    }
+  };
+
+  const handleStartFreeTrialNow = () => {
+    console.log('Start Free Trial Now button clicked - navigating to teacher-login');
+    try {
+      navigate('/teacher-login');
+    } catch (error) {
+      console.error('Navigation error:', error);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-white">
@@ -174,7 +202,10 @@ const PricingShowcase = () => {
                     <span className="text-brand-dark">{t('pricing.multiLanguage')}</span>
                   </div>
                 </div>
-                <Button className="w-full bg-brand-teal hover:bg-brand-dark text-white">
+                <Button 
+                  onClick={handleStartFreeTrial}
+                  className="w-full bg-brand-teal hover:bg-brand-dark text-white"
+                >
                   {t('pricing.startFreeTrial')}
                 </Button>
               </CardContent>
@@ -225,7 +256,10 @@ const PricingShowcase = () => {
                     <span className="text-brand-dark">{t('pricing.maximumImpact')}</span>
                   </div>
                 </div>
-                <Button className="w-full bg-brand-orange hover:bg-brand-orange/90 text-white">
+                <Button 
+                  onClick={handleTransformYourSchool}
+                  className="w-full bg-brand-orange hover:bg-brand-orange/90 text-white"
+                >
                   {t('pricing.transformYourSchool')}
                 </Button>
               </CardContent>
@@ -302,11 +336,12 @@ const PricingShowcase = () => {
           <p className="text-xl text-white/90 mb-12 drop-shadow-md">
             {t('pricing.startTrialToday')}
           </p>
-          <Link to="/signup">
-            <Button className="bg-brand-orange hover:bg-brand-orange/90 text-white text-lg px-8 py-3">
-              {t('pricing.startFreeTrialNow')}
-            </Button>
-          </Link>
+          <Button 
+            onClick={handleStartFreeTrialNow}
+            className="bg-brand-orange hover:bg-brand-orange/90 text-white text-lg px-8 py-3"
+          >
+            {t('pricing.startFreeTrialNow')}
+          </Button>
         </div>
       </section>
 
