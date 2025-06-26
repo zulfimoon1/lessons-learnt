@@ -33,34 +33,15 @@ class SecurePlatformAdminService {
     try {
       console.log('🔧 Setting platform admin context for:', adminEmail);
       
-      // Set multiple context variables for maximum compatibility
-      const { error: emailError } = await supabase.rpc('set_config', {
-        setting_name: 'app.current_user_email',
-        new_value: adminEmail,
-        is_local: true
-      });
-
-      const { error: adminError } = await supabase.rpc('set_config', {
-        setting_name: 'app.platform_admin', 
-        new_value: 'true',
-        is_local: true
-      });
-
-      const { error: verifiedError } = await supabase.rpc('set_config', {
-        setting_name: 'app.admin_verified',
-        new_value: 'true', 
-        is_local: true
-      });
-
-      // Also try the dedicated function
+      // Use the dedicated function created in the migration
       const { error: contextError } = await supabase.rpc('set_platform_admin_context', {
         admin_email: adminEmail
       });
 
-      if (emailError || adminError || verifiedError || contextError) {
-        console.error('Context setting errors:', { emailError, adminError, verifiedError, contextError });
+      if (contextError) {
+        console.error('Context setting error:', contextError);
       } else {
-        console.log('✅ All platform admin context variables set successfully');
+        console.log('✅ Platform admin context set successfully');
       }
 
       // Log the context setting
@@ -212,7 +193,7 @@ class SecurePlatformAdminService {
   }) {
     console.log('🔧 Creating transaction with enhanced context setting');
     
-    // Set context with multiple approaches for maximum reliability
+    // Set context with the dedicated function
     await this.setPlatformAdminContext(adminEmail);
     
     // Wait a moment for context to be fully applied
