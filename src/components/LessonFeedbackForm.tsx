@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -15,6 +16,7 @@ import { classScheduleService } from "@/services/classScheduleService";
 import { BookOpenIcon, StarIcon, LightbulbIcon, MessageCircleIcon, EyeOffIcon } from "lucide-react";
 import VoiceInputToggle from '@/components/voice/VoiceInputToggle';
 import AudioPlayer from '@/components/voice/AudioPlayer';
+import EmotionalStateSelector from '@/components/EmotionalStateSelector';
 
 const LessonFeedbackForm = () => {
   const [classes, setClasses] = useState([]);
@@ -262,19 +264,13 @@ const LessonFeedbackForm = () => {
             </div>
           </div>
 
-          {/* Emotional State */}
-          <div className="space-y-2">
+          {/* Emotional State - Using the proper EmotionalStateSelector component */}
+          <div className="space-y-3">
             <Label className="text-base font-semibold">{t('feedback.emotionalState')}</Label>
-            <RadioGroup value={emotionalState} onValueChange={setEmotionalState}>
-              <div className="grid grid-cols-2 gap-2">
-                {['happy', 'excited', 'content', 'curious', 'confused', 'frustrated', 'bored', 'anxious'].map((emotion) => (
-                  <div key={emotion} className="flex items-center space-x-2">
-                    <RadioGroupItem value={emotion} id={emotion} />
-                    <Label htmlFor={emotion} className="capitalize cursor-pointer">{t(`feedback.emotions.${emotion}`)}</Label>
-                  </div>
-                ))}
-              </div>
-            </RadioGroup>
+            <EmotionalStateSelector
+              selectedState={emotionalState}
+              onStateChange={setEmotionalState}
+            />
           </div>
 
           {/* Voice Input Toggle */}
