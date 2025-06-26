@@ -18,35 +18,37 @@ const DemoSection = () => {
     navigate('/teacher-login?tab=signup');
   };
 
+  const handleTryDemo = () => {
+    // Smart demo routing - try internal first, fallback to external
+    const internalDemo = '/demo';
+    const externalDemo = 'https://lessonslearnt.eu/demo';
+    
+    // For now, prefer the external live demo as it's more comprehensive
+    window.open(externalDemo, '_blank');
+  };
+
   return (
     <section className="bg-white py-20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
-          <div className="flex justify-center items-center gap-3 mb-6">
+          {/* Single, prominent demo button */}
+          <div className="flex justify-center items-center mb-6">
             <Badge 
               variant="outline" 
-              className="bg-brand-teal/10 border-brand-teal text-brand-teal px-6 py-3 cursor-pointer hover:bg-brand-teal hover:text-white transition-colors text-lg font-semibold"
-              onClick={() => window.open('/demo', '_blank')}
+              className="bg-brand-teal/10 border-brand-teal text-brand-teal px-8 py-4 cursor-pointer hover:bg-brand-teal hover:text-white transition-colors text-xl font-bold shadow-lg hover:shadow-xl transform hover:scale-105"
+              onClick={handleTryDemo}
             >
-              <PlayIcon className="w-5 h-5 mr-2" />
-              {t('demo.featureDemo')}
-            </Badge>
-            
-            <Badge 
-              variant="outline" 
-              className="bg-brand-orange/10 border-brand-orange text-brand-orange px-6 py-3 cursor-pointer hover:bg-brand-orange hover:text-white transition-colors text-lg font-semibold"
-              onClick={() => window.open('https://lessonslearnt.eu/demo', '_blank')}
-            >
-              <ExternalLink className="w-5 h-5 mr-2" />
-              Live Demo
+              <PlayIcon className="w-6 h-6 mr-3" />
+              Try Live Demo
             </Badge>
           </div>
+          
           <h2 className="text-4xl font-bold text-brand-dark mb-6">
             Experience the Complete Platform
           </h2>
           
           <p className="text-xl text-gray-600 max-w-4xl mx-auto mb-12">
-            Our interactive demos showcase the modern, intuitive design that makes complex educational workflows simple and efficient
+            Test the full platform with real workflows and see how our intuitive design makes complex educational processes simple and efficient
           </p>
           
           {/* Enhanced visibility for the features section */}
@@ -55,7 +57,7 @@ const DemoSection = () => {
               Real User Experience
             </p>
             <p className="text-xl font-bold opacity-95 drop-shadow-md mb-8">
-              Sign up and test all features with authentic workflows
+              Access the live platform and test all features with authentic workflows
             </p>
             
             {/* Step Overview - Alternating Layout */}
@@ -205,24 +207,24 @@ const DemoSection = () => {
                 <CardContent className="space-y-4">
                   <div className="flex items-center gap-3">
                     <ShieldCheckIcon className="w-5 h-5 text-brand-teal" />
-                    <span className="text-brand-dark">{t('demo.noRegistrationRequired')}</span>
+                    <span className="text-brand-dark">Full platform access</span>
                   </div>
                   <div className="flex items-center gap-3">
                     <ShieldCheckIcon className="w-5 h-5 text-brand-teal" />
-                    <span className="text-brand-dark">{t('demo.fullFeatureAccess')}</span>
+                    <span className="text-brand-dark">Real workflow testing</span>
                   </div>
                   <div className="flex items-center gap-3">
                     <ShieldCheckIcon className="w-5 h-5 text-brand-teal" />
-                    <span className="text-brand-dark">{t('demo.sampleDataIncluded')}</span>
+                    <span className="text-brand-dark">Live data examples</span>
                   </div>
                   
                   <div className="pt-4">
                     <Button 
                       className="w-full bg-brand-orange hover:bg-brand-orange/90 text-white"
-                      onClick={() => window.open('/demo', '_blank')}
+                      onClick={handleTryDemo}
                     >
-                      <PlayIcon className="w-4 h-4 mr-2" />
-                      {t('demo.enterDemo')}
+                      <ExternalLink className="w-4 h-4 mr-2" />
+                      Try Live Demo
                     </Button>
                   </div>
                 </CardContent>
