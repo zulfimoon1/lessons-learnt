@@ -8,6 +8,7 @@ import { CheckIcon, StarIcon, UsersIcon, BookOpenIcon, BarChart3Icon, ShieldIcon
 import { Link, useNavigate } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
+import ComplianceFooter from "@/components/ComplianceFooter";
 
 const PricingShowcase = () => {
   const { t } = useLanguage();
@@ -344,6 +345,9 @@ const PricingShowcase = () => {
           </Button>
         </div>
       </section>
+
+      {/* Add Compliance Footer */}
+      <ComplianceFooter />
     </div>
   );
 };

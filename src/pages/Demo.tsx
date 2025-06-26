@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -16,6 +17,7 @@ import { useNavigate } from "react-router-dom";
 import StudentSimulation from "@/components/StudentSimulation";
 import TeacherSimulation from "@/components/TeacherSimulation";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
+import ComplianceFooter from "@/components/ComplianceFooter";
 
 const Demo = () => {
   const { t } = useLanguage();
@@ -70,12 +72,12 @@ const Demo = () => {
                 className="flex items-center gap-2 text-gray-600 hover:text-gray-900"
               >
                 <ArrowLeft className="h-4 w-4" />
-                {t('navigation.backToHome')}
+                {t('navigation.backToHome') || 'Back to Home'}
               </Button>
               <div className="flex items-center gap-2">
                 <GraduationCap className="h-6 w-6 text-primary" />
                 <h1 className="text-xl font-semibold text-gray-900">
-                  {t('demo.page.title')}
+                  {t('demo.page.title') || 'Interactive Demo'}
                 </h1>
               </div>
             </div>
@@ -86,7 +88,7 @@ const Demo = () => {
                 className="flex items-center gap-2"
               >
                 <Pause className="h-4 w-4" />
-                {t('demo.page.pauseDemo')}
+                {t('demo.page.pauseDemo') || 'Pause Demo'}
               </Button>
               <LanguageSwitcher />
             </div>
@@ -98,10 +100,10 @@ const Demo = () => {
         {/* Main Title */}
         <div className="text-center mb-12">
           <h2 className="text-4xl font-bold text-gray-900 mb-4">
-            {t('demo.page.title')}
+            {t('demo.page.title') || 'Interactive Demo'}
           </h2>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-            {t('demo.page.subtitle')}
+            {t('demo.page.subtitle') || 'Experience our platform with interactive demonstrations'}
           </p>
         </div>
 
@@ -117,16 +119,16 @@ const Demo = () => {
                       <GraduationCap className="h-6 w-6 text-blue-600" />
                     </div>
                     <div>
-                      <CardTitle className="text-lg">{t('demo.simulation.student.title')}</CardTitle>
+                      <CardTitle className="text-lg">{t('demo.simulation.student.title') || 'Student Experience'}</CardTitle>
                       <Badge className="bg-blue-100 text-blue-700 border-blue-200">
-                        {t('demo.userType.student')}
+                        {t('demo.userType.student') || 'Student'}
                       </Badge>
                     </div>
                   </div>
                 </CardHeader>
                 <CardContent>
                   <CardDescription className="mb-4">
-                    {t('demo.simulation.student.description')}
+                    {t('demo.simulation.student.description') || 'Experience the platform from a student\'s perspective'}
                   </CardDescription>
                   <div className="space-y-2 text-sm text-gray-600 mb-4">
                     <p>• Experience the complete student dashboard</p>
@@ -152,16 +154,16 @@ const Demo = () => {
                       <Users className="h-6 w-6 text-green-600" />
                     </div>
                     <div>
-                      <CardTitle className="text-lg">{t('demo.simulation.teacher.title')}</CardTitle>
+                      <CardTitle className="text-lg">{t('demo.simulation.teacher.title') || 'Teacher Experience'}</CardTitle>
                       <Badge className="bg-green-100 text-green-700 border-green-200">
-                        {t('demo.userType.teacher')}
+                        {t('demo.userType.teacher') || 'Teacher'}
                       </Badge>
                     </div>
                   </div>
                 </CardHeader>
                 <CardContent>
                   <CardDescription className="mb-4">
-                    {t('demo.simulation.teacher.description')}
+                    {t('demo.simulation.teacher.description') || 'Explore comprehensive teaching tools and analytics'}
                   </CardDescription>
                   <div className="space-y-2 text-sm text-gray-600 mb-4">
                     <p>• Create and manage class schedules</p>
@@ -187,16 +189,16 @@ const Demo = () => {
                       <Heart className="h-6 w-6 text-purple-600" />
                     </div>
                     <div>
-                      <CardTitle className="text-lg">{t('demo.simulation.mentalHealth.title')}</CardTitle>
+                      <CardTitle className="text-lg">{t('demo.simulation.mentalHealth.title') || 'Mental Health Tools'}</CardTitle>
                       <Badge className="bg-purple-100 text-purple-700 border-purple-200">
-                        {t('demo.userType.psychologist')}
+                        {t('demo.userType.psychologist') || 'Psychologist'}
                       </Badge>
                     </div>
                   </div>
                 </CardHeader>
                 <CardContent>
                   <CardDescription className="mb-4">
-                    {t('demo.simulation.mentalHealth.description')}
+                    {t('demo.simulation.mentalHealth.description') || 'Specialized tools for mental health support'}
                   </CardDescription>
                   <div className="space-y-2 text-sm text-gray-600 mb-4">
                     <p>• Monitor student mental health alerts</p>
@@ -218,10 +220,10 @@ const Demo = () => {
             {/* Platform Features Section */}
             <div className="mt-16 bg-white rounded-lg p-8 shadow-sm">
               <h3 className="text-3xl font-bold text-center mb-4 text-brand-dark">
-                {t('demo.discoverFuture')}
+                Discover the Future of Education
               </h3>
               <p className="text-lg text-center text-gray-600 mb-8 max-w-4xl mx-auto">
-                {t('demo.discoverDescription')}
+                Transform your classroom with comprehensive feedback systems and mental health support
               </p>
               
               <div className="bg-brand-gradient text-white rounded-lg p-8 max-w-md mx-auto mb-12 shadow-xl">
@@ -281,7 +283,7 @@ const Demo = () => {
                 className="text-xl px-12 py-4 bg-brand-orange hover:bg-brand-orange/90 text-white transform scale-125"
                 onClick={handleStartFreeTrial}
               >
-                {t('pricing.startFreeTrial')}
+                {t('pricing.startFreeTrial') || 'Start Free Trial'}
               </Button>
             </div>
           </>
@@ -302,9 +304,9 @@ const Demo = () => {
                       Back to Demos
                     </Button>
                     <h2 className="text-2xl font-bold">
-                      {activeDemo === 'student' && t('demo.simulation.student.title')}
-                      {activeDemo === 'teacher' && t('demo.simulation.teacher.title')}
-                      {activeDemo === 'mentalHealth' && t('demo.simulation.mentalHealth.title')}
+                      {activeDemo === 'student' && (t('demo.simulation.student.title') || 'Student Experience')}
+                      {activeDemo === 'teacher' && (t('demo.simulation.teacher.title') || 'Teacher Experience')}
+                      {activeDemo === 'mentalHealth' && (t('demo.simulation.mentalHealth.title') || 'Mental Health Tools')}
                     </h2>
                   </div>
                   <div className="flex items-center gap-2">
@@ -313,7 +315,7 @@ const Demo = () => {
                       className="flex items-center gap-2"
                     >
                       {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
-                      {isPlaying ? t('demo.page.pauseDemo') : t('demo.page.playDemo')}
+                      {isPlaying ? (t('demo.page.pauseDemo') || 'Pause Demo') : (t('demo.page.playDemo') || 'Play Demo')}
                     </Button>
                     <Button
                       variant="outline"
@@ -361,7 +363,7 @@ const Demo = () => {
                     {activeDemo === 'student' && (
                       <div className="space-y-4">
                         <p className="text-sm text-gray-600">
-                          {t('demo.simulation.student.description')}
+                          {t('demo.simulation.student.description') || 'Experience the platform from a student\'s perspective'}
                         </p>
                         <div className="space-y-2">
                           <h4 className="font-semibold">Key Features:</h4>
@@ -377,7 +379,7 @@ const Demo = () => {
                     {activeDemo === 'teacher' && (
                       <div className="space-y-4">
                         <p className="text-sm text-gray-600">
-                          {t('demo.simulation.teacher.description')}
+                          {t('demo.simulation.teacher.description') || 'Explore comprehensive teaching tools and analytics'}
                         </p>
                         <div className="space-y-2">
                           <h4 className="font-semibold">Key Features:</h4>
@@ -397,6 +399,9 @@ const Demo = () => {
           </div>
         )}
       </div>
+      
+      {/* Add Compliance Footer */}
+      <ComplianceFooter />
     </div>
   );
 };
