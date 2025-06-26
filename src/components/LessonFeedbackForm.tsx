@@ -157,7 +157,7 @@ const LessonFeedbackForm = () => {
         setDebugInfo(`Error loading classes: ${error.message}`);
         toast({
           title: t('common.error'),
-          description: t('student.failedToLoadClasses'),
+          description: "Couldn't load your classes. Please try again!",
           variant: "destructive",
         });
       } finally {
@@ -187,16 +187,12 @@ const LessonFeedbackForm = () => {
     e.preventDefault();
     
     console.log('🚀 LessonFeedbackForm: Form submission started');
-    console.log('📋 Selected class:', selectedClass);
-    console.log('🎵 Audio data:', audioData);
-    console.log('📝 Text data:', { whatWentWell, suggestions, additionalComments });
-    console.log('👤 Student info:', student);
     
     if (!selectedClass) {
       console.log('❌ No class selected');
       toast({
-        title: t('feedback.selectClass'),
-        description: t('feedback.selectClassDesc'),
+        title: "Pick a class first!",
+        description: "Please choose which class you want to tell us about.",
         variant: "destructive",
       });
       return;
@@ -211,8 +207,8 @@ const LessonFeedbackForm = () => {
     if (!hasTextInput && !hasVoiceInput) {
       console.log('❌ No input provided');
       toast({
-        title: "Please provide feedback",
-        description: "Please either write your feedback or record a voice note.",
+        title: "Tell us something!",
+        description: "Please write about your class or record a voice note to share your thoughts.",
         variant: "destructive",
       });
       return;
@@ -266,7 +262,7 @@ const LessonFeedbackForm = () => {
       const feedbackData = {
         class_schedule_id: selectedClass,
         student_id: isAnonymous ? null : authenticatedUserId,
-        student_name: isAnonymous ? t('feedback.anonymous') : (student?.full_name || 'Student'),
+        student_name: isAnonymous ? 'Anonymous Student' : (student?.full_name || 'Student'),
         understanding: understanding[0] || 3,
         interest: interest[0] || 3,
         educational_growth: educationalGrowth[0] || 3,
@@ -318,23 +314,23 @@ const LessonFeedbackForm = () => {
         });
         
         // More specific error messages
-        let errorMessage = 'Failed to submit feedback. ';
+        let errorMessage = 'Oops! Something went wrong. ';
         
         switch (insertResult.error.code) {
           case '23503':
-            errorMessage += 'Invalid class selection. Please refresh the page and try again.';
+            errorMessage += 'The class you picked isn\'t valid anymore. Please refresh and try again.';
             break;
           case '23505':
-            errorMessage += 'You have already submitted feedback for this class.';
+            errorMessage += 'You\'ve already shared your thoughts about this class!';
             break;
           case '42501':
-            errorMessage += 'Permission denied. Please check your access rights.';
+            errorMessage += 'You don\'t have permission to do this. Please check if you\'re logged in.';
             break;
           default:
             if (insertResult.error.message?.includes('violates row-level security policy')) {
-              errorMessage += 'Access denied. Please check your login status and try again.';
+              errorMessage += 'Access denied. Please check your login and try again.';
             } else {
-              errorMessage += insertResult.error.message || 'Unknown database error occurred.';
+              errorMessage += insertResult.error.message || 'Something unexpected happened.';
             }
         }
         
@@ -345,10 +341,10 @@ const LessonFeedbackForm = () => {
 
       // Show success message with enhanced visibility
       toast({
-        title: "🎉 Feedback Submitted Successfully!",
+        title: "🎉 Thanks for sharing!",
         description: hasVoiceInput ? 
-          "Thank you! Your feedback and voice note have been saved. Your teacher will review it soon." :
-          "Thank you! Your feedback has been saved. Your teacher will review it soon.",
+          "Your thoughts and voice note have been saved! Your teacher will check them out soon." :
+          "Your thoughts have been saved! Your teacher will read them soon.",
         variant: "default",
         className: "bg-green-50 border-green-200 text-green-800"
       });
@@ -360,7 +356,7 @@ const LessonFeedbackForm = () => {
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
         </svg>
-        <span>Feedback submitted successfully!</span>
+        <span>Your thoughts were shared successfully!</span>
       `;
       document.body.appendChild(successIndicator);
       
@@ -393,16 +389,16 @@ const LessonFeedbackForm = () => {
       });
       
       // Check if it's an auth-related error and provide helpful guidance
-      let errorMessage = error instanceof Error ? error.message : "Failed to submit feedback. Please try again.";
+      let errorMessage = error instanceof Error ? error.message : "Couldn't share your thoughts right now. Please try again!";
       
       if (errorMessage.includes('session') || errorMessage.includes('auth') || errorMessage.includes('log in')) {
         // Already includes guidance in the error message
       } else {
-        errorMessage += " If this persists, try refreshing the page and logging in again.";
+        errorMessage += " If this keeps happening, try refreshing the page and logging in again.";
       }
       
       toast({
-        title: "Submission Failed",
+        title: "Oops! Something went wrong",
         description: errorMessage,
         variant: "destructive",
       });
@@ -430,10 +426,10 @@ const LessonFeedbackForm = () => {
       <CardHeader className="bg-gradient-to-r from-brand-teal to-brand-orange text-white rounded-t-lg">
         <CardTitle className="flex items-center gap-3">
           <MessageCircleIcon className="w-6 h-6" />
-          {t('feedback.title')}
+          Tell Us About Your Class!
         </CardTitle>
         <CardDescription className="text-white/90">
-          {t('feedback.description')}
+          Share how your class went - your thoughts help make school even better!
         </CardDescription>
       </CardHeader>
       
@@ -453,10 +449,10 @@ const LessonFeedbackForm = () => {
           {/* Class Selection */}
           <div className="space-y-2">
             <Label className="text-base font-semibold">
-              {t('feedback.selectClass')} 
+              Which class do you want to tell us about? 
               {classes.length === 0 && allClassesCount > 0 && (
                 <span className="text-sm text-green-600 ml-2">
-                  (All {allClassesCount} recent classes have feedback ✓)
+                  (You've shared thoughts about all {allClassesCount} recent classes! ✓)
                 </span>
               )}
             </Label>
@@ -466,12 +462,12 @@ const LessonFeedbackForm = () => {
                 <div className="text-gray-600 mb-2">
                   {allClassesCount === 0 
                     ? "No classes found for your grade in the last 30 days" 
-                    : `Great job! You've provided feedback for all ${allClassesCount} recent classes.`
+                    : `Awesome! You've shared your thoughts about all ${allClassesCount} recent classes.`
                   }
                 </div>
                 <div className="text-sm text-gray-500">
-                  {allClassesCount === 0 && "Classes for your grade and school will appear here once they're scheduled."}
-                  {feedbackSubmittedCount > 0 && `You've submitted ${feedbackSubmittedCount} feedback responses.`}
+                  {allClassesCount === 0 && "Classes for your grade will show up here once they're scheduled."}
+                  {feedbackSubmittedCount > 0 && `You've shared thoughts about ${feedbackSubmittedCount} classes!`}
                 </div>
               </div>
             ) : (
@@ -499,52 +495,70 @@ const LessonFeedbackForm = () => {
                 <div className="space-y-3">
                   <Label className="flex items-center gap-2 text-base font-semibold">
                     <BookOpenIcon className="w-5 h-5 text-blue-500" />
-                    {t('feedback.understanding')}: {understanding[0]}/5
+                    How well did you understand the lesson?: {understanding[0]}/5
                   </Label>
-                  <Slider
-                    value={understanding}
-                    onValueChange={setUnderstanding}
-                    max={5}
-                    min={1}
-                    step={1}
-                    className="w-full"
-                  />
+                  <div className="px-3">
+                    <Slider
+                      value={understanding}
+                      onValueChange={setUnderstanding}
+                      max={5}
+                      min={1}
+                      step={1}
+                      className="w-full"
+                    />
+                    <div className="flex justify-between text-xs text-gray-500 mt-1">
+                      <span>Didn't get it</span>
+                      <span>Got it perfectly!</span>
+                    </div>
+                  </div>
                 </div>
 
                 <div className="space-y-3">
                   <Label className="flex items-center gap-2 text-base font-semibold">
                     <StarIcon className="w-5 h-5 text-yellow-500" />
-                    {t('feedback.interest')}: {interest[0]}/5
+                    How interesting was it?: {interest[0]}/5
                   </Label>
-                  <Slider
-                    value={interest}
-                    onValueChange={setInterest}
-                    max={5}
-                    min={1}
-                    step={1}
-                    className="w-full"
-                  />
+                  <div className="px-3">
+                    <Slider
+                      value={interest}
+                      onValueChange={setInterest}
+                      max={5}
+                      min={1}
+                      step={1}
+                      className="w-full"
+                    />
+                    <div className="flex justify-between text-xs text-gray-500 mt-1">
+                      <span>Pretty boring</span>
+                      <span>Super interesting!</span>
+                    </div>
+                  </div>
                 </div>
 
                 <div className="space-y-3">
                   <Label className="flex items-center gap-2 text-base font-semibold">
                     <LightbulbIcon className="w-5 h-5 text-green-500" />
-                    {t('feedback.growth')}: {educationalGrowth[0]}/5
+                    How much did you learn?: {educationalGrowth[0]}/5
                   </Label>
-                  <Slider
-                    value={educationalGrowth}
-                    onValueChange={setEducationalGrowth}
-                    max={5}
-                    min={1}
-                    step={1}
-                    className="w-full"
-                  />
+                  <div className="px-3">
+                    <Slider
+                      value={educationalGrowth}
+                      onValueChange={setEducationalGrowth}
+                      max={5}
+                      min={1}
+                      step={1}
+                      className="w-full"
+                    />
+                    <div className="flex justify-between text-xs text-gray-500 mt-1">
+                      <span>Didn't learn much</span>
+                      <span>Learned lots!</span>
+                    </div>
+                  </div>
                 </div>
               </div>
 
-              {/* Emotional State - Using the proper EmotionalStateSelector component */}
+              {/* Emotional State */}
               <div className="space-y-3">
-                <Label className="text-base font-semibold">{t('feedback.emotionalState')}</Label>
+                <Label className="text-base font-semibold">How were you feeling during class?</Label>
                 <EmotionalStateSelector
                   selectedState={emotionalState}
                   onStateChange={setEmotionalState}
@@ -554,7 +568,7 @@ const LessonFeedbackForm = () => {
               {/* Voice Input Toggle */}
               <div className="border-t pt-6">
                 <Label className="text-base font-semibold mb-4 block">
-                  Choose how to share your detailed feedback:
+                  Want to tell us more? You can write or record a voice note:
                 </Label>
                 
                 <VoiceInputToggle
@@ -571,7 +585,7 @@ const LessonFeedbackForm = () => {
                       audioUrl={audioData.audioUrl}
                       transcription={audioData.transcription}
                       duration={audioData.duration}
-                      title="Your feedback voice note"
+                      title="Your voice note about class"
                       showTranscription={true}
                     />
                   </div>
@@ -581,10 +595,10 @@ const LessonFeedbackForm = () => {
                 {(!audioData.audioUrl || voiceMode === 'text') && (
                   <div className="space-y-4">
                     <div>
-                      <Label htmlFor="whatWentWell">{t('feedback.whatWentWell')}</Label>
+                      <Label htmlFor="whatWentWell">What went really well in class?</Label>
                       <Textarea
                         id="whatWentWell"
-                        placeholder={t('feedback.whatWentWellPlaceholder')}
+                        placeholder="Tell us about the cool stuff that happened or what you enjoyed..."
                         value={whatWentWell}
                         onChange={(e) => setWhatWentWell(e.target.value)}
                         className="min-h-[100px]"
@@ -592,10 +606,10 @@ const LessonFeedbackForm = () => {
                     </div>
 
                     <div>
-                      <Label htmlFor="suggestions">{t('feedback.suggestions')}</Label>
+                      <Label htmlFor="suggestions">What could make class even better?</Label>
                       <Textarea
                         id="suggestions"
-                        placeholder={t('feedback.suggestionsPlaceholder')}
+                        placeholder="Any ideas to make the lesson more fun or easier to understand?"
                         value={suggestions}
                         onChange={(e) => setSuggestions(e.target.value)}
                         className="min-h-[100px]"
@@ -603,10 +617,10 @@ const LessonFeedbackForm = () => {
                     </div>
 
                     <div>
-                      <Label htmlFor="additionalComments">{t('feedback.additionalComments')}</Label>
+                      <Label htmlFor="additionalComments">Anything else you want to share?</Label>
                       <Textarea
                         id="additionalComments"
-                        placeholder={t('feedback.additionalCommentsPlaceholder')}
+                        placeholder="Tell us anything else about how class went..."
                         value={additionalComments}
                         onChange={(e) => setAdditionalComments(e.target.value)}
                         className="min-h-[100px]"
@@ -625,7 +639,7 @@ const LessonFeedbackForm = () => {
                 />
                 <Label htmlFor="anonymous" className="flex items-center gap-2">
                   <EyeOffIcon className="w-4 h-4" />
-                  {t('feedback.submitAnonymously')}
+                  Share my thoughts without using my name
                 </Label>
               </div>
 
@@ -638,12 +652,12 @@ const LessonFeedbackForm = () => {
                 {isSubmitting ? (
                   <div className="flex items-center gap-2">
                     <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    Submitting your feedback...
+                    Sharing your thoughts...
                   </div>
                 ) : (
                   <div className="flex items-center gap-2">
                     <CheckCircle className="w-5 h-5" />
-                    Submit Feedback
+                    Share My Thoughts!
                   </div>
                 )}
               </Button>
