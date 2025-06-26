@@ -33,6 +33,11 @@ const TeacherDashboard: React.FC = () => {
     return <Navigate to="/teacher-login" replace />;
   }
 
+  // Redirect school admins to the admin dashboard
+  if (teacher.role === 'admin') {
+    return <Navigate to="/admin-dashboard" replace />;
+  }
+
   const tabItems = [
     {
       value: 'schedule',
@@ -100,7 +105,7 @@ const TeacherDashboard: React.FC = () => {
                   {teacher.school}
                 </p>
                 <p className="text-lg text-white/80 mb-4">
-                  {teacher.role === 'admin' ? t('admin.role') || 'School Administrator' : t('teacher.role') || 'Teacher'}
+                  {t('teacher.role') || 'Teacher'}
                 </p>
                 <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm text-white px-4 py-2 rounded-full text-sm font-medium">
                   <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
