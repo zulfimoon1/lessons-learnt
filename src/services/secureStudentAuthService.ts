@@ -1,3 +1,4 @@
+
 import { enhancedSecurityValidationService } from './enhancedSecurityValidationService';
 import bcrypt from 'bcryptjs';
 import { supabase } from '@/integrations/supabase/client';
@@ -38,28 +39,72 @@ export const secureStudentLogin = async (fullName: string, school: string, grade
       console.log('secureStudentLogin: Found students in database:', allStudents);
     }
 
-    // Find student in database
-    console.log('secureStudentLogin: Looking for exact match:', {
+    // Clean the grade input - try multiple variations
+    const cleanGrade = grade.replace(/^Grade\s+/i, '').trim();
+    console.log('secureStudentLogin: Original grade:', grade, 'Cleaned grade:', cleanGrade);
+
+    // Try to find student with multiple grade variations
+    console.log('secureStudentLogin: Looking for exact match with cleaned grade:', {
       full_name: fullName.trim(),
       school: school.trim(),
-      grade: grade.trim()
+      grade: cleanGrade
     });
 
-    const { data: student, error } = await supabase
+    let student = null;
+    let error = null;
+
+    // First try with cleaned grade (e.g., "5")
+    const result1 = await supabase
       .from('students')
       .select('*')
       .eq('full_name', fullName.trim())
       .eq('school', school.trim())
-      .eq('grade', grade.trim())
-      .single();
+      .eq('grade', cleanGrade)
+      .maybeSingle();
 
-    console.log('secureStudentLogin: Database query result:', { student, error });
+    console.log('secureStudentLogin: First attempt result (cleaned grade):', result1);
 
-    if (error || !student) {
-      console.log('secureStudentLogin: No student found or error:', error);
+    if (result1.data) {
+      student = result1.data;
+    } else {
+      // Try with original grade format (e.g., "Grade 5")
+      const result2 = await supabase
+        .from('students')
+        .select('*')
+        .eq('full_name', fullName.trim())
+        .eq('school', school.trim())
+        .eq('grade', grade.trim())
+        .maybeSingle();
+
+      console.log('secureStudentLogin: Second attempt result (original grade):', result2);
+
+      if (result2.data) {
+        student = result2.data;
+      } else {
+        // Try case-insensitive search for full name and school
+        const result3 = await supabase
+          .from('students')
+          .select('*')
+          .ilike('full_name', fullName.trim())
+          .ilike('school', school.trim())
+          .in('grade', [cleanGrade, grade.trim(), `Grade ${cleanGrade}`])
+          .maybeSingle();
+
+        console.log('secureStudentLogin: Third attempt result (case-insensitive):', result3);
+        
+        if (result3.data) {
+          student = result3.data;
+        } else {
+          error = result3.error;
+        }
+      }
+    }
+
+    if (!student) {
+      console.log('secureStudentLogin: No student found after all attempts. Error:', error);
       await enhancedSecurityValidationService.logSecurityEvent({
         type: 'suspicious_activity',
-        details: `Failed student login attempt for: ${fullName} at ${school}`,
+        details: `Failed student login attempt for: ${fullName} at ${school} grade ${grade}`,
         severity: 'medium'
       });
       throw new Error('Invalid credentials');
