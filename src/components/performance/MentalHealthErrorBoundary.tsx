@@ -1,76 +1,72 @@
 
 import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { AlertTriangle, RefreshCw } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { enhancedSecurityValidationService } from '@/services/enhancedSecurityValidationService';
 
 interface Props {
   children: ReactNode;
-  fallback?: ReactNode;
 }
 
 interface State {
   hasError: boolean;
-  error?: Error;
+  errorMessage: string;
 }
 
 class MentalHealthErrorBoundary extends Component<Props, State> {
   constructor(props: Props) {
     super(props);
-    this.state = { hasError: false };
+    this.state = { hasError: false, errorMessage: '' };
   }
 
   static getDerivedStateFromError(error: Error): State {
-    return { hasError: true, error };
+    return {
+      hasError: true,
+      errorMessage: error.message || 'An unexpected error occurred'
+    };
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.error('Mental Health component error:', error, errorInfo);
+    
+    // Log security event for component errors that might indicate tampering
+    enhancedSecurityValidationService.logSecurityEvent({
+      type: 'suspicious_activity',
+      details: `Mental health component error: ${error.message}`,
+      severity: 'medium'
+    });
   }
 
   handleRetry = () => {
-    this.setState({ hasError: false, error: undefined });
+    this.setState({ hasError: false, errorMessage: '' });
   };
 
   render() {
     if (this.state.hasError) {
-      if (this.props.fallback) {
-        return this.props.fallback;
-      }
-
       return (
-        <Card className="border-red-200">
+        <Card className="w-full border-red-200 bg-red-50">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-red-600">
+            <CardTitle className="flex items-center gap-2 text-red-800">
               <AlertTriangle className="w-5 h-5" />
-              Mental Health System Error
+              Mental Health Data Error
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <p className="text-gray-600">
-              There was an error loading the mental health alerts. This could be due to:
+            <p className="text-red-700">
+              An error occurred while loading mental health data. This has been logged for security review.
             </p>
-            <ul className="list-disc list-inside text-sm text-gray-600 space-y-1">
-              <li>Network connectivity issues</li>
-              <li>Authorization problems</li>
-              <li>Data loading errors</li>
-            </ul>
-            <div className="flex gap-2">
-              <Button onClick={this.handleRetry} variant="outline" size="sm">
-                <RefreshCw className="w-4 h-4 mr-2" />
-                Try Again
-              </Button>
-            </div>
-            {process.env.NODE_ENV === 'development' && this.state.error && (
-              <details className="mt-4">
-                <summary className="text-sm text-gray-500 cursor-pointer">
-                  Error Details (Development)
-                </summary>
-                <pre className="mt-2 text-xs bg-gray-100 p-2 rounded overflow-auto">
-                  {this.state.error.message}
-                </pre>
-              </details>
-            )}
+            <p className="text-sm text-red-600">
+              Error: {this.state.errorMessage}
+            </p>
+            <Button 
+              onClick={this.handleRetry}
+              variant="outline" 
+              className="border-red-300 text-red-700 hover:bg-red-100"
+            >
+              <RefreshCw className="w-4 h-4 mr-2" />
+              Try Again
+            </Button>
           </CardContent>
         </Card>
       );

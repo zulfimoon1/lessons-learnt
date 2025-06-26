@@ -8,70 +8,48 @@ interface ValidationResult {
 }
 
 interface SecurityEvent {
-  type: 'suspicious_activity' | 'rate_limit_exceeded' | 'authentication_failure' | 'session_restored' | 'session_error' | 'storage_error' | 'csrf_violation' | 'test_admin_created' | 'forced_password_reset';
+  type: 'suspicious_activity' | 'rate_limit_exceeded' | 'session_error';
   userId?: string;
   details: string;
   severity: 'low' | 'medium' | 'high';
 }
 
 class EnhancedSecurityValidationService {
-  private rateLimitMap = new Map<string, { count: number; lastReset: number }>();
-  private suspiciousPatterns = [
-    /<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi,
-    /javascript:/gi,
-    /on\w+\s*=/gi,
-    /(union|select|insert|update|delete|drop|create|alter)\s+/gi,
-    /(\||&|;|\$\(|\`)/g
-  ];
+  private rateLimitStore = new Map<string, { count: number; timestamp: number }>();
+  private readonly RATE_LIMIT_WINDOW = 15 * 60 * 1000; // 15 minutes
+  private readonly MAX_ATTEMPTS = 5;
 
-  validateInput(
-    value: string, 
-    type: 'email' | 'password' | 'name' | 'school' | 'grade' | 'text' = 'text',
-    options: { maxLength?: number; allowHtml?: boolean; requireAlphanumeric?: boolean } = {}
-  ): ValidationResult {
-    const { maxLength = 255, allowHtml = false, requireAlphanumeric = false } = options;
+  validateInput(input: string, type: 'email' | 'name' | 'school' | 'grade' | 'text', options?: { maxLength?: number; requireAlphanumeric?: boolean }): ValidationResult {
     const errors: string[] = [];
-    let riskLevel: 'low' | 'medium' | 'high' = 'low';
+    const maxLength = options?.maxLength || 255;
 
-    // Length validation
-    if (value.length > maxLength) {
-      errors.push(`Input exceeds maximum length of ${maxLength} characters`);
-      riskLevel = 'medium';
+    if (!input || input.trim().length === 0) {
+      return { isValid: false, errors: ['Input cannot be empty'], riskLevel: 'medium' };
     }
 
-    // XSS and injection detection
-    if (!allowHtml) {
-      for (const pattern of this.suspiciousPatterns) {
-        if (pattern.test(value)) {
-          errors.push('Potentially malicious content detected');
-          riskLevel = 'high';
-          break;
-        }
-      }
+    if (input.length > maxLength) {
+      errors.push(`Input exceeds maximum length of ${maxLength} characters`);
+    }
+
+    // Check for potential XSS patterns
+    const xssPatterns = [/<script/i, /javascript:/i, /on\w+\s*=/i, /<iframe/i];
+    if (xssPatterns.some(pattern => pattern.test(input))) {
+      errors.push('Potentially malicious content detected');
+      return { isValid: false, errors, riskLevel: 'high' };
     }
 
     // Type-specific validation
     switch (type) {
       case 'email':
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(value)) {
+        if (!emailRegex.test(input)) {
           errors.push('Invalid email format');
-          riskLevel = 'medium';
         }
         break;
-      
-      case 'password':
-        if (value.length < 8) {
-          errors.push('Password must be at least 8 characters');
-          riskLevel = 'medium';
-        }
-        break;
-      
       case 'name':
       case 'school':
-        if (requireAlphanumeric && !/^[a-zA-Z0-9\s\-'\.]+$/.test(value)) {
-          errors.push('Contains invalid characters');
-          riskLevel = 'medium';
+        if (options?.requireAlphanumeric && !/^[a-zA-Z0-9\s\-_.]+$/.test(input)) {
+          errors.push('Only alphanumeric characters, spaces, hyphens, and periods are allowed');
         }
         break;
     }
@@ -79,114 +57,121 @@ class EnhancedSecurityValidationService {
     return {
       isValid: errors.length === 0,
       errors,
-      riskLevel
+      riskLevel: errors.length > 0 ? 'medium' : 'low'
     };
   }
 
-  validateEmail(email: string): ValidationResult {
-    return this.validateInput(email, 'email');
-  }
-
   validatePassword(password: string): ValidationResult {
-    const result = this.validateInput(password, 'password');
-    
-    // Additional password strength checks
-    const hasUpperCase = /[A-Z]/.test(password);
-    const hasLowerCase = /[a-z]/.test(password);
-    const hasNumbers = /\d/.test(password);
-    const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password);
-    
-    const strengthScore = [hasUpperCase, hasLowerCase, hasNumbers, hasSpecialChar].filter(Boolean).length;
-    
-    if (strengthScore < 2) {
-      result.errors.push('Password should contain uppercase, lowercase, numbers, and special characters');
-      result.riskLevel = 'medium';
-      result.isValid = false;
+    const errors: string[] = [];
+
+    if (password.length < 8) {
+      errors.push('Password must be at least 8 characters long');
     }
 
-    return result;
+    if (!/[A-Z]/.test(password)) {
+      errors.push('Password must contain at least one uppercase letter');
+    }
+
+    if (!/[a-z]/.test(password)) {
+      errors.push('Password must contain at least one lowercase letter');
+    }
+
+    if (!/\d/.test(password)) {
+      errors.push('Password must contain at least one number');
+    }
+
+    // Check for common weak passwords
+    const weakPasswords = ['password', '123456', 'admin', 'admin123'];
+    if (weakPasswords.some(weak => password.toLowerCase().includes(weak))) {
+      errors.push('Password contains common weak patterns');
+      return { isValid: false, errors, riskLevel: 'high' };
+    }
+
+    return {
+      isValid: errors.length === 0,
+      errors,
+      riskLevel: errors.length > 0 ? 'medium' : 'low'
+    };
   }
 
-  async hashPassword(password: string): Promise<string> {
-    // Use Web Crypto API for secure hashing
-    const encoder = new TextEncoder();
-    const data = encoder.encode(password + this.generateSalt());
-    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-    const hashArray = Array.from(new Uint8Array(hashBuffer));
-    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-  }
-
-  async verifyPassword(password: string, hash: string): Promise<boolean> {
-    // Simple comparison for demo - in production use bcrypt
-    const newHash = await this.hashPassword(password);
-    return newHash === hash;
-  }
-
-  generateCSRFToken(): string {
-    const array = new Uint8Array(32);
-    crypto.getRandomValues(array);
-    return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
-  }
-
-  private generateSalt(): string {
-    const array = new Uint8Array(16);
-    crypto.getRandomValues(array);
-    return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
-  }
-
-  checkRateLimit(key: string, maxRequests: number = 10, windowMs: number = 60000): boolean {
+  checkRateLimit(identifier: string): boolean {
     const now = Date.now();
-    const entry = this.rateLimitMap.get(key);
+    const record = this.rateLimitStore.get(identifier);
 
-    if (!entry || now - entry.lastReset > windowMs) {
-      this.rateLimitMap.set(key, { count: 1, lastReset: now });
+    if (!record) {
+      this.rateLimitStore.set(identifier, { count: 1, timestamp: now });
       return true;
     }
 
-    if (entry.count >= maxRequests) {
+    // Reset if window has passed
+    if (now - record.timestamp > this.RATE_LIMIT_WINDOW) {
+      this.rateLimitStore.set(identifier, { count: 1, timestamp: now });
+      return true;
+    }
+
+    // Check if limit exceeded
+    if (record.count >= this.MAX_ATTEMPTS) {
       return false;
     }
 
-    entry.count++;
+    // Increment count
+    record.count++;
     return true;
   }
 
   validateSessionSecurity(): boolean {
     try {
-      // Check for basic browser security features
-      const hasSecureContext = window.isSecureContext;
-      const hasSessionStorage = typeof sessionStorage !== 'undefined';
+      // Basic session validation checks
+      const hasValidStorage = typeof Storage !== 'undefined';
+      const hasSecureContext = window.isSecureContext || location.protocol === 'https:' || location.hostname === 'localhost';
       
-      return hasSecureContext && hasSessionStorage;
+      return hasValidStorage && hasSecureContext;
     } catch (error) {
-      console.error('Session security validation failed:', error);
       return false;
     }
   }
 
-  detectSuspiciousActivity(): boolean {
-    // Basic suspicious activity detection
-    const userAgent = navigator.userAgent;
-    const suspiciousUserAgents = ['bot', 'crawler', 'spider'];
+  generateCSRFToken(): string {
+    const array = new Uint8Array(32);
+    crypto.getRandomValues(array);
+    const token = Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
     
-    return suspiciousUserAgents.some(pattern => 
-      userAgent.toLowerCase().includes(pattern)
-    );
+    try {
+      sessionStorage.setItem('csrf_token', token);
+      sessionStorage.setItem('csrf_token_timestamp', Date.now().toString());
+    } catch (error) {
+      console.warn('Failed to store CSRF token:', error);
+    }
+    
+    return token;
   }
 
   async logSecurityEvent(event: SecurityEvent): Promise<void> {
     try {
-      console.log('Security Event Logged:', event);
-      // In production, this would send to proper logging service
-      await supabase.rpc('log_security_event_safe', {
-        event_type: event.type,
+      // Log to audit table for compliance
+      await supabase.from('audit_log').insert({
+        table_name: 'security_events',
+        operation: event.type,
         user_id: event.userId || null,
-        details: event.details,
-        severity: event.severity
+        new_data: {
+          details: event.details,
+          severity: event.severity,
+          timestamp: new Date().toISOString(),
+          user_agent: navigator.userAgent
+        }
       });
     } catch (error) {
-      console.error('Failed to log security event:', error);
+      // Silent fail - don't block operations
+      console.warn('Failed to log security event:', error);
     }
+  }
+
+  sanitizeInput(input: string): string {
+    return input
+      .trim()
+      .replace(/[<>]/g, '')
+      .replace(/javascript:/gi, '')
+      .replace(/on\w+\s*=/gi, '');
   }
 }
 
