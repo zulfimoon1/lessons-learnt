@@ -1183,6 +1183,29 @@ export type Database = {
           updated_at: string | null
         }
       }
+      platform_admin_create_transaction: {
+        Args: {
+          admin_email_param: string
+          school_name_param: string
+          amount_param: number
+          currency_param: string
+          transaction_type_param: string
+          status_param: string
+          description_param: string
+        }
+        Returns: {
+          amount: number
+          created_at: string
+          created_by: string | null
+          currency: string
+          description: string | null
+          id: string
+          school_name: string
+          status: string
+          transaction_type: string
+          updated_at: string
+        }
+      }
       platform_admin_delete_discount_code: {
         Args: { admin_email_param: string; code_id_param: string }
         Returns: boolean
