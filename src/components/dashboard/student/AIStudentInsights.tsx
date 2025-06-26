@@ -70,6 +70,24 @@ const AIStudentInsights: React.FC<AIStudentInsightsProps> = ({ studentId, school
     return data;
   };
 
+  // Helper function to safely render content recommendations
+  const renderContentRecommendations = () => {
+    if (!contentRecommendations || contentRecommendations.length === 0) {
+      return (
+        <>
+          <p className="text-sm text-gray-800 font-medium">• Interactive practice exercises tailored to your current level</p>
+          <p className="text-sm text-gray-800 font-medium">• Creative projects that align with your learning style and interests</p>
+        </>
+      );
+    }
+
+    return contentRecommendations.slice(0, 2).map((rec: any, index: number) => (
+      <p key={index} className="text-sm text-gray-800 font-medium">
+        • {typeof rec === 'string' ? rec : (rec.title || rec.topic || 'Personalized recommendation')}
+      </p>
+    ));
+  };
+
   return (
     <Card className="bg-gradient-to-br from-emerald-50 to-blue-50 border-2 border-emerald-300/60 shadow-xl">
       <CardHeader className="bg-gradient-to-r from-emerald-500 to-blue-600 text-white rounded-t-lg">
@@ -150,16 +168,7 @@ const AIStudentInsights: React.FC<AIStudentInsightsProps> = ({ studentId, school
                 {hasRecommendations && <Badge className="bg-green-100 text-green-800 border-green-300">{t('common.ready') || 'Ready'}</Badge>}
               </div>
               <div className="space-y-2">
-                {contentRecommendations && contentRecommendations.length > 0 ? (
-                  contentRecommendations.slice(0, 2).map((rec: any, index: number) => (
-                    <p key={index} className="text-sm text-gray-800 font-medium">• {rec.title || rec}</p>
-                  ))
-                ) : (
-                  <>
-                    <p className="text-sm text-gray-800 font-medium">• Interactive practice exercises tailored to your current level</p>
-                    <p className="text-sm text-gray-800 font-medium">• Creative projects that align with your learning style and interests</p>
-                  </>
-                )}
+                {renderContentRecommendations()}
               </div>
             </div>
 
