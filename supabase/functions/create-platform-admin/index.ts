@@ -55,11 +55,11 @@ serve(async (req) => {
 
   try {
     const requestBody = await req.json();
-    const { name, email, password, adminEmail } = requestBody;
+    const { name, email, password, adminEmail, allowUpdate } = requestBody;
 
-    console.log('🔐 Platform admin creation request:', { name, email, requestedBy: adminEmail });
+    console.log('🔐 Platform admin creation request:', { name, email, requestedBy: adminEmail, allowUpdate });
 
-    // Verify the requesting admin is authorized (only zulfimoon1@gmail.com can create new admins)
+    // Verify the requesting admin is authorized
     if (adminEmail !== 'zulfimoon1@gmail.com') {
       console.log('❌ Unauthorized admin creation attempt from:', adminEmail);
       return new Response(
@@ -118,15 +118,24 @@ serve(async (req) => {
     console.log('🔍 Checking if admin already exists...');
     const { data: existingAdmin, error: checkError } = await supabaseClient
       .from('teachers')
-      .select('id, email')
+      .select('id, email, name')
       .eq('email', email.toLowerCase().trim())
       .eq('role', 'admin')
       .single();
 
-    if (existingAdmin) {
+    if (existingAdmin && !allowUpdate) {
       console.log('❌ Admin already exists:', email);
       return new Response(
-        JSON.stringify({ success: false, error: 'An admin account with this email already exists' }),
+        JSON.stringify({ 
+          success: false, 
+          error: 'An admin account with this email already exists',
+          existing_admin: {
+            id: existingAdmin.id,
+            email: existingAdmin.email,
+            name: existingAdmin.name
+          },
+          suggestion: 'You can update the existing admin or use a different email address'
+        }),
         { status: 409, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -135,29 +144,56 @@ serve(async (req) => {
     console.log('🔒 Hashing password...');
     const hashedPassword = await hashPassword(password);
 
-    // Create the new admin account
-    console.log('👤 Creating new platform admin account...');
-    const { data: newAdmin, error: createError } = await supabaseClient
-      .from('teachers')
-      .insert([{
-        name: name.trim(),
-        email: email.toLowerCase().trim(),
-        school: 'Platform Administration',
-        role: 'admin',
-        password_hash: hashedPassword
-      }])
-      .select()
-      .single();
+    let result;
+    if (existingAdmin && allowUpdate) {
+      // Update existing admin
+      console.log('🔄 Updating existing platform admin account...');
+      const { data: updatedAdmin, error: updateError } = await supabaseClient
+        .from('teachers')
+        .update({
+          name: name.trim(),
+          password_hash: hashedPassword
+        })
+        .eq('id', existingAdmin.id)
+        .select()
+        .single();
 
-    if (createError) {
-      console.error('❌ Failed to create admin:', createError);
-      return new Response(
-        JSON.stringify({ success: false, error: 'Failed to create admin account' }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      if (updateError) {
+        console.error('❌ Failed to update admin:', updateError);
+        return new Response(
+          JSON.stringify({ success: false, error: 'Failed to update admin account' }),
+          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      result = updatedAdmin;
+      console.log('🎉 Platform admin updated successfully:', email);
+    } else {
+      // Create new admin account
+      console.log('👤 Creating new platform admin account...');
+      const { data: newAdmin, error: createError } = await supabaseClient
+        .from('teachers')
+        .insert([{
+          name: name.trim(),
+          email: email.toLowerCase().trim(),
+          school: 'Platform Administration',
+          role: 'admin',
+          password_hash: hashedPassword
+        }])
+        .select()
+        .single();
+
+      if (createError) {
+        console.error('❌ Failed to create admin:', createError);
+        return new Response(
+          JSON.stringify({ success: false, error: 'Failed to create admin account' }),
+          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      result = newAdmin;
+      console.log('🎉 Platform admin created successfully:', email);
     }
-
-    console.log('🎉 Platform admin created successfully:', email);
 
     // Send welcome email if Resend is configured
     try {
@@ -165,12 +201,12 @@ serve(async (req) => {
         body: {
           email: email.toLowerCase().trim(),
           name: name.trim(),
-          tempPassword: password // In production, you might want to generate a temp password
+          tempPassword: password
         }
       });
 
       if (emailError) {
-        console.log('📧 Email sending failed, but admin was created:', emailError);
+        console.log('📧 Email sending failed, but admin was created/updated:', emailError);
       } else {
         console.log('📧 Welcome email sent successfully');
       }
@@ -182,13 +218,13 @@ serve(async (req) => {
       JSON.stringify({
         success: true,
         admin: {
-          id: newAdmin.id,
-          email: newAdmin.email,
-          name: newAdmin.name,
-          role: newAdmin.role,
-          school: newAdmin.school
+          id: result.id,
+          email: result.email,
+          name: result.name,
+          role: result.role,
+          school: result.school
         },
-        message: 'Platform admin account created successfully'
+        message: existingAdmin && allowUpdate ? 'Platform admin account updated successfully' : 'Platform admin account created successfully'
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );

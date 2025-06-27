@@ -6,12 +6,13 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
-import { UserPlus, Shield, Eye, EyeOff } from 'lucide-react';
+import { UserPlus, Shield, Eye, EyeOff, AlertTriangle } from 'lucide-react';
 import { validatePasswordStrength } from '@/services/securePasswordService';
 
 const AdminUserManagement: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [existingAdminError, setExistingAdminError] = useState<any>(null);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -25,7 +26,7 @@ const AdminUserManagement: React.FC = () => {
     setPasswordStrength(validatePasswordStrength(password));
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent, allowUpdate = false) => {
     e.preventDefault();
     
     if (!formData.name || !formData.email || !formData.password) {
@@ -56,9 +57,9 @@ const AdminUserManagement: React.FC = () => {
     }
 
     setIsLoading(true);
+    setExistingAdminError(null);
     
     try {
-      // Import the service dynamically to avoid circular dependencies
       const { supabase } = await import('@/integrations/supabase/client');
       
       const { data, error } = await supabase.functions.invoke('create-platform-admin', {
@@ -66,7 +67,8 @@ const AdminUserManagement: React.FC = () => {
           name: formData.name.trim(),
           email: formData.email.toLowerCase().trim(),
           password: formData.password,
-          adminEmail: 'zulfimoon1@gmail.com' // Your admin email for authorization
+          adminEmail: 'zulfimoon1@gmail.com',
+          allowUpdate
         }
       });
 
@@ -81,6 +83,11 @@ const AdminUserManagement: React.FC = () => {
       }
 
       if (!data || !data.success) {
+        if (data?.error?.includes('already exists') && data.existing_admin) {
+          setExistingAdminError(data);
+          return;
+        }
+        
         toast({
           title: "❌ Creation Failed",
           description: data?.error || 'Failed to create platform admin account',
@@ -90,18 +97,19 @@ const AdminUserManagement: React.FC = () => {
       }
 
       toast({
-        title: "✅ Admin Created",
-        description: `Platform admin account created for ${formData.email}`,
+        title: allowUpdate ? "✅ Admin Updated" : "✅ Admin Created",
+        description: `Platform admin account ${allowUpdate ? 'updated' : 'created'} for ${formData.email}`,
         variant: "default",
       });
       
-      // Reset form
+      // Reset form and error state
       setFormData({
         name: '',
         email: '',
         password: ''
       });
       setPasswordStrength({ isValid: false, score: 0, feedback: [] });
+      setExistingAdminError(null);
     } catch (error: any) {
       console.error('Platform admin creation error:', error);
       toast({
@@ -138,7 +146,40 @@ const AdminUserManagement: React.FC = () => {
         </p>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-6">
+        {existingAdminError && (
+          <Alert className="mb-6 border-amber-200 bg-amber-50">
+            <AlertTriangle className="h-4 w-4 text-amber-600" />
+            <AlertDescription className="text-amber-800">
+              <div className="space-y-2">
+                <p><strong>Admin Already Exists:</strong> {existingAdminError.existing_admin?.email}</p>
+                <p><strong>Current Name:</strong> {existingAdminError.existing_admin?.name}</p>
+                <p className="text-sm">{existingAdminError.suggestion}</p>
+                <div className="flex gap-2 mt-3">
+                  <Button
+                    onClick={(e) => handleSubmit(e, true)}
+                    disabled={isLoading}
+                    variant="outline"
+                    size="sm"
+                  >
+                    Update Existing Admin
+                  </Button>
+                  <Button
+                    onClick={() => {
+                      setExistingAdminError(null);
+                      setFormData({ name: '', email: '', password: '' });
+                    }}
+                    variant="ghost"
+                    size="sm"
+                  >
+                    Use Different Email
+                  </Button>
+                </div>
+              </div>
+            </AlertDescription>
+          </Alert>
+        )}
+
+        <form onSubmit={(e) => handleSubmit(e, false)} className="space-y-6">
           <div className="space-y-2">
             <Label htmlFor="admin-name">Full Name</Label>
             <Input
