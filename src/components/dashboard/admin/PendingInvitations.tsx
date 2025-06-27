@@ -5,8 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { RefreshCw, Mail, Clock, CheckCircle } from 'lucide-react';
-import { usePlatformAdmin } from '@/contexts/PlatformAdminContext';
+import { RefreshCw, Mail, Clock, Trash2 } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface Invitation {
   id: string;
@@ -32,21 +32,21 @@ const PendingInvitations: React.FC<PendingInvitationsProps> = ({
   const [invitations, setInvitations] = useState<Invitation[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
-  const { admin } = usePlatformAdmin();
+  const { teacher } = useAuth();
 
   const fetchInvitations = async () => {
     try {
       console.log('🔍 Fetching invitations for school:', school);
       
-      if (!admin?.email) {
-        throw new Error('Platform admin authentication required');
+      if (!teacher?.email) {
+        throw new Error('Teacher authentication required');
       }
 
       const { data, error } = await supabase.functions.invoke('manage-invitations', {
         body: {
           action: 'list',
           school: school,
-          adminEmail: admin.email
+          adminEmail: teacher.email
         }
       });
 
@@ -55,8 +55,18 @@ const PendingInvitations: React.FC<PendingInvitationsProps> = ({
         throw error;
       }
       
-      console.log('📨 Fetched invitations:', data.invitations);
-      setInvitations(data.invitations || []);
+      console.log('📨 Fetched invitations:', data);
+      
+      if (data && data.success) {
+        setInvitations(data.invitations || []);
+      } else {
+        console.error('Failed to fetch invitations:', data?.error);
+        toast({
+          title: "Error",
+          description: data?.error || 'Failed to fetch invitations',
+          variant: "destructive",
+        });
+      }
     } catch (error: any) {
       console.error('Error fetching invitations:', error);
       toast({
@@ -73,25 +83,29 @@ const PendingInvitations: React.FC<PendingInvitationsProps> = ({
     try {
       console.log('📧 Resending invitation to:', invitation.email);
       
-      if (!admin?.email) {
-        throw new Error('Platform admin authentication required');
+      if (!teacher?.email) {
+        throw new Error('Teacher authentication required');
       }
 
       const { data, error } = await supabase.functions.invoke('manage-invitations', {
         body: {
           action: 'resend',
           invitationId: invitation.id,
-          adminEmail: admin.email
+          adminEmail: teacher.email
         }
       });
 
       if (error) throw error;
 
-      toast({
-        title: "Invitation Resent",
-        description: `Invitation resent to ${invitation.email}`,
-        variant: "default",
-      });
+      if (data && data.success) {
+        toast({
+          title: "Invitation Resent",
+          description: `Invitation resent to ${invitation.email}`,
+          variant: "default",
+        });
+      } else {
+        throw new Error(data?.error || 'Failed to resend invitation');
+      }
     } catch (error: any) {
       console.error('Error resending invitation:', error);
       toast({
@@ -102,9 +116,48 @@ const PendingInvitations: React.FC<PendingInvitationsProps> = ({
     }
   };
 
+  const deleteInvitation = async (invitation: Invitation) => {
+    try {
+      console.log('🗑️ Deleting invitation:', invitation.id);
+      
+      if (!teacher?.email) {
+        throw new Error('Teacher authentication required');
+      }
+
+      const { data, error } = await supabase.functions.invoke('manage-invitations', {
+        body: {
+          action: 'delete',
+          invitationId: invitation.id,
+          adminEmail: teacher.email
+        }
+      });
+
+      if (error) throw error;
+
+      if (data && data.success) {
+        toast({
+          title: "Invitation Deleted",
+          description: `Invitation for ${invitation.email} has been deleted`,
+          variant: "default",
+        });
+        // Refresh the list
+        fetchInvitations();
+      } else {
+        throw new Error(data?.error || 'Failed to delete invitation');
+      }
+    } catch (error: any) {
+      console.error('Error deleting invitation:', error);
+      toast({
+        title: "Error",
+        description: `Failed to delete invitation: ${error.message}`,
+        variant: "destructive",
+      });
+    }
+  };
+
   useEffect(() => {
     fetchInvitations();
-  }, [school, refreshTrigger, admin]);
+  }, [school, refreshTrigger, teacher]);
 
   const getStatusBadge = (status: string, expiresAt: string) => {
     const isExpired = new Date(expiresAt) < new Date();
@@ -168,15 +221,25 @@ const PendingInvitations: React.FC<PendingInvitationsProps> = ({
                 </div>
                 <div className="flex items-center gap-2">
                   {getStatusBadge(invitation.status, invitation.expires_at)}
-                  {invitation.status === 'pending' && new Date(invitation.expires_at) > new Date() && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => resendInvitation(invitation)}
-                    >
-                      <Mail className="w-4 h-4 mr-1" />
-                      Resend
-                    </Button>
+                  {invitation.status === 'pending' && (
+                    <>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => resendInvitation(invitation)}
+                      >
+                        <Mail className="w-4 h-4 mr-1" />
+                        Resend
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => deleteInvitation(invitation)}
+                      >
+                        <Trash2 className="w-4 h-4 mr-1" />
+                        Delete
+                      </Button>
+                    </>
                   )}
                 </div>
               </div>
