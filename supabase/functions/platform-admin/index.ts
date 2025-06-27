@@ -84,6 +84,32 @@ serve(async (req) => {
         }
         break;
 
+      case 'getTeachers':
+        console.log('👨‍🏫 Fetching teachers and admins...');
+        try {
+          const { data: allTeachers, error: teachersError } = await supabaseAdmin
+            .from('teachers')
+            .select('*')
+            .order('name');
+
+          if (teachersError) throw teachersError;
+
+          // Separate teachers from platform admins
+          const teachers = (allTeachers || []).filter(t => t.role === 'teacher' || t.role === 'doctor');
+          const platformAdmins = (allTeachers || []).filter(t => t.role === 'admin');
+
+          result = {
+            teachers: teachers,
+            admins: platformAdmins
+          };
+          
+          console.log(`✅ Teachers fetched: ${teachers.length}, Platform Admins: ${platformAdmins.length}`);
+        } catch (error) {
+          console.error('Error fetching teachers:', error);
+          result = { teachers: [], admins: [] };
+        }
+        break;
+
       case 'getSubscriptions':
         console.log('💳 Fetching subscriptions...');
         const { data: subscriptionsData, error: subscriptionsError } = await supabaseAdmin
@@ -378,51 +404,6 @@ serve(async (req) => {
           console.error('Error marking alert as reviewed:', error);
           throw error;
         }
-        break;
-
-      case 'getTeachers':
-        console.log('👨‍🏫 Fetching teachers (excluding doctors)...');
-        const { data: teachersData, error: teachersError } = await supabaseAdmin
-          .from('teachers')
-          .select('*')
-          .neq('role', 'doctor') // Exclude doctors from teachers list
-          .order('name');
-
-        if (teachersError) throw teachersError;
-
-        console.log(`Retrieved ${teachersData?.length || 0} teachers from database`);
-        result = teachersData || [];
-        break;
-
-      case 'createTeacher':
-        const { teacherData } = params;
-        
-        const hashedPassword = await hashPassword(teacherData.password);
-        const teacherDataWithHash = {
-          ...teacherData,
-          password_hash: hashedPassword
-        };
-        delete teacherDataWithHash.password;
-
-        const { data: newTeacher, error: createTeacherError } = await supabaseAdmin
-          .from('teachers')
-          .insert(teacherDataWithHash)
-          .select()
-          .single();
-
-        if (createTeacherError) throw createTeacherError;
-        result = { id: newTeacher.id, success: true, message: 'Teacher created successfully' };
-        break;
-
-      case 'deleteTeacher':
-        const { teacherId } = params;
-        const { error: deleteTeacherError } = await supabaseAdmin
-          .from('teachers')
-          .delete()
-          .eq('id', teacherId);
-
-        if (deleteTeacherError) throw deleteTeacherError;
-        result = { success: true, message: 'Teacher deleted successfully' };
         break;
 
       case 'getStudents':

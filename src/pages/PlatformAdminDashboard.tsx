@@ -14,7 +14,9 @@ import {
   CreditCard,
   Lock,
   BarChart3,
-  UserPlus
+  UserPlus,
+  Receipt,
+  Percent
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import SchoolManagement from '@/components/platform-admin/SchoolManagement';
@@ -24,6 +26,9 @@ import SubscriptionManagement from '@/components/platform-admin/SubscriptionMana
 import SecurityMonitoring from '@/components/platform-admin/SecurityMonitoring';
 import PasswordChangeForm from '@/components/platform-admin/PasswordChangeForm';
 import AdminUserManagement from '@/components/platform-admin/AdminUserManagement';
+import DiscountCodeManagement from '@/components/platform-admin/DiscountCodeManagement';
+import TransactionManagement from '@/components/platform-admin/TransactionManagement';
+import DiscountNotifications from '@/components/platform-admin/DiscountNotifications';
 
 interface PlatformStats {
   studentsCount: number;
@@ -219,6 +224,24 @@ const PlatformAdminDashboard: React.FC = () => {
       component: <SubscriptionManagement />
     },
     {
+      value: 'transactions',
+      icon: Receipt,
+      label: 'Transactions',
+      component: <TransactionManagement adminEmail={admin?.email || 'zulfimoon1@gmail.com'} />
+    },
+    {
+      value: 'discounts',
+      icon: Percent,
+      label: 'Discount Codes',
+      component: <DiscountCodeManagement adminEmail={admin?.email || 'zulfimoon1@gmail.com'} />
+    },
+    {
+      value: 'notifications',
+      icon: CreditCard,
+      label: 'Payment Notifications',
+      component: <DiscountNotifications adminEmail={admin?.email || 'zulfimoon1@gmail.com'} />
+    },
+    {
       value: 'security',
       icon: ShieldIcon,
       label: 'Security',
@@ -285,7 +308,7 @@ const PlatformAdminDashboard: React.FC = () => {
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-8">
           {/* Tab Navigation */}
           <div className="bg-white/90 backdrop-blur-sm rounded-2xl border border-gray-200/50 shadow-lg p-6">
-            <TabsList className="bg-transparent p-0 h-auto gap-3 grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8">
+            <TabsList className="bg-transparent p-0 h-auto gap-3 grid grid-cols-2 md:grid-cols-5 lg:grid-cols-10">
               {tabItems.map((item) => {
                 const Icon = item.icon;
                 return (

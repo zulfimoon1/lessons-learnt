@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { Users, Search, UserPlus, Trash2, Shield } from 'lucide-react';
+import { Users, Search, Shield } from 'lucide-react';
 
 interface Teacher {
   id: string;
@@ -20,38 +20,32 @@ interface Teacher {
 
 const TeacherManagement: React.FC = () => {
   const [teachers, setTeachers] = useState<Teacher[]>([]);
-  const [admins, setAdmins] = useState<Teacher[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [isLoading, setIsLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'teachers' | 'admins'>('teachers');
   const { toast } = useToast();
 
-  const fetchTeachersAndAdmins = async () => {
+  const fetchTeachers = async () => {
     try {
       setIsLoading(true);
       const { data, error } = await supabase.functions.invoke('platform-admin', {
         body: {
-          action: 'getTeachers',
+          operation: 'getTeachers',
           adminEmail: 'zulfimoon1@gmail.com'
         }
       });
 
       if (error) throw error;
 
-      if (data.teachers) {
-        // Separate teachers and admins
-        const teachersList = data.teachers.filter((t: Teacher) => t.role === 'teacher');
-        const adminsList = data.teachers.filter((t: Teacher) => t.role === 'admin');
-        
-        setTeachers(teachersList);
-        setAdmins(adminsList);
-        console.log('📊 Loaded teachers:', teachersList.length, 'admins:', adminsList.length);
+      if (data?.success && data?.data) {
+        // Only show actual teachers, not platform admins
+        setTeachers(data.data.teachers || []);
+        console.log('📊 Loaded teachers:', data.data.teachers?.length || 0);
       }
     } catch (error: any) {
       console.error('Error fetching teachers:', error);
       toast({
         title: "Error",
-        description: "Failed to fetch teachers and admins",
+        description: "Failed to fetch teachers",
         variant: "destructive",
       });
     } finally {
@@ -60,7 +54,7 @@ const TeacherManagement: React.FC = () => {
   };
 
   useEffect(() => {
-    fetchTeachersAndAdmins();
+    fetchTeachers();
   }, []);
 
   const filteredTeachers = teachers.filter(teacher =>
@@ -69,16 +63,8 @@ const TeacherManagement: React.FC = () => {
     teacher.school.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const filteredAdmins = admins.filter(admin =>
-    admin.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    admin.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    admin.school.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
   const getRoleBadge = (role: string) => {
     switch (role) {
-      case 'admin':
-        return <Badge variant="destructive" className="bg-red-100 text-red-800">Admin</Badge>;
       case 'teacher':
         return <Badge variant="secondary">Teacher</Badge>;
       case 'doctor':
@@ -110,32 +96,14 @@ const TeacherManagement: React.FC = () => {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold">User Management</h2>
-        <div className="flex gap-2">
-          <Button
-            variant={activeTab === 'teachers' ? 'default' : 'outline'}
-            onClick={() => setActiveTab('teachers')}
-            className="flex items-center gap-2"
-          >
-            <Users className="w-4 h-4" />
-            Teachers ({teachers.length})
-          </Button>
-          <Button
-            variant={activeTab === 'admins' ? 'default' : 'outline'}
-            onClick={() => setActiveTab('admins')}
-            className="flex items-center gap-2"
-          >
-            <Shield className="w-4 h-4" />
-            Admins ({admins.length})
-          </Button>
-        </div>
+        <h2 className="text-2xl font-bold">Teacher Management</h2>
       </div>
 
       <div className="flex gap-4 mb-6">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
           <Input
-            placeholder={`Search ${activeTab}...`}
+            placeholder="Search teachers..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="pl-10"
@@ -146,17 +114,8 @@ const TeacherManagement: React.FC = () => {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            {activeTab === 'teachers' ? (
-              <>
-                <Users className="w-5 h-5" />
-                Teachers ({filteredTeachers.length})
-              </>
-            ) : (
-              <>
-                <Shield className="w-5 h-5" />
-                Platform Admins ({filteredAdmins.length})
-              </>
-            )}
+            <Users className="w-5 h-5" />
+            Teachers & Psychologists ({filteredTeachers.length})
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -173,25 +132,25 @@ const TeacherManagement: React.FC = () => {
                 </tr>
               </thead>
               <tbody>
-                {(activeTab === 'teachers' ? filteredTeachers : filteredAdmins).map((user) => (
-                  <tr key={user.id} className="border-b hover:bg-gray-50">
-                    <td className="p-3 font-medium">{user.name}</td>
-                    <td className="p-3 text-gray-600">{user.email}</td>
-                    <td className="p-3">{user.school}</td>
-                    <td className="p-3">{getRoleBadge(user.role)}</td>
-                    <td className="p-3">{getStatusBadge(user.subscription_status)}</td>
+                {filteredTeachers.map((teacher) => (
+                  <tr key={teacher.id} className="border-b hover:bg-gray-50">
+                    <td className="p-3 font-medium">{teacher.name}</td>
+                    <td className="p-3 text-gray-600">{teacher.email}</td>
+                    <td className="p-3">{teacher.school}</td>
+                    <td className="p-3">{getRoleBadge(teacher.role)}</td>
+                    <td className="p-3">{getStatusBadge(teacher.subscription_status)}</td>
                     <td className="p-3 text-sm text-gray-500">
-                      {new Date(user.created_at).toLocaleDateString()}
+                      {new Date(teacher.created_at).toLocaleDateString()}
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
             
-            {(activeTab === 'teachers' ? filteredTeachers : filteredAdmins).length === 0 && (
+            {filteredTeachers.length === 0 && (
               <div className="text-center py-8 text-gray-500">
                 <Users className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-                <p>No {activeTab} found</p>
+                <p>No teachers found</p>
                 {searchTerm && (
                   <p className="text-sm">Try adjusting your search terms</p>
                 )}
