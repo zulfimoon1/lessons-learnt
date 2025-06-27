@@ -77,7 +77,10 @@ serve(async (req) => {
 
         if (listError) {
           console.error('❌ List error:', listError);
-          throw listError;
+          return new Response(
+            JSON.stringify({ error: `Failed to list invitations: ${listError.message}` }),
+            { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
         }
         result = { invitations };
         break;
@@ -177,22 +180,30 @@ serve(async (req) => {
 
         if (fetchError) {
           console.error('❌ Fetch error:', fetchError);
-          throw fetchError;
+          return new Response(
+            JSON.stringify({ error: `Failed to fetch invitation: ${fetchError.message}` }),
+            { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
         }
 
-        const { error: resendError } = await supabaseClient.functions.invoke('send-teacher-invitation', {
-          body: {
-            email: invitation.email,
-            school: invitation.school,
-            inviteToken: invitation.invite_token,
-          },
-        });
+        try {
+          const { error: resendError } = await supabaseClient.functions.invoke('send-teacher-invitation', {
+            body: {
+              email: invitation.email,
+              school: invitation.school,
+              inviteToken: invitation.invite_token,
+            },
+          });
 
-        if (resendError) {
-          console.error('❌ Resend error:', resendError);
-          result = { success: false, error: resendError.message };
-        } else {
-          result = { success: true, message: 'Invitation resent successfully' };
+          if (resendError) {
+            console.error('❌ Resend error:', resendError);
+            result = { success: false, error: resendError.message };
+          } else {
+            result = { success: true, message: 'Invitation resent successfully' };
+          }
+        } catch (resendErr) {
+          console.error('❌ Resend function error:', resendErr);
+          result = { success: false, error: 'Failed to resend invitation' };
         }
         break;
 
@@ -205,7 +216,10 @@ serve(async (req) => {
 
         if (deleteError) {
           console.error('❌ Delete error:', deleteError);
-          throw deleteError;
+          return new Response(
+            JSON.stringify({ error: `Failed to delete invitation: ${deleteError.message}` }),
+            { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
         }
         result = { success: true, message: 'Invitation deleted successfully' };
         break;
