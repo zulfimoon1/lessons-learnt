@@ -31,6 +31,8 @@ const TeacherInvitationForm: React.FC<TeacherInvitationFormProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    console.log('🚀 Form submission started', { formData, school, admin });
+
     if (!formData.email.trim()) {
       toast({
         title: "Error",
@@ -50,13 +52,21 @@ const TeacherInvitationForm: React.FC<TeacherInvitationFormProps> = ({
     }
 
     setIsLoading(true);
+    
     try {
-      console.log('Creating invitation for:', { ...formData, school });
+      console.log('📤 Calling manage-invitations Edge Function with:', {
+        action: 'create',
+        email: formData.email,
+        school: school,
+        role: formData.role,
+        specialization: formData.specialization || null,
+        adminEmail: admin.email
+      });
 
       const { data, error } = await supabase.functions.invoke('manage-invitations', {
         body: {
           action: 'create',
-          email: formData.email,
+          email: formData.email.trim().toLowerCase(),
           school: school,
           role: formData.role,
           specialization: formData.specialization || null,
@@ -64,34 +74,51 @@ const TeacherInvitationForm: React.FC<TeacherInvitationFormProps> = ({
         }
       });
 
+      console.log('📥 Edge Function response:', { data, error });
+
       if (error) {
-        console.error('Error creating invitation:', error);
-        throw error;
+        console.error('❌ Edge Function error:', error);
+        throw new Error(error.message || 'Failed to send invitation');
       }
 
-      console.log('Invitation created:', data);
+      if (!data) {
+        throw new Error('No response data received from invitation service');
+      }
 
-      if (data.emailSent) {
-        toast({
-          title: "Invitation Sent",
-          description: `Successfully sent invitation to ${formData.email}`,
-          variant: "default",
-        });
+      // Handle success
+      if (data.invitation) {
+        if (data.emailSent) {
+          toast({
+            title: "✅ Invitation Sent Successfully",
+            description: `Invitation email sent to ${formData.email}`,
+            variant: "default",
+          });
+        } else {
+          toast({
+            title: "⚠️ Invitation Created",
+            description: `Invitation created for ${formData.email}, but email sending failed. Please share the invitation link manually.`,
+            variant: "default",
+          });
+          console.warn('📧 Email sending failed:', data.emailError);
+        }
+
+        // Reset form
+        setFormData({ email: '', role: 'teacher', specialization: '' });
+        
+        // Notify parent component
+        onInvitationSent?.();
       } else {
-        toast({
-          title: "Invitation Created",
-          description: `Invitation created for ${formData.email}, but email sending failed. Please share the invitation link manually.`,
-          variant: "default",
-        });
+        throw new Error('Invalid response format from invitation service');
       }
 
-      setFormData({ email: '', role: 'teacher', specialization: '' });
-      onInvitationSent?.();
     } catch (error: any) {
-      console.error('Error sending invitation:', error);
+      console.error('💥 Invitation sending failed:', error);
+      
+      // Show user-friendly error message
+      const errorMessage = error.message || 'An unexpected error occurred';
       toast({
-        title: "Error",
-        description: `Failed to send invitation: ${error.message}`,
+        title: "❌ Failed to Send Invitation",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
@@ -118,12 +145,17 @@ const TeacherInvitationForm: React.FC<TeacherInvitationFormProps> = ({
               onChange={(e) => setFormData({ ...formData, email: e.target.value })}
               placeholder="teacher@example.com"
               required
+              disabled={isLoading}
             />
           </div>
           
           <div>
             <Label htmlFor="invite-role">Role</Label>
-            <Select value={formData.role} onValueChange={(value) => setFormData({ ...formData, role: value })}>
+            <Select 
+              value={formData.role} 
+              onValueChange={(value) => setFormData({ ...formData, role: value })}
+              disabled={isLoading}
+            >
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
@@ -142,6 +174,7 @@ const TeacherInvitationForm: React.FC<TeacherInvitationFormProps> = ({
                 value={formData.specialization}
                 onChange={(e) => setFormData({ ...formData, specialization: e.target.value })}
                 placeholder="e.g., Child Psychology, Counseling"
+                disabled={isLoading}
               />
             </div>
           )}
