@@ -172,6 +172,171 @@ class SecurePlatformAdminService {
       return { success: false, error: 'Password change system error' };
     }
   }
+
+  async getSchoolData(adminEmail: string): Promise<any[]> {
+    try {
+      console.log('🏫 Fetching school data for admin:', adminEmail);
+      
+      await this.setPlatformAdminContext(adminEmail);
+      
+      const { data, error } = await supabase
+        .from('teachers')
+        .select(`
+          school,
+          id
+        `)
+        .not('school', 'is', null);
+
+      if (error) throw error;
+
+      // Group by school and count teachers and students
+      const schoolStats = new Map();
+      
+      for (const teacher of data || []) {
+        if (!schoolStats.has(teacher.school)) {
+          schoolStats.set(teacher.school, {
+            name: teacher.school,
+            teacher_count: 0,
+            student_count: 0
+          });
+        }
+        schoolStats.get(teacher.school).teacher_count++;
+      }
+
+      // Get student counts
+      const { data: students, error: studentsError } = await supabase
+        .from('students')
+        .select('school')
+        .not('school', 'is', null);
+
+      if (!studentsError && students) {
+        for (const student of students) {
+          if (schoolStats.has(student.school)) {
+            schoolStats.get(student.school).student_count++;
+          }
+        }
+      }
+
+      return Array.from(schoolStats.values());
+    } catch (error) {
+      console.error('Error fetching school data:', error);
+      throw error;
+    }
+  }
+
+  async createSchool(adminEmail: string, schoolName: string): Promise<any> {
+    try {
+      console.log('➕ Creating school:', schoolName);
+      
+      await this.setPlatformAdminContext(adminEmail);
+      
+      // For now, we'll just create a placeholder teacher record for the school
+      // In a real system, you might have a separate schools table
+      const { data, error } = await supabase
+        .from('teachers')
+        .insert({
+          name: 'School Administrator',
+          email: `admin@${schoolName.toLowerCase().replace(/\s+/g, '')}.edu`,
+          school: schoolName,
+          role: 'admin',
+          password_hash: 'placeholder'
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error('Error creating school:', error);
+      throw error;
+    }
+  }
+
+  async deleteSchool(adminEmail: string, schoolName: string): Promise<void> {
+    try {
+      console.log('🗑️ Deleting school:', schoolName);
+      
+      await this.setPlatformAdminContext(adminEmail);
+      
+      const { error } = await supabase.rpc('platform_admin_delete_school', {
+        school_name_param: schoolName,
+        admin_email_param: adminEmail
+      });
+
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error deleting school:', error);
+      throw error;
+    }
+  }
+
+  async getTransactions(adminEmail: string): Promise<any[]> {
+    try {
+      console.log('💰 Fetching transactions for admin:', adminEmail);
+      
+      await this.setPlatformAdminContext(adminEmail);
+      
+      const { data, error } = await supabase
+        .from('transactions')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      return data || [];
+    } catch (error) {
+      console.error('Error fetching transactions:', error);
+      throw error;
+    }
+  }
+
+  async createTransaction(adminEmail: string, transactionData: {
+    school_name: string;
+    amount: string;
+    currency: string;
+    transaction_type: string;
+    status: string;
+    description: string;
+  }): Promise<any> {
+    try {
+      console.log('💳 Creating transaction:', transactionData);
+      
+      await this.setPlatformAdminContext(adminEmail);
+      
+      const { data, error } = await supabase.rpc('platform_admin_create_transaction', {
+        admin_email_param: adminEmail,
+        school_name_param: transactionData.school_name,
+        amount_param: Math.round(parseFloat(transactionData.amount) * 100), // Convert to cents
+        currency_param: transactionData.currency,
+        transaction_type_param: transactionData.transaction_type,
+        status_param: transactionData.status,
+        description_param: transactionData.description
+      });
+
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error('Error creating transaction:', error);
+      throw error;
+    }
+  }
+
+  async deleteTransaction(adminEmail: string, transactionId: string): Promise<void> {
+    try {
+      console.log('🗑️ Deleting transaction:', transactionId);
+      
+      await this.setPlatformAdminContext(adminEmail);
+      
+      const { error } = await supabase
+        .from('transactions')
+        .delete()
+        .eq('id', transactionId);
+
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error deleting transaction:', error);
+      throw error;
+    }
+  }
 }
 
 export const securePlatformAdminService = new SecurePlatformAdminService();
