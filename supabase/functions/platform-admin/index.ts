@@ -59,7 +59,7 @@ serve(async (req) => {
         try {
           const [studentsResult, teachersResult, feedbackResult, subscriptionsResult] = await Promise.all([
             supabaseAdmin.from('students').select('*', { count: 'exact', head: true }),
-            supabaseAdmin.from('teachers').select('*', { count: 'exact', head: true }),
+            supabaseAdmin.from('teachers').select('*', { count: 'exact', head: true }).neq('school', 'Platform Administration'),
             supabaseAdmin.from('feedback').select('*', { count: 'exact', head: true }),
             supabaseAdmin.from('subscriptions').select('*', { count: 'exact', head: true })
           ]);
@@ -90,20 +90,14 @@ serve(async (req) => {
           const { data: allTeachers, error: teachersError } = await supabaseAdmin
             .from('teachers')
             .select('*')
+            .neq('school', 'Platform Administration')
             .order('name');
 
           if (teachersError) throw teachersError;
 
-          // Filter to only include teachers, doctors, and school admins (not platform admins)
-          const teachers = (allTeachers || []).filter(t => 
-            t.role === 'teacher' || 
-            t.role === 'doctor' || 
-            (t.role === 'admin' && t.school !== 'Platform Administration')
-          );
-
-          result = { teachers };
+          result = { teachers: allTeachers || [] };
           
-          console.log(`✅ Teachers and school admins fetched: ${teachers.length}`);
+          console.log(`✅ Teachers and school admins fetched: ${(allTeachers || []).length}`);
         } catch (error) {
           console.error('Error fetching teachers:', error);
           result = { teachers: [] };
@@ -116,18 +110,14 @@ serve(async (req) => {
           const { data: allTeachers, error: teachersError } = await supabaseAdmin
             .from('teachers')
             .select('*')
+            .eq('school', 'Platform Administration')
             .order('name');
 
           if (teachersError) throw teachersError;
 
-          // Filter to only include platform admins
-          const platformAdmins = (allTeachers || []).filter(t => 
-            t.role === 'admin' && t.school === 'Platform Administration'
-          );
-
-          result = { admins: platformAdmins };
+          result = { admins: allTeachers || [] };
           
-          console.log(`✅ Platform admin users fetched: ${platformAdmins.length}`);
+          console.log(`✅ Platform admin users fetched: ${(allTeachers || []).length}`);
         } catch (error) {
           console.error('Error fetching platform admin users:', error);
           result = { admins: [] };
@@ -145,15 +135,17 @@ serve(async (req) => {
 
           if (teachersError) throw teachersError;
 
+          // Get unique actual schools (excluding Platform Administration)
           const uniqueSchools = [...new Set(
-            teachersSchoolData?.map(t => t.school)
-              .filter(school => school) || []
+            (teachersSchoolData || [])
+              .map(t => t.school)
+              .filter(school => school && school !== 'Platform Administration')
           )];
           
           const schoolStats = [];
           for (const school of uniqueSchools) {
             const [teacherResult, studentResult] = await Promise.all([
-              supabaseAdmin.from('teachers').select('id', { count: 'exact', head: true }).eq('school', school).neq('school', 'Platform Administration'),
+              supabaseAdmin.from('teachers').select('id', { count: 'exact', head: true }).eq('school', school),
               supabaseAdmin.from('students').select('id', { count: 'exact', head: true }).eq('school', school)
             ]);
 
@@ -165,7 +157,7 @@ serve(async (req) => {
           }
 
           result = schoolStats;
-          console.log(`✅ School data fetched: ${schoolStats.length} schools`);
+          console.log(`✅ School data fetched: ${schoolStats.length} actual schools`);
         } catch (error) {
           console.error('Error fetching school data:', error);
           result = [];

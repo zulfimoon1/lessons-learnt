@@ -37,6 +37,12 @@ interface PlatformStats {
   subscriptionsCount: number;
 }
 
+interface SchoolData {
+  name: string;
+  teacher_count: number;
+  student_count: number;
+}
+
 const PlatformAdminDashboard: React.FC = () => {
   const { admin, logout, isLoading } = usePlatformAdmin();
   const [activeTab, setActiveTab] = useState('overview');
@@ -46,11 +52,13 @@ const PlatformAdminDashboard: React.FC = () => {
     responsesCount: 0,
     subscriptionsCount: 0
   });
+  const [schoolsData, setSchoolsData] = useState<SchoolData[]>([]);
   const [statsLoading, setStatsLoading] = useState(true);
 
   useEffect(() => {
     if (admin) {
       fetchPlatformStats();
+      fetchSchoolsData();
     }
   }, [admin]);
 
@@ -84,6 +92,31 @@ const PlatformAdminDashboard: React.FC = () => {
     }
   };
 
+  const fetchSchoolsData = async () => {
+    try {
+      console.log('🏫 Fetching schools data...');
+      
+      const { data, error } = await supabase.functions.invoke('platform-admin', {
+        body: {
+          operation: 'getSchoolData',
+          adminEmail: admin?.email || 'zulfimoon1@gmail.com'
+        }
+      });
+
+      if (error) {
+        console.error('Schools fetch error:', error);
+        throw error;
+      }
+
+      if (data?.success && data?.data) {
+        setSchoolsData(data.data);
+        console.log('✅ Schools data loaded:', data.data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch schools data:', error);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -114,9 +147,9 @@ const PlatformAdminDashboard: React.FC = () => {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
-                  {statsLoading ? '--' : stats.subscriptionsCount}
+                  {statsLoading ? '--' : schoolsData.length}
                 </div>
-                <p className="text-xs text-muted-foreground">Active subscriptions</p>
+                <p className="text-xs text-muted-foreground">Active schools</p>
               </CardContent>
             </Card>
             <Card>
@@ -164,6 +197,10 @@ const PlatformAdminDashboard: React.FC = () => {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex justify-between items-center">
+                  <span className="text-sm font-medium">Active Schools</span>
+                  <span className="text-lg font-bold">{statsLoading ? '--' : schoolsData.length}</span>
+                </div>
+                <div className="flex justify-between items-center">
                   <span className="text-sm font-medium">Teachers</span>
                   <span className="text-lg font-bold">{statsLoading ? '--' : stats.teachersCount}</span>
                 </div>
@@ -172,8 +209,8 @@ const PlatformAdminDashboard: React.FC = () => {
                   <span className="text-lg font-bold">{statsLoading ? '--' : stats.studentsCount}</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-sm font-medium">Active Schools</span>
-                  <span className="text-lg font-bold">{statsLoading ? '--' : stats.subscriptionsCount}</span>
+                  <span className="text-sm font-medium">Feedback Responses</span>
+                  <span className="text-lg font-bold">{statsLoading ? '--' : stats.responsesCount}</span>
                 </div>
               </CardContent>
             </Card>
@@ -192,7 +229,10 @@ const PlatformAdminDashboard: React.FC = () => {
                   <span className="text-sm text-gray-600">{new Date().toLocaleTimeString()}</span>
                 </div>
                 <Button 
-                  onClick={fetchPlatformStats} 
+                  onClick={() => {
+                    fetchPlatformStats();
+                    fetchSchoolsData();
+                  }} 
                   variant="outline" 
                   size="sm"
                   disabled={statsLoading}
@@ -202,6 +242,29 @@ const PlatformAdminDashboard: React.FC = () => {
               </CardContent>
             </Card>
           </div>
+
+          {/* School Details */}
+          {schoolsData.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle>School Details</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {schoolsData.map((school, index) => (
+                    <div key={index} className="flex justify-between items-center p-3 border rounded">
+                      <div>
+                        <h4 className="font-medium">{school.name}</h4>
+                        <p className="text-sm text-muted-foreground">
+                          {school.teacher_count} teachers, {school.student_count} students
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </div>
       )
     },
