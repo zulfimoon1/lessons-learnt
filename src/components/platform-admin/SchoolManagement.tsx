@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -35,15 +36,17 @@ const SchoolManagement: React.FC<SchoolManagementProps> = ({ onDataChange }) => 
       
       const schoolData = await securePlatformAdminService.getSchoolData(admin.email);
       
-      // Ensure the data has the correct types
-      const typedSchoolData = schoolData.map((school: any) => ({
-        name: school.name,
-        teacher_count: Number(school.teacher_count) || 0,
-        student_count: Number(school.student_count) || 0
-      }));
+      // Filter out Platform Administration and ensure the data has the correct types
+      const filteredSchoolData = schoolData
+        .filter((school: any) => school.name !== 'Platform Administration')
+        .map((school: any) => ({
+          name: school.name,
+          teacher_count: Number(school.teacher_count) || 0,
+          student_count: Number(school.student_count) || 0
+        }));
       
-      setSchools(typedSchoolData);
-      console.log(`✅ Schools loaded: ${typedSchoolData.length} schools`);
+      setSchools(filteredSchoolData);
+      console.log(`✅ Schools loaded: ${filteredSchoolData.length} schools`);
       
     } catch (error) {
       console.error('❌ Error fetching schools:', error);
