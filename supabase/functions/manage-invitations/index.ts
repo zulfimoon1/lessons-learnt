@@ -98,6 +98,7 @@ serve(async (req) => {
           .single();
 
         if (existingInvite) {
+          console.log('⚠️ Invitation already exists for:', data.email);
           return new Response(
             JSON.stringify({ 
               success: false,
