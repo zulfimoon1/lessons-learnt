@@ -63,7 +63,12 @@ const TeacherInvitationForm: React.FC<TeacherInvitationFormProps> = ({
         adminEmail: admin.email
       });
 
-      const { data, error } = await supabase.functions.invoke('manage-invitations', {
+      // Add timeout to the Edge Function call
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Request timeout after 30 seconds')), 30000)
+      );
+
+      const invocationPromise = supabase.functions.invoke('manage-invitations', {
         body: {
           action: 'create',
           email: formData.email.trim().toLowerCase(),
@@ -73,6 +78,8 @@ const TeacherInvitationForm: React.FC<TeacherInvitationFormProps> = ({
           adminEmail: admin.email
         }
       });
+
+      const { data, error } = await Promise.race([invocationPromise, timeoutPromise]) as any;
 
       console.log('📥 Edge Function response:', { data, error });
 

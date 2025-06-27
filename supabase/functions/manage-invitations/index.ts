@@ -8,6 +8,7 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -18,12 +19,24 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    const { action, adminEmail, ...data } = await req.json();
+    let requestBody;
+    try {
+      requestBody = await req.json();
+    } catch (e) {
+      console.error('Failed to parse request body:', e);
+      return new Response(
+        JSON.stringify({ error: 'Invalid JSON in request body' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const { action, adminEmail, ...data } = requestBody;
     
     console.log('🔧 Manage invitations request:', { action, adminEmail, data });
 
     // Verify platform admin permissions
     if (adminEmail !== 'zulfimoon1@gmail.com') {
+      console.error('❌ Unauthorized access attempt:', adminEmail);
       return new Response(
         JSON.stringify({ error: 'Unauthorized: Platform admin access required' }),
         { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -41,7 +54,10 @@ serve(async (req) => {
           .eq('school', data.school)
           .order('created_at', { ascending: false });
 
-        if (listError) throw listError;
+        if (listError) {
+          console.error('❌ List error:', listError);
+          throw listError;
+        }
         result = { invitations };
         break;
 
@@ -58,7 +74,12 @@ serve(async (req) => {
           .select()
           .single();
 
-        if (createError) throw createError;
+        if (createError) {
+          console.error('❌ Create error:', createError);
+          throw createError;
+        }
+        
+        console.log('✅ Invitation created:', newInvitation);
         
         // Send invitation email
         try {
@@ -71,17 +92,18 @@ serve(async (req) => {
           });
 
           if (emailError) {
-            console.error('Email sending failed:', emailError);
+            console.error('📧 Email sending failed:', emailError);
             result = { 
               invitation: newInvitation, 
               emailSent: false, 
               emailError: emailError.message 
             };
           } else {
+            console.log('📧 Email sent successfully');
             result = { invitation: newInvitation, emailSent: true };
           }
         } catch (emailErr) {
-          console.error('Email function error:', emailErr);
+          console.error('📧 Email function error:', emailErr);
           result = { 
             invitation: newInvitation, 
             emailSent: false, 
@@ -98,7 +120,10 @@ serve(async (req) => {
           .eq('id', data.invitationId)
           .single();
 
-        if (fetchError) throw fetchError;
+        if (fetchError) {
+          console.error('❌ Fetch error:', fetchError);
+          throw fetchError;
+        }
 
         const { error: resendError } = await supabaseClient.functions.invoke('send-teacher-invitation', {
           body: {
@@ -108,7 +133,10 @@ serve(async (req) => {
           },
         });
 
-        if (resendError) throw resendError;
+        if (resendError) {
+          console.error('❌ Resend error:', resendError);
+          throw resendError;
+        }
         result = { success: true, message: 'Invitation resent successfully' };
         break;
 
@@ -119,11 +147,15 @@ serve(async (req) => {
           .delete()
           .eq('id', data.invitationId);
 
-        if (deleteError) throw deleteError;
+        if (deleteError) {
+          console.error('❌ Delete error:', deleteError);
+          throw deleteError;
+        }
         result = { success: true, message: 'Invitation deleted successfully' };
         break;
 
       default:
+        console.error('❌ Invalid action:', action);
         return new Response(
           JSON.stringify({ error: 'Invalid action' }),
           { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -139,7 +171,10 @@ serve(async (req) => {
   } catch (error) {
     console.error('❌ Edge function error:', error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ 
+        error: error.message || 'An unexpected error occurred',
+        details: error.toString()
+      }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
