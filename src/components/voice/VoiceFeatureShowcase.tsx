@@ -1,7 +1,9 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   MicIcon, 
   VolumeIcon, 
@@ -12,6 +14,7 @@ import {
   CheckCircleIcon
 } from "lucide-react";
 import VoiceDemoCard from './VoiceDemoCard';
+import { useDeviceType } from '@/hooks/use-device';
 
 interface VoiceFeatureShowcaseProps {
   isPlaying?: boolean;
@@ -19,13 +22,22 @@ interface VoiceFeatureShowcaseProps {
 
 const VoiceFeatureShowcase: React.FC<VoiceFeatureShowcaseProps> = ({ isPlaying = false }) => {
   const [selectedFeature, setSelectedFeature] = useState<string>('overview');
+  const deviceType = useDeviceType();
+  const isMobile = deviceType === 'mobile';
+  const isTablet = deviceType === 'tablet';
 
   // Auto-play through features when isPlaying is true
   useEffect(() => {
     if (!isPlaying) return;
 
     const features = ['overview', 'student', 'teacher', 'analytics', 'wellness'];
-    let currentIndex = features.indexOf(selectedFeature);
+    let currentIndex = 0;
+
+    // Start from current selected feature
+    const startIndex = features.indexOf(selectedFeature);
+    if (startIndex !== -1) {
+      currentIndex = startIndex;
+    }
 
     const interval = setInterval(() => {
       currentIndex = (currentIndex + 1) % features.length;
@@ -33,68 +45,73 @@ const VoiceFeatureShowcase: React.FC<VoiceFeatureShowcaseProps> = ({ isPlaying =
     }, 4000); // Change feature every 4 seconds
 
     return () => clearInterval(interval);
-  }, [isPlaying, selectedFeature]);
+  }, [isPlaying]); // Remove selectedFeature from dependency to prevent restart
 
   const features = [
     {
       id: 'overview',
       title: 'Voice Revolution',
-      icon: <SparklesIcon className="w-5 h-5" />,
+      shortTitle: 'Overview',
+      icon: <SparklesIcon className="w-4 h-4 md:w-5 md:h-5" />,
       description: 'Transform education with voice-powered feedback'
     },
     {
       id: 'student',
       title: 'Student Experience',
-      icon: <MicIcon className="w-5 h-5" />,
+      shortTitle: 'Student',
+      icon: <MicIcon className="w-4 h-4 md:w-5 md:h-5" />,
       description: 'Natural, expressive student feedback'
     },
     {
       id: 'teacher',
       title: 'Teacher Tools',
-      icon: <VolumeIcon className="w-5 h-5" />,
+      shortTitle: 'Teacher',
+      icon: <VolumeIcon className="w-4 h-4 md:w-5 md:h-5" />,
       description: 'Advanced voice message management'
     },
     {
       id: 'analytics',
       title: 'Voice Analytics',
-      icon: <TrendingUpIcon className="w-5 h-5" />,
+      shortTitle: 'Analytics',
+      icon: <TrendingUpIcon className="w-4 h-4 md:w-5 md:h-5" />,
       description: 'Insights from voice communications'
     },
     {
       id: 'wellness',
       title: 'Emotional Intelligence',
-      icon: <HeartIcon className="w-5 h-5" />,
+      shortTitle: 'Wellness',
+      icon: <HeartIcon className="w-4 h-4 md:w-5 md:h-5" />,
       description: 'Detect and support student wellbeing'
     }
   ];
 
   const renderOverview = () => (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6">
       <Card className="bg-gradient-to-r from-purple-600 to-blue-600 text-white">
-        <CardHeader>
-          <CardTitle className="text-2xl font-bold text-center">
+        <CardHeader className="pb-3 md:pb-6">
+          <CardTitle className="text-xl md:text-2xl font-bold text-center">
             🎤 Voice-Powered Education Platform
           </CardTitle>
         </CardHeader>
-        <CardContent className="text-center space-y-4">
-          <p className="text-xl text-white/90">
+        <CardContent className="text-center space-y-3 md:space-y-4 pt-0">
+          <p className="text-lg md:text-xl text-white/90">
             The first educational platform designed for the voice-first generation
           </p>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
-            <div className="bg-white/10 rounded-lg p-4">
-              <CheckCircleIcon className="w-8 h-8 mx-auto mb-2" />
-              <h3 className="font-semibold mb-1">Faster Feedback</h3>
-              <p className="text-sm text-white/80">Students share thoughts 3x faster than typing</p>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4 mt-4 md:mt-6">
+            <div className="bg-white/10 rounded-lg p-3 md:p-4">
+              <CheckCircleIcon className="w-6 h-6 md:w-8 md:h-8 mx-auto mb-2" />
+              <h3 className="font-semibold mb-1 text-sm md:text-base">Faster Feedback</h3>
+              <p className="text-xs md:text-sm text-white/80">Students share thoughts 3x faster than typing</p>
             </div>
-            <div className="bg-white/10 rounded-lg p-4">
-              <CheckCircleIcon className="w-8 h-8 mx-auto mb-2" />
-              <h3 className="font-semibold mb-1">Emotional Context</h3>
-              <p className="text-sm text-white/80">Capture tone and emotion that text can't convey</p>
+            <div className="bg-white/10 rounded-lg p-3 md:p-4">
+              <CheckCircleIcon className="w-6 h-6 md:w-8 md:h-8 mx-auto mb-2" />
+              <h3 className="font-semibold mb-1 text-sm md:text-base">Emotional Context</h3>
+              <p className="text-xs md:text-sm text-white/80">Capture tone and emotion that text can't convey</p>
             </div>
-            <div className="bg-white/10 rounded-lg p-4">
-              <CheckCircleIcon className="w-8 h-8 mx-auto mb-2" />
-              <h3 className="font-semibold mb-1">Inclusive Learning</h3>
-              <p className="text-sm text-white/80">Perfect for students with writing challenges</p>
+            <div className="bg-white/10 rounded-lg p-3 md:p-4">
+              <CheckCircleIcon className="w-6 h-6 md:w-8 md:h-8 mx-auto mb-2" />
+              <h3 className="font-semibold mb-1 text-sm md:text-base">Inclusive Learning</h3>
+              <p className="text-xs md:text-sm text-white/80">Perfect for students with writing challenges</p>
             </div>
           </div>
         </CardContent>
@@ -103,16 +120,16 @@ const VoiceFeatureShowcase: React.FC<VoiceFeatureShowcaseProps> = ({ isPlaying =
   );
 
   const renderStudentExperience = () => (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6">
       <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <MicIcon className="w-5 h-5 text-purple-600" />
+        <CardHeader className="pb-3 md:pb-6">
+          <CardTitle className="flex items-center gap-2 text-lg md:text-xl">
+            <MicIcon className="w-4 h-4 md:w-5 md:h-5 text-purple-600" />
             Student Voice Experience
           </CardTitle>
         </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <CardContent className="pt-0">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 md:gap-4">
             <VoiceDemoCard
               title="Express True Feelings"
               description="Share authentic emotions about lessons"
@@ -128,9 +145,9 @@ const VoiceFeatureShowcase: React.FC<VoiceFeatureShowcaseProps> = ({ isPlaying =
             />
           </div>
           
-          <div className="mt-6 bg-purple-50 rounded-lg p-4">
-            <h3 className="font-semibold text-purple-800 mb-2">Why Students Love Voice:</h3>
-            <ul className="space-y-1 text-sm text-purple-700">
+          <div className="mt-4 md:mt-6 bg-purple-50 rounded-lg p-3 md:p-4">
+            <h3 className="font-semibold text-purple-800 mb-2 text-sm md:text-base">Why Students Love Voice:</h3>
+            <ul className="space-y-1 text-xs md:text-sm text-purple-700">
               <li>• Express complex thoughts without worrying about spelling</li>
               <li>• Share excitement and emotions naturally</li>
               <li>• Faster than typing on mobile devices</li>
@@ -143,18 +160,18 @@ const VoiceFeatureShowcase: React.FC<VoiceFeatureShowcaseProps> = ({ isPlaying =
   );
 
   const renderTeacherTools = () => (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6">
       <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <VolumeIcon className="w-5 h-5 text-orange-600" />
+        <CardHeader className="pb-3 md:pb-6">
+          <CardTitle className="flex items-center gap-2 text-lg md:text-xl">
+            <VolumeIcon className="w-4 h-4 md:w-5 md:h-5 text-orange-600" />
             Teacher Voice Management
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="bg-orange-50 rounded-lg p-4">
-            <h3 className="font-semibold text-orange-800 mb-2">Advanced Voice Tools:</h3>
-            <ul className="space-y-1 text-sm text-orange-700">
+        <CardContent className="space-y-3 md:space-y-4 pt-0">
+          <div className="bg-orange-50 rounded-lg p-3 md:p-4">
+            <h3 className="font-semibold text-orange-800 mb-2 text-sm md:text-base">Advanced Voice Tools:</h3>
+            <ul className="space-y-1 text-xs md:text-sm text-orange-700">
               <li>• Automatic transcription with 95% accuracy</li>
               <li>• Playback speed control (0.5x to 2x)</li>
               <li>• Emotional tone analysis and alerts</li>
@@ -163,30 +180,30 @@ const VoiceFeatureShowcase: React.FC<VoiceFeatureShowcaseProps> = ({ isPlaying =
             </ul>
           </div>
 
-          <div className="bg-white border-2 border-orange-200 rounded-lg p-4">
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2">
-                <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center">
-                  <MicIcon className="w-5 h-5 text-orange-600" />
+          <div className="bg-white border-2 border-orange-200 rounded-lg p-3 md:p-4">
+            <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
+              <div className="flex items-center gap-2 min-w-0">
+                <div className="w-8 h-8 md:w-10 md:h-10 bg-orange-100 rounded-full flex items-center justify-center flex-shrink-0">
+                  <MicIcon className="w-4 h-4 md:w-5 md:h-5 text-orange-600" />
                 </div>
-                <div>
-                  <p className="font-medium">Emma S. - Math Feedback</p>
-                  <p className="text-sm text-gray-600">High engagement detected</p>
+                <div className="min-w-0">
+                  <p className="font-medium text-sm md:text-base truncate">Emma S. - Math Feedback</p>
+                  <p className="text-xs md:text-sm text-gray-600">High engagement detected</p>
                 </div>
               </div>
-              <Badge className="bg-green-100 text-green-800">Positive</Badge>
+              <Badge className="bg-green-100 text-green-800 text-xs flex-shrink-0">Positive</Badge>
             </div>
             
             <div className="bg-gray-50 rounded-lg p-3 mb-3">
-              <p className="text-sm italic text-gray-700">
+              <p className="text-xs md:text-sm italic text-gray-700">
                 "I was really struggling with quadratic equations, but your basketball example made it click! I actually understand parabolas now!"
               </p>
             </div>
             
-            <div className="flex gap-2">
-              <Button size="sm" variant="outline">Play 1.5x</Button>
-              <Button size="sm" variant="outline">Reply</Button>
-              <Button size="sm" variant="outline">Add Note</Button>
+            <div className="flex flex-wrap gap-2">
+              <Button size="sm" variant="outline" className="text-xs">Play 1.5x</Button>
+              <Button size="sm" variant="outline" className="text-xs">Reply</Button>
+              <Button size="sm" variant="outline" className="text-xs">Add Note</Button>
             </div>
           </div>
         </CardContent>
@@ -195,33 +212,33 @@ const VoiceFeatureShowcase: React.FC<VoiceFeatureShowcaseProps> = ({ isPlaying =
   );
 
   const renderAnalytics = () => (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6">
       <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <TrendingUpIcon className="w-5 h-5 text-blue-600" />
+        <CardHeader className="pb-3 md:pb-6">
+          <CardTitle className="flex items-center gap-2 text-lg md:text-xl">
+            <TrendingUpIcon className="w-4 h-4 md:w-5 md:h-5 text-blue-600" />
             Voice Analytics Dashboard
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-3 gap-4">
-            <div className="bg-blue-50 rounded-lg p-4 text-center">
-              <p className="text-2xl font-bold text-blue-600">73%</p>
-              <p className="text-sm text-blue-800">Voice Adoption</p>
+        <CardContent className="space-y-3 md:space-y-4 pt-0">
+          <div className="grid grid-cols-3 gap-2 md:gap-4">
+            <div className="bg-blue-50 rounded-lg p-3 md:p-4 text-center">
+              <p className="text-xl md:text-2xl font-bold text-blue-600">73%</p>
+              <p className="text-xs md:text-sm text-blue-800">Voice Adoption</p>
             </div>
-            <div className="bg-green-50 rounded-lg p-4 text-center">
-              <p className="text-2xl font-bold text-green-600">+127%</p>
-              <p className="text-sm text-green-800">Feedback Volume</p>
+            <div className="bg-green-50 rounded-lg p-3 md:p-4 text-center">
+              <p className="text-xl md:text-2xl font-bold text-green-600">+127%</p>
+              <p className="text-xs md:text-sm text-green-800">Feedback Volume</p>
             </div>
-            <div className="bg-purple-50 rounded-lg p-4 text-center">
-              <p className="text-2xl font-bold text-purple-600">4.8/5</p>
-              <p className="text-sm text-purple-800">Satisfaction</p>
+            <div className="bg-purple-50 rounded-lg p-3 md:p-4 text-center">
+              <p className="text-xl md:text-2xl font-bold text-purple-600">4.8/5</p>
+              <p className="text-xs md:text-sm text-purple-800">Satisfaction</p>
             </div>
           </div>
 
-          <div className="bg-blue-50 rounded-lg p-4">
-            <h3 className="font-semibold text-blue-800 mb-2">Voice vs Text Insights:</h3>
-            <ul className="space-y-1 text-sm text-blue-700">
+          <div className="bg-blue-50 rounded-lg p-3 md:p-4">
+            <h3 className="font-semibold text-blue-800 mb-2 text-sm md:text-base">Voice vs Text Insights:</h3>
+            <ul className="space-y-1 text-xs md:text-sm text-blue-700">
               <li>• Voice messages are 40% more detailed than text</li>
               <li>• Students share emotions 5x more in voice</li>
               <li>• Voice feedback has 85% higher engagement scores</li>
@@ -234,18 +251,18 @@ const VoiceFeatureShowcase: React.FC<VoiceFeatureShowcaseProps> = ({ isPlaying =
   );
 
   const renderWellness = () => (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6">
       <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <HeartIcon className="w-5 h-5 text-red-600" />
+        <CardHeader className="pb-3 md:pb-6">
+          <CardTitle className="flex items-center gap-2 text-lg md:text-xl">
+            <HeartIcon className="w-4 h-4 md:w-5 md:h-5 text-red-600" />
             Emotional Intelligence & Wellness
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="bg-red-50 rounded-lg p-4">
-            <h3 className="font-semibold text-red-800 mb-2">AI-Powered Emotional Detection:</h3>
-            <ul className="space-y-1 text-sm text-red-700">
+        <CardContent className="space-y-3 md:space-y-4 pt-0">
+          <div className="bg-red-50 rounded-lg p-3 md:p-4">
+            <h3 className="font-semibold text-red-800 mb-2 text-sm md:text-base">AI-Powered Emotional Detection:</h3>
+            <ul className="space-y-1 text-xs md:text-sm text-red-700">
               <li>• Analyze tone and pace to detect distress</li>
               <li>• Flag messages indicating anxiety or sadness</li>
               <li>• Identify students who need extra support</li>
@@ -254,28 +271,28 @@ const VoiceFeatureShowcase: React.FC<VoiceFeatureShowcaseProps> = ({ isPlaying =
           </div>
 
           <div className="space-y-3">
-            <div className="bg-white border-2 border-yellow-200 rounded-lg p-4">
-              <div className="flex items-center justify-between mb-2">
-                <p className="font-medium text-gray-900">Sarah M. - Wellness Alert</p>
-                <Badge className="bg-yellow-100 text-yellow-800">Medium Priority</Badge>
+            <div className="bg-white border-2 border-yellow-200 rounded-lg p-3 md:p-4">
+              <div className="flex items-center justify-between mb-2 flex-wrap gap-2">
+                <p className="font-medium text-gray-900 text-sm md:text-base">Sarah M. - Wellness Alert</p>
+                <Badge className="bg-yellow-100 text-yellow-800 text-xs">Medium Priority</Badge>
               </div>
-              <p className="text-sm text-gray-700 italic mb-2">
+              <p className="text-xs md:text-sm text-gray-700 italic mb-2">
                 Voice analysis detected: slow speech, lower energy, keywords: "tired", "overwhelmed"
               </p>
-              <Button size="sm" className="bg-yellow-600 hover:bg-yellow-700 text-white">
+              <Button size="sm" className="bg-yellow-600 hover:bg-yellow-700 text-white text-xs">
                 Schedule Check-in
               </Button>
             </div>
 
-            <div className="bg-white border-2 border-red-200 rounded-lg p-4">
-              <div className="flex items-center justify-between mb-2">
-                <p className="font-medium text-gray-900">Anonymous Student</p>
-                <Badge className="bg-red-100 text-red-800">High Priority</Badge>
+            <div className="bg-white border-2 border-red-200 rounded-lg p-3 md:p-4">
+              <div className="flex items-center justify-between mb-2 flex-wrap gap-2">
+                <p className="font-medium text-gray-900 text-sm md:text-base">Anonymous Student</p>
+                <Badge className="bg-red-100 text-red-800 text-xs">High Priority</Badge>
               </div>
-              <p className="text-sm text-gray-700 italic mb-2">
+              <p className="text-xs md:text-sm text-gray-700 italic mb-2">
                 Emotional distress detected: trembling voice, keywords: "can't handle", "giving up"
               </p>
-              <Button size="sm" className="bg-red-600 hover:bg-red-700 text-white">
+              <Button size="sm" className="bg-red-600 hover:bg-red-700 text-white text-xs">
                 Immediate Intervention
               </Button>
             </div>
@@ -296,22 +313,65 @@ const VoiceFeatureShowcase: React.FC<VoiceFeatureShowcaseProps> = ({ isPlaying =
     }
   };
 
+  if (isMobile) {
+    return (
+      <div className="space-y-4">
+        <Tabs value={selectedFeature} onValueChange={setSelectedFeature} className="w-full">
+          <Card>
+            <CardContent className="p-3">
+              <TabsList className="grid w-full grid-cols-5 h-auto p-1">
+                {features.map((feature) => (
+                  <TabsTrigger
+                    key={feature.id}
+                    value={feature.id}
+                    className="flex flex-col items-center gap-1 p-2 text-xs data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+                    disabled={isPlaying}
+                  >
+                    {feature.icon}
+                    <span className="hidden xs:inline">{feature.shortTitle}</span>
+                  </TabsTrigger>
+                ))}
+              </TabsList>
+              {isPlaying && (
+                <div className="mt-2 text-center">
+                  <Badge variant="outline" className="text-brand-teal border-brand-teal animate-pulse text-xs">
+                    Auto-playing: {features.find(f => f.id === selectedFeature)?.shortTitle}
+                  </Badge>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {features.map((feature) => (
+            <TabsContent key={feature.id} value={feature.id} className="mt-4">
+              {renderFeatureContent()}
+            </TabsContent>
+          ))}
+        </Tabs>
+      </div>
+    );
+  }
+
+  // Desktop and tablet view (original layout with responsive improvements)
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6">
       {/* Feature Navigation */}
       <Card>
-        <CardContent className="p-4">
-          <div className="flex flex-wrap gap-2">
+        <CardContent className="p-3 md:p-4">
+          <div className={`flex ${isTablet ? 'flex-wrap' : ''} gap-2`}>
             {features.map((feature) => (
               <Button
                 key={feature.id}
                 onClick={() => setSelectedFeature(feature.id)}
                 variant={selectedFeature === feature.id ? "default" : "outline"}
-                className="flex items-center gap-2"
+                className="flex items-center gap-2 text-sm"
                 disabled={isPlaying}
+                size={isTablet ? "sm" : "default"}
               >
                 {feature.icon}
-                <span className="hidden sm:inline">{feature.title}</span>
+                <span className={`${isTablet ? 'hidden md:inline' : ''}`}>
+                  {isTablet ? feature.shortTitle : feature.title}
+                </span>
               </Button>
             ))}
           </div>
