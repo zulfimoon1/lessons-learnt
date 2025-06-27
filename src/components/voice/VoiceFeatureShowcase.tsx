@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -31,12 +30,11 @@ const VoiceFeatureShowcase: React.FC<VoiceFeatureShowcaseProps> = ({ isPlaying =
     if (!isPlaying) return;
 
     const features = ['overview', 'student', 'teacher', 'analytics', 'wellness'];
-    let currentIndex = 0;
-
-    // Start from current selected feature
-    const startIndex = features.indexOf(selectedFeature);
-    if (startIndex !== -1) {
-      currentIndex = startIndex;
+    let currentIndex = features.indexOf(selectedFeature);
+    
+    if (currentIndex === -1) {
+      currentIndex = 0;
+      setSelectedFeature('overview');
     }
 
     const interval = setInterval(() => {
@@ -45,7 +43,7 @@ const VoiceFeatureShowcase: React.FC<VoiceFeatureShowcaseProps> = ({ isPlaying =
     }, 4000); // Change feature every 4 seconds
 
     return () => clearInterval(interval);
-  }, [isPlaying]); // Remove selectedFeature from dependency to prevent restart
+  }, [isPlaying, selectedFeature]);
 
   const features = [
     {
