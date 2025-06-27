@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTrigger, DialogTitle, DialogHeader } from "@/components/ui/dialog";
 import { HeadphonesIcon } from "lucide-react";
 import PlatformAdminContactForm from './PlatformAdminContactForm';
 
@@ -41,6 +41,9 @@ const SupportButton: React.FC<SupportButtonProps> = ({
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Contact Platform Support</DialogTitle>
+        </DialogHeader>
         <PlatformAdminContactForm
           userEmail={userEmail}
           userName={userName}

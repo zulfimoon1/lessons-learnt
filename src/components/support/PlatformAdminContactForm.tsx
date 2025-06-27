@@ -13,7 +13,6 @@ import {
   SendIcon, 
   AlertTriangleIcon,
   CheckCircleIcon,
-  HeadphonesIcon,
   LoaderIcon
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -34,7 +33,6 @@ const PlatformAdminContactForm: React.FC<PlatformAdminContactFormProps> = ({
   userSchool,
   className
 }) => {
-  const [isOpen, setIsOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [formData, setFormData] = useState({
@@ -67,47 +65,18 @@ const PlatformAdminContactForm: React.FC<PlatformAdminContactFormProps> = ({
     setIsSubmitting(true);
 
     try {
-      // Get browser info
-      const browserInfo = {
-        userAgent: navigator.userAgent,
-        language: navigator.language,
-        platform: navigator.platform,
-        cookieEnabled: navigator.cookieEnabled,
-        onLine: navigator.onLine,
-        timestamp: new Date().toISOString()
-      };
-
-      // Try to call the RPC function, fall back to notification if not available
-      try {
-        const { data, error } = await supabase.rpc('create_platform_admin_message' as any, {
-          subject_param: formData.subject,
-          message_param: formData.message,
-          category_param: formData.category,
-          sender_email_param: userEmail,
-          sender_name_param: userName,
-          sender_role_param: userRole,
-          sender_school_param: userSchool,
-          user_agent_param: navigator.userAgent,
-          browser_info_param: browserInfo
+      // Create notification directly (fallback method)
+      const { data, error } = await supabase
+        .from('in_app_notifications')
+        .insert({
+          recipient_email: 'zulfimoon1@gmail.com',
+          recipient_type: 'platform_admin',
+          title: `Support Request: ${formData.subject}`,
+          message: `From ${userName} (${userSchool}, ${userRole}): ${formData.message}. Category: ${formData.category}`,
+          notification_type: 'support_request'
         });
 
-        if (error) throw error;
-      } catch (rpcError) {
-        console.log('RPC function not available, using fallback method');
-        
-        // Fallback: Create notification
-        const { data, error } = await supabase
-          .from('in_app_notifications')
-          .insert({
-            recipient_email: 'zulfimoon1@gmail.com',
-            recipient_type: 'platform_admin',
-            title: `Support Request: ${formData.subject}`,
-            message: `From ${userName} (${userSchool}, ${userRole}): ${formData.message}. Category: ${formData.category}`,
-            notification_type: 'support_request'
-          });
-
-        if (error) throw error;
-      }
+      if (error) throw error;
 
       setSubmitted(true);
       setFormData({ subject: '', message: '', category: '' });
@@ -116,12 +85,6 @@ const PlatformAdminContactForm: React.FC<PlatformAdminContactFormProps> = ({
         title: "Message Sent Successfully",
         description: "Your support request has been sent to the platform admin. You'll receive a response soon.",
       });
-
-      // Auto-close after success
-      setTimeout(() => {
-        setIsOpen(false);
-        setSubmitted(false);
-      }, 3000);
 
     } catch (error) {
       console.error('Error sending message:', error);
@@ -148,21 +111,8 @@ const PlatformAdminContactForm: React.FC<PlatformAdminContactFormProps> = ({
     }
   };
 
-  if (!isOpen) {
-    return (
-      <Button
-        onClick={() => setIsOpen(true)}
-        variant="outline"
-        className={`flex items-center gap-2 ${className}`}
-      >
-        <HeadphonesIcon className="w-4 h-4" />
-        Contact Platform Support
-      </Button>
-    );
-  }
-
   return (
-    <Card className={`w-full max-w-2xl ${className}`}>
+    <Card className={`w-full ${className || ''}`}>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <MessageSquareIcon className="w-5 h-5 text-primary" />
@@ -266,15 +216,6 @@ const PlatformAdminContactForm: React.FC<PlatformAdminContactFormProps> = ({
                   <SendIcon className="w-4 h-4" />
                 )}
                 {isSubmitting ? 'Sending...' : 'Send Message'}
-              </Button>
-              
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setIsOpen(false)}
-                disabled={isSubmitting}
-              >
-                Cancel
               </Button>
             </div>
           </form>
