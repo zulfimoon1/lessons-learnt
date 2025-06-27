@@ -103,10 +103,13 @@ serve(async (req) => {
           );
         }
 
-        // Generate a secure invite token manually
+        // Generate a secure invite token with proper base64 encoding
         const tokenBytes = new Uint8Array(32);
         crypto.getRandomValues(tokenBytes);
-        const inviteToken = btoa(String.fromCharCode(...tokenBytes));
+        const inviteToken = Array.from(tokenBytes, byte => 
+          String.fromCharCode(byte)
+        ).join('');
+        const base64Token = btoa(inviteToken);
 
         const { data: newInvitation, error: createError } = await supabaseClient
           .from('invitations')
@@ -115,14 +118,19 @@ serve(async (req) => {
             school: data.school,
             role: data.role || 'teacher',
             specialization: data.specialization || null,
-            invite_token: inviteToken,
+            invite_token: base64Token,
           })
           .select()
           .single();
 
         if (createError) {
           console.error('❌ Create error:', createError);
-          throw createError;
+          return new Response(
+            JSON.stringify({ 
+              error: `Failed to create invitation: ${createError.message}` 
+            }),
+            { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
         }
         
         console.log('✅ Invitation created:', newInvitation);
@@ -134,7 +142,7 @@ serve(async (req) => {
             body: {
               email: data.email.trim().toLowerCase(),
               school: data.school,
-              inviteToken: newInvitation.invite_token,
+              inviteToken: base64Token,
             },
           });
 
