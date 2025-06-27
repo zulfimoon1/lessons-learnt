@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { RefreshCw, Mail, Clock, CheckCircle } from 'lucide-react';
+import { usePlatformAdmin } from '@/contexts/PlatformAdminContext';
 
 interface Invitation {
   id: string;
@@ -31,22 +32,46 @@ const PendingInvitations: React.FC<PendingInvitationsProps> = ({
   const [invitations, setInvitations] = useState<Invitation[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
+  const { admin } = usePlatformAdmin();
 
   const fetchInvitations = async () => {
     try {
+      console.log('🔍 Fetching invitations for school:', school);
+      
+      // Set platform admin context if we have an admin
+      if (admin?.email) {
+        console.log('🔐 Setting platform admin context for:', admin.email);
+        
+        // Set the context using a function call
+        const { error: contextError } = await supabase.rpc('set_platform_admin_context', {
+          admin_email: admin.email
+        });
+        
+        if (contextError) {
+          console.error('Context setting error:', contextError);
+        } else {
+          console.log('✅ Platform admin context set successfully');
+        }
+      }
+
       const { data, error } = await supabase
         .from('invitations')
         .select('*')
         .eq('school', school)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Database error:', error);
+        throw error;
+      }
+      
+      console.log('📨 Fetched invitations:', data);
       setInvitations(data || []);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error fetching invitations:', error);
       toast({
         title: "Error",
-        description: "Failed to fetch invitations",
+        description: `Failed to fetch invitations: ${error.message}`,
         variant: "destructive",
       });
     } finally {
@@ -56,6 +81,8 @@ const PendingInvitations: React.FC<PendingInvitationsProps> = ({
 
   const resendInvitation = async (invitation: Invitation) => {
     try {
+      console.log('📧 Resending invitation to:', invitation.email);
+      
       const { error } = await supabase.functions.invoke('send-teacher-invitation', {
         body: {
           email: invitation.email,
@@ -83,7 +110,7 @@ const PendingInvitations: React.FC<PendingInvitationsProps> = ({
 
   useEffect(() => {
     fetchInvitations();
-  }, [school, refreshTrigger]);
+  }, [school, refreshTrigger, admin]);
 
   const getStatusBadge = (status: string, expiresAt: string) => {
     const isExpired = new Date(expiresAt) < new Date();
@@ -98,7 +125,21 @@ const PendingInvitations: React.FC<PendingInvitationsProps> = ({
   };
 
   if (isLoading) {
-    return <div>Loading invitations...</div>;
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Clock className="w-5 h-5" />
+            Loading Invitations...
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex justify-center py-4">
+            <RefreshCw className="w-6 h-6 animate-spin" />
+          </div>
+        </CardContent>
+      </Card>
+    );
   }
 
   return (
