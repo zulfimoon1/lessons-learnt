@@ -350,29 +350,82 @@ const VoiceFeatureShowcase: React.FC<VoiceFeatureShowcaseProps> = ({ isPlaying =
     );
   }
 
-  // Desktop and tablet view (original layout with responsive improvements)
+  // Desktop and tablet view with improved 2-row layout
   return (
     <div className="space-y-4 md:space-y-6">
-      {/* Feature Navigation */}
+      {/* Feature Navigation - Organized in 2 Rows */}
       <Card>
         <CardContent className="p-3 md:p-4">
-          <div className={`flex ${isTablet ? 'flex-wrap' : ''} gap-2`}>
-            {features.map((feature) => (
+          <div className="space-y-3">
+            {/* First Row - Overview and Primary Features */}
+            <div className="flex flex-wrap gap-2 justify-center">
               <Button
-                key={feature.id}
-                onClick={() => setSelectedFeature(feature.id)}
-                variant={selectedFeature === feature.id ? "default" : "outline"}
+                onClick={() => setSelectedFeature('overview')}
+                variant={selectedFeature === 'overview' ? "default" : "outline"}
                 className="flex items-center gap-2 text-sm"
                 disabled={isPlaying}
                 size={isTablet ? "sm" : "default"}
               >
-                {feature.icon}
+                <SparklesIcon className="w-4 h-4 md:w-5 md:h-5" />
                 <span className={`${isTablet ? 'hidden md:inline' : ''}`}>
-                  {isTablet ? feature.shortTitle : feature.title}
+                  {isTablet ? 'Overview' : 'Voice Revolution'}
                 </span>
               </Button>
-            ))}
+              <Button
+                onClick={() => setSelectedFeature('student')}
+                variant={selectedFeature === 'student' ? "default" : "outline"}
+                className="flex items-center gap-2 text-sm"
+                disabled={isPlaying}
+                size={isTablet ? "sm" : "default"}
+              >
+                <MicIcon className="w-4 h-4 md:w-5 md:h-5" />
+                <span className={`${isTablet ? 'hidden md:inline' : ''}`}>
+                  {isTablet ? 'Student' : 'Student Experience'}
+                </span>
+              </Button>
+              <Button
+                onClick={() => setSelectedFeature('teacher')}
+                variant={selectedFeature === 'teacher' ? "default" : "outline"}
+                className="flex items-center gap-2 text-sm"
+                disabled={isPlaying}
+                size={isTablet ? "sm" : "default"}
+              >
+                <VolumeIcon className="w-4 h-4 md:w-5 md:h-5" />
+                <span className={`${isTablet ? 'hidden md:inline' : ''}`}>
+                  {isTablet ? 'Teacher' : 'Teacher Tools'}
+                </span>
+              </Button>
+            </div>
+            
+            {/* Second Row - Analytics and Wellness */}
+            <div className="flex flex-wrap gap-2 justify-center">
+              <Button
+                onClick={() => setSelectedFeature('analytics')}
+                variant={selectedFeature === 'analytics' ? "default" : "outline"}
+                className="flex items-center gap-2 text-sm"
+                disabled={isPlaying}
+                size={isTablet ? "sm" : "default"}
+              >
+                <TrendingUpIcon className="w-4 h-4 md:w-5 md:h-5" />
+                <span className={`${isTablet ? 'hidden md:inline' : ''}`}>
+                  {isTablet ? 'Analytics' : 'Voice Analytics'}
+                </span>
+              </Button>
+              <Button
+                onClick={() => setSelectedFeature('wellness')}
+                variant={selectedFeature === 'wellness' ? "default" : "outline"}
+                className="flex items-center gap-2 text-sm"
+                disabled={isPlaying}
+                size={isTablet ? "sm" : "default"}
+              >
+                <HeartIcon className="w-4 h-4 md:w-5 md:h-5" />
+                <span className={`${isTablet ? 'hidden md:inline' : ''}`}>
+                  {isTablet ? 'Wellness' : 'Emotional Intelligence'}
+                </span>
+              </Button>
+            </div>
           </div>
+          
           {isPlaying && (
             <div className="mt-3 text-center">
               <Badge variant="outline" className="text-brand-teal border-brand-teal animate-pulse">
