@@ -318,10 +318,10 @@ const PlatformAdminDashboard: React.FC = () => {
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-6 py-8">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-8">
-          {/* Tab Navigation - Fixed grid layout */}
+          {/* Tab Navigation */}
           <div className="bg-white/90 backdrop-blur-sm rounded-2xl border border-gray-200/50 shadow-lg p-6">
             <TabsList className="bg-transparent p-0 h-auto gap-2 w-full">
-              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-11 gap-2 w-full">
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 2xl:grid-cols-11 gap-2 w-full">
                 {tabItems.map((item) => {
                   const Icon = item.icon;
                   return (
@@ -334,7 +334,7 @@ const PlatformAdminDashboard: React.FC = () => {
                         className={`w-4 h-4 ${activeTab === item.value ? 'text-white' : 'text-brand-teal'}`}
                         aria-hidden="true"
                       />
-                      <span className="text-xs font-medium">
+                      <span className="text-xs font-medium leading-tight">
                         {item.label}
                       </span>
                     </TabsTrigger>

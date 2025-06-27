@@ -85,7 +85,7 @@ serve(async (req) => {
         break;
 
       case 'getTeachers':
-        console.log('👨‍🏫 Fetching teachers and admins...');
+        console.log('👨‍🏫 Fetching teachers and school admins...');
         try {
           const { data: allTeachers, error: teachersError } = await supabaseAdmin
             .from('teachers')
@@ -94,34 +94,53 @@ serve(async (req) => {
 
           if (teachersError) throw teachersError;
 
-          // Separate teachers/doctors from platform admins and school admins
+          // Filter to only include teachers, doctors, and school admins (not platform admins)
           const teachers = (allTeachers || []).filter(t => 
-            t.role === 'teacher' || t.role === 'doctor' || 
+            t.role === 'teacher' || 
+            t.role === 'doctor' || 
             (t.role === 'admin' && t.school !== 'Platform Administration')
           );
+
+          result = { teachers };
+          
+          console.log(`✅ Teachers and school admins fetched: ${teachers.length}`);
+        } catch (error) {
+          console.error('Error fetching teachers:', error);
+          result = { teachers: [] };
+        }
+        break;
+
+      case 'getAdminUsers':
+        console.log('👑 Fetching platform admin users...');
+        try {
+          const { data: allTeachers, error: teachersError } = await supabaseAdmin
+            .from('teachers')
+            .select('*')
+            .order('name');
+
+          if (teachersError) throw teachersError;
+
+          // Filter to only include platform admins
           const platformAdmins = (allTeachers || []).filter(t => 
             t.role === 'admin' && t.school === 'Platform Administration'
           );
 
-          result = {
-            teachers: teachers,
-            admins: platformAdmins
-          };
+          result = { admins: platformAdmins };
           
-          console.log(`✅ Teachers fetched: ${teachers.length}, Platform Admins: ${platformAdmins.length}`);
+          console.log(`✅ Platform admin users fetched: ${platformAdmins.length}`);
         } catch (error) {
-          console.error('Error fetching teachers:', error);
-          result = { teachers: [], admins: [] };
+          console.error('Error fetching platform admin users:', error);
+          result = { admins: [] };
         }
         break;
 
       case 'getSchoolData':
         console.log('🏫 Fetching school data...');
         try {
-          // Get all teachers except platform admins
+          // Get all teachers that are actual school members (not platform admins)
           const { data: teachersSchoolData, error: teachersError } = await supabaseAdmin
             .from('teachers')
-            .select('school, role')
+            .select('school, role, name')
             .neq('school', 'Platform Administration');
 
           if (teachersError) throw teachersError;
@@ -134,7 +153,7 @@ serve(async (req) => {
           const schoolStats = [];
           for (const school of uniqueSchools) {
             const [teacherResult, studentResult] = await Promise.all([
-              supabaseAdmin.from('teachers').select('id', { count: 'exact', head: true }).eq('school', school),
+              supabaseAdmin.from('teachers').select('id', { count: 'exact', head: true }).eq('school', school).neq('school', 'Platform Administration'),
               supabaseAdmin.from('students').select('id', { count: 'exact', head: true }).eq('school', school)
             ]);
 
