@@ -302,6 +302,7 @@ export type Database = {
           invited_by: string | null
           role: string
           school: string
+          specialization: string | null
           status: string
           subscription_id: string | null
         }
@@ -315,6 +316,7 @@ export type Database = {
           invited_by?: string | null
           role?: string
           school: string
+          specialization?: string | null
           status?: string
           subscription_id?: string | null
         }
@@ -328,6 +330,7 @@ export type Database = {
           invited_by?: string | null
           role?: string
           school?: string
+          specialization?: string | null
           status?: string
           subscription_id?: string | null
         }
