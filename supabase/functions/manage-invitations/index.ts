@@ -34,11 +34,32 @@ serve(async (req) => {
     
     console.log('🔧 Manage invitations request:', { action, adminEmail, data });
 
-    // Verify platform admin permissions
-    if (adminEmail !== 'zulfimoon1@gmail.com') {
+    // Verify admin permissions - allow both platform admin and school admins
+    let isAuthorized = false;
+    
+    if (adminEmail === 'zulfimoon1@gmail.com') {
+      // Platform admin - always allowed
+      isAuthorized = true;
+      console.log('✅ Platform admin access granted');
+    } else {
+      // Check if it's a school admin
+      const { data: schoolAdmin, error: adminError } = await supabaseClient
+        .from('teachers')
+        .select('id, role, school')
+        .eq('email', adminEmail)
+        .eq('role', 'admin')
+        .single();
+
+      if (schoolAdmin && !adminError) {
+        isAuthorized = true;
+        console.log('✅ School admin access granted for:', schoolAdmin.school);
+      }
+    }
+
+    if (!isAuthorized) {
       console.error('❌ Unauthorized access attempt:', adminEmail);
       return new Response(
-        JSON.stringify({ error: 'Unauthorized: Platform admin access required' }),
+        JSON.stringify({ error: 'Unauthorized: Admin access required' }),
         { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -63,6 +84,25 @@ serve(async (req) => {
 
       case 'create':
         console.log('➕ Creating invitation:', data);
+        
+        // Check if invitation already exists
+        const { data: existingInvite, error: checkError } = await supabaseClient
+          .from('invitations')
+          .select('id')
+          .eq('email', data.email.trim().toLowerCase())
+          .eq('school', data.school)
+          .eq('status', 'pending')
+          .single();
+
+        if (existingInvite) {
+          return new Response(
+            JSON.stringify({ 
+              error: 'An invitation for this email already exists for this school' 
+            }),
+            { status: 409, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+
         const { data: newInvitation, error: createError } = await supabaseClient
           .from('invitations')
           .insert({
@@ -83,7 +123,8 @@ serve(async (req) => {
         
         // Send invitation email
         try {
-          const { error: emailError } = await supabaseClient.functions.invoke('send-teacher-invitation', {
+          console.log('📧 Attempting to send invitation email...');
+          const { data: emailData, error: emailError } = await supabaseClient.functions.invoke('send-teacher-invitation', {
             body: {
               email: data.email.trim().toLowerCase(),
               school: data.school,
@@ -99,7 +140,7 @@ serve(async (req) => {
               emailError: emailError.message 
             };
           } else {
-            console.log('📧 Email sent successfully');
+            console.log('📧 Email sent successfully:', emailData);
             result = { invitation: newInvitation, emailSent: true };
           }
         } catch (emailErr) {
@@ -135,9 +176,10 @@ serve(async (req) => {
 
         if (resendError) {
           console.error('❌ Resend error:', resendError);
-          throw resendError;
+          result = { success: false, error: resendError.message };
+        } else {
+          result = { success: true, message: 'Invitation resent successfully' };
         }
-        result = { success: true, message: 'Invitation resent successfully' };
         break;
 
       case 'delete':

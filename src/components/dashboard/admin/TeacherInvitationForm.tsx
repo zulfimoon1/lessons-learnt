@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Mail, Send } from 'lucide-react';
 
@@ -18,6 +19,7 @@ const TeacherInvitationForm: React.FC<TeacherInvitationFormProps> = ({
   school, 
   onInvitationSent 
 }) => {
+  const { teacher } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
@@ -29,7 +31,7 @@ const TeacherInvitationForm: React.FC<TeacherInvitationFormProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    console.log('🚀 Form submission started', { formData, school });
+    console.log('🚀 Form submission started', { formData, school, adminEmail: teacher?.email });
 
     if (!formData.email.trim()) {
       toast({
@@ -40,10 +42,18 @@ const TeacherInvitationForm: React.FC<TeacherInvitationFormProps> = ({
       return;
     }
 
+    if (!teacher?.email) {
+      toast({
+        title: "Error",
+        description: "Admin authentication required",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsLoading(true);
     
     try {
-      // Use the manage-invitations edge function with hardcoded admin email
       console.log('📧 Calling manage-invitations edge function...');
       
       const { data, error } = await supabase.functions.invoke('manage-invitations', {
@@ -53,7 +63,7 @@ const TeacherInvitationForm: React.FC<TeacherInvitationFormProps> = ({
           school: school,
           role: formData.role,
           specialization: formData.specialization || null,
-          adminEmail: 'zulfimoon1@gmail.com' // Hardcoded platform admin email
+          adminEmail: teacher.email // Use the authenticated admin's email
         }
       });
 
@@ -73,7 +83,7 @@ const TeacherInvitationForm: React.FC<TeacherInvitationFormProps> = ({
       } else {
         toast({
           title: "⚠️ Invitation Created",
-          description: `Invitation created for ${formData.email}, but email sending failed. Token: ${data.invitation?.invite_token}`,
+          description: `Invitation created for ${formData.email}, but email sending failed. Please share the invitation link manually.`,
           variant: "default",
         });
       }

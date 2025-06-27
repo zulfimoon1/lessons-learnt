@@ -3,12 +3,10 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Trash2, Plus, Users } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
-import { usePlatformAdmin } from '@/contexts/PlatformAdminContext';
+import { Users, Search, UserPlus, Trash2, Shield } from 'lucide-react';
 
 interface Teacher {
   id: string;
@@ -16,325 +14,193 @@ interface Teacher {
   email: string;
   school: string;
   role: string;
-  specialization?: string;
-  license_number?: string;
-  is_available: boolean;
+  subscription_status: string;
+  created_at: string;
 }
 
 const TeacherManagement: React.FC = () => {
-  const { admin } = usePlatformAdmin();
   const [teachers, setTeachers] = useState<Teacher[]>([]);
-  const [schools, setSchools] = useState<string[]>([]);
-  const [newTeacher, setNewTeacher] = useState({
-    name: '',
-    email: '',
-    school: '',
-    role: 'teacher',
-    specialization: '',
-    license_number: '',
-    password: ''
-  });
-  const [isLoading, setIsLoading] = useState(false);
+  const [admins, setAdmins] = useState<Teacher[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState<'teachers' | 'admins'>('teachers');
+  const { toast } = useToast();
 
-  const fetchTeachersViaEdgeFunction = async () => {
+  const fetchTeachersAndAdmins = async () => {
     try {
-      console.log('🔄 Fetching teachers via edge function...');
+      setIsLoading(true);
       const { data, error } = await supabase.functions.invoke('platform-admin', {
         body: {
-          operation: 'getTeachers',
-          adminEmail: admin?.email
+          action: 'getTeachers',
+          adminEmail: 'zulfimoon1@gmail.com'
         }
       });
 
       if (error) throw error;
-      
-      if (data?.success) {
-        console.log('✅ Teachers fetched:', data.data?.length || 0);
-        setTeachers(data.data || []);
-      } else {
-        throw new Error(data?.error || 'Failed to fetch teachers');
-      }
-    } catch (error) {
-      console.error('❌ Error fetching teachers:', error);
-      toast.error('Failed to fetch teachers');
-      setTeachers([]);
-    }
-  };
 
-  const fetchSchoolsViaEdgeFunction = async () => {
-    try {
-      console.log('🔄 Fetching schools via edge function...');
-      const { data, error } = await supabase.functions.invoke('platform-admin', {
-        body: {
-          operation: 'getSchoolData',
-          adminEmail: admin?.email
-        }
-      });
-
-      if (error) throw error;
-      
-      if (data?.success) {
-        const schoolNames = (data.data || []).map((school: any) => school.name);
-        console.log('✅ Schools fetched:', schoolNames.length);
-        setSchools(schoolNames);
-      } else {
-        throw new Error(data?.error || 'Failed to fetch schools');
-      }
-    } catch (error) {
-      console.error('❌ Error fetching schools:', error);
-      setSchools([]);
-    }
-  };
-
-  const addTeacher = async () => {
-    if (!newTeacher.name || !newTeacher.email || !newTeacher.school || !newTeacher.password) {
-      toast.error('Please fill in all required fields');
-      return;
-    }
-
-    if (!admin?.email) {
-      toast.error('Admin authentication required');
-      return;
-    }
-
-    setIsLoading(true);
-    try {
-      console.log('👨‍🏫 Creating new teacher:', newTeacher.name);
-
-      const teacherData = {
-        name: newTeacher.name,
-        email: newTeacher.email,
-        school: newTeacher.school,
-        role: newTeacher.role,
-        specialization: newTeacher.specialization || null,
-        license_number: newTeacher.license_number || null,
-        password: newTeacher.password // Send plain password - edge function will hash it
-      };
-
-      console.log('📝 Inserting teacher data via edge function...');
-      const { data, error } = await supabase.functions.invoke('platform-admin', {
-        body: {
-          operation: 'createTeacher',
-          adminEmail: admin.email,
-          teacherData: teacherData
-        }
-      });
-
-      if (error) throw error;
-      
-      if (data?.success) {
-        console.log('✅ Teacher created successfully');
-        toast.success('Teacher added successfully');
+      if (data.teachers) {
+        // Separate teachers and admins
+        const teachersList = data.teachers.filter((t: Teacher) => t.role === 'teacher');
+        const adminsList = data.teachers.filter((t: Teacher) => t.role === 'admin');
         
-        setNewTeacher({
-          name: '',
-          email: '',
-          school: '',
-          role: 'teacher',
-          specialization: '',
-          license_number: '',
-          password: ''
-        });
-        
-        fetchTeachersViaEdgeFunction();
-      } else {
-        throw new Error(data?.error || 'Failed to create teacher');
+        setTeachers(teachersList);
+        setAdmins(adminsList);
+        console.log('📊 Loaded teachers:', teachersList.length, 'admins:', adminsList.length);
       }
-    } catch (error) {
-      console.error('💥 Error adding teacher:', error);
-      if (error.message?.includes('unique constraint')) {
-        toast.error('A teacher with this email already exists');
-      } else {
-        toast.error(`Failed to add teacher: ${error.message}`);
-      }
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const deleteTeacher = async (teacherId: string, teacherName: string) => {
-    if (!confirm(`Are you sure you want to delete ${teacherName}?`)) {
-      return;
-    }
-
-    if (!admin?.email) {
-      toast.error('Admin authentication required');
-      return;
-    }
-
-    setIsLoading(true);
-    try {
-      console.log('🗑️ Deleting teacher:', teacherName);
-      
-      const { data, error } = await supabase.functions.invoke('platform-admin', {
-        body: {
-          operation: 'deleteTeacher',
-          adminEmail: admin.email,
-          teacherId: teacherId
-        }
+    } catch (error: any) {
+      console.error('Error fetching teachers:', error);
+      toast({
+        title: "Error",
+        description: "Failed to fetch teachers and admins",
+        variant: "destructive",
       });
-
-      if (error) throw error;
-      
-      if (data?.success) {
-        console.log('✅ Teacher deleted successfully');
-        toast.success('Teacher deleted successfully');
-        fetchTeachersViaEdgeFunction();
-      } else {
-        throw new Error(data?.error || 'Failed to delete teacher');
-      }
-    } catch (error) {
-      console.error('💥 Error deleting teacher:', error);
-      toast.error(`Failed to delete teacher: ${error.message}`);
     } finally {
       setIsLoading(false);
     }
   };
 
   useEffect(() => {
-    if (admin?.email) {
-      console.log('🚀 Starting teacher management data fetch...');
-      fetchTeachersViaEdgeFunction();
-      fetchSchoolsViaEdgeFunction();
+    fetchTeachersAndAdmins();
+  }, []);
+
+  const filteredTeachers = teachers.filter(teacher =>
+    teacher.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    teacher.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    teacher.school.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const filteredAdmins = admins.filter(admin =>
+    admin.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    admin.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    admin.school.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const getRoleBadge = (role: string) => {
+    switch (role) {
+      case 'admin':
+        return <Badge variant="destructive" className="bg-red-100 text-red-800">Admin</Badge>;
+      case 'teacher':
+        return <Badge variant="secondary">Teacher</Badge>;
+      case 'doctor':
+        return <Badge variant="default" className="bg-blue-100 text-blue-800">Psychologist</Badge>;
+      default:
+        return <Badge variant="outline">{role}</Badge>;
     }
-  }, [admin?.email]);
+  };
+
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'active':
+        return <Badge variant="default" className="bg-green-100 text-green-800">Active</Badge>;
+      case 'inactive':
+        return <Badge variant="secondary">Inactive</Badge>;
+      default:
+        return <Badge variant="outline">{status}</Badge>;
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center py-8">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-teal"></div>
+      </div>
+    );
+  }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Users className="w-5 h-5" />
-          Teacher Management
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-6">
-          {/* Add new teacher form */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 border rounded">
-            <div>
-              <Label htmlFor="teacherName">Name *</Label>
-              <Input
-                id="teacherName"
-                value={newTeacher.name}
-                onChange={(e) => setNewTeacher(prev => ({ ...prev, name: e.target.value }))}
-                placeholder="Teacher name"
-                disabled={isLoading}
-              />
-            </div>
-            <div>
-              <Label htmlFor="teacherEmail">Email *</Label>
-              <Input
-                id="teacherEmail"
-                type="email"
-                value={newTeacher.email}
-                onChange={(e) => setNewTeacher(prev => ({ ...prev, email: e.target.value }))}
-                placeholder="teacher@school.com"
-                disabled={isLoading}
-              />
-            </div>
-            <div>
-              <Label htmlFor="teacherSchool">School *</Label>
-              <Select
-                value={newTeacher.school}
-                onValueChange={(value) => setNewTeacher(prev => ({ ...prev, school: value }))}
-                disabled={isLoading}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select school" />
-                </SelectTrigger>
-                <SelectContent>
-                  {schools.length > 0 ? (
-                    schools.map((school) => (
-                      <SelectItem key={school} value={school}>
-                        {school}
-                      </SelectItem>
-                    ))
-                  ) : (
-                    <SelectItem value="__no_schools__" disabled>
-                      No schools available
-                    </SelectItem>
-                  )}
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label htmlFor="teacherRole">Role</Label>
-              <Select
-                value={newTeacher.role}
-                onValueChange={(value) => setNewTeacher(prev => ({ ...prev, role: value }))}
-                disabled={isLoading}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="teacher">Teacher</SelectItem>
-                  <SelectItem value="admin">Admin</SelectItem>
-                  <SelectItem value="doctor">Doctor</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label htmlFor="teacherPassword">Password *</Label>
-              <Input
-                id="teacherPassword"
-                type="password"
-                value={newTeacher.password}
-                onChange={(e) => setNewTeacher(prev => ({ ...prev, password: e.target.value }))}
-                placeholder="Password"
-                disabled={isLoading}
-              />
-            </div>
-            <div>
-              <Label htmlFor="teacherSpecialization">Specialization</Label>
-              <Input
-                id="teacherSpecialization"
-                value={newTeacher.specialization}
-                onChange={(e) => setNewTeacher(prev => ({ ...prev, specialization: e.target.value }))}
-                placeholder="Subject specialization"
-                disabled={isLoading}
-              />
-            </div>
-            <div className="md:col-span-2">
-              <Button onClick={addTeacher} disabled={isLoading} className="w-full">
-                <Plus className="w-4 h-4 mr-2" />
-                {isLoading ? 'Adding...' : 'Add Teacher'}
-              </Button>
-            </div>
-          </div>
-
-          {/* Teachers list */}
-          <div className="space-y-2">
-            <h3 className="font-medium">Existing Teachers ({teachers.length})</h3>
-            <div className="max-h-96 overflow-y-auto space-y-2">
-              {teachers.length === 0 ? (
-                <p className="text-muted-foreground">No teachers found</p>
-              ) : (
-                teachers.map((teacher) => (
-                  <div key={teacher.id} className="flex items-center justify-between p-3 border rounded">
-                    <div>
-                      <h4 className="font-medium">{teacher.name}</h4>
-                      <p className="text-sm text-muted-foreground">
-                        {teacher.email} • {teacher.school} • {teacher.role}
-                        {teacher.specialization && ` • ${teacher.specialization}`}
-                      </p>
-                    </div>
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      onClick={() => deleteTeacher(teacher.id, teacher.name)}
-                      disabled={isLoading}
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <h2 className="text-2xl font-bold">User Management</h2>
+        <div className="flex gap-2">
+          <Button
+            variant={activeTab === 'teachers' ? 'default' : 'outline'}
+            onClick={() => setActiveTab('teachers')}
+            className="flex items-center gap-2"
+          >
+            <Users className="w-4 h-4" />
+            Teachers ({teachers.length})
+          </Button>
+          <Button
+            variant={activeTab === 'admins' ? 'default' : 'outline'}
+            onClick={() => setActiveTab('admins')}
+            className="flex items-center gap-2"
+          >
+            <Shield className="w-4 h-4" />
+            Admins ({admins.length})
+          </Button>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+
+      <div className="flex gap-4 mb-6">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+          <Input
+            placeholder={`Search ${activeTab}...`}
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-10"
+          />
+        </div>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            {activeTab === 'teachers' ? (
+              <>
+                <Users className="w-5 h-5" />
+                Teachers ({filteredTeachers.length})
+              </>
+            ) : (
+              <>
+                <Shield className="w-5 h-5" />
+                Platform Admins ({filteredAdmins.length})
+              </>
+            )}
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse">
+              <thead>
+                <tr className="border-b">
+                  <th className="text-left p-3 font-medium">Name</th>
+                  <th className="text-left p-3 font-medium">Email</th>
+                  <th className="text-left p-3 font-medium">School</th>
+                  <th className="text-left p-3 font-medium">Role</th>
+                  <th className="text-left p-3 font-medium">Status</th>
+                  <th className="text-left p-3 font-medium">Created</th>
+                </tr>
+              </thead>
+              <tbody>
+                {(activeTab === 'teachers' ? filteredTeachers : filteredAdmins).map((user) => (
+                  <tr key={user.id} className="border-b hover:bg-gray-50">
+                    <td className="p-3 font-medium">{user.name}</td>
+                    <td className="p-3 text-gray-600">{user.email}</td>
+                    <td className="p-3">{user.school}</td>
+                    <td className="p-3">{getRoleBadge(user.role)}</td>
+                    <td className="p-3">{getStatusBadge(user.subscription_status)}</td>
+                    <td className="p-3 text-sm text-gray-500">
+                      {new Date(user.created_at).toLocaleDateString()}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            
+            {(activeTab === 'teachers' ? filteredTeachers : filteredAdmins).length === 0 && (
+              <div className="text-center py-8 text-gray-500">
+                <Users className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+                <p>No {activeTab} found</p>
+                {searchTerm && (
+                  <p className="text-sm">Try adjusting your search terms</p>
+                )}
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+    </div>
   );
 };
 

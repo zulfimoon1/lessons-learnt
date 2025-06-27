@@ -195,9 +195,11 @@ serve(async (req) => {
       console.log('🎉 Platform admin created successfully:', email);
     }
 
-    // Send welcome email if Resend is configured
+    // Send welcome email with better error handling
+    let emailSent = false;
     try {
-      const { error: emailError } = await supabaseClient.functions.invoke('send-admin-welcome', {
+      console.log('📧 Attempting to send welcome email...');
+      const { data: emailData, error: emailError } = await supabaseClient.functions.invoke('send-admin-welcome', {
         body: {
           email: email.toLowerCase().trim(),
           name: name.trim(),
@@ -206,9 +208,10 @@ serve(async (req) => {
       });
 
       if (emailError) {
-        console.log('📧 Email sending failed, but admin was created/updated:', emailError);
+        console.log('📧 Email sending failed:', emailError);
       } else {
-        console.log('📧 Welcome email sent successfully');
+        console.log('📧 Welcome email sent successfully:', emailData);
+        emailSent = true;
       }
     } catch (emailErr) {
       console.log('📧 Email function not available or failed:', emailErr);
@@ -224,6 +227,7 @@ serve(async (req) => {
           role: result.role,
           school: result.school
         },
+        emailSent,
         message: existingAdmin && allowUpdate ? 'Platform admin account updated successfully' : 'Platform admin account created successfully'
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

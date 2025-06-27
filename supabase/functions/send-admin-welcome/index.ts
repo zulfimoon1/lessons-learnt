@@ -24,7 +24,18 @@ const handler = async (req: Request): Promise<Response> => {
   try {
     const { email, name, tempPassword }: AdminWelcomeEmailRequest = await req.json();
 
-    console.log('Sending admin welcome email to:', email);
+    console.log('📧 Sending admin welcome email to:', email);
+
+    if (!Deno.env.get("RESEND_API_KEY")) {
+      console.log('⚠️ RESEND_API_KEY not configured, skipping email');
+      return new Response(JSON.stringify({ 
+        success: false, 
+        error: 'Email service not configured' 
+      }), {
+        status: 200,
+        headers: { "Content-Type": "application/json", ...corsHeaders },
+      });
+    }
 
     const loginUrl = `${req.headers.get('origin') || 'https://your-app.com'}/platform-admin-login`;
 
@@ -75,9 +86,12 @@ const handler = async (req: Request): Promise<Response> => {
       `,
     });
 
-    console.log("Admin welcome email sent successfully:", emailResponse);
+    console.log("✅ Admin welcome email sent successfully:", emailResponse);
 
-    return new Response(JSON.stringify(emailResponse), {
+    return new Response(JSON.stringify({
+      success: true,
+      emailResponse
+    }), {
       status: 200,
       headers: {
         "Content-Type": "application/json",
@@ -85,9 +99,12 @@ const handler = async (req: Request): Promise<Response> => {
       },
     });
   } catch (error: any) {
-    console.error("Error sending admin welcome email:", error);
+    console.error("❌ Error sending admin welcome email:", error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ 
+        success: false,
+        error: error.message || 'Failed to send welcome email'
+      }),
       {
         status: 500,
         headers: { "Content-Type": "application/json", ...corsHeaders },
