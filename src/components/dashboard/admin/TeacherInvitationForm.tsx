@@ -63,18 +63,19 @@ const TeacherInvitationForm: React.FC<TeacherInvitationFormProps> = ({
           school: school,
           role: formData.role,
           specialization: formData.specialization || null,
-          adminEmail: teacher.email // Use the authenticated admin's email
+          adminEmail: teacher.email
         }
       });
 
       console.log('📨 Edge function response:', { response, error });
 
+      // Handle any edge function invocation errors
       if (error) {
-        console.error('❌ Edge function error:', error);
-        throw new Error(`Edge function failed: ${error.message || error.toString()}`);
+        console.error('❌ Edge function invocation error:', error);
+        throw new Error(`Function invocation failed: ${error.message || error.toString()}`);
       }
 
-      // Handle the new response structure
+      // Handle the response from the edge function
       if (response && response.success) {
         if (response.emailSent) {
           toast({
@@ -100,8 +101,9 @@ const TeacherInvitationForm: React.FC<TeacherInvitationFormProps> = ({
         setFormData({ email: '', role: 'teacher', specialization: '' });
         onInvitationSent?.();
       } else {
-        // Handle error response
+        // Handle error response from the edge function
         const errorMessage = response?.error || 'Failed to create invitation';
+        console.error('❌ Edge function returned error:', errorMessage);
         toast({
           title: "❌ Failed to Create Invitation",
           description: errorMessage,
