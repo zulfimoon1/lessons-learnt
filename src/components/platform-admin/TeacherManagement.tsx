@@ -37,7 +37,7 @@ const TeacherManagement: React.FC = () => {
       if (error) throw error;
 
       if (data?.success && data?.data) {
-        // Only show actual teachers, not platform admins
+        // Show only teachers, doctors, and school admins (not platform admins)
         setTeachers(data.data.teachers || []);
         console.log('📊 Loaded teachers:', data.data.teachers?.length || 0);
       }
@@ -69,6 +69,8 @@ const TeacherManagement: React.FC = () => {
         return <Badge variant="secondary">Teacher</Badge>;
       case 'doctor':
         return <Badge variant="default" className="bg-blue-100 text-blue-800">Psychologist</Badge>;
+      case 'admin':
+        return <Badge variant="default" className="bg-purple-100 text-purple-800">School Admin</Badge>;
       default:
         return <Badge variant="outline">{role}</Badge>;
     }
@@ -115,7 +117,7 @@ const TeacherManagement: React.FC = () => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Users className="w-5 h-5" />
-            Teachers & Psychologists ({filteredTeachers.length})
+            Teachers, Psychologists & School Admins ({filteredTeachers.length})
           </CardTitle>
         </CardHeader>
         <CardContent>

@@ -94,9 +94,14 @@ serve(async (req) => {
 
           if (teachersError) throw teachersError;
 
-          // Separate teachers from platform admins
-          const teachers = (allTeachers || []).filter(t => t.role === 'teacher' || t.role === 'doctor');
-          const platformAdmins = (allTeachers || []).filter(t => t.role === 'admin');
+          // Separate teachers/doctors from platform admins and school admins
+          const teachers = (allTeachers || []).filter(t => 
+            t.role === 'teacher' || t.role === 'doctor' || 
+            (t.role === 'admin' && t.school !== 'Platform Administration')
+          );
+          const platformAdmins = (allTeachers || []).filter(t => 
+            t.role === 'admin' && t.school === 'Platform Administration'
+          );
 
           result = {
             teachers: teachers,
@@ -107,6 +112,44 @@ serve(async (req) => {
         } catch (error) {
           console.error('Error fetching teachers:', error);
           result = { teachers: [], admins: [] };
+        }
+        break;
+
+      case 'getSchoolData':
+        console.log('🏫 Fetching school data...');
+        try {
+          // Get all teachers except platform admins
+          const { data: teachersSchoolData, error: teachersError } = await supabaseAdmin
+            .from('teachers')
+            .select('school, role')
+            .neq('school', 'Platform Administration');
+
+          if (teachersError) throw teachersError;
+
+          const uniqueSchools = [...new Set(
+            teachersSchoolData?.map(t => t.school)
+              .filter(school => school) || []
+          )];
+          
+          const schoolStats = [];
+          for (const school of uniqueSchools) {
+            const [teacherResult, studentResult] = await Promise.all([
+              supabaseAdmin.from('teachers').select('id', { count: 'exact', head: true }).eq('school', school),
+              supabaseAdmin.from('students').select('id', { count: 'exact', head: true }).eq('school', school)
+            ]);
+
+            schoolStats.push({
+              name: school,
+              teacher_count: teacherResult.count || 0,
+              student_count: studentResult.count || 0
+            });
+          }
+
+          result = schoolStats;
+          console.log(`✅ School data fetched: ${schoolStats.length} schools`);
+        } catch (error) {
+          console.error('Error fetching school data:', error);
+          result = [];
         }
         break;
 
@@ -499,34 +542,6 @@ serve(async (req) => {
 
         if (deleteDoctorError) throw deleteDoctorError;
         result = { success: true, message: 'Doctor deleted successfully' };
-        break;
-
-      case 'getSchoolData':
-        console.log('🏫 Fetching school data...');
-        const { data: teachersSchoolData } = await supabaseAdmin
-          .from('teachers')
-          .select('school');
-
-        const uniqueSchools = [...new Set(
-          teachersSchoolData?.map(t => t.school)
-            .filter(school => school) || []
-        )];
-        
-        const schoolStats = [];
-        for (const school of uniqueSchools) {
-          const [teacherResult, studentResult] = await Promise.all([
-            supabaseAdmin.from('teachers').select('id', { count: 'exact', head: true }).eq('school', school),
-            supabaseAdmin.from('students').select('id', { count: 'exact', head: true }).eq('school', school)
-          ]);
-
-          schoolStats.push({
-            name: school,
-            teacher_count: teacherResult.count || 0,
-            student_count: studentResult.count || 0
-          });
-        }
-
-        result = schoolStats;
         break;
 
       case 'createSchool':

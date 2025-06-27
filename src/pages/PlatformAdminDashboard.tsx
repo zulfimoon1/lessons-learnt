@@ -106,7 +106,7 @@ const PlatformAdminDashboard: React.FC = () => {
       label: 'Overview',
       component: (
         <div className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Total Schools</CardTitle>
@@ -121,14 +121,26 @@ const PlatformAdminDashboard: React.FC = () => {
             </Card>
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total Users</CardTitle>
+                <CardTitle className="text-sm font-medium">Total Teachers</CardTitle>
                 <Users className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
-                  {statsLoading ? '--' : (stats.teachersCount + stats.studentsCount)}
+                  {statsLoading ? '--' : stats.teachersCount}
                 </div>
-                <p className="text-xs text-muted-foreground">Teachers + Students</p>
+                <p className="text-xs text-muted-foreground">All teachers & staff</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Total Students</CardTitle>
+                <Users className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">
+                  {statsLoading ? '--' : stats.studentsCount}
+                </div>
+                <p className="text-xs text-muted-foreground">Registered students</p>
               </CardContent>
             </Card>
             <Card>
@@ -306,27 +318,29 @@ const PlatformAdminDashboard: React.FC = () => {
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-6 py-8">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-8">
-          {/* Tab Navigation */}
+          {/* Tab Navigation - Fixed grid layout */}
           <div className="bg-white/90 backdrop-blur-sm rounded-2xl border border-gray-200/50 shadow-lg p-6">
-            <TabsList className="bg-transparent p-0 h-auto gap-3 grid grid-cols-2 md:grid-cols-5 lg:grid-cols-10">
-              {tabItems.map((item) => {
-                const Icon = item.icon;
-                return (
-                  <TabsTrigger 
-                    key={item.value}
-                    value={item.value} 
-                    className="h-auto p-4 flex items-center gap-3 hover:bg-gray-50 border border-gray-200 justify-center data-[state=active]:bg-brand-teal data-[state=active]:text-white data-[state=active]:border-brand-teal transition-all duration-300 rounded-lg bg-white flex-col text-center min-h-[80px]"
-                  >
-                    <Icon 
-                      className={`w-5 h-5 ${activeTab === item.value ? 'text-white' : 'text-brand-teal'}`}
-                      aria-hidden="true"
-                    />
-                    <span className="text-sm font-medium block">
-                      {item.label}
-                    </span>
-                  </TabsTrigger>
-                );
-              })}
+            <TabsList className="bg-transparent p-0 h-auto gap-2 w-full">
+              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-11 gap-2 w-full">
+                {tabItems.map((item) => {
+                  const Icon = item.icon;
+                  return (
+                    <TabsTrigger 
+                      key={item.value}
+                      value={item.value} 
+                      className="h-auto p-3 flex flex-col items-center gap-2 hover:bg-gray-50 border border-gray-200 data-[state=active]:bg-brand-teal data-[state=active]:text-white data-[state=active]:border-brand-teal transition-all duration-300 rounded-lg bg-white min-h-[70px] text-center"
+                    >
+                      <Icon 
+                        className={`w-4 h-4 ${activeTab === item.value ? 'text-white' : 'text-brand-teal'}`}
+                        aria-hidden="true"
+                      />
+                      <span className="text-xs font-medium">
+                        {item.label}
+                      </span>
+                    </TabsTrigger>
+                  );
+                })}
+              </div>
             </TabsList>
           </div>
 
