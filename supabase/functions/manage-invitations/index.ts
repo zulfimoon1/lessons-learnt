@@ -25,8 +25,8 @@ serve(async (req) => {
     } catch (e) {
       console.error('Failed to parse request body:', e);
       return new Response(
-        JSON.stringify({ error: 'Invalid JSON in request body' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        JSON.stringify({ success: false, error: 'Invalid JSON in request body' }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
@@ -59,8 +59,8 @@ serve(async (req) => {
     if (!isAuthorized) {
       console.error('❌ Unauthorized access attempt:', adminEmail);
       return new Response(
-        JSON.stringify({ error: 'Unauthorized: Admin access required' }),
-        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        JSON.stringify({ success: false, error: 'Unauthorized: Admin access required' }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
@@ -78,11 +78,11 @@ serve(async (req) => {
         if (listError) {
           console.error('❌ List error:', listError);
           return new Response(
-            JSON.stringify({ error: `Failed to list invitations: ${listError.message}` }),
-            { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+            JSON.stringify({ success: false, error: `Failed to list invitations: ${listError.message}` }),
+            { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
           );
         }
-        result = { invitations };
+        result = { success: true, invitations };
         break;
 
       case 'create':
@@ -100,9 +100,10 @@ serve(async (req) => {
         if (existingInvite) {
           return new Response(
             JSON.stringify({ 
+              success: false,
               error: 'An invitation for this email already exists for this school' 
             }),
-            { status: 409, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+            { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
           );
         }
 
@@ -130,9 +131,10 @@ serve(async (req) => {
           console.error('❌ Create error:', createError);
           return new Response(
             JSON.stringify({ 
+              success: false,
               error: `Failed to create invitation: ${createError.message}` 
             }),
-            { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+            { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
           );
         }
         
@@ -152,17 +154,19 @@ serve(async (req) => {
           if (emailError) {
             console.error('📧 Email sending failed:', emailError);
             result = { 
+              success: true,
               invitation: newInvitation, 
               emailSent: false, 
               emailError: emailError.message 
             };
           } else {
             console.log('📧 Email sent successfully:', emailData);
-            result = { invitation: newInvitation, emailSent: true };
+            result = { success: true, invitation: newInvitation, emailSent: true };
           }
         } catch (emailErr) {
           console.error('📧 Email function error:', emailErr);
           result = { 
+            success: true,
             invitation: newInvitation, 
             emailSent: false, 
             emailError: 'Email function failed' 
@@ -181,8 +185,8 @@ serve(async (req) => {
         if (fetchError) {
           console.error('❌ Fetch error:', fetchError);
           return new Response(
-            JSON.stringify({ error: `Failed to fetch invitation: ${fetchError.message}` }),
-            { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+            JSON.stringify({ success: false, error: `Failed to fetch invitation: ${fetchError.message}` }),
+            { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
           );
         }
 
@@ -217,8 +221,8 @@ serve(async (req) => {
         if (deleteError) {
           console.error('❌ Delete error:', deleteError);
           return new Response(
-            JSON.stringify({ error: `Failed to delete invitation: ${deleteError.message}` }),
-            { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+            JSON.stringify({ success: false, error: `Failed to delete invitation: ${deleteError.message}` }),
+            { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
           );
         }
         result = { success: true, message: 'Invitation deleted successfully' };
@@ -227,8 +231,8 @@ serve(async (req) => {
       default:
         console.error('❌ Invalid action:', action);
         return new Response(
-          JSON.stringify({ error: 'Invalid action' }),
-          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          JSON.stringify({ success: false, error: 'Invalid action' }),
+          { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
     }
 
@@ -242,10 +246,11 @@ serve(async (req) => {
     console.error('❌ Edge function error:', error);
     return new Response(
       JSON.stringify({ 
+        success: false,
         error: error.message || 'An unexpected error occurred',
         details: error.toString()
       }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
 });

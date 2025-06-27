@@ -74,30 +74,40 @@ const TeacherInvitationForm: React.FC<TeacherInvitationFormProps> = ({
         throw new Error(`Edge function failed: ${error.message || error.toString()}`);
       }
 
-      // Handle the response structure properly
-      if (response && response.emailSent) {
-        toast({
-          title: "✅ Invitation Sent Successfully",
-          description: `Invitation email sent to ${formData.email}`,
-          variant: "default",
-        });
-      } else if (response && response.invitation) {
-        toast({
-          title: "⚠️ Invitation Created",
-          description: `Invitation created for ${formData.email}, but email sending failed. Please share the invitation link manually.`,
-          variant: "default",
-        });
+      // Handle the new response structure
+      if (response && response.success) {
+        if (response.emailSent) {
+          toast({
+            title: "✅ Invitation Sent Successfully",
+            description: `Invitation email sent to ${formData.email}`,
+            variant: "default",
+          });
+        } else if (response.invitation) {
+          toast({
+            title: "⚠️ Invitation Created",
+            description: `Invitation created for ${formData.email}, but email sending failed. Please share the invitation link manually.`,
+            variant: "default",
+          });
+        } else {
+          toast({
+            title: "✅ Invitation Created",
+            description: `Invitation created for ${formData.email}`,
+            variant: "default",
+          });
+        }
+
+        // Reset form and notify parent
+        setFormData({ email: '', role: 'teacher', specialization: '' });
+        onInvitationSent?.();
       } else {
+        // Handle error response
+        const errorMessage = response?.error || 'Failed to create invitation';
         toast({
-          title: "✅ Invitation Created",
-          description: `Invitation created for ${formData.email}`,
-          variant: "default",
+          title: "❌ Failed to Create Invitation",
+          description: errorMessage,
+          variant: "destructive",
         });
       }
-
-      // Reset form and notify parent
-      setFormData({ email: '', role: 'teacher', specialization: '' });
-      onInvitationSent?.();
 
     } catch (error: any) {
       console.error('💥 Invitation creation failed:', error);
