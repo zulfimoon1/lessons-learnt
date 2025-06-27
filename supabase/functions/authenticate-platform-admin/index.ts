@@ -1,6 +1,7 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
+import * as bcrypt from "https://deno.land/x/bcrypt@v0.4.1/mod.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -21,6 +22,15 @@ serve(async (req) => {
       return new Response(
         JSON.stringify({ success: false, error: 'Email and password are required' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Basic validation
+    if (!email.includes('@') || password.length < 8) {
+      console.log('❌ Basic validation failed');
+      return new Response(
+        JSON.stringify({ success: false, error: 'Invalid credentials' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
@@ -60,18 +70,45 @@ serve(async (req) => {
       );
     }
 
-    // Check password - simplified for the known admin
+    // Proper password verification using bcrypt
+    console.log('🔍 Verifying password against stored hash...');
     let isValidPassword = false;
     
-    if (email.toLowerCase().trim() === 'zulfimoon1@gmail.com' && password === 'admin123') {
-      isValidPassword = true;
-      console.log('✅ Password validated for known admin');
-    } else {
-      console.log('❌ Invalid credentials for:', email);
+    try {
+      if (adminData.password_hash) {
+        // Check if it's a bcrypt hash (starts with $2a$, $2b$, $2x$, or $2y$)
+        if (adminData.password_hash.startsWith('$2')) {
+          isValidPassword = await bcrypt.compare(password, adminData.password_hash);
+          console.log('✅ Using bcrypt verification');
+        } else {
+          // Legacy SHA-256 hash - create new bcrypt hash and update
+          const encoder = new TextEncoder();
+          const data = encoder.encode(password + 'platform_salt_2024');
+          const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+          const hashArray = Array.from(new Uint8Array(hashBuffer));
+          const sha256Hash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+          
+          if (sha256Hash === adminData.password_hash) {
+            // Password is correct, upgrade to bcrypt
+            const newBcryptHash = await bcrypt.hash(password, 12);
+            
+            await supabaseClient
+              .from('teachers')
+              .update({ password_hash: newBcryptHash })
+              .eq('id', adminData.id);
+              
+            isValidPassword = true;
+            console.log('✅ Upgraded legacy hash to bcrypt');
+          }
+        }
+      }
+    } catch (hashError) {
+      console.error('❌ Password verification error:', hashError);
       isValidPassword = false;
     }
 
     if (!isValidPassword) {
+      console.log('❌ Invalid password for:', email);
       return new Response(
         JSON.stringify({ success: false, error: 'Invalid credentials' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

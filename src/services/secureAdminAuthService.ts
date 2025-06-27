@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { centralizedValidationService } from './centralizedValidationService';
 
@@ -31,8 +32,6 @@ class SecureAdminAuthService {
 
       // Input validation
       const emailValidation = centralizedValidationService.validateEmail(credentials.email);
-      const passwordValidation = centralizedValidationService.validatePassword(credentials.password);
-
       if (!emailValidation.isValid) {
         await centralizedValidationService.logSecurityEvent({
           type: 'form_validation_failed',
@@ -42,7 +41,7 @@ class SecureAdminAuthService {
         return { success: false, error: 'Invalid email format' };
       }
 
-      if (!passwordValidation.isValid) {
+      if (!credentials.password || credentials.password.length < 8) {
         await centralizedValidationService.logSecurityEvent({
           type: 'form_validation_failed',
           details: `Invalid password format in admin login`,
@@ -51,59 +50,47 @@ class SecureAdminAuthService {
         return { success: false, error: 'Invalid password format' };
       }
 
-      // Set admin context first
-      await this.setPlatformAdminContext(credentials.email);
+      console.log('📞 Calling authenticate-platform-admin edge function...');
       
-      // Query database for admin user - REMOVED HARDCODED PASSWORD
-      const { data: adminData, error } = await supabase
-        .from('teachers')
-        .select('id, name, email, school, role, password_hash')
-        .eq('email', credentials.email.toLowerCase().trim())
-        .eq('role', 'admin')
-        .single();
+      // Use Edge Function for secure authentication
+      const { data, error } = await supabase.functions.invoke('authenticate-platform-admin', {
+        body: {
+          email: credentials.email.toLowerCase().trim(),
+          password: credentials.password
+        }
+      });
 
-      if (error || !adminData) {
-        await centralizedValidationService.logSecurityEvent({
-          type: 'unauthorized_access',
-          details: `Admin login failed - user not found: ${credentials.email}`,
-          severity: 'high'
-        });
-        return { success: false, error: 'Invalid credentials' };
+      console.log('📨 Edge function response:', { success: data?.success, error: error?.message });
+
+      if (error) {
+        console.error('❌ Edge function error:', error);
+        return { success: false, error: 'Authentication service error' };
       }
 
-      // Verify password against stored hash (this should use proper bcrypt verification)
-      // For now, keeping simple verification but removing hardcoded password
-      const isValidPassword = await this.verifyPassword(credentials.password, adminData.password_hash);
-      
-      if (!isValidPassword) {
+      if (!data || !data.success) {
+        console.error('❌ Authentication failed:', data?.error);
         await centralizedValidationService.logSecurityEvent({
           type: 'unauthorized_access',
-          details: `Admin login failed - invalid password for: ${credentials.email}`,
+          details: `Admin login failed for: ${credentials.email}`,
           severity: 'high'
         });
-        return { success: false, error: 'Invalid credentials' };
+        return { success: false, error: data?.error || 'Authentication failed' };
       }
 
       await centralizedValidationService.logSecurityEvent({
-        type: 'unauthorized_access',
-        userId: adminData.id,
+        type: 'successful_login',
+        userId: data.admin.id,
         details: `Successful admin login for ${credentials.email}`,
         severity: 'low'
       });
 
       return {
         success: true,
-        admin: {
-          id: adminData.id,
-          email: adminData.email,
-          name: adminData.name,
-          role: adminData.role,
-          school: adminData.school
-        }
+        admin: data.admin
       };
 
     } catch (error) {
-      console.error('Admin authentication error:', error);
+      console.error('💥 Admin authentication error:', error);
       
       await centralizedValidationService.logSecurityEvent({
         type: 'suspicious_activity',
@@ -113,20 +100,6 @@ class SecureAdminAuthService {
       
       return { success: false, error: 'Authentication system error' };
     }
-  }
-
-  private async verifyPassword(password: string, storedHash: string): Promise<boolean> {
-    // For demo purposes, check if it's the known admin password
-    // In production, this should use proper bcrypt verification
-    if (password === 'admin123' && storedHash) {
-      return true;
-    }
-    
-    // TODO: Implement proper bcrypt verification
-    // const isValid = await bcrypt.compare(password, storedHash);
-    // return isValid;
-    
-    return false;
   }
 
   private async setPlatformAdminContext(adminEmail: string): Promise<void> {

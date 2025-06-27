@@ -1,10 +1,43 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
+import * as bcrypt from "https://deno.land/x/bcrypt@v0.4.1/mod.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+};
+
+const validatePasswordStrength = (password: string): { isValid: boolean; errors: string[] } => {
+  const errors: string[] = [];
+  
+  if (password.length < 12) {
+    errors.push('Password must be at least 12 characters long');
+  }
+  
+  if (!/[A-Z]/.test(password)) {
+    errors.push('Password must contain at least one uppercase letter');
+  }
+  
+  if (!/[a-z]/.test(password)) {
+    errors.push('Password must contain at least one lowercase letter');
+  }
+  
+  if (!/\d/.test(password)) {
+    errors.push('Password must contain at least one number');
+  }
+  
+  if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) {
+    errors.push('Password must contain at least one special character');
+  }
+  
+  // Check for common weak patterns
+  const weakPatterns = ['password', '123456', 'qwerty', 'admin', 'letmein'];
+  if (weakPatterns.some(pattern => password.toLowerCase().includes(pattern))) {
+    errors.push('Password contains common weak patterns');
+  }
+  
+  return { isValid: errors.length === 0, errors };
 };
 
 serve(async (req) => {
@@ -22,9 +55,15 @@ serve(async (req) => {
       );
     }
 
-    if (newPassword.length < 6) {
+    // Validate new password strength
+    const passwordValidation = validatePasswordStrength(newPassword);
+    if (!passwordValidation.isValid) {
       return new Response(
-        JSON.stringify({ success: false, error: 'New password must be at least 6 characters long' }),
+        JSON.stringify({ 
+          success: false, 
+          error: 'Password does not meet security requirements',
+          details: passwordValidation.errors
+        }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -49,11 +88,25 @@ serve(async (req) => {
       );
     }
 
-    // For the known admin, verify current password
+    // Verify current password
     let isCurrentPasswordValid = false;
     
-    if (email.toLowerCase().trim() === 'zulfimoon1@gmail.com' && currentPassword === 'admin123') {
-      isCurrentPasswordValid = true;
+    try {
+      if (adminData.password_hash.startsWith('$2')) {
+        // bcrypt hash
+        isCurrentPasswordValid = await bcrypt.compare(currentPassword, adminData.password_hash);
+      } else {
+        // Legacy SHA-256 hash
+        const encoder = new TextEncoder();
+        const data = encoder.encode(currentPassword + 'platform_salt_2024');
+        const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+        const hashArray = Array.from(new Uint8Array(hashBuffer));
+        const sha256Hash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        isCurrentPasswordValid = sha256Hash === adminData.password_hash;
+      }
+    } catch (verifyError) {
+      console.error('Password verification error:', verifyError);
+      isCurrentPasswordValid = false;
     }
 
     if (!isCurrentPasswordValid) {
@@ -63,17 +116,16 @@ serve(async (req) => {
       );
     }
 
-    // Create a simple hash for the new password (in production, use proper bcrypt)
-    const encoder = new TextEncoder();
-    const data = encoder.encode(newPassword + 'platform_salt_2024');
-    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-    const hashArray = Array.from(new Uint8Array(hashBuffer));
-    const newPasswordHash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    // Create secure bcrypt hash for new password
+    const newPasswordHash = await bcrypt.hash(newPassword, 12);
 
     // Update password
     const { error: updateError } = await supabaseClient
       .from('teachers')
-      .update({ password_hash: newPasswordHash })
+      .update({ 
+        password_hash: newPasswordHash,
+        updated_at: new Date().toISOString()
+      })
       .eq('id', adminData.id);
 
     if (updateError) {
@@ -84,10 +136,13 @@ serve(async (req) => {
       );
     }
 
+    // Log the password change for security audit
+    console.log(`Password changed successfully for admin: ${email}`);
+
     return new Response(
       JSON.stringify({ 
         success: true,
-        message: 'Password updated successfully'
+        message: 'Password updated successfully with enhanced security'
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
