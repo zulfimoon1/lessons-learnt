@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { MicIcon, PlayIcon, VolumeIcon, WaveformIcon } from "lucide-react";
+import { MicIcon, PlayIcon, VolumeIcon, AudioWaveformIcon } from "lucide-react";
 import AudioPlayer from './AudioPlayer';
 
 interface VoiceDemoCardProps {
@@ -81,7 +81,7 @@ const VoiceDemoCard: React.FC<VoiceDemoCardProps> = ({
             >
               {isRecording ? (
                 <>
-                  <WaveformIcon className="w-4 h-4 mr-2 animate-pulse" />
+                  <AudioWaveformIcon className="w-4 h-4 mr-2 animate-pulse" />
                   Recording... (Demo)
                 </>
               ) : (
