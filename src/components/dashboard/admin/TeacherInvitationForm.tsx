@@ -56,7 +56,7 @@ const TeacherInvitationForm: React.FC<TeacherInvitationFormProps> = ({
     try {
       console.log('📧 Calling manage-invitations edge function...');
       
-      const { data, error } = await supabase.functions.invoke('manage-invitations', {
+      const { data: response, error } = await supabase.functions.invoke('manage-invitations', {
         body: {
           action: 'create',
           email: formData.email.trim().toLowerCase(),
@@ -67,23 +67,30 @@ const TeacherInvitationForm: React.FC<TeacherInvitationFormProps> = ({
         }
       });
 
-      console.log('📨 Edge function response:', { data, error });
+      console.log('📨 Edge function response:', { response, error });
 
       if (error) {
         console.error('❌ Edge function error:', error);
         throw new Error(`Edge function failed: ${error.message || error.toString()}`);
       }
 
-      if (data.emailSent) {
+      // Handle the response structure properly
+      if (response && response.emailSent) {
         toast({
           title: "✅ Invitation Sent Successfully",
           description: `Invitation email sent to ${formData.email}`,
           variant: "default",
         });
-      } else {
+      } else if (response && response.invitation) {
         toast({
           title: "⚠️ Invitation Created",
           description: `Invitation created for ${formData.email}, but email sending failed. Please share the invitation link manually.`,
+          variant: "default",
+        });
+      } else {
+        toast({
+          title: "✅ Invitation Created",
+          description: `Invitation created for ${formData.email}`,
           variant: "default",
         });
       }
