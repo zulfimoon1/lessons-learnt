@@ -29,7 +29,7 @@ const handler = async (req: Request): Promise<Response> => {
     const inviteUrl = `${req.headers.get('origin') || 'https://your-app.com'}/accept-invitation?token=${inviteToken}`;
 
     const emailResponse = await resend.emails.send({
-      from: "School Platform <onboarding@resend.dev>",
+      from: "LessonsLearnt <noreply@lessonslearnt.eu>",
       to: [email],
       subject: `You're invited to join ${school}!`,
       html: `
