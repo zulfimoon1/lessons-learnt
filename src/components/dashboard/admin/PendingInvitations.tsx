@@ -38,35 +38,25 @@ const PendingInvitations: React.FC<PendingInvitationsProps> = ({
     try {
       console.log('🔍 Fetching invitations for school:', school);
       
-      // Set platform admin context if we have an admin
-      if (admin?.email) {
-        console.log('🔐 Setting platform admin context for:', admin.email);
-        
-        // Set the context using a function call
-        const { error: contextError } = await supabase.rpc('set_platform_admin_context', {
-          admin_email: admin.email
-        });
-        
-        if (contextError) {
-          console.error('Context setting error:', contextError);
-        } else {
-          console.log('✅ Platform admin context set successfully');
-        }
+      if (!admin?.email) {
+        throw new Error('Platform admin authentication required');
       }
 
-      const { data, error } = await supabase
-        .from('invitations')
-        .select('*')
-        .eq('school', school)
-        .order('created_at', { ascending: false });
+      const { data, error } = await supabase.functions.invoke('manage-invitations', {
+        body: {
+          action: 'list',
+          school: school,
+          adminEmail: admin.email
+        }
+      });
 
       if (error) {
-        console.error('Database error:', error);
+        console.error('Edge function error:', error);
         throw error;
       }
       
-      console.log('📨 Fetched invitations:', data);
-      setInvitations(data || []);
+      console.log('📨 Fetched invitations:', data.invitations);
+      setInvitations(data.invitations || []);
     } catch (error: any) {
       console.error('Error fetching invitations:', error);
       toast({
@@ -83,12 +73,16 @@ const PendingInvitations: React.FC<PendingInvitationsProps> = ({
     try {
       console.log('📧 Resending invitation to:', invitation.email);
       
-      const { error } = await supabase.functions.invoke('send-teacher-invitation', {
+      if (!admin?.email) {
+        throw new Error('Platform admin authentication required');
+      }
+
+      const { data, error } = await supabase.functions.invoke('manage-invitations', {
         body: {
-          email: invitation.email,
-          school: invitation.school,
-          inviteToken: invitation.invite_token,
-        },
+          action: 'resend',
+          invitationId: invitation.id,
+          adminEmail: admin.email
+        }
       });
 
       if (error) throw error;

@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { Mail, Send } from 'lucide-react';
+import { usePlatformAdmin } from '@/contexts/PlatformAdminContext';
 
 interface TeacherInvitationFormProps {
   school: string;
@@ -25,6 +26,7 @@ const TeacherInvitationForm: React.FC<TeacherInvitationFormProps> = ({
     specialization: ''
   });
   const { toast } = useToast();
+  const { admin } = usePlatformAdmin();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -38,49 +40,47 @@ const TeacherInvitationForm: React.FC<TeacherInvitationFormProps> = ({
       return;
     }
 
+    if (!admin?.email) {
+      toast({
+        title: "Error",
+        description: "Platform admin authentication required",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsLoading(true);
     try {
       console.log('Creating invitation for:', { ...formData, school });
 
-      // Create invitation record
-      const { data: invitation, error: inviteError } = await supabase
-        .from('invitations')
-        .insert({
-          email: formData.email.trim().toLowerCase(),
-          school,
+      const { data, error } = await supabase.functions.invoke('manage-invitations', {
+        body: {
+          action: 'create',
+          email: formData.email,
+          school: school,
           role: formData.role,
           specialization: formData.specialization || null,
-        })
-        .select()
-        .single();
-
-      if (inviteError) {
-        console.error('Error creating invitation:', inviteError);
-        throw inviteError;
-      }
-
-      console.log('Invitation created:', invitation);
-
-      // Send invitation email
-      const { error: emailError } = await supabase.functions.invoke('send-teacher-invitation', {
-        body: {
-          email: formData.email.trim().toLowerCase(),
-          school,
-          inviteToken: invitation.invite_token,
-        },
+          adminEmail: admin.email
+        }
       });
 
-      if (emailError) {
-        console.error('Error sending invitation email:', emailError);
+      if (error) {
+        console.error('Error creating invitation:', error);
+        throw error;
+      }
+
+      console.log('Invitation created:', data);
+
+      if (data.emailSent) {
         toast({
-          title: "Invitation Created",
-          description: `Invitation created for ${formData.email}, but email sending failed. Please share the invitation link manually.`,
+          title: "Invitation Sent",
+          description: `Successfully sent invitation to ${formData.email}`,
           variant: "default",
         });
       } else {
         toast({
-          title: "Invitation Sent",
-          description: `Successfully sent invitation to ${formData.email}`,
+          title: "Invitation Created",
+          description: `Invitation created for ${formData.email}, but email sending failed. Please share the invitation link manually.`,
           variant: "default",
         });
       }
