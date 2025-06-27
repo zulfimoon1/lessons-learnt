@@ -13,7 +13,8 @@ import {
   School, 
   CreditCard,
   Lock,
-  BarChart3
+  BarChart3,
+  UserPlus
 } from 'lucide-react';
 import SchoolManagement from '@/components/platform-admin/SchoolManagement';
 import TeacherManagement from '@/components/platform-admin/TeacherManagement';
@@ -21,6 +22,7 @@ import StudentManagement from '@/components/platform-admin/StudentManagement';
 import SubscriptionManagement from '@/components/platform-admin/SubscriptionManagement';
 import SecurityMonitoring from '@/components/platform-admin/SecurityMonitoring';
 import PasswordChangeForm from '@/components/platform-admin/PasswordChangeForm';
+import AdminUserManagement from '@/components/platform-admin/AdminUserManagement';
 
 const PlatformAdminDashboard: React.FC = () => {
   const { admin, logout, isLoading } = usePlatformAdmin();
@@ -82,6 +84,12 @@ const PlatformAdminDashboard: React.FC = () => {
           </div>
         </div>
       )
+    },
+    {
+      value: 'admin-users',
+      icon: UserPlus,
+      label: 'Admin Users',
+      component: <AdminUserManagement />
     },
     {
       value: 'schools',
@@ -174,7 +182,7 @@ const PlatformAdminDashboard: React.FC = () => {
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-8">
           {/* Tab Navigation */}
           <div className="bg-white/90 backdrop-blur-sm rounded-2xl border border-gray-200/50 shadow-lg p-6">
-            <TabsList className="bg-transparent p-0 h-auto gap-3 grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7">
+            <TabsList className="bg-transparent p-0 h-auto gap-3 grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8">
               {tabItems.map((item) => {
                 const Icon = item.icon;
                 return (
