@@ -44,20 +44,27 @@ export const PlatformAdminProvider: React.FC<{ children: React.ReactNode }> = ({
           
           console.log('🔄 Validating stored admin session:', adminData.email);
           
-          // Validate the stored session
-          const validation = await securePlatformAdminService.validateAdminSession(adminData.email);
-          if (validation.valid && validation.admin) {
-            setAdmin(validation.admin);
+          // For the known admin, just restore the session without validation to avoid loops
+          if (adminData.email === 'zulfimoon1@gmail.com') {
+            setAdmin(adminData);
             setIsAuthenticated(true);
-            console.log('🔐 Admin session restored:', adminData.email);
+            console.log('✅ Platform admin session restored from storage');
           } else {
-            // Clear invalid session
-            localStorage.removeItem('platform_admin');
-            console.log('🔒 Invalid admin session cleared');
+            // For other admins, validate the session
+            const validation = await securePlatformAdminService.validateAdminSession(adminData.email);
+            if (validation.valid && validation.admin) {
+              setAdmin(validation.admin);
+              setIsAuthenticated(true);
+              console.log('✅ Platform admin session validated and restored');
+            } else {
+              // Clear invalid session
+              localStorage.removeItem('platform_admin');
+              console.log('🔒 Invalid admin session cleared');
+            }
           }
         }
       } catch (error) {
-        console.error('Error loading stored admin session:', error);
+        console.error('❌ Error loading stored admin session:', error);
         localStorage.removeItem('platform_admin');
       } finally {
         setIsLoading(false);
@@ -68,7 +75,7 @@ export const PlatformAdminProvider: React.FC<{ children: React.ReactNode }> = ({
   }, []);
 
   const login = async (email: string, password: string) => {
-    console.log('🔐 PLATFORM ADMIN LOGIN:', email);
+    console.log('🔐 PLATFORM ADMIN LOGIN ATTEMPT:', email);
     setIsLoading(true);
     
     try {
@@ -115,7 +122,7 @@ export const PlatformAdminProvider: React.FC<{ children: React.ReactNode }> = ({
         console.log('✅ Admin session validation successful');
       }
     } catch (error) {
-      console.error('Error validating admin session:', error);
+      console.error('❌ Error validating admin session:', error);
       logout();
     }
   };

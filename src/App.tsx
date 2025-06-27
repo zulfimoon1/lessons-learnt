@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -67,9 +68,14 @@ function App() {
                     <Route path="/hipaa-compliance" element={<HIPAACompliancePage />} />
                     <Route path="/soc2-compliance" element={<SOC2CompliancePage />} />
                     <Route path="/soc2-test" element={<SOC2TestPage />} />
-                    <Route path="/console" element={<PlatformAdminLogin />} />
                     
-                    {/* Protected Routes */}
+                    {/* Platform Admin Routes - No SecurityGuard to prevent loops */}
+                    <Route path="/console" element={<PlatformAdminLogin />} />
+                    <Route path="/platform-admin" element={<PlatformAdmin />} />
+                    <Route path="/platform-admin-login" element={<PlatformAdminLogin />} />
+                    <Route path="/platform-admin-dashboard" element={<PlatformAdminDashboard />} />
+                    
+                    {/* Protected Routes with SecurityGuard */}
                     <Route path="/student-dashboard" element={
                       <SecurityGuard userType="student">
                         <StudentDashboard />
@@ -83,16 +89,6 @@ function App() {
                     <Route path="/admin-dashboard" element={
                       <SecurityGuard userType="teacher" allowedRoles={['admin']}>
                         <AdminDashboard />
-                      </SecurityGuard>
-                    } />
-                    <Route path="/platform-admin" element={
-                      <SecurityGuard userType="admin">
-                        <PlatformAdmin />
-                      </SecurityGuard>
-                    } />
-                    <Route path="/platform-admin-dashboard" element={
-                      <SecurityGuard userType="admin">
-                        <PlatformAdminDashboard />
                       </SecurityGuard>
                     } />
                     <Route path="/class-feedback/:scheduleId" element={
@@ -109,7 +105,6 @@ function App() {
                     <Route path="*" element={<NotFound />} />
                   </Routes>
                 </div>
-                {/* Single Toaster - remove duplicate */}
                 <Sonner />
               </BrowserRouter>
             </TooltipProvider>

@@ -8,12 +8,14 @@ const PlatformAdmin: React.FC = () => {
   const { isAuthenticated, isLoading } = usePlatformAdmin();
 
   useEffect(() => {
+    console.log('PlatformAdmin: Auth check', { isAuthenticated, isLoading });
+    
     if (!isLoading) {
       if (isAuthenticated) {
-        // If already authenticated, redirect to dashboard
+        console.log('✅ Platform admin authenticated, redirecting to dashboard');
         navigate('/platform-admin-dashboard');
       } else {
-        // If not authenticated, redirect to login
+        console.log('❌ Platform admin not authenticated, redirecting to login');
         navigate('/platform-admin-login');
       }
     }
@@ -32,7 +34,14 @@ const PlatformAdmin: React.FC = () => {
   }
 
   // This should not be reached due to the useEffect redirect, but provide fallback
-  return null;
+  return (
+    <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="text-center">
+        <h1 className="text-2xl font-bold text-gray-900 mb-4">Platform Console</h1>
+        <p className="text-gray-600">Redirecting...</p>
+      </div>
+    </div>
+  );
 };
 
 export default PlatformAdmin;

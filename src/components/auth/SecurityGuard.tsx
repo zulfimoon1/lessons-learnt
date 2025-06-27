@@ -27,20 +27,22 @@ const SecurityGuard: React.FC<SecurityGuardProps> = ({
   const location = useLocation();
   const { teacher, student, isLoading: authLoading } = useAuth();
 
-  // Safe platform admin context access
+  // Safe platform admin context access - prevent circular imports
   let admin = null;
   let adminAuthenticated = false;
   let adminLoading = false;
 
   try {
-    const { usePlatformAdmin } = require('@/contexts/PlatformAdminContext');
-    const platformAdminContext = usePlatformAdmin();
-    admin = platformAdminContext?.admin;
-    adminAuthenticated = platformAdminContext?.isAuthenticated || false;
-    adminLoading = platformAdminContext?.isLoading || false;
+    // Only import if we're dealing with admin routes
+    if (userType === 'admin' || location.pathname.includes('platform-admin')) {
+      const { usePlatformAdmin } = require('@/contexts/PlatformAdminContext');
+      const platformAdminContext = usePlatformAdmin();
+      admin = platformAdminContext?.admin;
+      adminAuthenticated = platformAdminContext?.isAuthenticated || false;
+      adminLoading = platformAdminContext?.isLoading || false;
+    }
   } catch (error) {
-    console.log('Platform admin context not available in SecurityGuard');
-    // Continue with teacher/student auth only
+    console.log('Platform admin context not available, proceeding with regular auth');
   }
 
   useEffect(() => {
@@ -52,31 +54,32 @@ const SecurityGuard: React.FC<SecurityGuardProps> = ({
       admin: !!admin, 
       adminAuthenticated,
       userType,
-      requireAuth 
+      requireAuth,
+      pathname: location.pathname
     });
 
     if (authLoading || adminLoading) return;
 
     const checkSecurity = async () => {
       try {
-        // Platform admin has access to everything - simplified check
+        // Platform admin has access to everything
         if (admin && adminAuthenticated) {
-          console.log('Platform admin authenticated, granting full access');
+          console.log('✅ Platform admin authenticated, granting full access');
           setIsAuthorized(true);
           setIsLoading(false);
           return;
         }
 
-        // If specifically requiring admin access and not platform admin, deny
+        // If specifically requiring admin access and not platform admin, redirect
         if (userType === 'admin' && (!admin || !adminAuthenticated)) {
-          console.log('Admin required but not platform admin');
+          console.log('❌ Admin required but not platform admin, redirecting to /console');
           navigate('/console');
           return;
         }
 
         // For regular users, check normal auth flow
         if (requireAuth && !teacher && !student && !admin) {
-          console.log('SecurityGuard: No user authenticated, redirecting');
+          console.log('❌ No user authenticated, redirecting to login');
           const defaultRedirect = userType === 'student' ? '/student-login' : '/teacher-login';
           navigate(redirectTo || defaultRedirect);
           return;
@@ -84,13 +87,13 @@ const SecurityGuard: React.FC<SecurityGuardProps> = ({
 
         // Check user type requirements (platform admin bypasses all checks)
         if (userType === 'teacher' && !teacher && !admin) {
-          console.log('SecurityGuard: Teacher required but student logged in, redirecting');
+          console.log('❌ Teacher required but not authenticated');
           navigate('/teacher-login');
           return;
         }
 
         if (userType === 'student' && !student && !admin) {
-          console.log('SecurityGuard: Student required but teacher logged in, redirecting');
+          console.log('❌ Student required but not authenticated');
           navigate('/student-login');
           return;
         }
@@ -98,15 +101,16 @@ const SecurityGuard: React.FC<SecurityGuardProps> = ({
         // Check role-based access for teachers (platform admin bypasses)
         if (allowedRoles.length > 0 && teacher && !admin) {
           if (!allowedRoles.includes(teacher.role)) {
-            console.log('SecurityGuard: Role-based access denied');
+            console.log('❌ Role-based access denied for role:', teacher.role);
             navigate('/teacher-dashboard');
             return;
           }
         }
 
+        console.log('✅ Security check passed');
         setIsAuthorized(true);
       } catch (error) {
-        console.error('Security check failed:', error);
+        console.error('💥 Security check failed:', error);
         setSecurityError('Security verification failed. Please try again.');
       } finally {
         setIsLoading(false);
@@ -149,7 +153,6 @@ const SecurityGuard: React.FC<SecurityGuardProps> = ({
           </CardHeader>
           <CardContent>
             <p className="text-red-600 mb-4">{securityError}</p>
-            {isAuthorized && children}
           </CardContent>
         </Card>
       </div>
