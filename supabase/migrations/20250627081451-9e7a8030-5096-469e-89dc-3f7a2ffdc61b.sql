@@ -5,71 +5,38 @@ DROP POLICY IF EXISTS "School admins can create invitations for their school" ON
 DROP POLICY IF EXISTS "School admins can update invitations for their school" ON public.invitations;
 DROP POLICY IF EXISTS "School admins can delete invitations for their school" ON public.invitations;
 
--- Create more permissive policies that work with platform admin context
-CREATE POLICY "School admins can view invitations for their school" 
-ON public.invitations 
-FOR SELECT 
-USING (
-  -- Allow if platform admin context is set (first priority)
-  current_setting('app.current_user_email', true) = 'zulfimoon1@gmail.com'
-  OR
-  current_setting('app.platform_admin', true) = 'true'
-  OR
-  -- Allow if user is a school admin for this school
-  EXISTS (
-    SELECT 1 FROM public.teachers t 
-    WHERE t.school = invitations.school 
-    AND t.id = auth.uid() 
-    AND t.role = 'admin'
-  )
-);
+-- Create a more reliable platform admin check function
+CREATE OR REPLACE FUNCTION public.is_platform_admin_authenticated()
+RETURNS boolean
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+  -- Check multiple context variables for maximum reliability
+  RETURN (
+    current_setting('app.current_user_email', true) = 'zulfimoon1@gmail.com' OR
+    current_setting('app.platform_admin', true) = 'true' OR
+    current_setting('app.admin_verified', true) = 'true' OR
+    current_setting('app.admin_context_set', true) = 'true'
+  );
+END;
+$$;
 
-CREATE POLICY "School admins can create invitations for their school" 
-ON public.invitations 
-FOR INSERT 
-WITH CHECK (
-  -- Allow if platform admin context is set (first priority)
-  current_setting('app.current_user_email', true) = 'zulfimoon1@gmail.com'
-  OR
-  current_setting('app.platform_admin', true) = 'true'
-  OR
-  -- Allow if user is a school admin for this school
-  EXISTS (
-    SELECT 1 FROM public.teachers t 
-    WHERE t.school = invitations.school 
-    AND t.id = auth.uid() 
-    AND t.role = 'admin'
-  )
-);
+-- Grant execute permission to all roles
+GRANT EXECUTE ON FUNCTION public.is_platform_admin_authenticated() TO anon, authenticated;
 
-CREATE POLICY "School admins can update invitations for their school" 
+-- Create simplified policies that prioritize platform admin access
+CREATE POLICY "Allow platform admin full access to invitations" 
 ON public.invitations 
-FOR UPDATE 
-USING (
-  -- Allow if platform admin context is set (first priority)
-  current_setting('app.current_user_email', true) = 'zulfimoon1@gmail.com'
-  OR
-  current_setting('app.platform_admin', true) = 'true'
-  OR
-  -- Allow if user is a school admin for this school
-  EXISTS (
-    SELECT 1 FROM public.teachers t 
-    WHERE t.school = invitations.school 
-    AND t.id = auth.uid() 
-    AND t.role = 'admin'
-  )
-);
+FOR ALL 
+USING (public.is_platform_admin_authenticated());
 
-CREATE POLICY "School admins can delete invitations for their school" 
+CREATE POLICY "School admins can manage invitations for their school" 
 ON public.invitations 
-FOR DELETE 
+FOR ALL 
 USING (
-  -- Allow if platform admin context is set (first priority)
-  current_setting('app.current_user_email', true) = 'zulfimoon1@gmail.com'
-  OR
-  current_setting('app.platform_admin', true) = 'true'
-  OR
-  -- Allow if user is a school admin for this school
+  public.is_platform_admin_authenticated() OR
   EXISTS (
     SELECT 1 FROM public.teachers t 
     WHERE t.school = invitations.school 
