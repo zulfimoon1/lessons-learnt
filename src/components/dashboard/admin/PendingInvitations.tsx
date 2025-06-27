@@ -15,6 +15,8 @@ interface Invitation {
   status: string;
   created_at: string;
   expires_at: string;
+  school: string;
+  invite_token: string;
 }
 
 interface PendingInvitationsProps {
