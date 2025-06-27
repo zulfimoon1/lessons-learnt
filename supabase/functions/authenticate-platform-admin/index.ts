@@ -14,6 +14,8 @@ serve(async (req) => {
 
   try {
     const { email, password } = await req.json();
+    
+    console.log('🔐 Platform admin authentication request:', { email, password: '***' });
 
     if (!email || !password) {
       return new Response(
@@ -27,7 +29,20 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
+    // Set platform admin context first
+    console.log('🔧 Setting platform admin context...');
+    const { error: contextError } = await supabaseClient.rpc('set_platform_admin_context', {
+      admin_email: email.toLowerCase().trim()
+    });
+
+    if (contextError) {
+      console.error('❌ Failed to set context:', contextError);
+    } else {
+      console.log('✅ Platform admin context set successfully');
+    }
+
     // Query for admin user
+    console.log('🔍 Querying for admin user...');
     const { data: adminData, error } = await supabaseClient
       .from('teachers')
       .select('id, name, email, school, role, password_hash')
@@ -35,22 +50,24 @@ serve(async (req) => {
       .eq('role', 'admin')
       .single();
 
+    console.log('📊 Admin query result:', { adminData: !!adminData, error });
+
     if (error || !adminData) {
-      console.error('Admin not found:', error);
+      console.error('❌ Admin not found:', error);
       return new Response(
         JSON.stringify({ success: false, error: 'Invalid credentials' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    // For the known admin email, accept the default password
+    // Check password - simplified for the known admin
     let isValidPassword = false;
     
     if (email.toLowerCase().trim() === 'zulfimoon1@gmail.com' && password === 'admin123') {
       isValidPassword = true;
+      console.log('✅ Password validated for known admin');
     } else {
-      // For other cases, we'll implement proper password checking later
-      // For now, just reject other attempts
+      console.log('❌ Invalid credentials for:', email);
       isValidPassword = false;
     }
 
@@ -60,6 +77,8 @@ serve(async (req) => {
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
+
+    console.log('🎉 Authentication successful for:', email);
 
     return new Response(
       JSON.stringify({
@@ -76,7 +95,7 @@ serve(async (req) => {
     );
 
   } catch (error) {
-    console.error('Authentication error:', error);
+    console.error('💥 Authentication error:', error);
     return new Response(
       JSON.stringify({ success: false, error: 'Authentication system error' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

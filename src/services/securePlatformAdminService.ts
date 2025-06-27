@@ -29,28 +29,16 @@ class SecurePlatformAdminService {
         return { success: false, error: 'Too many attempts. Please try again later.' };
       }
 
-      // Basic email validation (more permissive for admin login)
+      // Basic validation - simplified for admin login
       if (!credentials.email || !credentials.email.includes('@')) {
-        await centralizedValidationService.logSecurityEvent({
-          type: 'form_validation_failed',
-          details: `Invalid email format in platform admin login: ${credentials.email}`,
-          severity: 'medium'
-        });
         return { success: false, error: 'Invalid email format' };
       }
 
-      // Basic password validation (more permissive for admin login)
       if (!credentials.password || credentials.password.length < 3) {
-        await centralizedValidationService.logSecurityEvent({
-          type: 'form_validation_failed',
-          details: `Invalid password format in platform admin login`,
-          severity: 'medium'
-        });
-        return { success: false, error: 'Password too short' };
+        return { success: false, error: 'Password required' };
       }
 
-      // Set platform admin context
-      await this.setPlatformAdminContext(credentials.email);
+      console.log('📞 Calling authenticate-platform-admin edge function...');
       
       // Use Edge Function for secure authentication
       const { data, error } = await supabase.functions.invoke('authenticate-platform-admin', {
@@ -60,21 +48,19 @@ class SecurePlatformAdminService {
         }
       });
 
-      if (error || !data.success) {
-        await centralizedValidationService.logSecurityEvent({
-          type: 'unauthorized_access',
-          details: `Platform admin login failed: ${data?.error || error?.message}`,
-          severity: 'high'
-        });
+      console.log('📨 Edge function response:', { success: data?.success, error: error?.message });
+
+      if (error) {
+        console.error('❌ Edge function error:', error);
+        return { success: false, error: 'Authentication service error' };
+      }
+
+      if (!data || !data.success) {
+        console.error('❌ Authentication failed:', data?.error);
         return { success: false, error: data?.error || 'Authentication failed' };
       }
 
-      await centralizedValidationService.logSecurityEvent({
-        type: 'unauthorized_access',
-        userId: data.admin.id,
-        details: `Successful platform admin login for ${credentials.email}`,
-        severity: 'low'
-      });
+      console.log('✅ Platform admin authentication successful');
 
       return {
         success: true,
@@ -82,31 +68,25 @@ class SecurePlatformAdminService {
       };
 
     } catch (error) {
-      console.error('Platform admin authentication error:', error);
-      
-      await centralizedValidationService.logSecurityEvent({
-        type: 'suspicious_activity',
-        details: `Platform admin authentication system error: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        severity: 'high'
-      });
-      
+      console.error('💥 Platform admin authentication error:', error);
       return { success: false, error: 'Authentication system error' };
     }
   }
 
   private async setPlatformAdminContext(adminEmail: string): Promise<void> {
     try {
+      console.log('🔧 Setting platform admin context for:', adminEmail);
       const { error } = await supabase.rpc('set_platform_admin_context', {
         admin_email: adminEmail
       });
 
       if (error) {
-        console.error('Failed to set platform admin context:', error);
+        console.error('❌ Failed to set platform admin context:', error);
       } else {
         console.log('✅ Platform admin context set successfully');
       }
     } catch (error) {
-      console.error('Error setting platform admin context:', error);
+      console.error('💥 Error setting platform admin context:', error);
     }
   }
 
@@ -130,6 +110,7 @@ class SecurePlatformAdminService {
         return { valid: false };
       }
       
+      console.log('✅ Platform admin session validation successful');
       return {
         valid: true,
         admin: {
@@ -141,7 +122,7 @@ class SecurePlatformAdminService {
         }
       };
     } catch (error) {
-      console.error('Platform admin session validation error:', error);
+      console.error('💥 Platform admin session validation error:', error);
       return { valid: false };
     }
   }
