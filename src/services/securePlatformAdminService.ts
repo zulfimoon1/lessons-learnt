@@ -1,298 +1,175 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { secureAdminAuthService } from './secureAdminAuthService';
 import { centralizedValidationService } from './centralizedValidationService';
 
-interface AdminUser {
-  id: string;
-  email: string;
-  name: string;
-  role: string;
-  school: string;
-}
-
-interface AuthResult {
+interface AdminAuthResult {
   success: boolean;
-  admin?: AdminUser;
+  admin?: {
+    id: string;
+    email: string;
+    name: string;
+    role: string;
+    school: string;
+  };
   error?: string;
 }
 
-interface TransactionData {
-  school_name: string;
-  amount: string;
-  currency: string;
-  transaction_type: string;
-  status: string;
-  description: string;
-}
-
 class SecurePlatformAdminService {
-  // Enhanced admin authentication using the new secure service
-  async authenticateAdmin(credentials: { email: string; password: string }): Promise<AuthResult> {
+  async authenticateAdmin(credentials: { email: string; password: string }): Promise<AdminAuthResult> {
+    console.log('🔐 Secure platform admin authentication attempt:', credentials.email);
+    
     try {
-      return await secureAdminAuthService.authenticateAdmin(credentials);
-    } catch (error) {
-      console.error('Authentication error:', error);
+      // Rate limiting
+      const rateLimitKey = `platform_admin_auth:${credentials.email}`;
+      if (!centralizedValidationService.checkRateLimit(rateLimitKey)) {
+        await centralizedValidationService.logSecurityEvent({
+          type: 'rate_limit_exceeded',
+          details: `Platform admin authentication rate limit exceeded for ${credentials.email}`,
+          severity: 'medium'
+        });
+        return { success: false, error: 'Too many attempts. Please try again later.' };
+      }
+
+      // Input validation
+      const emailValidation = centralizedValidationService.validateEmail(credentials.email);
+      const passwordValidation = centralizedValidationService.validatePassword(credentials.password);
+
+      if (!emailValidation.isValid) {
+        await centralizedValidationService.logSecurityEvent({
+          type: 'form_validation_failed',
+          details: `Invalid email format in platform admin login: ${credentials.email}`,
+          severity: 'medium'
+        });
+        return { success: false, error: 'Invalid email format' };
+      }
+
+      if (!passwordValidation.isValid) {
+        await centralizedValidationService.logSecurityEvent({
+          type: 'form_validation_failed',
+          details: `Invalid password format in platform admin login`,
+          severity: 'medium'
+        });
+        return { success: false, error: 'Invalid password format' };
+      }
+
+      // Set platform admin context
+      await this.setPlatformAdminContext(credentials.email);
+      
+      // Use Edge Function for secure authentication
+      const { data, error } = await supabase.functions.invoke('authenticate-platform-admin', {
+        body: {
+          email: credentials.email.toLowerCase().trim(),
+          password: credentials.password
+        }
+      });
+
+      if (error || !data.success) {
+        await centralizedValidationService.logSecurityEvent({
+          type: 'unauthorized_access',
+          details: `Platform admin login failed: ${data?.error || error?.message}`,
+          severity: 'high'
+        });
+        return { success: false, error: data?.error || 'Authentication failed' };
+      }
+
+      await centralizedValidationService.logSecurityEvent({
+        type: 'unauthorized_access',
+        userId: data.admin.id,
+        details: `Successful platform admin login for ${credentials.email}`,
+        severity: 'low'
+      });
+
       return {
-        success: false,
-        error: 'Authentication failed'
+        success: true,
+        admin: data.admin
       };
+
+    } catch (error) {
+      console.error('Platform admin authentication error:', error);
+      
+      await centralizedValidationService.logSecurityEvent({
+        type: 'suspicious_activity',
+        details: `Platform admin authentication system error: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        severity: 'high'
+      });
+      
+      return { success: false, error: 'Authentication system error' };
     }
   }
 
-  // Validate admin session using the new secure service
-  async validateAdminSession(email: string): Promise<{ valid: boolean; admin?: AdminUser }> {
+  private async setPlatformAdminContext(adminEmail: string): Promise<void> {
     try {
-      return await secureAdminAuthService.validateAdminSession(email);
+      const { error } = await supabase.rpc('set_platform_admin_context', {
+        admin_email: adminEmail
+      });
+
+      if (error) {
+        console.error('Failed to set platform admin context:', error);
+      } else {
+        console.log('✅ Platform admin context set successfully');
+      }
     } catch (error) {
-      console.error('Session validation error:', error);
+      console.error('Error setting platform admin context:', error);
+    }
+  }
+
+  async validateAdminSession(email: string): Promise<{ valid: boolean; admin?: any }> {
+    try {
+      console.log('🔍 Validating platform admin session for:', email);
+      
+      // Set admin context
+      await this.setPlatformAdminContext(email);
+      
+      // Query database to verify admin exists and is active
+      const { data: adminData, error } = await supabase
+        .from('teachers')
+        .select('id, name, email, school, role')
+        .eq('email', email.toLowerCase().trim())
+        .eq('role', 'admin')
+        .single();
+
+      if (error || !adminData) {
+        console.log('❌ Platform admin session validation failed - user not found');
+        return { valid: false };
+      }
+      
+      return {
+        valid: true,
+        admin: {
+          id: adminData.id,
+          email: adminData.email,
+          name: adminData.name,
+          school: adminData.school,
+          role: adminData.role
+        }
+      };
+    } catch (error) {
+      console.error('Platform admin session validation error:', error);
       return { valid: false };
     }
   }
 
-  // Enhanced platform admin context setting with better error handling and multiple context variables
-  private async setPlatformAdminContext(adminEmail: string): Promise<void> {
+  async changePassword(currentPassword: string, newPassword: string, adminEmail: string): Promise<{ success: boolean; error?: string }> {
     try {
-      console.log('🔧 Setting comprehensive platform admin context for:', adminEmail);
+      console.log('🔐 Platform admin password change attempt for:', adminEmail);
       
-      // Set multiple context variables for maximum compatibility
-      const { error: contextError } = await supabase.rpc('set_platform_admin_context', {
-        admin_email: adminEmail
-      });
-
-      if (contextError) {
-        console.error('Context setting error:', contextError);
-        throw new Error(`Failed to set admin context: ${contextError.message}`);
-      } else {
-        console.log('✅ Platform admin context set successfully with all required flags');
-      }
-
-      // Log the context setting with valid event type
-      centralizedValidationService.logSecurityEvent({
-        type: 'suspicious_activity',
-        details: `Platform admin context configured for ${adminEmail} with comprehensive flags`,
-        severity: 'low'
-      });
-
-    } catch (error) {
-      console.error('Error setting platform admin context:', error);
-      centralizedValidationService.logSecurityEvent({
-        type: 'unauthorized_access',
-        details: `Failed to set admin context: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        severity: 'high'
-      });
-      throw error;
-    }
-  }
-
-  async getPlatformStats(adminEmail: string) {
-    try {
-      await this.setPlatformAdminContext(adminEmail);
-      
-      const [studentsResult, teachersResult, responsesResult, subscriptionsResult] = await Promise.all([
-        supabase.from('students').select('id', { count: 'exact' }),
-        supabase.from('teachers').select('id', { count: 'exact' }),
-        supabase.from('feedback').select('id', { count: 'exact' }),
-        supabase.from('subscriptions').select('id', { count: 'exact' })
-      ]);
-
-      return {
-        studentsCount: studentsResult.count || 0,
-        teachersCount: teachersResult.count || 0,
-        responsesCount: responsesResult.count || 0,
-        subscriptionsCount: subscriptionsResult.count || 0
-      };
-    } catch (error) {
-      console.error('Error getting platform stats:', error);
-      throw new Error('Failed to retrieve platform statistics');
-    }
-  }
-
-  async getSchoolData(adminEmail: string) {
-    try {
-      await this.setPlatformAdminContext(adminEmail);
-      
-      const { data: schoolData, error } = await supabase
-        .from('teachers')
-        .select('school')
-        .not('school', 'is', null);
-
-      if (error) throw new Error(`Failed to fetch school data: ${error.message}`);
-
-      const schoolCounts = schoolData.reduce((acc: any, teacher: any) => {
-        const school = teacher.school;
-        if (school) {
-          acc[school] = (acc[school] || 0) + 1;
+      // Use Edge Function for secure password change
+      const { data, error } = await supabase.functions.invoke('change-admin-password', {
+        body: {
+          email: adminEmail,
+          currentPassword,
+          newPassword
         }
-        return acc;
-      }, {});
-
-      const { data: studentData, error: studentError } = await supabase
-        .from('students')
-        .select('school')
-        .not('school', 'is', null);
-
-      if (studentError) throw new Error(`Failed to fetch student data: ${studentError.message}`);
-
-      const studentCounts = studentData.reduce((acc: any, student: any) => {
-        const school = student.school;
-        if (school) {
-          acc[school] = (acc[school] || 0) + 1;
-        }
-        return acc;
-      }, {});
-
-      return Object.entries(schoolCounts).map(([name, teacherCount]) => ({
-        name,
-        teacher_count: teacherCount,
-        student_count: studentCounts[name] || 0
-      }));
-    } catch (error) {
-      console.error('Error getting school data:', error);
-      throw new Error('Failed to retrieve school data');
-    }
-  }
-
-  async getTransactions(adminEmail: string) {
-    try {
-      console.log('🔍 Setting admin context before fetching transactions');
-      await this.setPlatformAdminContext(adminEmail);
-      
-      console.log('📊 Attempting to fetch transactions with enhanced admin context');
-      
-      const { data, error } = await supabase
-        .from('transactions')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (error) {
-        console.error('❌ Transaction fetch error with enhanced context:', error);
-        throw new Error(`Failed to fetch transactions: ${error.message}`);
-      }
-      
-      console.log('✅ Transactions fetched successfully with enhanced admin context:', data?.length || 0);
-      return data || [];
-    } catch (error) {
-      console.error('Error getting transactions:', error);
-      throw new Error('Failed to retrieve transactions');
-    }
-  }
-
-  async createSchool(adminEmail: string, schoolName: string) {
-    try {
-      await this.setPlatformAdminContext(adminEmail);
-      
-      console.log('School creation requested:', schoolName);
-      return { success: true, schoolName };
-    } catch (error) {
-      console.error('Error creating school:', error);
-      throw new Error('Failed to create school');
-    }
-  }
-
-  async deleteSchool(adminEmail: string, schoolName: string) {
-    try {
-      await this.setPlatformAdminContext(adminEmail);
-      
-      const { data, error } = await supabase.rpc('platform_admin_delete_school', {
-        school_name_param: schoolName,
-        admin_email_param: adminEmail
       });
 
-      if (error) throw new Error(`Failed to delete school: ${error.message}`);
-      return data;
-    } catch (error) {
-      console.error('Error deleting school:', error);
-      throw new Error('Failed to delete school');
-    }
-  }
-
-  async createTransaction(adminEmail: string, transactionData: TransactionData) {
-    console.log('🔧 Creating transaction via enhanced secure RPC function');
-    
-    try {
-      console.log('💳 Creating transaction with comprehensive admin context:', transactionData.school_name);
-      
-      // Validate input data
-      const amount = parseFloat(transactionData.amount);
-      if (isNaN(amount) || amount <= 0) {
-        throw new Error('Invalid amount provided');
+      if (error || !data.success) {
+        return { success: false, error: data?.error || 'Password change failed' };
       }
 
-      // Use the platform_admin_create_transaction RPC function with enhanced context
-      const { data, error } = await supabase.rpc('platform_admin_create_transaction', {
-        admin_email_param: adminEmail,
-        school_name_param: transactionData.school_name,
-        amount_param: Math.round(amount * 100), // Convert to cents
-        currency_param: transactionData.currency || 'usd',
-        transaction_type_param: transactionData.transaction_type,
-        status_param: transactionData.status,
-        description_param: transactionData.description || ''
-      });
-
-      if (error) {
-        console.error('❌ Enhanced RPC transaction creation failed:', error);
-        throw new Error(`Transaction creation failed: ${error.message}`);
-      }
-      
-      console.log('✅ Transaction created successfully via enhanced RPC:', data?.id);
-      return data;
-    } catch (error) {
-      console.error('Error creating transaction with enhanced context:', error);
-      centralizedValidationService.logSecurityEvent({
-        type: 'form_validation_failed',
-        details: `Failed to create transaction: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        severity: 'medium'
-      });
-      throw error;
-    }
-  }
-
-  async deleteTransaction(adminEmail: string, transactionId: string) {
-    try {
-      await this.setPlatformAdminContext(adminEmail);
-      
-      const { error } = await supabase
-        .from('transactions')
-        .delete()
-        .eq('id', transactionId);
-
-      if (error) throw new Error(`Failed to delete transaction: ${error.message}`);
       return { success: true };
     } catch (error) {
-      console.error('Error deleting transaction:', error);
-      throw new Error('Failed to delete transaction');
-    }
-  }
-
-  calculateMonthlyRevenue(transactions: any[]): number {
-    try {
-      const currentMonth = new Date().getMonth();
-      const currentYear = new Date().getFullYear();
-      
-      return transactions
-        .filter(transaction => {
-          const transactionDate = new Date(transaction.created_at);
-          return transactionDate.getMonth() === currentMonth && 
-                 transactionDate.getFullYear() === currentYear &&
-                 transaction.status === 'completed';
-        })
-        .reduce((total, transaction) => total + (transaction.amount / 100), 0);
-    } catch (error) {
-      console.error('Error calculating monthly revenue:', error);
-      return 0;
-    }
-  }
-
-  async cleanupDemoData(adminEmail: string) {
-    try {
-      await this.setPlatformAdminContext(adminEmail);
-      
-      console.log('Demo data cleanup requested by:', adminEmail);
-      return { success: true, message: 'Demo data cleanup completed' };
-    } catch (error) {
-      console.error('Error cleaning up demo data:', error);
-      throw new Error('Failed to cleanup demo data');
+      console.error('Password change error:', error);
+      return { success: false, error: 'Password change system error' };
     }
   }
 }

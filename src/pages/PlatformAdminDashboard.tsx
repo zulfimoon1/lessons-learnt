@@ -1,459 +1,213 @@
-import { useEffect, useState } from "react";
-import { usePlatformAdmin } from "@/contexts/PlatformAdminContext";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { SchoolIcon, LogOutIcon, RefreshCwIcon, UsersIcon, MessageSquareIcon, Settings, Users, School, Shield, TrashIcon } from "lucide-react";
-import { toast } from "sonner";
-import StatsCard from "@/components/dashboard/StatsCard";
-import SchoolOverview from "@/components/platform-admin/SchoolOverview";
-import FeedbackAnalytics from "@/components/platform-admin/FeedbackAnalytics";
-import DiscountCodeManagement from "@/components/DiscountCodeManagement";
-import SubscriptionManagement from "@/components/platform-admin/SubscriptionManagement";
-import ResponsesManagement from "@/components/platform-admin/ResponsesManagement";
-import TransactionManagement from "@/components/platform-admin/TransactionManagement";
-import SchoolManagement from "@/components/platform-admin/SchoolManagement";
-import TeacherManagement from "@/components/platform-admin/TeacherManagement";
-import StudentManagement from "@/components/platform-admin/StudentManagement";
-import DoctorManagement from "@/components/platform-admin/DoctorManagement";
-import SecurityMonitoring from "@/components/platform-admin/SecurityMonitoring";
-import DiscountNotifications from "@/components/platform-admin/DiscountNotifications";
-import LanguageSwitcher from "@/components/LanguageSwitcher";
-import GDPRAdminDashboard from "@/components/platform-admin/GDPRAdminDashboard";
-import { securePlatformAdminService } from "@/services/securePlatformAdminService";
 
-interface DashboardStats {
-  totalStudents: number;
-  totalTeachers: number;
-  totalSchools: number;
-  totalResponses: number;
-  totalSubscriptions: number;
-  monthlyRevenue: number;
-}
+import React, { useState } from 'react';
+import { usePlatformAdmin } from '@/contexts/PlatformAdminContext';
+import { Navigate } from 'react-router-dom';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { 
+  ShieldIcon, 
+  LogOut, 
+  Settings, 
+  Users, 
+  School, 
+  CreditCard,
+  Lock,
+  BarChart3
+} from 'lucide-react';
+import SchoolManagement from '@/components/platform-admin/SchoolManagement';
+import TeacherManagement from '@/components/platform-admin/TeacherManagement';
+import StudentManagement from '@/components/platform-admin/StudentManagement';
+import SubscriptionManagement from '@/components/platform-admin/SubscriptionManagement';
+import SecurityMonitoring from '@/components/platform-admin/SecurityMonitoring';
+import PasswordChangeForm from '@/components/platform-admin/PasswordChangeForm';
 
-interface SchoolStats {
-  school: string;
-  total_teachers: number;
-}
+const PlatformAdminDashboard: React.FC = () => {
+  const { admin, logout, isLoading } = usePlatformAdmin();
+  const [activeTab, setActiveTab] = useState('overview');
 
-const PlatformAdminDashboard = () => {
-  const { admin, isLoading: adminLoading, logout, isAuthenticated } = usePlatformAdmin();
-  const [stats, setStats] = useState<DashboardStats>({
-    totalStudents: 0,
-    totalTeachers: 0,
-    totalSchools: 0,
-    totalResponses: 0,
-    totalSubscriptions: 0,
-    monthlyRevenue: 0,
-  });
-  const [schoolStats, setSchoolStats] = useState<SchoolStats[]>([]);
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  const [isCleaningUp, setIsCleaningUp] = useState(false);
-  const [lastUpdated, setLastUpdated] = useState<string>("");
-  const [refreshKey, setRefreshKey] = useState(0);
-  const [hasDataLoaded, setHasDataLoaded] = useState(false);
-  const [fetchError, setFetchError] = useState<string>("");
-
-  console.log('📊 DASHBOARD: State check', { 
-    admin: !!admin, 
-    isAuthenticated, 
-    adminLoading,
-    adminEmail: admin?.email 
-  });
-
-  const fetchStats = async () => {
-    console.log('📊 DASHBOARD: Fetching stats via edge function...');
-    if (!admin?.email) {
-      console.warn('No admin email available for stats fetch');
-      return;
-    }
-
-    setIsRefreshing(true);
-    setFetchError("");
-    
-    try {
-      console.log('📊 Getting platform stats for admin:', admin.email);
-      
-      const [platformStats, schoolData, transactions] = await Promise.all([
-        securePlatformAdminService.getPlatformStats(admin.email).catch(error => {
-          console.error('Failed to get platform stats:', error);
-          return { studentsCount: 0, teachersCount: 0, responsesCount: 0, subscriptionsCount: 0 };
-        }),
-        securePlatformAdminService.getSchoolData(admin.email).catch(error => {
-          console.error('Failed to get school data:', error);
-          return [];
-        }),
-        securePlatformAdminService.getTransactions(admin.email).catch(error => {
-          console.error('Failed to get transactions:', error);
-          return [];
-        })
-      ]);
-
-      console.log('📊 Platform stats received:', platformStats);
-      console.log('📊 School data received:', schoolData);
-      console.log('📊 Transactions received:', transactions);
-
-      // Filter out administrative/non-school entries
-      const realSchools = schoolData.filter((school: any) => 
-        school.name && 
-        school.name !== 'Platform Administration' &&
-        !school.name.toLowerCase().includes('admin')
-      );
-
-      const schoolStatsProcessed = realSchools.map((school: any) => ({
-        school: school.name,
-        total_teachers: school.teacher_count
-      }));
-
-      // Calculate monthly revenue from transactions
-      const monthlyRevenue = securePlatformAdminService.calculateMonthlyRevenue(transactions);
-
-      const newStats = {
-        totalStudents: platformStats.studentsCount,
-        totalTeachers: platformStats.teachersCount,
-        totalSchools: realSchools.length,
-        totalResponses: platformStats.responsesCount,
-        totalSubscriptions: platformStats.subscriptionsCount,
-        monthlyRevenue: monthlyRevenue,
-      };
-
-      console.log('📊 Final stats assembled:', newStats);
-      
-      setStats(newStats);
-      setSchoolStats(schoolStatsProcessed);
-      setLastUpdated(new Date().toLocaleString());
-      setRefreshKey(Date.now());
-      setHasDataLoaded(true);
-      
-      toast.success('Dashboard data loaded successfully');
-      
-    } catch (error) {
-      console.error('❌ Failed to fetch dashboard stats:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      setFetchError(errorMessage);
-      toast.error(`Failed to load data: ${errorMessage}`);
-    } finally {
-      setIsRefreshing(false);
-    }
-  };
-
-  const handleCleanupDemoData = async () => {
-    if (!admin?.email) return;
-    
-    setIsCleaningUp(true);
-    try {
-      await securePlatformAdminService.cleanupDemoData(admin.email);
-      toast.success('Demo data cleaned up successfully');
-      
-      // Refresh the dashboard data
-      setTimeout(() => {
-        fetchStats();
-      }, 1000);
-    } catch (error) {
-      console.error('Failed to cleanup demo data:', error);
-      toast.error('Failed to cleanup demo data');
-    } finally {
-      setIsCleaningUp(false);
-    }
-  };
-
-  const handleRefresh = () => {
-    setHasDataLoaded(false);
-    fetchStats();
-  };
-
-  const handleDataChange = () => {
-    console.log('📊 Data changed, refreshing dashboard...');
-    setTimeout(() => {
-      fetchStats();
-    }, 1000);
-  };
-
-  const handleLogout = () => {
-    logout();
-    toast.info('Logged out successfully');
-  };
-
-  useEffect(() => {
-    console.log('📊 Dashboard useEffect triggered', { isAuthenticated, admin: !!admin });
-    if (isAuthenticated && admin?.email && !hasDataLoaded) {
-      console.log('Loading dashboard data for admin:', admin.email);
-      fetchStats();
-    }
-  }, [isAuthenticated, admin, hasDataLoaded]);
-
-  if (adminLoading) {
+  if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-brand-teal/10 via-white to-brand-orange/10 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-teal"></div>
-        <span className="ml-3 text-brand-dark">Loading admin session...</span>
-      </div>
-    );
-  }
-
-  if (!isAuthenticated || !admin) {
-    console.log('📊 Access denied', { isAuthenticated, admin: !!admin });
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-brand-teal/10 via-white to-brand-orange/10 flex items-center justify-center">
-        <div className="text-center">
-          <div className="text-lg text-red-600 mb-4">Admin Access Denied</div>
-          <p className="text-gray-600">Please log in as an administrator</p>
-          <a href="/console" className="text-blue-500 hover:text-blue-700 underline mt-4 inline-block">
-            Go to Admin Login
-          </a>
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="flex items-center space-x-2">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-teal"></div>
+          <span className="text-lg text-gray-600">Loading platform console...</span>
         </div>
       </div>
     );
   }
+
+  if (!admin) {
+    return <Navigate to="/platform-admin-login" replace />;
+  }
+
+  const tabItems = [
+    {
+      value: 'overview',
+      icon: BarChart3,
+      label: 'Overview',
+      component: (
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Total Schools</CardTitle>
+                <School className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">--</div>
+                <p className="text-xs text-muted-foreground">Active subscriptions</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Total Users</CardTitle>
+                <Users className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">--</div>
+                <p className="text-xs text-muted-foreground">Teachers + Students</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Revenue</CardTitle>
+                <CreditCard className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">--</div>
+                <p className="text-xs text-muted-foreground">This month</p>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      )
+    },
+    {
+      value: 'schools',
+      icon: School,
+      label: 'Schools',
+      component: <SchoolManagement />
+    },
+    {
+      value: 'teachers',
+      icon: Users,
+      label: 'Teachers',
+      component: <TeacherManagement />
+    },
+    {
+      value: 'students',
+      icon: Users,
+      label: 'Students',
+      component: <StudentManagement />
+    },
+    {
+      value: 'subscriptions',
+      icon: CreditCard,
+      label: 'Subscriptions',
+      component: <SubscriptionManagement />
+    },
+    {
+      value: 'security',
+      icon: ShieldIcon,
+      label: 'Security',
+      component: <SecurityMonitoring />
+    },
+    {
+      value: 'settings',
+      icon: Settings,
+      label: 'Settings',
+      component: (
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <PasswordChangeForm />
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Settings className="w-5 h-5" />
+                  Platform Settings
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-gray-600 mb-4">
+                  Additional platform configuration options will be available here.
+                </p>
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm">Platform Version</span>
+                    <span className="text-sm font-mono">v1.0.0</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm">Admin Email</span>
+                    <span className="text-sm font-mono">{admin.email}</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      )
+    }
+  ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-brand-teal/10 via-white to-brand-orange/10" key={`dashboard-${refreshKey}`}>
-      <div className="container mx-auto px-4 py-6 max-w-6xl">
-        {/* Header - matching teacher dashboard style */}
-        <div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-lg border border-gray-200/50 mb-6 p-6">
-          <div className="flex items-center justify-between">
+    <div className="min-h-screen bg-gradient-to-br from-brand-teal/5 via-white to-brand-orange/5">
+      {/* Header */}
+      <header className="bg-white/90 backdrop-blur-sm border-b border-gray-200/50 shadow-sm">
+        <div className="max-w-7xl mx-auto flex justify-between items-center px-6 py-4">
+          <div className="flex items-center space-x-3">
+            <ShieldIcon className="w-8 h-8 text-brand-teal" />
             <div>
-              <h1 className="text-3xl font-bold text-brand-dark mb-2">
-                Platform Admin Dashboard
-              </h1>
-              <p className="text-brand-dark/70 text-lg">
-                Welcome, {admin?.email} - Platform Administrator
-              </p>
-            </div>
-            <div className="flex gap-3">
-              <Button
-                onClick={handleRefresh}
-                disabled={isRefreshing}
-                variant="outline"
-                size="sm"
-                className="border-brand-orange/30 hover:bg-brand-orange/10 flex items-center gap-2"
-              >
-                <RefreshCwIcon className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-                {isRefreshing ? 'Loading...' : 'Refresh'}
-              </Button>
-              <Button
-                onClick={handleCleanupDemoData}
-                disabled={isCleaningUp}
-                variant="outline"
-                size="sm"
-                className="border-red-300 hover:bg-red-50 text-red-600 hover:text-red-700 flex items-center gap-2"
-              >
-                <TrashIcon className="w-4 h-4" />
-                {isCleaningUp ? 'Cleaning...' : 'Cleanup Demo Data'}
-              </Button>
-              <LanguageSwitcher />
-              <Button 
-                variant="outline" 
-                onClick={handleLogout}
-                className="border-brand-orange/30 hover:bg-brand-orange/10"
-              >
-                <LogOutIcon className="w-4 h-4 mr-2" />
-                Logout
-              </Button>
+              <h1 className="text-xl font-bold text-gray-900">Platform Console</h1>
+              <p className="text-sm text-gray-600">Welcome, {admin.name}</p>
             </div>
           </div>
+          <Button onClick={logout} variant="outline" className="flex items-center gap-2">
+            <LogOut className="w-4 h-4" />
+            Logout
+          </Button>
         </div>
+      </header>
 
-        {/* Error Display */}
-        {fetchError && (
-          <div className="bg-red-50/90 backdrop-blur-sm border border-red-200 rounded-xl p-4 mb-6">
-            <div className="text-red-800 font-medium">Error loading data:</div>
-            <div className="text-red-600 text-sm mt-1">{fetchError}</div>
+      {/* Main Content */}
+      <main className="max-w-7xl mx-auto px-6 py-8">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-8">
+          {/* Tab Navigation */}
+          <div className="bg-white/90 backdrop-blur-sm rounded-2xl border border-gray-200/50 shadow-lg p-6">
+            <TabsList className="bg-transparent p-0 h-auto gap-3 grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7">
+              {tabItems.map((item) => {
+                const Icon = item.icon;
+                return (
+                  <TabsTrigger 
+                    key={item.value}
+                    value={item.value} 
+                    className="h-auto p-4 flex items-center gap-3 hover:bg-gray-50 border border-gray-200 justify-center data-[state=active]:bg-brand-teal data-[state=active]:text-white data-[state=active]:border-brand-teal transition-all duration-300 rounded-lg bg-white flex-col text-center min-h-[80px]"
+                  >
+                    <Icon 
+                      className={`w-5 h-5 ${activeTab === item.value ? 'text-white' : 'text-brand-teal'}`}
+                      aria-hidden="true"
+                    />
+                    <span className="text-sm font-medium block">
+                      {item.label}
+                    </span>
+                  </TabsTrigger>
+                );
+              })}
+            </TabsList>
           </div>
-        )}
 
-        {/* Loading State */}
-        {isRefreshing && !hasDataLoaded && (
-          <div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-lg border border-gray-200/50 p-8 mb-6">
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-teal mx-auto mb-4"></div>
-              <p className="text-brand-dark/70">Loading dashboard data...</p>
-            </div>
-          </div>
-        )}
-
-        {/* Stats Cards - matching student dashboard */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
-          <Card className="bg-white/90 backdrop-blur-sm border-gray-200/50 shadow-lg">
-            <CardContent className="p-6">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-brand-teal/10 rounded-lg flex items-center justify-center">
-                  <UsersIcon className="w-6 h-6 text-brand-teal" />
-                </div>
-                <div>
-                  <p className="text-sm text-gray-600">Total Students</p>
-                  <p className="text-lg font-semibold text-brand-dark">{stats.totalStudents}</p>
+          {/* Tab Content */}
+          {tabItems.map((item) => (
+            <TabsContent key={item.value} value={item.value} className="space-y-6">
+              <div className="bg-white/80 backdrop-blur-sm rounded-2xl border border-gray-200/50 shadow-lg">
+                <div className="p-6">
+                  {item.component}
                 </div>
               </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-white/90 backdrop-blur-sm border-gray-200/50 shadow-lg">
-            <CardContent className="p-6">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-brand-orange/10 rounded-lg flex items-center justify-center">
-                  <SchoolIcon className="w-6 h-6 text-brand-orange" />
-                </div>
-                <div>
-                  <p className="text-sm text-gray-600">Total Schools</p>
-                  <p className="text-lg font-semibold text-brand-dark">{stats.totalSchools}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-white/90 backdrop-blur-sm border-gray-200/50 shadow-lg">
-            <CardContent className="p-6">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-brand-teal/10 rounded-lg flex items-center justify-center">
-                  <Users className="w-6 h-6 text-brand-teal" />
-                </div>
-                <div>
-                  <p className="text-sm text-gray-600">Total Teachers</p>
-                  <p className="text-lg font-semibold text-brand-dark">{stats.totalTeachers}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-white/90 backdrop-blur-sm border-gray-200/50 shadow-lg">
-            <CardContent className="p-6">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-brand-orange/10 rounded-lg flex items-center justify-center">
-                  <MessageSquareIcon className="w-6 h-6 text-brand-orange" />
-                </div>
-                <div>
-                  <p className="text-sm text-gray-600">Total Responses</p>
-                  <p className="text-lg font-semibold text-brand-dark">{stats.totalResponses}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Main Content with Tabs - matching student dashboard style */}
-        <div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-lg border border-gray-200/50 overflow-hidden">
-          <Tabs defaultValue="management" className="w-full">
-            {/* Tab Navigation - updated to include GDPR tab */}
-            <div className="bg-white border-b border-gray-200">
-              <TabsList className="h-auto p-0 bg-transparent rounded-none w-full justify-start overflow-x-auto">
-                <TabsTrigger 
-                  value="management" 
-                  className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-brand-orange data-[state=active]:to-brand-teal data-[state=active]:text-white data-[state=inactive]:text-gray-600 data-[state=inactive]:hover:text-brand-dark border-b-2 border-transparent data-[state=active]:border-brand-teal rounded-none px-6 py-4 font-medium transition-all duration-200 whitespace-nowrap"
-                >
-                  <Settings className="w-4 h-4 mr-2" />
-                  User Management
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="analytics" 
-                  className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-brand-orange data-[state=active]:to-brand-teal data-[state=active]:text-white data-[state=inactive]:text-gray-600 data-[state=inactive]:hover:text-brand-dark border-b-2 border-transparent data-[state=active]:border-brand-teal rounded-none px-6 py-4 font-medium transition-all duration-200 whitespace-nowrap"
-                >
-                  <MessageSquareIcon className="w-4 h-4 mr-2" />
-                  Analytics & Reports
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="gdpr" 
-                  className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-brand-orange data-[state=active]:to-brand-teal data-[state=active]:text-white data-[state=inactive]:text-gray-600 data-[state=inactive]:hover:text-brand-dark border-b-2 border-transparent data-[state=active]:border-brand-teal rounded-none px-6 py-4 font-medium transition-all duration-200 whitespace-nowrap"
-                >
-                  <Shield className="w-4 h-4 mr-2" />
-                  GDPR & Privacy
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="security" 
-                  className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-brand-orange data-[state=active]:to-brand-teal data-[state=active]:text-white data-[state=inactive]:text-gray-600 data-[state=inactive]:hover:text-brand-dark border-b-2 border-transparent data-[state=active]:border-brand-teal rounded-none px-6 py-4 font-medium transition-all duration-200 whitespace-nowrap"
-                >
-                  <Shield className="w-4 h-4 mr-2" />
-                  Security
-                </TabsTrigger>
-              </TabsList>
-            </div>
-
-            {/* Tab Content */}
-            <div className="p-6">
-              {/* Existing tabs - keep existing code */}
-              <TabsContent value="management" className="mt-0">
-                <Tabs defaultValue="schools" className="space-y-4">
-                  <TabsList className="bg-gray-100/50">
-                    <TabsTrigger value="schools">Schools</TabsTrigger>
-                    <TabsTrigger value="teachers">Teachers</TabsTrigger>
-                    <TabsTrigger value="students">Students</TabsTrigger>
-                    <TabsTrigger value="doctors">Doctors</TabsTrigger>
-                  </TabsList>
-
-                  <TabsContent value="schools">
-                    <SchoolManagement onDataChange={handleDataChange} />
-                  </TabsContent>
-
-                  <TabsContent value="teachers">
-                    <TeacherManagement />
-                  </TabsContent>
-
-                  <TabsContent value="students">
-                    <StudentManagement />
-                  </TabsContent>
-
-                  <TabsContent value="doctors">
-                    <DoctorManagement />
-                  </TabsContent>
-                </Tabs>
-              </TabsContent>
-
-              <TabsContent value="analytics" className="mt-0">
-                <div className="space-y-6">
-                  <DiscountNotifications adminEmail={admin?.email} />
-                  <SubscriptionManagement />
-                  <TransactionManagement />
-                  <DiscountCodeManagement />
-                  <ResponsesManagement />
-                  <SchoolOverview schoolStats={schoolStats} />
-                  <FeedbackAnalytics />
-                </div>
-              </TabsContent>
-
-              {/* New GDPR Tab */}
-              <TabsContent value="gdpr" className="mt-0">
-                <GDPRAdminDashboard />
-              </TabsContent>
-
-              <TabsContent value="security" className="mt-0">
-                <SecurityMonitoring />
-              </TabsContent>
-            </div>
-          </Tabs>
-        </div>
-
-        {/* Dashboard Footer with Status - matching style */}
-        <div className="mt-8">
-          <Card className="bg-white/90 backdrop-blur-sm border-gray-200/50 shadow-lg">
-            <CardContent className="pt-6">
-              <p className="text-sm text-brand-dark/70 mb-4">
-                Last updated: {lastUpdated || 'Never'} 
-                <span className={`ml-2 ${hasDataLoaded ? 'text-green-600' : 'text-yellow-600'}`}>
-                  {hasDataLoaded ? '✓ Data loaded' : '⏳ Loading...'}
-                </span>
-              </p>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                <div>
-                  <span className="font-medium text-brand-dark">Monthly Revenue:</span>
-                  <span className="ml-2 text-green-600">€{stats.monthlyRevenue.toFixed(2)}</span>
-                </div>
-                <div>
-                  <span className="font-medium text-brand-dark">Active Subscriptions:</span>
-                  <span className="ml-2 text-brand-teal">{stats.totalSubscriptions}</span>
-                </div>
-                <div>
-                  <span className="font-medium text-brand-dark">Total Users:</span>
-                  <span className="ml-2 text-brand-orange">{stats.totalStudents + stats.totalTeachers}</span>
-                </div>
-                <div>
-                  <span className="font-medium text-brand-dark">System Status:</span>
-                  <span className="ml-2 text-green-600">✅ Online</span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
+            </TabsContent>
+          ))}
+        </Tabs>
+      </main>
     </div>
   );
 };
