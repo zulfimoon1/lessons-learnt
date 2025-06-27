@@ -134,12 +134,11 @@ serve(async (req) => {
     // Create secure SHA-256 hash for new password
     const newPasswordHash = await hashPassword(newPassword);
 
-    // Update password
+    // Update password (removed the updated_at field that doesn't exist)
     const { error: updateError } = await supabaseClient
       .from('teachers')
       .update({ 
-        password_hash: newPasswordHash,
-        updated_at: new Date().toISOString()
+        password_hash: newPasswordHash
       })
       .eq('id', adminData.id);
 
