@@ -424,11 +424,11 @@ export const enTranslations = {
   'student.school': 'School',
   'student.yourName': 'Your Name',
 
-  // Welcome section - NEW ADDITIONS for WelcomeSection component
+  // Welcome section - UPDATED hero messaging
   'welcome.title': 'Lessons Learnt',
-  'welcome.heroTitle1': 'Collaborative Classrooms',
-  'welcome.heroTitle2': 'Unstoppable Minds',
-  'welcome.subtitle': 'Students rate lessons, access counselors instantly—the only platform giving teachers game-changing insights while ensuring no student struggles alone!',
+  'welcome.heroTitle1': 'Know How Every Student Feels',
+  'welcome.heroTitle2': 'And When They Need Support',
+  'welcome.subtitle': 'Get honest student feedback through voice messages. AI detects emotional distress early. Teachers receive alerts to help struggling students before it\'s too late.',
   'welcome.freeForStudents': 'Always free for students!',
   'welcome.studentsWelcome': 'Welcome to Your Learning Journey',
   'welcome.studentsSubtitle': 'Track your progress, share feedback, and access support whenever you need it.',
@@ -444,13 +444,13 @@ export const enTranslations = {
   'welcome.feedbackSubmitted': 'Feedback Submitted',
   'tagline.studentLead': 'Where every student voice shapes the future of learning',
 
-  // Features
-  'features.studentFeedback.title': 'Student Feedback Collection',
-  'features.studentFeedback.description': 'Collect direct feedback on lessons and experiences',
-  'features.teacherInsights.title': 'Teacher Analytics Dashboard',
-  'features.teacherInsights.description': 'Monitor student progress and classroom dynamics',
-  'features.mentalHealth.title': 'Mental Health Support',
-  'features.mentalHealth.description': 'Anonymous chat with school psychologists',
+  // Features - UPDATED to reflect combined value proposition
+  'features.studentFeedback.title': 'Voice Feedback Collection',
+  'features.studentFeedback.description': 'Students share honest feedback through voice messages, revealing true emotions and learning experiences',
+  'features.teacherInsights.title': 'AI-Powered Early Detection',
+  'features.teacherInsights.description': 'Advanced AI analyzes voice patterns and feedback to detect emotional distress and learning struggles early',
+  'features.mentalHealth.title': 'Instant Teacher Alerts',
+  'features.mentalHealth.description': 'Teachers receive immediate notifications when students need support, enabling timely intervention',
 
   // Platform
   'platform.whySchools': 'Why Schools Choose Lessons Learnt',
