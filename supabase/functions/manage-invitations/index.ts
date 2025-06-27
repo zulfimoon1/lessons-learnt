@@ -103,6 +103,11 @@ serve(async (req) => {
           );
         }
 
+        // Generate a secure invite token manually
+        const tokenBytes = new Uint8Array(32);
+        crypto.getRandomValues(tokenBytes);
+        const inviteToken = btoa(String.fromCharCode(...tokenBytes));
+
         const { data: newInvitation, error: createError } = await supabaseClient
           .from('invitations')
           .insert({
@@ -110,6 +115,7 @@ serve(async (req) => {
             school: data.school,
             role: data.role || 'teacher',
             specialization: data.specialization || null,
+            invite_token: inviteToken,
           })
           .select()
           .single();
