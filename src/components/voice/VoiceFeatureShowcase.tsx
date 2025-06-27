@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -40,7 +41,7 @@ const VoiceFeatureShowcase: React.FC<VoiceFeatureShowcaseProps> = ({ isPlaying =
     const interval = setInterval(() => {
       currentIndex = (currentIndex + 1) % features.length;
       setSelectedFeature(features[currentIndex]);
-    }, 4000); // Change feature every 4 seconds
+    }, 4000);
 
     return () => clearInterval(interval);
   }, [isPlaying, selectedFeature]);

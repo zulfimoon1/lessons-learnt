@@ -1,22 +1,25 @@
+
 import React, { useState } from 'react';
 import { useNavigate } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useDeviceType } from "@/hooks/use-device";
 import { cn } from "@/lib/utils";
 
-// Optimized imports - only what we need
+// Core simulation components
 import StudentSimulation from "@/components/StudentSimulation";
 import TeacherSimulation from "@/components/TeacherSimulation";
 import AdminSimulation from "@/components/AdminSimulation";
 import DoctorSimulation from "@/components/DoctorSimulation";
 import VoiceFeatureShowcase from "@/components/voice/VoiceFeatureShowcase";
+
+// Layout and optimization components
 import ComplianceFooter from "@/components/ComplianceFooter";
 import MobileOptimizedLayout from "@/components/mobile/MobileOptimizedLayout";
 import MobileOptimizedCard from "@/components/mobile/MobileOptimizedCard";
 import MobileOptimizedButton from "@/components/mobile/MobileOptimizedButton";
 import EnhancedLazyLoader from "@/components/performance/EnhancedLazyLoader";
 
-// New focused components
+// Focused demo components
 import DemoHeader from "@/components/demo/DemoHeader";
 import DemoSelectionCards from "@/components/demo/DemoSelectionCards";
 import DemoCallToAction from "@/components/demo/DemoCallToAction";
@@ -41,6 +44,7 @@ const Demo = () => {
   const [activeDemo, setActiveDemo] = useState<string | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
 
+  // Core navigation functions - preserving authentication flow
   const handleBackToHome = () => {
     navigate('/');
   };
@@ -66,9 +70,91 @@ const Demo = () => {
     navigate('/teacher-login?tab=signup');
   };
 
+  // Demo simulation mapping - preserving core functionality
+  const renderDemoContent = () => {
+    switch (activeDemo) {
+      case 'voice':
+        return <VoiceFeatureShowcase isPlaying={isPlaying} />;
+      case 'student':
+        return <StudentSimulation isPlaying={isPlaying} />;
+      case 'teacher':
+        return <TeacherSimulation isPlaying={isPlaying} />;
+      case 'admin':
+        return <AdminSimulation isPlaying={isPlaying} />;
+      case 'doctor':
+        return <DoctorSimulation isPlaying={isPlaying} />;
+      default:
+        return null;
+    }
+  };
+
+  const getDemoTitle = () => {
+    switch (activeDemo) {
+      case 'voice': return '🎤 Voice Features Demo';
+      case 'student': return t('demo.simulation.student.title') || 'Student Experience';
+      case 'teacher': return t('demo.simulation.teacher.title') || 'Teacher Experience';
+      case 'admin': return 'School Administrator Experience';
+      case 'doctor': return 'Doctor Experience';
+      default: return '';
+    }
+  };
+
+  const getDemoInfo = () => {
+    const demoInfoMap = {
+      voice: {
+        description: 'Experience the revolutionary voice-powered features that transform educational feedback.',
+        features: [
+          'Student voice recording and feedback',
+          'Teacher voice message management tools',
+          'AI-powered emotional tone analysis',
+          'Automatic voice transcription',
+          'Voice accessibility for all students'
+        ]
+      },
+      student: {
+        description: 'Experience our student-focused design with intuitive navigation and engaging interactions.',
+        features: [
+          'Modern dashboard with glass-morphism design',
+          'Interactive feedback forms with visual progress',
+          'Wellness tracking with mood indicators',
+          'Real-time progress monitoring'
+        ]
+      },
+      teacher: {
+        description: 'Explore powerful teaching tools with comprehensive analytics and real-time insights.',
+        features: [
+          'Advanced analytics with visual trends',
+          'Live student feedback monitoring',
+          'Mental health alert system',
+          'Performance insights and recommendations'
+        ]
+      },
+      admin: {
+        description: 'Comprehensive school management with oversight tools and system configuration.',
+        features: [
+          'School-wide analytics dashboard',
+          'Teacher management and invitations',
+          'System settings and compliance',
+          'Performance tracking across departments'
+        ]
+      },
+      doctor: {
+        description: 'Specialized medical tools for student health support with privacy compliance.',
+        features: [
+          'Mental health alert monitoring',
+          'Secure live chat with students',
+          'Wellness check-in reviews',
+          'HIPAA-compliant reporting'
+        ]
+      }
+    };
+    
+    return demoInfoMap[activeDemo as keyof typeof demoInfoMap];
+  };
+
   return (
     <MobileOptimizedLayout>
-      {/* Header - Now a focused component */}
+      {/* Header - Preserving language switching and navigation */}
       <DemoHeader 
         isMobile={isMobile}
         onBackToHome={handleBackToHome}
@@ -79,7 +165,7 @@ const Demo = () => {
         'max-w-7xl mx-auto',
         isMobile ? 'px-4 py-4' : 'px-4 sm:px-6 lg:px-8 py-8'
       )}>
-        {/* Main Title */}
+        {/* Main Title - Preserving translation context */}
         <div className={cn(
           'text-center',
           isMobile ? 'mb-6' : 'mb-12'
@@ -100,7 +186,7 @@ const Demo = () => {
 
         {!activeDemo ? (
           <>
-            {/* Demo Selection Cards - Now a focused component */}
+            {/* Demo Selection - Preserving all demo functionality */}
             <EnhancedLazyLoader minHeight={isMobile ? "600px" : "400px"}>
               <div className={cn(
                 'mb-16',
@@ -113,7 +199,7 @@ const Demo = () => {
               </div>
             </EnhancedLazyLoader>
 
-            {/* Step Overview Section - Now a focused component */}
+            {/* Call to Action - Preserving signup flow */}
             <EnhancedLazyLoader minHeight={isMobile ? "300px" : "400px"}>
               <DemoCallToAction 
                 isMobile={isMobile}
@@ -121,7 +207,7 @@ const Demo = () => {
               />
             </EnhancedLazyLoader>
 
-            {/* Key Features - Hidden on Mobile as requested */}
+            {/* Key Features - Desktop only as requested */}
             {!isMobile && (
               <EnhancedLazyLoader minHeight="300px">
                 <div className="mt-16 bg-white/90 backdrop-blur-sm rounded-2xl p-8 shadow-lg border border-gray-200/50">
@@ -167,7 +253,7 @@ const Demo = () => {
               </EnhancedLazyLoader>
             )}
 
-            {/* Call to Action */}
+            {/* Final CTA - Preserving navigation flow */}
             <div className={cn(
               'mt-16 bg-gradient-to-r from-brand-teal to-brand-orange text-white rounded-2xl text-center shadow-xl',
               isMobile ? 'p-6' : 'p-8'
@@ -194,9 +280,9 @@ const Demo = () => {
             </div>
           </>
         ) : (
-          /* Active Demo Display */
+          /* Active Demo - Preserving all simulation functionality */
           <div className="space-y-6">
-            {/* Demo Controls */}
+            {/* Demo Controls - Maintaining state management */}
             <MobileOptimizedCard className="shadow-lg">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
@@ -212,11 +298,7 @@ const Demo = () => {
                     'font-bold',
                     isMobile ? 'text-lg' : 'text-2xl'
                   )}>
-                    {activeDemo === 'voice' && '🎤 Voice Features Demo'}
-                    {activeDemo === 'student' && (t('demo.simulation.student.title') || 'Student Experience')}
-                    {activeDemo === 'teacher' && (t('demo.simulation.teacher.title') || 'Teacher Experience')}
-                    {activeDemo === 'admin' && 'School Administrator Experience'}
-                    {activeDemo === 'doctor' && 'Doctor Experience'}
+                    {getDemoTitle()}
                   </h2>
                 </div>
                 <div className="flex items-center gap-2">
@@ -239,122 +321,45 @@ const Demo = () => {
               </div>
             </MobileOptimizedCard>
 
-            {/* Demo Content */}
+            {/* Demo Content Layout */}
             <div className={cn(
               'gap-6',
               isMobile ? 'grid grid-cols-1' : 'grid grid-cols-1 lg:grid-cols-12 gap-6'
             )}>
-              {/* Simulation Display */}
+              {/* Simulation Display - Core functionality preserved */}
               <div className={cn(isMobile ? '' : 'lg:col-span-8')}>
                 <MobileOptimizedCard className="h-full shadow-lg">
                   <EnhancedLazyLoader>
-                    {activeDemo === 'voice' && (
-                      <VoiceFeatureShowcase isPlaying={isPlaying} />
-                    )}
-                    {activeDemo === 'student' && (
-                      <StudentSimulation isPlaying={isPlaying} />
-                    )}
-                    {activeDemo === 'teacher' && (
-                      <TeacherSimulation isPlaying={isPlaying} />
-                    )}
-                    {activeDemo === 'admin' && (
-                      <AdminSimulation isPlaying={isPlaying} />
-                    )}
-                    {activeDemo === 'doctor' && (
-                      <DoctorSimulation isPlaying={isPlaying} />
-                    )}
+                    {renderDemoContent()}
                   </EnhancedLazyLoader>
                 </MobileOptimizedCard>
               </div>
 
-              {/* Demo Information - Show on tablet and desktop only */}
-              {!isMobile && (
+              {/* Demo Information - Tablet/Desktop only */}
+              {!isMobile && activeDemo && (
                 <div className="lg:col-span-4">
                   <MobileOptimizedCard 
                     title="Demo Information"
                     className="h-full shadow-lg"
                   >
-                    {activeDemo === 'voice' && (
-                      <div className="space-y-4">
-                        <p className="text-sm text-gray-600">
-                          Experience the revolutionary voice-powered features that transform educational feedback.
-                        </p>
-                        <div className="space-y-2">
-                          <h4 className="font-semibold">Key Voice Features:</h4>
-                          <ul className="text-sm text-gray-600 space-y-1">
-                            <li>• Student voice recording and feedback</li>
-                            <li>• Teacher voice message management tools</li>
-                            <li>• AI-powered emotional tone analysis</li>
-                            <li>• Automatic voice transcription</li>
-                            <li>• Voice accessibility for all students</li>
-                          </ul>
+                    {(() => {
+                      const info = getDemoInfo();
+                      return info ? (
+                        <div className="space-y-4">
+                          <p className="text-sm text-gray-600">
+                            {info.description}
+                          </p>
+                          <div className="space-y-2">
+                            <h4 className="font-semibold">Key Features:</h4>
+                            <ul className="text-sm text-gray-600 space-y-1">
+                              {info.features.map((feature, index) => (
+                                <li key={index}>• {feature}</li>
+                              ))}
+                            </ul>
+                          </div>
                         </div>
-                      </div>
-                    )}
-                    {activeDemo === 'student' && (
-                      <div className="space-y-4">
-                        <p className="text-sm text-gray-600">
-                          Experience our student-focused design with intuitive navigation and engaging interactions.
-                        </p>
-                        <div className="space-y-2">
-                          <h4 className="font-semibold">Key Features:</h4>
-                          <ul className="text-sm text-gray-600 space-y-1">
-                            <li>• Modern dashboard with glass-morphism design</li>
-                            <li>• Interactive feedback forms with visual progress</li>
-                            <li>• Wellness tracking with mood indicators</li>
-                            <li>• Real-time progress monitoring</li>
-                          </ul>
-                        </div>
-                      </div>
-                    )}
-                    {activeDemo === 'teacher' && (
-                      <div className="space-y-4">
-                        <p className="text-sm text-gray-600">
-                          Explore powerful teaching tools with comprehensive analytics and real-time insights.
-                        </p>
-                        <div className="space-y-2">
-                          <h4 className="font-semibold">Key Features:</h4>
-                          <ul className="text-sm text-gray-600 space-y-1">
-                            <li>• Advanced analytics with visual trends</li>
-                            <li>• Live student feedback monitoring</li>
-                            <li>• Mental health alert system</li>
-                            <li>• Performance insights and recommendations</li>
-                          </ul>
-                        </div>
-                      </div>
-                    )}
-                    {activeDemo === 'admin' && (
-                      <div className="space-y-4">
-                        <p className="text-sm text-gray-600">
-                          Comprehensive school management with oversight tools and system configuration.
-                        </p>
-                        <div className="space-y-2">
-                          <h4 className="font-semibold">Key Features:</h4>
-                          <ul className="text-sm text-gray-600 space-y-1">
-                            <li>• School-wide analytics dashboard</li>
-                            <li>• Teacher management and invitations</li>
-                            <li>• System settings and compliance</li>
-                            <li>• Performance tracking across departments</li>
-                          </ul>
-                        </div>
-                      </div>
-                    )}
-                    {activeDemo === 'doctor' && (
-                      <div className="space-y-4">
-                        <p className="text-sm text-gray-600">
-                          Specialized medical tools for student health support with privacy compliance.
-                        </p>
-                        <div className="space-y-2">
-                          <h4 className="font-semibold">Key Features:</h4>
-                          <ul className="text-sm text-gray-600 space-y-1">
-                            <li>• Mental health alert monitoring</li>
-                            <li>• Secure live chat with students</li>
-                            <li>• Wellness check-in reviews</li>
-                            <li>• HIPAA-compliant reporting</li>
-                          </ul>
-                        </div>
-                      </div>
-                    )}
+                      ) : null;
+                    })()}
                   </MobileOptimizedCard>
                 </div>
               )}
