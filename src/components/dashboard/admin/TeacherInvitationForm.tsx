@@ -54,78 +54,71 @@ const TeacherInvitationForm: React.FC<TeacherInvitationFormProps> = ({
     setIsLoading(true);
     
     try {
-      console.log('📤 Calling manage-invitations Edge Function with:', {
-        action: 'create',
-        email: formData.email,
-        school: school,
-        role: formData.role,
-        specialization: formData.specialization || null,
-        adminEmail: admin.email
-      });
-
-      // Add timeout to the Edge Function call
-      const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Request timeout after 30 seconds')), 30000)
-      );
-
-      const invocationPromise = supabase.functions.invoke('manage-invitations', {
-        body: {
-          action: 'create',
+      // Create invitation directly in the invitations table first
+      console.log('📝 Creating invitation record directly...');
+      
+      const { data: invitation, error: createError } = await supabase
+        .from('invitations')
+        .insert({
           email: formData.email.trim().toLowerCase(),
           school: school,
           role: formData.role,
           specialization: formData.specialization || null,
-          adminEmail: admin.email
-        }
-      });
+        })
+        .select()
+        .single();
 
-      const { data, error } = await Promise.race([invocationPromise, timeoutPromise]) as any;
-
-      console.log('📥 Edge Function response:', { data, error });
-
-      if (error) {
-        console.error('❌ Edge Function error:', error);
-        throw new Error(error.message || 'Failed to send invitation');
+      if (createError) {
+        console.error('❌ Direct invitation creation error:', createError);
+        throw new Error(`Failed to create invitation: ${createError.message}`);
       }
 
-      if (!data) {
-        throw new Error('No response data received from invitation service');
-      }
+      console.log('✅ Invitation created directly:', invitation);
 
-      // Handle success
-      if (data.invitation) {
-        if (data.emailSent) {
+      // Now try to send the email
+      try {
+        const { error: emailError } = await supabase.functions.invoke('send-teacher-invitation', {
+          body: {
+            email: formData.email.trim().toLowerCase(),
+            school: school,
+            inviteToken: invitation.invite_token,
+          }
+        });
+
+        if (emailError) {
+          console.error('📧 Email sending failed:', emailError);
+          toast({
+            title: "⚠️ Invitation Created",
+            description: `Invitation created for ${formData.email}, but email sending failed. The invitation token is: ${invitation.invite_token}`,
+            variant: "default",
+          });
+        } else {
+          console.log('📧 Email sent successfully');
           toast({
             title: "✅ Invitation Sent Successfully",
             description: `Invitation email sent to ${formData.email}`,
             variant: "default",
           });
-        } else {
-          toast({
-            title: "⚠️ Invitation Created",
-            description: `Invitation created for ${formData.email}, but email sending failed. Please share the invitation link manually.`,
-            variant: "default",
-          });
-          console.warn('📧 Email sending failed:', data.emailError);
         }
-
-        // Reset form
-        setFormData({ email: '', role: 'teacher', specialization: '' });
-        
-        // Notify parent component
-        onInvitationSent?.();
-      } else {
-        throw new Error('Invalid response format from invitation service');
+      } catch (emailErr: any) {
+        console.error('📧 Email function error:', emailErr);
+        toast({
+          title: "⚠️ Invitation Created",
+          description: `Invitation created for ${formData.email}, but email sending failed. The invitation token is: ${invitation.invite_token}`,
+          variant: "default",
+        });
       }
 
+      // Reset form and notify parent
+      setFormData({ email: '', role: 'teacher', specialization: '' });
+      onInvitationSent?.();
+
     } catch (error: any) {
-      console.error('💥 Invitation sending failed:', error);
+      console.error('💥 Invitation creation failed:', error);
       
-      // Show user-friendly error message
-      const errorMessage = error.message || 'An unexpected error occurred';
       toast({
-        title: "❌ Failed to Send Invitation",
-        description: errorMessage,
+        title: "❌ Failed to Create Invitation",
+        description: error.message || 'An unexpected error occurred',
         variant: "destructive",
       });
     } finally {
@@ -188,7 +181,7 @@ const TeacherInvitationForm: React.FC<TeacherInvitationFormProps> = ({
 
           <Button type="submit" disabled={isLoading} className="w-full">
             <Send className="w-4 h-4 mr-2" />
-            {isLoading ? 'Sending Invitation...' : 'Send Invitation'}
+            {isLoading ? 'Creating Invitation...' : 'Send Invitation'}
           </Button>
         </form>
       </CardContent>
