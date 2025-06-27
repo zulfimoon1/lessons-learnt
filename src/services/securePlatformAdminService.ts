@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { centralizedValidationService } from './centralizedValidationService';
 
@@ -30,11 +29,8 @@ class SecurePlatformAdminService {
         return { success: false, error: 'Too many attempts. Please try again later.' };
       }
 
-      // Input validation
-      const emailValidation = centralizedValidationService.validateEmail(credentials.email);
-      const passwordValidation = centralizedValidationService.validatePassword(credentials.password);
-
-      if (!emailValidation.isValid) {
+      // Basic email validation (more permissive for admin login)
+      if (!credentials.email || !credentials.email.includes('@')) {
         await centralizedValidationService.logSecurityEvent({
           type: 'form_validation_failed',
           details: `Invalid email format in platform admin login: ${credentials.email}`,
@@ -43,13 +39,14 @@ class SecurePlatformAdminService {
         return { success: false, error: 'Invalid email format' };
       }
 
-      if (!passwordValidation.isValid) {
+      // Basic password validation (more permissive for admin login)
+      if (!credentials.password || credentials.password.length < 3) {
         await centralizedValidationService.logSecurityEvent({
           type: 'form_validation_failed',
           details: `Invalid password format in platform admin login`,
           severity: 'medium'
         });
-        return { success: false, error: 'Invalid password format' };
+        return { success: false, error: 'Password too short' };
       }
 
       // Set platform admin context
