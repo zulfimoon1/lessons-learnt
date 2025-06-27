@@ -4,6 +4,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { useDeviceType } from '@/hooks/use-device';
 import { useMobileOptimization } from '@/hooks/useMobileOptimization';
+import { MicIcon, GraduationCapIcon, VolumeIcon, TrendingUpIcon, HeartIcon } from 'lucide-react';
 
 // Import focused feature components
 import VoiceOverview from './features/VoiceOverview';
@@ -25,11 +26,11 @@ const VoiceFeatureShowcase: React.FC<VoiceFeatureShowcaseProps> = ({
   const { isMobile } = useMobileOptimization();
 
   const features = [
-    { id: 'overview', title: 'Voice Revolution', shortTitle: 'Overview' },
-    { id: 'student', title: 'Student Experience', shortTitle: 'Student' },
-    { id: 'teacher', title: 'Teacher Tools', shortTitle: 'Teacher' },
-    { id: 'analytics', title: 'Voice Analytics', shortTitle: 'Analytics' },
-    { id: 'wellness', title: 'Emotional Intelligence', shortTitle: 'Wellness' }
+    { id: 'overview', title: 'Voice Revolution', shortTitle: 'Overview', icon: <MicIcon className="w-4 h-4" /> },
+    { id: 'student', title: 'Student Experience', shortTitle: 'Student', icon: <GraduationCapIcon className="w-4 h-4" /> },
+    { id: 'teacher', title: 'Teacher Tools', shortTitle: 'Teacher', icon: <VolumeIcon className="w-4 h-4" /> },
+    { id: 'analytics', title: 'Voice Analytics', shortTitle: 'Analytics', icon: <TrendingUpIcon className="w-4 h-4" /> },
+    { id: 'wellness', title: 'Emotional Intelligence', shortTitle: 'Wellness', icon: <HeartIcon className="w-4 h-4" /> }
   ];
 
   // Auto-play through features when isPlaying is true
@@ -76,6 +77,7 @@ const VoiceFeatureShowcase: React.FC<VoiceFeatureShowcaseProps> = ({
                   className="flex flex-col items-center gap-1 p-2 text-xs data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
                   disabled={isPlaying}
                 >
+                  {feature.icon}
                   <span className="hidden xs:inline">{feature.shortTitle}</span>
                 </TabsTrigger>
               ))}

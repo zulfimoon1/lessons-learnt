@@ -30,9 +30,11 @@ class UnifiedAuthService {
         throw new Error('Email and password are required');
       }
 
-      // Security validation
-      const isValid = await securityValidationService.validateCredentials(credentials);
-      if (!isValid) {
+      // Basic input validation using existing service
+      const emailValid = securityValidationService.validateInput(credentials.email, 200);
+      const passwordValid = securityValidationService.validateInput(credentials.password, 200);
+      
+      if (!emailValid || !passwordValid) {
         throw new Error('Invalid credentials format');
       }
 
