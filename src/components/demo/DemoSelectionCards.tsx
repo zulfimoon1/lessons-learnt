@@ -1,11 +1,13 @@
 import React from 'react';
 import { Badge } from "@/components/ui/badge";
+import { CardDescription } from "@/components/ui/card";
 import { 
   GraduationCap,
   Users,
   Heart,
   Settings,
-  MicIcon
+  MicIcon,
+  Play
 } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import MobileOptimizedCard from "@/components/mobile/MobileOptimizedCard";
