@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
@@ -34,14 +33,15 @@ serve(async (req) => {
       }
     )
 
-    const { operation, adminEmail, ...params } = await req.json()
+    const requestBody = await req.json();
+    const { operation, adminEmail, ...params } = requestBody;
+
+    console.log(`🔧 Admin operation: ${operation} by ${adminEmail}`);
 
     // Verify admin email for security
     if (adminEmail !== 'zulfimoon1@gmail.com') {
       throw new Error('Unauthorized: Not a platform admin')
     }
-
-    console.log(`🔧 Admin operation: ${operation} by ${adminEmail}`);
 
     // Set multiple admin context variables for comprehensive RLS bypass
     try {
@@ -55,18 +55,32 @@ serve(async (req) => {
     switch (operation) {
       case 'getPlatformStats':
         console.log('📊 Fetching platform stats...');
-        const [studentsResult, teachersResult, feedbackResult, subscriptionsResult] = await Promise.all([
-          supabaseAdmin.from('students').select('*', { count: 'exact', head: true }),
-          supabaseAdmin.from('teachers').select('*', { count: 'exact', head: true }),
-          supabaseAdmin.from('feedback').select('*', { count: 'exact', head: true }),
-          supabaseAdmin.from('subscriptions').select('*', { count: 'exact', head: true })
-        ])
+        
+        try {
+          const [studentsResult, teachersResult, feedbackResult, subscriptionsResult] = await Promise.all([
+            supabaseAdmin.from('students').select('*', { count: 'exact', head: true }),
+            supabaseAdmin.from('teachers').select('*', { count: 'exact', head: true }),
+            supabaseAdmin.from('feedback').select('*', { count: 'exact', head: true }),
+            supabaseAdmin.from('subscriptions').select('*', { count: 'exact', head: true })
+          ]);
 
-        result = {
-          studentsCount: studentsResult.count || 0,
-          teachersCount: teachersResult.count || 0,
-          responsesCount: feedbackResult.count || 0,
-          subscriptionsCount: subscriptionsResult.count || 0,
+          result = {
+            studentsCount: studentsResult.count || 0,
+            teachersCount: teachersResult.count || 0,
+            responsesCount: feedbackResult.count || 0,
+            subscriptionsCount: subscriptionsResult.count || 0,
+          };
+          
+          console.log('✅ Platform stats fetched:', result);
+        } catch (statsError) {
+          console.error('Error fetching platform stats:', statsError);
+          // Return zero counts if there's an error
+          result = {
+            studentsCount: 0,
+            teachersCount: 0,
+            responsesCount: 0,
+            subscriptionsCount: 0,
+          };
         }
         break;
 
@@ -668,28 +682,28 @@ serve(async (req) => {
         break;
 
       default:
-        throw new Error(`Unknown operation: ${operation}`)
+        console.error('❌ Invalid operation:', operation);
+        return new Response(
+          JSON.stringify({ error: 'Invalid operation' }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
     }
 
-    return new Response(
-      JSON.stringify({ success: true, data: result }),
-      { 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 200,
-      },
-    )
+    console.log('✅ Operation completed successfully:', result);
+
+    return new Response(JSON.stringify({ success: true, data: result }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
 
   } catch (error) {
-    console.error('Platform admin error:', error)
+    console.error('❌ Edge function error:', error);
     return new Response(
       JSON.stringify({ 
         success: false, 
-        error: error.message || 'Internal server error' 
+        error: error.message || 'An unexpected error occurred',
+        details: error.toString()
       }),
-      { 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 500,
-      },
-    )
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
   }
-})
+});

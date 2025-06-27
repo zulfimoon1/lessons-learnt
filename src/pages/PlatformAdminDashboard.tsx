@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { usePlatformAdmin } from '@/contexts/PlatformAdminContext';
 import { Navigate } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -16,6 +16,7 @@ import {
   BarChart3,
   UserPlus
 } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 import SchoolManagement from '@/components/platform-admin/SchoolManagement';
 import TeacherManagement from '@/components/platform-admin/TeacherManagement';
 import StudentManagement from '@/components/platform-admin/StudentManagement';
@@ -24,9 +25,59 @@ import SecurityMonitoring from '@/components/platform-admin/SecurityMonitoring';
 import PasswordChangeForm from '@/components/platform-admin/PasswordChangeForm';
 import AdminUserManagement from '@/components/platform-admin/AdminUserManagement';
 
+interface PlatformStats {
+  studentsCount: number;
+  teachersCount: number;
+  responsesCount: number;
+  subscriptionsCount: number;
+}
+
 const PlatformAdminDashboard: React.FC = () => {
   const { admin, logout, isLoading } = usePlatformAdmin();
   const [activeTab, setActiveTab] = useState('overview');
+  const [stats, setStats] = useState<PlatformStats>({
+    studentsCount: 0,
+    teachersCount: 0,
+    responsesCount: 0,
+    subscriptionsCount: 0
+  });
+  const [statsLoading, setStatsLoading] = useState(true);
+
+  useEffect(() => {
+    if (admin) {
+      fetchPlatformStats();
+    }
+  }, [admin]);
+
+  const fetchPlatformStats = async () => {
+    try {
+      setStatsLoading(true);
+      console.log('🔄 Fetching platform stats...');
+      
+      const { data, error } = await supabase.functions.invoke('platform-admin', {
+        body: {
+          operation: 'getPlatformStats',
+          adminEmail: admin?.email || 'zulfimoon1@gmail.com'
+        }
+      });
+
+      if (error) {
+        console.error('Stats fetch error:', error);
+        throw error;
+      }
+
+      if (data?.success && data?.data) {
+        setStats(data.data);
+        console.log('✅ Platform stats loaded:', data.data);
+      } else {
+        console.warn('No stats data received');
+      }
+    } catch (error) {
+      console.error('Failed to fetch platform stats:', error);
+    } finally {
+      setStatsLoading(false);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -57,7 +108,9 @@ const PlatformAdminDashboard: React.FC = () => {
                 <School className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">--</div>
+                <div className="text-2xl font-bold">
+                  {statsLoading ? '--' : stats.subscriptionsCount}
+                </div>
                 <p className="text-xs text-muted-foreground">Active subscriptions</p>
               </CardContent>
             </Card>
@@ -67,18 +120,68 @@ const PlatformAdminDashboard: React.FC = () => {
                 <Users className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">--</div>
+                <div className="text-2xl font-bold">
+                  {statsLoading ? '--' : (stats.teachersCount + stats.studentsCount)}
+                </div>
                 <p className="text-xs text-muted-foreground">Teachers + Students</p>
               </CardContent>
             </Card>
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Revenue</CardTitle>
+                <CardTitle className="text-sm font-medium">Feedback Responses</CardTitle>
                 <CreditCard className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">--</div>
-                <p className="text-xs text-muted-foreground">This month</p>
+                <div className="text-2xl font-bold">
+                  {statsLoading ? '--' : stats.responsesCount}
+                </div>
+                <p className="text-xs text-muted-foreground">Total responses</p>
+              </CardContent>
+            </Card>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Quick Stats</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm font-medium">Teachers</span>
+                  <span className="text-lg font-bold">{statsLoading ? '--' : stats.teachersCount}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm font-medium">Students</span>
+                  <span className="text-lg font-bold">{statsLoading ? '--' : stats.studentsCount}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm font-medium">Active Schools</span>
+                  <span className="text-lg font-bold">{statsLoading ? '--' : stats.subscriptionsCount}</span>
+                </div>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader>
+                <CardTitle>Platform Health</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm font-medium">System Status</span>
+                  <span className="text-sm text-green-600 font-medium">Operational</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm font-medium">Last Updated</span>
+                  <span className="text-sm text-gray-600">{new Date().toLocaleTimeString()}</span>
+                </div>
+                <Button 
+                  onClick={fetchPlatformStats} 
+                  variant="outline" 
+                  size="sm"
+                  disabled={statsLoading}
+                >
+                  {statsLoading ? 'Refreshing...' : 'Refresh Stats'}
+                </Button>
               </CardContent>
             </Card>
           </div>
