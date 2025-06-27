@@ -1,28 +1,26 @@
 
-import React, { useState } from 'react';
+import React, { useState, lazy, Suspense } from 'react';
 import { useNavigate } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { useDeviceType } from "@/hooks/use-device";
+import { useMobileOptimization } from "@/hooks/useMobileOptimization";
 import { cn } from "@/lib/utils";
 
-// Core simulation components
-import StudentSimulation from "@/components/StudentSimulation";
-import TeacherSimulation from "@/components/TeacherSimulation";
-import AdminSimulation from "@/components/AdminSimulation";
-import DoctorSimulation from "@/components/DoctorSimulation";
-import VoiceFeatureShowcase from "@/components/voice/VoiceFeatureShowcase";
-
-// Layout and optimization components
+// Core components - loaded immediately
 import ComplianceFooter from "@/components/ComplianceFooter";
 import MobileOptimizedLayout from "@/components/mobile/MobileOptimizedLayout";
-import MobileOptimizedCard from "@/components/mobile/MobileOptimizedCard";
-import MobileOptimizedButton from "@/components/mobile/MobileOptimizedButton";
+import OptimizedCard from "@/components/shared/OptimizedCard";
+import OptimizedButton from "@/components/shared/OptimizedButton";
 import EnhancedLazyLoader from "@/components/performance/EnhancedLazyLoader";
-
-// Focused demo components
 import DemoHeader from "@/components/demo/DemoHeader";
-import DemoSelectionCards from "@/components/demo/DemoSelectionCards";
-import DemoCallToAction from "@/components/demo/DemoCallToAction";
+
+// Lazy-loaded demo components for code splitting
+const VoiceFeatureShowcase = lazy(() => import("@/components/voice/VoiceFeatureShowcase"));
+const StudentSimulation = lazy(() => import("@/components/StudentSimulation"));
+const TeacherSimulation = lazy(() => import("@/components/TeacherSimulation"));
+const AdminSimulation = lazy(() => import("@/components/AdminSimulation"));
+const DoctorSimulation = lazy(() => import("@/components/DoctorSimulation"));
+const DemoSelectionCards = lazy(() => import("@/components/demo/DemoSelectionCards"));
+const DemoCallToAction = lazy(() => import("@/components/demo/DemoCallToAction"));
 
 import { 
   Play,
@@ -39,118 +37,83 @@ import {
 const Demo = () => {
   const { t } = useLanguage();
   const navigate = useNavigate();
-  const deviceType = useDeviceType();
-  const isMobile = deviceType === 'mobile';
+  const { isMobile, getResponsiveClasses } = useMobileOptimization();
   const [activeDemo, setActiveDemo] = useState<string | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
 
   // Core navigation functions - preserving authentication flow
-  const handleBackToHome = () => {
-    navigate('/');
-  };
-
+  const handleBackToHome = () => navigate('/');
   const handleDemoSelect = (demoType: string) => {
     setActiveDemo(demoType);
     setIsPlaying(false);
   };
+  const handlePlayPause = () => setIsPlaying(!isPlaying);
+  const handleReset = () => setIsPlaying(false);
+  const handlePauseDemo = () => setIsPlaying(false);
+  const handleStartFreeTrial = () => navigate('/teacher-login?tab=signup');
 
-  const handlePlayPause = () => {
-    setIsPlaying(!isPlaying);
-  };
-
-  const handleReset = () => {
-    setIsPlaying(false);
-  };
-
-  const handlePauseDemo = () => {
-    setIsPlaying(false);
-  };
-
-  const handleStartFreeTrial = () => {
-    navigate('/teacher-login?tab=signup');
-  };
-
-  // Demo simulation mapping - preserving core functionality
+  // Demo simulation mapping with lazy loading
   const renderDemoContent = () => {
+    const commonProps = { isPlaying };
+    
     switch (activeDemo) {
       case 'voice':
-        return <VoiceFeatureShowcase isPlaying={isPlaying} />;
+        return (
+          <Suspense fallback={<div className="animate-pulse bg-gray-200 h-64 rounded-lg" />}>
+            <VoiceFeatureShowcase {...commonProps} />
+          </Suspense>
+        );
       case 'student':
-        return <StudentSimulation isPlaying={isPlaying} />;
+        return (
+          <Suspense fallback={<div className="animate-pulse bg-gray-200 h-64 rounded-lg" />}>
+            <StudentSimulation {...commonProps} />
+          </Suspense>
+        );
       case 'teacher':
-        return <TeacherSimulation isPlaying={isPlaying} />;
+        return (
+          <Suspense fallback={<div className="animate-pulse bg-gray-200 h-64 rounded-lg" />}>
+            <TeacherSimulation {...commonProps} />
+          </Suspense>
+        );
       case 'admin':
-        return <AdminSimulation isPlaying={isPlaying} />;
+        return (
+          <Suspense fallback={<div className="animate-pulse bg-gray-200 h-64 rounded-lg" />}>
+            <AdminSimulation {...commonProps} />
+          </Suspense>
+        );
       case 'doctor':
-        return <DoctorSimulation isPlaying={isPlaying} />;
+        return (
+          <Suspense fallback={<div className="animate-pulse bg-gray-200 h-64 rounded-lg" />}>
+            <DoctorSimulation {...commonProps} />
+          </Suspense>
+        );
       default:
         return null;
     }
   };
 
   const getDemoTitle = () => {
-    switch (activeDemo) {
-      case 'voice': return '🎤 Voice Features Demo';
-      case 'student': return t('demo.simulation.student.title') || 'Student Experience';
-      case 'teacher': return t('demo.simulation.teacher.title') || 'Teacher Experience';
-      case 'admin': return 'School Administrator Experience';
-      case 'doctor': return 'Doctor Experience';
-      default: return '';
-    }
+    const titles = {
+      voice: '🎤 Voice Features Demo',
+      student: t('demo.simulation.student.title') || 'Student Experience',
+      teacher: t('demo.simulation.teacher.title') || 'Teacher Experience',
+      admin: 'School Administrator Experience',
+      doctor: 'Doctor Experience'
+    };
+    return titles[activeDemo as keyof typeof titles] || '';
   };
 
-  const getDemoInfo = () => {
-    const demoInfoMap = {
-      voice: {
-        description: 'Experience the revolutionary voice-powered features that transform educational feedback.',
-        features: [
-          'Student voice recording and feedback',
-          'Teacher voice message management tools',
-          'AI-powered emotional tone analysis',
-          'Automatic voice transcription',
-          'Voice accessibility for all students'
-        ]
-      },
-      student: {
-        description: 'Experience our student-focused design with intuitive navigation and engaging interactions.',
-        features: [
-          'Modern dashboard with glass-morphism design',
-          'Interactive feedback forms with visual progress',
-          'Wellness tracking with mood indicators',
-          'Real-time progress monitoring'
-        ]
-      },
-      teacher: {
-        description: 'Explore powerful teaching tools with comprehensive analytics and real-time insights.',
-        features: [
-          'Advanced analytics with visual trends',
-          'Live student feedback monitoring',
-          'Mental health alert system',
-          'Performance insights and recommendations'
-        ]
-      },
-      admin: {
-        description: 'Comprehensive school management with oversight tools and system configuration.',
-        features: [
-          'School-wide analytics dashboard',
-          'Teacher management and invitations',
-          'System settings and compliance',
-          'Performance tracking across departments'
-        ]
-      },
-      doctor: {
-        description: 'Specialized medical tools for student health support with privacy compliance.',
-        features: [
-          'Mental health alert monitoring',
-          'Secure live chat with students',
-          'Wellness check-in reviews',
-          'HIPAA-compliant reporting'
-        ]
-      }
-    };
-    
-    return demoInfoMap[activeDemo as keyof typeof demoInfoMap];
-  };
+  const containerClasses = getResponsiveClasses({
+    mobile: 'px-4 py-4',
+    tablet: 'px-6 py-6',
+    desktop: 'px-4 sm:px-6 lg:px-8 py-8'
+  });
+
+  const titleClasses = getResponsiveClasses({
+    mobile: 'text-2xl mb-6',
+    tablet: 'text-3xl mb-8',
+    desktop: 'text-4xl mb-12'
+  });
 
   return (
     <MobileOptimizedLayout>
@@ -161,19 +124,10 @@ const Demo = () => {
         onPauseDemo={handlePauseDemo}
       />
 
-      <div className={cn(
-        'max-w-7xl mx-auto',
-        isMobile ? 'px-4 py-4' : 'px-4 sm:px-6 lg:px-8 py-8'
-      )}>
+      <div className={cn('max-w-7xl mx-auto', containerClasses.combined)}>
         {/* Main Title - Preserving translation context */}
-        <div className={cn(
-          'text-center',
-          isMobile ? 'mb-6' : 'mb-12'
-        )}>
-          <h2 className={cn(
-            'font-bold text-gray-900 mb-4',
-            isMobile ? 'text-2xl' : 'text-4xl'
-          )}>
+        <div className={cn('text-center', titleClasses.combined)}>
+          <h2 className={cn('font-bold text-gray-900 mb-4', titleClasses.combined)}>
             {t('demo.page.title') || 'Interactive Demo'}
           </h2>
           <p className={cn(
@@ -186,70 +140,55 @@ const Demo = () => {
 
         {!activeDemo ? (
           <>
-            {/* Demo Selection - Preserving all demo functionality */}
+            {/* Demo Selection - Lazy loaded for performance */}
             <EnhancedLazyLoader minHeight={isMobile ? "600px" : "400px"}>
-              <div className={cn(
-                'mb-16',
-                isMobile ? 'grid grid-cols-1 gap-6' : 'space-y-8'
-              )}>
-                <DemoSelectionCards 
-                  isMobile={isMobile}
-                  onDemoSelect={handleDemoSelect}
-                />
+              <div className={cn('mb-16', isMobile ? 'grid grid-cols-1 gap-6' : 'space-y-8')}>
+                <Suspense fallback={<div className="animate-pulse bg-gray-200 h-96 rounded-lg" />}>
+                  <DemoSelectionCards 
+                    isMobile={isMobile}
+                    onDemoSelect={handleDemoSelect}
+                  />
+                </Suspense>
               </div>
             </EnhancedLazyLoader>
 
-            {/* Call to Action - Preserving signup flow */}
+            {/* Call to Action - Lazy loaded */}
             <EnhancedLazyLoader minHeight={isMobile ? "300px" : "400px"}>
-              <DemoCallToAction 
-                isMobile={isMobile}
-                onStartFreeTrial={handleStartFreeTrial}
-              />
+              <Suspense fallback={<div className="animate-pulse bg-gray-200 h-64 rounded-lg" />}>
+                <DemoCallToAction 
+                  isMobile={isMobile}
+                  onStartFreeTrial={handleStartFreeTrial}
+                />
+              </Suspense>
             </EnhancedLazyLoader>
 
-            {/* Key Features - Desktop only as requested */}
+            {/* Key Features - Desktop only, optimized */}
             {!isMobile && (
               <EnhancedLazyLoader minHeight="300px">
-                <div className="mt-16 bg-white/90 backdrop-blur-sm rounded-2xl p-8 shadow-lg border border-gray-200/50">
-                  <h3 className="text-2xl font-bold text-center mb-8">Modern Design Meets Powerful Functionality</h3>
+                <OptimizedCard
+                  variant="gradient"
+                  size="lg"
+                  className="mt-16"
+                  title="Modern Design Meets Powerful Functionality"
+                >
                   <div className="grid grid-cols-1 md:grid-cols-5 gap-8">
-                    <div className="text-center">
-                      <div className="w-16 h-16 bg-purple-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                        <MicIcon className="h-8 w-8 text-purple-600" />
+                    {[
+                      { icon: MicIcon, title: 'Voice-First Platform', desc: 'Revolutionary voice recording and analysis technology', color: 'purple' },
+                      { icon: GraduationCap, title: 'Student-Centric Design', desc: 'Intuitive interfaces that make learning and feedback engaging', color: 'brand-teal' },
+                      { icon: Users, title: 'Teacher Empowerment', desc: 'Comprehensive tools that enhance teaching effectiveness', color: 'brand-orange' },
+                      { icon: Settings, title: 'Administrative Control', desc: 'Complete oversight with streamlined management workflows', color: 'purple' },
+                      { icon: Heart, title: 'Health & Wellness', desc: 'Comprehensive support for student mental health and wellbeing', color: 'green' }
+                    ].map((feature, index) => (
+                      <div key={index} className="text-center">
+                        <div className={`w-16 h-16 bg-${feature.color}-100 rounded-2xl flex items-center justify-center mx-auto mb-4`}>
+                          <feature.icon className={`h-8 w-8 text-${feature.color}-600`} />
+                        </div>
+                        <h4 className="text-lg font-semibold mb-2">{feature.title}</h4>
+                        <p className="text-gray-600">{feature.desc}</p>
                       </div>
-                      <h4 className="text-lg font-semibold mb-2">Voice-First Platform</h4>
-                      <p className="text-gray-600">Revolutionary voice recording and analysis technology</p>
-                    </div>
-                    <div className="text-center">
-                      <div className="w-16 h-16 bg-brand-teal/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                        <GraduationCap className="h-8 w-8 text-brand-teal" />
-                      </div>
-                      <h4 className="text-lg font-semibold mb-2">Student-Centric Design</h4>
-                      <p className="text-gray-600">Intuitive interfaces that make learning and feedback engaging</p>
-                    </div>
-                    <div className="text-center">
-                      <div className="w-16 h-16 bg-brand-orange/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                        <Users className="h-8 w-8 text-brand-orange" />
-                      </div>
-                      <h4 className="text-lg font-semibold mb-2">Teacher Empowerment</h4>
-                      <p className="text-gray-600">Comprehensive tools that enhance teaching effectiveness</p>
-                    </div>
-                    <div className="text-center">
-                      <div className="w-16 h-16 bg-purple-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                        <Settings className="h-8 w-8 text-purple-600" />
-                      </div>
-                      <h4 className="text-lg font-semibold mb-2">Administrative Control</h4>
-                      <p className="text-gray-600">Complete oversight with streamlined management workflows</p>
-                    </div>
-                    <div className="text-center">
-                      <div className="w-16 h-16 bg-green-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                        <Heart className="h-8 w-8 text-green-600" />
-                      </div>
-                      <h4 className="text-lg font-semibold mb-2">Health & Wellness</h4>
-                      <p className="text-gray-600">Comprehensive support for student mental health and wellbeing</p>
-                    </div>
+                    ))}
                   </div>
-                </div>
+                </OptimizedCard>
               </EnhancedLazyLoader>
             )}
 
@@ -258,15 +197,13 @@ const Demo = () => {
               'mt-16 bg-gradient-to-r from-brand-teal to-brand-orange text-white rounded-2xl text-center shadow-xl',
               isMobile ? 'p-6' : 'p-8'
             )}>
-              <h3 className={cn(
-                'font-bold mb-4',
-                isMobile ? 'text-2xl' : 'text-3xl'
-              )}>Ready to Transform Your School?</h3>
-              <p className={cn(
-                'mb-6 opacity-90',
-                isMobile ? 'text-lg' : 'text-xl'
-              )}>Experience the future of educational technology with our comprehensive platform.</p>
-              <MobileOptimizedButton 
+              <h3 className={cn('font-bold mb-4', isMobile ? 'text-2xl' : 'text-3xl')}>
+                Ready to Transform Your School?
+              </h3>
+              <p className={cn('mb-6 opacity-90', isMobile ? 'text-lg' : 'text-xl')}>
+                Experience the future of educational technology with our comprehensive platform.
+              </p>
+              <OptimizedButton 
                 size="lg" 
                 className={cn(
                   'bg-brand-orange hover:bg-brand-orange/90 text-white transform hover:scale-105 transition-all shadow-lg',
@@ -276,94 +213,54 @@ const Demo = () => {
                 touchOptimized={true}
               >
                 {t('pricing.startFreeTrial') || 'Start Free Trial'}
-              </MobileOptimizedButton>
+              </OptimizedButton>
             </div>
           </>
         ) : (
           /* Active Demo - Preserving all simulation functionality */
           <div className="space-y-6">
             {/* Demo Controls - Maintaining state management */}
-            <MobileOptimizedCard className="shadow-lg">
+            <OptimizedCard className="shadow-lg">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
-                  <MobileOptimizedButton
+                  <OptimizedButton
                     variant="outline"
                     onClick={() => setActiveDemo(null)}
                     className="flex items-center gap-2"
                   >
                     <ArrowLeft className="h-4 w-4" />
                     {!isMobile && 'Back to Demos'}
-                  </MobileOptimizedButton>
-                  <h2 className={cn(
-                    'font-bold',
-                    isMobile ? 'text-lg' : 'text-2xl'
-                  )}>
+                  </OptimizedButton>
+                  <h2 className={cn('font-bold', isMobile ? 'text-lg' : 'text-2xl')}>
                     {getDemoTitle()}
                   </h2>
                 </div>
                 <div className="flex items-center gap-2">
-                  <MobileOptimizedButton
+                  <OptimizedButton
                     onClick={handlePlayPause}
                     className="flex items-center gap-2 bg-brand-teal hover:bg-brand-dark text-white"
                   >
                     {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
                     {!isMobile && (isPlaying ? (t('demo.page.pauseDemo') || 'Pause Demo') : (t('demo.page.playDemo') || 'Play Demo'))}
-                  </MobileOptimizedButton>
-                  <MobileOptimizedButton
+                  </OptimizedButton>
+                  <OptimizedButton
                     variant="outline"
                     onClick={handleReset}
                     className="flex items-center gap-2"
                   >
                     <RotateCcw className="h-4 w-4" />
                     {!isMobile && 'Reset'}
-                  </MobileOptimizedButton>
+                  </OptimizedButton>
                 </div>
               </div>
-            </MobileOptimizedCard>
+            </OptimizedCard>
 
             {/* Demo Content Layout */}
-            <div className={cn(
-              'gap-6',
-              isMobile ? 'grid grid-cols-1' : 'grid grid-cols-1 lg:grid-cols-12 gap-6'
-            )}>
-              {/* Simulation Display - Core functionality preserved */}
-              <div className={cn(isMobile ? '' : 'lg:col-span-8')}>
-                <MobileOptimizedCard className="h-full shadow-lg">
-                  <EnhancedLazyLoader>
-                    {renderDemoContent()}
-                  </EnhancedLazyLoader>
-                </MobileOptimizedCard>
-              </div>
-
-              {/* Demo Information - Tablet/Desktop only */}
-              {!isMobile && activeDemo && (
-                <div className="lg:col-span-4">
-                  <MobileOptimizedCard 
-                    title="Demo Information"
-                    className="h-full shadow-lg"
-                  >
-                    {(() => {
-                      const info = getDemoInfo();
-                      return info ? (
-                        <div className="space-y-4">
-                          <p className="text-sm text-gray-600">
-                            {info.description}
-                          </p>
-                          <div className="space-y-2">
-                            <h4 className="font-semibold">Key Features:</h4>
-                            <ul className="text-sm text-gray-600 space-y-1">
-                              {info.features.map((feature, index) => (
-                                <li key={index}>• {feature}</li>
-                              ))}
-                            </ul>
-                          </div>
-                        </div>
-                      ) : null;
-                    })()}
-                  </MobileOptimizedCard>
-                </div>
-              )}
-            </div>
+            <OptimizedCard className="shadow-lg">
+              <EnhancedLazyLoader>
+                {renderDemoContent()}
+              </EnhancedLazyLoader>
+            </OptimizedCard>
           </div>
         )}
       </div>
@@ -373,4 +270,4 @@ const Demo = () => {
   );
 };
 
-export default Demo;
+export default React.memo(Demo);
