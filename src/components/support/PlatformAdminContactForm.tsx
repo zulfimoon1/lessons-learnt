@@ -77,19 +77,37 @@ const PlatformAdminContactForm: React.FC<PlatformAdminContactFormProps> = ({
         timestamp: new Date().toISOString()
       };
 
-      const { data, error } = await supabase.rpc('create_platform_admin_message', {
-        subject_param: formData.subject,
-        message_param: formData.message,
-        category_param: formData.category,
-        sender_email_param: userEmail,
-        sender_name_param: userName,
-        sender_role_param: userRole,
-        sender_school_param: userSchool,
-        user_agent_param: navigator.userAgent,
-        browser_info_param: browserInfo
-      });
+      // Try to call the RPC function, fall back to notification if not available
+      try {
+        const { data, error } = await supabase.rpc('create_platform_admin_message' as any, {
+          subject_param: formData.subject,
+          message_param: formData.message,
+          category_param: formData.category,
+          sender_email_param: userEmail,
+          sender_name_param: userName,
+          sender_role_param: userRole,
+          sender_school_param: userSchool,
+          user_agent_param: navigator.userAgent,
+          browser_info_param: browserInfo
+        });
 
-      if (error) throw error;
+        if (error) throw error;
+      } catch (rpcError) {
+        console.log('RPC function not available, using fallback method');
+        
+        // Fallback: Create notification
+        const { data, error } = await supabase
+          .from('in_app_notifications')
+          .insert({
+            recipient_email: 'zulfimoon1@gmail.com',
+            recipient_type: 'platform_admin',
+            title: `Support Request: ${formData.subject}`,
+            message: `From ${userName} (${userSchool}, ${userRole}): ${formData.message}. Category: ${formData.category}`,
+            notification_type: 'support_request'
+          });
+
+        if (error) throw error;
+      }
 
       setSubmitted(true);
       setFormData({ subject: '', message: '', category: '' });

@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { SchoolIcon, LogOut, Menu } from "lucide-react";
@@ -9,10 +10,20 @@ import SupportButton from "@/components/support/SupportButton";
 interface DashboardHeaderProps {
   title: string;
   userName: string;
+  userEmail?: string;
+  userRole?: string;
+  userSchool?: string;
   onLogout: () => void;
 }
 
-const DashboardHeader: React.FC<DashboardHeaderProps> = ({ title, userName, onLogout }) => {
+const DashboardHeader: React.FC<DashboardHeaderProps> = ({ 
+  title, 
+  userName, 
+  userEmail = "user@example.com",
+  userRole = "teacher",
+  userSchool = "Example School",
+  onLogout 
+}) => {
   const { t } = useLanguage();
   const isMobile = useIsMobile();
 
@@ -34,10 +45,10 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({ title, userName, onLo
             </span>
           )}
           <SupportButton
-            userEmail="user@example.com" // This should be passed as prop
+            userEmail={userEmail}
             userName={userName}
-            userRole="teacher" // This should be passed as prop
-            userSchool="Example School" // This should be passed as prop
+            userRole={userRole}
+            userSchool={userSchool}
             variant="ghost"
             size={isMobile ? "sm" : "default"}
             showText={!isMobile}
