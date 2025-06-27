@@ -47,7 +47,7 @@ class CentralizedValidationService {
 
   // Log security events with proper type mapping
   async logSecurityEvent(event: {
-    type: 'unauthorized_access' | 'suspicious_activity' | 'rate_limit_exceeded' | 'form_validation_failed';
+    type: 'unauthorized_access' | 'suspicious_activity' | 'rate_limit_exceeded' | 'form_validation_failed' | 'successful_login';
     userId?: string;
     details: string;
     severity: 'low' | 'medium' | 'high';
@@ -57,7 +57,8 @@ class CentralizedValidationService {
       'unauthorized_access': 'session_error',
       'suspicious_activity': 'suspicious_activity',
       'rate_limit_exceeded': 'rate_limit_exceeded',
-      'form_validation_failed': 'suspicious_activity'
+      'form_validation_failed': 'suspicious_activity',
+      'successful_login': 'session_error' // Map successful login to session_error for audit purposes
     };
 
     const mappedType = eventTypeMap[event.type] || 'suspicious_activity';
