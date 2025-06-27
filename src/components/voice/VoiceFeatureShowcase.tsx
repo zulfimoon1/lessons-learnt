@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -14,8 +13,27 @@ import {
 } from "lucide-react";
 import VoiceDemoCard from './VoiceDemoCard';
 
-const VoiceFeatureShowcase: React.FC = () => {
+interface VoiceFeatureShowcaseProps {
+  isPlaying?: boolean;
+}
+
+const VoiceFeatureShowcase: React.FC<VoiceFeatureShowcaseProps> = ({ isPlaying = false }) => {
   const [selectedFeature, setSelectedFeature] = useState<string>('overview');
+
+  // Auto-play through features when isPlaying is true
+  useEffect(() => {
+    if (!isPlaying) return;
+
+    const features = ['overview', 'student', 'teacher', 'analytics', 'wellness'];
+    let currentIndex = features.indexOf(selectedFeature);
+
+    const interval = setInterval(() => {
+      currentIndex = (currentIndex + 1) % features.length;
+      setSelectedFeature(features[currentIndex]);
+    }, 4000); // Change feature every 4 seconds
+
+    return () => clearInterval(interval);
+  }, [isPlaying, selectedFeature]);
 
   const features = [
     {
@@ -290,12 +308,20 @@ const VoiceFeatureShowcase: React.FC = () => {
                 onClick={() => setSelectedFeature(feature.id)}
                 variant={selectedFeature === feature.id ? "default" : "outline"}
                 className="flex items-center gap-2"
+                disabled={isPlaying}
               >
                 {feature.icon}
                 <span className="hidden sm:inline">{feature.title}</span>
               </Button>
             ))}
           </div>
+          {isPlaying && (
+            <div className="mt-3 text-center">
+              <Badge variant="outline" className="text-brand-teal border-brand-teal animate-pulse">
+                Auto-playing demo: {features.find(f => f.id === selectedFeature)?.title}
+              </Badge>
+            </div>
+          )}
         </CardContent>
       </Card>
 
