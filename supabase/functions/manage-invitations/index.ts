@@ -110,10 +110,7 @@ serve(async (req) => {
         // Generate a secure invite token with proper base64 encoding
         const tokenBytes = new Uint8Array(32);
         crypto.getRandomValues(tokenBytes);
-        const inviteToken = Array.from(tokenBytes, byte => 
-          String.fromCharCode(byte)
-        ).join('');
-        const base64Token = btoa(inviteToken);
+        const base64Token = btoa(String.fromCharCode(...tokenBytes));
 
         const { data: newInvitation, error: createError } = await supabaseClient
           .from('invitations')
@@ -239,6 +236,7 @@ serve(async (req) => {
     console.log('✅ Operation completed successfully:', result);
 
     return new Response(JSON.stringify(result), {
+      status: 200,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
 
