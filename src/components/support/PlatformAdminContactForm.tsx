@@ -15,8 +15,7 @@ import {
   CheckCircleIcon,
   LoaderIcon
 } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
+import { usePlatformAdminSupport } from "@/hooks/usePlatformAdminSupport";
 
 interface PlatformAdminContactFormProps {
   userEmail: string;
@@ -33,15 +32,13 @@ const PlatformAdminContactForm: React.FC<PlatformAdminContactFormProps> = ({
   userSchool,
   className
 }) => {
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { createSupportMessage, isLoading } = usePlatformAdminSupport();
   const [submitted, setSubmitted] = useState(false);
   const [formData, setFormData] = useState({
     subject: '',
     message: '',
     category: ''
   });
-
-  const { toast } = useToast();
 
   const categories = [
     { value: 'technical', label: 'Technical Issues', description: 'Login problems, bugs, system errors' },
@@ -54,47 +51,24 @@ const PlatformAdminContactForm: React.FC<PlatformAdminContactFormProps> = ({
     e.preventDefault();
     
     if (!formData.subject.trim() || !formData.message.trim() || !formData.category) {
-      toast({
-        title: "Missing Information",
-        description: "Please fill in all required fields.",
-        variant: "destructive"
-      });
       return;
     }
 
-    setIsSubmitting(true);
-
     try {
-      // Create notification directly (fallback method)
-      const { data, error } = await supabase
-        .from('in_app_notifications')
-        .insert({
-          recipient_email: 'zulfimoon1@gmail.com',
-          recipient_type: 'platform_admin',
-          title: `Support Request: ${formData.subject}`,
-          message: `From ${userName} (${userSchool}, ${userRole}): ${formData.message}. Category: ${formData.category}`,
-          notification_type: 'support_request'
-        });
-
-      if (error) throw error;
+      await createSupportMessage({
+        subject: formData.subject,
+        message: formData.message,
+        category: formData.category,
+        userEmail,
+        userName,
+        userRole,
+        userSchool
+      });
 
       setSubmitted(true);
       setFormData({ subject: '', message: '', category: '' });
-      
-      toast({
-        title: "Message Sent Successfully",
-        description: "Your support request has been sent to the platform admin. You'll receive a response soon.",
-      });
-
     } catch (error) {
-      console.error('Error sending message:', error);
-      toast({
-        title: "Failed to Send Message",
-        description: "There was an error sending your message. Please try again.",
-        variant: "destructive"
-      });
-    } finally {
-      setIsSubmitting(false);
+      console.error('Failed to submit support message:', error);
     }
   };
 
@@ -207,15 +181,15 @@ const PlatformAdminContactForm: React.FC<PlatformAdminContactFormProps> = ({
             <div className="flex gap-3 pt-4">
               <Button
                 type="submit"
-                disabled={isSubmitting || !formData.subject.trim() || !formData.message.trim() || !formData.category}
+                disabled={isLoading || !formData.subject.trim() || !formData.message.trim() || !formData.category}
                 className="flex items-center gap-2"
               >
-                {isSubmitting ? (
+                {isLoading ? (
                   <LoaderIcon className="w-4 h-4 animate-spin" />
                 ) : (
                   <SendIcon className="w-4 h-4" />
                 )}
-                {isSubmitting ? 'Sending...' : 'Send Message'}
+                {isLoading ? 'Sending...' : 'Send Message'}
               </Button>
             </div>
           </form>

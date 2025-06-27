@@ -44,12 +44,14 @@ const SupportButton: React.FC<SupportButtonProps> = ({
         <DialogHeader>
           <DialogTitle>Contact Platform Support</DialogTitle>
         </DialogHeader>
-        <PlatformAdminContactForm
-          userEmail={userEmail}
-          userName={userName}
-          userRole={userRole}
-          userSchool={userSchool}
-        />
+        <div className="mt-4">
+          <PlatformAdminContactForm
+            userEmail={userEmail}
+            userName={userName}
+            userRole={userRole}
+            userSchool={userSchool}
+          />
+        </div>
       </DialogContent>
     </Dialog>
   );
