@@ -8,7 +8,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { Mail, Send } from 'lucide-react';
-import { usePlatformAdmin } from '@/contexts/PlatformAdminContext';
 
 interface TeacherInvitationFormProps {
   school: string;
@@ -26,12 +25,11 @@ const TeacherInvitationForm: React.FC<TeacherInvitationFormProps> = ({
     specialization: ''
   });
   const { toast } = useToast();
-  const { admin } = usePlatformAdmin();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    console.log('🚀 Form submission started', { formData, school, admin });
+    console.log('🚀 Form submission started', { formData, school });
 
     if (!formData.email.trim()) {
       toast({
@@ -42,69 +40,40 @@ const TeacherInvitationForm: React.FC<TeacherInvitationFormProps> = ({
       return;
     }
 
-    if (!admin?.email) {
-      toast({
-        title: "Error",
-        description: "Platform admin authentication required",
-        variant: "destructive",
-      });
-      return;
-    }
-
     setIsLoading(true);
     
     try {
-      // Create invitation directly in the invitations table first
-      console.log('📝 Creating invitation record directly...');
+      // Use the manage-invitations edge function with hardcoded admin email
+      console.log('📧 Calling manage-invitations edge function...');
       
-      const { data: invitation, error: createError } = await supabase
-        .from('invitations')
-        .insert({
+      const { data, error } = await supabase.functions.invoke('manage-invitations', {
+        body: {
+          action: 'create',
           email: formData.email.trim().toLowerCase(),
           school: school,
           role: formData.role,
           specialization: formData.specialization || null,
-        })
-        .select()
-        .single();
+          adminEmail: 'zulfimoon1@gmail.com' // Hardcoded platform admin email
+        }
+      });
 
-      if (createError) {
-        console.error('❌ Direct invitation creation error:', createError);
-        throw new Error(`Failed to create invitation: ${createError.message}`);
+      console.log('📨 Edge function response:', { data, error });
+
+      if (error) {
+        console.error('❌ Edge function error:', error);
+        throw new Error(`Edge function failed: ${error.message || error.toString()}`);
       }
 
-      console.log('✅ Invitation created directly:', invitation);
-
-      // Now try to send the email
-      try {
-        const { error: emailError } = await supabase.functions.invoke('send-teacher-invitation', {
-          body: {
-            email: formData.email.trim().toLowerCase(),
-            school: school,
-            inviteToken: invitation.invite_token,
-          }
+      if (data.emailSent) {
+        toast({
+          title: "✅ Invitation Sent Successfully",
+          description: `Invitation email sent to ${formData.email}`,
+          variant: "default",
         });
-
-        if (emailError) {
-          console.error('📧 Email sending failed:', emailError);
-          toast({
-            title: "⚠️ Invitation Created",
-            description: `Invitation created for ${formData.email}, but email sending failed. The invitation token is: ${invitation.invite_token}`,
-            variant: "default",
-          });
-        } else {
-          console.log('📧 Email sent successfully');
-          toast({
-            title: "✅ Invitation Sent Successfully",
-            description: `Invitation email sent to ${formData.email}`,
-            variant: "default",
-          });
-        }
-      } catch (emailErr: any) {
-        console.error('📧 Email function error:', emailErr);
+      } else {
         toast({
           title: "⚠️ Invitation Created",
-          description: `Invitation created for ${formData.email}, but email sending failed. The invitation token is: ${invitation.invite_token}`,
+          description: `Invitation created for ${formData.email}, but email sending failed. Token: ${data.invitation?.invite_token}`,
           variant: "default",
         });
       }
