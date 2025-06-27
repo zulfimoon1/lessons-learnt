@@ -3,18 +3,6 @@ import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
-interface SupportMessage {
-  id: string;
-  subject: string;
-  message: string;
-  category: string;
-  priority: string;
-  status: string;
-  created_at: string;
-  admin_response?: string;
-  responded_at?: string;
-}
-
 interface CreateMessageParams {
   subject: string;
   message: string;
@@ -27,14 +15,13 @@ interface CreateMessageParams {
 
 export const usePlatformAdminSupport = () => {
   const [isLoading, setIsLoading] = useState(false);
-  const [messages, setMessages] = useState<SupportMessage[]>([]);
   const { toast } = useToast();
 
   const createSupportMessage = async (params: CreateMessageParams) => {
     setIsLoading(true);
     try {
-      // Use the edge function approach to send support messages
-      const { data: functionData, error: functionError } = await supabase.functions.invoke('send-platform-admin-notification', {
+      // Direct edge function call - simplified approach
+      const { error } = await supabase.functions.invoke('send-platform-admin-notification', {
         body: {
           messageId: crypto.randomUUID(),
           senderName: params.userName,
@@ -47,16 +34,8 @@ export const usePlatformAdminSupport = () => {
         }
       });
 
-      if (functionError) {
-        // Fallback - console log for development
-        console.log('Support message (dev mode):', {
-          from: params.userName,
-          email: params.userEmail,
-          school: params.userSchool,
-          subject: params.subject,
-          message: params.message,
-          category: params.category
-        });
+      if (error) {
+        console.error('Support message error:', error);
       }
 
       toast({
@@ -64,7 +43,6 @@ export const usePlatformAdminSupport = () => {
         description: "Your support request has been sent to the platform admin.",
       });
 
-      return functionData;
     } catch (error) {
       console.error('Error creating support message:', error);
       toast({
@@ -78,28 +56,8 @@ export const usePlatformAdminSupport = () => {
     }
   };
 
-  const getUserMessages = async (userEmail: string) => {
-    setIsLoading(true);
-    try {
-      setMessages([]);
-      return [];
-    } catch (error) {
-      console.error('Error fetching user messages:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load your support messages.",
-        variant: "destructive"
-      });
-      return [];
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   return {
     isLoading,
-    messages,
-    createSupportMessage,
-    getUserMessages
+    createSupportMessage
   };
 };
