@@ -54,7 +54,8 @@ serve(async (req) => {
   }
 
   try {
-    const { name, email, password, adminEmail } = await req.json();
+    const requestBody = await req.json();
+    const { name, email, password, adminEmail } = requestBody;
 
     console.log('🔐 Platform admin creation request:', { name, email, requestedBy: adminEmail });
 
@@ -157,6 +158,25 @@ serve(async (req) => {
     }
 
     console.log('🎉 Platform admin created successfully:', email);
+
+    // Send welcome email if Resend is configured
+    try {
+      const { error: emailError } = await supabaseClient.functions.invoke('send-admin-welcome', {
+        body: {
+          email: email.toLowerCase().trim(),
+          name: name.trim(),
+          tempPassword: password // In production, you might want to generate a temp password
+        }
+      });
+
+      if (emailError) {
+        console.log('📧 Email sending failed, but admin was created:', emailError);
+      } else {
+        console.log('📧 Welcome email sent successfully');
+      }
+    } catch (emailErr) {
+      console.log('📧 Email function not available or failed:', emailErr);
+    }
 
     return new Response(
       JSON.stringify({
