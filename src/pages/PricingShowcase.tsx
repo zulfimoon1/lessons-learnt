@@ -184,6 +184,24 @@ const PricingShowcase = () => {
               />
             ))}
           </div>
+
+          {/* Custom Pricing Section */}
+          <div className="mt-16 text-center">
+            <Card className="max-w-4xl mx-auto bg-gradient-to-r from-gray-50 to-blue-50 border-gray-200">
+              <CardHeader>
+                <CardTitle className="text-2xl text-brand-dark">Custom pricing available</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <h3 className="text-xl font-semibold text-brand-dark">Need a custom solution?</h3>
+                <p className="text-gray-700 text-lg">
+                  For large organizations or specific requirements, we offer tailored pricing solutions.
+                </p>
+                <p className="text-brand-teal font-medium">
+                  Custom pricing request form coming soon!
+                </p>
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </section>
 

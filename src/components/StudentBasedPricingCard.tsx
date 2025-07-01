@@ -29,7 +29,7 @@ const StudentBasedPricingCard = ({
   // Calculate per student cost
   const pricePerStudent = Math.ceil((isAnnual ? annualPrice : monthlyPrice * 12) / tier.maxStudents);
   
-  // Holiday pause calculations
+  // Holiday pause calculations - €10 per month for pause feature
   const holidayPauseFee = 10;
   const activeMonths = 9;
   const pauseMonths = 3;
@@ -69,7 +69,7 @@ const StudentBasedPricingCard = ({
           
           {isAnnual && (
             <div className="text-green-600 text-sm mt-1">
-              Save €{(monthlyPrice * 12) - annualPrice}/year
+              Save €{Math.ceil((monthlyPrice * 12) - annualPrice)}/year (20% off)
             </div>
           )}
         </div>

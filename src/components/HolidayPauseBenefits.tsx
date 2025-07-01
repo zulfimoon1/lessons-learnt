@@ -104,51 +104,6 @@ const HolidayPauseBenefits = () => {
           </CardContent>
         </Card>
 
-        {/* Strategic Benefits */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-          <Card className="bg-white">
-            <CardHeader>
-              <div className="flex items-center gap-2">
-                <CreditCardIcon className="w-5 h-5 text-brand-teal" />
-                <CardTitle className="text-lg">Customer Retention</CardTitle>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <p className="text-gray-600">
-                Prevents cancellations during school breaks by offering flexible billing options
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-white">
-            <CardHeader>
-              <div className="flex items-center gap-2">
-                <TrendingUpIcon className="w-5 h-5 text-brand-orange" />
-                <CardTitle className="text-lg">Revenue Optimization</CardTitle>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <p className="text-gray-600">
-                70% opt for pause but 30% forget, creating additional revenue opportunities
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-white">
-            <CardHeader>
-              <div className="flex items-center gap-2">
-                <StarIcon className="w-5 h-5 text-purple-600" />
-                <CardTitle className="text-lg">Upsell Opportunity</CardTitle>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <p className="text-gray-600">
-                Annual customers get holiday pause included free with 20% discount
-              </p>
-            </CardContent>
-          </Card>
-        </div>
-
         {/* Implementation Tips */}
         <Card className="bg-blue-50 border border-blue-200">
           <CardHeader>
