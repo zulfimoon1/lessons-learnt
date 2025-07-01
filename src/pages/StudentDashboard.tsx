@@ -19,6 +19,7 @@ import StudentAnalyticsDashboard from "@/components/analytics/StudentAnalyticsDa
 import MentalHealthSupportTab from "@/components/dashboard/MentalHealthSupportTab";
 import MobileTabs from "@/components/dashboard/student/MobileTabs";
 import WelcomeTour from "@/components/onboarding/WelcomeTour";
+import LiveChatWidget from "@/components/LiveChatWidget";
 import { classScheduleService } from "@/services/classScheduleService";
 import AIStudentInsights from "@/components/dashboard/student/AIStudentInsights";
 import MobileOptimizedLayout from "@/components/mobile/MobileOptimizedLayout";
@@ -152,13 +153,23 @@ const StudentDashboard: React.FC = () => {
       icon: HeartIcon,
       label: 'How I\'m Feeling',
       component: (
-        <MentalHealthSupportTab
-          psychologists={[]}
-          studentId={student.id}
-          studentName={student.full_name}
-          studentSchool={student.school}
-          studentGrade={student.grade}
-        />
+        <div className="space-y-6">
+          <MentalHealthSupportTab
+            psychologists={[]}
+            studentId={student.id}
+            studentName={student.full_name}
+            studentSchool={student.school}
+            studentGrade={student.grade}
+          />
+          <div className="flex justify-center">
+            <LiveChatWidget
+              studentId={student.id}
+              studentName={student.full_name}
+              school={student.school}
+              grade={student.grade}
+            />
+          </div>
+        </div>
       )
     },
     {
