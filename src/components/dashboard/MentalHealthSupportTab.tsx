@@ -21,6 +21,7 @@ interface MentalHealthSupportTabProps {
   studentName: string;
   studentSchool: string;
   studentGrade: string;
+  liveChatWidget?: React.ReactNode;
 }
 
 interface MoodEntry {
@@ -34,7 +35,8 @@ const MentalHealthSupportTab: React.FC<MentalHealthSupportTabProps> = ({
   studentId,
   studentName,
   studentSchool,
-  studentGrade
+  studentGrade,
+  liveChatWidget
 }) => {
   const { t } = useLanguage();
   const [recentMoodEntries, setRecentMoodEntries] = useState<MoodEntry[]>([]);
@@ -42,10 +44,6 @@ const MentalHealthSupportTab: React.FC<MentalHealthSupportTabProps> = ({
   const handleMoodSubmit = (entry: MoodEntry) => {
     setRecentMoodEntries(prev => [entry, ...prev].slice(0, 10));
     console.log('Mood entry submitted:', entry);
-  };
-
-  const handleStartChat = () => {
-    console.log('Starting chat session for student:', studentId);
   };
 
   return (
@@ -108,18 +106,23 @@ const MentalHealthSupportTab: React.FC<MentalHealthSupportTabProps> = ({
           </p>
           
           <div className="grid gap-4">
-            <Button 
-              onClick={handleStartChat}
-              className="w-full bg-brand-teal hover:bg-brand-teal/90 text-white p-4 h-auto"
-            >
-              <div className="flex items-center gap-3">
-                <MessageCircle className="w-5 h-5" />
-                <div className="text-left">
-                  <div className="font-semibold">Chat With Someone Now</div>
-                  <div className="text-sm opacity-90">Talk to a counselor right away</div>
-                </div>
+            {liveChatWidget ? (
+              <div className="w-full">
+                {liveChatWidget}
               </div>
-            </Button>
+            ) : (
+              <Button 
+                className="w-full bg-brand-teal hover:bg-brand-teal/90 text-white p-4 h-auto"
+              >
+                <div className="flex items-center gap-3">
+                  <MessageCircle className="w-5 h-5" />
+                  <div className="text-left">
+                    <div className="font-semibold">Chat With Someone Now</div>
+                    <div className="text-sm opacity-90">Talk to a counselor right away</div>
+                  </div>
+                </div>
+              </Button>
+            )}
             
             {psychologists.length > 0 && (
               <div className="space-y-3">

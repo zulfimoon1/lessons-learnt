@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -153,29 +152,21 @@ const StudentDashboard: React.FC = () => {
       icon: HeartIcon,
       label: 'How I\'m Feeling',
       component: (
-        <div className="space-y-6">
-          <MentalHealthSupportTab
-            psychologists={[]}
-            studentId={student.id}
-            studentName={student.full_name}
-            studentSchool={student.school}
-            studentGrade={student.grade}
-          />
-          <div className="bg-white rounded-lg p-6 shadow-sm border">
-            <h3 className="text-lg font-semibold mb-4 text-center">Need to Talk to Someone?</h3>
-            <p className="text-gray-600 text-center mb-4">
-              Connect with a school doctor for immediate support and guidance.
-            </p>
-            <div className="flex justify-center">
-              <LiveChatWidget
-                studentId={student.id}
-                studentName={student.full_name}
-                school={student.school}
-                grade={student.grade}
-              />
-            </div>
-          </div>
-        </div>
+        <MentalHealthSupportTab
+          psychologists={[]}
+          studentId={student.id}
+          studentName={student.full_name}
+          studentSchool={student.school}
+          studentGrade={student.grade}
+          liveChatWidget={
+            <LiveChatWidget
+              studentId={student.id}
+              studentName={student.full_name}
+              school={student.school}
+              grade={student.grade}
+            />
+          }
+        />
       )
     },
     {
