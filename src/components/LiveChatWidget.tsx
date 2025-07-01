@@ -220,19 +220,22 @@ const LiveChatWidget = ({ studentId, studentName, school, grade, onClose }: Live
     );
   }
 
+  // Main chat button - this should always be visible
   return (
-    <Button
-      onClick={() => {
-        console.log('LiveChatWidget: Opening chat interface');
-        setIsOpen(true);
-        setError(null);
-      }}
-      disabled={isConnecting}
-      className="bg-purple-600 hover:bg-purple-700 text-white"
-    >
-      <MessageCircleIcon className="w-4 h-4 mr-2" />
-      {t('chat.chatWithDoctor') || 'Chat with Doctor'}
-    </Button>
+    <div className="w-full">
+      <Button
+        onClick={() => {
+          console.log('LiveChatWidget: Opening chat interface');
+          setIsOpen(true);
+          setError(null);
+        }}
+        disabled={isConnecting}
+        className="w-full bg-purple-600 hover:bg-purple-700 text-white py-3 px-6 text-lg font-medium"
+      >
+        <MessageCircleIcon className="w-5 h-5 mr-2" />
+        {t('chat.chatWithDoctor') || 'Chat with Doctor'}
+      </Button>
+    </div>
   );
 };
 
