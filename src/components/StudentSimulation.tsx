@@ -13,7 +13,10 @@ import {
   TrendingUpIcon,
   UserIcon,
   MicIcon,
-  VolumeIcon
+  VolumeIcon,
+  MessageCircleIcon,
+  ShieldCheckIcon,
+  PhoneIcon
 } from "lucide-react";
 import VoiceDemoCard from './voice/VoiceDemoCard';
 
@@ -50,6 +53,11 @@ const StudentSimulation: React.FC<StudentSimulationProps> = ({ isPlaying }) => {
       title: "Weekly Summary",
       description: "Student reviews their progress and writes weekly reflection",
       component: "summary"
+    },
+    {
+      title: "Anonymous Chat Support",
+      description: "Student discovers they can chat anonymously with a school doctor for mental health support",
+      component: "chat"
     }
   ];
 
@@ -319,6 +327,193 @@ const StudentSimulation: React.FC<StudentSimulationProps> = ({ isPlaying }) => {
     </div>
   );
 
+  const renderChat = () => (
+    <div className="space-y-6">
+      {/* Introduction to Anonymous Chat */}
+      <Card className="bg-gradient-to-r from-purple-50 to-blue-50 border-purple-200 shadow-lg">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-purple-800">
+            <MessageCircleIcon className="w-6 h-6" />
+            💬 Need Someone to Talk To? Chat Anonymously!
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="bg-white/80 backdrop-blur-sm rounded-lg p-4">
+            <h3 className="font-semibold text-purple-900 mb-2">Why Anonymous Chat is Amazing:</h3>
+            <ul className="space-y-2 text-sm text-purple-800">
+              <li className="flex items-center gap-2">
+                <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
+                Talk to a real school doctor - they're trained to help students
+              </li>
+              <li className="flex items-center gap-2">
+                <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
+                Your identity stays completely private and anonymous
+              </li>
+              <li className="flex items-center gap-2">
+                <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
+                Get support right away when you're feeling overwhelmed
+              </li>
+              <li className="flex items-center gap-2">
+                <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
+                Everything you share is confidential and secure
+              </li>
+            </ul>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Chat Interface Demo */}
+      <Card className="bg-white/90 backdrop-blur-sm border-gray-200/50 shadow-lg">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <ShieldCheckIcon className="w-5 h-5 text-green-600" />
+            Anonymous Chat with School Doctor
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {/* Privacy Toggle Demo */}
+          <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <ShieldCheckIcon className="w-4 h-4 text-green-600" />
+                <span className="font-medium text-blue-800">Anonymous Mode: ON</span>
+                <Badge className="bg-green-100 text-green-700">Protected</Badge>
+              </div>
+              <div className="text-xs text-blue-600">Your identity is completely hidden</div>
+            </div>
+          </div>
+
+          {/* Mock Chat Interface */}
+          <div className="bg-gray-50 border rounded-lg p-4 h-64 overflow-y-auto">
+            <div className="space-y-3">
+              {/* System message */}
+              <div className="text-center">
+                <Badge className="bg-green-100 text-green-800">Connected to Dr. Martinez</Badge>
+                <p className="text-xs text-gray-600 mt-1">Your conversation is private and confidential</p>
+              </div>
+
+              {/* Doctor's greeting */}
+              <div className="flex gap-3">
+                <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
+                  <UserIcon className="w-4 h-4 text-white" />
+                </div>
+                <div className="flex-1">
+                  <div className="bg-blue-100 p-3 rounded-lg max-w-xs">
+                    <p className="text-sm text-blue-900">
+                      Hi there! I'm Dr. Martinez, the school doctor. I'm here to listen and support you. 
+                      What's on your mind today?
+                    </p>
+                  </div>
+                  <p className="text-xs text-gray-500 mt-1">Dr. Martinez • Just now</p>
+                </div>
+              </div>
+
+              {/* Student response */}
+              <div className="flex gap-3 justify-end">
+                <div className="flex-1 flex justify-end">
+                  <div className="bg-purple-100 p-3 rounded-lg max-w-xs">
+                    <p className="text-sm text-purple-900">
+                      Hi doctor. I've been feeling really stressed about exams lately and having trouble sleeping. 
+                      I don't want anyone to know it's me talking about this...
+                    </p>
+                  </div>
+                </div>
+                <div className="w-8 h-8 bg-purple-600 rounded-full flex items-center justify-center">
+                  <span className="text-white text-xs">A</span>
+                </div>
+              </div>
+
+              {/* Doctor's supportive response */}
+              <div className="flex gap-3">
+                <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
+                  <UserIcon className="w-4 h-4 text-white" />
+                </div>
+                <div className="flex-1">
+                  <div className="bg-blue-100 p-3 rounded-lg max-w-xs">
+                    <p className="text-sm text-blue-900">
+                      I completely understand, and I want you to know that your privacy is 100% protected here. 
+                      Exam stress is very common, and there are effective ways we can help you manage it...
+                    </p>
+                  </div>
+                  <p className="text-xs text-gray-500 mt-1">Dr. Martinez • Just now</p>
+                </div>
+              </div>
+
+              {/* Typing indicator */}
+              <div className="flex gap-3">
+                <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
+                  <UserIcon className="w-4 h-4 text-white" />
+                </div>
+                <div className="bg-blue-100 p-3 rounded-lg">
+                  <div className="flex gap-1">
+                    <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce"></div>
+                    <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
+                    <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Chat input area */}
+          <div className="border rounded-lg p-3 bg-white">
+            <div className="flex items-center gap-2 mb-2">
+              <ShieldCheckIcon className="w-4 h-4 text-green-600" />
+              <span className="text-sm text-green-700 font-medium">Anonymous Mode Active</span>
+            </div>
+            <div className="flex gap-2">
+              <input 
+                className="flex-1 p-2 border rounded text-sm" 
+                placeholder="Type your message... Your identity is protected"
+                disabled
+              />
+              <Button className="bg-purple-600 hover:bg-purple-700 text-white">
+                <MessageCircleIcon className="w-4 h-4" />
+              </Button>
+            </div>
+          </div>
+
+          {/* Benefits highlighted */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+            <div className="bg-green-50 p-3 rounded-lg border border-green-200">
+              <div className="flex items-center gap-2 mb-1">
+                <ShieldCheckIcon className="w-4 h-4 text-green-600" />
+                <span className="font-medium text-green-800">100% Anonymous</span>
+              </div>
+              <p className="text-sm text-green-700">
+                Dr. Martinez can't see your name or any identifying information
+              </p>
+            </div>
+            
+            <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
+              <div className="flex items-center gap-2 mb-1">
+                <PhoneIcon className="w-4 h-4 text-blue-600" />
+                <span className="font-medium text-blue-800">Real Professional</span>
+              </div>
+              <p className="text-sm text-blue-700">
+                Qualified school doctors trained to help students
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Call to Action */}
+      <Card className="bg-gradient-to-r from-brand-teal to-brand-orange text-white shadow-lg">
+        <CardContent className="p-6 text-center">
+          <h3 className="font-bold text-xl mb-2">Ready to Get Support?</h3>
+          <p className="mb-4 opacity-90">
+            Remember: It's completely normal to need help sometimes. You're not alone!
+          </p>
+          <Button className="bg-white text-brand-teal hover:bg-gray-100 font-semibold">
+            <MessageCircleIcon className="w-4 h-4 mr-2" />
+            Start Anonymous Chat
+          </Button>
+        </CardContent>
+      </Card>
+    </div>
+  );
+
   const getCurrentComponent = () => {
     switch (steps[currentStep].component) {
       case "dashboard": return renderDashboard();
@@ -326,6 +521,7 @@ const StudentSimulation: React.FC<StudentSimulationProps> = ({ isPlaying }) => {
       case "feedback": return renderFeedback();
       case "wellness": return renderWellness();
       case "summary": return renderSummary();
+      case "chat": return renderChat();
       default: return renderDashboard();
     }
   };
