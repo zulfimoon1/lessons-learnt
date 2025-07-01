@@ -190,18 +190,18 @@ const MentalHealthSupportTab: React.FC<MentalHealthSupportTabProps> = ({
           <div className="space-y-2">
             <div className="flex items-center gap-2 text-sm">
               <Phone className="w-3 h-3 text-red-600" />
-              <span className="font-medium">Crisis Text Line:</span>
-              <span>Text HOME to 741741</span>
+              <span className="font-medium">European Emergency:</span>
+              <span>112</span>
             </div>
             <div className="flex items-center gap-2 text-sm">
               <Phone className="w-3 h-3 text-red-600" />
-              <span className="font-medium">National Suicide Prevention:</span>
-              <span>988</span>
+              <span className="font-medium">Samaritans (UK/Ireland):</span>
+              <span>116 123</span>
             </div>
             <div className="flex items-center gap-2 text-sm">
               <Phone className="w-3 h-3 text-red-600" />
-              <span className="font-medium">Emergency:</span>
-              <span>911</span>
+              <span className="font-medium">Crisis Text Line Europe:</span>
+              <span>Text HELLO to 50808</span>
             </div>
           </div>
         </CardContent>
