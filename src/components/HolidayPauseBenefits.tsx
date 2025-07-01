@@ -1,7 +1,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { PauseIcon, CalendarIcon, CreditCardIcon, TrendingUpIcon, BellIcon, DashboardIcon } from "lucide-react";
+import { PauseIcon, CalendarIcon, CreditCardIcon, TrendingUpIcon, BellIcon, LayoutDashboardIcon, StarIcon } from "lucide-react";
 
 const HolidayPauseBenefits = () => {
   return (
@@ -165,7 +165,7 @@ const HolidayPauseBenefits = () => {
               </div>
               
               <div className="flex items-start gap-3">
-                <DashboardIcon className="w-5 h-5 text-blue-600 mt-1" />
+                <LayoutDashboardIcon className="w-5 h-5 text-blue-600 mt-1" />
                 <div>
                   <h4 className="font-semibold text-blue-800">Dashboard Notifications</h4>
                   <p className="text-blue-700 text-sm">"Summer break coming! Activate pause now" alerts</p>
