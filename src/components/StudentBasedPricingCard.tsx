@@ -24,10 +24,18 @@ const StudentBasedPricingCard = ({
   
   const monthlyPrice = tier.monthlyPrice / 100;
   const annualPrice = tier.annualPrice ? tier.annualPrice / 100 : monthlyPrice * 12 * 0.8; // 20% discount
-  const baseDisplayPrice = isAnnual ? Math.ceil(annualPrice / 12) : monthlyPrice;
   
-  // Add €10 to the main price if Holiday Pause is enabled
-  const displayPrice = includeHolidayPause ? baseDisplayPrice + 10 : baseDisplayPrice;
+  // Show the actual price the customer pays
+  let displayPrice;
+  let priceLabel;
+  
+  if (isAnnual) {
+    displayPrice = includeHolidayPause ? annualPrice + 120 : annualPrice; // +€120 for holiday pause (€10 x 12 months)
+    priceLabel = "/year";
+  } else {
+    displayPrice = includeHolidayPause ? monthlyPrice + 10 : monthlyPrice;
+    priceLabel = "/month";
+  }
   
   // Calculate per student cost
   const pricePerStudent = Math.ceil((isAnnual ? annualPrice : monthlyPrice * 12) / tier.maxStudents);
@@ -36,8 +44,8 @@ const StudentBasedPricingCard = ({
   const holidayPauseFee = 10;
   const activeMonths = 9;
   const pauseMonths = 3;
-  const totalWithPause = (baseDisplayPrice * activeMonths) + (holidayPauseFee * pauseMonths);
-  const savings = (baseDisplayPrice * 12) - totalWithPause;
+  const totalWithPause = (monthlyPrice * activeMonths) + (holidayPauseFee * pauseMonths);
+  const savings = (monthlyPrice * 12) - totalWithPause;
 
   return (
     <Card className={`relative transition-all duration-200 hover:shadow-lg ${
@@ -58,8 +66,8 @@ const StudentBasedPricingCard = ({
         
         <div className="mt-4">
           <div className="text-4xl font-bold text-brand-dark">
-            €{displayPrice}
-            <span className="text-sm font-normal text-muted-foreground">/month</span>
+            €{Math.ceil(displayPrice)}
+            <span className="text-sm font-normal text-muted-foreground">{priceLabel}</span>
           </div>
           
           <div className="text-sm text-muted-foreground mt-1">
@@ -101,7 +109,7 @@ const StudentBasedPricingCard = ({
                 Annual savings: €{savings}
               </div>
               <div className="text-purple-600">
-                Pay €{totalWithPause}/year instead of €{baseDisplayPrice * 12}
+                Pay €{totalWithPause}/year instead of €{monthlyPrice * 12}
               </div>
             </div>
           )}
