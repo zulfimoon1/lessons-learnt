@@ -23,7 +23,7 @@ const StudentBasedPricingCard = ({
   const [includeHolidayPause, setIncludeHolidayPause] = useState(false);
   
   const monthlyPrice = tier.monthlyPrice / 100;
-  const annualPrice = tier.annualPrice ? tier.annualPrice / 100 : monthlyPrice * 12;
+  const annualPrice = tier.annualPrice ? tier.annualPrice / 100 : monthlyPrice * 12 * 0.8; // 20% discount
   const baseDisplayPrice = isAnnual ? Math.ceil(annualPrice / 12) : monthlyPrice;
   
   // Add €10 to the main price if Holiday Pause is enabled
