@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { UserIcon, Mail, School, ShieldIcon } from "lucide-react";
+import { UserIcon, Mail, School, ShieldIcon, ChevronDownIcon } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 interface TeacherSignupFormProps {
@@ -86,13 +86,20 @@ const TeacherSignupForm: React.FC<TeacherSignupFormProps> = ({ onSignup, isLoadi
             setSignupData(prev => ({ ...prev, role: value }))
           }
         >
-          <SelectTrigger>
-            <SelectValue placeholder={language === 'lt' ? 'Pasirinkite vaidmenį' : 'Select role'} />
+          <SelectTrigger className="w-full h-10 px-3 py-2 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-brand-teal focus:border-transparent">
+            <div className="flex items-center justify-between w-full">
+              <SelectValue placeholder={language === 'lt' ? 'Pasirinkite vaidmenį' : 'Select your role'} />
+              <ChevronDownIcon className="h-4 w-4 text-gray-500" />
+            </div>
           </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="teacher">{t('login.teacher.roleTeacher')}</SelectItem>
-            <SelectItem value="admin">{t('login.teacher.roleAdmin')}</SelectItem>
-            <SelectItem value="doctor">
+          <SelectContent className="bg-white border border-gray-200 rounded-md shadow-lg z-50">
+            <SelectItem value="teacher" className="px-3 py-2 hover:bg-gray-100 cursor-pointer">
+              {t('login.teacher.roleTeacher')}
+            </SelectItem>
+            <SelectItem value="admin" className="px-3 py-2 hover:bg-gray-100 cursor-pointer">
+              {t('login.teacher.roleAdmin')}
+            </SelectItem>
+            <SelectItem value="doctor" className="px-3 py-2 hover:bg-gray-100 cursor-pointer">
               {language === 'lt' ? 'Psichinės sveikatos specialistas' : 'Mental Health Professional'}
             </SelectItem>
           </SelectContent>
