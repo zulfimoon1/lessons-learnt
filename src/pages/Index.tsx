@@ -247,7 +247,7 @@ const Index = () => {
             )}>
               {t('platform.readyToTransformDesc')}
             </p>
-            <Link to="/teacher-login?tab=signup">
+            <a href="https://meetings.hubspot.com/zmoon" target="_blank" rel="noopener noreferrer">
               <Button 
                 size="lg" 
                 className={cn(
@@ -255,9 +255,9 @@ const Index = () => {
                   isMobile ? 'text-lg px-8 py-4' : 'text-xl px-12 py-4 transform scale-125'
                 )}
               >
-                {t('navigation.signUpNow')}
+                Book a Demo
               </Button>
-            </Link>
+            </a>
           </div>
         </div>
       </section>
