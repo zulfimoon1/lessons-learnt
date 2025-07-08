@@ -49,5 +49,10 @@ export const ltChatTranslations = {
   'chat.downloadTranscript': 'Atsisiųsti pokalbio įrašą',
   'chat.reportIssue': 'Pranešti apie problemą',
   'chat.rateConversation': 'Įvertinti pokalbį',
-  'chat.thankYouForFeedback': 'Ačiū už atsiliepimą'
+  'chat.thankYouForFeedback': 'Ačiū už atsiliepimą',
+  
+  // Additional translations from DeepL
+  error: "Nepavyko išsiųsti pranešimo. Bandykite dar kartą.",
+  waitingForDoctor: "Gydytojo laukimas",
+  doctorJoinShortly: "Gydytojas prisijungs netrukus"
 };
