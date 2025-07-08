@@ -44,30 +44,17 @@ async function verifyPassword(password: string, storedHash: string): Promise<boo
 const validatePasswordStrength = (password: string): { isValid: boolean; errors: string[] } => {
   const errors: string[] = [];
   
-  if (password.length < 8) {
-    errors.push('Password must be at least 8 characters long');
+  if (password.length < 6) {
+    errors.push('Password must be at least 6 characters long');
   }
   
-  if (!/[A-Z]/.test(password)) {
-    errors.push('Password must contain at least one uppercase letter');
-  }
-  
-  if (!/[a-z]/.test(password)) {
-    errors.push('Password must contain at least one lowercase letter');
+  // More lenient requirements - only require length and at least one letter and one number
+  if (!/[A-Za-z]/.test(password)) {
+    errors.push('Password must contain at least one letter');
   }
   
   if (!/\d/.test(password)) {
     errors.push('Password must contain at least one number');
-  }
-  
-  if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) {
-    errors.push('Password must contain at least one special character');
-  }
-  
-  // Check for common weak patterns
-  const weakPatterns = ['password', '123456', 'qwerty', 'admin', 'letmein'];
-  if (weakPatterns.some(pattern => password.toLowerCase().includes(pattern))) {
-    errors.push('Password contains common weak patterns');
   }
   
   return { isValid: errors.length === 0, errors };
