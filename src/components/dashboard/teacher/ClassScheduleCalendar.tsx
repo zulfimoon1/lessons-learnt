@@ -53,10 +53,14 @@ const ClassScheduleCalendar: React.FC<ClassScheduleCalendarProps> = ({ teacher }
       try {
         setIsLoading(true);
         
+        console.log('ClassScheduleCalendar: Teacher data:', teacher);
+        console.log('ClassScheduleCalendar: Fetching data for school:', teacher.school);
+        
         // Fetch class schedules
         const response = await classScheduleService.getSchedulesByTeacher(teacher.id);
         if (response.data) {
           setSchedules(response.data);
+          console.log('ClassScheduleCalendar: Fetched schedules:', response.data.length);
         }
 
         // Fetch school calendar events
@@ -67,12 +71,13 @@ const ClassScheduleCalendar: React.FC<ClassScheduleCalendarProps> = ({ teacher }
           .order('start_date', { ascending: true });
 
         if (error) {
-          console.error('Error fetching school events:', error);
+          console.error('ClassScheduleCalendar: Error fetching school events:', error);
         } else {
+          console.log('ClassScheduleCalendar: Fetched school events:', events);
           setSchoolEvents(events || []);
         }
       } catch (error) {
-        console.error('Error fetching data:', error);
+        console.error('ClassScheduleCalendar: Error fetching data:', error);
       } finally {
         setIsLoading(false);
       }
