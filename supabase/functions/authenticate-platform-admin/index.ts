@@ -130,8 +130,11 @@ serve(async (req) => {
         }
       } else {
         // Handle case where there's no password hash
-        console.log('⚠️ No password hash found, checking for demo admin');
-        if (email === 'zulfi.iqbal@me.com' && password === 'demo123') {
+        console.log('⚠️ No password hash found, checking for demo admin credentials');
+        
+        // Check for demo admin credentials
+        if ((email === 'zulfi.iqbal@me.com' && password === 'demo123') ||
+            (email === 'demoadmin@demo.com' && password === 'admin123')) {
           isValidPassword = true;
           // Set a proper hash for this demo admin
           const newHash = await hashPassword(password);
@@ -139,7 +142,7 @@ serve(async (req) => {
             .from('teachers')
             .update({ password_hash: newHash })
             .eq('id', adminData.id);
-          console.log('✅ Set password hash for demo admin');
+          console.log('✅ Set password hash for demo admin:', email);
         }
       }
     } catch (hashError) {
