@@ -7,6 +7,9 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import ChatHeader from "./chat/ChatHeader";
 import ChatMessages from "./chat/ChatMessages";
 import ChatInput from "./chat/ChatInput";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import { ShieldCheckIcon } from "lucide-react";
 import { toast } from "sonner";
 
 interface RealtimeChatProps {
@@ -17,8 +20,9 @@ interface RealtimeChatProps {
   isDoctorView?: boolean;
 }
 
-const RealtimeChat = ({ session, studentName, isAnonymous, onClose, isDoctorView = false }: RealtimeChatProps) => {
+const RealtimeChat = ({ session, studentName, isAnonymous: initialIsAnonymous, onClose, isDoctorView = false }: RealtimeChatProps) => {
   const [newMessage, setNewMessage] = useState("");
+  const [isAnonymous, setIsAnonymous] = useState(initialIsAnonymous);
   const { t } = useLanguage();
   const { messages, isConnected, doctorInfo, sendMessage } = useChatSession(session, isDoctorView, studentName);
 
@@ -70,6 +74,24 @@ const RealtimeChat = ({ session, studentName, isAnonymous, onClose, isDoctorView
           isConnected={isConnected}
           isDoctorView={isDoctorView}
         />
+        
+        {/* Anonymous toggle for students only */}
+        {!isDoctorView && (
+          <div className="px-3 py-2 border-t border-gray-200 bg-gray-50">
+            <div className="flex items-center space-x-2">
+              <Switch
+                id="chat-anonymous"
+                checked={isAnonymous}
+                onCheckedChange={setIsAnonymous}
+              />
+              <Label htmlFor="chat-anonymous" className="text-xs flex items-center gap-1">
+                <ShieldCheckIcon className="w-3 h-3" />
+                Anonymous
+              </Label>
+            </div>
+          </div>
+        )}
+        
         <ChatInput
           newMessage={newMessage}
           setNewMessage={setNewMessage}
