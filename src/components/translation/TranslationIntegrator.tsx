@@ -144,19 +144,17 @@ export const additional${exportName.charAt(0).toUpperCase() + exportName.slice(1
 
 // To integrate: merge these with your existing translations object`;
     
-    // Change extension to .txt to avoid browser confusion
+    // Use data URL approach to bypass MIME type issues
     const txtFilename = filename.replace('.ts', '.txt');
+    const dataStr = "data:text/plain;charset=utf-8," + encodeURIComponent(content);
     
-    const blob = new Blob([content], { type: 'application/octet-stream' });
-    const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
-    a.href = url;
+    a.href = dataStr;
     a.download = txtFilename;
-    a.setAttribute('download', txtFilename); // Force download attribute
+    a.style.display = 'none';
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
-    URL.revokeObjectURL(url);
   };
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
