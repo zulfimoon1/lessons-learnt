@@ -58,13 +58,14 @@ serve(async (req) => {
 
     console.log(`🔄 Translating ${texts.length} texts to ${targetLanguage}`);
 
-    // Prepare request body for DeepL API
-    const formData = new FormData();
-    texts.forEach(text => formData.append('text', text));
-    formData.append('target_lang', targetLanguage.toUpperCase());
-    formData.append('source_lang', sourceLanguage.toUpperCase());
-    formData.append('preserve_formatting', '1');
+    // Prepare request body for DeepL API - DeepL expects JSON, not FormData
+    const requestBody = {
+      text: texts,
+      target_lang: targetLanguage.toUpperCase(),
+      source_lang: sourceLanguage.toUpperCase()
+    };
 
+    console.log('📦 Request body:', JSON.stringify(requestBody, null, 2));
     console.log('🌐 Making request to DeepL API...');
     
     // Call DeepL API
@@ -72,8 +73,9 @@ serve(async (req) => {
       method: 'POST',
       headers: {
         'Authorization': `DeepL-Auth-Key ${deeplApiKey}`,
+        'Content-Type': 'application/json',
       },
-      body: formData,
+      body: JSON.stringify(requestBody),
     });
 
     console.log('📡 DeepL API response status:', response.status);
