@@ -29,6 +29,7 @@ import AdminUserManagement from '@/components/platform-admin/AdminUserManagement
 import DiscountCodeManagement from '@/components/platform-admin/DiscountCodeManagement';
 import TransactionManagement from '@/components/platform-admin/TransactionManagement';
 import DiscountNotifications from '@/components/platform-admin/DiscountNotifications';
+import TranslationAuditTest from '@/components/translation/TranslationAuditTest';
 
 interface PlatformStats {
   studentsCount: number;
@@ -315,6 +316,12 @@ const PlatformAdminDashboard: React.FC = () => {
       icon: CreditCard,
       label: 'Payment Notifications',
       component: <DiscountNotifications adminEmail={admin?.email || 'zulfimoon1@gmail.com'} />
+    },
+    {
+      value: 'translations',
+      icon: Settings,
+      label: 'Translation Audit',
+      component: <TranslationAuditTest />
     },
     {
       value: 'security',
