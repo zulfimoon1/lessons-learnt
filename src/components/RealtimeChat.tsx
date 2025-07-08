@@ -35,10 +35,12 @@ const RealtimeChat = ({ session, studentName, isAnonymous, onClose, isDoctorView
       await sendMessage(newMessage, isAnonymous);
       setNewMessage("");
       console.log('RealtimeChat: Message sent successfully');
-      toast.success(t('chat.messageSent') || 'Message sent successfully');
     } catch (error) {
       console.error('RealtimeChat: Error sending message:', error);
-      toast.error(t('chat.error') || 'Failed to send message. Please try again.');
+      
+      // Show user-friendly error message
+      const errorMessage = error instanceof Error ? error.message : 'Failed to send message';
+      toast.error(errorMessage);
     }
   };
 

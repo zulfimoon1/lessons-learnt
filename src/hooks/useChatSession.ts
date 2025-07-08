@@ -168,24 +168,30 @@ export const useChatSession = (session: LiveChatSession, isDoctorView: boolean, 
 
     try {
       console.log('useChatSession: Sending message:', message);
+      
+      // Prepare the message data with minimal payload
+      const messageData = {
+        session_id: session.id,
+        sender_type: isDoctorView ? 'doctor' : 'student',
+        sender_name: isDoctorView ? `Dr. ${studentName}` : (isAnonymous ? 'Anonymous Student' : studentName),
+        message: message.trim().slice(0, 1000) // Limit message length to prevent payload issues
+      };
+
       const { error } = await supabase
         .from('chat_messages')
-        .insert({
-          session_id: session.id,
-          sender_type: isDoctorView ? 'doctor' : 'student',
-          sender_name: isDoctorView ? `Dr. ${studentName}` : (isAnonymous ? 'Anonymous Student' : studentName),
-          message: message.trim()
-        });
+        .insert(messageData);
 
-      if (error) throw error;
+      if (error) {
+        console.error('useChatSession: Database error:', error);
+        throw error;
+      }
+      
       console.log('useChatSession: Message sent successfully');
     } catch (error) {
       console.error('useChatSession: Error sending message:', error);
-      toast({
-        title: "Error",
-        description: "Failed to send message. Please try again.",
-        variant: "destructive",
-      });
+      
+      // Re-throw the error so it can be handled by the UI
+      throw new Error('Failed to send message. Please try again.');
     }
   };
 
