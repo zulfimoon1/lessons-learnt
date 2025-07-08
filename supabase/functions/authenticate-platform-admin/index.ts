@@ -97,12 +97,20 @@ serve(async (req) => {
       .select('id, name, email, school, role, password_hash')
       .eq('email', email.toLowerCase().trim())
       .eq('role', 'admin')
-      .single();
+      .maybeSingle();
 
-    console.log('📊 Admin query result:', { adminData: !!adminData, error });
+    console.log('📊 Admin query result:', { adminData: !!adminData, error, email: email.toLowerCase().trim() });
 
-    if (error || !adminData) {
-      console.error('❌ Admin not found:', error);
+    if (error) {
+      console.error('❌ Database query error:', error);
+      return new Response(
+        JSON.stringify({ success: false, error: 'Database error' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    if (!adminData) {
+      console.error('❌ Admin not found for email:', email.toLowerCase().trim());
       return new Response(
         JSON.stringify({ success: false, error: 'Invalid credentials' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
