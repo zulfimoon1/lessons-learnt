@@ -11,16 +11,6 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { useMentalHealthAlerts } from "@/hooks/useMentalHealthAlerts";
 import WellnessCheckCard from "./WellnessCheckCard";
 
-interface WeeklySummary {
-  id: string;
-  student_name: string;
-  school: string;
-  grade: string;
-  week_start_date: string;
-  emotional_concerns: string;
-  academic_concerns: string;
-  submitted_at: string;
-}
 
 interface DoctorDashboardProps {
   teacher: {
@@ -32,46 +22,13 @@ interface DoctorDashboardProps {
 }
 
 const DoctorDashboard: React.FC<DoctorDashboardProps> = ({ teacher }) => {
-  const [weeklySummaries, setWeeklySummaries] = useState<WeeklySummary[]>([]);
-  const [isLoadingSummaries, setIsLoadingSummaries] = useState(true);
   const { alerts, isLoading: isLoadingAlerts, isAuthorized, markAsReviewed } = useMentalHealthAlerts();
   const { toast } = useToast();
   const { t } = useLanguage();
 
   useEffect(() => {
     console.log('DoctorDashboard: Initializing for doctor:', teacher.name, 'at school:', teacher.school);
-    fetchWeeklySummaries();
   }, [teacher.school]);
-
-  const fetchWeeklySummaries = async () => {
-    try {
-      setIsLoadingSummaries(true);
-      console.log('DoctorDashboard: Fetching weekly summaries for school:', teacher.school);
-
-      const { data: summariesData, error: summariesError } = await supabase
-        .from('weekly_summaries')
-        .select('*')
-        .eq('school', teacher.school)
-        .order('submitted_at', { ascending: false });
-
-      if (summariesError) {
-        console.error('DoctorDashboard: Error fetching summaries:', summariesError);
-        throw summariesError;
-      }
-      
-      console.log('DoctorDashboard: Loaded summaries:', summariesData?.length || 0);
-      setWeeklySummaries(summariesData || []);
-    } catch (error) {
-      console.error('DoctorDashboard: Error in fetchWeeklySummaries:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to load weekly summaries',
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoadingSummaries(false);
-    }
-  };
 
   const getSeverityColor = (level: number) => {
     if (level >= 5) return 'destructive';
@@ -85,7 +42,7 @@ const DoctorDashboard: React.FC<DoctorDashboardProps> = ({ teacher }) => {
     return 'Low Risk';
   };
 
-  if (isLoadingAlerts || isLoadingSummaries) {
+  if (isLoadingAlerts) {
     return (
       <div className="flex items-center justify-center py-12">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-teal"></div>
@@ -105,11 +62,11 @@ const DoctorDashboard: React.FC<DoctorDashboardProps> = ({ teacher }) => {
           <CardContent className="p-6">
             <div className="flex items-center gap-4">
               <div className="w-12 h-12 bg-brand-teal/10 rounded-lg flex items-center justify-center">
-                <Calendar className="w-6 h-6 text-brand-teal" />
+                <Heart className="w-6 h-6 text-brand-teal" />
               </div>
               <div>
-                <p className="text-sm text-gray-600">Weekly Summaries</p>
-                <p className="text-2xl font-bold text-brand-dark">{weeklySummaries.length}</p>
+                <p className="text-sm text-gray-600">Wellness Checks</p>
+                <p className="text-2xl font-bold text-brand-dark">Monitor</p>
               </div>
             </div>
           </CardContent>
@@ -179,117 +136,66 @@ const DoctorDashboard: React.FC<DoctorDashboardProps> = ({ teacher }) => {
           </p>
         </CardHeader>
         <CardContent>
-          <Tabs defaultValue="alerts" className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="alerts">Mental Health Alerts</TabsTrigger>
-              <TabsTrigger value="summaries">Weekly Summaries</TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="alerts" className="mt-4">
-              {!isAuthorized ? (
-                <div className="text-center py-8">
-                  <Shield className="w-12 h-12 text-red-400 mx-auto mb-4" />
-                  <p className="text-gray-600 mb-2">Access to mental health alerts requires proper authorization</p>
-                  <p className="text-sm text-gray-500">Contact your system administrator for medical data access</p>
-                </div>
-              ) : alerts.length === 0 ? (
-                <div className="text-center py-8">
-                  <Heart className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                  <p className="text-gray-600">No mental health alerts at this time</p>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {alerts.map((alert) => (
-                    <div key={alert.id} className="border border-gray-200 rounded-lg p-4 bg-red-50/30">
-                      <div className="flex justify-between items-start mb-2">
-                        <div>
-                          <div className="flex items-center gap-2 mb-1">
-                            <h3 className="font-semibold text-brand-dark">{alert.student_name}</h3>
-                            <Badge variant={getSeverityColor(alert.severity_level)}>
-                              {getSeverityText(alert.severity_level)}
+          <div className="mt-4">
+            {!isAuthorized ? (
+              <div className="text-center py-8">
+                <Shield className="w-12 h-12 text-red-400 mx-auto mb-4" />
+                <p className="text-gray-600 mb-2">Access to mental health alerts requires proper authorization</p>
+                <p className="text-sm text-gray-500">Contact your system administrator for medical data access</p>
+              </div>
+            ) : alerts.length === 0 ? (
+              <div className="text-center py-8">
+                <Heart className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                <p className="text-gray-600">No mental health alerts at this time</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {alerts.map((alert) => (
+                  <div key={alert.id} className="border border-gray-200 rounded-lg p-4 bg-red-50/30">
+                    <div className="flex justify-between items-start mb-2">
+                      <div>
+                        <div className="flex items-center gap-2 mb-1">
+                          <h3 className="font-semibold text-brand-dark">{alert.student_name}</h3>
+                          <Badge variant={getSeverityColor(alert.severity_level)}>
+                            {getSeverityText(alert.severity_level)}
+                          </Badge>
+                          {alert.is_reviewed && (
+                            <Badge variant="outline" className="border-green-200 text-green-800 bg-green-50">
+                              Reviewed
                             </Badge>
-                            {alert.is_reviewed && (
-                              <Badge variant="outline" className="border-green-200 text-green-800 bg-green-50">
-                                Reviewed
-                              </Badge>
-                            )}
-                          </div>
-                          <div className="flex items-center gap-4 text-sm text-gray-600 mb-2">
-                            <span className="flex items-center gap-1">
-                              <User className="w-3 h-3" />
-                              Grade {alert.grade}
-                            </span>
-                            <span className="flex items-center gap-1">
-                              <Calendar className="w-3 h-3" />
-                              {new Date(alert.created_at).toLocaleDateString()}
-                            </span>
-                          </div>
+                          )}
                         </div>
-                        {!alert.is_reviewed && (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => markAsReviewed(alert.id)}
-                            className="border-green-300 text-green-700 hover:bg-green-50"
-                          >
-                            <Eye className="w-4 h-4 mr-2" />
-                            Mark Reviewed
-                          </Button>
-                        )}
-                      </div>
-                      <div className="bg-red-100/50 p-3 rounded border-l-4 border-red-300">
-                        <p className="text-sm text-red-800">{alert.content}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </TabsContent>
-
-            <TabsContent value="summaries" className="mt-4">
-              {weeklySummaries.length === 0 ? (
-                <div className="text-center py-8">
-                  <MessageSquare className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                  <p className="text-gray-600">No weekly summaries available</p>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {weeklySummaries.map((summary) => (
-                    <div key={summary.id} className="border border-gray-200 rounded-lg p-4 bg-white">
-                      <div className="flex justify-between items-start mb-3">
-                        <div>
-                          <h3 className="font-semibold text-brand-dark">{summary.student_name}</h3>
-                          <div className="flex items-center gap-4 text-sm text-gray-600">
-                            <span>Grade {summary.grade}</span>
-                            <span>Week from {new Date(summary.week_start_date).toLocaleDateString()}</span>
-                            <span>Submitted {new Date(summary.submitted_at).toLocaleDateString()}</span>
-                          </div>
+                        <div className="flex items-center gap-4 text-sm text-gray-600 mb-2">
+                          <span className="flex items-center gap-1">
+                            <User className="w-3 h-3" />
+                            Grade {alert.grade}
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <Calendar className="w-3 h-3" />
+                            {new Date(alert.created_at).toLocaleDateString()}
+                          </span>
                         </div>
                       </div>
-                      
-                      {summary.emotional_concerns && (
-                        <div className="mb-3">
-                          <h4 className="text-sm font-medium text-gray-700 mb-1">Emotional Concerns</h4>
-                          <p className="text-sm bg-red-50 p-3 rounded border-l-4 border-red-200 text-brand-dark">
-                            {summary.emotional_concerns}
-                          </p>
-                        </div>
-                      )}
-                      
-                      {summary.academic_concerns && (
-                        <div>
-                          <h4 className="text-sm font-medium text-gray-700 mb-1">Academic Concerns</h4>
-                          <p className="text-sm bg-blue-50 p-3 rounded border-l-4 border-blue-200 text-brand-dark">
-                            {summary.academic_concerns}
-                          </p>
-                        </div>
+                      {!alert.is_reviewed && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => markAsReviewed(alert.id)}
+                          className="border-green-300 text-green-700 hover:bg-green-50"
+                        >
+                          <Eye className="w-4 h-4 mr-2" />
+                          Mark Reviewed
+                        </Button>
                       )}
                     </div>
-                  ))}
-                </div>
-              )}
-            </TabsContent>
-          </Tabs>
+                    <div className="bg-red-100/50 p-3 rounded border-l-4 border-red-300">
+                      <p className="text-sm text-red-800">{alert.content}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </CardContent>
       </Card>
     </div>

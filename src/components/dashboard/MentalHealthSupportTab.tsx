@@ -1,9 +1,11 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Heart, MessageCircle, Phone, Clock, MapPin, User, ShieldCheck } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 import WellnessTracker from "@/components/dashboard/student/WellnessTracker";
 
 interface Psychologist {
@@ -27,6 +29,9 @@ interface MentalHealthSupportTabProps {
 interface MoodEntry {
   mood: 'great' | 'good' | 'okay' | 'poor' | 'terrible';
   notes?: string;
+  audioUrl?: string;
+  transcription?: string;
+  audioDuration?: number;
   timestamp: Date;
 }
 
@@ -39,11 +44,81 @@ const MentalHealthSupportTab: React.FC<MentalHealthSupportTabProps> = ({
   liveChatWidget
 }) => {
   const { t } = useLanguage();
+  const { toast } = useToast();
   const [recentMoodEntries, setRecentMoodEntries] = useState<MoodEntry[]>([]);
 
-  const handleMoodSubmit = (entry: MoodEntry) => {
-    setRecentMoodEntries(prev => [entry, ...prev].slice(0, 10));
-    console.log('Mood entry submitted:', entry);
+  useEffect(() => {
+    fetchRecentWellnessEntries();
+  }, [studentId]);
+
+  const fetchRecentWellnessEntries = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('student_wellness')
+        .select('*')
+        .eq('student_id', studentId)
+        .order('created_at', { ascending: false })
+        .limit(10);
+
+      if (error) {
+        console.error('Error fetching wellness entries:', error);
+        return;
+      }
+
+      if (data) {
+        const mappedEntries = data.map((entry: any) => ({
+          mood: entry.mood as 'great' | 'good' | 'okay' | 'poor' | 'terrible',
+          notes: entry.notes || undefined,
+          timestamp: new Date(entry.created_at)
+        }));
+        setRecentMoodEntries(mappedEntries);
+      }
+    } catch (error) {
+      console.error('Error fetching wellness entries:', error);
+    }
+  };
+
+  const handleMoodSubmit = async (entry: MoodEntry) => {
+    try {
+      const { error } = await supabase
+        .from('student_wellness')
+        .insert({
+          student_id: studentId,
+          student_name: studentName,
+          school: studentSchool,
+          grade: studentGrade,
+          mood: entry.mood,
+          notes: entry.notes || null,
+          audio_url: entry.audioUrl || null,
+          transcription: entry.transcription || null,
+          audio_duration: entry.audioDuration || null
+        });
+
+      if (error) {
+        console.error('Error submitting wellness entry:', error);
+        toast({
+          title: "Error",
+          description: "Failed to submit your wellness check. Please try again.",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      // Add to local state for immediate feedback
+      setRecentMoodEntries(prev => [entry, ...prev].slice(0, 10));
+      
+      toast({
+        title: "Thank you!",
+        description: "Your wellness check has been submitted successfully.",
+      });
+    } catch (error) {
+      console.error('Error submitting wellness entry:', error);
+      toast({
+        title: "Error",
+        description: "Failed to submit your wellness check. Please try again.",
+        variant: "destructive"
+      });
+    }
   };
 
   return (

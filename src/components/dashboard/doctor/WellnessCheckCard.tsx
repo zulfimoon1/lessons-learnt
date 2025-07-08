@@ -8,12 +8,17 @@ import { supabase } from "@/integrations/supabase/client";
 
 interface WellnessEntry {
   id: string;
+  student_id?: string;
   student_name: string;
   school: string;
   grade: string;
   mood: 'great' | 'good' | 'okay' | 'poor' | 'terrible';
   notes?: string;
-  submitted_at: string;
+  audio_url?: string;
+  transcription?: string;
+  audio_duration?: number;
+  created_at: string;
+  updated_at?: string;
 }
 
 interface WellnessCheckCardProps {
@@ -34,57 +39,24 @@ const WellnessCheckCard: React.FC<WellnessCheckCardProps> = ({ school }) => {
       setIsLoading(true);
       console.log('WellnessCheckCard: Fetching wellness entries for school:', school);
       
-      // Since we don't have a student_wellness table, we'll use mock data for demonstration
-      // In a real implementation, this would be replaced with actual database queries
-      const mockData: WellnessEntry[] = [
-        {
-          id: '1',
-          student_name: 'Emma Johnson',
-          school: school,
-          grade: '9th',
-          mood: 'good',
-          notes: 'Feeling much better after talking to my counselor about stress management techniques',
-          submitted_at: new Date().toISOString()
-        },
-        {
-          id: '2',
-          student_name: 'Michael Chen',
-          school: school,
-          grade: '10th',
-          mood: 'okay',
-          notes: 'A bit worried about upcoming exams but trying to stay positive',
-          submitted_at: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString()
-        },
-        {
-          id: '3',
-          student_name: 'Sarah Wilson',
-          school: school,
-          grade: '11th',
-          mood: 'poor',
-          notes: 'Having trouble sleeping and feeling anxious about college applications',
-          submitted_at: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString()
-        },
-        {
-          id: '4',
-          student_name: 'Anonymous Student',
-          school: school,
-          grade: '8th',
-          mood: 'terrible',
-          notes: 'Really struggling with bullying issues and feeling isolated',
-          submitted_at: new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString()
-        },
-        {
-          id: '5',
-          student_name: 'Alex Rodriguez',
-          school: school,
-          grade: '12th',
-          mood: 'great',
-          notes: 'Feeling confident and excited about graduation!',
-          submitted_at: new Date(Date.now() - 8 * 60 * 60 * 1000).toISOString()
-        }
-      ];
-      
-      setWellnessEntries(mockData);
+      // Fetch real wellness data from the database
+      const { data: wellnessData, error } = await supabase
+        .from('student_wellness')
+        .select('*')
+        .eq('school', school)
+        .order('created_at', { ascending: false })
+        .limit(20);
+
+      if (error) {
+        console.error('WellnessCheckCard: Error fetching wellness entries:', error);
+        throw error;
+      }
+
+      console.log('WellnessCheckCard: Loaded wellness entries:', wellnessData?.length || 0);
+      setWellnessEntries((wellnessData || []).map(entry => ({
+        ...entry,
+        mood: entry.mood as 'great' | 'good' | 'okay' | 'poor' | 'terrible'
+      })));
     } catch (error) {
       console.error('WellnessCheckCard: Error fetching wellness entries:', error);
       setWellnessEntries([]);
@@ -178,9 +150,9 @@ const WellnessCheckCard: React.FC<WellnessCheckCardProps> = ({ school }) => {
                   </div>
                   <div className="flex items-center gap-2">
                     <Calendar className="w-3 h-3 text-gray-400" />
-                    <span className="text-xs text-gray-500">
-                      {new Date(entry.submitted_at).toLocaleString()}
-                    </span>
+                     <span className="text-xs text-gray-500">
+                       {new Date(entry.created_at).toLocaleString()}
+                     </span>
                   </div>
                 </div>
                 

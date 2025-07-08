@@ -730,6 +730,59 @@ export type Database = {
           },
         ]
       }
+      student_wellness: {
+        Row: {
+          audio_duration: number | null
+          audio_url: string | null
+          created_at: string | null
+          grade: string
+          id: string
+          mood: string
+          notes: string | null
+          school: string
+          student_id: string | null
+          student_name: string
+          transcription: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          audio_duration?: number | null
+          audio_url?: string | null
+          created_at?: string | null
+          grade: string
+          id?: string
+          mood: string
+          notes?: string | null
+          school: string
+          student_id?: string | null
+          student_name: string
+          transcription?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          audio_duration?: number | null
+          audio_url?: string | null
+          created_at?: string | null
+          grade?: string
+          id?: string
+          mood?: string
+          notes?: string | null
+          school?: string
+          student_id?: string | null
+          student_name?: string
+          transcription?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_wellness_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       students: {
         Row: {
           created_at: string
