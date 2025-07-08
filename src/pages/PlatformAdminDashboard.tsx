@@ -30,6 +30,7 @@ import DiscountCodeManagement from '@/components/platform-admin/DiscountCodeMana
 import TransactionManagement from '@/components/platform-admin/TransactionManagement';
 import DiscountNotifications from '@/components/platform-admin/DiscountNotifications';
 import TranslationAuditTest from '@/components/translation/TranslationAuditTest';
+import TranslationProcessor from '@/components/translation/TranslationProcessor';
 
 interface PlatformStats {
   studentsCount: number;
@@ -322,6 +323,12 @@ const PlatformAdminDashboard: React.FC = () => {
       icon: Settings,
       label: 'Translation Audit',
       component: <TranslationAuditTest />
+    },
+    {
+      value: 'translation-processor',
+      icon: Settings,
+      label: 'DeepL Translation',
+      component: <TranslationProcessor />
     },
     {
       value: 'security',
