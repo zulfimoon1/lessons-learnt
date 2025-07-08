@@ -43,9 +43,15 @@ serve(async (req) => {
     }
 
     const deeplApiKey = Deno.env.get('DEEPL_API_KEY');
+    console.log('🔑 API Key status:', deeplApiKey ? 'Present' : 'Missing');
+    
     if (!deeplApiKey) {
+      console.error('❌ DEEPL_API_KEY environment variable not found');
       return new Response(
-        JSON.stringify({ success: false, error: 'DeepL API key not configured' }),
+        JSON.stringify({ 
+          success: false, 
+          error: 'DeepL API key not configured. Please set DEEPL_API_KEY in Supabase secrets.' 
+        }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
