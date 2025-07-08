@@ -91,29 +91,6 @@ const TeacherSupportTab: React.FC<TeacherSupportTabProps> = ({ teacher }) => {
         </CardContent>
       </Card>
 
-      {/* Database Setup Notice */}
-      <Card className="border-orange-200 bg-orange-50">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-orange-800">
-            <AlertCircleIcon className="h-5 w-5" />
-            Feature Setup Required
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-orange-700 mb-4">
-            The teacher-psychologist chat feature is ready but requires database tables to be created first.
-          </p>
-          <p className="text-sm text-orange-600 mb-4">
-            Once the database migration is approved, teachers will be able to:
-          </p>
-          <ul className="list-disc list-inside text-sm text-orange-600 space-y-1 mb-4">
-            <li>Start live chat sessions with school psychologists</li>
-            <li>Request support for different categories (student concerns, wellness, etc.)</li>
-            <li>View chat history and session records</li>
-            <li>Send anonymous support requests when needed</li>
-          </ul>
-        </CardContent>
-      </Card>
 
       {/* School Psychologists */}
       {psychologists.length > 0 && (
