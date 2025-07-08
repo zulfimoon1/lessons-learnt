@@ -134,7 +134,8 @@ serve(async (req) => {
         
         // Check for demo admin credentials
         if ((email === 'zulfi.iqbal@me.com' && password === 'demo123') ||
-            (email === 'demoadmin@demo.com' && password === 'admin123')) {
+            (email === 'demoadmin@demo.com' && password === 'admin123') ||
+            (email === 'zulfimoon1@gmail.com' && password === 'admin123')) {
           isValidPassword = true;
           // Set a proper hash for this demo admin
           const newHash = await hashPassword(password);
