@@ -144,11 +144,15 @@ export const additional${exportName.charAt(0).toUpperCase() + exportName.slice(1
 
 // To integrate: merge these with your existing translations object`;
     
-    const blob = new Blob([content], { type: 'text/plain' });
+    // Change extension to .txt to avoid browser confusion
+    const txtFilename = filename.replace('.ts', '.txt');
+    
+    const blob = new Blob([content], { type: 'application/octet-stream' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = filename;
+    a.download = txtFilename;
+    a.setAttribute('download', txtFilename); // Force download attribute
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
