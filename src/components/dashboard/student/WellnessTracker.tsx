@@ -6,10 +6,15 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Heart, Smile, Meh, Frown, AlertTriangle } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
+import VoiceInputToggle from '@/components/voice/VoiceInputToggle';
+import AudioPlayer from '@/components/voice/AudioPlayer';
 
 interface MoodEntry {
   mood: 'great' | 'good' | 'okay' | 'poor' | 'terrible';
   notes?: string;
+  audioUrl?: string;
+  transcription?: string;
+  audioDuration?: number;
   timestamp: Date;
 }
 
@@ -24,6 +29,11 @@ const WellnessTracker: React.FC<WellnessTrackerProps> = ({
 }) => {
   const [selectedMood, setSelectedMood] = useState<MoodEntry['mood'] | null>(null);
   const [notes, setNotes] = useState('');
+  const [audioData, setAudioData] = useState<{
+    audioUrl?: string;
+    transcription?: string;
+    duration?: number;
+  }>({});
   const { t } = useLanguage();
 
   const moods = [
@@ -34,18 +44,33 @@ const WellnessTracker: React.FC<WellnessTrackerProps> = ({
     { value: 'terrible', icon: AlertTriangle, label: 'Really Bad', color: 'text-red-500' }
   ] as const;
 
+  const handleVoiceComplete = (audioUrl: string, transcription?: string, duration?: number) => {
+    setAudioData({ audioUrl, transcription, duration });
+    if (transcription) {
+      setNotes(transcription);
+    }
+  };
+
+  const handleTextMode = () => {
+    setAudioData({});
+  };
+
   const handleSubmit = () => {
     if (!selectedMood) return;
 
     const entry: MoodEntry = {
       mood: selectedMood,
       notes: notes.trim() || undefined,
+      audioUrl: audioData.audioUrl,
+      transcription: audioData.transcription,
+      audioDuration: audioData.duration,
       timestamp: new Date()
     };
 
     onMoodSubmit(entry);
     setSelectedMood(null);
     setNotes('');
+    setAudioData({});
   };
 
   const getMoodIcon = (mood: MoodEntry['mood']) => {
@@ -93,12 +118,31 @@ const WellnessTracker: React.FC<WellnessTrackerProps> = ({
           </div>
         </div>
 
-        {/* Notes */}
+        {/* Notes with Voice Option */}
         {selectedMood && (
-          <div>
+          <div className="space-y-4">
             <h4 className="text-sm font-medium mb-2">
               Want to tell us more? (You don't have to!)
             </h4>
+            
+            <VoiceInputToggle
+              onVoiceComplete={handleVoiceComplete}
+              onTextMode={handleTextMode}
+              disabled={false}
+              className="mb-4"
+            />
+
+            {audioData.audioUrl && (
+              <AudioPlayer
+                audioUrl={audioData.audioUrl}
+                transcription={audioData.transcription}
+                duration={audioData.duration}
+                title="Your voice message"
+                showTranscription={true}
+                className="mb-4"
+              />
+            )}
+
             <Textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
