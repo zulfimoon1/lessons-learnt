@@ -67,13 +67,18 @@ const ClassScheduleCalendar: React.FC<ClassScheduleCalendarProps> = ({ teacher }
         const adminEmail = localStorage.getItem('platform_admin');
         const teacherData = localStorage.getItem('teacher');
         
+        console.log('ClassScheduleCalendar: Admin email from storage:', adminEmail);
+        console.log('ClassScheduleCalendar: Teacher data from storage:', teacherData);
+        
         if (adminEmail) {
           const adminData = JSON.parse(adminEmail);
+          console.log('ClassScheduleCalendar: Setting admin context with:', adminData.email);
           await supabase.rpc('set_platform_admin_context', { admin_email: adminData.email });
         } else if (teacherData) {
           // Set teacher email context for RLS policy access
-          const teacher = JSON.parse(teacherData);
-          await supabase.rpc('set_platform_admin_context', { admin_email: teacher.email });
+          const teacherInfo = JSON.parse(teacherData);
+          console.log('ClassScheduleCalendar: Setting teacher context with:', teacherInfo.email);
+          await supabase.rpc('set_platform_admin_context', { admin_email: teacherInfo.email });
         }
 
         // Fetch school calendar events
