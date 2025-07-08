@@ -27,6 +27,7 @@ interface SchoolCalendarManagerProps {
     id: string;
     school: string;
     role: string;
+    email: string;
   };
 }
 
@@ -52,6 +53,12 @@ const SchoolCalendarManager: React.FC<SchoolCalendarManagerProps> = ({ teacher }
   const loadCalendarEvents = async () => {
     try {
       setIsLoading(true);
+      
+      // Set authentication context for custom auth
+      await supabase.rpc('set_platform_admin_context', { 
+        admin_email: teacher.email 
+      });
+      
       const { data, error } = await supabase
         .from('school_calendar_events')
         .select('*')
@@ -74,6 +81,11 @@ const SchoolCalendarManager: React.FC<SchoolCalendarManagerProps> = ({ teacher }
 
   const handleSaveEvent = async () => {
     try {
+      // Set authentication context for custom auth
+      await supabase.rpc('set_platform_admin_context', { 
+        admin_email: teacher.email 
+      });
+
       const eventData = {
         ...formData,
         school: teacher.school,
@@ -129,6 +141,11 @@ const SchoolCalendarManager: React.FC<SchoolCalendarManagerProps> = ({ teacher }
 
   const handleDeleteEvent = async (eventId: string) => {
     try {
+      // Set authentication context for custom auth
+      await supabase.rpc('set_platform_admin_context', { 
+        admin_email: teacher.email 
+      });
+      
       const { error } = await supabase
         .from('school_calendar_events')
         .delete()
