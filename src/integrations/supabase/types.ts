@@ -1198,6 +1198,10 @@ export type Database = {
       }
     }
     Functions: {
+      add_sample_psychologist_data: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       authenticate_student_working: {
         Args: {
           name_param: string
