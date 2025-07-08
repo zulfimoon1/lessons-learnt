@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { MessageCircleIcon, UserIcon, ClockIcon, StethoscopeIcon } from "lucide-react";
+import { MessageCircleIcon, UserIcon, ClockIcon, StethoscopeIcon, XIcon } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { LiveChatSession } from "@/types/auth";
@@ -160,6 +160,44 @@ const DoctorChatDashboard = ({ doctorId, doctorName, school }: DoctorChatDashboa
     }
   };
 
+  const handleEndSession = async (sessionId: string) => {
+    try {
+      console.log('DoctorChatDashboard: Ending session:', sessionId);
+      
+      const { error } = await supabase
+        .from('live_chat_sessions')
+        .update({ 
+          status: 'ended', 
+          ended_at: new Date().toISOString() 
+        })
+        .eq('id', sessionId);
+      
+      if (error) {
+        console.error('DoctorChatDashboard: Error ending session:', error);
+        toast({
+          title: "Error",
+          description: "Failed to end session",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      toast({
+        title: "Session Ended",
+        description: "Chat session has been successfully ended",
+      });
+      
+      loadSessions();
+    } catch (error) {
+      console.error('DoctorChatDashboard: Error ending session:', error);
+      toast({
+        title: "Error",
+        description: "Failed to end session",
+        variant: "destructive",
+      });
+    }
+  };
+
   const handleCloseChat = () => {
     setCurrentChatSession(null);
     loadSessions();
@@ -283,13 +321,23 @@ const DoctorChatDashboard = ({ doctorId, doctorName, school }: DoctorChatDashboa
                         <div className="text-sm text-gray-600 mb-3">
                           Started: {new Date(session.started_at!).toLocaleTimeString()}
                         </div>
-                        <Button
-                          onClick={() => setCurrentChatSession(session)}
-                          className="w-full bg-blue-600 hover:bg-blue-700"
-                          size="sm"
-                        >
-                          Continue Session
-                        </Button>
+                        <div className="flex gap-2">
+                          <Button
+                            onClick={() => setCurrentChatSession(session)}
+                            className="flex-1 bg-blue-600 hover:bg-blue-700"
+                            size="sm"
+                          >
+                            Continue Session
+                          </Button>
+                          <Button
+                            onClick={() => handleEndSession(session.id)}
+                            variant="outline"
+                            className="border-red-300 text-red-600 hover:bg-red-50"
+                            size="sm"
+                          >
+                            <XIcon className="w-4 h-4" />
+                          </Button>
+                        </div>
                       </CardContent>
                     </Card>
                   ))
