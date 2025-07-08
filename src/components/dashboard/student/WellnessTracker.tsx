@@ -6,7 +6,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Heart, Smile, Meh, Frown, AlertTriangle } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
-import VoiceInputToggle from '@/components/voice/VoiceInputToggle';
+import { VoiceInputToggle } from '@/components/voice/VoiceInputToggle';
 import AudioPlayer from '@/components/voice/AudioPlayer';
 
 interface MoodEntry {
