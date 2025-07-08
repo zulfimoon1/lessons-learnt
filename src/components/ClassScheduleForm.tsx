@@ -5,10 +5,14 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Switch } from '@/components/ui/switch';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
 import { classScheduleService } from '@/services/classScheduleService';
-import { Calendar, Clock, BookOpen, Users } from 'lucide-react';
+import { Calendar, Clock, BookOpen, Users, Repeat, CalendarDays } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { addDays, addWeeks, addMonths, format, parseISO } from 'date-fns';
 
 interface ClassScheduleFormProps {
   teacher: {
@@ -34,35 +38,78 @@ const ClassScheduleForm: React.FC<ClassScheduleFormProps> = ({ teacher, onSchedu
     description: ''
   });
 
+  const [recurringData, setRecurringData] = useState({
+    isRecurring: false,
+    frequency: 'weekly', // 'daily', 'weekly', 'monthly'
+    endDate: '',
+    numberOfOccurrences: 10,
+    daysOfWeek: [] as number[], // 0 = Sunday, 1 = Monday, etc.
+  });
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
     try {
-      console.log('Submitting schedule with teacher data:', { teacher, formData });
+      console.log('Submitting schedule with teacher data:', { teacher, formData, recurringData });
       
-      const scheduleData = {
-        teacher_id: teacher.id,
-        school: teacher.school,
-        grade: formData.grade,
-        subject: formData.subject,
-        lesson_topic: formData.lesson_topic,
-        class_date: formData.class_date,
-        class_time: formData.class_time,
-        duration_minutes: formData.duration_minutes,
-        description: formData.description || null
-      };
+      if (recurringData.isRecurring) {
+        // Generate recurring dates
+        const dates = generateRecurringDates(
+          formData.class_date,
+          recurringData.frequency,
+          recurringData.endDate,
+          recurringData.numberOfOccurrences
+        );
 
-      const result = await classScheduleService.createSchedule(scheduleData);
+        // Create multiple schedule entries
+        const schedules = dates.map(date => ({
+          teacher_id: teacher.id,
+          school: teacher.school,
+          grade: formData.grade,
+          subject: formData.subject,
+          lesson_topic: formData.lesson_topic,
+          class_date: date,
+          class_time: formData.class_time,
+          duration_minutes: formData.duration_minutes,
+          description: formData.description || null
+        }));
 
-      if (result.error) {
-        throw result.error;
+        const result = await classScheduleService.bulkCreateSchedules(schedules);
+
+        if (result.error) {
+          throw result.error;
+        }
+
+        toast({
+          title: t('common.success'),
+          description: `Created ${dates.length} recurring classes successfully!`,
+        });
+      } else {
+        // Create single schedule
+        const scheduleData = {
+          teacher_id: teacher.id,
+          school: teacher.school,
+          grade: formData.grade,
+          subject: formData.subject,
+          lesson_topic: formData.lesson_topic,
+          class_date: formData.class_date,
+          class_time: formData.class_time,
+          duration_minutes: formData.duration_minutes,
+          description: formData.description || null
+        };
+
+        const result = await classScheduleService.createSchedule(scheduleData);
+
+        if (result.error) {
+          throw result.error;
+        }
+
+        toast({
+          title: t('common.success'),
+          description: t('schedule.success'),
+        });
       }
-
-      toast({
-        title: t('common.success'),
-        description: t('schedule.success'),
-      });
 
       // Reset form
       setFormData({
@@ -73,6 +120,14 @@ const ClassScheduleForm: React.FC<ClassScheduleFormProps> = ({ teacher, onSchedu
         class_time: '',
         duration_minutes: 60,
         description: ''
+      });
+
+      setRecurringData({
+        isRecurring: false,
+        frequency: 'weekly',
+        endDate: '',
+        numberOfOccurrences: 10,
+        daysOfWeek: [],
       });
 
       onScheduleCreated?.();
@@ -90,6 +145,42 @@ const ClassScheduleForm: React.FC<ClassScheduleFormProps> = ({ teacher, onSchedu
 
   const handleInputChange = (field: string, value: string | number) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleRecurringChange = (field: string, value: any) => {
+    setRecurringData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const generateRecurringDates = (startDate: string, frequency: string, endDate: string, numberOfOccurrences: number): string[] => {
+    const dates: string[] = [];
+    let currentDate = parseISO(startDate);
+    const end = endDate ? parseISO(endDate) : null;
+    
+    dates.push(format(currentDate, 'yyyy-MM-dd')); // Include the start date
+    
+    for (let i = 1; i < numberOfOccurrences; i++) {
+      switch (frequency) {
+        case 'daily':
+          currentDate = addDays(currentDate, 1);
+          break;
+        case 'weekly':
+          currentDate = addWeeks(currentDate, 1);
+          break;
+        case 'monthly':
+          currentDate = addMonths(currentDate, 1);
+          break;
+        default:
+          return dates;
+      }
+      
+      if (end && currentDate > end) {
+        break;
+      }
+      
+      dates.push(format(currentDate, 'yyyy-MM-dd'));
+    }
+    
+    return dates;
   };
 
   return (
@@ -182,6 +273,81 @@ const ClassScheduleForm: React.FC<ClassScheduleFormProps> = ({ teacher, onSchedu
               step="15"
               required
             />
+          </div>
+
+          {/* Recurring Event Options */}
+          <div className="space-y-4 p-4 border rounded-lg bg-gray-50/50">
+            <div className="flex items-center justify-between">
+              <Label htmlFor="recurring" className="flex items-center gap-2">
+                <Repeat className="w-4 h-4" />
+                Make this a recurring event
+              </Label>
+              <Switch
+                id="recurring"
+                checked={recurringData.isRecurring}
+                onCheckedChange={(checked) => handleRecurringChange('isRecurring', checked)}
+              />
+            </div>
+
+            {recurringData.isRecurring && (
+              <div className="space-y-4 animate-fade-in">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="frequency">Frequency</Label>
+                    <Select
+                      value={recurringData.frequency}
+                      onValueChange={(value) => handleRecurringChange('frequency', value)}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select frequency" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="daily">Daily</SelectItem>
+                        <SelectItem value="weekly">Weekly</SelectItem>
+                        <SelectItem value="monthly">Monthly</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="occurrences">Number of Classes</Label>
+                    <Input
+                      id="occurrences"
+                      type="number"
+                      value={recurringData.numberOfOccurrences}
+                      onChange={(e) => handleRecurringChange('numberOfOccurrences', parseInt(e.target.value))}
+                      min="1"
+                      max="52"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="end_date">End Date (Optional)</Label>
+                  <Input
+                    id="end_date"
+                    type="date"
+                    value={recurringData.endDate}
+                    onChange={(e) => handleRecurringChange('endDate', e.target.value)}
+                    min={formData.class_date}
+                  />
+                  <p className="text-xs text-gray-600">
+                    If set, recurring classes will stop at this date regardless of number of classes
+                  </p>
+                </div>
+
+                {formData.class_date && (
+                  <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                    <p className="text-sm text-blue-800">
+                      <CalendarDays className="w-4 h-4 inline mr-1" />
+                      This will create {recurringData.numberOfOccurrences} {recurringData.frequency} classes starting from{' '}
+                      {format(parseISO(formData.class_date), 'MMMM d, yyyy')}
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           <div className="space-y-2">
