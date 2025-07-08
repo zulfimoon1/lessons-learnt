@@ -39,13 +39,22 @@ const WellnessCheckCard: React.FC<WellnessCheckCardProps> = ({ school }) => {
       setIsLoading(true);
       console.log('WellnessCheckCard: Fetching wellness entries for school:', school);
       
-      // Fetch real wellness data from the database
-      const { data: wellnessData, error } = await supabase
-        .from('student_wellness')
-        .select('*')
-        .eq('school', school)
-        .order('created_at', { ascending: false })
-        .limit(20);
+      // Fetch wellness data and weekly summary emotional concerns
+      const [wellnessResponse, summaryResponse] = await Promise.all([
+        supabase
+          .from('student_wellness')
+          .select('*')
+          .eq('school', school)
+          .order('created_at', { ascending: false })
+          .limit(10),
+        supabase
+          .from('weekly_summaries')
+          .select('*')
+          .eq('school', school)
+          .not('emotional_concerns', 'is', null)
+          .order('created_at', { ascending: false })
+          .limit(10)
+      ]);
 
       if (error) {
         console.error('WellnessCheckCard: Error fetching wellness entries:', error);
