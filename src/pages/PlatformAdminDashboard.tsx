@@ -31,6 +31,7 @@ import TransactionManagement from '@/components/platform-admin/TransactionManage
 import DiscountNotifications from '@/components/platform-admin/DiscountNotifications';
 import TranslationAuditTest from '@/components/translation/TranslationAuditTest';
 import TranslationProcessor from '@/components/translation/TranslationProcessor';
+import TranslationIntegrator from '@/components/translation/TranslationIntegrator';
 
 interface PlatformStats {
   studentsCount: number;
@@ -329,6 +330,12 @@ const PlatformAdminDashboard: React.FC = () => {
       icon: Settings,
       label: 'DeepL Translation',
       component: <TranslationProcessor />
+    },
+    {
+      value: 'translation-integrator',
+      icon: Settings,
+      label: 'Translation Integration',
+      component: <TranslationIntegrator />
     },
     {
       value: 'security',
