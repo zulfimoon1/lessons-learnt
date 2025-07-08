@@ -4,10 +4,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Settings, CreditCard, School, Users, Calendar, CheckCircle } from 'lucide-react';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { Calendar, Settings, CreditCard, School, Users, CheckCircle, Plus, Edit, Trash2 } from 'lucide-react';
 import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { format } from "date-fns";
+import SchoolCalendarManager from "./SchoolCalendarManager";
 
 interface SchoolSettingsProps {
   teacher: any;
@@ -233,95 +238,7 @@ const SchoolSettings: React.FC<SchoolSettingsProps> = ({ teacher }) => {
       </div>
 
       {/* Academic Calendar Management */}
-      <Card className="group hover:shadow-xl transition-all duration-300 border-0 shadow-lg">
-        <CardHeader>
-          <CardTitle className="text-lg text-gray-900">Academic Calendar</CardTitle>
-          <CardDescription>Manage term dates, holidays, and important school dates</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-6">
-            {/* Calendar Management Interface */}
-            <div className="grid gap-6 md:grid-cols-2">
-              {/* Term Dates */}
-              <div className="space-y-4">
-                <div className="flex items-center gap-3">
-                  <Calendar className="w-5 h-5 text-brand-teal" />
-                  <h4 className="font-medium text-gray-900">Term Dates</h4>
-                </div>
-                <div className="space-y-3">
-                  <div className="p-3 bg-gray-50 rounded-lg">
-                    <div className="flex justify-between items-center">
-                      <span className="font-medium">Autumn Term</span>
-                      <Badge variant="outline">Sep 4 - Dec 15</Badge>
-                    </div>
-                  </div>
-                  <div className="p-3 bg-gray-50 rounded-lg">
-                    <div className="flex justify-between items-center">
-                      <span className="font-medium">Spring Term</span>
-                      <Badge variant="outline">Jan 8 - Mar 28</Badge>
-                    </div>
-                  </div>
-                  <div className="p-3 bg-gray-50 rounded-lg">
-                    <div className="flex justify-between items-center">
-                      <span className="font-medium">Summer Term</span>
-                      <Badge variant="outline">Apr 15 - Jul 20</Badge>
-                    </div>
-                  </div>
-                </div>
-                <Button variant="outline" className="w-full">
-                  Edit Term Dates
-                </Button>
-              </div>
-
-              {/* National Holidays & Red Days */}
-              <div className="space-y-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-5 h-5 bg-red-500 rounded-full"></div>
-                  <h4 className="font-medium text-gray-900">National Holidays</h4>
-                </div>
-                <div className="space-y-3">
-                  <div className="p-3 bg-red-50 rounded-lg border border-red-200">
-                    <div className="flex justify-between items-center">
-                      <span className="font-medium text-red-900">Christmas Day</span>
-                      <Badge variant="secondary" className="bg-red-100 text-red-800">Dec 25</Badge>
-                    </div>
-                  </div>
-                  <div className="p-3 bg-red-50 rounded-lg border border-red-200">
-                    <div className="flex justify-between items-center">
-                      <span className="font-medium text-red-900">New Year's Day</span>
-                      <Badge variant="secondary" className="bg-red-100 text-red-800">Jan 1</Badge>
-                    </div>
-                  </div>
-                  <div className="p-3 bg-red-50 rounded-lg border border-red-200">
-                    <div className="flex justify-between items-center">
-                      <span className="font-medium text-red-900">Independence Day</span>
-                      <Badge variant="secondary" className="bg-red-100 text-red-800">Jul 4</Badge>
-                    </div>
-                  </div>
-                </div>
-                <Button variant="outline" className="w-full text-red-600 border-red-200 hover:bg-red-50">
-                  Manage Holidays
-                </Button>
-              </div>
-            </div>
-
-            {/* Quick Actions */}
-            <div className="pt-4 border-t border-gray-200">
-              <div className="flex gap-3">
-                <Button className="bg-brand-teal hover:bg-brand-teal/90">
-                  Add New Term
-                </Button>
-                <Button variant="outline" className="border-brand-orange text-brand-orange hover:bg-brand-orange/10">
-                  Add Holiday
-                </Button>
-                <Button variant="outline">
-                  Import Calendar
-                </Button>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      <SchoolCalendarManager teacher={teacher} />
     </div>
   );
 };

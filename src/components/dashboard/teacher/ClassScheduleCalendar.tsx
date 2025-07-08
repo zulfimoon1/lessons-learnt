@@ -4,8 +4,9 @@ import { Calendar } from '@/components/ui/calendar';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Clock, BookOpen, Users, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Clock, BookOpen, Users, ChevronLeft, ChevronRight, Calendar as CalendarIcon } from 'lucide-react';
 import { classScheduleService } from '@/services/classScheduleService';
+import { supabase } from '@/integrations/supabase/client';
 import { format, parseISO, isSameDay } from 'date-fns';
 
 interface ClassSchedule {
@@ -21,6 +22,16 @@ interface ClassSchedule {
   description?: string;
 }
 
+interface SchoolEvent {
+  id: string;
+  title: string;
+  event_type: string;
+  start_date: string;
+  end_date?: string;
+  description?: string;
+  color: string;
+}
+
 interface ClassScheduleCalendarProps {
   teacher: {
     id: string;
@@ -32,27 +43,43 @@ interface ClassScheduleCalendarProps {
 
 const ClassScheduleCalendar: React.FC<ClassScheduleCalendarProps> = ({ teacher }) => {
   const [schedules, setSchedules] = useState<ClassSchedule[]>([]);
+  const [schoolEvents, setSchoolEvents] = useState<SchoolEvent[]>([]);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [isLoading, setIsLoading] = useState(true);
   const [viewMode, setViewMode] = useState<'calendar' | 'list'>('calendar');
 
   useEffect(() => {
-    const fetchSchedules = async () => {
+    const fetchData = async () => {
       try {
         setIsLoading(true);
+        
+        // Fetch class schedules
         const response = await classScheduleService.getSchedulesByTeacher(teacher.id);
         if (response.data) {
           setSchedules(response.data);
         }
+
+        // Fetch school calendar events
+        const { data: events, error } = await supabase
+          .from('school_calendar_events')
+          .select('*')
+          .eq('school', teacher.school)
+          .order('start_date', { ascending: true });
+
+        if (error) {
+          console.error('Error fetching school events:', error);
+        } else {
+          setSchoolEvents(events || []);
+        }
       } catch (error) {
-        console.error('Error fetching schedules:', error);
+        console.error('Error fetching data:', error);
       } finally {
         setIsLoading(false);
       }
     };
 
-    fetchSchedules();
-  }, [teacher.id]);
+    fetchData();
+  }, [teacher.id, teacher.school]);
 
   // Get classes for selected date
   const getClassesForDate = (date: Date) => {
@@ -61,12 +88,28 @@ const ClassScheduleCalendar: React.FC<ClassScheduleCalendarProps> = ({ teacher }
     );
   };
 
-  // Get all dates that have classes
-  const getDatesWithClasses = () => {
-    return schedules.map(schedule => parseISO(schedule.class_date));
+  // Get school events for selected date
+  const getSchoolEventsForDate = (date: Date) => {
+    return schoolEvents.filter(event => 
+      isSameDay(parseISO(event.start_date), date) ||
+      (event.end_date && date >= parseISO(event.start_date) && date <= parseISO(event.end_date))
+    );
+  };
+
+  // Get all dates that have classes or events
+  const getDatesWithActivity = () => {
+    const classDates = schedules.map(schedule => parseISO(schedule.class_date));
+    const eventDates = schoolEvents.map(event => parseISO(event.start_date));
+    return [...classDates, ...eventDates];
+  };
+
+  // Get event dates specifically for styling
+  const getSchoolEventDates = () => {
+    return schoolEvents.map(event => parseISO(event.start_date));
   };
 
   const selectedDateClasses = getClassesForDate(selectedDate);
+  const selectedDateEvents = getSchoolEventsForDate(selectedDate);
 
   if (isLoading) {
     return (
@@ -131,7 +174,8 @@ const ClassScheduleCalendar: React.FC<ClassScheduleCalendarProps> = ({ teacher }
                       selected={selectedDate}
                       onSelect={(date) => date && setSelectedDate(date)}
                       modifiers={{
-                        hasClasses: getDatesWithClasses()
+                        hasClasses: getDatesWithActivity(),
+                        hasEvents: getSchoolEventDates()
                       }}
                       modifiersStyles={{
                         hasClasses: {
@@ -154,31 +198,62 @@ const ClassScheduleCalendar: React.FC<ClassScheduleCalendarProps> = ({ teacher }
                       {format(selectedDate, 'MMMM d, yyyy')}
                     </CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-3">
-                    {selectedDateClasses.length === 0 ? (
-                      <p className="text-gray-500 text-sm">No classes scheduled for this date.</p>
-                    ) : (
-                      selectedDateClasses
-                        .sort((a, b) => a.class_time.localeCompare(b.class_time))
-                        .map((classItem) => (
-                          <div key={classItem.id} className="p-3 border rounded-lg space-y-2">
-                            <div className="flex items-center justify-between">
-                              <Badge variant="secondary">{classItem.subject}</Badge>
-                              <div className="flex items-center text-sm text-gray-600">
-                                <Clock className="w-4 h-4 mr-1" />
-                                {classItem.class_time}
-                              </div>
-                            </div>
-                            <h4 className="font-medium text-sm">{classItem.lesson_topic}</h4>
-                            <div className="flex items-center text-xs text-gray-600">
-                              <Users className="w-3 h-3 mr-1" />
-                              Grade {classItem.grade}
-                            </div>
-                            {classItem.description && (
-                              <p className="text-xs text-gray-600">{classItem.description}</p>
+                  <CardContent className="space-y-4">
+                    {/* School Events */}
+                    {selectedDateEvents.length > 0 && (
+                      <div className="space-y-2">
+                        <h5 className="text-sm font-medium text-gray-700 flex items-center gap-2">
+                          <CalendarIcon className="w-4 h-4" />
+                          School Events
+                        </h5>
+                        {selectedDateEvents.map((event) => (
+                          <div key={event.id} className="p-3 rounded-lg space-y-1"
+                               style={{ backgroundColor: `${event.color}15`, borderLeft: `3px solid ${event.color}` }}>
+                            <h6 className="font-medium text-sm">{event.title}</h6>
+                            <Badge variant="outline" className="text-xs">
+                              {event.event_type.replace('_', ' ').toUpperCase()}
+                            </Badge>
+                            {event.description && (
+                              <p className="text-xs text-gray-600">{event.description}</p>
                             )}
                           </div>
-                        ))
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Classes */}
+                    {selectedDateClasses.length > 0 && (
+                      <div className="space-y-2">
+                        <h5 className="text-sm font-medium text-gray-700 flex items-center gap-2">
+                          <BookOpen className="w-4 h-4" />
+                          Your Classes
+                        </h5>
+                        {selectedDateClasses
+                          .sort((a, b) => a.class_time.localeCompare(b.class_time))
+                          .map((classItem) => (
+                            <div key={classItem.id} className="p-3 border rounded-lg space-y-2">
+                              <div className="flex items-center justify-between">
+                                <Badge variant="secondary">{classItem.subject}</Badge>
+                                <div className="flex items-center text-sm text-gray-600">
+                                  <Clock className="w-4 h-4 mr-1" />
+                                  {classItem.class_time}
+                                </div>
+                              </div>
+                              <h4 className="font-medium text-sm">{classItem.lesson_topic}</h4>
+                              <div className="flex items-center text-xs text-gray-600">
+                                <Users className="w-3 h-3 mr-1" />
+                                Grade {classItem.grade}
+                              </div>
+                              {classItem.description && (
+                                <p className="text-xs text-gray-600">{classItem.description}</p>
+                              )}
+                            </div>
+                          ))}
+                      </div>
+                    )}
+
+                    {selectedDateClasses.length === 0 && selectedDateEvents.length === 0 && (
+                      <p className="text-gray-500 text-sm">No classes or events scheduled for this date.</p>
                     )}
                   </CardContent>
                 </Card>

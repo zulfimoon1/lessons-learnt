@@ -597,6 +597,59 @@ export type Database = {
         }
         Relationships: []
       }
+      school_calendar_events: {
+        Row: {
+          color: string | null
+          created_at: string
+          created_by: string | null
+          description: string | null
+          end_date: string | null
+          event_type: string
+          id: string
+          is_recurring: boolean | null
+          school: string
+          start_date: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          end_date?: string | null
+          event_type: string
+          id?: string
+          is_recurring?: boolean | null
+          school: string
+          start_date: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          color?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          end_date?: string | null
+          event_type?: string
+          id?: string
+          is_recurring?: boolean | null
+          school?: string
+          start_date?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "school_calendar_events_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "teachers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       school_psychologists: {
         Row: {
           availability_hours: string | null
