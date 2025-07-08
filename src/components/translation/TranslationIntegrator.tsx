@@ -144,7 +144,7 @@ export const additional${exportName.charAt(0).toUpperCase() + exportName.slice(1
 
 // To integrate: merge these with your existing translations object`;
     
-    const blob = new Blob([content], { type: 'text/typescript' });
+    const blob = new Blob([content], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
