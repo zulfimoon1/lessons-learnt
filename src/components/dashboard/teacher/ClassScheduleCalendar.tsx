@@ -63,6 +63,19 @@ const ClassScheduleCalendar: React.FC<ClassScheduleCalendarProps> = ({ teacher }
           console.log('ClassScheduleCalendar: Fetched schedules:', response.data.length);
         }
 
+        // Set platform admin context for school calendar events access
+        const adminEmail = localStorage.getItem('platform_admin');
+        const teacherData = localStorage.getItem('teacher');
+        
+        if (adminEmail) {
+          const adminData = JSON.parse(adminEmail);
+          await supabase.rpc('set_platform_admin_context', { admin_email: adminData.email });
+        } else if (teacherData) {
+          // Set teacher email context for RLS policy access
+          const teacher = JSON.parse(teacherData);
+          await supabase.rpc('set_platform_admin_context', { admin_email: teacher.email });
+        }
+
         // Fetch school calendar events
         const { data: events, error } = await supabase
           .from('school_calendar_events')
