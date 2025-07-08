@@ -79,6 +79,39 @@ const ClassScheduleCalendar: React.FC<ClassScheduleCalendarProps> = ({ teacher }
     };
 
     fetchData();
+
+    // Set up real-time subscription for school calendar events
+    const channel = supabase
+      .channel('school-calendar-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'school_calendar_events',
+          filter: `school=eq.${teacher.school}`
+        },
+        (payload) => {
+          console.log('School calendar event changed:', payload);
+          // Refetch school events when changes occur
+          supabase
+            .from('school_calendar_events')
+            .select('*')
+            .eq('school', teacher.school)
+            .order('start_date', { ascending: true })
+            .then(({ data, error }) => {
+              if (!error && data) {
+                setSchoolEvents(data);
+              }
+            });
+        }
+      )
+      .subscribe();
+
+    // Cleanup subscription on unmount
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [teacher.id, teacher.school]);
 
   // Get classes for selected date
