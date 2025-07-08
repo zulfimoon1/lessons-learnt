@@ -65,6 +65,8 @@ serve(async (req) => {
     formData.append('source_lang', sourceLanguage.toUpperCase());
     formData.append('preserve_formatting', '1');
 
+    console.log('🌐 Making request to DeepL API...');
+    
     // Call DeepL API
     const response = await fetch('https://api-free.deepl.com/v2/translate', {
       method: 'POST',
@@ -74,13 +76,21 @@ serve(async (req) => {
       body: formData,
     });
 
+    console.log('📡 DeepL API response status:', response.status);
+
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('DeepL API error:', errorText);
+      console.error('❌ DeepL API error response:', {
+        status: response.status,
+        statusText: response.statusText,
+        errorBody: errorText,
+        headers: Object.fromEntries(response.headers.entries())
+      });
+      
       return new Response(
         JSON.stringify({ 
           success: false, 
-          error: `DeepL API error: ${response.status} ${response.statusText}` 
+          error: `DeepL API error: ${response.status} ${response.statusText} - ${errorText}` 
         }),
         { status: response.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
