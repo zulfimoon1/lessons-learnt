@@ -54,10 +54,23 @@ const SchoolCalendarManager: React.FC<SchoolCalendarManagerProps> = ({ teacher }
     try {
       setIsLoading(true);
       
-      // Set authentication context for custom auth
-      await supabase.rpc('set_platform_admin_context', { 
-        admin_email: teacher.email 
-      });
+      console.log('Loading events for teacher:', teacher);
+      
+      // Check if teacher has email
+      if (!teacher.email) {
+        console.error('Teacher object missing email field during load');
+        // Try to continue without setting context for now
+      } else {
+        // Set authentication context for custom auth
+        console.log('Setting admin context for loading events:', teacher.email);
+        const { error: contextError } = await supabase.rpc('set_platform_admin_context', { 
+          admin_email: teacher.email 
+        });
+        
+        if (contextError) {
+          console.error('Context setting error during load:', contextError);
+        }
+      }
       
       const { data, error } = await supabase
         .from('school_calendar_events')
@@ -65,7 +78,12 @@ const SchoolCalendarManager: React.FC<SchoolCalendarManagerProps> = ({ teacher }
         .eq('school', teacher.school)
         .order('start_date', { ascending: true });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching events:', error);
+        throw error;
+      }
+      
+      console.log('Loaded events:', data);
       setEvents(data || []);
     } catch (error) {
       console.error('Error loading calendar events:', error);
@@ -81,10 +99,34 @@ const SchoolCalendarManager: React.FC<SchoolCalendarManagerProps> = ({ teacher }
 
   const handleSaveEvent = async () => {
     try {
+      console.log('Teacher object:', teacher);
+      
+      // Check if teacher has email
+      if (!teacher.email) {
+        console.error('Teacher object missing email field');
+        toast({
+          title: "Error",
+          description: "Authentication error: Missing email",
+          variant: "destructive",
+        });
+        return;
+      }
+
       // Set authentication context for custom auth
-      await supabase.rpc('set_platform_admin_context', { 
+      console.log('Setting admin context for:', teacher.email);
+      const { error: contextError } = await supabase.rpc('set_platform_admin_context', { 
         admin_email: teacher.email 
       });
+      
+      if (contextError) {
+        console.error('Context setting error:', contextError);
+        toast({
+          title: "Error",
+          description: "Authentication context error",
+          variant: "destructive",
+        });
+        return;
+      }
 
       const eventData = {
         ...formData,
@@ -92,6 +134,8 @@ const SchoolCalendarManager: React.FC<SchoolCalendarManagerProps> = ({ teacher }
         created_by: teacher.id,
         end_date: formData.end_date || formData.start_date
       };
+
+      console.log('Attempting to save event:', eventData);
 
       if (editingEvent) {
         const { error } = await supabase
