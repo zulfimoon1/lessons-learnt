@@ -56,16 +56,45 @@ const WellnessCheckCard: React.FC<WellnessCheckCardProps> = ({ school }) => {
           .limit(10)
       ]);
 
-      if (error) {
-        console.error('WellnessCheckCard: Error fetching wellness entries:', error);
-        throw error;
+      // Check for errors in both responses
+      if (wellnessResponse.error) {
+        console.error('WellnessCheckCard: Error fetching wellness entries:', wellnessResponse.error);
+        throw wellnessResponse.error;
+      }
+      
+      if (summaryResponse.error) {
+        console.error('WellnessCheckCard: Error fetching weekly summaries:', summaryResponse.error);
+        throw summaryResponse.error;
       }
 
-      console.log('WellnessCheckCard: Loaded wellness entries:', wellnessData?.length || 0);
-      setWellnessEntries((wellnessData || []).map(entry => ({
+      // Process wellness entries
+      const wellnessEntries = (wellnessResponse.data || []).map(entry => ({
         ...entry,
         mood: entry.mood as 'great' | 'good' | 'okay' | 'poor' | 'terrible'
-      })));
+      }));
+      
+      // Process weekly summary emotional concerns as wellness entries
+      const emotionalEntries = (summaryResponse.data || []).map(summary => ({
+        id: summary.id,
+        student_id: summary.student_id,
+        student_name: summary.student_name,
+        school: summary.school,
+        grade: summary.grade,
+        mood: 'okay' as const, // Default mood for weekly summaries
+        notes: summary.emotional_concerns,
+        created_at: summary.submitted_at || new Date().toISOString(),
+        updated_at: summary.submitted_at || new Date().toISOString(),
+        audio_url: summary.emotional_audio_url,
+        transcription: summary.emotional_transcription,
+        audio_duration: summary.audio_duration
+      }));
+
+      // Combine and sort all entries by date
+      const allEntries = [...wellnessEntries, ...emotionalEntries]
+        .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+
+      console.log('WellnessCheckCard: Loaded wellness entries:', wellnessEntries.length, 'emotional entries:', emotionalEntries.length);
+      setWellnessEntries(allEntries);
     } catch (error) {
       console.error('WellnessCheckCard: Error fetching wellness entries:', error);
       setWellnessEntries([]);
