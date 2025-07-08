@@ -35,14 +35,26 @@ const TeacherSupportTab: React.FC<TeacherSupportTabProps> = ({ teacher }) => {
   const fetchData = async () => {
     setIsLoading(true);
     try {
-      // Fetch school psychologists - this table exists
+      // Fetch doctors from teachers table for this school
       const { data: psychData, error: psychError } = await supabase
-        .from('school_psychologists')
-        .select('*')
-        .eq('school', teacher.school);
+        .from('teachers')
+        .select('id, name, email, specialization, is_available')
+        .eq('school', teacher.school)
+        .eq('role', 'doctor');
 
       if (psychError) throw psychError;
-      setPsychologists(psychData || []);
+      
+      // Transform the data to match SchoolPsychologist interface
+      const transformedData = (psychData || []).map(doc => ({
+        id: doc.id,
+        name: doc.name,
+        email: doc.email,
+        phone: '', // Teachers table doesn't have phone
+        office_location: '', // Teachers table doesn't have office location
+        availability_hours: doc.is_available ? 'Available during school hours' : 'Currently unavailable'
+      }));
+      
+      setPsychologists(transformedData);
     } catch (error) {
       console.error('Error fetching support data:', error);
     }
