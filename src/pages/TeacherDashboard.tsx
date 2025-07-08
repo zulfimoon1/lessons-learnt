@@ -25,7 +25,6 @@ import { cn } from '@/lib/utils';
 const TeacherDashboard: React.FC = () => {
   const { teacher, logout } = useAuth();
   const { t } = useLanguage();
-  const [activeTab, setActiveTab] = useState('feedback');
   const deviceType = useDeviceType();
   const isMobile = deviceType === 'mobile';
   const isTablet = deviceType === 'tablet';
@@ -50,48 +49,19 @@ const TeacherDashboard: React.FC = () => {
 
   // Check if user is a doctor
   const isDoctor = teacher.role === 'doctor';
+  
+  // Set initial active tab based on role
+  const [activeTab, setActiveTab] = useState(isDoctor ? 'doctor-dashboard' : 'feedback');
 
   // Define tab items based on role
   const getTabItems = () => {
-    const baseItems = [
-      {
-        value: 'feedback',
-        icon: MessageSquareIcon,
-        label: t('dashboard.feedback') || 'Feedback',
-        component: <FeedbackDashboard teacher={teacher} />,
-        color: 'text-brand-orange'
-      },
-      {
-        value: 'summaries',
-        icon: FileTextIcon,
-        label: t('weekly.summaries') || 'Summaries',
-        component: <WeeklySummariesTab teacher={teacher} />,
-        color: 'text-brand-teal'
-      },
-      {
-        value: 'analytics',
-        icon: BarChartIcon,
-        label: t('analytics.title') || 'Analytics',
-        component: <AnalyticsTab teacher={teacher} />,
-        color: 'text-brand-teal'
-      },
-      {
-        value: 'ai-insights',
-        icon: BrainIcon,
-        label: t('ai.insights') || 'AI Insights',
-        component: <AIInsightsTab teacher={teacher} />,
-        color: 'text-brand-orange'
-      }
-    ];
-
     if (isDoctor) {
-      // For doctors, add doctor-specific tabs and remove schedule/notes
+      // For doctors, only show wellness-focused tabs
       return [
-        ...baseItems,
         {
           value: 'doctor-dashboard',
-          icon: MessageSquareIcon,
-          label: 'Medical Dashboard',
+          icon: HeartHandshakeIcon,
+          label: 'Student Wellness',
           component: <DoctorDashboard teacher={teacher} />,
           color: 'text-brand-teal'
         },
@@ -104,6 +74,37 @@ const TeacherDashboard: React.FC = () => {
         }
       ];
     } else {
+      // For regular teachers, include all academic tabs
+      const baseItems = [
+        {
+          value: 'feedback',
+          icon: MessageSquareIcon,
+          label: t('dashboard.feedback') || 'Feedback',
+          component: <FeedbackDashboard teacher={teacher} />,
+          color: 'text-brand-orange'
+        },
+        {
+          value: 'summaries',
+          icon: FileTextIcon,
+          label: t('weekly.summaries') || 'Summaries',
+          component: <WeeklySummariesTab teacher={teacher} />,
+          color: 'text-brand-teal'
+        },
+        {
+          value: 'analytics',
+          icon: BarChartIcon,
+          label: t('analytics.title') || 'Analytics',
+          component: <AnalyticsTab teacher={teacher} />,
+          color: 'text-brand-teal'
+        },
+        {
+          value: 'ai-insights',
+          icon: BrainIcon,
+          label: t('ai.insights') || 'AI Insights',
+          component: <AIInsightsTab teacher={teacher} />,
+          color: 'text-brand-orange'
+        }
+      ];
       // For regular teachers, include schedule, notes, and password reset
       return [
         {
