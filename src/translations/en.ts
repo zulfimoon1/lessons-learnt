@@ -676,6 +676,10 @@ export const enTranslations = {
   // Weekly Summary - Add missing key
   'weekly.summaries': 'Weekly Summaries',
 
+  'pricing.discountAppliedMessage': '{percent}% discount applied!',
+  'pricing.discountValidationFailed': 'Failed to validate discount code. Please try again.',
+  'pricing.signUpEducatorFirst': 'Please sign up as an educator first to start your free trial',
+  'form.enterDiscountCode': 'Please enter a discount code',
   // Additional translations for new content
   'pricing.backToHome': 'Back to Home',
   'pricing.startThirtyDayTrial': 'Start 30-Day Free Trial',
@@ -741,6 +745,9 @@ export const enTranslations = {
   'dashboard.createAccount': 'Create Account',
   'dashboard.loadingInvitation': 'Loading invitation details...',
 
+  'admin.transactionActionSuccess': 'Transaction {action} successfully.',
+  'dashboard.accessDenied': 'Access denied. Admin privileges required.',
+  'admin.comprehensiveAnalyticsFor': 'Comprehensive analytics for {school}',
   // Admin dashboard translations
   'admin.manageTeachers': 'Manage Teachers',
   'admin.inviteTeacher': 'Invite Teacher',

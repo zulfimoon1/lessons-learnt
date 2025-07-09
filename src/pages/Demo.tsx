@@ -169,15 +169,15 @@ const Demo = () => {
                   variant="gradient"
                   size="lg"
                   className="mt-16"
-                  title="Modern Design Meets Powerful Functionality"
+                  title={t('demo.modernDesignMeetsFunctionality')}
                 >
                   <div className="grid grid-cols-1 md:grid-cols-5 gap-8">
                     {[
-                      { icon: MicIcon, title: 'Voice-First Platform', desc: 'Revolutionary voice recording and analysis technology', color: 'purple' },
-                      { icon: GraduationCap, title: 'Student-Centric Design', desc: 'Intuitive interfaces that make learning and feedback engaging', color: 'brand-teal' },
-                      { icon: Users, title: 'Teacher Empowerment', desc: 'Comprehensive tools that enhance teaching effectiveness', color: 'brand-orange' },
-                      { icon: Settings, title: 'Administrative Control', desc: 'Complete oversight with streamlined management workflows', color: 'purple' },
-                      { icon: Heart, title: 'Health & Wellness', desc: 'Comprehensive support for student mental health and wellbeing', color: 'green' }
+                      { icon: MicIcon, title: t('demo.voiceFirstPlatform'), desc: t('demo.voiceFirstDescription'), color: 'purple' },
+                      { icon: GraduationCap, title: t('demo.studentCentricDesign'), desc: t('demo.studentCentricDescription'), color: 'brand-teal' },
+                      { icon: Users, title: t('demo.teacherEmpowerment'), desc: t('demo.teacherEmpowermentDescription'), color: 'brand-orange' },
+                      { icon: Settings, title: t('demo.administrativeControl'), desc: t('demo.administrativeControlDescription'), color: 'purple' },
+                      { icon: Heart, title: t('demo.healthWellness'), desc: t('demo.healthWellnessDescription'), color: 'green' }
                     ].map((feature, index) => (
                       <div key={index} className="text-center">
                         <div className={`w-16 h-16 bg-${feature.color}-100 rounded-2xl flex items-center justify-center mx-auto mb-4`}>
@@ -198,10 +198,10 @@ const Demo = () => {
               isMobile ? 'p-6' : 'p-8'
             )}>
               <h3 className={cn('font-bold mb-4', isMobile ? 'text-2xl' : 'text-3xl')}>
-                Ready to Transform Your School?
+                {t('demo.readyTransformSchool')}
               </h3>
               <p className={cn('mb-6 opacity-90', isMobile ? 'text-lg' : 'text-xl')}>
-                Experience the future of educational technology with our comprehensive platform.
+                {t('demo.experienceFutureEducation')}
               </p>
               <OptimizedButton 
                 size="lg" 
@@ -212,7 +212,7 @@ const Demo = () => {
                 onClick={handleStartFreeTrial}
                 touchOptimized={true}
               >
-                {t('pricing.startFreeTrial') || 'Start Free Trial'}
+                {t('pricing.startFreeTrial')}
               </OptimizedButton>
             </div>
           </>
@@ -229,7 +229,7 @@ const Demo = () => {
                     className="flex items-center gap-2"
                   >
                     <ArrowLeft className="h-4 w-4" />
-                    {!isMobile && 'Back to Demos'}
+                    {!isMobile && t('demo.backToDemo')}
                   </OptimizedButton>
                   <h2 className={cn('font-bold', isMobile ? 'text-lg' : 'text-2xl')}>
                     {getDemoTitle()}
@@ -241,7 +241,7 @@ const Demo = () => {
                     className="flex items-center gap-2 bg-brand-teal hover:bg-brand-dark text-white"
                   >
                     {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
-                    {!isMobile && (isPlaying ? (t('demo.page.pauseDemo') || 'Pause Demo') : (t('demo.page.playDemo') || 'Play Demo'))}
+                    {!isMobile && (isPlaying ? t('demo.page.pauseDemo') : t('demo.page.playDemo'))}
                   </OptimizedButton>
                   <OptimizedButton
                     variant="outline"
@@ -249,7 +249,7 @@ const Demo = () => {
                     className="flex items-center gap-2"
                   >
                     <RotateCcw className="h-4 w-4" />
-                    {!isMobile && 'Reset'}
+                    {!isMobile && t('demo.resetDemo')}
                   </OptimizedButton>
                 </div>
               </div>

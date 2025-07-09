@@ -20,6 +20,7 @@ import {
   CreditCardIcon,
   ExternalLinkIcon
 } from 'lucide-react';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface PendingTransactionsCardProps {
   adminEmail: string;
@@ -30,6 +31,7 @@ const PendingTransactionsCard: React.FC<PendingTransactionsCardProps> = ({
   adminEmail, 
   schoolName 
 }) => {
+  const { t } = useLanguage();
   const { toast } = useToast();
   const { pendingTransactions, isLoading, fetchPendingTransactions, handleTransactionAction } = usePendingTransactions();
   const [selectedTransaction, setSelectedTransaction] = useState<string | null>(null);
@@ -56,13 +58,13 @@ const PendingTransactionsCard: React.FC<PendingTransactionsCardProps> = ({
       
       if (actionType === 'approved' && result?.payment_initiated) {
         toast({
-          title: "Payment Processing Started",
-          description: "Transaction approved and payment processing has been initiated. A new tab will open for payment completion.",
+          title: t('messages.paymentProcessingStarted'),
+          description: t('messages.paymentProcessingStartedDescription'),
         });
       } else {
         toast({
-          title: "Success",
-          description: `Transaction ${actionType} successfully.`,
+          title: t('messages.success'),
+          description: t('admin.transactionActionSuccess', { action: actionType }),
         });
       }
       
@@ -72,7 +74,7 @@ const PendingTransactionsCard: React.FC<PendingTransactionsCardProps> = ({
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : `Failed to ${actionType} transaction`;
       toast({
-        title: "Error",
+        title: t('messages.error'),
         description: errorMessage,
         variant: "destructive",
       });

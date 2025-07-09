@@ -672,6 +672,10 @@ export const ltTranslations = {
   'grade': 'Klasė',
   'role': 'Vaidmuo',
 
+  'pricing.discountAppliedMessage': '{percent}% nuolaida pritaikyta!',
+  'pricing.discountValidationFailed': 'Nepavyko patikrinti nuolaidų kodo. Prašome bandyti dar kartą.',
+  'pricing.signUpEducatorFirst': 'Prašome pirmiausia registruotis kaip pedagogas, kad pradėtumėte nemokamą bandomąjį laikotarpį',
+  'form.enterDiscountCode': 'Prašome įvesti nuolaidų kodą',
   // Additional translations for new content - Lithuanian
   'pricing.backToHome': 'Grįžti į pradžią',
   'pricing.startThirtyDayTrial': 'Pradėti 30 dienų nemokamą bandomąjį laikotarpį',
@@ -737,6 +741,9 @@ export const ltTranslations = {
   'dashboard.createAccount': 'Sukurti paskyrą',
   'dashboard.loadingInvitation': 'Kraunama kvietimo informacija...',
 
+  'admin.transactionActionSuccess': 'Transakcija {action} sėkmingai.',
+  'dashboard.accessDenied': 'Prieiga uždrausta. Reikalingos administratoriaus teisės.',
+  'admin.comprehensiveAnalyticsFor': 'Išsami analitika {school} mokyklai',
   // Admin dashboard translations - Lithuanian
   'admin.manageTeachers': 'Valdyti mokytojus',
   'admin.inviteTeacher': 'Pakviesti mokytoją',

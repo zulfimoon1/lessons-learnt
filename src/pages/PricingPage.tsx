@@ -33,7 +33,7 @@ const PricingPage = () => {
 
   const validateDiscountCode = async (code: string) => {
     if (!code.trim()) {
-      setDiscountError("Please enter a discount code");
+      setDiscountError(t('form.enterDiscountCode'));
       return;
     }
 
@@ -49,8 +49,8 @@ const PricingPage = () => {
         setDiscountCode(code.trim().toUpperCase());
         setDiscount(result.discountPercent); // Set the discount state as well
         toast({
-          title: "Success",
-          description: `${result.discountPercent}% discount applied!`,
+          title: t('messages.success'),
+          description: t('pricing.discountAppliedMessage', { percent: result.discountPercent.toString() }),
         });
       } else {
         setDiscountError(result.error);
@@ -60,7 +60,7 @@ const PricingPage = () => {
       }
     } catch (error) {
       console.error('Error validating discount code:', error);
-      setDiscountError("Failed to validate discount code. Please try again.");
+      setDiscountError(t('pricing.discountValidationFailed'));
       setDiscountPercent(0);
       setDiscountCode("");
       setDiscount(0);
@@ -72,8 +72,8 @@ const PricingPage = () => {
   const handleCreateSubscription = async () => {
     if (!teacher?.email || !teacher?.school) {
       toast({
-        title: "Authentication Required",
-        description: "Please sign up as an educator first to start your free trial",
+        title: t('messages.authenticationRequired'),
+        description: t('pricing.signUpEducatorFirst'),
         variant: "destructive",
       });
       navigate('/teacher-login');
