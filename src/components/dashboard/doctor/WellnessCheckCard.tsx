@@ -52,7 +52,7 @@ const WellnessCheckCard: React.FC<WellnessCheckCardProps> = ({ school }) => {
           .select('*')
           .eq('school', school)
           .not('emotional_concerns', 'is', null)
-          .order('created_at', { ascending: false })
+          .order('submitted_at', { ascending: false })
           .limit(10)
       ]);
 

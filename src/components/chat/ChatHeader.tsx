@@ -39,7 +39,12 @@ const ChatHeader = ({
         <Button
           variant="ghost"
           size="sm"
-          onClick={onClose}
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            console.log('ChatHeader: Close button clicked');
+            onClose();
+          }}
           className="text-white hover:bg-purple-700"
         >
           <XIcon className="w-4 h-4" />
