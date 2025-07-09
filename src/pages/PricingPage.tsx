@@ -158,7 +158,7 @@ const PricingPage = () => {
               className="flex items-center gap-2"
             >
               <ArrowLeftIcon className="w-4 h-4" />
-              {teacher ? t('pricing.backToDashboard') : 'Back to Home'}
+              {teacher ? t('pricing.backToDashboard') : t('pricing.backToHome')}
             </Button>
             <h1 className="text-2xl font-bold text-gray-900">{t('pricing.title')}</h1>
           </div>
@@ -324,7 +324,7 @@ const PricingPage = () => {
                   disabled={isCreatingCheckout || !teacher}
                   className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-lg py-6"
                 >
-                  {isCreatingCheckout ? t('pricing.processing') : 'Start 30-Day Free Trial'}
+                  {isCreatingCheckout ? t('pricing.processing') : t('pricing.startThirtyDayTrial')}
                 </Button>
 
                 {!teacher && (
@@ -333,15 +333,15 @@ const PricingPage = () => {
                     variant="outline"
                     className="w-full text-lg py-6 border-2 border-blue-600 text-blue-600 hover:bg-blue-50"
                   >
-                    Sign Up as an Educator
+                    {t('pricing.signUpEducator')}
                   </Button>
                 )}
               </div>
 
               <p className="text-xs text-gray-500 text-center">
                 {teacher ? 
-                  "30-day free trial with full access to all features" :
-                  "Create your educator account to start your free trial"
+                  t('pricing.thirtyDayTrial') :
+                  t('pricing.createEducatorAccount')
                 }
               </p>
             </CardContent>
@@ -356,57 +356,56 @@ const PricingPage = () => {
                 <div className="flex items-center justify-center mb-4">
                   <Badge className="bg-purple-600 text-white px-4 py-2 text-sm font-semibold">
                     <StarIcon className="w-4 h-4 mr-2" />
-                    Custom Pricing Available
+                    {t('pricing.customPricingAvailableShort')}
                   </Badge>
                 </div>
                 <h3 className="text-2xl font-bold text-gray-900 mb-4">
-                  Need a custom solution for your organization?
+                  {t('pricing.needCustomSolutionOrg')}
                 </h3>
                 <p className="text-gray-600 mb-6 max-w-2xl mx-auto">
-                  We offer tailored pricing and features for school districts, large organizations, 
-                  and enterprise customers. Get volume discounts, custom integrations, and dedicated support.
+                  {t('pricing.tailoredPricingFeatures')}
                 </p>
                 <div className="flex items-center justify-center gap-4 flex-wrap">
                   <Button
                     variant="outline"
                     className="text-lg px-8 py-3 border-2 border-purple-600 text-purple-600 hover:bg-purple-50"
-                    onClick={() => {
-                      toast({
-                        title: "Coming Soon",
-                        description: "Custom pricing form will be available soon. Please contact support for now.",
-                      });
-                    }}
+                      onClick={() => {
+                        toast({
+                          title: t('pricing.comingSoonTitle'),
+                          description: t('pricing.customPricingFormDescription'),
+                        });
+                      }}
                   >
                     <PhoneIcon className="w-5 h-5 mr-2" />
-                    Request Custom Pricing
+                    {t('pricing.requestCustomPricingButton')}
                   </Button>
                   <div className="text-sm text-gray-500">
-                    Perfect for 50+ teachers or district-wide implementation
+                    {t('pricing.perfectFiftyTeachers')}
                   </div>
                 </div>
                 
                 {/* Bottom CTA Section */}
                 <div className="mt-8 pt-8 border-t border-purple-200">
                   <h4 className="text-xl font-semibold text-gray-900 mb-4">
-                    Ready to get started?
+                    {t('pricing.readyGetStarted')}
                   </h4>
                   <div className="flex gap-4 justify-center flex-wrap">
                     <Button
                       onClick={handleStartFreeTrialNow}
                       className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white text-lg px-8 py-3"
                     >
-                      Start Free Trial Now
+                      {t('pricing.startFreeTrialNowButton')}
                     </Button>
                     <Button
                       onClick={handleTransformYourSchool}
                       variant="outline"
                       className="border-2 border-green-600 text-green-600 hover:bg-green-50 text-lg px-8 py-3"
                     >
-                      Transform Your School
+                      {t('pricing.transformYourSchoolButton')}
                     </Button>
                   </div>
                   <p className="text-sm text-gray-500 mt-2">
-                    No credit card required • 30-day free trial
+                    {t('pricing.noCreditCard')}
                   </p>
                 </div>
               </div>
