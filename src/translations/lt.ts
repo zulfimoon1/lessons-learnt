@@ -625,6 +625,25 @@ export const ltTranslations = {
   'doctor.dashboard.lowRiskLevel': 'Maža rizika',
   'doctor.dashboard.loading': 'Pakraunama...',
 
+  // Demo translations
+  'demo.tryLiveDemo': 'Išbandyti gyvą demonstraciją',
+  'demo.experienceComplete': 'Patirkite visą platformą',
+  'demo.testFullPlatform': 'Išbandykite visą platformą su tikrais darbo procesais ir pamatykite, kaip mūsų intuityvus dizainas padaro sudėtingus švietimo procesus paprastais ir efektyviais',
+  'demo.realUserExperience': 'Tikra naudotojo patirtis',
+  'demo.accessLivePlatform': 'Prieiga prie gyvos platformos ir visų funkcijų išbandymas su autentiškais darbo procesais',
+  'demo.step1': '1 žingsnis',
+  'demo.step1Description': 'Mokyklos administratorius prisijungia ir pakviečia mokytojus bei mokyklos psichologą',
+  'demo.step2': '2 žingsnis',
+  'demo.step2Description': 'Mokytojai gali masiškai įkelti pamokų tvarkaraščius kartu su išvykomis',
+  'demo.step3': '3 žingsnis',
+  'demo.step3Description': 'Mokiniai palieka atsiliepimus',
+  'demo.step4': '4 žingsnis',
+  'demo.step4Description': 'Mokyklos psichologas turi prieigą prie gyvo pokalbio ir emocinės gerovės',
+  'demo.bonusPoints': '✨ Papildomi taškai',
+  'demo.pauseSubscriptions': 'Pristabdyti prenumeratas atostogų metu?',
+  'demo.payOnlyEducating': 'Mokėkite tik tada, kai tikrai mokote protus',
+  'demo.startFreeTrial': 'Pradėti nemokamą bandomąjį laikotarpį',
+
   // Login specific
   'login.teacher.title': 'Mokytojų portalas',
   'login.teacher.subtitle': 'Prisijunkite prie savo mokymo prietaisų skydelio',

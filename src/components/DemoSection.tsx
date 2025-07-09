@@ -39,25 +39,25 @@ const DemoSection = () => {
               onClick={handleTryDemo}
             >
               <PlayIcon className="w-6 h-6 mr-3" />
-              Try Live Demo
+              {t('demo.tryLiveDemo')}
             </Badge>
           </div>
           
           <h2 className="text-4xl font-bold text-brand-dark mb-6">
-            Experience the Complete Platform
+            {t('demo.experienceComplete')}
           </h2>
           
           <p className="text-xl text-gray-600 max-w-4xl mx-auto mb-12">
-            Test the full platform with real workflows and see how our intuitive design makes complex educational processes simple and efficient
+            {t('demo.testFullPlatform')}
           </p>
           
           {/* Enhanced visibility for the features section */}
           <div className="bg-brand-gradient text-white rounded-lg p-8 max-w-4xl mx-auto mb-12 shadow-xl">
             <p className="text-4xl font-black tracking-wide drop-shadow-lg mb-4">
-              Real User Experience
+              {t('demo.realUserExperience')}
             </p>
             <p className="text-xl font-bold opacity-95 drop-shadow-md mb-8">
-              Access the live platform and test all features with authentic workflows
+              {t('demo.accessLivePlatform')}
             </p>
             
             {/* Step Overview - Alternating Layout */}
@@ -68,8 +68,8 @@ const DemoSection = () => {
                   <Users className="w-4 h-4 text-white" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-white mb-1">Step 1</h3>
-                  <p className="text-sm text-white/90">School administrator logins and invites teachers and school psychologist</p>
+                  <h3 className="font-semibold text-white mb-1">{t('demo.step1')}</h3>
+                  <p className="text-sm text-white/90">{t('demo.step1Description')}</p>
                 </div>
               </div>
               
@@ -79,8 +79,8 @@ const DemoSection = () => {
                   <Calendar className="w-4 h-4 text-white" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-white mb-1">Step 2</h3>
-                  <p className="text-sm text-white/90">Teachers can bulk upload class schedules along with any day trips</p>
+                  <h3 className="font-semibold text-white mb-1">{t('demo.step2')}</h3>
+                  <p className="text-sm text-white/90">{t('demo.step2Description')}</p>
                 </div>
               </div>
               
@@ -90,8 +90,8 @@ const DemoSection = () => {
                   <MessageSquare className="w-4 h-4 text-white" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-white mb-1">Step 3</h3>
-                  <p className="text-sm text-white/90">Student leave feedback</p>
+                  <h3 className="font-semibold text-white mb-1">{t('demo.step3')}</h3>
+                  <p className="text-sm text-white/90">{t('demo.step3Description')}</p>
                 </div>
               </div>
               
@@ -101,8 +101,8 @@ const DemoSection = () => {
                   <Heart className="w-4 h-4 text-white" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-white mb-1">Step 4</h3>
-                  <p className="text-sm text-white/90">School psychologist has access to live chat and emotional wellbeing</p>
+                  <h3 className="font-semibold text-white mb-1">{t('demo.step4')}</h3>
+                  <p className="text-sm text-white/90">{t('demo.step4Description')}</p>
                 </div>
               </div>
             </div>
@@ -114,10 +114,10 @@ const DemoSection = () => {
                   <Gift className="w-6 h-6 text-brand-orange" />
                 </div>
                 <div>
-                  <h3 className="text-2xl font-bold text-white mb-2 drop-shadow-lg">✨ Bonus Points</h3>
+                  <h3 className="text-2xl font-bold text-white mb-2 drop-shadow-lg">{t('demo.bonusPoints')}</h3>
                   <p className="text-lg text-white/95 font-medium drop-shadow-md">
-                    Pause subscriptions during holidays?<br />
-                    Pay only when you're actually educating minds
+                    {t('demo.pauseSubscriptions')}<br />
+                    {t('demo.payOnlyEducating')}
                   </p>
                 </div>
               </div>
@@ -129,7 +129,7 @@ const DemoSection = () => {
                 onClick={handleRegisterNow}
                 className="bg-brand-orange hover:bg-brand-orange/90 text-white px-8 py-3 text-lg font-semibold shadow-lg hover:shadow-xl transition-all transform hover:scale-105"
               >
-                Start Your Free Trial
+                {t('demo.startFreeTrial')}
               </Button>
             </div>
           </div>
