@@ -6,6 +6,7 @@ import { MessageSquareIcon, UserIcon, ClockIcon, HeartHandshakeIcon } from "luci
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import RealtimeChat from "./RealtimeChat";
+import { LiveChatSession } from "@/types/auth";
 
 interface TeacherSupportChatWidgetProps {
   teacher: {
@@ -16,22 +17,11 @@ interface TeacherSupportChatWidgetProps {
   };
 }
 
-interface SupportChatSession {
-  id: string;
-  teacher_email: string;
-  teacher_name: string;
-  teacher_role: string;
-  school_name: string;
-  status: string;
-  created_at: string;
-  ended_at?: string;
-}
-
 const TeacherSupportChatWidget: React.FC<TeacherSupportChatWidgetProps> = ({ teacher }) => {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
-  const [currentSession, setCurrentSession] = useState<SupportChatSession | null>(null);
-  const [activeSessions, setActiveSessions] = useState<SupportChatSession[]>([]);
+  const [currentSession, setCurrentSession] = useState<LiveChatSession | null>(null);
+  const [activeSessions, setActiveSessions] = useState<LiveChatSession[]>([]);
 
   useEffect(() => {
     loadSessions();
@@ -40,14 +30,18 @@ const TeacherSupportChatWidget: React.FC<TeacherSupportChatWidgetProps> = ({ tea
   const loadSessions = async () => {
     try {
       const { data, error } = await supabase
-        .from('support_chat_sessions')
+        .from('live_chat_sessions')
         .select('*')
-        .eq('teacher_email', teacher.email)
-        .eq('status', 'active')
+        .eq('student_id', teacher.id)
+        .eq('grade', 'Teacher Support')
+        .eq('status', 'waiting')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setActiveSessions(data || []);
+      setActiveSessions((data || []).map(session => ({
+        ...session,
+        status: session.status as 'waiting' | 'active' | 'ended'
+      })));
     } catch (error) {
       console.error('Error loading support sessions:', error);
     }
@@ -57,20 +51,24 @@ const TeacherSupportChatWidget: React.FC<TeacherSupportChatWidgetProps> = ({ tea
     setIsLoading(true);
     try {
       const { data, error } = await supabase
-        .from('support_chat_sessions')
+        .from('live_chat_sessions')
         .insert({
-          teacher_email: teacher.email,
-          teacher_name: teacher.name,
-          teacher_role: 'teacher',
-          school_name: teacher.school,
-          status: 'active'
+          student_id: teacher.id, // Using teacher as "student" for support chat
+          student_name: teacher.name,
+          school: teacher.school,
+          grade: 'Teacher Support',
+          is_anonymous: false,
+          status: 'waiting'
         })
         .select()
         .single();
 
       if (error) throw error;
       
-      setCurrentSession(data);
+      setCurrentSession({
+        ...data,
+        status: data.status as 'waiting' | 'active' | 'ended'
+      });
       toast({
         title: "Support Session Started",
         description: "You are now connected to mental health support",
