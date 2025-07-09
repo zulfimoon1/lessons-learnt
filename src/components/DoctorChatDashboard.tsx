@@ -245,45 +245,51 @@ const DoctorChatDashboard = ({ doctorId, doctorName, school }: DoctorChatDashboa
           <div>
             <h3 className="font-semibold mb-4 flex items-center gap-2">
               <ClockIcon className="w-4 h-4" />
-              Students Waiting ({waitingSessions.length})
+              Waiting for Support ({waitingSessions.length})
             </h3>
             <ScrollArea className="h-96">
               <div className="space-y-3">
                 {waitingSessions.length === 0 ? (
                   <div className="text-center text-gray-500 py-8">
                     <MessageCircleIcon className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-                    <p className="text-sm">No students waiting for medical support</p>
+                    <p className="text-sm">No one waiting for medical support</p>
                   </div>
                 ) : (
-                  waitingSessions.map((session) => (
-                    <Card key={session.id} className="border-orange-200 bg-orange-50/30">
-                      <CardContent className="p-4">
-                        <div className="flex items-center justify-between mb-2">
-                          <div className="flex items-center gap-2">
-                            <UserIcon className="w-4 h-4" />
-                            <span className="font-medium">
-                              {session.is_anonymous ? 'Anonymous Student' : session.student_name}
-                            </span>
-                            {session.is_anonymous && (
-                              <Badge variant="secondary">Anonymous</Badge>
-                            )}
+                  waitingSessions.map((session) => {
+                    const isTeacherSupport = session.grade === 'Teacher Support';
+                    return (
+                      <Card key={session.id} className={isTeacherSupport ? "border-blue-200 bg-blue-50/30" : "border-orange-200 bg-orange-50/30"}>
+                        <CardContent className="p-4">
+                          <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center gap-2">
+                              <UserIcon className="w-4 h-4" />
+                              <span className="font-medium">
+                                {session.is_anonymous ? 'Anonymous Student' : session.student_name}
+                              </span>
+                              {session.is_anonymous && (
+                                <Badge variant="secondary">Anonymous</Badge>
+                              )}
+                              {isTeacherSupport && (
+                                <Badge variant="default" className="bg-blue-600">Teacher</Badge>
+                              )}
+                            </div>
+                            <Badge variant="outline">{isTeacherSupport ? 'Staff Support' : session.grade}</Badge>
                           </div>
-                          <Badge variant="outline">{session.grade}</Badge>
-                        </div>
                         <div className="text-sm text-gray-600 mb-3">
                           Waiting since: {new Date(session.created_at!).toLocaleTimeString()}
                         </div>
-                        <Button
-                          onClick={() => handleJoinSession(session)}
-                          className="w-full bg-green-600 hover:bg-green-700"
-                          size="sm"
-                        >
-                          <StethoscopeIcon className="w-4 h-4 mr-2" />
-                          Provide Support
-                        </Button>
-                      </CardContent>
-                    </Card>
-                  ))
+                          <Button
+                            onClick={() => handleJoinSession(session)}
+                            className="w-full bg-green-600 hover:bg-green-700"
+                            size="sm"
+                          >
+                            <StethoscopeIcon className="w-4 h-4 mr-2" />
+                            {isTeacherSupport ? 'Provide Staff Support' : 'Provide Support'}
+                          </Button>
+                        </CardContent>
+                      </Card>
+                    );
+                  })
                 )}
               </div>
             </ScrollArea>
@@ -303,21 +309,26 @@ const DoctorChatDashboard = ({ doctorId, doctorName, school }: DoctorChatDashboa
                     <p className="text-sm">No active medical support sessions</p>
                   </div>
                 ) : (
-                  activeSessions.map((session) => (
-                    <Card key={session.id} className="border-green-200 bg-green-50/30">
-                      <CardContent className="p-4">
-                        <div className="flex items-center justify-between mb-2">
-                          <div className="flex items-center gap-2">
-                            <UserIcon className="w-4 h-4" />
-                            <span className="font-medium">
-                              {session.is_anonymous ? 'Anonymous Student' : session.student_name}
-                            </span>
-                            {session.is_anonymous && (
-                              <Badge variant="secondary">Anonymous</Badge>
-                            )}
+                  activeSessions.map((session) => {
+                    const isTeacherSupport = session.grade === 'Teacher Support';
+                    return (
+                      <Card key={session.id} className={isTeacherSupport ? "border-blue-200 bg-blue-50/30" : "border-green-200 bg-green-50/30"}>
+                        <CardContent className="p-4">
+                          <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center gap-2">
+                              <UserIcon className="w-4 h-4" />
+                              <span className="font-medium">
+                                {session.is_anonymous ? 'Anonymous Student' : session.student_name}
+                              </span>
+                              {session.is_anonymous && (
+                                <Badge variant="secondary">Anonymous</Badge>
+                              )}
+                              {isTeacherSupport && (
+                                <Badge variant="default" className="bg-blue-600">Teacher</Badge>
+                              )}
+                            </div>
+                            <Badge variant="outline">{isTeacherSupport ? 'Staff Support' : session.grade}</Badge>
                           </div>
-                          <Badge variant="outline">{session.grade}</Badge>
-                        </div>
                         <div className="text-sm text-gray-600 mb-3">
                           Started: {new Date(session.started_at!).toLocaleTimeString()}
                         </div>
@@ -337,10 +348,11 @@ const DoctorChatDashboard = ({ doctorId, doctorName, school }: DoctorChatDashboa
                           >
                             <XIcon className="w-4 h-4" />
                           </Button>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))
+                          </div>
+                        </CardContent>
+                      </Card>
+                    );
+                  })
                 )}
               </div>
             </ScrollArea>
