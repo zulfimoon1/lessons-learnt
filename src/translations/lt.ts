@@ -70,8 +70,61 @@ export const ltTranslations = {
   'welcome.studentsWelcome': 'Sveiki atvykę į savo mokymosi kelionę',
   'welcome.studentsSubtitle': 'Sekite pažangą, dalinkitės atsiliepimais ir gaukite pagalbą, kai jos reikia.',
 
-  // Pricing and Demo
+  // Pricing - COMPLETE
   'pricing.title': 'Kainodara',
+  'pricing.backToDashboard': 'Grįžti į skydą',
+  'pricing.backToHome': 'Grįžti į pradžią',
+  'pricing.welcome': 'Sveiki',
+  'pricing.choosePlan': 'Pasirinkite planą',
+  'pricing.subtitle': 'Lankstūs įkainiai, kurie auga kartu su jūsų mokykla',
+  'pricing.school': 'Mokykla',
+  'pricing.configurePlan': 'Konfigūruoti planą',
+  'pricing.configureDesc': 'Pritaikykite prenumeratą pagal savo poreikius',
+  'pricing.numberOfTeachers': 'Mokytojų skaičius',
+  'pricing.teacherDesc': 'Kiekvienas mokytojas gali valdyti neribotą pamokų ir mokinių skaičių',
+  'pricing.discountCode': 'Nuolaidos kodas (neprivalomas)',
+  'pricing.enterDiscount': 'Įveskite nuolaidos kodą',
+  'pricing.validating': 'Tikrinama...',
+  'pricing.apply': 'Pritaikyti',
+  'pricing.discountAppliedShort': 'nuolaida pritaikyta',
+  'pricing.whatsIncluded': 'Kas įtraukta',
+  'pricing.unlimitedClasses': 'Neribotai pamokų ir mokinių',
+  'pricing.feedbackCollection': 'Balso atsiliepimų rinkimas ir analizė',
+  'pricing.analytics': 'Realaus laiko analizė ir įžvalgos',
+  'pricing.mentalHealth': 'Psichikos sveikatos stebėjimas ir įspėjimai',
+  'pricing.multiLanguage': 'Daugiakalbė palaikymas',
+  'pricing.orderSummary': 'Užsakymo santrauka',
+  'pricing.reviewDetails': 'Peržiūrėkite prenumeratos detales',
+  'pricing.teachers': 'Mokytojai',
+  'pricing.each': 'kiekvienas',
+  'pricing.subtotal': 'Tarpinė suma',
+  'pricing.discount': 'Nuolaida',
+  'pricing.totalMonthly': 'Iš viso (mėnesinis)',
+  'pricing.billing': 'Sąskaitų išrašymas',
+  'pricing.billingDesc': 'Jums bus nuskaičiuota €{amount} kas mėnesį. Atšaukite bet kada.',
+  'pricing.processing': 'Apdorojama...',
+  'pricing.startThirtyDayTrial': 'Pradėti 30 dienų nemokamą bandomąjį laikotarpį',
+  'pricing.signUpEducator': 'Registruotis kaip pedagogas',
+  'pricing.thirtyDayTrial': 'Pradėkite 30 dienų nemokamą bandomąjį laikotarpį šiandien. Nereikia kredito kortelės.',
+  'pricing.createEducatorAccount': 'Sukurkite pedagogo paskyrą, kad pradėtumėte',
+  'pricing.customPricingAvailableShort': 'Individualūs įkainiai',
+  'pricing.needCustomSolutionOrg': 'Reikia individualaus sprendimo jūsų organizacijai?',
+  'pricing.tailoredPricingFeatures': 'Dideliems mokyklų rajonams siūlome individualius įkainius su papildomomis funkcijomis, specializuotu palaikymu ir pritaikytais integravimais.',
+  'pricing.requestCustomPricingButton': 'Prašyti individualių įkainių',
+  'pricing.perfectFiftyTeachers': 'Tobulas 50+ mokytojų',
+  'pricing.readyGetStarted': 'Pasiruošę pradėti?',
+  'pricing.startFreeTrialNowButton': 'Pradėti nemokamą bandomąjį laikotarpį dabar',
+  'pricing.transformYourSchoolButton': 'Transformuokite savo mokyklą',
+  'pricing.noCreditCard': 'Nereikia kredito kortelės • Atšaukite bet kada',
+  'pricing.paymentError': 'Mokėjimo klaida',
+  'pricing.paymentErrorDesc': 'Įvyko klaida apdorojant jūsų mokėjimą. Bandykite dar kartą.',
+  'pricing.signUpEducatorFirst': 'Pirmiausia prašome užsiregistruoti kaip pedagogas',
+  'pricing.discountValidationFailed': 'Nepavyko patikrinti nuolaidos kodo',
+  'pricing.discountAppliedMessage': '{percent}% nuolaida sėkmingai pritaikyta!',
+  'pricing.comingSoonTitle': 'Netrukus',
+  'pricing.customPricingFormDescription': 'Individualių įkainių užklausos forma bus prieinama netrukus. Kol kas kreipkitės į palaikymą.',
+
+  // Demo section
   'demo.title': 'Žiūrėti demonstraciją',
 
   // Homepage - Platform section
@@ -178,6 +231,11 @@ export const ltTranslations = {
 
   // Form
   'form.email': 'El. paštas',
+  'form.enterDiscountCode': 'Prašome įvesti nuolaidos kodą',
+
+  // Messages
+  'messages.success': 'Sėkmė',
+  'messages.authenticationRequired': 'Reikalingas autentifikavimas',
 
   // Demo section - COMPLETE
   'demo.tryLiveDemo': 'Išbandyti gyvą demonstraciją',

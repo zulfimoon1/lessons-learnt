@@ -76,8 +76,61 @@ export const enTranslations = {
   'welcome.studentsWelcome': 'Welcome to your learning journey',
   'welcome.studentsSubtitle': 'Track your progress, share feedback, and get support when you need it.',
 
-  // Pricing and Demo
+  // Pricing - COMPLETE
   'pricing.title': 'Pricing',
+  'pricing.backToDashboard': 'Back to Dashboard',
+  'pricing.backToHome': 'Back to Home',
+  'pricing.welcome': 'Welcome',
+  'pricing.choosePlan': 'Choose Your Plan',
+  'pricing.subtitle': 'Flexible pricing that grows with your school',
+  'pricing.school': 'School',
+  'pricing.configurePlan': 'Configure Your Plan',
+  'pricing.configureDesc': 'Customize your subscription based on your needs',
+  'pricing.numberOfTeachers': 'Number of Teachers',
+  'pricing.teacherDesc': 'Each teacher can manage unlimited classes and students',
+  'pricing.discountCode': 'Discount Code (Optional)',
+  'pricing.enterDiscount': 'Enter discount code',
+  'pricing.validating': 'Validating...',
+  'pricing.apply': 'Apply',
+  'pricing.discountAppliedShort': 'discount applied',
+  'pricing.whatsIncluded': 'What\'s included',
+  'pricing.unlimitedClasses': 'Unlimited classes and students',
+  'pricing.feedbackCollection': 'Voice feedback collection & analysis',
+  'pricing.analytics': 'Real-time analytics & insights',
+  'pricing.mentalHealth': 'Mental health monitoring & alerts',
+  'pricing.multiLanguage': 'Multi-language support',
+  'pricing.orderSummary': 'Order Summary',
+  'pricing.reviewDetails': 'Review your subscription details',
+  'pricing.teachers': 'Teachers',
+  'pricing.each': 'each',
+  'pricing.subtotal': 'Subtotal',
+  'pricing.discount': 'Discount',
+  'pricing.totalMonthly': 'Total (Monthly)',
+  'pricing.billing': 'Billing',
+  'pricing.billingDesc': 'You will be charged €{amount} monthly. Cancel anytime.',
+  'pricing.processing': 'Processing...',
+  'pricing.startThirtyDayTrial': 'Start 30-Day Free Trial',
+  'pricing.signUpEducator': 'Sign Up as Educator',
+  'pricing.thirtyDayTrial': 'Start your 30-day free trial today. No credit card required.',
+  'pricing.createEducatorAccount': 'Create an educator account to get started',
+  'pricing.customPricingAvailableShort': 'Custom Pricing',
+  'pricing.needCustomSolutionOrg': 'Need a Custom Solution for Your Organization?',
+  'pricing.tailoredPricingFeatures': 'For large school districts, we offer tailored pricing with additional features, dedicated support, and custom integrations.',
+  'pricing.requestCustomPricingButton': 'Request Custom Pricing',
+  'pricing.perfectFiftyTeachers': 'Perfect for 50+ teachers',
+  'pricing.readyGetStarted': 'Ready to Get Started?',
+  'pricing.startFreeTrialNowButton': 'Start Free Trial Now',
+  'pricing.transformYourSchoolButton': 'Transform Your School',
+  'pricing.noCreditCard': 'No credit card required • Cancel anytime',
+  'pricing.paymentError': 'Payment Error',
+  'pricing.paymentErrorDesc': 'There was an error processing your payment. Please try again.',
+  'pricing.signUpEducatorFirst': 'Please sign up as an educator first',
+  'pricing.discountValidationFailed': 'Failed to validate discount code',
+  'pricing.discountAppliedMessage': '{percent}% discount applied successfully!',
+  'pricing.comingSoonTitle': 'Coming Soon',
+  'pricing.customPricingFormDescription': 'Custom pricing request form will be available soon. Please contact support for now.',
+
+  // Demo section
   'demo.title': 'See Demo',
 
   // Homepage - Platform section
@@ -184,6 +237,11 @@ export const enTranslations = {
 
   // Form
   'form.email': 'Email',
+  'form.enterDiscountCode': 'Please enter a discount code',
+
+  // Messages
+  'messages.success': 'Success',
+  'messages.authenticationRequired': 'Authentication Required',
 
   // Demo section - COMPLETE
   'demo.tryLiveDemo': 'Try Live Demo',
