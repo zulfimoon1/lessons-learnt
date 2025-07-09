@@ -170,6 +170,18 @@ export const useChatSession = (session: LiveChatSession, isDoctorView: boolean, 
       console.log('useChatSession: Sending message to session:', session.id);
       console.log('useChatSession: Message content:', message);
       
+      // Verify session exists before sending message
+      const { data: sessionExists, error: sessionError } = await supabase
+        .from('live_chat_sessions')
+        .select('id')
+        .eq('id', session.id)
+        .single();
+
+      if (sessionError || !sessionExists) {
+        console.error('useChatSession: Session not found:', sessionError);
+        throw new Error('Chat session not found. Please try again.');
+      }
+      
       // Prepare the message data
       const messageData = {
         session_id: session.id,
@@ -186,12 +198,18 @@ export const useChatSession = (session: LiveChatSession, isDoctorView: boolean, 
 
       if (error) {
         console.error('useChatSession: Database error:', error);
+        if (error.code === '23503') {
+          throw new Error('Session not ready. Please wait a moment and try again.');
+        }
         throw error;
       }
       
       console.log('useChatSession: Message sent successfully');
     } catch (error) {
       console.error('useChatSession: Error sending message:', error);
+      if (error instanceof Error) {
+        throw error;
+      }
       throw new Error('Failed to send message. Please try again.');
     }
   };
