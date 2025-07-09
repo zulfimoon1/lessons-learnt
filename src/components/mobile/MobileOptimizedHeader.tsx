@@ -27,7 +27,7 @@ const MobileOptimizedHeader: React.FC = () => {
               'font-bold text-brand-dark',
               isMobile ? 'text-lg' : 'text-2xl'
             )}>
-              {isMobile ? 'Lessons' : t('welcome.title')}
+              {isMobile ? t('common.lessonsShort') : t('welcome.title')}
             </h1>
           </Link>
 
@@ -66,7 +66,7 @@ const MobileOptimizedHeader: React.FC = () => {
                 </SheetTrigger>
                 <SheetContent side="right" className="w-80 bg-white/95 backdrop-blur-sm">
                   <div className="flex items-center justify-between mb-6">
-                    <h2 className="text-lg font-semibold text-brand-dark">Menu</h2>
+                    <h2 className="text-lg font-semibold text-brand-dark">{t('common.menu')}</h2>
                     <Button
                       variant="ghost"
                       size="icon"
@@ -99,16 +99,16 @@ const MobileOptimizedHeader: React.FC = () => {
                     </Link>
                     
                     <div className="pt-6 border-t">
-                      <h3 className="text-sm font-medium text-gray-600 mb-3">Get Started</h3>
+                      <h3 className="text-sm font-medium text-gray-600 mb-3">{t('common.getStarted')}</h3>
                       <div className="space-y-3">
                         <Link to="/student-login" onClick={closeMenu}>
                           <Button className="w-full bg-brand-teal hover:bg-brand-dark text-white min-h-12">
-                            Student Login
+                            {t('common.studentLogin')}
                           </Button>
                         </Link>
                         <Link to="/teacher-login" onClick={closeMenu}>
                           <Button variant="outline" className="w-full border-brand-teal text-brand-teal hover:bg-brand-teal hover:text-white min-h-12">
-                            Teacher Login
+                            {t('common.teacherLogin')}
                           </Button>
                         </Link>
                       </div>

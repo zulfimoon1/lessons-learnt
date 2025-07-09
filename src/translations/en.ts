@@ -42,6 +42,11 @@ export const enTranslations = {
   'common.ready': 'Ready',
   'common.minimize': 'Minimize',
   'common.bookDemo': 'Book a Demo',
+  'common.menu': 'Menu',
+  'common.getStarted': 'Get Started',
+  'common.studentLogin': 'Student Login',
+  'common.teacherLogin': 'Teacher Login',
+  'common.lessonsShort': 'Lessons',
 
   // Navigation
   'nav.home': 'Home',

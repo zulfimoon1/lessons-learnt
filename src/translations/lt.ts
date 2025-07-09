@@ -505,6 +505,11 @@ export const ltTranslations = {
   'compliance.dataEncrypted': 'Visi duomenys šifruojami perduodant ir saugant. Įjungtas pilnas audito registravimas.',
   'compliance.soc2Controls': 'SOC 2 Type II atitinkantys saugumo kontrolės elementai',
   'common.bookDemo': 'Užsisakyti demonstraciją',
+  'common.menu': 'Meniu',
+  'common.getStarted': 'Pradėti',
+  'common.studentLogin': 'Mokinio prisijungimas',
+  'common.teacherLogin': 'Mokytojo prisijungimas',
+  'common.lessonsShort': 'Pamokos',
 
   'privacy.title': 'Privatumo politika',
   'privacy.cookieConsent': 'Sutikimas dėl slapukų',
