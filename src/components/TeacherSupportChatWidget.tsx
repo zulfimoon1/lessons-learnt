@@ -50,6 +50,8 @@ const TeacherSupportChatWidget: React.FC<TeacherSupportChatWidgetProps> = ({ tea
   const startNewSupportSession = async () => {
     setIsLoading(true);
     try {
+      console.log('TeacherSupportChatWidget: Creating new support session for teacher:', teacher);
+      
       const { data, error } = await supabase
         .from('live_chat_sessions')
         .insert({
@@ -63,12 +65,32 @@ const TeacherSupportChatWidget: React.FC<TeacherSupportChatWidgetProps> = ({ tea
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('TeacherSupportChatWidget: Error creating session:', error);
+        throw error;
+      }
+      
+      console.log('TeacherSupportChatWidget: Session created successfully:', data);
+      
+      // Verify the session was created by fetching it
+      const { data: verifySession, error: verifyError } = await supabase
+        .from('live_chat_sessions')
+        .select('*')
+        .eq('id', data.id)
+        .single();
+
+      if (verifyError || !verifySession) {
+        console.error('TeacherSupportChatWidget: Session verification failed:', verifyError);
+        throw new Error('Failed to verify session creation');
+      }
+
+      console.log('TeacherSupportChatWidget: Session verified:', verifySession);
       
       setCurrentSession({
-        ...data,
-        status: data.status as 'waiting' | 'active' | 'ended'
+        ...verifySession,
+        status: verifySession.status as 'waiting' | 'active' | 'ended'
       });
+      
       toast({
         title: "Support Session Started",
         description: "You are now connected to mental health support",
@@ -90,20 +112,24 @@ const TeacherSupportChatWidget: React.FC<TeacherSupportChatWidgetProps> = ({ tea
   };
 
   if (currentSession) {
+    console.log('TeacherSupportChatWidget: Rendering RealtimeChat with session:', currentSession);
+    
     // Convert to the format expected by RealtimeChat
     const chatSession = {
       id: currentSession.id,
-      student_id: teacher.id,
-      student_name: teacher.name,
-      school: teacher.school,
-      grade: 'Teacher',
-      status: 'active' as const,
-      is_anonymous: false,
+      student_id: currentSession.student_id,
+      student_name: currentSession.student_name,
+      school: currentSession.school,
+      grade: currentSession.grade,
+      status: currentSession.status,
+      is_anonymous: currentSession.is_anonymous,
       created_at: currentSession.created_at,
-      started_at: currentSession.created_at,
-      ended_at: null,
-      doctor_id: null
+      started_at: currentSession.started_at,
+      ended_at: currentSession.ended_at,
+      doctor_id: currentSession.doctor_id
     };
+
+    console.log('TeacherSupportChatWidget: Converted session for RealtimeChat:', chatSession);
 
     return (
       <RealtimeChat

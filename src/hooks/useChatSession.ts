@@ -21,7 +21,13 @@ export const useChatSession = (session: LiveChatSession, isDoctorView: boolean, 
   const channelRef = useRef<any>(null);
 
   useEffect(() => {
-    console.log('useChatSession: Initializing for session:', session.id);
+    console.log('useChatSession: Initializing for session:', session);
+    console.log('useChatSession: Session details:', {
+      id: session.id,
+      student_id: session.student_id,
+      status: session.status,
+      grade: session.grade
+    });
     
     // Initialize chat
     loadMessages();
@@ -169,18 +175,22 @@ export const useChatSession = (session: LiveChatSession, isDoctorView: boolean, 
     try {
       console.log('useChatSession: Sending message to session:', session.id);
       console.log('useChatSession: Message content:', message);
+      console.log('useChatSession: Full session object:', session);
       
       // Verify session exists before sending message
       const { data: sessionExists, error: sessionError } = await supabase
         .from('live_chat_sessions')
-        .select('id')
+        .select('id, status')
         .eq('id', session.id)
         .single();
 
       if (sessionError || !sessionExists) {
-        console.error('useChatSession: Session not found:', sessionError);
+        console.error('useChatSession: Session not found during verification:', sessionError);
+        console.log('useChatSession: Attempted to find session with ID:', session.id);
         throw new Error('Chat session not found. Please try again.');
       }
+      
+      console.log('useChatSession: Session exists, proceeding with message send:', sessionExists);
       
       // Prepare the message data
       const messageData = {
