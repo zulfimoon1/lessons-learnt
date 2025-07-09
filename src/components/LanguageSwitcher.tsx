@@ -5,7 +5,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 
 const LanguageSwitcher = () => {
   try {
-    const { language, setLanguage } = useLanguage();
+    const { language, setLanguage, t } = useLanguage();
 
     return (
       <div className="flex items-center gap-2">
@@ -19,13 +19,13 @@ const LanguageSwitcher = () => {
             <SelectItem value="en" className="hover:bg-gray-50">
               <div className="flex items-center gap-2">
                 <span className="text-lg">🇬🇧</span>
-                <span>English</span>
+                <span>{t('common.english')}</span>
               </div>
             </SelectItem>
             <SelectItem value="lt" className="hover:bg-gray-50">
               <div className="flex items-center gap-2">
                 <span className="text-lg">🇱🇹</span>
-                <span>Lietuvių</span>
+                <span>{t('common.lithuanian')}</span>
               </div>
             </SelectItem>
           </SelectContent>

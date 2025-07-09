@@ -47,6 +47,8 @@ export const enTranslations = {
   'common.studentLogin': 'Student Login',
   'common.teacherLogin': 'Teacher Login',
   'common.lessonsShort': 'Lessons',
+  'common.english': 'English',
+  'common.lithuanian': 'Lietuvių',
 
   // Navigation
   'nav.home': 'Home',

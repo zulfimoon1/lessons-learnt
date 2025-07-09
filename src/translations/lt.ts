@@ -510,6 +510,8 @@ export const ltTranslations = {
   'common.studentLogin': 'Mokinio prisijungimas',
   'common.teacherLogin': 'Mokytojo prisijungimas',
   'common.lessonsShort': 'Pamokos',
+  'common.english': 'English',
+  'common.lithuanian': 'Lietuvių',
 
   'privacy.title': 'Privatumo politika',
   'privacy.cookieConsent': 'Sutikimas dėl slapukų',
