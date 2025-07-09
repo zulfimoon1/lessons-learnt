@@ -126,7 +126,7 @@ const StudentDashboard: React.FC = () => {
     {
       value: 'classes',
       icon: CalendarIcon,
-      label: 'My Classes',
+      label: t('dashboard.myClasses'),
       component: (
         <UpcomingClassesTab
           classes={upcomingClasses}
@@ -138,19 +138,19 @@ const StudentDashboard: React.FC = () => {
     {
       value: 'feedback',
       icon: MessageSquareIcon,
-      label: 'Share My Thoughts',
+      label: t('dashboard.shareMyThoughts'),
       component: <FeedbackTab />
     },
     {
       value: 'summary',
       icon: FileTextIcon,
-      label: 'My Week',
+      label: t('dashboard.myWeek'),
       component: <WeeklySummaryTab student={student} />
     },
     {
       value: 'wellness',
       icon: HeartIcon,
-      label: 'How I\'m Feeling',
+      label: t('dashboard.howImFeeling'),
       component: (
         <MentalHealthSupportTab
           psychologists={[]}
@@ -172,7 +172,7 @@ const StudentDashboard: React.FC = () => {
     {
       value: 'analytics',
       icon: BarChartIcon,
-      label: 'My Progress',
+      label: t('dashboard.myProgress'),
       component: (
         <div className="min-h-[400px]">
           <StudentAnalyticsDashboard
@@ -188,7 +188,7 @@ const StudentDashboard: React.FC = () => {
   return (
     <MobileOptimizedLayout className="bg-background">
       <DashboardHeader
-        title="My Learning Dashboard"
+        title={t('dashboard.myLearningDashboard')}
         userName={student.full_name}
         onLogout={handleLogout}
       />

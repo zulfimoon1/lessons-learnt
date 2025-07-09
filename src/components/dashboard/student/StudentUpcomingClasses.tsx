@@ -237,7 +237,7 @@ const StudentUpcomingClasses: React.FC<StudentUpcomingClassesProps> = ({ student
           <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
             <Calendar className="w-5 h-5" />
           </div>
-          Classes & Feedback
+          {t('classes.title')}
         </CardTitle>
       </CardHeader>
       <CardContent className="p-6">
@@ -246,7 +246,7 @@ const StudentUpcomingClasses: React.FC<StudentUpcomingClassesProps> = ({ student
           <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
             <div className="flex items-center gap-2 mb-2">
               <AlertCircle className="w-4 h-4 text-blue-600" />
-              <span className="text-sm font-medium text-blue-800">Debug Information:</span>
+              <span className="text-sm font-medium text-blue-800">{t('classes.debugInfo')}</span>
             </div>
             <div className="text-xs text-blue-700 whitespace-pre-line">{debugInfo}</div>
           </div>
@@ -257,9 +257,9 @@ const StudentUpcomingClasses: React.FC<StudentUpcomingClassesProps> = ({ student
             <div className="w-20 h-20 bg-brand-teal/10 rounded-full mx-auto mb-4 flex items-center justify-center">
               <BookOpen className="w-10 h-10 text-brand-teal" />
             </div>
-            <p className="text-brand-dark font-medium mb-2">No classes found</p>
+            <p className="text-brand-dark font-medium mb-2">{t('classes.noClassesFound')}</p>
             <p className="text-brand-dark/60 text-sm">
-              Classes for {student.grade} at {student.school} will appear here
+              {t('classes.classesWillAppear', { grade: student.grade, school: student.school })}
             </p>
           </div>
         ) : (
@@ -281,18 +281,18 @@ const StudentUpcomingClasses: React.FC<StudentUpcomingClassesProps> = ({ student
                       </Badge>
                       {classItem.is_past && !classItem.has_feedback && (
                         <Badge variant="secondary" className="bg-orange-100 text-orange-800 border-orange-200">
-                          Feedback Needed
+                          {t('classes.feedbackNeeded')}
                         </Badge>
                       )}
                       {classItem.has_feedback && (
                         <Badge variant="secondary" className="bg-green-100 text-green-800 border-green-200">
                           <CheckCircle className="w-3 h-3 mr-1" />
-                          Feedback Submitted
+                          {t('classes.feedbackSubmitted')}
                         </Badge>
                       )}
                       {!classItem.is_past && (
                         <Badge variant="default" className="bg-blue-100 text-blue-800 border-blue-200">
-                          Upcoming
+                          {t('classes.upcoming')}
                         </Badge>
                       )}
                     </div>
@@ -329,7 +329,7 @@ const StudentUpcomingClasses: React.FC<StudentUpcomingClassesProps> = ({ student
                         className="bg-gradient-to-r from-brand-orange to-brand-orange/80 hover:from-brand-orange/90 hover:to-brand-orange/70 text-white shadow-lg hover:shadow-xl transition-all duration-200 group-hover:scale-105"
                       >
                         <MessageSquare className="w-4 h-4 mr-2" />
-                        {classItem.is_past ? 'Leave Feedback' : 'Submit Feedback'}
+                        {classItem.is_past ? t('classes.leaveFeedback') : t('classes.submitFeedback')}
                       </Button>
                     )}
                   </div>
