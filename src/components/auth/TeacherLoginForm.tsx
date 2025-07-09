@@ -26,11 +26,11 @@ const TeacherLoginForm: React.FC<TeacherLoginFormProps> = ({ onLogin, isLoading 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="space-y-2">
-        <Label htmlFor="email" className="text-black font-medium">Email</Label>
+        <Label htmlFor="email" className="text-black font-medium">{t('form.email')}</Label>
         <SecurityEnhancedInput
           id="email"
           type="email"
-          placeholder="teacher@school.com"
+          placeholder={t('form.emailPlaceholder')}
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
@@ -41,12 +41,12 @@ const TeacherLoginForm: React.FC<TeacherLoginFormProps> = ({ onLogin, isLoading 
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="password" className="text-black font-medium">Password</Label>
+        <Label htmlFor="password" className="text-black font-medium">{t('form.password')}</Label>
         <div className="relative">
           <SecurityEnhancedInput
             id="password"
             type={showPassword ? "text" : "password"}
-            placeholder="••••••••"
+            placeholder={t('form.passwordPlaceholder')}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
@@ -70,7 +70,7 @@ const TeacherLoginForm: React.FC<TeacherLoginFormProps> = ({ onLogin, isLoading 
             type="button"
             className="text-sm bg-brand-gradient bg-clip-text text-transparent hover:opacity-80 transition-opacity font-medium"
           >
-            Forgot Password?
+            {t('form.forgotPassword')}
           </button>
         </ForgotPasswordDialog>
       </div>
@@ -83,10 +83,10 @@ const TeacherLoginForm: React.FC<TeacherLoginFormProps> = ({ onLogin, isLoading 
         {isLoading ? (
           <div className="flex items-center gap-2">
             <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-            Signing In...
+            {t('form.signingIn')}
           </div>
         ) : (
-          "Sign In"
+          t('form.signIn')
         )}
       </Button>
     </form>

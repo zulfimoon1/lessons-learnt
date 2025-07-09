@@ -6,6 +6,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Users, BookOpen, MessageSquare, TrendingUp, BarChart3, Percent } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface FeedbackAnalytics {
   teacher_name: string;
@@ -28,6 +29,7 @@ interface SchoolAdminDashboardProps {
 }
 
 const SchoolAdminDashboard: React.FC<SchoolAdminDashboardProps> = ({ teacher }) => {
+  const { t } = useLanguage();
   const [feedbackData, setFeedbackData] = useState<FeedbackAnalytics[]>([]);
   const [schoolStats, setSchoolStats] = useState({
     totalTeachers: 0,
@@ -192,7 +194,7 @@ const SchoolAdminDashboard: React.FC<SchoolAdminDashboardProps> = ({ teacher }) 
     return (
       <div className="flex items-center justify-center p-8">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-teal mr-3"></div>
-        Loading school analytics...
+        {t('dashboard.admin.loadingSchoolAnalytics')}
       </div>
     );
   }
@@ -205,78 +207,78 @@ const SchoolAdminDashboard: React.FC<SchoolAdminDashboardProps> = ({ teacher }) 
       <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
         <Card className="bg-white/90 backdrop-blur-sm border-gray-200/50 shadow-lg">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Teachers</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('dashboard.admin.totalTeachers')}</CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-brand-dark">{schoolStats.totalTeachers}</div>
             <p className="text-xs text-muted-foreground">
-              Active staff members
+              {t('dashboard.admin.activeStaffMembers')}
             </p>
           </CardContent>
         </Card>
 
         <Card className="bg-white/90 backdrop-blur-sm border-gray-200/50 shadow-lg">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Students</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('dashboard.admin.totalStudents')}</CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-brand-dark">{schoolStats.totalStudents}</div>
             <p className="text-xs text-muted-foreground">
-              Enrolled students
+              {t('dashboard.admin.enrolledStudents')}
             </p>
           </CardContent>
         </Card>
 
         <Card className="bg-white/90 backdrop-blur-sm border-gray-200/50 shadow-lg">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Classes</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('dashboard.admin.totalClasses')}</CardTitle>
             <BookOpen className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-brand-dark">{schoolStats.totalClasses}</div>
             <p className="text-xs text-muted-foreground">
-              All scheduled classes
+              {t('dashboard.admin.allScheduledClasses')}
             </p>
           </CardContent>
         </Card>
 
         <Card className="bg-white/90 backdrop-blur-sm border-gray-200/50 shadow-lg">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active Classes</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('dashboard.admin.activeClasses')}</CardTitle>
             <BarChart3 className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-brand-dark">{schoolStats.activeClasses}</div>
             <p className="text-xs text-muted-foreground">
-              Scheduled this week
+              {t('dashboard.admin.scheduledThisWeek')}
             </p>
           </CardContent>
         </Card>
 
         <Card className="bg-white/90 backdrop-blur-sm border-gray-200/50 shadow-lg">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Feedback</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('dashboard.admin.totalFeedback')}</CardTitle>
             <MessageSquare className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-brand-dark">{schoolStats.totalFeedback}</div>
             <p className="text-xs text-muted-foreground">
-              This month
+              {t('dashboard.admin.thisMonth')}
             </p>
           </CardContent>
         </Card>
 
         <Card className="bg-white/90 backdrop-blur-sm border-gray-200/50 shadow-lg">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Response Rate</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('dashboard.admin.responseRate')}</CardTitle>
             <Percent className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-brand-dark">{schoolStats.responseRate}%</div>
             <p className="text-xs text-muted-foreground">
-              Average feedback rate
+              {t('dashboard.admin.averageFeedbackRate')}
             </p>
           </CardContent>
         </Card>
@@ -285,8 +287,8 @@ const SchoolAdminDashboard: React.FC<SchoolAdminDashboardProps> = ({ teacher }) 
       {/* Feedback Analytics */}
       <Tabs defaultValue="overview" className="space-y-4">
         <TabsList className="bg-white/90 backdrop-blur-sm border border-gray-200/50">
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="detailed">Detailed Feedback</TabsTrigger>
+          <TabsTrigger value="overview">{t('dashboard.admin.overview')}</TabsTrigger>
+          <TabsTrigger value="detailed">{t('dashboard.admin.detailedFeedback')}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="space-y-4">
@@ -294,7 +296,7 @@ const SchoolAdminDashboard: React.FC<SchoolAdminDashboardProps> = ({ teacher }) 
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <TrendingUp className="w-5 h-5" />
-                Teacher Performance Overview
+                {t('dashboard.admin.teacherPerformanceOverview')}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -305,15 +307,15 @@ const SchoolAdminDashboard: React.FC<SchoolAdminDashboardProps> = ({ teacher }) 
                     <XAxis dataKey="teacher_name" />
                     <YAxis />
                     <Tooltip />
-                    <Bar dataKey="avg_understanding" fill="#8884d8" name="Understanding" />
-                    <Bar dataKey="avg_interest" fill="#82ca9d" name="Interest" />
-                    <Bar dataKey="avg_growth" fill="#ffc658" name="Growth" />
+                    <Bar dataKey="avg_understanding" fill="#8884d8" name={t('dashboard.admin.understanding')} />
+                    <Bar dataKey="avg_interest" fill="#82ca9d" name={t('dashboard.admin.interest')} />
+                    <Bar dataKey="avg_growth" fill="#ffc658" name={t('dashboard.admin.growth')} />
                   </BarChart>
                 </ResponsiveContainer>
               ) : (
                 <div className="text-center py-8">
-                  <p className="text-muted-foreground">No feedback data available yet.</p>
-                  <p className="text-xs text-muted-foreground mt-2">Charts will appear here as students submit feedback.</p>
+                  <p className="text-muted-foreground">{t('dashboard.admin.noFeedbackAvailable')}</p>
+                  <p className="text-xs text-muted-foreground mt-2">{t('dashboard.admin.chartsWillAppear')}</p>
                 </div>
               )}
             </CardContent>
@@ -323,7 +325,7 @@ const SchoolAdminDashboard: React.FC<SchoolAdminDashboardProps> = ({ teacher }) 
         <TabsContent value="detailed" className="space-y-4">
           <Card className="bg-white/90 backdrop-blur-sm border-gray-200/50 shadow-lg">
             <CardHeader>
-              <CardTitle>Feedback per Teacher per Lesson</CardTitle>
+              <CardTitle>{t('dashboard.admin.feedbackPerTeacher')}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
@@ -336,22 +338,22 @@ const SchoolAdminDashboard: React.FC<SchoolAdminDashboardProps> = ({ teacher }) 
                           {item.subject} - {item.lesson_topic}
                         </p>
                         <p className="text-xs text-muted-foreground">
-                          {new Date(item.class_date).toLocaleDateString()} | {item.total_responses} responses
+                          {new Date(item.class_date).toLocaleDateString()} | {item.total_responses} {t('dashboard.admin.responses')}
                         </p>
                       </div>
                       <div className="text-right">
                         <div className="grid grid-cols-3 gap-2 text-sm">
                           <div>
                             <div className="font-medium">{item.avg_understanding.toFixed(1)}</div>
-                            <div className="text-xs text-muted-foreground">Understanding</div>
+                            <div className="text-xs text-muted-foreground">{t('dashboard.admin.understanding')}</div>
                           </div>
                           <div>
                             <div className="font-medium">{item.avg_interest.toFixed(1)}</div>
-                            <div className="text-xs text-muted-foreground">Interest</div>
+                            <div className="text-xs text-muted-foreground">{t('dashboard.admin.interest')}</div>
                           </div>
                           <div>
                             <div className="font-medium">{item.avg_growth.toFixed(1)}</div>
-                            <div className="text-xs text-muted-foreground">Growth</div>
+                            <div className="text-xs text-muted-foreground">{t('dashboard.admin.growth')}</div>
                           </div>
                         </div>
                       </div>
@@ -360,7 +362,7 @@ const SchoolAdminDashboard: React.FC<SchoolAdminDashboardProps> = ({ teacher }) 
                 ))}
                 {feedbackData.length === 0 && (
                   <p className="text-center text-muted-foreground py-8">
-                    No feedback data available yet. Feedback will appear here as students submit responses.
+                    {t('dashboard.admin.feedbackWillAppear')}
                   </p>
                 )}
               </div>

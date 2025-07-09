@@ -25,19 +25,19 @@ const WelcomeSection: React.FC<WelcomeSectionProps> = ({
   const stats = [
     {
       icon: GraduationCapIcon,
-      label: 'My School',
+      label: t('dashboard.student.mySchool'),
       value: school,
       color: 'text-brand-teal'
     },
     {
       icon: GraduationCapIcon,
-      label: 'My Grade',
+      label: t('dashboard.student.myGrade'),
       value: grade,
       color: 'text-brand-orange'
     },
     {
       icon: CalendarIcon,
-      label: 'Classes Coming Up',
+      label: t('dashboard.student.classesComingUp'),
       value: upcomingClassesCount.toString(),
       color: 'text-brand-teal'
     }
@@ -62,7 +62,7 @@ const WelcomeSection: React.FC<WelcomeSectionProps> = ({
             aria-hidden="true"
           />
           <span>
-            Hey there, {studentName}!
+            {t('dashboard.student.heyThere')}, {studentName}!
           </span>
         </CardTitle>
       </CardHeader>
@@ -110,7 +110,7 @@ const WelcomeSection: React.FC<WelcomeSectionProps> = ({
               aria-hidden="true"
             />
             <p className={cn('text-sm', isMobile ? 'text-center' : 'text-left')}>
-              Ready to share how your classes are going and help make school even better!
+              {t('dashboard.student.readyToShare')}
             </p>
           </div>
         </div>
