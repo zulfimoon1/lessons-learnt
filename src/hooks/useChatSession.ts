@@ -167,7 +167,27 @@ export const useChatSession = (session: LiveChatSession, isDoctorView: boolean, 
     if (!message.trim()) return;
 
     try {
-      console.log('useChatSession: Sending message:', message);
+      console.log('useChatSession: Sending message to session:', session.id);
+      console.log('useChatSession: Message content:', message);
+      
+      // First verify the session still exists
+      const { data: sessionCheck, error: sessionError } = await supabase
+        .from('live_chat_sessions')
+        .select('id, status')
+        .eq('id', session.id)
+        .single();
+        
+      if (sessionError) {
+        console.error('useChatSession: Session verification failed:', sessionError);
+        throw new Error('Chat session no longer exists. Please start a new chat.');
+      }
+      
+      if (!sessionCheck) {
+        console.error('useChatSession: Session not found:', session.id);
+        throw new Error('Chat session not found. Please start a new chat.');
+      }
+      
+      console.log('useChatSession: Session verified, status:', sessionCheck.status);
       
       // Prepare the message data with minimal payload
       const messageData = {
@@ -176,6 +196,8 @@ export const useChatSession = (session: LiveChatSession, isDoctorView: boolean, 
         sender_name: isDoctorView ? `Dr. ${studentName}` : (isAnonymous ? 'Anonymous Student' : studentName),
         message: message.trim().slice(0, 1000) // Limit message length to prevent payload issues
       };
+
+      console.log('useChatSession: Inserting message with data:', messageData);
 
       const { error } = await supabase
         .from('chat_messages')

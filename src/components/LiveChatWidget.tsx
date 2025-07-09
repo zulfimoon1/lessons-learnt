@@ -77,7 +77,7 @@ const LiveChatWidget = ({ studentId, studentName, school, grade, onClose }: Live
         return;
       }
 
-      console.log('LiveChatWidget: Session created successfully:', session);
+      console.log('LiveChatWidget: Session created successfully with ID:', session.id);
       setCurrentSession(session);
       
       toast({
