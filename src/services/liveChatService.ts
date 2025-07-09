@@ -32,7 +32,27 @@ export const createChatSession = async (
       return { error: 'Failed to start chat session. Please try again.' };
     }
 
-    console.log('Chat session created successfully:', session);
+    if (!session) {
+      console.error('No session returned from database');
+      return { error: 'Failed to start chat session. Please try again.' };
+    }
+
+    // Verify session was created by fetching it
+    const { data: verifySession, error: verifyError } = await supabase
+      .from('live_chat_sessions')
+      .select('id')
+      .eq('id', session.id)
+      .single();
+
+    if (verifyError || !verifySession) {
+      console.error('Session verification failed:', verifyError);
+      return { error: 'Failed to verify chat session. Please try again.' };
+    }
+
+    console.log('Chat session created and verified successfully:', session);
+    
+    // Small delay to ensure database consistency
+    await new Promise(resolve => setTimeout(resolve, 100));
     
     // Notify available doctors
     await notifyAvailableDoctors(school, session.id);
