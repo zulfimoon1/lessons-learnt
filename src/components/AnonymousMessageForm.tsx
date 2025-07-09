@@ -39,8 +39,8 @@ const AnonymousMessageForm = ({ psychologists }: AnonymousMessageFormProps) => {
     
     if (!formData.message.trim()) {
       toast({
-        title: "Message required",
-        description: "Please enter a message",
+        title: t('common.messageRequired'),
+        description: t('common.pleaseEnterMessage'),
         variant: "destructive",
       });
       return;
@@ -48,8 +48,8 @@ const AnonymousMessageForm = ({ psychologists }: AnonymousMessageFormProps) => {
 
     if (!formData.selectedPsychologist && psychologists.length > 0) {
       toast({
-        title: "Psychologist required",
-        description: "Please select a psychologist to contact",
+        title: t('common.psychologistRequired'),
+        description: t('common.pleaseSelectPsychologist'),
         variant: "destructive",
       });
       return;
@@ -61,7 +61,7 @@ const AnonymousMessageForm = ({ psychologists }: AnonymousMessageFormProps) => {
       // For now, we'll store these as mental health alerts until the proper table is created
       const alertData = {
         student_id: formData.isAnonymous ? null : student?.id,
-        student_name: formData.isAnonymous ? "Anonymous Student" : (formData.studentName || student?.full_name || "Unknown"),
+        student_name: formData.isAnonymous ? t('common.anonymousStudent') : (formData.studentName || student?.full_name || t('common.unknown')),
         school: student?.school || "",
         grade: student?.grade || "",
         content: `SUPPORT REQUEST: ${formData.message.trim()}`,
@@ -80,10 +80,10 @@ const AnonymousMessageForm = ({ psychologists }: AnonymousMessageFormProps) => {
       if (error) throw error;
 
       toast({
-        title: t('dashboard.messageSent') || "Message sent successfully",
+        title: t('dashboard.messageSent'),
         description: formData.isAnonymous 
-          ? "Your anonymous message has been sent to the school psychologist"
-          : "Your message has been sent to the school psychologist",
+          ? t('common.anonymousMessageSent')
+          : t('common.messageSentToSchoolPsychologist'),
       });
 
       // Reset form
@@ -98,8 +98,8 @@ const AnonymousMessageForm = ({ psychologists }: AnonymousMessageFormProps) => {
     } catch (error) {
       console.error('Error sending message:', error);
       toast({
-        title: t('common.error') || "Error",
-        description: "Failed to send message. Please try again.",
+        title: t('common.error'),
+        description: t('common.failedToSendMessage'),
         variant: "destructive",
       });
     } finally {
@@ -112,17 +112,17 @@ const AnonymousMessageForm = ({ psychologists }: AnonymousMessageFormProps) => {
       <DialogTrigger asChild>
         <Button className="w-full" variant="outline">
           <MessageCircleIcon className="w-4 h-4 mr-2" />
-          {t('dashboard.contactForSupport') || "Contact for Support"}
+          {t('dashboard.contactForSupport')}
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <MessageCircleIcon className="w-5 h-5" />
-            {t('dashboard.contactPsychologist') || "Contact School Psychologist"}
+            {t('dashboard.contactPsychologist')}
           </DialogTitle>
           <DialogDescription>
-            {t('dashboard.confidentialMessage') || "Send a confidential message to your school's mental health support team."}
+            {t('dashboard.confidentialMessage')}
           </DialogDescription>
         </DialogHeader>
         
@@ -130,7 +130,7 @@ const AnonymousMessageForm = ({ psychologists }: AnonymousMessageFormProps) => {
           {psychologists.length > 1 && (
             <div className="space-y-2">
               <Label htmlFor="psychologist">
-                {t('dashboard.selectPsychologist') || "Select Psychologist"}
+                {t('dashboard.selectPsychologist')}
               </Label>
               <select
                 id="psychologist"
@@ -138,7 +138,7 @@ const AnonymousMessageForm = ({ psychologists }: AnonymousMessageFormProps) => {
                 onChange={(e) => setFormData(prev => ({ ...prev, selectedPsychologist: e.target.value }))}
                 className="w-full h-10 px-3 py-2 text-sm border border-input bg-background rounded-md focus:outline-none focus:ring-2 focus:ring-ring"
               >
-                <option value="">Choose a psychologist...</option>
+                <option value="">{t('common.choosePsychologist')}</option>
                 {psychologists.map((psychologist) => (
                   <option key={psychologist.id} value={psychologist.id}>
                     {psychologist.name}
@@ -150,11 +150,11 @@ const AnonymousMessageForm = ({ psychologists }: AnonymousMessageFormProps) => {
 
           <div className="space-y-2">
             <Label htmlFor="message">
-              {t('dashboard.yourMessage') || "Your Message"} *
+              {t('dashboard.yourMessage')} *
             </Label>
             <Textarea
               id="message"
-              placeholder={t('dashboard.messagePlaceholder') || "Share what's on your mind. Your message will be handled confidentially..."}
+              placeholder={t('dashboard.messagePlaceholder')}
               value={formData.message}
               onChange={(e) => setFormData(prev => ({ ...prev, message: e.target.value }))}
               className="min-h-[120px]"
@@ -170,19 +170,19 @@ const AnonymousMessageForm = ({ psychologists }: AnonymousMessageFormProps) => {
             />
             <Label htmlFor="anonymous" className="flex items-center gap-2">
               <ShieldCheckIcon className="w-4 h-4" />
-              {t('dashboard.sendAnonymously') || "Send anonymously"}
+              {t('dashboard.sendAnonymously')}
             </Label>
           </div>
 
           {!formData.isAnonymous && (
             <div className="space-y-2">
               <Label htmlFor="studentName">
-                {t('student.yourName') || "Your Name"} (optional)
+                {t('student.yourName')} (optional)
               </Label>
               <Input
                 id="studentName"
                 type="text"
-                placeholder={student?.full_name || "Enter your name"}
+                placeholder={student?.full_name || t('common.enterYourName')}
                 value={formData.studentName}
                 onChange={(e) => setFormData(prev => ({ ...prev, studentName: e.target.value }))}
               />
@@ -192,7 +192,7 @@ const AnonymousMessageForm = ({ psychologists }: AnonymousMessageFormProps) => {
           <div className="bg-blue-50 p-3 rounded-lg">
             <p className="text-sm text-blue-800">
               <ShieldCheckIcon className="w-4 h-4 inline mr-1" />
-              {t('dashboard.privacyNote') || "Your privacy is protected. Messages are handled confidentially by qualified mental health professionals."}
+              {t('dashboard.privacyNote')}
             </p>
           </div>
 
@@ -203,7 +203,7 @@ const AnonymousMessageForm = ({ psychologists }: AnonymousMessageFormProps) => {
               onClick={() => setIsOpen(false)}
               className="flex-1"
             >
-              {t('common.cancel') || "Cancel"}
+              {t('common.cancel')}
             </Button>
             <Button
               type="submit"
@@ -211,11 +211,11 @@ const AnonymousMessageForm = ({ psychologists }: AnonymousMessageFormProps) => {
               className="flex-1"
             >
               {isSubmitting ? (
-                t('dashboard.sending') || "Sending..."
+                t('dashboard.sending')
               ) : (
                 <>
                   <SendIcon className="w-4 h-4 mr-2" />
-                  {t('dashboard.sendMessage') || "Send Message"}
+                  {t('dashboard.sendMessage')}
                 </>
               )}
             </Button>
