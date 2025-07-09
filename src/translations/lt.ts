@@ -35,6 +35,8 @@ export const ltTranslations = {
   'common.minutes': 'minutės',
   'common.ready': 'Pasiruošęs',
   'common.minimize': 'Sumažinti',
+  'common.play': 'Žaisti',
+  'common.pause': 'Pauzė',
 
   // Navigation
   'nav.home': 'Pradžia',
