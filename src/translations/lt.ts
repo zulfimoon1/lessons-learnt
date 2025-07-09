@@ -501,6 +501,9 @@ export const ltTranslations = {
   'compliance.dataProcessing': 'Duomenų apdorojimas',
   'compliance.dataRetention': 'Duomenų saugojimas',
   'compliance.rightToDelete': 'Teisė ištrinti',
+  'compliance.viewSOC2Dashboard': 'Peržiūrėti SOC 2 skydelį',
+  'compliance.dataEncrypted': 'Visi duomenys šifruojami perduodant ir saugant. Įjungtas pilnas audito registravimas.',
+  'compliance.soc2Controls': 'SOC 2 Type II atitinkantys saugumo kontrolės elementai',
 
   'privacy.title': 'Privatumo politika',
   'privacy.cookieConsent': 'Sutikimas dėl slapukų',

@@ -64,7 +64,7 @@ const ComplianceFooter: React.FC = () => {
                   to="/soc2-compliance" 
                   className="text-xs text-blue-600 hover:text-blue-800 underline mt-1 block"
                 >
-                  View SOC 2 Dashboard
+                  {t('compliance.viewSOC2Dashboard')}
                 </Link>
               )}
             </div>
@@ -87,9 +87,9 @@ const ComplianceFooter: React.FC = () => {
           
           <div className="flex items-center space-x-2 text-xs text-gray-500">
             <Eye className="w-4 h-4" />
-            <span>All data is encrypted in transit and at rest. Full audit logging enabled.</span>
+            <span>{t('compliance.dataEncrypted')}</span>
             <CheckCircle className="w-4 h-4 text-green-500 ml-2" />
-            <span>SOC 2 Type II compliant security controls</span>
+            <span>{t('compliance.soc2Controls')}</span>
           </div>
         </div>
       </div>
