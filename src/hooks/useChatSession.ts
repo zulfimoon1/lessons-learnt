@@ -170,31 +170,12 @@ export const useChatSession = (session: LiveChatSession, isDoctorView: boolean, 
       console.log('useChatSession: Sending message to session:', session.id);
       console.log('useChatSession: Message content:', message);
       
-      // First verify the session still exists
-      const { data: sessionCheck, error: sessionError } = await supabase
-        .from('live_chat_sessions')
-        .select('id, status')
-        .eq('id', session.id)
-        .single();
-        
-      if (sessionError) {
-        console.error('useChatSession: Session verification failed:', sessionError);
-        throw new Error('Chat session no longer exists. Please start a new chat.');
-      }
-      
-      if (!sessionCheck) {
-        console.error('useChatSession: Session not found:', session.id);
-        throw new Error('Chat session not found. Please start a new chat.');
-      }
-      
-      console.log('useChatSession: Session verified, status:', sessionCheck.status);
-      
-      // Prepare the message data with minimal payload
+      // Prepare the message data
       const messageData = {
         session_id: session.id,
         sender_type: isDoctorView ? 'doctor' : 'student',
         sender_name: isDoctorView ? `Dr. ${studentName}` : (isAnonymous ? 'Anonymous Student' : studentName),
-        message: message.trim().slice(0, 1000) // Limit message length to prevent payload issues
+        message: message.trim().slice(0, 1000)
       };
 
       console.log('useChatSession: Inserting message with data:', messageData);
@@ -211,8 +192,6 @@ export const useChatSession = (session: LiveChatSession, isDoctorView: boolean, 
       console.log('useChatSession: Message sent successfully');
     } catch (error) {
       console.error('useChatSession: Error sending message:', error);
-      
-      // Re-throw the error so it can be handled by the UI
       throw new Error('Failed to send message. Please try again.');
     }
   };
