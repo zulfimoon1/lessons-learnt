@@ -25,6 +25,8 @@ export const createChatSession = async (
       .select()
       .single();
 
+    console.log('Session creation result:', { session, error });
+
     if (error) {
       console.error('Error creating chat session:', error);
       return { error: 'Failed to start chat session. Please try again.' };
