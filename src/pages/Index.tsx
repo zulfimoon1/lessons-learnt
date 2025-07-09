@@ -255,7 +255,7 @@ const Index = () => {
                   isMobile ? 'text-lg px-8 py-4' : 'text-xl px-12 py-4 transform scale-125'
                 )}
               >
-                Book a Demo
+                {t('common.bookDemo')}
               </Button>
             </a>
           </div>

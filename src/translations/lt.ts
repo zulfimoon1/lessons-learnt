@@ -504,6 +504,7 @@ export const ltTranslations = {
   'compliance.viewSOC2Dashboard': 'Peržiūrėti SOC 2 skydelį',
   'compliance.dataEncrypted': 'Visi duomenys šifruojami perduodant ir saugant. Įjungtas pilnas audito registravimas.',
   'compliance.soc2Controls': 'SOC 2 Type II atitinkantys saugumo kontrolės elementai',
+  'common.bookDemo': 'Užsisakyti demonstraciją',
 
   'privacy.title': 'Privatumo politika',
   'privacy.cookieConsent': 'Sutikimas dėl slapukų',
