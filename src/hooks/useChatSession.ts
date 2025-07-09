@@ -169,22 +169,6 @@ export const useChatSession = (session: LiveChatSession, isDoctorView: boolean, 
     try {
       console.log('useChatSession: Sending message:', message);
       
-      // First verify the session exists and is active
-      const { data: sessionExists, error: sessionError } = await supabase
-        .from('live_chat_sessions')
-        .select('id, status')
-        .eq('id', session.id)
-        .single();
-
-      if (sessionError || !sessionExists) {
-        console.error('useChatSession: Session not found:', sessionError);
-        throw new Error('Chat session no longer exists. Please refresh the page.');
-      }
-
-      if (sessionExists.status === 'ended') {
-        throw new Error('This chat session has ended.');
-      }
-      
       // Prepare the message data with minimal payload
       const messageData = {
         session_id: session.id,
@@ -207,7 +191,7 @@ export const useChatSession = (session: LiveChatSession, isDoctorView: boolean, 
       console.error('useChatSession: Error sending message:', error);
       
       // Re-throw the error so it can be handled by the UI
-      throw new Error(error instanceof Error ? error.message : 'Failed to send message. Please try again.');
+      throw new Error('Failed to send message. Please try again.');
     }
   };
 
