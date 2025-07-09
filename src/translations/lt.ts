@@ -178,4 +178,31 @@ export const ltTranslations = {
 
   // Form
   'form.email': 'El. paštas',
+
+  // Demo section - COMPLETE
+  'demo.tryLiveDemo': 'Išbandyti gyvą demonstraciją',
+  'demo.experienceComplete': 'Patirkite visą platformą',
+  'demo.testFullPlatform': 'Išbandykite mūsų visą platformą su autentiškais darbo srautais ir tikromis naudotojų patirtimis',
+  'demo.realUserExperience': 'Tikra naudotojų patirtis',
+  'demo.accessLivePlatform': 'Užsiregistruokite ir išbandykite visas funkcijas su autentiškais darbo srautais',
+  'demo.step1': '1 žingsnis',
+  'demo.step1Description': 'Mokyklos administratorius prisijungia ir pakviečia mokytojus bei mokyklos psichologą',
+  'demo.step2': '2 žingsnis',
+  'demo.step2Description': 'Mokytojai gali masiškai įkelti pamokų tvarkaraščius kartu su bet kokiais išvykų planais',
+  'demo.step3': '3 žingsnis',
+  'demo.step3Description': 'Mokiniai palieka atsiliepimus',
+  'demo.step4': '4 žingsnis',
+  'demo.step4Description': 'Mokyklos psichologas turi prieigą prie gyvo pokalbio ir emocinės gerovės',
+  'demo.bonusPoints': '✨ Papildomi taškai',
+  'demo.pauseSubscriptions': 'Pristabdyti prenumeratas atostogų metu?',
+  'demo.payOnlyEducating': 'Mokėkite tik tada, kai iš tikrųjų ugdote protus',
+  'demo.startFreeTrial': 'Pradėti nemokamą bandomąjį laikotarpį',
+  'demo.studentExperience': 'Mokinio patirtis',
+  'demo.studentExperienceDesc': 'Pateikite atsiliepimus apie pamokas, dalinkitės savaitinėmis santraukomis ir kreipkitės dėl psichikos sveikatos pagalbos - visa tai saugioje, anoniminėje aplinkoje.',
+  'demo.teacherDashboard': 'Mokytojo prietaisų skydelis',
+  'demo.teacherDashboardDesc': 'Stebėkite mokinių įsitraukimą, sekite mokymosi pažangą ir nustatykite mokinius, kuriems reikia papildomos pagalbos.',
+  'demo.adminOverview': 'Administratoriaus apžvalga',
+  'demo.adminOverviewDesc': 'Mokyklos masto analizė, mokytojų valdymas ir išsamios įžvalgos apie ugdymo rezultatus.',
+  'demo.schoolPsychologist': 'Mokyklos psichologas',
+  'demo.schoolPsychologistDesc': 'Prieiga prie mokinių psichikos sveikatos duomenų, atsakymas į įspėjimus ir laiku teikiama pagalba per mūsų integruotą komunikacijos sistemą.',
 };

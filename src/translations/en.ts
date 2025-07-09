@@ -185,6 +185,33 @@ export const enTranslations = {
   // Form
   'form.email': 'Email',
 
+  // Demo section - COMPLETE
+  'demo.tryLiveDemo': 'Try Live Demo',
+  'demo.experienceComplete': 'Experience the Complete Platform',
+  'demo.testFullPlatform': 'Test our full platform with authentic workflows and real user experiences',
+  'demo.realUserExperience': 'Real User Experience',
+  'demo.accessLivePlatform': 'Sign up and test all features with authentic workflows',
+  'demo.step1': 'Step 1',
+  'demo.step1Description': 'School administrator logins and invites teachers and school psychologist',
+  'demo.step2': 'Step 2',
+  'demo.step2Description': 'Teachers can bulk upload class schedules along with any day trips',
+  'demo.step3': 'Step 3',
+  'demo.step3Description': 'Student leave feedback',
+  'demo.step4': 'Step 4',
+  'demo.step4Description': 'School psychologist has access to live chat and emotional wellbeing',
+  'demo.bonusPoints': '✨ Bonus Points',
+  'demo.pauseSubscriptions': 'Pause subscriptions during holidays?',
+  'demo.payOnlyEducating': 'Pay only when you\'re actually educating minds',
+  'demo.startFreeTrial': 'Start Your Free Trial',
+  'demo.studentExperience': 'Student Experience',
+  'demo.studentExperienceDesc': 'Submit feedback on classes, share weekly summaries, and seek mental health support - all in a secure, anonymous environment.',
+  'demo.teacherDashboard': 'Teacher Dashboard',
+  'demo.teacherDashboardDesc': 'Monitor student engagement, track learning progress, and identify students who need additional support.',
+  'demo.adminOverview': 'Admin Overview',
+  'demo.adminOverviewDesc': 'School-wide analytics, teacher management, and comprehensive insights into educational outcomes.',
+  'demo.schoolPsychologist': 'School Psychologist',
+  'demo.schoolPsychologistDesc': 'Access student mental health data, respond to alerts, and provide timely support through our integrated communication system.',
+
   // Merge all sub-translations
   ...enAuthTranslations,
   ...enTeacherTranslations,
