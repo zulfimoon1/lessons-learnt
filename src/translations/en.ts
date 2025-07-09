@@ -41,6 +41,7 @@ export const enTranslations = {
   'common.minutes': 'minutes',
   'common.ready': 'Ready',
   'common.minimize': 'Minimize',
+  'common.bookDemo': 'Book a Demo',
 
   // Navigation
   'nav.home': 'Home',
