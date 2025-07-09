@@ -126,6 +126,11 @@ export const enTranslations = {
 
   // Dashboard - Enhanced with missing keys
   'dashboard.title': 'Student Dashboard',
+  'dashboard.student.heyThere': 'Hey there',
+  'dashboard.student.mySchool': 'My School',
+  'dashboard.student.myGrade': 'My Grade', 
+  'dashboard.student.classesComingUp': 'Classes Coming Up',
+  'dashboard.student.readyToShare': 'Ready to share how you\'re feeling?',
   'dashboard.welcome': 'Welcome',
   'dashboard.overview': 'Overview',
   'dashboard.teacherOverview': 'Teacher Overview',

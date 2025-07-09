@@ -84,6 +84,11 @@ export const ltTranslations = {
 
   // Dashboard
   'dashboard.title': 'Mokinio valdymo skydas',
+  'dashboard.student.heyThere': 'Labas',
+  'dashboard.student.mySchool': 'Mano mokykla',
+  'dashboard.student.myGrade': 'Mano klasė',
+  'dashboard.student.classesComingUp': 'Artėjančios pamokos',
+  'dashboard.student.readyToShare': 'Pasiruošęs pasidalinti kaip jaučiesi?',
   'dashboard.welcome': 'Sveiki',
   'dashboard.overview': 'Apžvalga',
   'dashboard.teacherOverview': 'Mokytojo apžvalga',
