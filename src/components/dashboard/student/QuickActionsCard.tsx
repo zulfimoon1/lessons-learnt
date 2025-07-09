@@ -26,31 +26,31 @@ const QuickActionsCard: React.FC<QuickActionsCardProps> = ({
   const actions = [
     {
       icon: Calendar,
-      label: t('quickActions.checkMyClasses'),
+      label: 'Check My Classes',
       onClick: onViewClasses,
       color: 'text-brand-teal',
-      description: t('quickActions.seeClassesComingUp')
+      description: 'See what classes I have coming up'
     },
     {
       icon: MessageSquare,
-      label: t('quickActions.shareHowClassWent'),
+      label: 'Share How Class Went',
       onClick: onSubmitFeedback,
       color: 'text-brand-orange',
-      description: t('quickActions.tellUsAboutClasses')
+      description: 'Tell us about your classes'
     },
     {
       icon: FileText,
-      label: t('quickActions.checkInAboutMyWeek'),
+      label: 'Check In About My Week',
       onClick: onWeeklySummary,
       color: 'text-brand-teal',
-      description: t('quickActions.seeHowWeekGoing')
+      description: 'See how this week is going'
     },
     {
       icon: Heart,
-      label: t('quickActions.howAmIFeeling'),
+      label: 'How Am I Feeling?',
       onClick: onWellnessCheck,
       color: 'text-brand-orange',
-      description: t('quickActions.talkAboutFeeling')
+      description: 'Talk about how I\'m doing'
     }
   ];
 
@@ -65,7 +65,7 @@ const QuickActionsCard: React.FC<QuickActionsCardProps> = ({
           id="quick-actions-title"
           className={cn(isMobile ? 'text-lg' : 'text-xl')}
         >
-          {t('quickActions.title')}
+          Quick Actions
         </CardTitle>
       </CardHeader>
       <CardContent className={cn(isMobile ? 'p-4 pt-0' : 'p-6 pt-0')}>
