@@ -1,217 +1,227 @@
+import { supabase } from '@/integrations/supabase/client';
 
-import { authenticationSecurityService } from './security/authenticationSecurityService';
-import { formSecurityService } from './security/formSecurityService';
-import { dataAccessSecurityService } from './security/dataAccessSecurityService';
-import { securityValidationService } from './securityValidationService';
-import { securityMonitoringService } from './securityMonitoringService';
+interface SecurityEvent {
+  type: 'login_attempt' | 'unauthorized_access' | 'rate_limit_exceeded' | 'suspicious_activity' | 'data_access';
+  userId?: string;
+  details: string;
+  severity: 'low' | 'medium' | 'high' | 'critical';
+  metadata?: Record<string, any>;
+}
 
-interface SecurityDashboardData {
-  totalEvents: number;
-  highSeverityEvents: number;
-  mediumSeverityEvents: number;
-  lowSeverityEvents: number;
-  recentViolations: number;
-  criticalAlerts: number;
+interface RateLimitConfig {
+  windowMs: number;
+  maxAttempts: number;
+  blockDurationMs: number;
 }
 
 class EnhancedSecurityService {
-  // Delegate authentication to focused service
-  async authenticateUser(
-    userType: 'student' | 'teacher' | 'admin',
-    credentials: any,
-    requestContext: {
-      userAgent: string;
-      ipAddress?: string;
-    }
-  ) {
-    return authenticationSecurityService.authenticateUser(userType, credentials, requestContext);
-  }
+  private rateLimitStore: Map<string, { count: number; firstAttempt: number; blockedUntil?: number }> = new Map();
+  
+  private defaultRateLimits: Record<string, RateLimitConfig> = {
+    login: { windowMs: 900000, maxAttempts: 5, blockDurationMs: 1800000 }, // 15 min window, 5 attempts, 30 min block
+    api: { windowMs: 60000, maxAttempts: 100, blockDurationMs: 300000 }, // 1 min window, 100 attempts, 5 min block
+    password_reset: { windowMs: 3600000, maxAttempts: 3, blockDurationMs: 3600000 } // 1 hour window, 3 attempts, 1 hour block
+  };
 
-  // Delegate form validation to focused service
-  async validateSecureForm(formData: Record<string, any>, formType: string) {
-    return formSecurityService.validateSecureForm(formData, formType);
-  }
-
-  async checkRateLimit(identifier: string, action: string) {
-    return formSecurityService.checkRateLimit(identifier, action);
-  }
-
-  validateAndSanitizeInput(input: string, fieldType: string) {
-    return formSecurityService.validateAndSanitizeInput(input, fieldType);
-  }
-
-  // Delegate data access validation to focused service
-  async validateDataAccess(
-    tableName: string,
-    operation: 'SELECT' | 'INSERT' | 'UPDATE' | 'DELETE',
-    userContext: {
-      userId?: string;
-      userRole?: string;
-      userSchool?: string;
-    },
-    filters?: any
-  ) {
-    return dataAccessSecurityService.validateDataAccess(tableName, operation, userContext, filters);
-  }
-
-  async validateSecureAccess(table: string, operation: string) {
-    return dataAccessSecurityService.validateSecureAccess(table, operation);
-  }
-
-  // Core security monitoring methods
-  async monitorSecurityViolations(): Promise<void> {
-    console.log('🔐 Security monitoring initialized');
+  async logSecurityEvent(event: SecurityEvent): Promise<void> {
     try {
-      await this.logSecurityEvent({
-        type: 'security_monitoring_started',
-        details: 'Enhanced security monitoring activated',
-        severity: 'low'
+      await supabase.rpc('log_security_event_enhanced', {
+        event_type: event.type,
+        user_id: event.userId || null,
+        details: event.details,
+        severity: event.severity,
+        metadata: event.metadata || {}
       });
     } catch (error) {
-      console.error('Failed to initialize security monitoring:', error);
+      console.error('Failed to log security event:', error);
+      // Fallback: store in localStorage for later sync
+      this.storeEventLocally(event);
     }
   }
 
-  async enhanceFormValidation(): Promise<void> {
-    console.log('🔐 Form validation enhanced');
-  }
-
-  async logSecurityViolation(violation: {
-    type: string;
-    userId?: string;
-    details: string;
-    severity: 'low' | 'medium' | 'high';
-  }): Promise<void> {
+  private storeEventLocally(event: SecurityEvent): void {
     try {
-      await this.logSecurityEvent({
-        type: violation.type,
-        userId: violation.userId,
-        details: violation.details,
-        severity: violation.severity,
+      const localEvents = JSON.parse(localStorage.getItem('pending_security_events') || '[]');
+      localEvents.push({
+        ...event,
         timestamp: new Date().toISOString(),
-        userAgent: navigator.userAgent
+        clientGenerated: true
       });
+      
+      // Keep only last 100 events
+      if (localEvents.length > 100) {
+        localEvents.splice(0, localEvents.length - 100);
+      }
+      
+      localStorage.setItem('pending_security_events', JSON.stringify(localEvents));
     } catch (error) {
-      console.error('Failed to log security violation:', error);
+      console.error('Failed to store security event locally:', error);
     }
   }
 
-  async getSecurityDashboardData(): Promise<SecurityDashboardData> {
-    try {
-      return {
-        totalEvents: 0,
-        highSeverityEvents: 0,
-        mediumSeverityEvents: 0,
-        lowSeverityEvents: 0,
-        recentViolations: 0,
-        criticalAlerts: 0
-      };
-    } catch (error) {
-      console.error('Failed to get security dashboard data:', error);
-      return {
-        totalEvents: 0,
-        highSeverityEvents: 0,
-        mediumSeverityEvents: 0,
-        lowSeverityEvents: 0,
-        recentViolations: 0,
-        criticalAlerts: 0
-      };
+  checkRateLimit(identifier: string, action: string): boolean {
+    const config = this.defaultRateLimits[action] || this.defaultRateLimits.api;
+    const key = `${action}:${identifier}`;
+    const now = Date.now();
+    
+    const record = this.rateLimitStore.get(key);
+    
+    // Check if still blocked
+    if (record?.blockedUntil && now < record.blockedUntil) {
+      return false;
     }
+    
+    // Reset if outside window
+    if (!record || now - record.firstAttempt > config.windowMs) {
+      this.rateLimitStore.set(key, { count: 1, firstAttempt: now });
+      return true;
+    }
+    
+    // Increment count
+    record.count++;
+    
+    // Check if exceeded limit
+    if (record.count > config.maxAttempts) {
+      record.blockedUntil = now + config.blockDurationMs;
+      
+      // Log rate limit exceeded
+      this.logSecurityEvent({
+        type: 'rate_limit_exceeded',
+        details: `Rate limit exceeded for action: ${action}, identifier: ${identifier}`,
+        severity: 'medium',
+        metadata: { action, identifier, attemptCount: record.count }
+      });
+      
+      return false;
+    }
+    
+    return true;
+  }
+
+  validateInput(input: string, type: 'email' | 'text' | 'password'): string {
+    if (!input || typeof input !== 'string') {
+      throw new Error('Invalid input type');
+    }
+    
+    // Length validation
+    if (input.length > 10000) {
+      throw new Error('Input too long');
+    }
+    
+    // Basic sanitization
+    let sanitized = input.trim();
+    
+    switch (type) {
+      case 'email':
+        // Basic email validation
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(sanitized)) {
+          throw new Error('Invalid email format');
+        }
+        break;
+        
+      case 'text':
+        // Remove potential XSS patterns
+        sanitized = sanitized
+          .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+          .replace(/javascript:/gi, '')
+          .replace(/on\w+\s*=/gi, '');
+        break;
+        
+      case 'password':
+        // No special sanitization for passwords, just length check
+        if (sanitized.length < 1) {
+          throw new Error('Password cannot be empty');
+        }
+        break;
+    }
+    
+    return sanitized;
+  }
+
+  async syncPendingEvents(): Promise<void> {
+    try {
+      const pendingEvents = JSON.parse(localStorage.getItem('pending_security_events') || '[]');
+      
+      if (pendingEvents.length === 0) return;
+      
+      // Attempt to sync events
+      for (const event of pendingEvents) {
+        try {
+          await this.logSecurityEvent(event);
+        } catch (error) {
+          console.error('Failed to sync security event:', error);
+          break; // Stop syncing if one fails
+        }
+      }
+      
+      // Clear synced events
+      localStorage.removeItem('pending_security_events');
+    } catch (error) {
+      console.error('Failed to sync pending security events:', error);
+    }
+  }
+
+  getClientSecurityInfo(): Record<string, any> {
+    return {
+      userAgent: navigator.userAgent,
+      language: navigator.language,
+      platform: navigator.platform,
+      cookieEnabled: navigator.cookieEnabled,
+      onLine: navigator.onLine,
+      timestamp: new Date().toISOString(),
+      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+      screen: {
+        width: screen.width,
+        height: screen.height,
+        colorDepth: screen.colorDepth
+      }
+    };
+  }
+
+  // Clean up old rate limit records
+  cleanupRateLimitStore(): void {
+    const now = Date.now();
+    const oneHour = 3600000;
+    
+    for (const [key, record] of this.rateLimitStore.entries()) {
+      if (now - record.firstAttempt > oneHour && (!record.blockedUntil || now > record.blockedUntil)) {
+        this.rateLimitStore.delete(key);
+      }
+    }
+  }
+
+  // Additional methods for compatibility
+  monitorSecurityViolations(): void {
+    // Monitor for security violations
+  }
+
+  enhanceFormValidation(): void {
+    // Enhanced form validation
+  }
+
+  async getSecurityDashboardData(): Promise<any> {
+    return { events: [], metrics: {} };
+  }
+
+  logSecurityViolation(violation: any): void {
+    this.logSecurityEvent({
+      type: 'suspicious_activity',
+      details: violation.details || 'Security violation detected',
+      severity: violation.severity || 'medium'
+    });
   }
 
   clearSecurityLogs(): void {
-    localStorage.removeItem('security_events');
-    localStorage.removeItem('security_violations');
-    console.log('Security logs cleared');
-  }
-
-  async recordAttempt(identifier: string, action: string, success: boolean): Promise<void> {
-    const eventType = success ? 'unauthorized_access' : 'unauthorized_access';
-    securityValidationService.logSecurityEvent({
-      type: eventType,
-      userId: identifier,
-      details: `${action}: ${success ? 'success' : 'failed'}`,
-      severity: success ? 'low' : 'medium'
-    });
-  }
-
-  async logSecurityEvent(event: {
-    type: string;
-    userId?: string;
-    timestamp?: string;
-    details: string;
-    userAgent?: string;
-    severity: 'low' | 'medium' | 'high';
-  }): Promise<void> {
-    // Map to valid security event types only
-    const eventTypeMap: Record<string, 'unauthorized_access' | 'suspicious_activity' | 'form_validation_failed' | 'rate_limit_exceeded'> = {
-      'unauthorized_access': 'unauthorized_access',
-      'suspicious_activity': 'suspicious_activity',
-      'form_validation_failed': 'form_validation_failed',
-      'rate_limit_exceeded': 'rate_limit_exceeded',
-      'security_monitoring_started': 'unauthorized_access',
-      'invalid_access_attempt': 'suspicious_activity'
-    };
-
-    const mappedType = eventTypeMap[event.type] || 'suspicious_activity';
-    
-    securityValidationService.logSecurityEvent({
-      type: mappedType,
-      userId: event.userId,
-      details: event.details,
-      severity: event.severity
-    });
-  }
-
-  getSecurityMetrics() {
-    return {
-      failedLogins: 0,
-      blockedIPs: 0,
-      suspiciousActivity: 0
-    };
-  }
-
-  async getSecurityDashboard() {
-    const metrics = await securityMonitoringService.getSecurityMetrics();
-    const alerts = securityMonitoringService.getActiveAlerts();
-    
-    return {
-      metrics,
-      alerts,
-      recommendations: this.generateSecurityRecommendations(metrics, alerts)
-    };
-  }
-
-  private generateSecurityRecommendations(metrics: any, alerts: any[]): string[] {
-    const recommendations: string[] = [];
-    
-    if (metrics.criticalViolations > 0) {
-      recommendations.push('Review and address critical security violations immediately');
-    }
-    
-    if (alerts.filter(a => a.type === 'critical').length > 0) {
-      recommendations.push('Critical security alerts require immediate attention');
-    }
-    
-    if (metrics.recentAttempts > 50) {
-      recommendations.push('Consider implementing stricter rate limiting');
-    }
-    
-    if (metrics.blockedIPs.length > 10) {
-      recommendations.push('Review blocked IP list for potential threats');
-    }
-    
-    return recommendations;
-  }
-
-  cleanup(): void {
-    authenticationSecurityService.cleanup();
+    localStorage.removeItem('pending_security_events');
   }
 }
 
 export const enhancedSecurityService = new EnhancedSecurityService();
 
-// Cleanup every hour
+// Sync pending events on app start
+enhancedSecurityService.syncPendingEvents();
+
+// Clean up rate limit store every 10 minutes
 setInterval(() => {
-  enhancedSecurityService.cleanup();
-}, 60 * 60 * 1000);
+  enhancedSecurityService.cleanupRateLimitStore();
+}, 600000);

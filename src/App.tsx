@@ -8,34 +8,47 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import { PlatformAdminProvider } from "@/contexts/PlatformAdminContext";
 import SecurityGuard from "@/components/auth/SecurityGuard";
-import Index from "./pages/Index";
-import StudentLogin from "./pages/StudentLogin";
-import TeacherLogin from "./pages/TeacherLogin";
-import StudentDashboard from "./pages/StudentDashboard";
-import TeacherDashboard from "./pages/TeacherDashboard";
-import AdminDashboard from "./pages/AdminDashboard";
-import PlatformAdmin from "./pages/PlatformAdmin";
-import PlatformAdminLogin from "./pages/PlatformAdminLogin";
-import PlatformAdminDashboard from "./pages/PlatformAdminDashboard";
-import ClassFeedback from "./pages/ClassFeedback";
-import WeeklySummary from "./pages/WeeklySummary";
-import ResetPassword from "./pages/ResetPassword";
-import AcceptInvitation from "./pages/AcceptInvitation";
-import SecureAuth from "./pages/SecureAuth";
-import SecureStudentLogin from "./pages/SecureStudentLogin";
-import SecureTeacherLogin from "./pages/SecureTeacherLogin";
-import Demo from "./pages/Demo";
-import PricingPage from "./pages/PricingPage";
-import EnhancedPricingPage from "./pages/EnhancedPricingPage";
-import PricingShowcase from "./pages/PricingShowcase";
-import HowItWorks from "./pages/HowItWorks";
-import PrivacyPolicy from "./pages/PrivacyPolicy";
-import PrivacyPolicyPage from "./pages/PrivacyPolicyPage";
-import PrivacyDashboard from "./pages/PrivacyDashboard";
-import HIPAACompliancePage from "./pages/HIPAACompliancePage";
-import SOC2CompliancePage from "./pages/SOC2CompliancePage";
-import SOC2TestPage from "./pages/SOC2TestPage";
-import NotFound from "./pages/NotFound";
+import SecurityHeadersProvider from "@/components/security/SecurityHeadersProvider";
+import { Suspense, lazy } from "react";
+// Lazy load pages for better performance
+const Index = lazy(() => import("./pages/Index"));
+const StudentLogin = lazy(() => import("./pages/StudentLogin"));
+const TeacherLogin = lazy(() => import("./pages/TeacherLogin"));
+const StudentDashboard = lazy(() => import("./pages/StudentDashboard"));
+const TeacherDashboard = lazy(() => import("./pages/TeacherDashboard"));
+const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
+const PlatformAdmin = lazy(() => import("./pages/PlatformAdmin"));
+const PlatformAdminLogin = lazy(() => import("./pages/PlatformAdminLogin"));
+const PlatformAdminDashboard = lazy(() => import("./pages/PlatformAdminDashboard"));
+const ClassFeedback = lazy(() => import("./pages/ClassFeedback"));
+const WeeklySummary = lazy(() => import("./pages/WeeklySummary"));
+const ResetPassword = lazy(() => import("./pages/ResetPassword"));
+const AcceptInvitation = lazy(() => import("./pages/AcceptInvitation"));
+const SecureAuth = lazy(() => import("./pages/SecureAuth"));
+const SecureStudentLogin = lazy(() => import("./pages/SecureStudentLogin"));
+const SecureTeacherLogin = lazy(() => import("./pages/SecureTeacherLogin"));
+const Demo = lazy(() => import("./pages/Demo"));
+const PricingPage = lazy(() => import("./pages/PricingPage"));
+const EnhancedPricingPage = lazy(() => import("./pages/EnhancedPricingPage"));
+const PricingShowcase = lazy(() => import("./pages/PricingShowcase"));
+const HowItWorks = lazy(() => import("./pages/HowItWorks"));
+const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
+const PrivacyPolicyPage = lazy(() => import("./pages/PrivacyPolicyPage"));
+const PrivacyDashboard = lazy(() => import("./pages/PrivacyDashboard"));
+const HIPAACompliancePage = lazy(() => import("./pages/HIPAACompliancePage"));
+const SOC2CompliancePage = lazy(() => import("./pages/SOC2CompliancePage"));
+const SOC2TestPage = lazy(() => import("./pages/SOC2TestPage"));
+const NotFound = lazy(() => import("./pages/NotFound"));
+
+// Loading component
+const PageLoader = () => (
+  <div className="min-h-screen bg-background flex items-center justify-center">
+    <div className="text-center">
+      <div className="w-8 h-8 border-4 border-brand-teal border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+      <p className="text-muted-foreground">Loading...</p>
+    </div>
+  </div>
+);
 
 const queryClient = new QueryClient();
 
@@ -46,9 +59,11 @@ function App() {
         <AuthProvider>
           <PlatformAdminProvider>
             <TooltipProvider>
-              <BrowserRouter>
-                <div className="min-h-screen bg-background">
-                  <Routes>
+              <SecurityHeadersProvider>
+                <BrowserRouter>
+                  <div className="min-h-screen bg-background">
+                    <Suspense fallback={<PageLoader />}>
+                      <Routes>
                     <Route path="/" element={<Index />} />
                     <Route path="/student-login" element={<StudentLogin />} />
                     <Route path="/teacher-login" element={<TeacherLogin />} />
@@ -75,38 +90,40 @@ function App() {
                     <Route path="/platform-admin-login" element={<PlatformAdminLogin />} />
                     <Route path="/platform-admin-dashboard" element={<PlatformAdminDashboard />} />
                     
-                    {/* Protected Routes with SecurityGuard */}
-                    <Route path="/student-dashboard" element={
-                      <SecurityGuard userType="student">
-                        <StudentDashboard />
-                      </SecurityGuard>
-                    } />
-                    <Route path="/teacher-dashboard" element={
-                      <SecurityGuard userType="teacher">
-                        <TeacherDashboard />
-                      </SecurityGuard>
-                    } />
-                    <Route path="/admin-dashboard" element={
-                      <SecurityGuard userType="teacher" allowedRoles={['admin']}>
-                        <AdminDashboard />
-                      </SecurityGuard>
-                    } />
-                    <Route path="/class-feedback/:scheduleId" element={
-                      <SecurityGuard userType="student">
-                        <ClassFeedback />
-                      </SecurityGuard>
-                    } />
-                    <Route path="/weekly-summary" element={
-                      <SecurityGuard userType="student">
-                        <WeeklySummary />
-                      </SecurityGuard>
-                    } />
-                    
-                    <Route path="*" element={<NotFound />} />
-                  </Routes>
-                </div>
-                <Sonner />
-              </BrowserRouter>
+                        {/* Protected Routes with SecurityGuard */}
+                        <Route path="/student-dashboard" element={
+                          <SecurityGuard userType="student">
+                            <StudentDashboard />
+                          </SecurityGuard>
+                        } />
+                        <Route path="/teacher-dashboard" element={
+                          <SecurityGuard userType="teacher">
+                            <TeacherDashboard />
+                          </SecurityGuard>
+                        } />
+                        <Route path="/admin-dashboard" element={
+                          <SecurityGuard userType="teacher" allowedRoles={['admin']}>
+                            <AdminDashboard />
+                          </SecurityGuard>
+                        } />
+                        <Route path="/class-feedback/:scheduleId" element={
+                          <SecurityGuard userType="student">
+                            <ClassFeedback />
+                          </SecurityGuard>
+                        } />
+                        <Route path="/weekly-summary" element={
+                          <SecurityGuard userType="student">
+                            <WeeklySummary />
+                          </SecurityGuard>
+                        } />
+                        
+                        <Route path="*" element={<NotFound />} />
+                      </Routes>
+                    </Suspense>
+                  </div>
+                  <Sonner />
+                </BrowserRouter>
+              </SecurityHeadersProvider>
             </TooltipProvider>
           </PlatformAdminProvider>
         </AuthProvider>

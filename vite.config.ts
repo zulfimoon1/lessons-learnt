@@ -32,7 +32,15 @@ export default defineConfig(({ mode }) => {
       assetsDir: 'assets',
       rollupOptions: {
         output: {
-          manualChunks: undefined,
+          manualChunks: {
+            vendor: ['react', 'react-dom'],
+            ui: ['@radix-ui/react-dialog', '@radix-ui/react-toast', '@radix-ui/react-tabs'],
+            routing: ['react-router-dom'],
+            forms: ['react-hook-form', '@hookform/resolvers', 'zod'],
+            supabase: ['@supabase/supabase-js'],
+            charts: ['recharts'],
+            icons: ['lucide-react']
+          },
           assetFileNames: 'assets/[name]-[hash][extname]',
           chunkFileNames: 'assets/[name]-[hash].js',
           entryFileNames: 'assets/[name]-[hash].js',
@@ -40,8 +48,15 @@ export default defineConfig(({ mode }) => {
       },
       sourcemap: false,
       minify: mode === 'production' ? 'terser' : false,
+      terserOptions: {
+        compress: {
+          drop_console: mode === 'production',
+          drop_debugger: mode === 'production',
+        },
+      },
       outDir: 'dist',
       emptyOutDir: true,
+      chunkSizeWarningLimit: 1000,
     },
     define: {
       __BASE_URL__: JSON.stringify(base),
