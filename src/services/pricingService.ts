@@ -43,13 +43,13 @@ export const PRICING_TIERS: PricingTier[] = [
     description: 'Great for growing schools',
     studentRange: '31-100',
     maxStudents: 100,
-    maxTeachers: 15,
+    maxTeachers: 10,
     monthlyPrice: 25000, // €250 in cents
-    annualPrice: 24000, // €2400/year (20% discount)
+    annualPrice: 240000, // €2400/year (20% discount from €3000)
     features: [
       'Everything in Basic',
       'Advanced analytics',
-      'Up to 15 teachers',
+      'Up to 10 teachers',
       'Priority support',
       'Custom reporting',
       'Voice feedback features'
@@ -62,13 +62,13 @@ export const PRICING_TIERS: PricingTier[] = [
     description: 'For large educational institutions',
     studentRange: '101-250',
     maxStudents: 250,
-    maxTeachers: 30,
+    maxTeachers: 20,
     monthlyPrice: 50000, // €500 in cents
-    annualPrice: 48000, // €4800/year (20% discount)
+    annualPrice: 480000, // €4800/year (20% discount from €6000)
     features: [
       'Everything in Standard',
       'Custom integrations',
-      'Up to 30 teachers',
+      'Up to 20 teachers',
       'Dedicated support manager',
       'Advanced AI insights',
       'Priority feature requests'
