@@ -133,6 +133,7 @@ const SchoolAdminDashboard: React.FC<SchoolAdminDashboardProps> = ({ teacher }) 
       });
 
       // Set calendar events
+      console.log('Calendar events fetched:', events);
       setCalendarEvents(events || []);
 
       // Calculate active classes (classes scheduled for today or in the future)
