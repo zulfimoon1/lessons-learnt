@@ -60,9 +60,12 @@ export const secureStudentLogin = async (
     let isValidPassword = false;
     
     if (studentRecord.password_hash.length === 64) {
-      // Legacy SHA256 hash - test with original salt format
-      const crypto = await import('crypto');
-      const sha256Hash = crypto.createHash('sha256').update(password + 'simple_salt_2024').digest('hex');
+      // Legacy SHA256 hash - use Web Crypto API
+      const encoder = new TextEncoder();
+      const data = encoder.encode(password + 'simple_salt_2024');
+      const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      const sha256Hash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
       isValidPassword = sha256Hash === studentRecord.password_hash;
     } else {
       // BCrypt hash
