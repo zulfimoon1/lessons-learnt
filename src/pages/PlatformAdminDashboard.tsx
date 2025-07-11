@@ -16,8 +16,7 @@ import {
   BarChart3,
   UserPlus,
   Receipt,
-  Percent,
-  Calendar
+  Percent
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import SchoolManagement from '@/components/platform-admin/SchoolManagement';
@@ -33,7 +32,6 @@ import DiscountNotifications from '@/components/platform-admin/DiscountNotificat
 import TranslationAuditTest from '@/components/translation/TranslationAuditTest';
 import TranslationProcessor from '@/components/translation/TranslationProcessor';
 import TranslationIntegrator from '@/components/translation/TranslationIntegrator';
-import SchoolCalendarManager from '@/components/dashboard/admin/SchoolCalendarManager';
 
 interface PlatformStats {
   studentsCount: number;
@@ -340,17 +338,6 @@ const PlatformAdminDashboard: React.FC = () => {
       component: <TranslationIntegrator />
     },
     {
-      value: 'calendar',
-      icon: Calendar,
-      label: 'School Calendar',
-      component: <SchoolCalendarManager teacher={{
-        id: admin?.id || '',
-        school: 'Platform Administration',
-        role: 'admin',
-        email: admin?.email || 'demoadmin@demo.com'
-      }} />
-    },
-    {
       value: 'security',
       icon: ShieldIcon,
       label: 'Security',
@@ -418,7 +405,7 @@ const PlatformAdminDashboard: React.FC = () => {
           {/* Tab Navigation */}
           <div className="bg-white/90 backdrop-blur-sm rounded-2xl border border-gray-200/50 shadow-lg p-6">
             <TabsList className="bg-transparent p-0 h-auto gap-2 w-full">
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 2xl:grid-cols-6 gap-2 w-full">
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 2xl:grid-cols-11 gap-2 w-full">
                 {tabItems.map((item) => {
                   const Icon = item.icon;
                   return (

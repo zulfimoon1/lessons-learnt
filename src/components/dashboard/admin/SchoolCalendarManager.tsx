@@ -11,7 +11,6 @@ import { Calendar, Plus, Edit, Trash2 } from 'lucide-react';
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
-import { usePlatformAdmin } from '@/contexts/PlatformAdminContext';
 
 interface CalendarEvent {
   id: string;
@@ -34,7 +33,6 @@ interface SchoolCalendarManagerProps {
 
 const SchoolCalendarManager: React.FC<SchoolCalendarManagerProps> = ({ teacher }) => {
   const { toast } = useToast();
-  const { admin, isAuthenticated } = usePlatformAdmin();
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -58,19 +56,20 @@ const SchoolCalendarManager: React.FC<SchoolCalendarManagerProps> = ({ teacher }
       
       console.log('Loading events for teacher:', teacher);
       
-      // Set platform admin context if available, otherwise use teacher's email
-      const adminEmail = (isAuthenticated && admin) ? admin.email : teacher.email;
-      if (adminEmail) {
-        console.log('Setting admin context for loading events:', adminEmail);
+      // Check if teacher has email
+      if (!teacher.email) {
+        console.error('Teacher object missing email field during load');
+        // Try to continue without setting context for now
+      } else {
+        // Set authentication context for custom auth
+        console.log('Setting admin context for loading events:', teacher.email);
         const { error: contextError } = await supabase.rpc('set_platform_admin_context', { 
-          admin_email: adminEmail 
+          admin_email: teacher.email 
         });
         
         if (contextError) {
           console.error('Context setting error during load:', contextError);
         }
-      } else {
-        console.error('No admin email found for context');
       }
       
       const { data, error } = await supabase
@@ -102,44 +101,21 @@ const SchoolCalendarManager: React.FC<SchoolCalendarManagerProps> = ({ teacher }
     try {
       console.log('Teacher object:', teacher);
       
-      // Check admin authentication - either platform admin or regular admin
-      const adminEmail = (isAuthenticated && admin) ? admin.email : teacher.email;
-      if (!adminEmail) {
-        console.error('No admin email found');
+      // Check if teacher has email
+      if (!teacher.email) {
+        console.error('Teacher object missing email field');
         toast({
           title: "Error",
-          description: "Authentication error: Admin context not found",
+          description: "Authentication error: Missing email",
           variant: "destructive",
         });
         return;
       }
 
-      console.log('Setting admin context for:', adminEmail);
-
-      // Validate required fields
-      if (!formData.title?.trim() || !formData.start_date) {
-        toast({
-          title: "Error",
-          description: "Please enter a title and select a start date",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      const eventData = {
-        title: formData.title.trim(),
-        event_type: formData.event_type || 'School Event',
-        start_date: formData.start_date,
-        end_date: formData.end_date || formData.start_date,
-        description: formData.description?.trim() || null,
-        color: formData.color || '#dc2626',
-        school: teacher.school,
-        created_by: teacher.id
-      };
-
-      // Set context first (this now uses session-scoped settings)
+      // Set authentication context for custom auth
+      console.log('Setting admin context for:', teacher.email);
       const { error: contextError } = await supabase.rpc('set_platform_admin_context', { 
-        admin_email: adminEmail 
+        admin_email: teacher.email 
       });
       
       if (contextError) {
@@ -152,25 +128,33 @@ const SchoolCalendarManager: React.FC<SchoolCalendarManagerProps> = ({ teacher }
         return;
       }
 
-      // Then perform the database operation
+      const eventData = {
+        ...formData,
+        school: teacher.school,
+        created_by: teacher.id,
+        end_date: formData.end_date || formData.start_date
+      };
+
+      console.log('Attempting to save event:', eventData);
+
       if (editingEvent) {
-        const { error: updateError } = await supabase
+        const { error } = await supabase
           .from('school_calendar_events')
           .update(eventData)
           .eq('id', editingEvent.id);
         
-        if (updateError) throw updateError;
+        if (error) throw error;
         
         toast({
           title: "Success",
           description: "Calendar event updated successfully",
         });
       } else {
-        const { error: insertError } = await supabase
+        const { error } = await supabase
           .from('school_calendar_events')
           .insert([eventData]);
         
-        if (insertError) throw insertError;
+        if (error) throw error;
         
         toast({
           title: "Success",
@@ -201,13 +185,10 @@ const SchoolCalendarManager: React.FC<SchoolCalendarManagerProps> = ({ teacher }
 
   const handleDeleteEvent = async (eventId: string) => {
     try {
-      // Set admin context - either platform admin or regular admin
-      const adminEmail = (isAuthenticated && admin) ? admin.email : teacher.email;
-      if (adminEmail) {
-        await supabase.rpc('set_platform_admin_context', { 
-          admin_email: adminEmail 
-        });
-      }
+      // Set authentication context for custom auth
+      await supabase.rpc('set_platform_admin_context', { 
+        admin_email: teacher.email 
+      });
       
       const { error } = await supabase
         .from('school_calendar_events')
@@ -279,7 +260,6 @@ const SchoolCalendarManager: React.FC<SchoolCalendarManagerProps> = ({ teacher }
 
   const termEvents = events.filter(e => e.event_type === 'term_start' || e.event_type === 'term_end');
   const holidayEvents = events.filter(e => e.event_type === 'holiday' || e.event_type === 'red_day');
-  const schoolEvents = events.filter(e => e.event_type === 'school_event' || (!['term_start', 'term_end', 'holiday', 'red_day'].includes(e.event_type)));
 
   if (isLoading) {
     return (
@@ -483,49 +463,6 @@ const SchoolCalendarManager: React.FC<SchoolCalendarManagerProps> = ({ teacher }
               )}
             </div>
           </div>
-
-          {/* School Events */}
-          {schoolEvents.length > 0 && (
-            <div className="space-y-4">
-              <div className="flex items-center gap-3">
-                <div className="w-5 h-5 bg-blue-500 rounded-full"></div>
-                <h4 className="font-medium text-gray-900">School Events</h4>
-              </div>
-              <div className="space-y-3">
-                {schoolEvents.map((event) => (
-                  <div key={event.id} className="p-3 bg-blue-50 rounded-lg border border-blue-200">
-                    <div className="flex justify-between items-center">
-                      <div className="flex-1">
-                        <span className="font-medium text-blue-900">{event.title}</span>
-                        <div className="flex items-center gap-2 mt-1">
-                          <Badge variant="outline" className={getEventTypeColor(event.event_type)}>
-                            {getEventTypeLabel(event.event_type)}
-                          </Badge>
-                          <span className="text-sm text-gray-500">
-                            {format(new Date(event.start_date), 'MMM d, yyyy')}
-                            {event.end_date && event.end_date !== event.start_date && 
-                              ` - ${format(new Date(event.end_date), 'MMM d, yyyy')}`
-                            }
-                          </span>
-                        </div>
-                        {event.description && (
-                          <p className="text-sm text-blue-700 mt-1">{event.description}</p>
-                        )}
-                      </div>
-                      <div className="flex gap-2">
-                        <Button variant="outline" size="sm" onClick={() => openEditDialog(event)}>
-                          <Edit className="w-3 h-3" />
-                        </Button>
-                        <Button variant="outline" size="sm" onClick={() => handleDeleteEvent(event.id)}>
-                          <Trash2 className="w-3 h-3" />
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
 
           {/* All Events Summary */}
           {events.length > 0 && (
