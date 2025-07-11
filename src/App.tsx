@@ -10,8 +10,8 @@ import { PlatformAdminProvider } from "@/contexts/PlatformAdminContext";
 import SecurityGuard from "@/components/auth/SecurityGuard";
 import SecurityHeadersProvider from "@/components/security/SecurityHeadersProvider";
 import { Suspense, lazy } from "react";
+import Index from "./pages/Index";
 // Lazy load pages for better performance
-const Index = lazy(() => import("./pages/Index"));
 const StudentLogin = lazy(() => import("./pages/StudentLogin"));
 const TeacherLogin = lazy(() => import("./pages/TeacherLogin"));
 const StudentDashboard = lazy(() => import("./pages/StudentDashboard"));
