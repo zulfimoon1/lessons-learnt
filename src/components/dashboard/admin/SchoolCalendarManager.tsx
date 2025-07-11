@@ -117,10 +117,14 @@ const SchoolCalendarManager: React.FC<SchoolCalendarManagerProps> = ({ teacher }
       console.log('Setting admin context for:', adminData.email);
 
       const eventData = {
-        ...formData,
+        title: formData.title,
+        event_type: formData.event_type,
+        start_date: formData.start_date,
+        end_date: formData.end_date || formData.start_date,
+        description: formData.description || null,
+        color: formData.color || '#dc2626',
         school: teacher.school,
-        created_by: teacher.id,
-        end_date: formData.end_date || formData.start_date
+        created_by: teacher.id
       };
 
       console.log('Attempting to save event:', eventData);
