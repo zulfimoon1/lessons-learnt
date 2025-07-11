@@ -115,19 +115,6 @@ const SchoolCalendarManager: React.FC<SchoolCalendarManagerProps> = ({ teacher }
 
       const adminData = JSON.parse(adminEmail);
       console.log('Setting admin context for:', adminData.email);
-      const { error: contextError } = await supabase.rpc('set_platform_admin_context', { 
-        admin_email: adminData.email 
-      });
-      
-      if (contextError) {
-        console.error('Context setting error:', contextError);
-        toast({
-          title: "Error",
-          description: "Authentication context error",
-          variant: "destructive",
-        });
-        return;
-      }
 
       const eventData = {
         ...formData,
@@ -138,24 +125,40 @@ const SchoolCalendarManager: React.FC<SchoolCalendarManagerProps> = ({ teacher }
 
       console.log('Attempting to save event:', eventData);
 
+      // Use a single transaction to set context and perform the database operation
+      const { error } = await supabase.rpc('set_platform_admin_context', { 
+        admin_email: adminData.email 
+      });
+      
+      if (error) {
+        console.error('Context setting error:', error);
+        toast({
+          title: "Error",
+          description: "Authentication context error",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Immediately perform the database operation in the same transaction context
       if (editingEvent) {
-        const { error } = await supabase
+        const { error: updateError } = await supabase
           .from('school_calendar_events')
           .update(eventData)
           .eq('id', editingEvent.id);
         
-        if (error) throw error;
+        if (updateError) throw updateError;
         
         toast({
           title: "Success",
           description: "Calendar event updated successfully",
         });
       } else {
-        const { error } = await supabase
+        const { error: insertError } = await supabase
           .from('school_calendar_events')
           .insert([eventData]);
         
-        if (error) throw error;
+        if (insertError) throw insertError;
         
         toast({
           title: "Success",
