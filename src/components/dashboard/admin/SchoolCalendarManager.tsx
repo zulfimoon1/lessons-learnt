@@ -99,10 +99,13 @@ const SchoolCalendarManager: React.FC<SchoolCalendarManagerProps> = ({ teacher }
 
   const handleSaveEvent = async () => {
     try {
+      console.log('=== CALENDAR EVENT SAVE DEBUG ===');
       console.log('Teacher object:', teacher);
       
       // Get platform admin context from localStorage
       const adminEmail = localStorage.getItem('platform_admin');
+      console.log('Raw localStorage platform_admin:', adminEmail);
+      
       if (!adminEmail) {
         console.error('No platform admin context found in localStorage');
         toast({
