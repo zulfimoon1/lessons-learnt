@@ -1308,6 +1308,22 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      admin_manage_calendar_event: {
+        Args: {
+          admin_email_param: string
+          operation_type: string
+          event_id_param?: string
+          title_param?: string
+          event_type_param?: string
+          start_date_param?: string
+          end_date_param?: string
+          description_param?: string
+          color_param?: string
+          school_param?: string
+          created_by_param?: string
+        }
+        Returns: Json
+      }
       authenticate_student_working: {
         Args: {
           name_param: string

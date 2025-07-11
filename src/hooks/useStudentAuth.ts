@@ -17,6 +17,10 @@ export const useStudentAuth = () => {
       // Use the secure student login service with name-only authentication
       const result = await secureStudentLogin(fullName.trim(), password);
       
+      if (result.error) {
+        return { error: result.error };
+      }
+
       if (result.student) {
         const studentData: Student = {
           id: result.student.id,
@@ -32,7 +36,6 @@ export const useStudentAuth = () => {
           localStorage.setItem('student', JSON.stringify(studentData));
           localStorage.removeItem('teacher');
           localStorage.removeItem('platformAdmin');
-          console.log('useStudentAuth: Student data saved successfully');
         } catch (storageError) {
           console.warn('useStudentAuth: Failed to save student data to localStorage:', storageError);
         }
