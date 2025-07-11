@@ -47,10 +47,10 @@ const SchoolCalendarManager: React.FC<SchoolCalendarManagerProps> = ({ teacher }
   });
 
   useEffect(() => {
-    loadCalendarEvents();
+    loadEvents();
   }, [teacher.school]);
 
-  const loadCalendarEvents = async () => {
+  const loadEvents = async () => {
     try {
       setIsLoading(true);
       
@@ -167,7 +167,7 @@ const SchoolCalendarManager: React.FC<SchoolCalendarManagerProps> = ({ teacher }
         description: '',
         color: '#dc2626'
       });
-      loadCalendarEvents();
+      loadEvents();
     } catch (error) {
       console.error('Error saving event:', error);
       toast({
@@ -196,7 +196,7 @@ const SchoolCalendarManager: React.FC<SchoolCalendarManagerProps> = ({ teacher }
         title: "Success",
         description: "Calendar event deleted successfully",
       });
-      loadCalendarEvents();
+      loadEvents();
     } catch (error) {
       console.error('Error deleting event:', error);
       toast({
