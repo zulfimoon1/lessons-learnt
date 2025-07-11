@@ -25,6 +25,7 @@ export const secureStudentLogin = async (
 ): Promise<AuthResult> => {
   try {
     console.log('🔐 SecureStudentAuth: Starting secure login process for:', { fullName });
+    console.log('🔐 SecureStudentAuth: Password provided:', password ? 'YES' : 'NO');
 
     // Input validation
     const nameValidation = securityService.validateAndSanitizeInput(fullName, 'name');
