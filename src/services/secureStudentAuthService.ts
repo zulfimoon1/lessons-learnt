@@ -26,6 +26,7 @@ export const secureStudentLogin = async (
   try {
     console.log('🔐 SecureStudentAuth: Starting secure login process for:', { fullName });
     console.log('🔐 SecureStudentAuth: Password provided:', password ? 'YES' : 'NO');
+    console.log('🔐 SecureStudentAuth: Password value (for debugging):', password);
 
     // Input validation
     const nameValidation = securityService.validateAndSanitizeInput(fullName, 'name');
@@ -56,6 +57,9 @@ export const secureStudentLogin = async (
     }
 
     const studentRecord = students[0];
+    console.log('🔐 SecureStudentAuth: Found student record:', { id: studentRecord.id, name: studentRecord.full_name, school: studentRecord.school, grade: studentRecord.grade });
+    console.log('🔐 SecureStudentAuth: Password hash length:', studentRecord.password_hash.length);
+    console.log('🔐 SecureStudentAuth: Password hash:', studentRecord.password_hash);
 
     // Verify password with original hash format
     let isValidPassword = false;
@@ -64,11 +68,15 @@ export const secureStudentLogin = async (
       // Legacy SHA256 hash - test with original salt format
       const crypto = await import('crypto');
       const sha256Hash = crypto.createHash('sha256').update(password + 'simple_salt_2024').digest('hex');
+      console.log('🔐 SecureStudentAuth: Generated hash:', sha256Hash);
+      console.log('🔐 SecureStudentAuth: Stored hash:', studentRecord.password_hash);
+      console.log('🔐 SecureStudentAuth: Hashes match:', sha256Hash === studentRecord.password_hash);
       isValidPassword = sha256Hash === studentRecord.password_hash;
     } else {
       // BCrypt hash
       const bcrypt = await import('bcryptjs');
       isValidPassword = await bcrypt.compare(password, studentRecord.password_hash);
+      console.log('🔐 SecureStudentAuth: BCrypt comparison result:', isValidPassword);
     }
     
     if (!isValidPassword) {
