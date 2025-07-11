@@ -56,20 +56,20 @@ const SchoolCalendarManager: React.FC<SchoolCalendarManagerProps> = ({ teacher }
       
       console.log('Loading events for teacher:', teacher);
       
-      // Set platform admin context if we have admin email stored
-      const adminEmail = localStorage.getItem('platform_admin');
-      if (adminEmail) {
-        const adminData = JSON.parse(adminEmail);
-        console.log('Setting admin context for loading events:', adminData.email);
+      // Check if teacher has email
+      if (!teacher.email) {
+        console.error('Teacher object missing email field during load');
+        // Try to continue without setting context for now
+      } else {
+        // Set authentication context for custom auth
+        console.log('Setting admin context for loading events:', teacher.email);
         const { error: contextError } = await supabase.rpc('set_platform_admin_context', { 
-          admin_email: adminData.email 
+          admin_email: teacher.email 
         });
         
         if (contextError) {
           console.error('Context setting error during load:', contextError);
         }
-      } else {
-        console.error('No platform admin context found in localStorage');
       }
       
       const { data, error } = await supabase
@@ -101,22 +101,21 @@ const SchoolCalendarManager: React.FC<SchoolCalendarManagerProps> = ({ teacher }
     try {
       console.log('Teacher object:', teacher);
       
-      // Set platform admin context if we have admin email stored
-      const adminEmail = localStorage.getItem('platform_admin');
-      if (!adminEmail) {
-        console.error('No platform admin context found in localStorage');
+      // Check if teacher has email
+      if (!teacher.email) {
+        console.error('Teacher object missing email field');
         toast({
           title: "Error",
-          description: "Authentication error: Admin context not found",
+          description: "Authentication error: Missing email",
           variant: "destructive",
         });
         return;
       }
 
-      const adminData = JSON.parse(adminEmail);
-      console.log('Setting admin context for:', adminData.email);
+      // Set authentication context for custom auth
+      console.log('Setting admin context for:', teacher.email);
       const { error: contextError } = await supabase.rpc('set_platform_admin_context', { 
-        admin_email: adminData.email 
+        admin_email: teacher.email 
       });
       
       if (contextError) {
@@ -186,14 +185,10 @@ const SchoolCalendarManager: React.FC<SchoolCalendarManagerProps> = ({ teacher }
 
   const handleDeleteEvent = async (eventId: string) => {
     try {
-      // Set platform admin context if we have admin email stored
-      const adminEmail = localStorage.getItem('platform_admin');
-      if (adminEmail) {
-        const adminData = JSON.parse(adminEmail);
-        await supabase.rpc('set_platform_admin_context', { 
-          admin_email: adminData.email 
-        });
-      }
+      // Set authentication context for custom auth
+      await supabase.rpc('set_platform_admin_context', { 
+        admin_email: teacher.email 
+      });
       
       const { error } = await supabase
         .from('school_calendar_events')
