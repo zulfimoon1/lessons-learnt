@@ -464,15 +464,15 @@ const SchoolCalendarManager: React.FC<SchoolCalendarManagerProps> = ({ teacher }
             </div>
           </div>
 
-          {/* Other Events */}
-          {events.filter(e => !['term_start', 'term_end', 'holiday', 'red_day'].includes(e.event_type)).length > 0 && (
+          {/* School Events */}
+          {events.filter(e => e.event_type === 'school_event').length > 0 && (
             <div className="space-y-4">
               <div className="flex items-center gap-3">
                 <div className="w-5 h-5 bg-blue-500 rounded-full"></div>
                 <h4 className="font-medium text-gray-900">School Events</h4>
               </div>
               <div className="space-y-3">
-                {events.filter(e => !['term_start', 'term_end', 'holiday', 'red_day'].includes(e.event_type)).map((event) => (
+                {events.filter(e => e.event_type === 'school_event').map((event) => (
                   <div key={event.id} className="p-3 bg-blue-50 rounded-lg border border-blue-200">
                     <div className="flex justify-between items-center">
                       <div className="flex-1">
