@@ -54,22 +54,18 @@ const SchoolCalendarManager: React.FC<SchoolCalendarManagerProps> = ({ teacher }
     try {
       setIsLoading(true);
       
-      console.log('Loading events for teacher:', teacher);
-      
-      // Check if teacher has email
-      if (!teacher.email) {
-        console.error('Teacher object missing email field during load');
-        // Try to continue without setting context for now
-      } else {
-        // Set authentication context for custom auth
-        console.log('Setting admin context for loading events:', teacher.email);
+      // Set authentication context for custom auth before any database operation
+      if (teacher.email) {
         const { error: contextError } = await supabase.rpc('set_platform_admin_context', { 
           admin_email: teacher.email 
         });
         
         if (contextError) {
-          console.error('Context setting error during load:', contextError);
+          console.error('Context setting error:', contextError);
+          throw contextError;
         }
+      } else {
+        throw new Error('Teacher email required for calendar access');
       }
       
       const { data, error } = await supabase
@@ -83,7 +79,6 @@ const SchoolCalendarManager: React.FC<SchoolCalendarManagerProps> = ({ teacher }
         throw error;
       }
       
-      console.log('Loaded events:', data);
       setEvents(data || []);
     } catch (error) {
       console.error('Error loading calendar events:', error);
@@ -261,11 +256,6 @@ const SchoolCalendarManager: React.FC<SchoolCalendarManagerProps> = ({ teacher }
   const termEvents = events.filter(e => e.event_type === 'term_start' || e.event_type === 'term_end');
   const holidayEvents = events.filter(e => e.event_type === 'holiday' || e.event_type === 'red_day');
   const otherEvents = events.filter(e => !['term_start', 'term_end', 'holiday', 'red_day'].includes(e.event_type));
-  
-  console.log('Event filtering - Total events:', events.length);
-  console.log('Term events:', termEvents.length, termEvents);
-  console.log('Holiday events:', holidayEvents.length, holidayEvents);
-  console.log('Other events:', otherEvents.length, otherEvents);
 
   if (isLoading) {
     return (
