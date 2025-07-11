@@ -39,12 +39,20 @@ const MobileOptimizedHeader: React.FC = () => {
                   {t('pricing.title')}
                 </Button>
               </Link>
-              <Link to="/demo">
-                <Button variant="outline" size="sm" className="flex items-center gap-2 border-brand-teal text-brand-teal hover:bg-brand-teal hover:text-white">
-                  <PlayCircleIcon className="w-4 h-4" />
-                  {t('demo.title')}
-                </Button>
-              </Link>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="flex items-center gap-2 border-brand-teal text-brand-teal hover:bg-brand-teal hover:text-white"
+                onClick={() => {
+                  const demoSection = document.querySelector('section:has(.bg-brand-gradient)');
+                  if (demoSection) {
+                    demoSection.scrollIntoView({ behavior: 'smooth' });
+                  }
+                }}
+              >
+                <PlayCircleIcon className="w-4 h-4" />
+                {t('demo.title')}
+              </Button>
               <LanguageSwitcher />
             </div>
           )}
@@ -88,15 +96,20 @@ const MobileOptimizedHeader: React.FC = () => {
                       </Button>
                     </Link>
                     
-                    <Link to="/demo" onClick={closeMenu}>
-                      <Button 
-                        variant="outline" 
-                        className="w-full justify-start border-brand-teal text-brand-teal hover:bg-brand-teal hover:text-white min-h-12"
-                      >
-                        <PlayCircleIcon className="w-4 h-4 mr-2" />
-                        {t('demo.title')}
-                      </Button>
-                    </Link>
+                    <Button 
+                      variant="outline" 
+                      className="w-full justify-start border-brand-teal text-brand-teal hover:bg-brand-teal hover:text-white min-h-12"
+                      onClick={() => {
+                        closeMenu();
+                        const demoSection = document.querySelector('section:has(.bg-brand-gradient)');
+                        if (demoSection) {
+                          demoSection.scrollIntoView({ behavior: 'smooth' });
+                        }
+                      }}
+                    >
+                      <PlayCircleIcon className="w-4 h-4 mr-2" />
+                      {t('demo.title')}
+                    </Button>
                     
                     <div className="pt-6 border-t">
                       <h3 className="text-sm font-medium text-gray-600 mb-3">{t('common.getStarted')}</h3>
