@@ -2,12 +2,10 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { Users, BookOpen, MessageSquare, TrendingUp, BarChart3, Percent, Calendar, Clock } from "lucide-react";
-import { format } from "date-fns";
+import { Users, BookOpen, MessageSquare, TrendingUp, BarChart3, Percent } from "lucide-react";
 
 interface FeedbackAnalytics {
   teacher_name: string;
@@ -20,29 +18,17 @@ interface FeedbackAnalytics {
   total_responses: number;
 }
 
-interface CalendarEvent {
-  id: string;
-  title: string;
-  event_type: string;
-  start_date: string;
-  end_date?: string;
-  description?: string;
-  color: string;
-}
-
 interface SchoolAdminDashboardProps {
   teacher: {
     id: string;
     name: string;
     school: string;
     role: string;
-    email: string;
   };
 }
 
 const SchoolAdminDashboard: React.FC<SchoolAdminDashboardProps> = ({ teacher }) => {
   const [feedbackData, setFeedbackData] = useState<FeedbackAnalytics[]>([]);
-  const [calendarEvents, setCalendarEvents] = useState<CalendarEvent[]>([]);
   const [schoolStats, setSchoolStats] = useState({
     totalTeachers: 0,
     totalStudents: 0,
@@ -63,36 +49,12 @@ const SchoolAdminDashboard: React.FC<SchoolAdminDashboardProps> = ({ teacher }) 
       setIsLoading(true);
       console.log('SchoolAdminDashboard: Fetching data for school:', teacher.school);
 
-      // Set platform admin context - prioritize teacher prop since AdminDashboard uses useAuth
-      const adminEmail = localStorage.getItem('platform_admin');
-      const teacherData = localStorage.getItem('teacher');
-      
-      console.log('🔍 SchoolAdminDashboard localStorage check:', { adminEmail, teacherData, teacherEmail: teacher.email });
-      
-      // First try the teacher prop (from AdminDashboard useAuth), then fallback to localStorage
-      if (teacher.email) {
-        console.log('🔑 Setting context with teacher prop email:', teacher.email);
-        await supabase.rpc('set_platform_admin_context', { admin_email: teacher.email });
-      } else if (adminEmail) {
-        const adminData = JSON.parse(adminEmail);
-        console.log('🔑 Setting admin context with localStorage:', adminData.email);
-        await supabase.rpc('set_platform_admin_context', { admin_email: adminData.email });
-      } else if (teacherData) {
-        // Set teacher email context for RLS policy access
-        const teacherInfo = JSON.parse(teacherData);
-        console.log('🔑 Setting teacher context with localStorage:', teacherInfo.email);
-        await supabase.rpc('set_platform_admin_context', { admin_email: teacherInfo.email });
-      } else {
-        console.log('❌ No admin or teacher data available');
-      }
-
       // Fetch all statistics in parallel
       const [
         { data: teachers, error: teachersError },
         { data: students, error: studentsError },
         { data: classes, error: classesError },
-        { data: feedback, error: feedbackError },
-        { data: events, error: eventsError }
+        { data: feedback, error: feedbackError }
       ] = await Promise.all([
         supabase.from('teachers').select('id').eq('school', teacher.school),
         supabase.from('students').select('id').eq('school', teacher.school),
@@ -110,12 +72,7 @@ const SchoolAdminDashboard: React.FC<SchoolAdminDashboardProps> = ({ teacher }) 
               teachers!inner(name)
             )
           `)
-          .eq('class_schedules.school', teacher.school),
-        supabase
-          .from('school_calendar_events')
-          .select('*')
-          .eq('school', teacher.school)
-          .order('start_date', { ascending: true })
+          .eq('class_schedules.school', teacher.school)
       ]);
 
       // Handle errors
@@ -135,23 +92,13 @@ const SchoolAdminDashboard: React.FC<SchoolAdminDashboardProps> = ({ teacher }) 
         console.error('Feedback fetch error:', feedbackError);
         throw feedbackError;
       }
-      if (eventsError) {
-        console.error('Calendar events fetch error:', eventsError);
-        console.error('Events error details:', eventsError.message, eventsError.details);
-        // Don't throw for events error, just log it
-      }
 
       console.log('Raw data received:', {
         teachers: teachers?.length || 0,
         students: students?.length || 0,
         classes: classes?.length || 0,
-        feedback: feedback?.length || 0,
-        events: events?.length || 0
+        feedback: feedback?.length || 0
       });
-
-      // Set calendar events
-      console.log('Calendar events fetched:', events);
-      setCalendarEvents(events || []);
 
       // Calculate active classes (classes scheduled for today or in the future)
       const today = new Date();
@@ -334,63 +281,6 @@ const SchoolAdminDashboard: React.FC<SchoolAdminDashboardProps> = ({ teacher }) 
           </CardContent>
         </Card>
       </div>
-
-      {/* Calendar Events Section */}
-      <Card className="bg-white/90 backdrop-blur-sm border-gray-200/50 shadow-lg">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Calendar className="w-5 h-5" />
-            Recent Calendar Events
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {calendarEvents.length > 0 ? (
-            <div className="space-y-3">
-              {calendarEvents.slice(0, 5).map((event) => (
-                <div key={event.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                  <div className="flex items-center gap-3">
-                    <div
-                      className="w-3 h-3 rounded-full"
-                      style={{ backgroundColor: event.color }}
-                    />
-                    <div>
-                      <h4 className="font-medium">{event.title}</h4>
-                      <div className="flex items-center gap-2">
-                        <Badge variant="outline" className="text-xs">
-                          {event.event_type.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
-                        </Badge>
-                        <span className="text-sm text-muted-foreground">
-                          {format(new Date(event.start_date), 'MMM d, yyyy')}
-                          {event.end_date && event.end_date !== event.start_date && 
-                            ` - ${format(new Date(event.end_date), 'MMM d, yyyy')}`
-                          }
-                        </span>
-                      </div>
-                      {event.description && (
-                        <p className="text-sm text-muted-foreground mt-1">{event.description}</p>
-                      )}
-                    </div>
-                  </div>
-                  <Clock className="w-4 h-4 text-muted-foreground" />
-                </div>
-              ))}
-              {calendarEvents.length > 5 && (
-                <p className="text-sm text-muted-foreground text-center">
-                  +{calendarEvents.length - 5} more events. View all in Settings → Calendar Management
-                </p>
-              )}
-            </div>
-          ) : (
-            <div className="text-center py-6">
-              <Calendar className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
-              <p className="text-muted-foreground">No calendar events found.</p>
-              <p className="text-sm text-muted-foreground mt-1">
-                Create calendar events in Settings → Calendar Management to see them here.
-              </p>
-            </div>
-          )}
-        </CardContent>
-      </Card>
 
       {/* Feedback Analytics */}
       <Tabs defaultValue="overview" className="space-y-4">
