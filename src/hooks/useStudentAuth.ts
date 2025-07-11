@@ -110,8 +110,12 @@ export const useStudentAuth = () => {
     try {
       localStorage.removeItem('student');
       sessionStorage.clear();
+      // Redirect to homepage after logout
+      window.location.href = '/';
     } catch (error) {
       console.error('useStudentAuth: Error clearing student data:', error);
+      // Still redirect even if storage clearing fails
+      window.location.href = '/';
     }
   };
 

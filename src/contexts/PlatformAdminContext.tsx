@@ -107,6 +107,9 @@ export const PlatformAdminProvider: React.FC<{ children: React.ReactNode }> = ({
     setAdmin(null);
     setIsAuthenticated(false);
     localStorage.removeItem('platform_admin');
+    sessionStorage.clear();
+    // Redirect to homepage after logout
+    window.location.href = '/';
   };
 
   const validateSession = async () => {

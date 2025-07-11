@@ -8,7 +8,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import SecurityEnhancedInput from "@/components/security/SecurityEnhancedInput";
 
 interface StudentLoginFormProps {
-  onLogin: (fullName: string, school: string, grade: string, password: string) => Promise<void>;
+  onLogin: (fullName: string, password: string) => Promise<void>;
   isLoading: boolean;
 }
 
@@ -16,14 +16,12 @@ const StudentLoginForm: React.FC<StudentLoginFormProps> = ({ onLogin, isLoading 
   const { t } = useLanguage();
   const [loginData, setLoginData] = useState({
     fullName: "",
-    school: "",
-    grade: "",
     password: ""
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await onLogin(loginData.fullName, loginData.school, loginData.grade, loginData.password);
+    await onLogin(loginData.fullName, loginData.password);
   };
 
   return (
@@ -45,39 +43,6 @@ const StudentLoginForm: React.FC<StudentLoginFormProps> = ({ onLogin, isLoading 
         />
       </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="loginSchool" className="flex items-center gap-2 text-black font-medium">
-          <SchoolIcon className="w-4 h-4 text-brand-teal" />
-          {t('student.school')}
-        </Label>
-        <SecurityEnhancedInput
-          id="loginSchool"
-          type="text"
-          placeholder={t('student.schoolPlaceholder')}
-          value={loginData.school}
-          onChange={(e) => setLoginData(prev => ({ ...prev, school: e.target.value }))}
-          required
-          validateAs="school"
-          maxLength={200}
-        />
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="loginGrade" className="flex items-center gap-2 text-black font-medium">
-          <GraduationCapIcon className="w-4 h-4 text-brand-teal" />
-          {t('student.classGrade')}
-        </Label>
-        <SecurityEnhancedInput
-          id="loginGrade"
-          type="text"
-          placeholder={t('student.gradePlaceholder')}
-          value={loginData.grade}
-          onChange={(e) => setLoginData(prev => ({ ...prev, grade: e.target.value }))}
-          required
-          validateAs="grade"
-          maxLength={50}
-        />
-      </div>
 
       <div className="space-y-2">
         <Label htmlFor="loginPassword" className="text-black font-medium">{t('auth.password')}</Label>

@@ -54,13 +54,13 @@ const StudentLogin = () => {
     );
   }
 
-  const handleLogin = async (fullName: string, school: string, grade: string, password: string) => {
-    console.log('StudentLogin: Login attempt with:', { fullName, school, grade });
+  const handleLogin = async (fullName: string, password: string) => {
+    console.log('StudentLogin: Login attempt with:', { fullName });
     
-    if (!fullName.trim() || !school.trim() || !grade.trim() || !password) {
+    if (!fullName.trim() || !password) {
       toast({
         title: "Missing information",
-        description: "Please enter your full name, school, grade, and password",
+        description: "Please enter your full name and password",
         variant: "destructive",
       });
       return;
@@ -69,9 +69,11 @@ const StudentLogin = () => {
     setIsLoading(true);
 
     try {
-      console.log('StudentLogin: Attempting login with credentials:', { fullName, school, grade });
+      console.log('StudentLogin: Attempting login with credentials:', { fullName });
       
-      const result = await studentLogin(fullName.trim(), school.trim(), grade.trim(), password);
+      // For login, we need to find the student record by name first, then validate
+      // This is a temporary approach - in production, you'd want a more secure method
+      const result = await studentLogin(fullName.trim(), "", "", password);
 
       if (result.error) {
         console.log('StudentLogin: Login failed with error:', result.error);

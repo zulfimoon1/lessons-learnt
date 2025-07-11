@@ -115,8 +115,13 @@ export const useTeacherAuth = () => {
     setTeacher(null);
     try {
       localStorage.removeItem('teacher');
+      sessionStorage.clear();
+      // Redirect to homepage after logout
+      window.location.href = '/';
     } catch (error) {
       console.error('useTeacherAuth: Error clearing teacher data:', error);
+      // Still redirect even if storage clearing fails
+      window.location.href = '/';
     }
   };
 
