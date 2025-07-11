@@ -35,12 +35,11 @@ const StudentLogin = () => {
 
   // Redirect if already logged in - moved after all hook calls
   useEffect(() => {
-    console.log('StudentLogin: Checking auth state', { student, authLoading });
-    if (student && !authLoading) {
-      console.log('StudentLogin: Student already logged in, redirecting...');
+    // Only redirect if we have a student and we're not in the middle of a login process
+    if (student && !authLoading && !isLoading) {
       navigate("/student-dashboard", { replace: true });
     }
-  }, [student, authLoading, navigate]);
+  }, [student, authLoading, isLoading, navigate]);
 
   // Don't render if still loading auth state
   if (authLoading) {
