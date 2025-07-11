@@ -23,6 +23,7 @@ export const secureStudentLogin = async (
 ): Promise<AuthResult> => {
   try {
     console.log('🔐 SecureStudentAuth: Starting secure login process for:', { fullName });
+    console.log('🔐 SecureStudentAuth: About to call authenticate_student_working function');
 
     // Input validation
     const nameValidation = securityService.validateAndSanitizeInput(fullName, 'name');
@@ -39,7 +40,7 @@ export const secureStudentLogin = async (
       password_param: password
     });
 
-    // Track login attempt
+    console.log('🔐 SecureStudentAuth: Database function returned:', { authResult, authError });
     const loginSuccess = !authError && authResult && authResult.length > 0 && authResult[0].password_valid;
     
     try {
