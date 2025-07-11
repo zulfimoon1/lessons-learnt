@@ -101,7 +101,7 @@ const SchoolCalendarManager: React.FC<SchoolCalendarManagerProps> = ({ teacher }
     try {
       console.log('Teacher object:', teacher);
       
-      // Set platform admin context if we have admin email stored
+      // Get platform admin context from localStorage
       const adminEmail = localStorage.getItem('platform_admin');
       if (!adminEmail) {
         console.error('No platform admin context found in localStorage');
@@ -114,57 +114,50 @@ const SchoolCalendarManager: React.FC<SchoolCalendarManagerProps> = ({ teacher }
       }
 
       const adminData = JSON.parse(adminEmail);
-      console.log('Setting admin context for:', adminData.email);
+      console.log('Using admin email for calendar operation:', adminData.email);
 
-      const eventData = {
-        ...formData,
-        school: teacher.school,
-        created_by: teacher.id,
-        end_date: formData.end_date || formData.start_date
-      };
+      console.log('Attempting to save event:', formData);
 
-      console.log('Attempting to save event:', eventData);
-
-      // Use a single transaction to set context and perform the database operation
-      const { error } = await supabase.rpc('set_platform_admin_context', { 
-        admin_email: adminData.email 
+      // Use the comprehensive admin function that handles context and database operation in one call
+      const { data, error } = await supabase.rpc('admin_manage_calendar_event', {
+        admin_email_param: adminData.email,
+        operation_type: editingEvent ? 'update' : 'insert',
+        event_id_param: editingEvent?.id || null,
+        title_param: formData.title,
+        event_type_param: formData.event_type,
+        start_date_param: formData.start_date,
+        end_date_param: formData.end_date || formData.start_date,
+        description_param: formData.description,
+        color_param: formData.color,
+        school_param: teacher.school,
+        created_by_param: teacher.id
       });
       
       if (error) {
-        console.error('Context setting error:', error);
+        console.error('Calendar operation error:', error);
         toast({
           title: "Error",
-          description: "Authentication context error",
+          description: "Failed to save calendar event: " + error.message,
           variant: "destructive",
         });
         return;
       }
 
-      // Immediately perform the database operation in the same transaction context
-      if (editingEvent) {
-        const { error: updateError } = await supabase
-          .from('school_calendar_events')
-          .update(eventData)
-          .eq('id', editingEvent.id);
-        
-        if (updateError) throw updateError;
-        
+      const result = data as { success: boolean; error?: string };
+      if (!result?.success) {
+        console.error('Calendar operation failed:', result?.error);
         toast({
-          title: "Success",
-          description: "Calendar event updated successfully",
+          title: "Error",
+          description: result?.error || "Failed to save calendar event",
+          variant: "destructive",
         });
-      } else {
-        const { error: insertError } = await supabase
-          .from('school_calendar_events')
-          .insert([eventData]);
-        
-        if (insertError) throw insertError;
-        
-        toast({
-          title: "Success",
-          description: "Calendar event created successfully",
-        });
+        return;
       }
+
+      toast({
+        title: "Success",
+        description: `Calendar event ${editingEvent ? 'updated' : 'created'} successfully`,
+      });
 
       setIsDialogOpen(false);
       setEditingEvent(null);
