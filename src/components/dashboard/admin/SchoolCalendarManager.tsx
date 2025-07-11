@@ -260,6 +260,7 @@ const SchoolCalendarManager: React.FC<SchoolCalendarManagerProps> = ({ teacher }
 
   const termEvents = events.filter(e => e.event_type === 'term_start' || e.event_type === 'term_end');
   const holidayEvents = events.filter(e => e.event_type === 'holiday' || e.event_type === 'red_day');
+  const otherEvents = events.filter(e => !['term_start', 'term_end', 'holiday', 'red_day'].includes(e.event_type));
 
   if (isLoading) {
     return (
@@ -463,6 +464,49 @@ const SchoolCalendarManager: React.FC<SchoolCalendarManagerProps> = ({ teacher }
               )}
             </div>
           </div>
+
+          {/* Other Events */}
+          {otherEvents.length > 0 && (
+            <div className="space-y-4">
+              <div className="flex items-center gap-3">
+                <div className="w-5 h-5 bg-blue-500 rounded-full"></div>
+                <h4 className="font-medium text-gray-900">School Events</h4>
+              </div>
+              <div className="space-y-3">
+                {otherEvents.map((event) => (
+                  <div key={event.id} className="p-3 bg-blue-50 rounded-lg border border-blue-200">
+                    <div className="flex justify-between items-center">
+                      <div className="flex-1">
+                        <span className="font-medium text-blue-900">{event.title}</span>
+                        <div className="flex items-center gap-2 mt-1">
+                          <Badge variant="outline" className={getEventTypeColor(event.event_type)}>
+                            {getEventTypeLabel(event.event_type)}
+                          </Badge>
+                          <span className="text-sm text-blue-600">
+                            {format(new Date(event.start_date), 'MMM d, yyyy')}
+                            {event.end_date && event.end_date !== event.start_date && 
+                              ` - ${format(new Date(event.end_date), 'MMM d, yyyy')}`
+                            }
+                          </span>
+                        </div>
+                        {event.description && (
+                          <p className="text-sm text-blue-700 mt-1">{event.description}</p>
+                        )}
+                      </div>
+                      <div className="flex gap-2">
+                        <Button variant="outline" size="sm" onClick={() => openEditDialog(event)}>
+                          <Edit className="w-3 h-3" />
+                        </Button>
+                        <Button variant="outline" size="sm" onClick={() => handleDeleteEvent(event.id)}>
+                          <Trash2 className="w-3 h-3" />
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* All Events Summary */}
           {events.length > 0 && (
