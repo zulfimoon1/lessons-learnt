@@ -54,30 +54,48 @@ const SchoolCalendarManager: React.FC<SchoolCalendarManagerProps> = ({ teacher }
     try {
       setIsLoading(true);
       
-      // Set platform admin context for school calendar events access (following ClassScheduleCalendar pattern)
+      // Set platform admin context - prioritize teacher prop since this is used in AdminDashboard
       const adminEmail = localStorage.getItem('platform_admin');
       const teacherData = localStorage.getItem('teacher');
       
-      if (adminEmail) {
+      console.log('🔍 SchoolCalendarManager localStorage check:', { adminEmail, teacherData, teacherEmail: teacher.email });
+      
+      // First try the teacher prop (from AdminDashboard useAuth), then fallback to localStorage
+      if (teacher.email) {
+        console.log('🔑 Setting context with teacher prop email:', teacher.email);
+        const { error: contextError } = await supabase.rpc('set_platform_admin_context', { 
+          admin_email: teacher.email 
+        });
+        if (contextError) {
+          console.error('❌ Teacher prop context setting error:', contextError);
+          throw contextError;
+        }
+        console.log('✅ Teacher prop context set successfully');
+      } else if (adminEmail) {
         const adminData = JSON.parse(adminEmail);
+        console.log('🔑 Setting admin context with localStorage:', adminData.email);
         const { error: contextError } = await supabase.rpc('set_platform_admin_context', { 
           admin_email: adminData.email 
         });
         if (contextError) {
-          console.error('Admin context setting error:', contextError);
+          console.error('❌ Admin localStorage context setting error:', contextError);
           throw contextError;
         }
+        console.log('✅ Admin localStorage context set successfully');
       } else if (teacherData) {
         // Set teacher email context for RLS policy access
         const teacherInfo = JSON.parse(teacherData);
+        console.log('🔑 Setting teacher context with localStorage:', teacherInfo.email);
         const { error: contextError } = await supabase.rpc('set_platform_admin_context', { 
           admin_email: teacherInfo.email 
         });
         if (contextError) {
-          console.error('Teacher context setting error:', contextError);
+          console.error('❌ Teacher localStorage context setting error:', contextError);
           throw contextError;
         }
+        console.log('✅ Teacher localStorage context set successfully');
       } else {
+        console.error('❌ No admin or teacher email available for calendar access');
         throw new Error('No admin or teacher email available for calendar access');
       }
       
@@ -86,6 +104,8 @@ const SchoolCalendarManager: React.FC<SchoolCalendarManagerProps> = ({ teacher }
         .select('*')
         .eq('school', teacher.school)
         .order('start_date', { ascending: true });
+
+      console.log('📅 Calendar events query result:', { data: data?.length || 0, error });
 
       if (error) {
         console.error('Error fetching events:', error);
