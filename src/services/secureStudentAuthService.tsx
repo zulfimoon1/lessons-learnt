@@ -17,14 +17,12 @@ interface AuthResult {
   needsPasswordChange?: boolean;
 }
 
-// Enhanced secure student login with login activity tracking
 export const secureStudentLogin = async (
   fullName: string, 
   password: string
 ): Promise<AuthResult> => {
   try {
     console.log('🔐 SecureStudentAuth: Starting secure login process for:', { fullName });
-    console.log('🔐 SecureStudentAuth: Password provided:', password ? 'Yes' : 'No');
 
     // Input validation
     const nameValidation = securityService.validateAndSanitizeInput(fullName, 'name');
@@ -33,76 +31,53 @@ export const secureStudentLogin = async (
       return { error: 'Invalid input provided' };
     }
 
-    // Find student by name only
-    const { data: students, error: fetchError } = await supabase
-      .from('students')
-      .select('*')
-      .eq('full_name', nameValidation.sanitized)
-      .limit(10);
-
-    if (fetchError) {
-      console.error('❌ SecureStudentAuth: Database fetch error:', fetchError);
-      return { error: 'Authentication failed' };
-    }
-
-    if (!students || students.length === 0) {
-      console.log('❌ SecureStudentAuth: No matching student found');
-      return { error: 'Invalid credentials' };
-    }
-
-    // If multiple students with same name, try password validation on each
-    let authenticatedStudent = null;
-    for (const student of students) {
-      try {
-        let isPasswordValid = false;
-        
-        // Check if it's a bcrypt hash (starts with $2a$, $2b$, or $2y$)
-        if (student.password_hash.startsWith('$2')) {
-          isPasswordValid = await bcrypt.compare(password, student.password_hash);
-        } else {
-          // Legacy SHA256 hash - create SHA256 hash of password and compare
-          const encoder = new TextEncoder();
-          const data = encoder.encode(password + 'simple_salt_2024');
-          const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-          const hashArray = Array.from(new Uint8Array(hashBuffer));
-          const sha256Hash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-          isPasswordValid = sha256Hash === student.password_hash;
-        }
-        
-        if (isPasswordValid) {
-          authenticatedStudent = student;
-          break;
-        }
-      } catch (passwordError) {
-        console.warn('Password comparison error:', passwordError);
-      }
-    }
-
-    if (!authenticatedStudent) {
-      console.log('❌ SecureStudentAuth: Invalid credentials');
-      return { error: 'Invalid credentials' };
-    }
+    // Call the secure authentication function with hardcoded demo school data
+    const { data: authResult, error: authError } = await supabase.rpc('authenticate_student_working', {
+      name_param: nameValidation.sanitized,
+      school_param: "demo school",
+      grade_param: "5",
+      password_param: password
+    });
 
     // Track login attempt
+    const loginSuccess = !authError && authResult && authResult.length > 0 && authResult[0].password_valid;
+    
     try {
       await supabase.from('student_login_activity').insert({
-        student_id: authenticatedStudent.id,
-        school: authenticatedStudent.school,
-        grade: authenticatedStudent.grade,
-        success: true,
+        student_id: loginSuccess ? authResult[0].student_id : null,
+        school: "demo school",
+        grade: "5",
+        success: loginSuccess,
         user_agent: navigator.userAgent
       });
     } catch (trackingError) {
       console.warn('Failed to track login activity:', trackingError);
     }
 
+    if (authError) {
+      console.error('❌ SecureStudentAuth: Database authentication error:', authError);
+      return { error: 'Authentication failed' };
+    }
+
+    if (!authResult || authResult.length === 0) {
+      console.log('❌ SecureStudentAuth: No matching student found');
+      return { error: 'Invalid credentials' };
+    }
+
+    const studentData = authResult[0];
+    
+    if (!studentData.student_id || !studentData.password_valid) {
+      console.log('❌ SecureStudentAuth: Invalid credentials');
+      return { error: 'Invalid credentials' };
+    }
+
     console.log('✅ SecureStudentAuth: Student authenticated successfully');
 
     const student: Student = {
-      id: authenticatedStudent.id,
-      full_name: authenticatedStudent.full_name,
-      school: authenticatedStudent.school,
-      grade: authenticatedStudent.grade
+      id: studentData.student_id,
+      full_name: studentData.student_name,
+      school: studentData.student_school,
+      grade: studentData.student_grade
     };
 
     // Create a Supabase auth session for the student

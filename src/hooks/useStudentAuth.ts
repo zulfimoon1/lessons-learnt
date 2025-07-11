@@ -14,7 +14,7 @@ export const useStudentAuth = () => {
         return { error: 'Name and password are required' };
       }
 
-      // Use the secure student login service with name-only authentication
+      // Use the secure student login service
       const result = await secureStudentLogin(fullName.trim(), password);
       
       if (result.error) {
