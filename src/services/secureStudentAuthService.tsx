@@ -57,7 +57,8 @@ export const secureStudentLogin = async (
 
     if (authError) {
       console.error('❌ SecureStudentAuth: Database authentication error:', authError);
-      return { error: 'Authentication failed' };
+      console.error('❌ SecureStudentAuth: Full error details:', JSON.stringify(authError, null, 2));
+      return { error: `Authentication failed: ${authError.message || authError}` };
     }
 
     if (!authResult || authResult.length === 0) {
