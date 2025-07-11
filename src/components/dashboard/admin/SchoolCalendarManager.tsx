@@ -54,18 +54,31 @@ const SchoolCalendarManager: React.FC<SchoolCalendarManagerProps> = ({ teacher }
     try {
       setIsLoading(true);
       
-      // Set authentication context for custom auth
-      if (teacher.email) {
+      // Set platform admin context for school calendar events access (following ClassScheduleCalendar pattern)
+      const adminEmail = localStorage.getItem('platform_admin');
+      const teacherData = localStorage.getItem('teacher');
+      
+      if (adminEmail) {
+        const adminData = JSON.parse(adminEmail);
         const { error: contextError } = await supabase.rpc('set_platform_admin_context', { 
-          admin_email: teacher.email 
+          admin_email: adminData.email 
         });
-        
         if (contextError) {
-          console.error('Context setting error:', contextError);
+          console.error('Admin context setting error:', contextError);
+          throw contextError;
+        }
+      } else if (teacherData) {
+        // Set teacher email context for RLS policy access
+        const teacherInfo = JSON.parse(teacherData);
+        const { error: contextError } = await supabase.rpc('set_platform_admin_context', { 
+          admin_email: teacherInfo.email 
+        });
+        if (contextError) {
+          console.error('Teacher context setting error:', contextError);
           throw contextError;
         }
       } else {
-        throw new Error('Teacher email required for calendar access');
+        throw new Error('No admin or teacher email available for calendar access');
       }
       
       const { data, error } = await supabase
