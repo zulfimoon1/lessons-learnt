@@ -63,11 +63,13 @@ const SchoolAdminDashboard: React.FC<SchoolAdminDashboardProps> = ({ teacher }) 
       setIsLoading(true);
       console.log('SchoolAdminDashboard: Fetching data for school:', teacher.school);
 
-      // Set authentication context for calendar events
-      if (teacher.email) {
-        await supabase.rpc('set_platform_admin_context', { 
-          admin_email: teacher.email 
-        });
+      // Set authentication context following the established pattern
+      const adminEmail = localStorage.getItem('platform_admin');
+      if (adminEmail) {
+        const adminData = JSON.parse(adminEmail);
+        await supabase.rpc('set_platform_admin_context', { admin_email: adminData.email });
+      } else if (teacher.email) {
+        await supabase.rpc('set_platform_admin_context', { admin_email: teacher.email });
       }
 
       // Fetch all statistics in parallel
