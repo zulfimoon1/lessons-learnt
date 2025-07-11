@@ -16,7 +16,8 @@ import {
   BarChart3,
   UserPlus,
   Receipt,
-  Percent
+  Percent,
+  Calendar
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import SchoolManagement from '@/components/platform-admin/SchoolManagement';
@@ -32,6 +33,7 @@ import DiscountNotifications from '@/components/platform-admin/DiscountNotificat
 import TranslationAuditTest from '@/components/translation/TranslationAuditTest';
 import TranslationProcessor from '@/components/translation/TranslationProcessor';
 import TranslationIntegrator from '@/components/translation/TranslationIntegrator';
+import SchoolCalendarManager from '@/components/dashboard/admin/SchoolCalendarManager';
 
 interface PlatformStats {
   studentsCount: number;
@@ -336,6 +338,17 @@ const PlatformAdminDashboard: React.FC = () => {
       icon: Settings,
       label: 'Translation Integration',
       component: <TranslationIntegrator />
+    },
+    {
+      value: 'calendar',
+      icon: Calendar,
+      label: 'School Calendar',
+      component: <SchoolCalendarManager teacher={{
+        id: admin?.id || '',
+        school: 'Platform Administration',
+        role: 'admin',
+        email: admin?.email || 'demoadmin@demo.com'
+      }} />
     },
     {
       value: 'security',
