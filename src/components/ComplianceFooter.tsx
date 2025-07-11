@@ -5,17 +5,18 @@ import { Shield, Lock, FileText, Eye, CheckCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import PrivacyLinks from '@/components/privacy/PrivacyLinks';
 import SOC2ComplianceIndicator from '@/components/security/SOC2ComplianceIndicator';
+import { useAuth } from '@/contexts/AuthContext';
+import { usePlatformAdmin } from '@/contexts/PlatformAdminContext';
 
 const ComplianceFooter: React.FC = () => {
   const { t } = useLanguage();
-
-  // Safe check for auth context - only use if available
+  
+  // Safe check for auth context
   let teacher = null;
+  let admin = null;
   let canViewSOC2Dashboard = false;
 
   try {
-    // Only import and use useAuth if it's available in the context
-    const { useAuth } = require('@/contexts/AuthContext');
     const authContext = useAuth();
     teacher = authContext?.teacher;
   } catch (error) {
@@ -23,12 +24,7 @@ const ComplianceFooter: React.FC = () => {
     console.log('Auth context not available in ComplianceFooter');
   }
 
-  // Safe check for platform admin - only show SOC2 dashboard link if we can safely access the context
-  let admin = null;
-
   try {
-    // Dynamically import the platform admin context only if it's available
-    const { usePlatformAdmin } = require('@/contexts/PlatformAdminContext');
     admin = usePlatformAdmin()?.admin;
     canViewSOC2Dashboard = admin || (teacher && teacher.role === 'admin');
   } catch (error) {
