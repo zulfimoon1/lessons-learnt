@@ -56,12 +56,40 @@ export const secureStudentLogin = async (
 
     const studentRecord = students[0];
 
-    // Verify password using bcrypt
-    const bcrypt = await import('bcryptjs');
-    const isValidPassword = await bcrypt.compare(password, studentRecord.password_hash);
+    // Verify password - support both legacy and new hash formats
+    let isValidPassword = false;
+    
+    // Test common passwords for demo student
+    const commonPasswords = ['password', 'demo', 'student', 'password123', '123456'];
+    
+    if (studentRecord.password_hash.length === 64) {
+      // This looks like a hex-encoded hash, try different hashing methods
+      for (const testPassword of [password, ...commonPasswords]) {
+        // Try simple concatenation and SHA256
+        const crypto = await import('crypto');
+        const testHashes = [
+          crypto.createHash('sha256').update(testPassword).digest('hex'),
+          crypto.createHash('sha256').update(testPassword + 'simple_salt_2024').digest('hex'),
+          crypto.createHash('sha256').update('simple_salt_2024' + testPassword).digest('hex')
+        ];
+        
+        if (testHashes.includes(studentRecord.password_hash)) {
+          isValidPassword = testPassword === password;
+          if (isValidPassword) {
+            console.log('✅ SecureStudentAuth: Password verified with legacy hash');
+            break;
+          }
+        }
+      }
+    } else {
+      // New bcrypt hash
+      const bcrypt = await import('bcryptjs');
+      isValidPassword = await bcrypt.compare(password, studentRecord.password_hash);
+    }
     
     if (!isValidPassword) {
-      console.log('❌ SecureStudentAuth: Invalid password');
+      console.log('❌ SecureStudentAuth: Invalid password for user:', studentRecord.full_name);
+      console.log('❌ SecureStudentAuth: Hash format:', studentRecord.password_hash.length === 64 ? 'Legacy (64 chars)' : 'BCrypt');
       return { error: 'Invalid credentials' };
     }
 
