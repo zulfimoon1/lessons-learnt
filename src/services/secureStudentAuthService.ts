@@ -24,6 +24,8 @@ export const secureStudentLogin = async (
   password: string
 ): Promise<AuthResult> => {
   try {
+    console.log('🔐 SecureStudentAuth: Starting secure login process for:', { fullName });
+
     // Input validation
     const nameValidation = securityService.validateAndSanitizeInput(fullName, 'name');
     
@@ -31,7 +33,7 @@ export const secureStudentLogin = async (
       return { error: 'Invalid input provided' };
     }
 
-    // Find the student by name only
+    // First, find the student by name only
     const { data: students, error: findError } = await supabase
       .from('students')
       .select('*')
@@ -54,12 +56,22 @@ export const secureStudentLogin = async (
 
     const studentRecord = students[0];
 
-    // Verify password - the demo student password should be 'demostudent123'
-    const crypto = await import('crypto');
-    const expectedHash = crypto.createHash('sha256').update(password + 'simple_salt_2024').digest('hex');
-    const isValidPassword = expectedHash === studentRecord.password_hash;
+    // Verify password with original hash format
+    let isValidPassword = false;
+    
+    if (studentRecord.password_hash.length === 64) {
+      // Legacy SHA256 hash - test with original salt format
+      const crypto = await import('crypto');
+      const sha256Hash = crypto.createHash('sha256').update(password + 'simple_salt_2024').digest('hex');
+      isValidPassword = sha256Hash === studentRecord.password_hash;
+    } else {
+      // BCrypt hash
+      const bcrypt = await import('bcryptjs');
+      isValidPassword = await bcrypt.compare(password, studentRecord.password_hash);
+    }
     
     if (!isValidPassword) {
+      console.log('❌ SecureStudentAuth: Invalid password');
       return { error: 'Invalid credentials' };
     }
 

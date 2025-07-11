@@ -255,32 +255,4 @@ export const enDemoTranslations = {
   'demo.mentalHealth.selfHelpResources': 'Self-Help Resources',
   'demo.mentalHealth.moodTracking': 'Mood Tracking',
   'demo.mentalHealth.crisisSupport': 'Crisis Support: 116 123 Hope Line',
-
-  // Email Gate Form
-  'demo.emailGate.title': 'Watch Live Demo',
-  'demo.emailGate.subtitle': 'Enter your email to access our comprehensive platform demonstration',
-  'demo.emailGate.mainTitle': 'Watch Our Live Demo',
-  'demo.emailGate.mainSubtitle': 'Get exclusive access to our comprehensive platform demonstration',
-  'demo.emailGate.emailLabel': 'Email Address',
-  'demo.emailGate.emailPlaceholder': 'your.email@example.com',
-  'demo.emailGate.languageLabel': 'Demo Language',
-  'demo.emailGate.languagePlaceholder': 'Select demo language',
-  'demo.emailGate.consentText': 'By watching this demo, you agree to receive marketing content from lessonslearnt.eu',
-  'demo.emailGate.watchDemo': 'Watch Demo Video',
-  'demo.emailGate.submitting': 'Loading Demo...',
-  'demo.emailGate.privacyNotice': 'We respect your privacy. Your email will only be used for demo access and marketing communications from lessonslearnt.eu. You can unsubscribe at any time.',
-  'demo.emailGate.backToMain': 'Back to Main Page',
-
-  // Video Player
-  'demo.video.title': 'Platform Demo',
-  'demo.video.subtitle': 'Comprehensive platform walkthrough',
-  'demo.video.loading': 'Loading video...',
-  'demo.video.footer': 'This demonstration showcases our complete educational platform features and capabilities.',
-  'demo.video.welcomeTitle': 'Welcome to Your Demo Experience',
-  'demo.video.welcomeSubtitle': 'Enjoy this comprehensive walkthrough of our educational platform',
-  'demo.video.backToMain': 'Back to Home',
-
-  // Languages
-  'language.english': 'English',
-  'language.lithuanian': 'Lietuvių kalba',
 };

@@ -277,33 +277,5 @@ export const ltDemoTranslations = {
   'demo.mentalHealth.studyStrategies': 'Tai skamba tikrai nelinksmai. Pabandykime rasti keletą mokymosi strategijų, kurios padėtų jums jaustis užtikrinčiau. Ar bandėte suskaidyti mokymosi sesijas į mažesnes dalis?',
   'demo.mentalHealth.selfHelpResources': 'Savipagalbos ištekliai',
   'demo.mentalHealth.moodTracking': 'Nuotaikos stebėjimas',
-  'demo.mentalHealth.crisisSupport': 'Pagalba krizių atveju: 116 123 Vilties linija',
-
-  // Email Gate Form
-  'demo.emailGate.title': 'Žiūrėti demonstraciją',
-  'demo.emailGate.subtitle': 'Įveskite savo el. paštą, kad pamatytumėte išsamų platformos pristatymą',
-  'demo.emailGate.mainTitle': 'Žiūrėkite mūsų demonstraciją',
-  'demo.emailGate.mainSubtitle': 'Gaukite išskirtinę prieigą prie išsamaus platformos pristatymo',
-  'demo.emailGate.emailLabel': 'El. pašto adresas',
-  'demo.emailGate.emailPlaceholder': 'jusu.pastas@example.com',
-  'demo.emailGate.languageLabel': 'Demonstracijos kalba',
-  'demo.emailGate.languagePlaceholder': 'Pasirinkite demonstracijos kalbą',
-  'demo.emailGate.consentText': 'Žiūrėdami šią demonstraciją, sutinkate gauti rinkodaros turinį iš lessonslearnt.eu',
-  'demo.emailGate.watchDemo': 'Žiūrėti demonstraciją',
-  'demo.emailGate.submitting': 'Kraunama demonstracija...',
-  'demo.emailGate.privacyNotice': 'Gerbiame jūsų privatumą. Jūsų el. paštas bus naudojamas tik demonstracijos prieigai ir rinkodaros komunikacijai iš lessonslearnt.eu. Galite atsisakyti bet kada.',
-  'demo.emailGate.backToMain': 'Grįžti į pagrindinį puslapį',
-
-  // Video Player
-  'demo.video.title': 'Platformos demonstracija',
-  'demo.video.subtitle': 'Išsamus platformos pristatymas',
-  'demo.video.loading': 'Kraunamas vaizdo įrašas...',
-  'demo.video.footer': 'Ši demonstracija atskleidžia visas mūsų švietimo platformos funkcijas ir galimybes.',
-  'demo.video.welcomeTitle': 'Sveiki atvykę į demonstracijos patirtį',
-  'demo.video.welcomeSubtitle': 'Mėgaukitės išsamiu mūsų švietimo platformos pristatymu',
-  'demo.video.backToMain': 'Grįžti į pradžią',
-
-  // Languages
-  'language.english': 'Anglų kalba',
-  'language.lithuanian': 'Lietuvių kalba',
+  'demo.mentalHealth.crisisSupport': 'Pagalba krizių atveju: 116 123 Vilties linija'
 };

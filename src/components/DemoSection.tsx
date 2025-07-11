@@ -7,132 +7,25 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { useNavigate } from "react-router-dom";
 import { useDeviceType } from "@/hooks/use-device";
 import { cn } from "@/lib/utils";
-import EmailGateForm from "@/components/demo/EmailGateForm";
-import VideoPlayer from "@/components/demo/VideoPlayer";
-import { useState } from "react";
 
 const DemoSection = () => {
   const { t } = useLanguage();
   const navigate = useNavigate();
   const deviceType = useDeviceType();
   const isMobile = deviceType === 'mobile';
-  const [showEmailGate, setShowEmailGate] = useState(false);
-  const [showVideo, setShowVideo] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [selectedLanguage, setSelectedLanguage] = useState<'en' | 'lt'>('en');
 
   const handleRegisterNow = () => {
     navigate('/teacher-login?tab=signup');
   };
 
   const handleTryDemo = () => {
-    setShowEmailGate(true);
+    // Smart demo routing - try internal first, fallback to external
+    const internalDemo = '/demo';
+    const externalDemo = 'https://lessonslearnt.eu/demo';
+    
+    // For now, prefer the external live demo as it's more comprehensive
+    window.open(externalDemo, '_blank');
   };
-
-  const handleEmailGateSubmit = async (data: { email: string; language: 'en' | 'lt'; marketingConsent: boolean }) => {
-    setIsSubmitting(true);
-    try {
-      // Small delay to show loading state
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      setSelectedLanguage(data.language);
-      setShowEmailGate(false);
-      setShowVideo(true);
-    } catch (error) {
-      console.error('Error processing form:', error);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const handleVideoEnd = () => {
-    // Video ended - could trigger additional actions
-    console.log('Demo video completed');
-  };
-
-  const handleBackToForm = () => {
-    setShowVideo(false);
-    setShowEmailGate(true);
-  };
-
-  const handleBackToMain = () => {
-    setShowVideo(false);
-    setShowEmailGate(false);
-  };
-
-  // Render email gate when requested
-  if (showEmailGate) {
-    return (
-      <section className="bg-gray-50 py-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-4xl font-bold text-brand-dark mb-6">
-              {t('demo.emailGate.mainTitle') || 'Watch Our Live Demo'}
-            </h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              {t('demo.emailGate.mainSubtitle') || 'Get exclusive access to our comprehensive platform demonstration'}
-            </p>
-          </div>
-          
-          <EmailGateForm 
-            onFormSubmit={handleEmailGateSubmit}
-            isSubmitting={isSubmitting}
-          />
-          
-          <div className="text-center mt-8">
-            <Button 
-              variant="outline" 
-              onClick={handleBackToMain}
-              className="text-gray-600 hover:text-brand-teal"
-            >
-              ← {t('demo.emailGate.backToMain') || 'Back to Main Page'}
-            </Button>
-          </div>
-        </div>
-      </section>
-    );
-  }
-
-  // Render video player when form is submitted
-  if (showVideo) {
-    return (
-      <section className="bg-gray-50 py-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-8">
-            <h2 className="text-3xl font-bold text-brand-dark mb-4">
-              {t('demo.video.welcomeTitle') || 'Welcome to Your Demo Experience'}
-            </h2>
-            <p className="text-lg text-gray-600">
-              {t('demo.video.welcomeSubtitle') || 'Enjoy this comprehensive walkthrough of our educational platform'}
-            </p>
-          </div>
-          
-          <VideoPlayer 
-            language={selectedLanguage}
-            onVideoEnd={handleVideoEnd}
-            autoPlay={true}
-            className="mb-8"
-          />
-          
-          <div className="text-center space-x-4">
-            <Button 
-              onClick={handleRegisterNow}
-              className="bg-brand-teal hover:bg-brand-dark text-white px-8 py-3 text-lg font-semibold"
-            >
-              {t('demo.startFreeTrial') || 'Start Free Trial'}
-            </Button>
-            <Button 
-              variant="outline" 
-              onClick={handleBackToMain}
-              className="text-gray-600 hover:text-brand-teal"
-            >
-              {t('demo.video.backToMain') || 'Back to Home'}
-            </Button>
-          </div>
-        </div>
-      </section>
-    );
-  }
 
   return (
     <section className="bg-white py-20">
