@@ -24,15 +24,19 @@ export const secureStudentLogin = async (
   password: string
 ): Promise<AuthResult> => {
   try {
+    console.log('🔐 secureStudentLogin: Starting login for:', { fullName, hasPassword: !!password });
 
     // Input validation
     const nameValidation = securityService.validateAndSanitizeInput(fullName, 'name');
+    console.log('🔐 secureStudentLogin: Name validation result:', nameValidation);
     
     if (!nameValidation.isValid) {
+      console.log('🔐 secureStudentLogin: Name validation failed');
       return { error: 'Invalid input provided' };
     }
 
     // Find the student by name only
+    console.log('🔐 secureStudentLogin: Searching for student with name:', nameValidation.sanitized);
     const { data: students, error: findError } = await supabase
       .from('students')
       .select('*')
