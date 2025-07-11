@@ -69,7 +69,6 @@ const StudentLoginForm: React.FC<StudentLoginFormProps> = ({ onLogin, isLoading 
         type="submit" 
         className="w-full bg-brand-gradient hover:opacity-90 text-white"
         disabled={isLoading}
-        onClick={() => console.log('🔴 LOGIN BUTTON CLICKED!')}
       >
         {isLoading ? t('auth.loggingIn') : (
           <>
