@@ -13,7 +13,6 @@ import MobileOptimizedHero from "@/components/mobile/MobileOptimizedHero";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
-import LoginTester from "@/components/LoginTester";
 
 const Index = () => {
   const { t, isLoading } = useLanguage();
@@ -22,7 +21,6 @@ const Index = () => {
   if (isLoading) {
     return (
       <MobileOptimizedLayout>
-        <LoginTester />
         <div className="min-h-screen bg-background flex items-center justify-center">
           <div className="text-center">
             <GraduationCapIcon className="w-12 h-12 text-brand-teal mx-auto mb-4" />
