@@ -21,6 +21,7 @@ const StudentLoginForm: React.FC<StudentLoginFormProps> = ({ onLogin, isLoading 
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log('StudentLoginForm: Form submitted with:', { fullName: loginData.fullName, hasPassword: !!loginData.password });
     await onLogin(loginData.fullName, loginData.password);
   };
 
