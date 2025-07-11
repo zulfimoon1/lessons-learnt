@@ -261,6 +261,11 @@ const SchoolCalendarManager: React.FC<SchoolCalendarManagerProps> = ({ teacher }
   const termEvents = events.filter(e => e.event_type === 'term_start' || e.event_type === 'term_end');
   const holidayEvents = events.filter(e => e.event_type === 'holiday' || e.event_type === 'red_day');
   const otherEvents = events.filter(e => !['term_start', 'term_end', 'holiday', 'red_day'].includes(e.event_type));
+  
+  console.log('Event filtering - Total events:', events.length);
+  console.log('Term events:', termEvents.length, termEvents);
+  console.log('Holiday events:', holidayEvents.length, holidayEvents);
+  console.log('Other events:', otherEvents.length, otherEvents);
 
   if (isLoading) {
     return (
