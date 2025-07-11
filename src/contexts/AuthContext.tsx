@@ -15,7 +15,7 @@ interface AuthContextType {
   student: Student | null;
   isLoading: boolean;
   teacherLogin: (email: string, password: string, name?: string, school?: string, role?: 'teacher' | 'admin' | 'doctor') => Promise<{ teacher?: Teacher; error?: string }>;
-  studentLogin: (fullName: string, school: string, grade: string, password: string) => Promise<{ student?: Student; error?: string }>;
+  studentLogin: (fullName: string, password: string) => Promise<{ student?: Student; error?: string }>;
   studentSignup: (fullName: string, school: string, grade: string, password: string) => Promise<{ student?: Student; error?: string }>;
   logout: () => void;
   setTeacher: (teacher: Teacher | null) => void;

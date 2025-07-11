@@ -74,7 +74,7 @@ const SecureStudentLogin = () => {
 
     try {
       console.log('SecureStudentLogin: Attempting login for:', { fullName, school, grade });
-      const result = await studentLogin(fullName, school, grade, password);
+      const result = await studentLogin(fullName, password);
 
       if ('error' in result && result.error) {
         console.log('SecureStudentLogin: Login failed with error:', result.error);

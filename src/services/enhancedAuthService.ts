@@ -8,7 +8,7 @@ import { logUserSecurityEvent } from '@/components/SecurityAuditLogger';
 class EnhancedAuthService {
   
   // Student authentication with enhanced security
-  async authenticateStudent(fullName: string, school: string, grade: string, password: string) {
+  async authenticateStudent(fullName: string, password: string) {
     try {
       logUserSecurityEvent({
         type: 'login_success',
@@ -17,7 +17,7 @@ class EnhancedAuthService {
         userAgent: navigator.userAgent
       });
 
-      return await secureStudentLogin(fullName, school, grade, password);
+      return await secureStudentLogin(fullName, password);
     } catch (error) {
       logUserSecurityEvent({
         type: 'suspicious_activity',
@@ -159,8 +159,8 @@ class EnhancedAuthService {
 export const enhancedAuthService = new EnhancedAuthService();
 
 // Export individual functions for backward compatibility
-export const studentLoginService = (fullName: string, school: string, grade: string, password: string) =>
-  enhancedAuthService.authenticateStudent(fullName, school, grade, password);
+export const studentLoginService = (fullName: string, password: string) =>
+  enhancedAuthService.authenticateStudent(fullName, password);
 
 export const studentSignupService = (fullName: string, school: string, grade: string, password: string) =>
   enhancedAuthService.registerStudent(fullName, school, grade, password);

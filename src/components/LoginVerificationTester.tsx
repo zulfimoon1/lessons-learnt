@@ -39,7 +39,7 @@ const LoginVerificationTester: React.FC = () => {
     // Test 1: Student Login Input Validation
     updateTestResult('Student Login Validation', 'running');
     try {
-      const result = await studentLogin('', '', '', '');
+      const result = await studentLogin('', '');
       if (result.error) {
         updateTestResult('Student Login Validation', 'success', 'Input validation working', result.error);
       } else {
@@ -52,7 +52,7 @@ const LoginVerificationTester: React.FC = () => {
     // Test 2: Student Login with Invalid Credentials
     updateTestResult('Invalid Credentials Test', 'running');
     try {
-      const result = await studentLogin('NonExistent User', 'NonExistent School', 'Grade 1', 'wrongpassword');
+      const result = await studentLogin('NonExistent User', 'wrongpassword');
       if (result.error && result.error.includes('Invalid credentials')) {
         updateTestResult('Invalid Credentials Test', 'success', 'Invalid credentials properly rejected', result.error);
       } else {
@@ -93,7 +93,7 @@ const LoginVerificationTester: React.FC = () => {
     try {
       // Attempt multiple rapid logins
       const promises = Array(6).fill(0).map(() => 
-        studentLogin('Rate Test User', 'Rate Test School', 'Grade 1', 'wrongpassword')
+        studentLogin('Rate Test User', 'wrongpassword')
       );
       
       const results = await Promise.all(promises);

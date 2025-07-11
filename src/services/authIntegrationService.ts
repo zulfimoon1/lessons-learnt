@@ -28,11 +28,11 @@ export const signupTeacher = async (name: string, email: string, school: string,
 };
 
 // Student authentication functions - now using secure service
-export const loginStudent = async (fullName: string, school: string, grade: string, password: string) => {
+export const loginStudent = async (fullName: string, password: string) => {
   try {
-    console.log('🔐 AuthIntegrationService: Secure student login attempt for:', { fullName, school, grade });
+    console.log('🔐 AuthIntegrationService: Secure student login attempt for:', { fullName });
     
-    const result = await secureStudentLogin(fullName, school, grade, password);
+    const result = await secureStudentLogin(fullName, password);
     console.log('🔐 AuthIntegrationService: Secure student login result:', result.student ? 'Success' : 'Failed');
     return { student: result.student };
     

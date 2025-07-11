@@ -18,71 +18,73 @@ interface AuthResult {
   needsPasswordChange?: boolean;
 }
 
-// Enhanced secure student login with login activity tracking
+// Enhanced secure student login with name-only authentication
 export const secureStudentLogin = async (
   fullName: string, 
-  school: string, 
-  grade: string, 
   password: string
 ): Promise<AuthResult> => {
   try {
-    console.log('🔐 SecureStudentAuth: Starting secure login process for:', { fullName, school, grade });
+    console.log('🔐 SecureStudentAuth: Starting secure login process for:', { fullName });
 
     // Input validation
     const nameValidation = securityService.validateAndSanitizeInput(fullName, 'name');
-    const schoolValidation = securityService.validateAndSanitizeInput(school, 'school');
     
-    if (!nameValidation.isValid || !schoolValidation.isValid) {
+    if (!nameValidation.isValid) {
       return { error: 'Invalid input provided' };
     }
 
-    // Call the secure authentication function
-    const { data: authResult, error: authError } = await supabase.rpc('authenticate_student_working', {
-      name_param: nameValidation.sanitized,
-      school_param: schoolValidation.sanitized,
-      grade_param: grade.trim(),
-      password_param: password
-    });
+    // First, find the student by name only
+    const { data: students, error: findError } = await supabase
+      .from('students')
+      .select('*')
+      .eq('full_name', nameValidation.sanitized);
+
+    if (findError) {
+      console.error('❌ SecureStudentAuth: Database error:', findError);
+      return { error: 'Authentication failed' };
+    }
+
+    if (!students || students.length === 0) {
+      console.log('❌ SecureStudentAuth: No matching student found');
+      return { error: 'Invalid credentials' };
+    }
+
+    if (students.length > 1) {
+      console.log('❌ SecureStudentAuth: Multiple students with same name found');
+      return { error: 'Multiple students with this name exist. Please contact your teacher.' };
+    }
+
+    const studentRecord = students[0];
+
+    // Verify password using bcrypt
+    const bcrypt = await import('bcryptjs');
+    const isValidPassword = await bcrypt.compare(password, studentRecord.password_hash);
+    
+    if (!isValidPassword) {
+      console.log('❌ SecureStudentAuth: Invalid password');
+      return { error: 'Invalid credentials' };
+    }
 
     // Track login attempt
-    const loginSuccess = !authError && authResult && authResult.length > 0 && authResult[0].password_valid;
-    
     try {
       await supabase.from('student_login_activity').insert({
-        student_id: loginSuccess ? authResult[0].student_id : null,
-        school: schoolValidation.sanitized,
-        grade: grade.trim(),
-        success: loginSuccess,
+        student_id: studentRecord.id,
+        school: studentRecord.school,
+        grade: studentRecord.grade,
+        success: true,
         user_agent: navigator.userAgent
       });
     } catch (trackingError) {
       console.warn('Failed to track login activity:', trackingError);
     }
 
-    if (authError) {
-      console.error('❌ SecureStudentAuth: Database authentication error:', authError);
-      return { error: 'Authentication failed' };
-    }
-
-    if (!authResult || authResult.length === 0) {
-      console.log('❌ SecureStudentAuth: No matching student found');
-      return { error: 'Invalid credentials' };
-    }
-
-    const studentData = authResult[0];
-    
-    if (!studentData.student_id || !studentData.password_valid) {
-      console.log('❌ SecureStudentAuth: Invalid credentials');
-      return { error: 'Invalid credentials' };
-    }
-
     console.log('✅ SecureStudentAuth: Student authenticated successfully');
 
     const student: Student = {
-      id: studentData.student_id,
-      full_name: studentData.student_name,
-      school: studentData.student_school,
-      grade: studentData.student_grade
+      id: studentRecord.id,
+      full_name: studentRecord.full_name,
+      school: studentRecord.school,
+      grade: studentRecord.grade
     };
 
     // Create a Supabase auth session for the student
@@ -137,8 +139,8 @@ export const secureStudentLogin = async (
     // Track failed login attempt
     try {
       await supabase.from('student_login_activity').insert({
-        school: school,
-        grade: grade,
+        school: 'unknown',
+        grade: 'unknown', 
         success: false,
         user_agent: navigator.userAgent
       });
