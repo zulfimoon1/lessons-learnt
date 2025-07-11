@@ -21,14 +21,15 @@ const StudentLoginForm: React.FC<StudentLoginFormProps> = ({ onLogin, isLoading 
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('StudentLoginForm: Form submitted with:', { fullName: loginData.fullName, hasPassword: !!loginData.password });
-    console.log('StudentLoginForm: Calling onLogin function...');
     
+    if (!loginData.fullName.trim() || !loginData.password) {
+      return;
+    }
+
     try {
       await onLogin(loginData.fullName, loginData.password);
-      console.log('StudentLoginForm: onLogin call completed');
     } catch (error) {
-      console.error('StudentLoginForm: Error in onLogin:', error);
+      console.error('StudentLoginForm: Error in handleSubmit:', error);
     }
   };
 
