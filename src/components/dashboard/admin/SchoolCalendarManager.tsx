@@ -79,6 +79,7 @@ const SchoolCalendarManager: React.FC<SchoolCalendarManagerProps> = ({ teacher }
         throw error;
       }
       
+      console.log('Calendar Manager: Events loaded successfully:', data?.length || 0, data);
       setEvents(data || []);
     } catch (error) {
       console.error('Error loading calendar events:', error);

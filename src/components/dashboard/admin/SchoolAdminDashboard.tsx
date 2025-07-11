@@ -121,6 +121,7 @@ const SchoolAdminDashboard: React.FC<SchoolAdminDashboardProps> = ({ teacher }) 
       }
       if (eventsError) {
         console.error('Calendar events fetch error:', eventsError);
+        console.error('Events error details:', eventsError.message, eventsError.details);
         // Don't throw for events error, just log it
       }
 
