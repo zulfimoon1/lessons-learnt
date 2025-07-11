@@ -53,13 +53,24 @@ export const secureStudentLogin = async (
     let authenticatedStudent = null;
     for (const student of students) {
       try {
-        const isPasswordValid = await bcrypt.compare(password, student.password_hash);
+        let isPasswordValid = false;
+        
+        // Check if it's a bcrypt hash (starts with $2a$, $2b$, or $2y$)
+        if (student.password_hash.startsWith('$2')) {
+          isPasswordValid = await bcrypt.compare(password, student.password_hash);
+        } else {
+          // Legacy SHA256 hash - create SHA256 hash of password and compare
+          const crypto = await import('crypto');
+          const sha256Hash = crypto.createHash('sha256').update(password + 'simple_salt_2024').digest('hex');
+          isPasswordValid = sha256Hash === student.password_hash;
+        }
+        
         if (isPasswordValid) {
           authenticatedStudent = student;
           break;
         }
-      } catch (bcryptError) {
-        console.warn('Password comparison error:', bcryptError);
+      } catch (passwordError) {
+        console.warn('Password comparison error:', passwordError);
       }
     }
 
