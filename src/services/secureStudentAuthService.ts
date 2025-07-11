@@ -62,22 +62,18 @@ export const secureStudentLogin = async (
     // Verify password with original hash format
     let isValidPassword = false;
     
-    // For debugging - let's test the password
-    if (fullName.toLowerCase().includes('demo') && password === 'demostudent123') {
-      const crypto = await import('crypto');
-      const testHash = crypto.createHash('sha256').update('demostudent123' + 'simple_salt_2024').digest('hex');
-      console.log('Password test:', { 
-        expected: '23eea11b8d8352fd2fa04fac1469377c8a522b9e0468a04baba65b3e1f1f157f',
-        calculated: testHash,
-        matches: testHash === '23eea11b8d8352fd2fa04fac1469377c8a522b9e0468a04baba65b3e1f1f157f'
-      });
-    }
-    
     if (studentRecord.password_hash.length === 64) {
       // Legacy SHA256 hash - test with original salt format
       const crypto = await import('crypto');
       const sha256Hash = crypto.createHash('sha256').update(password + 'simple_salt_2024').digest('hex');
       isValidPassword = sha256Hash === studentRecord.password_hash;
+      
+      console.log('Password verification:', {
+        inputPassword: password,
+        expectedHash: studentRecord.password_hash,
+        calculatedHash: sha256Hash,
+        isValid: isValidPassword
+      });
     } else {
       // BCrypt hash
       const bcrypt = await import('bcryptjs');
@@ -85,8 +81,11 @@ export const secureStudentLogin = async (
     }
     
     if (!isValidPassword) {
+      console.log('Password verification failed');
       return { error: 'Invalid credentials' };
     }
+
+    console.log('Password verification successful');
 
     // Track login attempt
     try {
