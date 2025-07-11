@@ -116,18 +116,26 @@ const SchoolCalendarManager: React.FC<SchoolCalendarManagerProps> = ({ teacher }
       const adminData = JSON.parse(adminEmail);
       console.log('Setting admin context for:', adminData.email);
 
+      // Validate required fields
+      if (!formData.title?.trim() || !formData.start_date) {
+        toast({
+          title: "Error",
+          description: "Please enter a title and select a start date",
+          variant: "destructive",
+        });
+        return;
+      }
+
       const eventData = {
-        title: formData.title,
-        event_type: formData.event_type,
+        title: formData.title.trim(),
+        event_type: formData.event_type || 'School Event',
         start_date: formData.start_date,
         end_date: formData.end_date || formData.start_date,
-        description: formData.description || null,
+        description: formData.description?.trim() || null,
         color: formData.color || '#dc2626',
         school: teacher.school,
         created_by: teacher.id
       };
-
-      console.log('Attempting to save event:', eventData);
 
       // Set context first (this now uses session-scoped settings)
       const { error: contextError } = await supabase.rpc('set_platform_admin_context', { 
