@@ -405,7 +405,7 @@ const PlatformAdminDashboard: React.FC = () => {
           {/* Tab Navigation */}
           <div className="bg-white/90 backdrop-blur-sm rounded-2xl border border-gray-200/50 shadow-lg p-6">
             <TabsList className="bg-transparent p-0 h-auto gap-2 w-full">
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 2xl:grid-cols-11 gap-2 w-full">
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 2xl:grid-cols-6 gap-2 w-full">
                 {tabItems.map((item) => {
                   const Icon = item.icon;
                   return (
