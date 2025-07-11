@@ -12,6 +12,7 @@ import StudentLoginForm from "@/components/auth/StudentLoginForm";
 import StudentSignupForm from "@/components/auth/StudentSignupForm";
 import LoginVerificationTester from "@/components/LoginVerificationTester";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
+import LoginTester from "@/components/LoginTester";
 
 const StudentLogin = () => {
   const { t } = useLanguage();
@@ -156,6 +157,7 @@ const StudentLogin = () => {
 
   return (
     <div className="min-h-screen bg-brand-gradient-soft">
+      <LoginTester />
       {/* Header similar to dashboard */}
       <header className="bg-card/80 backdrop-blur-sm border-b border-border p-4">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
