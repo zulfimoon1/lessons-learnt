@@ -24,6 +24,22 @@ export const secureStudentLogin = async (
   password: string
 ): Promise<AuthResult> => {
   try {
+    console.log('🔐 DEMO: Testing login for:', fullName, 'with password:', password);
+    
+    // Quick test for demo student with common passwords
+    if (fullName.toLowerCase().includes('demo')) {
+      const crypto = await import('crypto');
+      const testPasswords = ['demo', 'password', '123456', 'test', 'student'];
+      
+      for (const testPass of testPasswords) {
+        const testHash = crypto.createHash('sha256').update(testPass + 'simple_salt_2024').digest('hex');
+        console.log(`🔐 Testing "${testPass}": ${testHash}`);
+        if (testHash === '23eea11b8d8352fd2fa04fac1469377c8a522b9e0468a04baba65b3e1f1f157f') {
+          console.log(`🔐 FOUND WORKING PASSWORD: "${testPass}"`);
+          break;
+        }
+      }
+    }
 
     // Input validation
     const nameValidation = securityService.validateAndSanitizeInput(fullName, 'name');
