@@ -56,24 +56,14 @@ export const secureStudentLogin = async (
 
     const studentRecord = students[0];
 
-    // For demo purposes, allow simple password verification
-    // The demo student hash: 23eea11b8d8352fd2fa04fac1469377c8a522b9e0468a04baba65b3e1f1f157f
+    // Verify password with original hash format
     let isValidPassword = false;
     
-    if (studentRecord.full_name === 'demo student') {
-      // For demo student, accept common passwords
-      const validPasswords = ['password', 'demo', 'student', 'password123', '123456', 'demo123'];
-      isValidPassword = validPasswords.includes(password);
-      console.log('✅ SecureStudentAuth: Demo student login with password:', password);
-    } else if (studentRecord.password_hash.length === 64) {
-      // Legacy hash - try different combinations
+    if (studentRecord.password_hash.length === 64) {
+      // Legacy SHA256 hash - test with original salt format
       const crypto = await import('crypto');
-      const testHashes = [
-        crypto.createHash('sha256').update(password).digest('hex'),
-        crypto.createHash('sha256').update(password + 'simple_salt_2024').digest('hex'),
-        crypto.createHash('sha256').update('simple_salt_2024' + password).digest('hex')
-      ];
-      isValidPassword = testHashes.includes(studentRecord.password_hash);
+      const sha256Hash = crypto.createHash('sha256').update(password + 'simple_salt_2024').digest('hex');
+      isValidPassword = sha256Hash === studentRecord.password_hash;
     } else {
       // BCrypt hash
       const bcrypt = await import('bcryptjs');
@@ -81,8 +71,7 @@ export const secureStudentLogin = async (
     }
     
     if (!isValidPassword) {
-      console.log('❌ SecureStudentAuth: Invalid password for user:', studentRecord.full_name);
-      console.log('❌ SecureStudentAuth: Tried password:', password);
+      console.log('❌ SecureStudentAuth: Invalid password');
       return { error: 'Invalid credentials' };
     }
 
