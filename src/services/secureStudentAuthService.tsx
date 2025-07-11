@@ -60,8 +60,11 @@ export const secureStudentLogin = async (
           isPasswordValid = await bcrypt.compare(password, student.password_hash);
         } else {
           // Legacy SHA256 hash - create SHA256 hash of password and compare
-          const crypto = await import('crypto');
-          const sha256Hash = crypto.createHash('sha256').update(password + 'simple_salt_2024').digest('hex');
+          const encoder = new TextEncoder();
+          const data = encoder.encode(password + 'simple_salt_2024');
+          const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+          const hashArray = Array.from(new Uint8Array(hashBuffer));
+          const sha256Hash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
           isPasswordValid = sha256Hash === student.password_hash;
         }
         
